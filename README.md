@@ -1,2 +1,2 @@
 # seqr-db
-Configuration, notes, and 
+install notes, config files, etc. 
