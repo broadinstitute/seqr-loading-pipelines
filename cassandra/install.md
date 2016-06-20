@@ -1,6 +1,9 @@
 Installation instructions
 =========================
 
+
+## Installing from TARBALL
+
 1. Install location 
 
 /local/cassandra
@@ -95,5 +98,38 @@ system_traces  system_schema  system_auth  system  system_distributed
 
 
  
+ ## Installing as a service
+ 
+ (http://docs.datastax.com/en/cassandra/3.x/cassandra/install/installRHEL.html)
+ 
+ 
+ 1. Add the repo to yum,
+ 
+  sudo vi /etc/yum.repos.d/datastax.repo
+  
+  then paste in,
+ 
+[datastax-ddc] 
+
+name = DataStax Repo for Apache Cassandra
+
+baseurl = http://rpm.datastax.com/datastax-ddc/3.7
+
+enabled = 1
+
+gpgcheck = 0 
+
+ 
+ 2. Do yum install,
+ 
+ sudo yum install datastax-ddc
+ 
+ 3. Conflict with scylla
+ 
+ s.noarch
+......
+  file /usr/lib/python2.7/site-packages/cassandra_pylib-0.0.0-py2.7.egg-info from install of datastax-ddc-3.7.0-1.noarch conflicts with file from package scylla-tools-1.2.0-20160614.cfd4575.el7.centos.noarch
+
+Error Summary
  
 
