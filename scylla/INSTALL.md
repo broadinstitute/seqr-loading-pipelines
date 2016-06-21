@@ -21,3 +21,8 @@ CONFIGURE:
 
 0. edit /etc/scylla/scylla.yaml 
 
+TROUBLESHOOTING:
+
+Current take-away from 
+https://groups.google.com/forum/#!topic/scylladb-users/cy2Z4yEKdxg 
+is some fixes are needed in their install scripts.
