@@ -2,9 +2,9 @@ Installation instructions
 =========================
 
 
-## Installing from TARBALL
+## Installing from TARBALL (did the same process with same directory patterns in seqr-db1, seqr-db2 seqr-db3
 
-1. Install location 
+1-Install location 
 
 /local/cassandra
 
@@ -12,7 +12,7 @@ sudo mkdir /local/cassandra
 
 chmod 755 cassandra
 
-2. Got the version 3.7from,
+2-Got the version 3.7from,
 
 cd cassandra
 
@@ -24,7 +24,7 @@ downloaded,
 
 sudo curl -k -O -L http://apache.claz.org/cassandra/3.7/apache-cassandra-3.7-bin.tar.gz 
 
-3. Extracted,
+3-Extracted,
 
 sudo tar -xvzf apache-cassandra-3.7-bin.tar.gz
 
@@ -131,5 +131,10 @@ gpgcheck = 0
   file /usr/lib/python2.7/site-packages/cassandra_pylib-0.0.0-py2.7.egg-info from install of datastax-ddc-3.7.0-1.noarch conflicts with file from package scylla-tools-1.2.0-20160614.cfd4575.el7.centos.noarch
 
 Error Summary
+
+AFTER discussion with Ben, Cotton, Monkol we decided to abandon yum based installing and went with tarball. Benefits of tarball
+
+1. Can control where all files get installed
+2. Can control installation, config files better
  
 
