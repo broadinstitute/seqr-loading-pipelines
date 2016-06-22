@@ -73,3 +73,5 @@ export HADOOP_CONF_DIR=/usr/local/hadoop-2.7.2/etc/hadoop
 export SPARK_DIST_CLASSPATH=$(/usr/local/hadoop-2.7.2/bin/hdfs classpath)
 
 export SPARK_MASTER_IP=seqr-db1
+
+export SPARK_WORKER_DIR=/local/spark/work
