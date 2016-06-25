@@ -2,7 +2,9 @@ Installation instructions
 =========================
 
 
-## Installing from TARBALL (did the same process with same directory patterns in seqr-db1, seqr-db2 seqr-db3
+# Installing from TARBALL (did the same process with same directory patterns in seqr-db1, seqr-db2 seqr-db3
+
+#Basic installation of Cassandra on nodes (before creating data center)
 
 1-Install location 
 
@@ -97,8 +99,44 @@ cqlsh> describe keyspaces;
 system_traces  system_schema  system_auth  system  system_distributed
 
 
+
+
+#Converting Cassandra installation on nodes to data center (using https://wiki.apache.org/cassandra/GettingStarted)
+
+
+1-First get IP addresses of the 3 nodes via ifconfig.
+
+For example,
+
+[harindra@dmz-seqr-db1 ~]$ ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 69.173.112.35  netmask 255.255.255.0  broadcast 69.173.112.255
+        ether 00:50:56:bb:69:a8  txqueuelen 1000  (Ethernet)
+        RX packets 21773314  bytes 103905116842 (96.7 GiB)
+        RX errors 0  dropped 24  overruns 0  frame 0
+        TX packets 12985667  bytes 75340139504 (70.1 GiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        loop  txqueuelen 0  (Local Loopback)
+        RX packets 12351034  bytes 175447929012 (163.3 GiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 12351034  bytes 175447929012 (163.3 GiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+seqr-db1: 69.173.112.35
+seqr-db2: 69.173.112.36
+seqr-db3: 69.173.112.37 
+
+2- Decide which nodes to use as seeds in Gossip communication.
  
- ## Installing as a service
+seqr-db1: 69.173.112.35 (seed)
+seqr-db2: 69.173.112.36
+seqr-db3: 69.173.112.37 (seed)
+ 
+ 
+ ## Appendix-A Installing as a service
  
  (http://docs.datastax.com/en/cassandra/3.x/cassandra/install/installRHEL.html)
  
