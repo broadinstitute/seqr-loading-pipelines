@@ -101,7 +101,8 @@ system_traces  system_schema  system_auth  system  system_distributed
 
 
 
-#Converting Cassandra installation on nodes to data center (using https://wiki.apache.org/cassandra/GettingStarted)
+#Converting Cassandra installation on nodes to data center 
+(using https://wiki.apache.org/cassandra/GettingStarted,https://netangels.net/knowledge-base/cassandra-multi-datacenter-setup/)
 
 
 1-First get IP addresses of the 3 nodes via ifconfig.
@@ -129,13 +130,99 @@ seqr-db1: 69.173.112.35
 seqr-db2: 69.173.112.36
 seqr-db3: 69.173.112.37 
 
-2- Decide which nodes to use as seeds in Gossip communication.
+2-Decide which nodes to use as seeds in Gossip communication. We are using all 3 as seeds
  
 seqr-db1: 69.173.112.35 (seed)
-seqr-db2: 69.173.112.36
+seqr-db2: 69.173.112.36 (seed)
 seqr-db3: 69.173.112.37 (seed)
  
  
+ 
+3-Update cons/cassandra.yaml with seed node IPs 
+seqr-db1:/conf/cassandra.yaml 
+          - seeds: "69.173.112.35,69.173.112.36,69.173.112.37"
+seqr-db2:/conf/cassandra.yaml 
+ 		  - seeds: "69.173.112.35,69.173.112.36,69.173.112.37"
+seqr-db3:/conf/cassandra.yaml 
+ 		  - seeds: "69.173.112.35,69.173.112.36,69.173.112.37"
+ 		  
+4-Update listed addresses in all 3
+listen_address: IP_OF_INSTANCE
+rpc_address: IP_OF_INSTANCE 
+
+seqr-db1:/conf/cassandra.yaml 
+	listen_address: 69.173.112.35
+	rpc_address: 69.173.112.35
+	
+seqr-db2:/conf/cassandra.yaml 
+	rpc_address: 69.173.112.36
+	listen_address: 69.173.112.36
+	
+
+seqr-db3:/conf/cassandra.yaml 
+	rpc_address: 69.173.112.37
+	listen_address: 69.173.112.37
+ 
+4-Update protocol
+
+seqr-db1:
+	endpoint_snitch: GossipingPropertyFileSnitch
+seqr-db2:
+	endpoint_snitch: GossipingPropertyFileSnitch
+seqr-db3:
+	endpoint_snitch: GossipingPropertyFileSnitch
+	
+	
+	
+5-Update cluster name  [NOTE: I backtracked on this temporarily and reverted to as-was, found a bug and found first need to do https://support.datastax.com/hc/en-us/articles/205289825-Change-Cluster-Name-)]
+
+seqr-db1:
+	cluster_name: 'seqrdb'
+seqr-db2:
+	cluster_name: 'seqrdb'	
+seqr-db3:
+	cluster_name: 'seqrdb'
+
+
+6-Update conf/cassandra-rackdc.properties  [NOTE: I backtracked on this temporarily and reverted to as-was, found a bug and found first need to do https://support.datastax.com/hc/en-us/articles/205289825-Change-Cluster-Name-)]
+seqr-db1	
+	dc=US
+	rack=RAC1
+seqr-db2
+	dc=US
+	rack=RAC1
+seqr-db3
+	dc=US
+	rack=RAC1
+	
+	
+7-Start servers one by one as earlier,
+seqr-db1
+	sudo ./bin/cassandra -R
+seqr-db2
+	sudo ./bin/cassandra -R
+seqr-db3
+	sudo ./bin/cassandra -R
+	
+	
+8. Test if it is seeing nodes,
+
+[harindra@dmz-seqr-db1 apache-cassandra-3.7]$ ./bin/nodetool status
+Datacenter: datacenter1
+=======================
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address        Load       Tokens       Owns (effective)  Host ID                               Rack
+UN  69.173.112.37  124.81 KiB  256          64.5%             93448f2f-1ef4-45da-a182-643ae5029c26  rack1
+UN  69.173.112.36  98.59 KiB  256          69.8%             63cf71c1-53d4-40ba-aa2f-b76775742b0f  rack1
+UN  69.173.112.35  136.55 KiB  256          65.7%             17046571-b7de-40c5-a010-f8bebcc23c27  rack1
+
+[harindra@dmz-seqr-db1 apache-cassandra-3.7]$ 
+
+
+
+
+
  ## Appendix-A Installing as a service
  
  (http://docs.datastax.com/en/cassandra/3.x/cassandra/install/installRHEL.html)
