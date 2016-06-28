@@ -207,7 +207,6 @@ seqr-db3
 	
 8. Test if it is seeing nodes,
 
-
 [harindra@dmz-seqr-db1 apache-cassandra-3.7]$ ./bin/nodetool status
 Datacenter: datacenter1
 =======================
