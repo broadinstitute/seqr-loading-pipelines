@@ -62,7 +62,14 @@ response:
 			exac_v3_global: 0.0,
 			exac_v3_popmax: 0.0,
 			gene_id: ["ENSG0001234", "ENSG000534321"],
-			transcript: [{
+			transcript_to_show: {
+				gene_id: "ENSG00012345",
+				transcript_id: "ENST00012345",
+				consequence: "stop_gained",
+				is_protein_coding: true, 
+				is_canonical: true, 
+			},
+			transcripts: [{
 					gene_id: "ENSG00012345",
 					transcript_id: "ENST00012345",
 					consequence: "stop_gained",
@@ -75,7 +82,6 @@ response:
 					is_protein_coding: true, 
 					is_canonical: false, 
 				}
-			
 			],
 			genotypes: [{
 					id: : "NA12879",
