@@ -1,4 +1,4 @@
-0. unpack ZooKeeper in `/usr/local/zookeepr-3.4.8`
+0. unpack ZooKeeper in `/usr/local/zookeeper-3.4.8`
 
 0. add `conf/zoo.cfg`
  
