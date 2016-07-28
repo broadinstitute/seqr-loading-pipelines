@@ -21,7 +21,9 @@ request:
 			consequence: {   in : ["stop_gained", "splice_donor_variant", "splice_acceptor_variant"] },
 			gene_id:     {   in : ["ENSG00012345", "ENSG0012412"] },
 		},
-		dataset_id: [ { id: "INMR", version: "2016_04_12", datatype: "wgs"} ],
+		dataset_id: "INMR",
+		dataset_version: "2016_04_12",
+		dataset_type: "wgs",
 	},
 
 	genotype_filters: [{
