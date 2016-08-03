@@ -1,8 +1,8 @@
 
-*INPUT:* ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.decomposed.with_popmax.vcf.bgz  
+**INPUT:** ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.decomposed.with_popmax.vcf.bgz  
 (TODO: document how this was made)
 
-*hail command:*
+**hail command:**
 
 ```
 dmz-seqr-db1:~ 1005 130 $ time hail importvcf ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.decomposed.with_popmax.vcf.bgz splitmulti printschema write -o 1kg_wgs_phase3.vds
