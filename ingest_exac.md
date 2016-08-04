@@ -2,8 +2,15 @@
 
 **HAIL COMMAND:**  
 ```
-dmz-seqr-db1:~ 1009 1 $ time hail importvcf exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz  splitmulti printschema write -o exac_v0.3.1.vds
+dmz-seqr-db1:~ 1009 1 $ time hail --parquet-compression snappy \  
+importvcf exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz \  
+annotatevariants expr -c 'va.info.CSQ = NA: Boolean' \  
+splitmulti \  
+printschema \  
+write -o exac_v0.3.1.vds
+
 hail: info: running: importvcf exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz
+hail: info: running: annotatevariants expr -c 'va.info.CSQ = NA: Boolean'
 hail: info: running: splitmulti
 hail: info: running: printschema
 Global annotation schema:
@@ -97,7 +104,7 @@ va: Struct {
         AC_CONSANGUINEOUS: Array[String],
         AN_CONSANGUINEOUS: String,
         Hom_CONSANGUINEOUS: Array[String],
-        CSQ: Array[String],
+        CSQ: Boolean,
         AC_POPMAX: Array[String],
         AN_POPMAX: Array[String],
         POPMAX: Array[String],
@@ -125,10 +132,11 @@ SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further detail
 hail: info: while importing:
     hdfs://seqr-db1/user/weisburd/exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz  import clean
 hail: info: timing:
-  importvcf: 2.309s
-  splitmulti: 27.084ms
-  printschema: 18.617ms
-  write: 11m33.8s
+  importvcf: 2.433s
+  annotatevariants expr: 533.331ms
+  splitmulti: 32.595ms
+  printschema: 27.279ms
+  write: 11m1.9s
 
-real	11m44.371s
+real	11m12.539s
 ```
