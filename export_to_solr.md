@@ -1,5 +1,5 @@
 
-Export data:
+**HAIL COMMAND:**
 ```
 ## delete existing core
 (cd /local/software/solr-6.0.1;   ./bin/solr delete -c test &&   ./bin/solr create_collection -c test -shards 3)
