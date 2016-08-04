@@ -11,21 +11,21 @@ time hail \
   annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
   annotatevariants vds -r va.clinvar -i clinvar_v2016_07_07.vds \
   annotatevariants vds -r va.dbnsfp -i dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
-  printschema
+  printschema \
   exportvariantssolr -c test -v 'contig = v.contig,
     start = v.start,
     ref = v.ref,
     alt = v.alt,
-    pass = v.apss,
-    filter = if(v.pass) "PASS" else v.filters.mkString(","),
+    pass = va.pass,
+    filter = if(v.pass) "PASS" else va.filters.mkString(","),
     g1k_wgs_phase3_global_AF = va.g1k.info.AF,
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
     exac_v3_popmax_AF = va.exac.info.POPMAX,
-    sample_af = va.info.AF[va.aIndex]', 
-    dataset_id: "INMR",
-    dataset_version: "2016_04_12",
-    dataset_type: "wex",
+    sample_af = va.info.AF[va.aIndex], 
+    dataset_id = "INMR",
+    dataset_version = "2016_04_12",
+    dataset_type = "wex"' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
     ab = let s = g.ad.sum
