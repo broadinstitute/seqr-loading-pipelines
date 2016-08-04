@@ -1,7 +1,7 @@
 Variant Search Query:
 
 request:
-```json
+```
 {
 	page: 1,
 	limit: 50,
