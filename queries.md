@@ -49,6 +49,7 @@ response:
 	api_version: 0.1,
 	page: 1,
 	limit: 50,
+	found: 2,
 	variants: [
 		{ 
 			chrom:  "1",
