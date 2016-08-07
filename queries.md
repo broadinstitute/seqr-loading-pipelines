@@ -86,13 +86,19 @@ response:
 			genotypes: [{
 					id: : "NA12879",
 					num_alt: 2,
+					AD: "40,40",
+					DP: 80,
 					AB: 0.5,
 					GQ: 99,
+					PL: "100,70,0"
 				}, {
 					id: "NA12879",
 					num_alt: 0,
+					AD: "40,40",
+					DP: 80,
 					AB: 0.5,
 					GQ: 90,
+					PL: "0,70,180"
 				}, 
 			]
 		}, 
