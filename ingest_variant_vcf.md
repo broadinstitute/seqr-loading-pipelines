@@ -1,7 +1,7 @@
 
 ```
-dmz-seqr-db1:/local 1030 0 $ hail importvcf  --store-gq ../cseed/INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
-hail: info: running: importvcf --store-gq ../cseed/INMR_v9.vep.vcf.bgz
+dmz-seqr-db1:/local 1030 0 $ hail importvcf  ../cseed/INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
+hail: info: running: importvcf ../cseed/INMR_v9.vep.vcf.bgz
 hail: info: running: splitmulti
 hail: info: running: write -o INMR_v9.vds
 [Stage 0:=======================================>                   (4 + 2) / 6]SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
