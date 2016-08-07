@@ -9,15 +9,15 @@ time hail \
   read -i INMR_v9.subset.vds \
   annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
   annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
-  annotatevariants vds -r va.clinvar -i clinvar_v2016_07_07.vds \
-  annotatevariants vds -r va.dbnsfp -i dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
   printschema \
   exportvariantssolr -c test -v 'contig = v.contig,
     start = v.start,
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
-    filter = if(va.pass) "PASS" else va.filters.mkString(","),
+    filter = if(va.pass) "PASS" else "va.filters",
+    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms[0] ).toSet,
+    vep_gene_ids=va.vep.transcript_consequences.map( x => x. gene_id ).toSet,
     g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
