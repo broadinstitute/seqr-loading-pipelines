@@ -1,9 +1,6 @@
 
 **HAIL COMMAND:**
 ```
-## delete existing core
-(cd /local/software/solr-6.0.1;   ./bin/solr delete -c test &&   ./bin/solr create_collection -c test -shards 3)
-
 ## import data
 time hail \
   read -i INMR_v9.subset.vds \
