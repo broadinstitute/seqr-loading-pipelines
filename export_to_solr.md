@@ -21,7 +21,7 @@ time hail \
     g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
-    exac_v3_popmax_AF = va.exac.info.POPMAX,
+    exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex],
     sample_af = va.info.AF[va.aIndex], 
     dataset_id = "INMR",
     dataset_version = "2016_04_12",
