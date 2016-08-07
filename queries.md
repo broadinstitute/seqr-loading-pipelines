@@ -57,6 +57,7 @@ response:
 			ref:    "A",
 			alt:    "G",
 			filter: "PASS",
+			rsid: "rs1800234",  
 			1kg_wgs_phase3_global: 0.01,
 			1kg_wgs_phase3_popmax: 0.01,
 			exac_v3_global: 0.0,
