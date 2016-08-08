@@ -14,7 +14,7 @@ time hail \
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
-    filter = if(va.pass) "PASS" else va.filters.mkString(","),
+    filters = va.filters,
     g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
