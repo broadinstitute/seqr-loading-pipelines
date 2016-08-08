@@ -24,18 +24,16 @@ request:
 		dataset_type: { "eq": "wgs" },
 	},
 
-	genotype_filters: [{
-			"id": { "eq": "NA12879" },
-			num_alt: { "in" : [0, 1] },
+	genotype_filters: {
+		"NA12879": {
+			"num_alt": { "in" : [0, 1] },
 			"AB": { "range": [0.2, "*"] },
-			"GQ": { "range": [90, "*"] },
-		}, {
-			"id": { "eq": "NA12879" },
+			"GQ": { "range": [90, "*"] }, }, 
+		"NA12879": {
 			"num_alt": { "eq": 0 },
 			"AB": { "range": [0.2, "*"] },
-			"GQ": { "range": [90, "*"]	},
-		}, { 
-			"id": { "eq": "NA12879" },
+			"GQ": { "range": [90, "*"] }, },
+		"NA12879": { 
 			"num_alt": { "eq": 1 },
 			"AB": { "range": [0.2, "*"] },
 			"GQ": { "range": [90, "*"] },
