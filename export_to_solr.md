@@ -17,7 +17,7 @@ time hail \
     pass = va.pass,
     filter = if(va.pass) "PASS" else "va.filters",
     vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms[0] ).toSet,
-    vep_gene_ids=va.vep.transcript_consequences.map( x => x. gene_id ).toSet,
+    vep_gene_ids=va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
     g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
