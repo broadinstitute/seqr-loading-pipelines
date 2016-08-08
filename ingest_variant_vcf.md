@@ -22,7 +22,8 @@ hail: info: timing:
 Annotate with VEP and other reference data on cray1:
 
 ```
-time hail importvcf INMR_v9.vcf.bgz \
+ 
+time hail -b 2 importvcf -n 250 INMR_v9.vcf.bgz \
 splitmulti \
 vep --block-size 250 --force --config /home/users/cseed/vep.properties \
 annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
@@ -38,7 +39,7 @@ write -o INMR_v9.vds
 Annotate with just VEP on cray1:
 
 ```
-[weisburd@nid00014 data]$ time hail importvcf INMR_v9.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.vds
+[weisburd@nid00014 data]$ time hail -b 2 importvcf -n 250 importvcf INMR_v9.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.vds
 
 hail: info: running: importvcf INMR_v9.subset.vcf.bgz
 hail: info: running: splitmulti
