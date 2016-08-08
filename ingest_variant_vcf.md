@@ -19,10 +19,26 @@ hail: info: timing:
   write: 1m36.0s
 ```
 
+Annotate with VEP and other reference data on cray1:
+
+```
+hail importvcf INMR_v9.vcf.bgz \
+splitmulti \
+vep --block-size 250 --force --config /home/users/cseed/vep.properties \
+annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
+annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
+annotatevariants vds -r va.clinvar -i clinvar_v2016_07_07.vds \
+annotatevariants vds -r va.dbnsfp -i dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+printschema count \
+write -o INMR_v9.vds
+
+```
+
+
 To annotate with VEP on cray1:
 
 ```
-[weisburd@nid00014 data]$ hail importvcf INMR_v9.subset.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.subset.vds
+[weisburd@nid00014 data]$ hail importvcf INMR_v9.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.vds
 
 hail: info: running: importvcf INMR_v9.subset.vcf.bgz
 hail: info: running: splitmulti
