@@ -1,6 +1,10 @@
 
 **HAIL COMMAND:**
 ```
+## in cqlsh:
+
+use test; 
+DROP TABLE test;
 CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom, pos), ref, alt));
 
 ## import data
