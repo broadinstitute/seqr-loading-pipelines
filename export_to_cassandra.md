@@ -20,7 +20,7 @@ time hail \
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
     exac_v3_popmax_AF = va.exac.info.POPMAX,
     sample_af = va.info.AF[va.aIndex], 
-    vep_transcripts = va.vep.transcript_consequences.json,
+    vep_transcripts = json(va.vep.transcript_consequences),
     dataset_id = "INMR",
     dataset_version = "2016_04_12",
     dataset_type = "wex"' \
