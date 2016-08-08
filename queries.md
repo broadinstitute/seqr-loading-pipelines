@@ -6,6 +6,7 @@ request:
 	page: 1,
 	limit: 50,
 	sort_by: ["chrom", "pos"],
+	sample_ids: ["NA12878", ...],
 	variant_filters: {
 		chrom:  { "eq": "1" },
 		pos:    { "range": [12345, 54321] },
