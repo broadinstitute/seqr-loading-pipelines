@@ -3,7 +3,7 @@
 ```
 ## import data
 time hail \
-  read -i INMR_v9.subset.vds \
+  read -i INMR_v9.vds \
   annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
   annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
   annotatevariants vds -r va.clinvar -i clinvar_v2016_07_07.vds \
