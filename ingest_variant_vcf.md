@@ -1,6 +1,6 @@
 
 ```
-dmz-seqr-db1:~ 1001 0 $ hail importvcf  ../cseed/INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
+dmz-seqr-db1:~ 1001 0 $ time hail importvcf  ../cseed/INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
 hail: info: running: importvcf ../cseed/INMR_v9.vep.vcf.bgz
 hail: info: running: splitmulti
 hail: info: running: write -o INMR_v9.vds
@@ -22,7 +22,7 @@ hail: info: timing:
 Annotate with VEP and other reference data on cray1:
 
 ```
-hail importvcf INMR_v9.vcf.bgz \
+time hail importvcf INMR_v9.vcf.bgz \
 splitmulti \
 vep --block-size 250 --force --config /home/users/cseed/vep.properties \
 annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
@@ -38,7 +38,7 @@ write -o INMR_v9.vds
 Annotate with just VEP on cray1:
 
 ```
-[weisburd@nid00014 data]$ hail importvcf INMR_v9.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.vds
+[weisburd@nid00014 data]$ time hail importvcf INMR_v9.vcf.bgz splitmulti vep --block-size 250 --force --config /home/users/cseed/vep.properties printschema count write -o INMR_v9.vds
 
 hail: info: running: importvcf INMR_v9.subset.vcf.bgz
 hail: info: running: splitmulti
