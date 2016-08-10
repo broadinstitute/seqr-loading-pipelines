@@ -1,12 +1,45 @@
+**DELETE AND CREATE CASSANDRA TABLE:**
 
-**HAIL COMMAND:**
 ```
-## in cqlsh:
-
+> cqlsh
 use test; 
 DROP TABLE test;
 CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom, pos), ref, alt));
+```
 
+**HAIL COMMAND:**
+
+```
+## import data
+time hail_with_3_cores \
+  read -i INMR_v9.vds \
+  printschema \
+  exportvariantscass -k test -t test -a seqr-db1 -v 'contig = v.contig,
+    start = v.start,
+    ref = v.ref,
+    alt = v.alt,
+    pass = va.pass,
+    filters = va.filters,
+    g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
+    g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
+    exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
+    exac_v3_popmax_AF = va.exac.info.POPMAX,
+    sample_af = va.info.AF[va.aIndex], 
+    vep_transcripts = json(va.vep.transcript_consequences),
+    dataset_id = "INMR",
+    dataset_version = "2016_04_12",
+    dataset_type = "wex"' \
+  -g 'num_alt = g.nNonRefAlleles,
+    gq = g.gq,
+    ab = let s = g.ad.sum
+         in if (s == 0 || !g.isHet)
+       NA: Float
+     else
+       (g.ad[0] / s).toFloat' 
+```
+
+**HAIL COMMAND WITH ANNOTATION:**
+```
 ## import data
 time hail \
   read -i INMR_v9.vds \
