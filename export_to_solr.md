@@ -7,7 +7,7 @@ cd /local/software/solr-6.0.1; ./bin/solr delete -c test && ./bin/solr create_co
 **HAIL COMMAND:**
 ```
 ## import data
-time hail \
+time hail_with_3_cores \
   read -i INMR_v9.vds \
   printschema \
   count \
