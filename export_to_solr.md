@@ -1,9 +1,45 @@
+** DELETE & CREATED SOLR CORE:**
+```
+## delete and create core
+cd /local/software/solr-6.0.1; ./bin/solr delete -c test && ./bin/solr create_collection -c test -shards 3
+```
 
 **HAIL COMMAND:**
 ```
-## delete existing core
-(cd /local/software/solr-6.0.1;   ./bin/solr delete -c test &&   ./bin/solr create_collection -c test -shards 3)
+## import data
+time hail \
+  read -i INMR_v9.vds \
+  printschema \
+  count \
+  exportvariantssolr -c test -v 'contig = v.contig,
+    start = v.start,
+    ref = v.ref,
+    alt = v.alt,
+    pass = va.pass,
+    filters = va.filters,
+    most_severe_consequence=va.vep.most_severe_consequence, 
+    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms[0] ).toSet,
+    vep_gene_ids=va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
+    g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
+    g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
+    exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
+    exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex],
+    sample_af = va.info.AF[va.aIndex], 
+    dataset_id = "INMR",
+    dataset_version = "2016_04_12",
+    dataset_type = "wex"' \
+  -g 'num_alt = g.nNonRefAlleles,
+    gq = g.gq,
+    ab = let s = g.ad.sum
+         in if (s == 0 || !g.isHet)
+       NA: Float
+     else
+       (g.ad[0] / s).toFloat' \
+  -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
+```
 
+**HAIL COMMAND WITH ANNOTATION:**
+```
 ## import data
 time hail \
   read -i INMR_v9.subset.vds \
