@@ -1,10 +1,10 @@
 Installation instructions
 =========================
+Basic installation on nodes (before creating data center)  
+Repeated on seqr-db1, seqr-db2, seqr-db3  
+Based on http://wiki.apache.org/cassandra/GettingStarted    
 
-Installing from TARBALL
-
-
-* Basic installation of Cassandra on nodes (before creating data center)  - repeated on seqr-db1, seqr-db2, seqr-db3
+0. download tarball
 ```
 mkdir /local/software/cassandra
 cd /local/software/cassandra
@@ -14,21 +14,18 @@ tar -xvzf apache-cassandra-3.7-bin.tar.gz
 cd apache-cassandra-3.7
 ```
 
-i. Configure installation based on http://wiki.apache.org/cassandra/GettingStarted  
-    Didn't have to change `conf/logback.xml`  <file>/var/log/cassandra/system.log</file>  
-    Created directories in the top level cassandra directory:
-    `commitlog_directory`
-    `data_file_directory`
-    `saved_caches_directory`   
-    (I didn't associate them to the version, should we? I think these transcend version?
+0. created directories:
+    `mkdir /local/software/cassanrda/commitlog_directory`
+    `mkdir /local/software/cassanrda/data_file_directory`
+    `mkdir /local/software/cassanrda/saved_caches_directory`   
+    (I didn't associate them to the version, should we? I think these transcend version?)
 
-ii. Updated conf/cassandra.yaml   
-    - data_file_directories:  `/local/software/cassandra/data_file_directory`     
-    - commitlog_directory: /local/software/cassandra/commitlog_directory  (if not set, the default directory is $CASSANDRA_HOME/data/commitlog)   
-    - saved_caches_directory: /local/cassandra/saved_caches_directory (if not set, the default directory is $CASSANDRA_HOME/data/saved_caches)   
+0. Updated conf/cassandra.yaml   
+    - data_file_directories:  `/local/software/cassandra/data_file_directory` 
+    - commitlog_directory: `/local/software/cassandra/commitlog_directory` (if not set, the default directory is $CASSANDRA_HOME/data/commitlog)   
+    - saved_caches_directory: `/local/cassandra/saved_caches_directory` (if not set, the default directory is $CASSANDRA_HOME/data/saved_caches)   
 
-
-iii. Start cassandra: 
+0. started cassandra: 
 ```
 [harindra@dmz-seqr-db2 apache-cassandra-3.7]$ sudo ./bin/cassandra -f   # start as root for now, but let's make a new user called cassandra?
 ```
@@ -39,7 +36,7 @@ to start in daemon mode:
 to kill daemon:
 ```sudo pkill -f CassandraDaemon```
 
-iv. Test if cassandra is up
+0. test if cassandra is up:
 
 ```
 [harindra@dmz-seqr-db2 apache-cassandra-3.7]$ ./bin/cqlsh
