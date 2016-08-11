@@ -5,14 +5,15 @@ Repeated on seqr-db1, seqr-db2, seqr-db3
 Based on http://wiki.apache.org/cassandra/GettingStarted    
 
 0. download tarball  
-  ```
-  mkdir /local/software/cassandra  
-  cd /local/software/cassandra  
-  chmod 755 .  
-  curl -k -O -L http://apache.claz.org/cassandra/3.7/apache-cassandra-3.7-bin.tar.gz   
-  tar -xvzf apache-cassandra-3.7-bin.tar.gz  
-  cd apache-cassandra-3.7   
-  ```
+```
+mkdir /local/software/cassandra; 
+cd /local/software/cassandra  
+chmod 755 .  
+curl -k -O -L http://apache.claz.org/cassandra/3.7/apache-cassandra-3.7-bin.tar.gz   
+tar -xvzf apache-cassandra-3.7-bin.tar.gz  
+cd apache-cassandra-3.7
+```
+
 0. created directories:  
   `mkdir /local/software/cassanrda/commitlog_directory`  
   `mkdir /local/software/cassanrda/data_file_directory`  
