@@ -2,8 +2,8 @@
 
 **HAIL COMMAND:**  
 ```
-dmz-seqr-db1:~ 1009 1 $ time hail --parquet-compression snappy \
-importvcf exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz \
+dmz-seqr-db1:~ 1009 1 $ time hail -b 2 --parquet-compression snappy \
+importvcf -n 250 exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz \
 annotatevariants expr -c 'va.info.CSQ = NA: Boolean' \
 splitmulti \
 printschema \
