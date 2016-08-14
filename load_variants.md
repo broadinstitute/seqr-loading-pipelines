@@ -22,17 +22,15 @@ hail: info: timing:
 Annotate with VEP and other reference data on cray1:
 
 ```
- 
 time hail -b 2 importvcf -n 250 INMR_v9.vcf.bgz \
 splitmulti \
-vep --block-size 250 --force --config /home/users/cseed/vep.properties \
 annotatevariants vds -r va.g1k -i 1kg_wgs_phase3.vds \
 annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
 annotatevariants vds -r va.clinvar -i clinvar_v2016_08_04.vds \
 annotatevariants vds -r va.dbnsfp -i dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+vep --block-size 250 --force --config /home/users/cseed/vep.properties \
 printschema count \
 write -o INMR_v9.vds
-
 ```
 
 
