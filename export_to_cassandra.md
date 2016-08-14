@@ -2,7 +2,8 @@
 
 ```
 > cqlsh
-use test; 
+CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}  AND durable_writes = true;
+USE test;
 DROP TABLE test;
 CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom, pos), ref, alt));
 ```
@@ -14,7 +15,7 @@ CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom,
 time hail_with_3_cores \
   read -i INMR_v9.vds \
   printschema \
-  exportvariantscass -k test -t test -a seqr-db1 -v 'contig = v.contig,
+  exportvariantscass -a seqr-db1 -k bw -t test -v 'contig = v.contig,
     start = v.start,
     ref = v.ref,
     alt = v.alt,
