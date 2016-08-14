@@ -4,8 +4,8 @@
 **hail command:**
 
 ```
-dmz-seqr-db1:~ 1005 130 $ hail \
-importvcf  ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.vcf.bgz \
+dmz-seqr-db1:~ 1005 130 $ hail -b 2 \
+importvcf -n 250 ALL.wgs.phase3_shapeit2_mvncall_integrated_v5a.20130502.sites.vcf.bgz \
 splitmulti \
 annotatevariants expr -c 'va.info.POPMAX_AF = [va.info.EAS_AF[0], va.info.EUR_AF[0], va.info.AFR_AF[0], va.info.AMR_AF[0], va.info.SAS_AF[0]].max' \
 annotatevariants expr -c 'va.info.POPMAX = if (va.info.POPMAX_AF==0) "NA" else if (va.info.POPMAX_AF==va.info.EAS_AF[0]) "EAS" else if (va.info.POPMAX_AF==va.info.EUR_AF[0]) "EUR" else if (va.info.POPMAX_AF==va.info.AFR_AF[0]) "AFR" else if (va.info.POPMAX_AF==va.info.AMR_AF[0]) "AMR" else if (va.info.POPMAX_AF==va.info.SAS_AF[0]) "SAS" else "ERROR:UNEXPECTED_POPMAX"' \
