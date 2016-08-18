@@ -18,7 +18,7 @@ time hail_with_3_cores \
     pass = va.pass,
     filters = va.filters,
     most_severe_consequence=va.vep.most_severe_consequence, 
-    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms[0] ).toSet,
+    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
     vep_gene_ids=va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
     g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
