@@ -1,24 +1,3 @@
-
-```
-dmz-seqr-db1:~ 1001 0 $ time hail importvcf INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
-hail: info: running: importvcf ../cseed/INMR_v9.vep.vcf.bgz
-hail: info: running: splitmulti
-hail: info: running: write -o INMR_v9.vds
-[Stage 0:=================================================>         (5 + 1) / 6]SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
-SLF4J: Defaulting to no-operation (NOP) logger implementation
-SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
-hail: warning: while importing:
-    hdfs://seqr-db1/user/cseed/INMR_v9.vep.vcf.bgz
-  filtered 9364 genotypes:
-    1462 times: sum(AD) > DP
-    7274 times: GQ != difference of two smallest PL entries
-    628 times: GQ present but PL missing
-hail: info: timing:
-  importvcf: 2.020s
-  splitmulti: 35.076ms
-  write: 1m36.0s
-```
-
 Annotate with VEP and other reference data on cray1:
 
 ```
