@@ -8,7 +8,7 @@ annotatevariants vds -r va.exac -i exac_v0.3.1.vds \
 annotatevariants vds -r va.clinvar -i clinvar_v2016_08_04.vds \
 annotatevariants vds -r va.dbnsfp -i dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
 vep --block-size 250 --force --config /home/users/cseed/vep.properties \
-printschema count \
+printschema \
 write -o INMR_v9.vds
 ```
 
