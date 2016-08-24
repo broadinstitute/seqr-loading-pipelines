@@ -1,6 +1,6 @@
 
 ```
-dmz-seqr-db1:~ 1001 0 $ time hail importvcf  ../cseed/INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
+dmz-seqr-db1:~ 1001 0 $ time hail importvcf INMR_v9.vep.vcf.bgz splitmulti write -o INMR_v9.vds
 hail: info: running: importvcf ../cseed/INMR_v9.vep.vcf.bgz
 hail: info: running: splitmulti
 hail: info: running: write -o INMR_v9.vds
