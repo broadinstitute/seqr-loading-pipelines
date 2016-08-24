@@ -3,9 +3,10 @@ Latest `clinvar.tsv.gz` from the https://github.com/macarthur-lab/clinvar repo
 
 **HAIL COMMAND:**  
 ```
-dmz-seqr-db1:~ 1010 0 $ hail importannotations \
+dmz-seqr-db1:~ 1010 0 $ time hail importannotations \
 table -t 'pos: Int, pathogenic: Int, conflicted: Int, measureset_id: Int' -e 'Variant(chrom,pos,ref,alt)' \
 clinvar_2016_08_04.tsv.gz \
+splitmulti \
 write -o clinvar_v2016_08_04.vds
 
 hail: info: running: importannotations table -t 'pos: Int, pathogenic: Int, conflicted: Int, measureset_id: Int' -e Variant(chrom,pos,ref,alt) clinvar.tsv.gz
