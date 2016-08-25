@@ -11,11 +11,11 @@ CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom,
 **HAIL COMMAND:**
 
 ```
-## import data
+## export data
 time hail_with_3_cores \
   read -i INMR_v9.vds \
   printschema \
-  exportvariantscass -a seqr-db1 -k bw -t test -v 'chrom = v.contig,
+  exportvariantscass --export-ref -a seqr-db1 -k bw -t test_with_ref -v 'chrom = v.contig,
     pos = v.start,
     ref = v.ref,
     alt = v.alt,
@@ -27,6 +27,8 @@ time hail_with_3_cores \
     exac_v3_popmax_AF = va.exac.info.POPMAX,
     sample_af = va.info.AF[va.aIndex], 
     vep_transcripts = json(va.vep.transcript_consequences),
+    dbnsfp = json(va.dbnsfp),
+    clinvar = json(va.clinvar),
     dataset_id = "INMR",
     dataset_version = "2016_04_12",
     dataset_type = "wex"' \
