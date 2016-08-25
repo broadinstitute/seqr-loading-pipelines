@@ -10,8 +10,8 @@ cd /local/software/solr-6.0.1; ./bin/solr delete -c test && ./bin/solr create_co
 time hail_with_3_cores \
   read -i INMR_v9.vds \
   printschema \
-  exportvariantssolr -c test -v 'contig = v.contig,
-    start = v.start,
+  exportvariantssolr -c test -v 'chrom = v.contig,
+    pos = v.start,
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
