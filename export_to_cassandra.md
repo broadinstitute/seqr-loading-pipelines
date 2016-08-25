@@ -15,7 +15,7 @@ CREATE TABLE test (chrom text, pos int, ref text, alt text, PRIMARY KEY ((chrom,
 time hail_with_3_cores \
   read -i INMR_v9.vds \
   printschema \
-  exportvariantscass --export-ref -a seqr-db1 -k bw -t test_with_ref -v 'chrom = v.contig,
+  exportvariantscass --export-ref -a seqr-db1 -k bw -t test_with_ref_and_dbnsfp -v 'chrom = v.contig,
     pos = v.start,
     ref = v.ref,
     alt = v.alt,
