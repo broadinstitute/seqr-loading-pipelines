@@ -8,10 +8,11 @@ cd /local/software/solr-6.0.1; ./bin/solr delete -c test && ./bin/solr create_co
 ```
 ## import data
 time hail_with_3_cores \
-  read -i INMR_v9.vds \
+  read -i file://`pwd`/NIAID.vds \
   printschema \
   exportvariantssolr -c test -v 'chrom = v.contig,
-    pos = v.start,
+    start = v.start,
+    end = v.end,
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
@@ -24,9 +25,9 @@ time hail_with_3_cores \
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
     exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex],
     sample_af = va.info.AF[va.aIndex], 
-    dataset_id = "INMR",
+    dataset_id = "NIAID-gatk3dot4",
     dataset_version = "2016_04_12",
-    dataset_type = "wex"' \
+    dataset_type = "wgs"' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
     ab = let s = g.ad.sum
