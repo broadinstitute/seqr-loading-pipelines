@@ -5,6 +5,38 @@ cd /local/software/solr-6.0.1; ./bin/solr delete -c seqrdb && ./bin/solr create_
 ```
 
 **HAIL COMMAND:**
+
+Hanson: 
+```
+## import data
+time hail_with_3_cores \
+  read -i file://`pwd`/NIAID.vds \
+  printschema \
+  exportvariantssolr -c seqrdb -v 'chrom = v.contig,
+    start = v.start,
+    end = va.info.END,
+    ref = v.ref,
+    alt = v.alt,
+    pass = va.pass,
+    filters = va.filters,
+    most_severe_consequence=va.vep.most_severe_consequence, 
+    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
+    vep_gene_ids=va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
+    g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex],
+    g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
+    exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
+    exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex],
+    sample_af = va.info.AF[va.aIndex], 
+    dataset_id = "NIAID-gatk3dot4",
+    dataset_version = "2016_04_12",
+    dataset_type = "wgs"' \
+  -g 'num_alt = g.nNonRefAlleles,
+    gq = g.gq,
+    ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat' \
+  -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
+```
+
+
 ```
 ## import data
 time hail_with_3_cores \
