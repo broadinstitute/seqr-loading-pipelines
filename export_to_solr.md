@@ -44,7 +44,7 @@ time hail_local \
     exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex - 1],
     dataset_id = "INMR_v9",
     dataset_version = "2016_04_12",
-    dataset_type = "wgs"' \
+    dataset_type = "wex"' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
     ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat, 
