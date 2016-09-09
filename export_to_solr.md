@@ -19,7 +19,7 @@ INMR_v9: read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR
 
 ```
 ## import data
-time hail_with_3_cores \
+time hail_local \
   read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR_v9.vds \
   exportvariantssolr -c INMR_v9_without_ref -v 'chrom = v.contig,
     start = v.start,
@@ -28,9 +28,9 @@ time hail_with_3_cores \
     alt = v.alt,
     pass = va.pass,
     filters = va.filters,
-    AC = va.info.AC[va.aIndex],
+    AC = va.info.AC[va.aIndex-1],
     AN = va.info.AN,
-    AF = va.info.AF[va.aIndex],
+    AF = va.info.AF[va.aIndex-1],
     clinvar_clinsig = va.clinvar.clinical_significance,
     clinvar_review_status = va.clinvar.review_status,
     clinvar_is_pathogenic = va.clinvar.pathogenic,
@@ -42,7 +42,6 @@ time hail_with_3_cores \
     g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
     exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex],
     exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex],
-    sample_af = va.info.AF[va.aIndex], 
     dataset_id = "INMR_v9",
     dataset_version = "2016_04_12",
     dataset_type = "wgs"' \
