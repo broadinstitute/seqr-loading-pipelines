@@ -10,7 +10,7 @@ Hanson:
 ```
 ## import data
 time hail_with_3_cores \
-  read -i file://`pwd`/NIAID.vds \
+  read -i file:///home/users/weisburd/data/projects/test/wgs/Hanson-gatk3dot4/Hanson.vds \
   printschema \
   exportvariantssolr -c seqrdb -v 'chrom = v.contig,
     start = v.start,
@@ -36,11 +36,11 @@ time hail_with_3_cores \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
-
+NIAID
 ```
 ## import data
 time hail_with_3_cores \
-  read -i file://`pwd`/NIAID.vds \
+  read -i file:///home/users/weisburd/data/projects/test/wgs/NIAID-gatk3dot4/NIAID.vds \
   printschema \
   exportvariantssolr -c seqrdb -v 'chrom = v.contig,
     start = v.start,
@@ -66,7 +66,7 @@ time hail_with_3_cores \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
-
+INMR:
 ```
 ## import data
 time hail_with_3_cores \
