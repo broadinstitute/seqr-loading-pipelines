@@ -30,6 +30,7 @@ time hail_with_3_cores \
     filters = va.filters,
     AC = va.info.AC[va.aIndex],
     AN = va.info.AN[va.aIndex],
+    AF = va.info.AF[va.aIndex],
     clinvar_clinsig = va.clinvar.clinical_significance,
     clinvar_review_status = va.clinvar.review_status,
     clinvar_is_pathogenic = va.clinvar.pathogenic,
