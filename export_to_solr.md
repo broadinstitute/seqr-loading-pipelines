@@ -12,7 +12,7 @@ time hail_with_3_cores \
   printschema \
   exportvariantssolr -c test -v 'chrom = v.contig,
     start = v.start,
-    end = v.end,
+    end = va.info.END,
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
