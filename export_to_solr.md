@@ -30,11 +30,7 @@ time hail_with_3_cores \
     dataset_type = "wgs"' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
-    ab = let s = g.ad.sum
-         in if (s == 0 || !g.isHet)
-       NA: Float
-     else
-       (g.ad[0] / s).toFloat' \
+    ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat' \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
@@ -65,11 +61,7 @@ time hail \
     dataset_type = "wex"' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
-    ab = let s = g.ad.sum
-         in if (s == 0 || !g.isHet)
-       NA: Float
-     else
-       (g.ad[0] / s).toFloat' \
+    ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat' \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
