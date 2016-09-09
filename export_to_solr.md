@@ -21,7 +21,7 @@ INMR_v9: read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR
 ## import data
 time hail_with_3_cores \
   read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR_v9.vds \
-  exportvariantssolr -c seqrdb -v 'chrom = v.contig,
+  exportvariantssolr -c INMR_v9_without_ref -v 'chrom = v.contig,
     start = v.start,
     end = va.info.END,
     ref = v.ref,
@@ -51,8 +51,6 @@ time hail_with_3_cores \
     ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat, 
     dp = g.dp,
     pl = g.pl' \
-    
-    
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
