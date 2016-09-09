@@ -20,7 +20,6 @@ INMR_v9: read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR
 ## import data
 time hail_with_3_cores \
   read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR_v9.vds \
-  printschema \
   exportvariantssolr -c seqrdb -v 'chrom = v.contig,
     start = v.start,
     end = va.info.END,
@@ -29,7 +28,7 @@ time hail_with_3_cores \
     pass = va.pass,
     filters = va.filters,
     AC = va.info.AC[va.aIndex],
-    AN = va.info.AN[va.aIndex],
+    AN = va.info.AN,
     AF = va.info.AF[va.aIndex],
     clinvar_clinsig = va.clinvar.clinical_significance,
     clinvar_review_status = va.clinvar.review_status,
