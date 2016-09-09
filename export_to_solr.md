@@ -70,7 +70,7 @@ INMR:
 ```
 ## import data
 time hail_with_3_cores \
-  read -i file://`pwd`/INMR_v9.vds \
+  read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9.vds \
   printschema \
   exportvariantssolr -c seqrdb -v 'chrom = v.contig,
     start = v.start,
