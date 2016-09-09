@@ -1,7 +1,8 @@
 **DELETE & CREATED SOLR COLLECTION:**
 ```
 ## delete and create core
-cd /local/software/solr-6.0.1; ./bin/solr delete -c seqrdb && ./bin/solr create_collection -c seqrdb -shards 3; cd -
+/local/software/solr-6.2.0/bin/solr delete -c seqrdb && \
+/local/software/solr-6.2.0/bin/solr create_collection -c seqrdb -shards 3
 ```
 
 **HAIL COMMAND:**
