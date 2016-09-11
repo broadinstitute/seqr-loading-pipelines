@@ -3,12 +3,15 @@ Latest `clinvar.tsv.gz` from the https://github.com/macarthur-lab/clinvar repo
 
 **HAIL COMMAND:**  
 ```
-dmz-seqr-db1:~ 1010 0 $ time hail importannotations \
-table -t 'pos: Int, pathogenic: Int, conflicted: Int, measureset_id: Int' -e 'Variant(chrom,pos,ref,alt)' \
-clinvar_2016_08_04.tsv.gz \
+time hail importannotations \
+table -t 'pos: Int, pathogenic: Int, conflicted: Int, measureset_id: Int, gold_stars: Int' -e 'Variant(chrom,pos,ref,alt)' \
+file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_2016_09_01.tsv.gz \
 splitmulti \
-write -o clinvar_v2016_08_04.vds
+write -o file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_v2016_09_01.vds
+```
 
+**HAIL LOG:**
+```
 hail: info: running: importannotations table -t 'pos: Int, pathogenic: Int, conflicted: Int, measureset_id: Int' -e Variant(chrom,pos,ref,alt) clinvar.tsv.gz
 hail: info: Reading table with no type imputation
   Loading column `chrom' as type `String' (type not specified)
