@@ -16,6 +16,7 @@ write -o file://%(vds_path)s
 ```
 
 ** LOG **
+```
 hail: info: running: printschema
 Global annotation schema:
 global: Empty
