@@ -13,7 +13,7 @@ printschema \
 write -o file:///mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vds
 ```
 
-**LOG:***
+**LOG:**
 ```
 hail: info: running: annotatevariants expr -c '
     va.info.CSQ = NA: Boolean,
