@@ -15,7 +15,7 @@ printschema showglobals \
 write -o file://%(vds_path)s
 ```
 
-** LOG **
+*** LOG ***
 ```
 hail: info: running: printschema
 Global annotation schema:
