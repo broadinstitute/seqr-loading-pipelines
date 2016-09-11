@@ -1,4 +1,4 @@
-**DELETE & CREATED SOLR COLLECTION:**
+**DELETE & CREATE SOLR COLLECTION:**
 ```
 ## delete and create core
 /local/software/solr-6.2.0/bin/solr delete -c seqrdb && \
@@ -18,36 +18,80 @@ INMR_v9: read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR
 ```
 
 ```
-## import data
-time hail_local \
+time hail_local_with_3_cores \
   read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR_v9.vds \
-  exportvariantssolr -c INMR_v9_without_ref -v 'chrom = v.contig,
+  annotatevariants vds -r va.clinvar -i file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_v2016_09_01.vds \
+  annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds \
+  annotatevariants vds -r va.g1k -i file:///mnt/lustre/weisburd/data/reference_data/1kg/1kg_wgs_phase3.vds \
+  annotatevariants vds -r va.dbnsfp -i file:///mnt/lustre/weisburd/data/reference_data/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+  exportvariantssolr -c INMR_v9_without_ref -v '  
+    dataset_id = "INMR_v9",
+    dataset_version = "2016_04_12",
+    dataset_type = "wex",
+
+    chrom = v.contig,
     start = v.start,
     end = va.info.END,
     ref = v.ref,
     alt = v.alt,
     pass = va.pass,
     filters = va.filters,
+    pass = va.pass,
+    rsid = va.rsid,
     AC = va.info.AC[va.aIndex-1],
     AN = va.info.AN,
     AF = va.info.AF[va.aIndex-1],
+
     clinvar_clinsig = va.clinvar.clinical_significance,
     clinvar_review_status = va.clinvar.review_status,
     clinvar_is_pathogenic = va.clinvar.pathogenic,
     clinvar_is_conflicted = va.clinvar.conflicted,
-    most_severe_consequence=va.vep.most_severe_consequence, 
-    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
-    vep_gene_ids=va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
-    g1k_wgs_phase3_global_AF = va.g1k.info.AF[va.g1k.aIndex - 1],
-    g1k_wgs_phase3_popmax_AF = va.g1k.info.POPMAX_AF,
-    exac_v3_global_AF = va.exac.info.AF[va.exac.aIndex - 1],
-    exac_v3_popmax_AF = va.exac.info.POPMAX[va.exac.aIndex - 1],
-    dataset_id = "INMR_v9",
-    dataset_version = "2016_04_12",
-    dataset_type = "wex"' \
+
+    dbnsfp_sift_pred = va.dbnsfp.SIFT_pred, 
+    dbnsfp_polyphen2_hdiv_pred = va.dbnsfp.Polyphen2_HDIV_pred,
+    dbnsfp_polyphen2_hvar_pred = va.dbnsfp.Polyphen2_HVAR_pred,
+    dbnsfp_lrt_pred = va.dbnsfp.LRT_pred,
+    dbnsfp_muttaster_pred = va.dbnsfp.MutationTaster_pred,
+    dbnsfp_mutassesor_pred = va.dbnsfp.MutationAssessor_pred,
+    dbnsfp_fathmm_pred = va.dbnsfp.FATHMM_pred,
+    dbnsfp_provean_pred = va.dbnsfp.PROVEAN_pred,
+    dbnsfp_metasvm_pred = va.dbnsfp.MetaSVM_pred,
+    dbnsfp_metalr_pred = va.dbnsfp.MetaLR_pred,
+    dbnsfp_cadd_phred = va.dbnsfp.CADD_phred,
+    
+    vep_consequences = va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
+    vep_gene_ids = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
+    
+    most_severe_consequence = va.vep.most_severe_consequence,
+ 
+    
+    g1k_wgs_phase3_afr_af = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_amr_af = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_eur_af = va.g1k.info.EUR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_eas_af = va.g1k.info.EAS_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_sas_af = va.g1k.info.SAS_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_global_af = va.g1k.info.AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_popmax_af = va.g1k.info.POPMAX_AF,
+    g1k_wgs_phase3_popmax = va.g1k.info.POPMAX,
+    
+    exac_v1_afr_af = if(va.exac.info.AN_AFR == 0) NA:Double else va.exac.info.AC_AFR[va.exac.aIndex-1]/va.exac.info.AN_AFR,
+    exac_v1_amr_af = if(va.exac.info.AN_AMR == 0) NA:Double else va.exac.info.AC_AMR[va.exac.aIndex-1]/va.exac.info.AN_AMR,
+    exac_v1_nfe_af = if(va.exac.info.AN_NFE == 0) NA:Double else va.exac.info.AC_NFE[va.exac.aIndex-1]/va.exac.info.AN_NFE,
+    exac_v1_fin_af = if(va.exac.info.AN_FIN == 0) NA:Double else va.exac.info.AC_FIN[va.exac.aIndex-1]/va.exac.info.AN_FIN,
+    exac_v1_eas_af = if(va.exac.info.AN_EAS == 0) NA:Double else va.exac.info.AC_EAS[va.exac.aIndex-1]/va.exac.info.AN_EAS,
+    exac_v1_sas_af = if(va.exac.info.AN_SAS == 0) NA:Double else va.exac.info.AC_SAS[va.exac.aIndex-1]/va.exac.info.AN_SAS,
+    exac_v1_global_af = va.exac.info.AF[va.exac.aIndex-1],
+    exac_v1_popmax_af = if(va.exac.info.AN_POPMAX[va.exac.aIndex-1] == 0) NA:Double else va.exac.info.AC_POPMAX[va.exac.aIndex-1]/va.exac.info.AN_POPMAX[va.exac.aIndex-1],
+    exac_v1_popmax = va.exac.info.POPMAX[va.exac.aIndex-1],
+
+    twinsuk_af = va.dbnsfp.TWINSUK_AF.toDouble,
+    alspac_af = va.dbnsfp.ALSPAC_AF.toDouble,
+    esp65000_aa_af = va.dbnsfp.ESP6500_AA_AF.toDouble,
+    esp65000_ea_af = va.dbnsfp.ESP6500_EA_AF.toDouble
+    ' \
   -g 'num_alt = g.nNonRefAlleles,
     gq = g.gq,
-    ab = let s = g.ad.sum in if (s == 0) NA: Float else (g.ad[0] / s).toFloat, 
+    ab = let s = g.ad.sum in if (s == 0) NA:Float else (g.ad[0] / s).toFloat, 
     dp = g.dp,
     pl = g.pl' \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
