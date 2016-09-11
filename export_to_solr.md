@@ -24,6 +24,17 @@ time hail_local_with_3_cores \
   annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds \
   annotatevariants vds -r va.g1k -i file:///mnt/lustre/weisburd/data/reference_data/1kg/1kg_wgs_phase3.vds \
   annotatevariants vds -r va.dbnsfp -i file:///mnt/lustre/weisburd/data/reference_data/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+  annotatevariants expr -c 'va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.sortBy(c =>
+        let is_canonical = (c.canonical == 1) and is_coding = (c.biotype == "protein_coding") and is_most_severe = c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) in
+            if(is_coding) 
+                if(is_most_severe) 
+                    if(is_canonical)  1  else  2
+                else  3
+            else
+                if(is_most_severe) 
+                    if(is_canonical)  4  else  5
+                else  6
+        )' \
   exportvariantssolr -c INMR_v9_without_ref -v '  
     dataset_id = "INMR_v9",
     dataset_version = "2016_04_12",
@@ -61,10 +72,11 @@ time hail_local_with_3_cores \
     
     vep_consequences = va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
     vep_gene_ids = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
-    
-    most_severe_consequence = va.vep.most_severe_consequence,
- 
-    
+    vep_transcript_ids = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
+
+    vep_most_severe_consequence = va.vep.most_severe_consequence,
+    vep_annotations_sorted = json(va.vep.sorted_transcript_consequences),
+
     g1k_wgs_phase3_afr_af = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_amr_af = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_eur_af = va.g1k.info.EUR_AF[va.g1k.aIndex-1],
