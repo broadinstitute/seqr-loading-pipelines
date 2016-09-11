@@ -10,7 +10,7 @@ annotatevariants expr -c '
     va.info.AN_POPMAX = va.info.AN_POPMAX.map(x => if(x == "NA") NA:Int else x.toInt)' \
 splitmulti \
 printschema \
-write -o file:///mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vds
+write -o file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds
 ```
 
 **LOG:**
