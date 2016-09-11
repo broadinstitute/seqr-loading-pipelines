@@ -5,7 +5,7 @@ The pipeline below is implemented in the script `cray1:/home/users/weisburd/bin/
 ```
 time %(hail_command)s -b 2 importvcf -n 250 %(vcf_paths)s splitmulti \
 annotatevariants vds -r va.clinvar -i file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_v2016_08_04.vds \
-annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v0.3.1.vds \
+annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds \
 annotatevariants vds -r va.g1k -i file:///mnt/lustre/weisburd/data/reference_data/1kg/1kg_wgs_phase3.vds \
 annotatevariants vds -r va.dbnsfp -i file:///mnt/lustre/weisburd/data/reference_data/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
 vep --force --block-size 250 --config /home/users/cseed/vep.properties \
