@@ -5,17 +5,16 @@
 /local/software/solr-6.2.0/bin/solr create_collection -c seqrdb -shards 3
 ```
 
-**HAIL COMMAND:**
-
-Hanson:
 
 ```
 ## import data
-Hanson:  read -i file:///home/users/weisburd/data/projects/test/wgs/Hanson-gatk3dot4/Hanson.vds 
-NIAID:   read -i file:///home/users/weisburd/data/projects/test/wgs/NIAMS-gatk3dot4/NIAMS.vds 
-NIAID:   read -i file:///home/users/weisburd/data/projects/test/wgs/NIAID-gatk3dot4/NIAID.vds 
 INMR_v9: read -i file:///home/users/weisburd/data/projects/test/wes/INMR_v9/INMR_v9.vds
+Hanson:  read -i file:///home/users/weisburd/data/projects/test/wgs/Hanson-gatk3dot4/Hanson.vds 
+NIAMS:   read -i file:///home/users/weisburd/data/projects/test/wgs/NIAMS-gatk3dot4/NIAMS.vds 
+NIAID:   read -i file:///home/users/weisburd/data/projects/test/wgs/NIAID-gatk3dot4/NIAID.vds 
 ```
+
+**HAIL COMMAND:**
 
 ```
 time hail_local_with_3_cores \
