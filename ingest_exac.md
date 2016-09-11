@@ -2,16 +2,26 @@
 
 **HAIL COMMAND:**  
 ```
-dmz-seqr-db1:~ 1009 1 $ time hail -b 2 --parquet-compression snappy \
-importvcf -n 250 exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz \
-annotatevariants expr -c 'va.info.CSQ = NA: Boolean' \
+time hail -b 2 --parquet-compression snappy \
+importvcf -n 250 file:///mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vep.vcf.bgz \
+annotatevariants expr -c '
+    va.info.CSQ = NA: Boolean,
+    va.info.AC_POPMAX = va.info.AC_POPMAX.map(x => if(x == "NA") NA:Int else x.toInt), 
+    va.info.AN_POPMAX = va.info.AN_POPMAX.map(x => if(x == "NA") NA:Int else x.toInt)' \
 splitmulti \
 printschema \
-write -o exac_v0.3.1.vds
+write -o file:///mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vds
+```
 
-hail: info: running: importvcf exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz
-hail: info: running: annotatevariants expr -c 'va.info.CSQ = NA: Boolean'
+**LOG:***
+```
+hail: info: running: annotatevariants expr -c '
+    va.info.CSQ = NA: Boolean,
+    va.info.AC_POPMAX = va.info.AC_POPMAX.map(x => if(x == "NA") NA:Int else x.toInt),
+    va.info.AN_POPMAX = va.info.AN_POPMAX.map(x => if(x == "NA") NA:Int else x.toInt)'
+hail: info: partitions: 250, 249
 hail: info: running: splitmulti
+hail: info: partitions: 250, 249
 hail: info: running: printschema
 Global annotation schema:
 global: Empty
@@ -105,8 +115,8 @@ va: Struct {
         AN_CONSANGUINEOUS: String,
         Hom_CONSANGUINEOUS: Array[String],
         CSQ: Boolean,
-        AC_POPMAX: Array[String],
-        AN_POPMAX: Array[String],
+        AC_POPMAX: Array[Int],
+        AN_POPMAX: Array[Int],
         POPMAX: Array[String],
         clinvar_measureset_id: Array[String],
         clinvar_conflicted: Array[String],
@@ -125,18 +135,22 @@ va: Struct {
     aIndex: Int,
     wasSplit: Boolean
 }
-hail: info: running: write -o exac_v0.3.1.vds
-[Stage 0:=======================================================> (32 + 1) / 33]SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+hail: info: running: write -o file:///mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vds
+[Stage 2:======================================================>(249 + 1) / 250]SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 hail: info: while importing:
-    hdfs://seqr-db1/user/weisburd/exac_v0.3.1/ExAC.r0.3.1.sites.vep.vcf.bgz  import clean
+    file:/mnt/lustre/weisburd/data/reference_data/exac/ExAC.r0.3.1.sites.vep.vcf.bgz  import clean
 hail: info: timing:
-  importvcf: 2.433s
-  annotatevariants expr: 533.331ms
-  splitmulti: 32.595ms
-  printschema: 27.279ms
-  write: 11m1.9s
+  importvcf: 9.564s
+  annotatevariants expr: 136.275ms
+  splitmulti: 17.146ms
+  printschema: 4.718ms
+  write: 1m46.4s
+I0910 23:22:33.524613 33313 sched.cpp:1771] Asked to stop the driver
+I0910 23:22:33.524718 33424 sched.cpp:1040] Stopping framework '0233fcf9-88ce-407f-8ed5-b015adf9b59c-2824'
 
-real	11m12.539s
+real   	2m1.100s
+user   	0m37.570s
+sys    	0m4.719s
 ```
