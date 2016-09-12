@@ -23,8 +23,8 @@ time hail_local_with_3_cores \
   annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds \
   annotatevariants vds -r va.g1k -i file:///mnt/lustre/weisburd/data/reference_data/1kg/1kg_wgs_phase3.vds \
   annotatevariants vds -r va.dbnsfp -i file:///mnt/lustre/weisburd/data/reference_data/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
-  annotatevariants expr -c 'va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.sortBy(c =>
-        let is_canonical = (c.canonical == 1) and is_coding = (c.biotype == "protein_coding") and is_most_severe = c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) in
+  annotatevariants expr -c 'va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c => 
+        let is_coding=(c.biotype=="protein_coding") and is_most_severe=c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) and is_canonical=(c.canonical==1) in
             if(is_coding) 
                 if(is_most_severe) 
                     if(is_canonical)  1  else  2
@@ -34,7 +34,7 @@ time hail_local_with_3_cores \
                     if(is_canonical)  4  else  5
                 else  6
         )' \
-  exportvariantssolr -c INMR_v9_without_ref -v '  
+  exportvariantssolr --export-ref -c INMR_v9_with_ref -v '  
     dataset_id = "INMR_v9",
     dataset_version = "2016_04_12",
     dataset_type = "wex",
@@ -44,7 +44,6 @@ time hail_local_with_3_cores \
     end = va.info.END,
     ref = v.ref,
     alt = v.alt,
-    pass = va.pass,
     filters = va.filters,
     pass = va.pass,
     rsid = va.rsid,
@@ -57,24 +56,24 @@ time hail_local_with_3_cores \
     clinvar_is_pathogenic = va.clinvar.pathogenic,
     clinvar_is_conflicted = va.clinvar.conflicted,
 
-    dbnsfp_sift_pred = va.dbnsfp.SIFT_pred, 
-    dbnsfp_polyphen2_hdiv_pred = va.dbnsfp.Polyphen2_HDIV_pred,
-    dbnsfp_polyphen2_hvar_pred = va.dbnsfp.Polyphen2_HVAR_pred,
-    dbnsfp_lrt_pred = va.dbnsfp.LRT_pred,
-    dbnsfp_muttaster_pred = va.dbnsfp.MutationTaster_pred,
-    dbnsfp_mutassesor_pred = va.dbnsfp.MutationAssessor_pred,
-    dbnsfp_fathmm_pred = va.dbnsfp.FATHMM_pred,
-    dbnsfp_provean_pred = va.dbnsfp.PROVEAN_pred,
-    dbnsfp_metasvm_pred = va.dbnsfp.MetaSVM_pred,
-    dbnsfp_metalr_pred = va.dbnsfp.MetaLR_pred,
-    dbnsfp_cadd_phred = va.dbnsfp.CADD_phred,
+    dbnsfp_sift_pred { indexed = false } = va.dbnsfp.SIFT_pred, 
+    dbnsfp_polyphen2_hdiv_pred { indexed = false } = va.dbnsfp.Polyphen2_HDIV_pred,
+    dbnsfp_polyphen2_hvar_pred { indexed = false } = va.dbnsfp.Polyphen2_HVAR_pred,
+    dbnsfp_lrt_pred { indexed = false } = va.dbnsfp.LRT_pred,
+    dbnsfp_muttaster_pred { indexed = false } = va.dbnsfp.MutationTaster_pred,
+    dbnsfp_mutassesor_pred { indexed = false } = va.dbnsfp.MutationAssessor_pred,
+    dbnsfp_fathmm_pred { indexed = false } = va.dbnsfp.FATHMM_pred,
+    dbnsfp_provean_pred { indexed = false } = va.dbnsfp.PROVEAN_pred,
+    dbnsfp_metasvm_pred { indexed = false } = va.dbnsfp.MetaSVM_pred,
+    dbnsfp_metalr_pred { indexed = false } = va.dbnsfp.MetaLR_pred,
+    dbnsfp_cadd_phred { indexed = false } = va.dbnsfp.CADD_phred,
     
     vep_consequences = va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
     vep_gene_ids = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
     vep_transcript_ids = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
 
     vep_most_severe_consequence = va.vep.most_severe_consequence,
-    vep_annotations_sorted = json(va.vep.sorted_transcript_consequences),
+    vep_annotations_sorted { type = "text_ws", indexed = false } = json(va.vep.sorted_transcript_consequences),
 
     g1k_wgs_phase3_afr_af = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_amr_af = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
@@ -104,7 +103,7 @@ time hail_local_with_3_cores \
     gq = g.gq,
     ab = let s = g.ad.sum in if (s == 0) NA:Float else (g.ad[0] / s).toFloat, 
     dp = g.dp,
-    pl = g.pl' \
+    pl { indexed = false } = g.pl' \
   -z 'seqr-db1:2181,seqr-db2:2181,seqr-db3:2181'
 ```
 
