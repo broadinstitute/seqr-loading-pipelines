@@ -38,7 +38,6 @@ time hail_local_with_3_cores \
     dataset_id = "INMR_v9",
     dataset_version = "2016_04_12",
     dataset_type = "wex",
-
     chrom = v.contig,
     start = v.start,
     end = va.info.END,
@@ -50,12 +49,11 @@ time hail_local_with_3_cores \
     AC = va.info.AC[va.aIndex-1],
     AN = va.info.AN,
     AF = va.info.AF[va.aIndex-1],
-
+    was_split = va.wasSplit,
     clinvar_clinsig = va.clinvar.clinical_significance,
     clinvar_review_status = va.clinvar.review_status,
     clinvar_is_pathogenic = va.clinvar.pathogenic,
     clinvar_is_conflicted = va.clinvar.conflicted,
-
     dbnsfp_sift_pred { indexed = false } = va.dbnsfp.SIFT_pred, 
     dbnsfp_polyphen2_hdiv_pred { indexed = false } = va.dbnsfp.Polyphen2_HDIV_pred,
     dbnsfp_polyphen2_hvar_pred { indexed = false } = va.dbnsfp.Polyphen2_HVAR_pred,
@@ -67,14 +65,11 @@ time hail_local_with_3_cores \
     dbnsfp_metasvm_pred { indexed = false } = va.dbnsfp.MetaSVM_pred,
     dbnsfp_metalr_pred { indexed = false } = va.dbnsfp.MetaLR_pred,
     dbnsfp_cadd_phred { indexed = false } = va.dbnsfp.CADD_phred,
-    
     vep_consequences = va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
     vep_gene_ids = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
     vep_transcript_ids = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
-
     vep_most_severe_consequence = va.vep.most_severe_consequence,
     vep_annotations_sorted { type = "text_ws", indexed = false } = json(va.vep.sorted_transcript_consequences),
-
     g1k_wgs_phase3_afr_af = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_amr_af = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_eur_af = va.g1k.info.EUR_AF[va.g1k.aIndex-1],
@@ -83,7 +78,6 @@ time hail_local_with_3_cores \
     g1k_wgs_phase3_global_af = va.g1k.info.AF[va.g1k.aIndex-1],
     g1k_wgs_phase3_popmax_af = va.g1k.info.POPMAX_AF,
     g1k_wgs_phase3_popmax = va.g1k.info.POPMAX,
-    
     exac_v1_afr_af = if(va.exac.info.AN_AFR == 0) NA:Double else va.exac.info.AC_AFR[va.exac.aIndex-1]/va.exac.info.AN_AFR,
     exac_v1_amr_af = if(va.exac.info.AN_AMR == 0) NA:Double else va.exac.info.AC_AMR[va.exac.aIndex-1]/va.exac.info.AN_AMR,
     exac_v1_nfe_af = if(va.exac.info.AN_NFE == 0) NA:Double else va.exac.info.AC_NFE[va.exac.aIndex-1]/va.exac.info.AN_NFE,
@@ -93,7 +87,6 @@ time hail_local_with_3_cores \
     exac_v1_global_af = va.exac.info.AF[va.exac.aIndex-1],
     exac_v1_popmax_af = if(va.exac.info.AN_POPMAX[va.exac.aIndex-1] == 0) NA:Double else va.exac.info.AC_POPMAX[va.exac.aIndex-1]/va.exac.info.AN_POPMAX[va.exac.aIndex-1],
     exac_v1_popmax = va.exac.info.POPMAX[va.exac.aIndex-1],
-
     twinsuk_af = va.dbnsfp.TWINSUK_AF.toDouble,
     alspac_af = va.dbnsfp.ALSPAC_AF.toDouble,
     esp65000_aa_af = va.dbnsfp.ESP6500_AA_AF.toDouble,
