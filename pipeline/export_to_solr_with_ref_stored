@@ -6,10 +6,12 @@ import argparse
 p=argparse.ArgumentParser()
 p.add_argument("-c", "--solr-collection", help="Solr collection")
 p.add_argument("-i", "--dataset-id", help="Dataset id", required=True)
+p.add_argument("-b", "--block-size", help="Block size", default=10)
 p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
 args=p.parse_args()
 
 dataset_id=args.dataset_id
+block_size=args.block_size
 
 print("========================================================================")
 print("  EXPORT_TO_SOLR_WITH_REF_STORED %(dataset_id)s " % locals())
@@ -50,7 +52,7 @@ time %(hail_command)s \
                     if(is_canonical)  4  else  5
                 else  6
         )' \
-  exportvariantssolr --block-size 5 --drop --num-shards 3 --export-ref --export-missing -c %(solr_collection)s -v '
+  exportvariantssolr --block-size %(block_size)s --num-shards 3 --export-ref --export-missing -c %(solr_collection)s -v '
     dataset_id { stored=true, docValues=false } = "%(dataset_id)s",
     chrom { stored=true, docValues=false } = v.contig,
     start { stored=true, docValues=false } = v.start,

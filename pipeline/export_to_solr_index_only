@@ -6,10 +6,12 @@ import argparse
 p=argparse.ArgumentParser()
 p.add_argument("-c", "--solr-collection", help="Solr collection")
 p.add_argument("-i", "--dataset-id", help="Dataset id", required=True)
+p.add_argument("-b", "--block-size", help="Number of variants to export at a time", default=10)
 p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
 args=p.parse_args()
 
 dataset_id=args.dataset_id
+block_size = args.block_size
 
 print("============================================================")
 print("    EXPORT_TO_SOLR_INDEX_ONLY %(dataset_id)s " % locals())
@@ -33,7 +35,8 @@ print("Running %s on %s" % (hail_command, solr_collection))
 
 run(
 """
-date;
+echo Date: `date`;
+
 time %(hail_command)s \
   read -i file://%(vds_path)s \
   annotatevariants vds -r va.clinvar -i file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_v2016_09_01.vds \
@@ -51,8 +54,8 @@ time %(hail_command)s \
                     if(is_canonical)  4  else  5
                 else  6
         )' \
-  exportvariantssolr --block-size 10 --drop --num-shards 3 --export-missing -c %(solr_collection)s -v '  
-    dataset_id { stored=true, docValues=false } = "%(dataset_id)s"
+  exportvariantssolr --block-size %(block_size)s --num-shards 3 --export-missing -c %(solr_collection)s -v '  
+    dataset_id { stored=true, docValues=false } = "%(dataset_id)s",
     chrom { docValues = false } = v.contig,
     start { docValues = false } = v.start,
     end { docValues = false } = v.start + v.ref.length - 1,
@@ -103,7 +106,9 @@ time %(hail_command)s \
     gq { stored=false, docValues=false } = if(g.isCalled) g.gq else NA:Int,
     ab { stored=false, docValues=false } = let s=g.ad.sum in if(g.isCalled && s != 0) (g.ad[0] / s).toFloat else NA:Float,
     dp { stored=false, docValues=false } = if(g.isCalled) g.dp else NA:Int' \
-  -z '69.173.112.35:2181,69.173.112.36:2181,69.173.112.37:2181'
+  -z '69.173.112.35:2181,69.173.112.36:2181,69.173.112.37:2181';
+
+echo Date: `date`;
 """ % locals())
 
 # INMR_PCRFree_WGS_v6_index_only
