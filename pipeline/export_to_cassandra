@@ -42,8 +42,7 @@ print("Running %s on %s:%s" % (hail_command, cassandra_keyspace, cassandra_table
 
 
 print("Running %s on %s:%s" % (hail_command, cassandra_keyspace, cassandra_table))
-run(
-    """
+run("""
     date;
     time %(hail_command)s \
       read -i file://%(vds_path)s \
@@ -138,6 +137,23 @@ run(
         pl = if(g.isCalled) g.pl else NA:Array[Int]';
     date;
     """ % locals())
+
+"""
+date;
+time %(hail_command)s \
+  read -i file://%(vds_path)s \
+  exportvariantscass -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
+    dataset_id="%(dataset_id)s",
+    chrom=v.contig,
+    start=v.start,
+    end=v.start + v.ref.length - 1,
+    ref=v.ref,
+    alt=v.alt
+    ' \
+  -g 'num_alt = if(g.isCalled) g.nNonRefAlleles else -1'
+date;
+""" % locals())
+
 #    vep_gene_id = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
 #    vep_transcript_id = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
 #    vep_most_severe_consequence = va.vep.most_severe_consequence
