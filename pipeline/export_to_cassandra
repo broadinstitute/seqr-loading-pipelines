@@ -8,28 +8,29 @@ p.add_argument("-k", "--cassandra-keyspace", help="Cassandra keyspace", required
 p.add_argument("-t", "--cassandra-table", help="Cassandra table", required=True)
 p.add_argument("-i", "--dataset-id", help="Dataset id. Default: vds name")
 #p.add_argument("--export-ref", action="store_true")
+p.add_argument("--drop", action="store_true", help="First drop the dataset")
 p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
+#p.add_argument("-l", "--local", action="store_true", help="Run hail locally instead of using Spark")
 args=p.parse_args()
 
 vds_path=os.path.abspath(args.vds_path)
 
 dataset_id=args.dataset_id or os.path.basename(vds_path).replace(".vds", "")
-
-#p.add_argument("-l", "--local", action="store_true", help="Run hail locally instead of using Spark")
-args.local = True
-
 cassandra_keyspace = args.cassandra_keyspace
 cassandra_table = args.cassandra_table
 
+drop_arg = "--drop" if args.drop else ""
+
+args.local = True
 
 def run(cmd):
     print(cmd)
     os.system(cmd)
 
 
-hail_command="hail_local_with_1_cores" if args.local else "hail_with_3_cores"
-data_dir = "/Volumes/hd/seqr-hail/reference_data"
-#data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
+hail_command="hail_local_with_3_cores" if args.local else "hail_with_3_cores"
+#data_dir = "/Volumes/hd/seqr-hail/reference_data"
+data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
 
 print("========================================================================")
 print("  EXPORT_TO_CASSANDRA %(dataset_id)s " % locals())
@@ -55,9 +56,9 @@ run("""
                         if(is_canonical)  4  else  5
                     else  6
             )' \
-      exportvariantscass --export-ref --drop -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
+      exportvariantscass %(drop_arg)s --export-ref -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
         dataset_id="%(dataset_id)s",
-        chrom="3",
+        chrom=v.chrom,
         start=v.start,
         end=v.start + v.ref.length - 1,
         ref=v.ref,
