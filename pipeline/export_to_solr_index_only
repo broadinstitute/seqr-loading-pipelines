@@ -6,19 +6,22 @@ import argparse
 p=argparse.ArgumentParser()
 p.add_argument("-c", "--solr-collection", help="Solr collection")
 p.add_argument("-i", "--dataset-id", help="Dataset id", required=True)
-p.add_argument("-b", "--block-size", help="Number of variants to export at a time", default=10)
+p.add_argument("-b", "--block-size", help="Number of variants to export at a time", default=100)
+p.add_argument("--export-ref", help="export homozygous-reference genotypes", action="store_true")
+#p.add_argument("--export-missing", help="export ./. genotypes", action="store_true", default=True)
 p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
 args=p.parse_args()
 
-dataset_id=args.dataset_id
+dataset_id = args.dataset_id
 block_size = args.block_size
+export_ref_arg = "--export-ref" if args.export_ref else ""
+
+vds_path = os.path.abspath(args.vds_path)
 
 print("============================================================")
 print("    EXPORT_TO_SOLR_INDEX_ONLY %(dataset_id)s " % locals())
 print("============================================================")
 
-
-vds_path=os.path.abspath(args.vds_path)
 
 def run(cmd):
     print(cmd)
@@ -29,9 +32,12 @@ hail_command="hail_local_with_3_cores" # if args.local else "hail_with_3_cores"
 if args.solr_collection:
     solr_collection=args.solr_collection
 else:
-    solr_collection=dataset_id + "_index_only" 
+    solr_collection=dataset_id + "_index_only" + ("_export_ref" if args.export_ref else "")
 
 print("Running %s on %s" % (hail_command, solr_collection))
+
+#data_dir = "/Volumes/hd/seqr-hail/reference_data"
+#data_dir = "/mnt/lustre/weisburd/data/reference_data"
 
 run(
 """
@@ -39,10 +45,10 @@ echo Date: `date`;
 
 time %(hail_command)s \
   read -i file://%(vds_path)s \
-  annotatevariants vds -r va.clinvar -i file:///mnt/lustre/weisburd/data/reference_data/clinvar/clinvar_v2016_09_01.vds \
-  annotatevariants vds -r va.exac -i file:///mnt/lustre/weisburd/data/reference_data/exac/exac_v1.vds \
-  annotatevariants vds -r va.g1k -i file:///mnt/lustre/weisburd/data/reference_data/1kg/1kg_wgs_phase3.vds \
-  annotatevariants vds -r va.dbnsfp -i file:///mnt/lustre/weisburd/data/reference_data/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+  annotatevariants vds -r va.clinvar -i file://%(data_dir)s/clinvar/clinvar_v2016_09_01.vds \
+  annotatevariants vds -r va.exac -i file://%(data_dir)s/exac/exac_v1.vds \
+  annotatevariants vds -r va.g1k -i file://%(data_dir)s/1kg/1kg_wgs_phase3.vds \
+  annotatevariants vds -r va.dbnsfp -i file://%(data_dir)s/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
   annotatevariants expr -c 'va.vep.sorted_transcript_consequences=va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c => 
         let is_coding=(c.biotype=="protein_coding") and is_most_severe=c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) and is_canonical=(c.canonical==1) in
             if(is_coding) 
@@ -54,7 +60,7 @@ time %(hail_command)s \
                     if(is_canonical)  4  else  5
                 else  6
         )' \
-  exportvariantssolr --block-size %(block_size)s --num-shards 3 --export-missing -c %(solr_collection)s -v '  
+  exportvariantssolr --block-size %(block_size)s --num-shards 3 %(export_ref_arg)s --export-missing -c %(solr_collection)s -v '
     dataset_id { stored=true, docValues=false } = "%(dataset_id)s",
     chrom { docValues = false } = v.contig,
     start { docValues = false } = v.start,

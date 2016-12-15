@@ -21,7 +21,6 @@ args.local = True
 cassandra_keyspace = args.cassandra_keyspace
 cassandra_table = args.cassandra_table
 
-dataset_id=args.dataset_id or os.path.basename(vds_path).replace(".vds", "")
 
 def run(cmd):
     print(cmd)
@@ -29,17 +28,12 @@ def run(cmd):
 
 
 hail_command="hail_local_with_1_cores" if args.local else "hail_with_3_cores"
-#data_dir = "/Users/weisburd/data"
-data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
+data_dir = "/Volumes/hd/seqr-hail/reference_data"
+#data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
 
 print("========================================================================")
 print("  EXPORT_TO_CASSANDRA %(dataset_id)s " % locals())
 print("========================================================================")
-
-
-print("Running %s on %s:%s" % (hail_command, cassandra_keyspace, cassandra_table))
-
-
 
 print("Running %s on %s:%s" % (hail_command, cassandra_keyspace, cassandra_table))
 run("""
@@ -61,9 +55,9 @@ run("""
                         if(is_canonical)  4  else  5
                     else  6
             )' \
-      exportvariantscass -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
+      exportvariantscass --export-ref --drop -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
         dataset_id="%(dataset_id)s",
-        chrom=v.contig,
+        chrom="3",
         start=v.start,
         end=v.start + v.ref.length - 1,
         ref=v.ref,
@@ -71,9 +65,7 @@ run("""
         filters = va.filters,
         pass = va.pass,
         rsid = va.rsid,
-        AC = va.info.AC[va.aIndex-1],
-        AN = va.info.AN,
-        AF = va.info.AF[va.aIndex-1],
+
         was_split = va.wasSplit,
         clinvar_clinsig = va.clinvar.clinical_significance,
         clinvar_review_status = va.clinvar.review_status,
@@ -87,22 +79,8 @@ run("""
         vep_transcript_id = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
         vep_most_severe_consequence = va.vep.most_severe_consequence,
 
-        g1k_wgs_phase3_afr_af = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
-        g1k_wgs_phase3_amr_af = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
-        g1k_wgs_phase3_eur_af = va.g1k.info.EUR_AF[va.g1k.aIndex-1],
-        g1k_wgs_phase3_eas_af = va.g1k.info.EAS_AF[va.g1k.aIndex-1],
-        g1k_wgs_phase3_sas_af = va.g1k.info.SAS_AF[va.g1k.aIndex-1],
-        g1k_wgs_phase3_global_af = va.g1k.info.AF[va.g1k.aIndex-1],
         g1k_wgs_phase3_popmax_af = va.g1k.info.POPMAX_AF,
         g1k_wgs_phase3_popmax = va.g1k.info.POPMAX,
-        exac_v1_afr_af = if(va.exac.info.AN_AFR == 0) NA:Double else va.exac.info.AC_AFR[va.exac.aIndex-1]/va.exac.info.AN_AFR,
-        exac_v1_amr_af = if(va.exac.info.AN_AMR == 0) NA:Double else va.exac.info.AC_AMR[va.exac.aIndex-1]/va.exac.info.AN_AMR,
-        exac_v1_nfe_af = if(va.exac.info.AN_NFE == 0) NA:Double else va.exac.info.AC_NFE[va.exac.aIndex-1]/va.exac.info.AN_NFE,
-        exac_v1_fin_af = if(va.exac.info.AN_FIN == 0) NA:Double else va.exac.info.AC_FIN[va.exac.aIndex-1]/va.exac.info.AN_FIN,
-        exac_v1_eas_af = if(va.exac.info.AN_EAS == 0) NA:Double else va.exac.info.AC_EAS[va.exac.aIndex-1]/va.exac.info.AN_EAS,
-        exac_v1_sas_af = if(va.exac.info.AN_SAS == 0) NA:Double else va.exac.info.AC_SAS[va.exac.aIndex-1]/va.exac.info.AN_SAS,
-        exac_v1_global_af = va.exac.info.AF[va.exac.aIndex-1],
-        exac_v1_popmax_af = if(va.exac.info.AN_POPMAX[va.exac.aIndex-1] == 0) NA:Double else va.exac.info.AC_POPMAX[va.exac.aIndex-1]/va.exac.info.AN_POPMAX[va.exac.aIndex-1],
         exac_v1_popmax = va.exac.info.POPMAX[va.exac.aIndex-1],
         twinsuk_af = va.dbnsfp.TWINSUK_AF.toDouble,
         alspac_af = va.dbnsfp.ALSPAC_AF.toDouble,
@@ -152,8 +130,4 @@ time %(hail_command)s \
     ' \
   -g 'num_alt = if(g.isCalled) g.nNonRefAlleles else -1'
 date;
-""" % locals())
-
-#    vep_gene_id = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
-#    vep_transcript_id = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
-#    vep_most_severe_consequence = va.vep.most_severe_consequence
+"""
