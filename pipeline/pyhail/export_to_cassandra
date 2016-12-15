@@ -20,8 +20,8 @@ dataset_id = args.dataset_id or os.path.basename(vds_path).replace(".vds", "")
 cassandra_keyspace = args.cassandra_keyspace
 cassandra_table = args.cassandra_table
 
-data_dir = "/Volumes/hd/seqr-hail/wes/"
-
+data_dir = "/Volumes/hd/seqr-hail/reference_data"
+data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
 
 hc = pyhail.HailContext(log="hail.log")
 vds = (hc.read(vds_path, sites_only=False)
@@ -29,6 +29,7 @@ vds = (hc.read(vds_path, sites_only=False)
         .annotate_variants_vds(root="va.exac", other="%(data_dir)s/exac/exac_v1.vds" % locals())
         .annotate_variants_vds(root="va.g1k", other="%(data_dir)s/1kg/1kg_wgs_phase3.vds" % locals())
         .annotate_variants_vds(root="va.dbnsfp", other="%(data_dir)s/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds" % locals())
+        .annotations_variants_table(root="va.revel", path="$(data_dir)s/revel/revel_all_chromosomes.tsv.bgz", variant_expr="Variant(_0, _1.toInt, _2, _3)", code="revel_score=_4.toFloat", header=False)
         .annotate_variants_expr("""va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.map(
             c => select(c,
                 amino_acids,
@@ -128,6 +129,9 @@ vds = (hc.read(vds_path, sites_only=False)
             dbnsfp_metasvm_pred = va.dbnsfp.MetaSVM_pred,
             dbnsfp_metalr_pred = va.dbnsfp.MetaLR_pred,
             dbnsfp_cadd_phred = va.dbnsfp.CADD_phred,
+
+            revel_score = va.revel.revel_score.toFloat,
+
             vep_annotations_sorted = json(va.vep.sorted_transcript_consequences),
             vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
             clinvar_submitter = va.clinvar.all_submitters.split(";").toSet,
@@ -152,42 +156,3 @@ vds = (hc.read(vds_path, sites_only=False)
         export_ref=False)
     )
 
-
-
-def run(cmd):
-    print(cmd)
-    os.system(cmd)
-
-hail_command = "hail_local_with_1_cores"
-
-print("========================================================================")
-print("  EXPORT_TO_CASSANDRA %(dataset_id)s " % locals())
-print("========================================================================")
-
-print("Running %s on %s:%s" % (hail_command, cassandra_keyspace, cassandra_table))
-run(
-    """
-    date;
-    time %(hail_command)s \
-      read -i file://%(vds_path)s \
-      annotatevariants vds -r va.clinvar -i %(data_dir)s/clinvar/clinvar_v2016_09_01.vds \
-      annotatevariants vds -r va.exac -i %(data_dir)s/exac/exac_v1.vds \
-      annotatevariants vds -r va.g1k -i %(data_dir)s/1kg/1kg_wgs_phase3.vds \
-      annotatevariants vds -r va.dbnsfp -i %(data_dir)s/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
-      annotatevariants expr -c 'va.vep.sorted_transcript_consequences=va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c =>
-            let is_coding=(c.biotype=="protein_coding") and is_most_severe=c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) and is_canonical=(c.canonical==1) in
-                if(is_coding)
-                    if(is_most_severe)
-                        if(is_canonical)  1  else  2
-                    else  3
-                else
-                    if(is_most_severe)
-                        if(is_canonical)  4  else  5
-                    else  6
-            )' \
-      exportvariantscass -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
-
-        ' \
-      -g '';
-    date;
-    """ % locals())
