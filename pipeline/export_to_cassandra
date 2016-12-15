@@ -29,8 +29,8 @@ def run(cmd):
 
 
 hail_command="hail_local_with_3_cores" if args.local else "hail_with_3_cores"
-#data_dir = "/Volumes/hd/seqr-hail/reference_data"
-data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
+data_dir = "/Volumes/hd/seqr-hail/reference_data"
+#data_dir = "file:///mnt/lustre/weisburd/data/reference_data"
 
 print("========================================================================")
 print("  EXPORT_TO_CASSANDRA %(dataset_id)s " % locals())
@@ -58,7 +58,7 @@ run("""
             )' \
       exportvariantscass %(drop_arg)s --export-ref -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
         dataset_id="%(dataset_id)s",
-        chrom=v.chrom,
+        chrom=v.contig,
         start=v.start,
         end=v.start + v.ref.length - 1,
         ref=v.ref,
