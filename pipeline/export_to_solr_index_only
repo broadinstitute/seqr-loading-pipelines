@@ -49,7 +49,7 @@ time %(hail_command)s \
   annotatevariants vds -r va.exac -i file://%(data_dir)s/exac/exac_v1.vds \
   annotatevariants vds -r va.g1k -i file://%(data_dir)s/1kg/1kg_wgs_phase3.vds \
   annotatevariants vds -r va.dbnsfp -i file://%(data_dir)s/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
-  annotatevariants expr -c 'va.vep.sorted_transcript_consequences=va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c => 
+  annotatevariants expr -c 'va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c =>
         let is_coding=(c.biotype=="protein_coding") and is_most_severe=c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) and is_canonical=(c.canonical==1) in
             if(is_coding) 
                 if(is_most_severe) 

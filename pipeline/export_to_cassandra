@@ -8,7 +8,7 @@ p.add_argument("-k", "--cassandra-keyspace", help="Cassandra keyspace", required
 p.add_argument("-t", "--cassandra-table", help="Cassandra table", required=True)
 p.add_argument("-i", "--dataset-id", help="Dataset id. Default: vds name")
 p.add_argument("--block-size", help="Block size = N", type=int, default=10)
-#p.add_argument("--export-ref", action="store_true")
+p.add_argument("--export-ref", action="store_true")
 p.add_argument("--drop", action="store_true", help="First drop the dataset")
 
 p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
@@ -20,6 +20,12 @@ vds_path=os.path.abspath(args.vds_path)
 dataset_id=args.dataset_id or os.path.basename(vds_path).replace(".vds", "")
 cassandra_keyspace = args.cassandra_keyspace
 cassandra_table = args.cassandra_table
+
+export_ref_arg = ""
+if args.export_ref:
+    export_ref_arg = "--export-ref"
+    dataset_id += "_export_ref"
+    cassandra_table += "_export_ref"
 
 drop_arg = "--drop" if args.drop else ""
 
@@ -63,7 +69,7 @@ run("""
                         if(is_canonical)  4  else  5
                     else  6
             )' \
-      exportvariantscass %(drop_arg)s --block-size %(block_size)s -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
+      exportvariantscass %(drop_arg)s %(export_ref_arg)s --block-size %(block_size)s -k %(cassandra_keyspace)s -t %(cassandra_table)s -a 69.173.112.35 -v '
         dataset_id="%(dataset_id)s",
         chrom=v.contig,
         start=v.start,
