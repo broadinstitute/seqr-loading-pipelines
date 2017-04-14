@@ -5,7 +5,7 @@ request:
 {
 	page: 1,
 	limit: 50,
-	sort_by: ["chrom", "pos"],
+	"sort_by": [{"chrom": "asc"}, {"pos": "desc"}, ...],
 	sample_ids: ["NA12878", ...],
 	variant_filters: {
 		chrom:  { "eq": "1" },
