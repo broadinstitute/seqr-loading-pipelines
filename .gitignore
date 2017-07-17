@@ -1,1 +1,7 @@
-*~
+.idea*
+*.iml
+*.log
+
+*.pyc
+*.DS_Store
+
