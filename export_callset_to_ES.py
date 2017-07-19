@@ -73,6 +73,7 @@ vds_computed_annotations_exprs = [
     "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
     "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="stop"),
 ]
+
 for expr in vds_computed_annotations_exprs:
     vds = vds.annotate_variants_expr(expr)
 
@@ -130,11 +131,10 @@ vds = add_1kg_phase3_data_struct(hc, vds, args.genome_version, root="va.g1k")
 vds = add_clinvar_data_struct(hc, vds, args.genome_version, root="va.clinvar")
 vds = add_mpc_data_struct(hc, vds, args.genome_version, root="va.mpc")
 
-
 #vds = vds.annotate_variants_db([
-#'va.cadd.PHRED',
-#'va.cadd.RawScore',
-#'va.dann.score'
+#    'va.cadd.PHRED',
+#    'va.cadd.RawScore',
+#    'va.dann.score'
 #])
 
 pprint(vds.variant_schema)

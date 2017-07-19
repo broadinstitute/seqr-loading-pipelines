@@ -1,7 +1,5 @@
 import argparse
 import hail
-import os
-import sys
 
 hc = hail.HailContext()
 

@@ -1,7 +1,7 @@
-from utils.run_annotation_utils import print_elasticsearch_stats
-
 import os
 import pip
+
+from utils.elasticsearch_utils import print_elasticsearch_stats
 
 pip.main(['install', 'elasticsearch'])
 import elasticsearch

@@ -1,1 +1,3 @@
-gcloud dataproc jobs list | head 
+#!/usr/bin/env bash
+
+gcloud dataproc jobs list | head

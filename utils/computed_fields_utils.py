@@ -113,6 +113,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
         ).map(c =>
             let CONSEQUENCE_TERM_ORDER = %(CONSEQUENCE_TERM_ORDER)s in
             merge(c, {
+                major_consequence_rank: CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt(),
                 category:
                     if(CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_ORDER.get("frameshift_variant").toInt())
                         "lof_variant"
@@ -170,6 +171,7 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(vep_sorted_tran
         domains:String,
         hgvs:String,
         major_consequence:String,
+        major_consequence_rank:Int,
         category:String} in
     if( %(vep_sorted_transcript_consequences_root)s.length == 0 )
         NA_type
@@ -194,7 +196,7 @@ def get_expr_for_variant_id():
 
 def get_expr_for_xpos(field_prefix="v.", contig_field="contig", pos_field="start"):
     return (
-        '1000000000 * ( '
+        '1000000000.toLong() * ( '
         '   if(%(field_prefix)s%(contig_field)s == "X") 23'
         '   else if (%(field_prefix)s%(contig_field)s == "Y") 24'
         '   else if (%(field_prefix)s%(contig_field)s[0] == "M") 25'

@@ -1,13 +1,9 @@
 import argparse
 import hail
-import os
-import sys
 
 from pprint import pprint
 
 hc = hail.HailContext()
-
-# exac, gnomad, 1kg, clinvar, cadd
 
 p = argparse.ArgumentParser()
 p.add_argument("input_path", help="input VCF or VDS")
@@ -24,4 +20,5 @@ else:
 pprint(vds.sample_schema)
 pprint(vds.variant_schema)
 pprint(vds.genotype_schema)
+pprint("%d sample ids" % len(vds.sample_ids))
 

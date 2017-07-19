@@ -7,7 +7,7 @@ metadata:
     deployment: {{ DEPLOY_TO }}
 spec:
   ports:
-  - port: 5601
+  - port: {{ KIBANA_PORT }}
   selector:
     name: kibana
 ---
@@ -27,11 +27,11 @@ spec:
       - name: kibana-pod
         image: {{ DOCKER_IMAGE_PREFIX }}/kibana:{{ TIMESTAMP }}
         ports:
-        - containerPort: 5601
+        - containerPort: {{ KIBANA_PORT }}
           protocol: TCP
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         env:
         - name: KIBANA_PORT
-          value: "5601"
+          value: "{{ KIBANA_PORT }}"
       restartPolicy: Always
       dnsPolicy: ClusterFirst

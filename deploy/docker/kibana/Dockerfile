@@ -20,7 +20,7 @@ ENV KIBANA_PORT=$KIBANA_PORT
 
 EXPOSE $KIBANA_PORT
 
-#COPY kibana.yml /usr/local/kibana-${KIBANA_VERSION}-linux-x86_64/config/kibana.yml
+COPY kibana.yml /usr/local/kibana-${KIBANA_VERSION}-linux-x86_64/config/kibana.yml
 COPY entrypoint.sh /
 
 CMD [ "/entrypoint.sh" ]

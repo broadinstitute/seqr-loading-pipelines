@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z $1 ]; then
-    CLUSTER=$(gcloud dataproc clusters list | cut -f 1 -d \ | grep -v NAME | grep seqr | head -n 1)
+    CLUSTER=$(gcloud dataproc clusters list | cut -f 1 -d \ | grep -v NAME | grep dataproc-cluster | head -n 1)
 else
     CLUSTER=$1
 fi

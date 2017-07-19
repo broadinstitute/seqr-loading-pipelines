@@ -4,13 +4,13 @@ metadata:
   name: elasticsearch-svc
   labels:
     name: elasticsearch
-    deployment: test
+    deployment: {{ DEPLOY_TO }}
 spec:
   type: NodePort
   ports:
   - name: elasticsearch
-    port: 30001
-    nodePort: 30001
+    port: {{ ELASTICSEARCH_PORT }}
+    nodePort: {{ ELASTICSEARCH_PORT }}
   selector:
     name: elasticsearch
 ---
@@ -24,26 +24,24 @@ spec:
     metadata:
       labels:
         name: elasticsearch
-        deployment: test
+        deployment: {{ DEPLOY_TO }}
     spec:
       volumes:
       - name: elasticsearch-dbpath
-        gcePersistentDisk:
-          # This disk must already exist.
-          pdName: test-elasticsearch-disk
-          fsType: ext4
+        hostPath:
+          path: {{ ELASTICSEARCH_DBPATH }}
       containers:
       - name: elasticsearch-pod
-        image: gcr.io/seqr-project/elasticsearch
+        image: {{ DOCKER_IMAGE_PREFIX }}/elasticsearch:{{ TIMESTAMP }}
         ports:
-        - containerPort: 30001
+        - containerPort: {{ ELASTICSEARCH_PORT }}
           protocol: TCP
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - name: elasticsearch-dbpath
           mountPath: /elasticsearch-data
         env:
         - name: ELASTICSEARCH_PORT
-          value: "30001"
+          value: "{{ ELASTICSEARCH_PORT }}"
       restartPolicy: Always
       dnsPolicy: ClusterFirst

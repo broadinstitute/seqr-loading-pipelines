@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
 # resize cluster
-CLUSTER=$1 #  $(gcloud dataproc clusters list | cut -f 1 -d \ | grep -v NAME | head -n 1 | grep seqr)
+if [ -z $1 ]; then
+    CLUSTER=$(gcloud dataproc clusters list | cut -f 1 -d \ | grep -v NAME | grep dataproc-cluster | head -n 1)
+else
+    CLUSTER=$1
+fi
+
 if [ -z $CLUSTER ]; then
     echo ERROR: cluster doesn\'t exist
     exit 0

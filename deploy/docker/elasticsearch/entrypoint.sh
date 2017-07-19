@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-env
-
 set -x
 
 # must run sudo /sbin/sysctl -w vm.max_map_count=262144  on the VM

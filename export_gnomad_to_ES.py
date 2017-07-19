@@ -1,4 +1,3 @@
-from utils.add_gnomad import GNOMAD_VDS_PATHS
 from utils.computed_fields_utils import get_expr_for_xpos, get_expr_for_orig_alt_alleles_set, \
     get_expr_for_variant_id, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_sorted_transcript_consequences_array, \
@@ -11,14 +10,22 @@ from pprint import pprint
 
 hc = hail.HailContext(log="./hail.log") #, branching_factor=1)
 
-exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-exomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
+GNOMAD_VDS_PATHS = {
+    "exomes_37": "gs://gnomad-public/release-170228/gnomad.exomes.r2.0.1.sites.vds",
+    "exomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.0.1.sites.liftover.b38.vds",
+    "genomes_37": "gs://gnomad-public/release-170228/gnomad.genomes.r2.0.1.sites.vds",
+    "genomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.0.1.sites.liftover.b38.vds",
+}
 
-genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-genomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
 
-#exomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
-#genomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
+#exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
+#exomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
+
+#genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
+#genomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
+
+exomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
+genomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
 
 #vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_subset.vds")
 #vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad.exomes.r2.0.1.sites_larger_subset.vep.vds")
