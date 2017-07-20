@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-hail_local read -i $1 count 2>&1 | grep 'nVariants\|nSamples'

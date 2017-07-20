@@ -1,8 +1,0 @@
-#!/bin/bash
-
-DIR=`dirname $0`
-
-$DIR/../../hail-repo/build/install/hail/bin/hail "$@"
-
-#/home/users/weisburd/bin/hail-repo/build/install/hail/bin/hail "$@"
-#/home/users/weisburd/bin/bw2-hail-repo/build/install/hail/bin/hail "$@"
