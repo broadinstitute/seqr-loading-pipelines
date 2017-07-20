@@ -1,0 +1,9 @@
+#         --plugin dbNSFP,/humgen/atgu1/fs03/weisburd/xbrowse/data/reference_data/dbNSFP/dbNSFPv2.9.gz,Polyphen2_HVAR_pred,CADD_phred,SIFT_pred,FATHMM_pred,MutationTaster_pred,MetaSVM_pred 
+
+
+Polyphen2_HVAR_pred,
+CADD_phred,
+SIFT_pred,
+FATHMM_pred,
+MutationTaster_pred,
+MetaSVM_pred 

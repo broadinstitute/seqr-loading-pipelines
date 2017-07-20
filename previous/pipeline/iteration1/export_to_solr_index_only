@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+
+import os
+import argparse
+
+p=argparse.ArgumentParser()
+p.add_argument("-c", "--solr-collection", help="Solr collection")
+p.add_argument("-i", "--dataset-id", help="Dataset id", required=True)
+p.add_argument("-b", "--block-size", help="Number of variants to export at a time", default=100)
+p.add_argument("--export-ref", help="export homozygous-reference genotypes", action="store_true")
+#p.add_argument("--export-missing", help="export ./. genotypes", action="store_true", default=True)
+p.add_argument("vds_path", help="Path of the VEP-annotated vds to load")
+args=p.parse_args()
+
+dataset_id = args.dataset_id
+block_size = args.block_size
+export_ref_arg = "--export-ref" if args.export_ref else ""
+
+vds_path = os.path.abspath(args.vds_path)
+
+print("============================================================")
+print("    EXPORT_TO_SOLR_INDEX_ONLY %(dataset_id)s " % locals())
+print("============================================================")
+
+
+def run(cmd):
+    print(cmd)
+    os.system(cmd)
+
+
+hail_command="hail_local_with_3_cores" # if args.local else "hail_with_3_cores"
+if args.solr_collection:
+    solr_collection=args.solr_collection
+else:
+    solr_collection=dataset_id + "_index_only" + ("_export_ref" if args.export_ref else "")
+
+print("Running %s on %s" % (hail_command, solr_collection))
+
+#data_dir = "/Volumes/hd/seqr-hail/reference_data"
+#data_dir = "/mnt/lustre/weisburd/data/reference_data"
+
+run(
+"""
+echo Date: `date`;
+
+time %(hail_command)s \
+  read -i file://%(vds_path)s \
+  annotatevariants vds -r va.clinvar -i file://%(data_dir)s/clinvar/clinvar_v2016_09_01.vds \
+  annotatevariants vds -r va.exac -i file://%(data_dir)s/exac/exac_v1.vds \
+  annotatevariants vds -r va.g1k -i file://%(data_dir)s/1kg/1kg_wgs_phase3.vds \
+  annotatevariants vds -r va.dbnsfp -i file://%(data_dir)s/dbnsfp/dbNSFP_3.2a_variant.filtered.allhg19_nodup.vds \
+  annotatevariants expr -c 'va.vep.sorted_transcript_consequences = va.vep.transcript_consequences.map(c => select(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, distance, domains, exon, gene_id, transcript_id, protein_id, gene_symbol, gene_symbol_source, hgnc_id, hgvsc, hgvsp, lof, lof_flags, lof_filter, lof_info)).sortBy(c =>
+        let is_coding=(c.biotype=="protein_coding") and is_most_severe=c.consequence_terms.toSet.contains(va.vep.most_severe_consequence) and is_canonical=(c.canonical==1) in
+            if(is_coding) 
+                if(is_most_severe) 
+                    if(is_canonical)  1  else  2
+                else  3
+            else
+                if(is_most_severe) 
+                    if(is_canonical)  4  else  5
+                else  6
+        )' \
+  exportvariantssolr --block-size %(block_size)s --num-shards 3 %(export_ref_arg)s --export-missing -c %(solr_collection)s -v '
+    dataset_id { stored=true, docValues=false } = "%(dataset_id)s",
+    chrom { docValues = false } = v.contig,
+    start { docValues = false } = v.start,
+    end { docValues = false } = v.start + v.ref.length - 1,
+    ref { docValues = false } = v.ref,
+    alt { docValues = false } = v.alt,
+    filters { stored=false, docValues=false } = va.filters,
+    pass { stored=false, docValues=false } = va.pass,
+    rsid { stored=false, docValues=false } = va.rsid,
+    AC { stored=false, docValues=false } = va.info.AC[va.aIndex-1],
+    AN { stored=false, docValues=false } = va.info.AN,
+    AF { stored=false, docValues=false } = va.info.AF[va.aIndex-1],
+    was_split { stored=false, docValues=false } = va.wasSplit,
+    clinvar_clinsig { stored=false, docValues=false } = va.clinvar.clinical_significance,
+    clinvar_review_status { stored=false, docValues=false } = va.clinvar.review_status,
+    clinvar_inheritance_mode { stored=false, docValues=false } = va.clinvar.inheritance_modes.split(";").toSet,
+    clinvar_disease_mechanism { stored=false, docValues=false } = va.clinvar.disease_mechanism.split(";").toSet,
+    clinvar_gold_stars { stored=false, docValues=false } = va.clinvar.gold_stars,
+    clinvar_is_pathogenic { stored=false, docValues=false } = va.clinvar.pathogenic,
+    clinvar_is_conflicted { stored=false, docValues=false } = va.clinvar.conflicted,
+
+    vep_gene_id { stored=false, docValues=false } = va.vep.transcript_consequences.map( x => x.gene_id ).toSet,
+    vep_transcript_id { stored=false, docValues=false } = va.vep.transcript_consequences.map( x => x.transcript_id ).toSet,
+    vep_most_severe_consequence { stored=false, docValues=false } = va.vep.most_severe_consequence,
+
+    g1k_wgs_phase3_afr_af { stored=false, docValues=false } = va.g1k.info.AFR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_amr_af { stored=false, docValues=false } = va.g1k.info.AMR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_eur_af { stored=false, docValues=false } = va.g1k.info.EUR_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_eas_af { stored=false, docValues=false } = va.g1k.info.EAS_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_sas_af { stored=false, docValues=false } = va.g1k.info.SAS_AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_global_af { stored=false, docValues=false } = va.g1k.info.AF[va.g1k.aIndex-1],
+    g1k_wgs_phase3_popmax_af { stored=false, docValues=false } = va.g1k.info.POPMAX_AF,
+    g1k_wgs_phase3_popmax { stored=false, docValues=false } = va.g1k.info.POPMAX,
+    exac_v1_afr_af { stored=false, docValues=false } = if(va.exac.info.AN_AFR == 0) NA:Double else va.exac.info.AC_AFR[va.exac.aIndex-1]/va.exac.info.AN_AFR,
+    exac_v1_amr_af { stored=false, docValues=false } = if(va.exac.info.AN_AMR == 0) NA:Double else va.exac.info.AC_AMR[va.exac.aIndex-1]/va.exac.info.AN_AMR,
+    exac_v1_nfe_af { stored=false, docValues=false } = if(va.exac.info.AN_NFE == 0) NA:Double else va.exac.info.AC_NFE[va.exac.aIndex-1]/va.exac.info.AN_NFE,
+    exac_v1_fin_af { stored=false, docValues=false } = if(va.exac.info.AN_FIN == 0) NA:Double else va.exac.info.AC_FIN[va.exac.aIndex-1]/va.exac.info.AN_FIN,
+    exac_v1_eas_af { stored=false, docValues=false } = if(va.exac.info.AN_EAS == 0) NA:Double else va.exac.info.AC_EAS[va.exac.aIndex-1]/va.exac.info.AN_EAS,
+    exac_v1_sas_af { stored=false, docValues=false } = if(va.exac.info.AN_SAS == 0) NA:Double else va.exac.info.AC_SAS[va.exac.aIndex-1]/va.exac.info.AN_SAS,
+    exac_v1_global_af { stored=false, docValues=false } = va.exac.info.AF[va.exac.aIndex-1],
+    exac_v1_popmax_af { stored=false, docValues=false } = if(va.exac.info.AN_POPMAX[va.exac.aIndex-1] == 0) NA:Double else va.exac.info.AC_POPMAX[va.exac.aIndex-1]/va.exac.info.AN_POPMAX[va.exac.aIndex-1],
+    exac_v1_popmax { stored=false, docValues=false } = va.exac.info.POPMAX[va.exac.aIndex-1],
+    twinsuk_af { stored=false, docValues=false } = va.dbnsfp.TWINSUK_AF.toDouble,
+    alspac_af { stored=false, docValues=false } = va.dbnsfp.ALSPAC_AF.toDouble,
+    esp65000_aa_af { stored=false, docValues=false } = va.dbnsfp.ESP6500_AA_AF.toDouble,
+    esp65000_ea_af { stored=false, docValues=false } = va.dbnsfp.ESP6500_EA_AF.toDouble
+    ' \
+  -g 'num_alt { stored=false, docValues=false } = if(g.isCalled) g.nNonRefAlleles else -1,
+    gq { stored=false, docValues=false } = if(g.isCalled) g.gq else NA:Int,
+    ab { stored=false, docValues=false } = let s=g.ad.sum in if(g.isCalled && s != 0) (g.ad[0] / s).toFloat else NA:Float,
+    dp { stored=false, docValues=false } = if(g.isCalled) g.dp else NA:Int' \
+  -z '69.173.112.35:2181,69.173.112.36:2181,69.173.112.37:2181';
+
+echo Date: `date`;
+""" % locals())
+
+# INMR_PCRFree_WGS_v6_index_only
+"""
+    dbnsfp_sift_pred { indexed=false } = va.dbnsfp.SIFT_pred, 
+    dbnsfp_polyphen2_hdiv_pred { indexed=false } = va.dbnsfp.Polyphen2_HDIV_pred,
+    dbnsfp_polyphen2_hvar_pred { indexed=false } = va.dbnsfp.Polyphen2_HVAR_pred,
+    dbnsfp_lrt_pred { indexed=false } = va.dbnsfp.LRT_pred,
+    dbnsfp_muttaster_pred { indexed=false } = va.dbnsfp.MutationTaster_pred,
+    dbnsfp_mutassesor_pred { indexed=false } = va.dbnsfp.MutationAssessor_pred,
+    dbnsfp_fathmm_pred { indexed=false } = va.dbnsfp.FATHMM_pred,
+    dbnsfp_provean_pred { indexed=false } = va.dbnsfp.PROVEAN_pred,
+    dbnsfp_metasvm_pred { indexed=false } = va.dbnsfp.MetaSVM_pred,
+    dbnsfp_metalr_pred { indexed=false } = va.dbnsfp.MetaLR_pred,
+    dbnsfp_cadd_phred { indexed=false } = va.dbnsfp.CADD_phred,
+    vep_annotations_sorted { type="text_ws", indexed=false } = json(va.vep.sorted_transcript_consequences),
+    vep_consequences=va.vep.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet,
+    clinvar_submitter { indexed=false } = va.clinvar.all_submitters.split(";").toSet,
+    clinvar_trait { indexed=false } = va.clinvar.all_traits.split(";").toSet,
+    clinvar_pmid { indexed=false } = va.clinvar.all_pmids.split(";").toSet,
+
+    clinvar_age_of_onset { indexed=false } = va.clinvar.age_of_onset.split(";").toSet,    
+    clinvar_prevalence { indexed=false } = va.clinvar.prevalence.split(";").toSet,
+    clinvar_origin { indexed=false } = va.clinvar.origin.split(";").toSet,
+    clinvar_xrefs { indexed=false } = va.clinvar.xrefs,
+ "%(dataset_id)s", "%(dataset_type)s", "%(dataset_version)s",
+    pl { indexed=false } = g.pl' \
+
+"""
+
