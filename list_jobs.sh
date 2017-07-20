@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-gcloud dataproc jobs list | head
+CLUSTER=$1
+gcloud dataproc jobs list --cluster=$1 | head

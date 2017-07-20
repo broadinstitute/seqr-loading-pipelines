@@ -40,21 +40,21 @@ def check_kubernetes_context(deployment_label):
 
     if deployment_label == "local":
         if kubectl_current_context != 'kube-solo':
-            logger.error("'%(cmd)s' returned '%(kubectl_current_context)s'. For %(deployment_label)s deployment, this is "
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s'. For %(deployment_label)s deployment, this is "
                          "expected to equal 'kube-solo'. Please configure your shell environment "
                          "to point to a local kube-solo cluster by installing "
                          "kube-solo from https://github.com/TheNewNormal/kube-solo-osx, starting the kube-solo VM, "
-                         "and then clicking on 'Preset OS Shell' in the kube-solo menu to launch a pre-configured shell." % locals())
+                         "and then clicking on 'Preset OS Shell' in the kube-solo menu to launch a pre-configured shell.") % locals())
             sys.exit(-1)
 
     elif deployment_label.startswith("gcloud"):
         suffix = deployment_label.split("-")[-1]  # "dev" or "prod"
         if not kubectl_current_context.startswith('gke_') or not kubectl_current_context.endswith(suffix):
-            logger.error("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_label)s. "
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_label)s. "
                          "To fix this, run:\n\n   "
                          "gcloud container clusters get-credentials <cluster-name>\n\n"
                          "Using one of these clusters: " + subprocess.check_output("gcloud container clusters list", shell=True) +
-                         "\n\n" % locals())
+                         "\n\n") % locals())
             sys.exit(-1)
     else:
         raise ValueError("Unexpected value for deployment_label: %s" % deployment_label)

@@ -12,13 +12,13 @@ gcloud dataproc clusters create $CLUSTER   \
     --worker-boot-disk-size 75 \
     --num-worker-local-ssds 1 \
     --image-version 1.1 \
-    #--project exac-gnomad \
     --properties "spark:spark.driver.extraJavaOptions=-Xss4M,spark:spark.executor.extraJavaOptions=-Xss4M,spark:spark.driver.memory=45g,spark:spark.driver.maxResultSize=30g,spark:spark.task.maxFailures=20,spark:spark.yarn.executor.memoryOverhead=30,spark:spark.kryoserializer.buffer.max=1g,hdfs:dfs.replication=1"  \
-    --initialization-actions gs://hail-common/hail-init.sh,gs://seqr-hail/init_notebook.py
+    --initialization-actions gs://hail-common/hail-init.sh,gs://gnomad-bw2/hail-jar/init-notebook.py
+    #--project exac-gnomad \
     #--num-preemptible-workers 4 \
 
 # open ipython notebook
-python utils/connect_cluster.py  --name $CLUSTER --port 8088
+python connect_cluster.py  --name $CLUSTER --port 8088
 
 open http://localhost:8088  # open spark dashboard
 

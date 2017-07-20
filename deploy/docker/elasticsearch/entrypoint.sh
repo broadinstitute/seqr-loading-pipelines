@@ -11,7 +11,6 @@ su elasticsearch -c "/usr/local/elasticsearch-${ELASTICSEARCH_VERSION}/bin/elast
     -E network.host=0.0.0.0 \
     -E http.port=${ELASTICSEARCH_PORT} \
     -E path.data=/elasticsearch-data \
-    -E path.logs=/logs" &
+    -E path.logs=/logs"
 
-# sleep indefinitely to prevent container from terminating
-sleep 1000000000000
+echo elasticsearch started on port ${ELASTICSEARCH_PORT}!!

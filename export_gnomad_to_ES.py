@@ -1,12 +1,25 @@
+import argparse
 from utils.computed_fields_utils import get_expr_for_xpos, get_expr_for_orig_alt_alleles_set, \
     get_expr_for_variant_id, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_sorted_transcript_consequences_array, \
-    get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos
+    get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
+    get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, get_expr_for_ref_allele
 from utils.elasticsearch_utils import export_kt_to_elasticsearch
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_vds_make_table_arg
 
 import hail
 from pprint import pprint
+
+p = argparse.ArgumentParser()
+p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], default="37")
+p.add_argument("-H", "--host", help="Elasticsearch host or IP", default="10.48.0.105")
+p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
+p.add_argument("-i", "--index", help="Elasticsearch index name", default="gnomad_combined")
+p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
+p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=200)
+
+# parse args
+args = p.parse_args()
 
 hc = hail.HailContext(log="./hail.log") #, branching_factor=1)
 
@@ -18,21 +31,24 @@ GNOMAD_VDS_PATHS = {
 }
 
 
-#exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-#exomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
+#exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
+#exomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_%s_DMD_subset.vds" % args.genome_version, overwrite=True)
 
-#genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_37"]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-#genomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds", overwrite=True)
+#genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
+#genomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_%s_DMD_subset.vds" % args.genome_version, overwrite=True)
 
-exomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
-genomes_vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
-
-#vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_subset.vds")
-#vds = hc.read("gs://seqr-hail/reference_data/GRCh37/gnomad.exomes.r2.0.1.sites_larger_subset.vep.vds")
+exomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
+genomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
 
 # based on output of pprint(vds.variant_schema)
 GNOMAD_SCHEMA = {
     "top_level_fields": """
+        contig: String,
+        start: Int,
+        ref: String,
+        alt: String,
+
+        rsid: String,
         qual: Double,
         filters: Set[String],
         wasSplit: Boolean,
@@ -43,8 +59,8 @@ GNOMAD_SCHEMA = {
         geneIds: Set[String],
         transcriptIds: Set[String],
         transcriptConsequenceTerms: Set[String],
-        sortedTranscriptConsequences: String,
         mainTranscriptAnnotations: Struct,
+        sortedTranscriptConsequences: String,
     """,
 
     "info_fields": """
@@ -118,6 +134,10 @@ GNOMAD_SCHEMA = {
 }
 
 vds_computed_annotations_exprs = [
+    "va.contig = %s" % get_expr_for_contig(),
+    "va.start = %s" % get_expr_for_start_pos(),
+    "va.ref = %s" % get_expr_for_ref_allele(),
+    "va.alt = %s" % get_expr_for_alt_allele(),
     "va.joinKey = %s" % get_expr_for_variant_id(),
     "va.variantId = %s" % get_expr_for_variant_id(),
     "va.originalAltAlleles = %s" % get_expr_for_orig_alt_alleles_set(),
@@ -153,7 +173,7 @@ combined_kt = genomes_kt.key_by("genomes_joinKey").join(exomes_kt.key_by("exomes
 combined_kt = combined_kt.drop(["genomes_joinKey"])
 
 for field in [
-    "variantId", "contig", "start", "ref", "alt",
+    "contig", "start", "ref", "alt", "variantId", "rsid",
     "geneIds", "transcriptIds",
     "transcriptConsequenceTerms", "sortedTranscriptConsequences", "mainTranscriptAnnotations"
 ]:
@@ -205,4 +225,15 @@ pprint(combined_kt.schema)
 
 
 print("======== Export to elasticsearch ======")
-export_kt_to_elasticsearch(combined_kt, index_name="gnomad_combined", index_type_name="variant")
+export_kt_to_elasticsearch(
+    combined_kt,
+    host=args.host,
+    port=args.port,
+    index_name=args.index,
+    index_type_name=args.index_type,
+    block_size=args.block_size,
+    delete_index_before_exporting=True,
+    verbose=True,
+)
+
+
