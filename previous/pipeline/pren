@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# This code was written by Josh Dunn
+# JGD 2010-11-18 updated
+
+function usage {
+	echo "Renames multiple files at once, based upon regular expression patterns"
+	echo ""
+	echo "Usage: ${0} input_pattern output_pattern files_to_rename"
+	echo ""
+	echo "       e.g. ${0} bread toast *bread_recipe.txt"
+
+}
+if [ $# -eq 1 ] && ([ "$1" = "-h" ] || [ "$1" = "--help" ]); then
+	usage
+	exit 0
+elif [ $# -lt  3 ]; then
+	usage
+	exit 1
+fi
+INPUT_PATTERN=$1
+OUTPUT_PATTERN=$2
+shift 2
+declare -a FILES
+FILES=( `ls -d ${@}` )
+
+for FILE in ${FILES[@]}
+do
+  
+	NEWNAME=`echo $FILE | sed -e "s/${INPUT_PATTERN}/${OUTPUT_PATTERN}/"`
+	echo "Renaming '$FILE' to '$NEWNAME'" >&2
+	mv $FILE $NEWNAME
+done
