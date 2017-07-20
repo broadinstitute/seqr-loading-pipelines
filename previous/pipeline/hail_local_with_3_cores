@@ -1,0 +1,5 @@
+#!/bin/bash
+
+DIR=`dirname $0`
+
+$DIR/hail_local --master 'local[3]' "$@"
