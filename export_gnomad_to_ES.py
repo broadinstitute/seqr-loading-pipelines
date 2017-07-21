@@ -11,7 +11,7 @@ import hail
 from pprint import pprint
 
 p = argparse.ArgumentParser()
-p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], default="37")
+p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 p.add_argument("-H", "--host", help="Elasticsearch host or IP", default="10.48.0.105")
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="gnomad_combined")
@@ -31,14 +31,14 @@ GNOMAD_VDS_PATHS = {
 }
 
 
-#exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-#exomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_%s_DMD_subset.vds" % args.genome_version, overwrite=True)
+exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('22')) # hail.Interval.parse('X:31224000-31228000'))
+exomes_vds.write("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_%s_chr22_subset.vds" % args.genome_version, overwrite=True)
 
-#genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('X:31224000-31228000'))
-#genomes_vds.write("gs://seqr-hail/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_%s_DMD_subset.vds" % args.genome_version, overwrite=True)
+genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('22')) #hail.Interval.parse('X:31224000-31228000'))
+genomes_vds.write("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_%s_chr22_subset.vds" % args.genome_version, overwrite=True)
 
-exomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
-genomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
+#exomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
+#genomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
 
 # based on output of pprint(vds.variant_schema)
 GNOMAD_SCHEMA = {
@@ -212,6 +212,7 @@ transcript_annotations_to_keep = [
 
     "hgvs",
     "major_consequence",
+    "major_consequence_rank",
     "category",
 ]
 
@@ -223,6 +224,7 @@ combined_kt = combined_kt.drop(["mainTranscriptAnnotations"])
 
 pprint(combined_kt.schema)
 
+DISABLE_INDEX_FOR_FIELDS=("sortedTranscriptConsequences", )
 
 print("======== Export to elasticsearch ======")
 export_kt_to_elasticsearch(
@@ -233,6 +235,7 @@ export_kt_to_elasticsearch(
     index_type_name=args.index_type,
     block_size=args.block_size,
     delete_index_before_exporting=True,
+    disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,
     verbose=True,
 )
 
