@@ -49,6 +49,7 @@ def deploy(deployment_label, component=None, output_dir=None, other_settings={})
         logger.info("%s = %s" % (key, value))
 
     # copy settings, templates and scripts to output directory
+    os.chdir("deploy")
     output_base_dir = os.path.join(output_dir, 'kubernetes/settings')
     for file_path in glob.glob("kubernetes/templates/*/*.*") + glob.glob("kubernetes/templates/*/*/*.*"):
         file_path = file_path.replace('kubernetes/templates/', '')
