@@ -18,11 +18,11 @@ hc = hail.HailContext(log="/hail.log")
 if args.input_file.endswith(".vds"):
     vds = hc.read(args.input_file)
 elif args.input_file.endswith("gz"):
-    vds = hc.import_vcf(args.input_file, force_bgz=True, min_partitions=1000)
+    vds = hc.import_vcf(args.input_file, force_bgz=True, min_partitions=10000)
 else:
     p.error("Invalid input file: %s" % args.input_file)
 
-vds = vds.split_multi().vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=1000)  #, csq=True)
+vds = vds.split_multi().vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)  #, csq=True)
 
 
 pprint.pprint(vds.variant_schema)
