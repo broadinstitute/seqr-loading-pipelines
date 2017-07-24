@@ -18,7 +18,8 @@ if [ "$DEPLOY_TO_PREFIX" = 'gcloud' ]; then
     --num-nodes $CLUSTER_NUM_NODES
 
     gcloud container clusters get-credentials $CLUSTER_NAME \
-    --zone=$GCLOUD_ZONE
+    --project $GCLOUD_PROJECT \
+    --zone $GCLOUD_ZONE
 
     # create persistent disk  (200Gb is the minimum recommended by Google)
     gcloud compute disks create --size ${ELASTICSEARCH_DISK_SIZE} ${DEPLOY_TO}-elasticsearch-disk --zone $GCLOUD_ZONE
@@ -36,3 +37,8 @@ gcloud compute ssh $NODE_NAME --command "sudo /sbin/sysctl -w vm.max_map_count=4
 
 echo Cluster Info:
 kubectl cluster-info
+
+# deploy config map
+kubectl delete configmap all-settings
+kubectl create configmap all-settings --from-file=kubernetes/settings/all-settings.properties
+kubectl get configmaps all-settings -o yaml

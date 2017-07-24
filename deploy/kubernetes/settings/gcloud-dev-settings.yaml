@@ -1,7 +1,7 @@
 DEPLOY_TO: 'gcloud-dev'
 DEPLOY_TO_PREFIX: 'gcloud'
+DEPLOYMENT_TYPE: 'dev'
 
-GCLOUD_PROJECT: 'broad-mpg-gnomad'
 DOCKER_IMAGE_PREFIX: 'gcr.io/broad-mpg-gnomad'
 
 # gcloud settings

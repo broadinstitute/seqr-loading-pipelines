@@ -41,11 +41,10 @@ CONSEQUENCE_TERMS = [
     "intergenic_variant",
 ]
 
-CONSEQUENCE_TERM_ORDER = (
-    "Dict(%s, %s)" % (
-        CONSEQUENCE_TERMS,
-        map(str, range(len(CONSEQUENCE_TERMS)))
-    )
+# hail Dict expression that maps each CONSEQUENCE_TERM to it's rank in the list
+CONSEQUENCE_TERM_RANKS = map(str, range(len(CONSEQUENCE_TERMS)))
+CONSEQUENCE_TERM_RANK_LOOKUP = (
+    "Dict(%s, %s)" % (CONSEQUENCE_TERMS, CONSEQUENCE_TERM_RANKS)
 ).replace("'", '"')
 
 
@@ -83,7 +82,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
     """
 
     return """
-    let CONSEQUENCE_TERM_ORDER = %(CONSEQUENCE_TERM_ORDER)s in
+    let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in
         %(vep_root)s.transcript_consequences.map(
             c => select(c,
                 amino_acids,
@@ -116,20 +115,18 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
                     domains: c.domains.map( domain => domain.name ).mkString(","),
                     hgvs: orElse(c.hgvsp, c.hgvsc),
                     major_consequence: if( c.consequence_terms.size() > 0)
-                            c.consequence_terms.toArray().sortBy(t => CONSEQUENCE_TERM_ORDER.get(t).toInt())[0]
+                            c.consequence_terms.toArray().sortBy(t => CONSEQUENCE_TERM_RANK_LOOKUP.get(t).toInt())[0]
                         else
                             NA:String
                 })
-        ).map(c =>
-            let CONSEQUENCE_TERM_ORDER = %(CONSEQUENCE_TERM_ORDER)s in
-            merge(c, {
-                major_consequence_rank: CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt(),
+        ).map(c => merge(c, {
+                major_consequence_rank: CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt(),
                 category:
-                    if(CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_ORDER.get("frameshift_variant").toInt())
+                    if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("frameshift_variant").toInt())
                         "lof"
-                    else if(CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_ORDER.get("missense_variant").toInt())
+                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("missense_variant").toInt())
                         "missense"
-                    else if(CONSEQUENCE_TERM_ORDER.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_ORDER.get("synonymous_variant").toInt())
+                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("synonymous_variant").toInt())
                         "synonymous"
                     else
                         "other"

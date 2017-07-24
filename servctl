@@ -7,10 +7,10 @@ import sys
 
 from deploy.utils.constants import DEPLOYMENT_LABELS, DEPLOYABLE_COMPONENTS
 from deploy.utils.deploy_utils import deploy
-from deploy.utils.other_utils import check_kubernetes_context
 from deploy.utils.servctl_utils import print_log, port_forward, exec_command, show_dashboard, show_status, \
-    troubleshoot_component, kill_components, kill_and_delete_all, get_component_port_pairs
-from deploy.utils.shell_utils import wait_for
+    troubleshoot_component, kill_components, kill_and_delete_all, get_component_port_pairs, \
+    check_kubernetes_context
+from utils.shell_utils import wait_for
 
 logging.basicConfig(stream=sys.stdout, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -43,7 +43,6 @@ for command in DEPLOY_SYNONYMS:
 
     sp = subparsers.add_parser(command, description="Deploy one or more components")
     sp.add_argument("-o", "--output-dir", help="output directory for deployment files and logs")
-    sp.add_argument("--reset-db", action="store_true", help="if deploying phenotips or seqr, clear and re-initialize the phenotips xwiki database")
     sp.add_argument("-b", "--build", action="store_true", help="use 'docker build --no-cache' to rebuild docker image from the beginning without using cache")
     sp.add_argument("-d", "--delete-before-deploy", action="store_true", help="use 'kubectl delete' and then 'kubectl create' to deploy component(s) instead of just 'kubectl update'")
     sp.add_argument("-f", "--force", dest="build_and_reset_db", action="store_true", help="Same as -b and -d together - reset the db and rebuild the docker image.")
@@ -145,5 +144,3 @@ elif args.command in TROUBLESHOOT_SYNONYMS:
 
 elif args.command in KILL_AND_RESET_ALL_SYNONYMS:
     kill_and_delete_all(args.label)
-
-

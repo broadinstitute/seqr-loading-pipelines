@@ -12,7 +12,7 @@ from pprint import pprint
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
-p.add_argument("-H", "--host", help="Elasticsearch host or IP", default="10.48.0.105")
+p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="gnomad_combined")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
@@ -21,7 +21,7 @@ p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=20
 # parse args
 args = p.parse_args()
 
-hc = hail.HailContext(log="./hail.log") #, branching_factor=1)
+hc = hail.HailContext(log="/hail.log") #, branching_factor=1)
 
 GNOMAD_VDS_PATHS = {
     "exomes_37": "gs://gnomad-public/release-170228/gnomad.exomes.r2.0.1.sites.vds",
@@ -59,7 +59,7 @@ GNOMAD_SCHEMA = {
         geneIds: Set[String],
         transcriptIds: Set[String],
         transcriptConsequenceTerms: Set[String],
-        mainTranscriptAnnotations: Struct,
+        mainTranscript: Struct,
         sortedTranscriptConsequences: String,
     """,
 
@@ -145,7 +145,7 @@ vds_computed_annotations_exprs = [
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(),
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(),
     "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(),
-    "va.mainTranscriptAnnotations = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
+    "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
     "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
 ]
 
@@ -175,7 +175,7 @@ combined_kt = combined_kt.drop(["genomes_joinKey"])
 for field in [
     "contig", "start", "ref", "alt", "variantId", "rsid",
     "geneIds", "transcriptIds",
-    "transcriptConsequenceTerms", "sortedTranscriptConsequences", "mainTranscriptAnnotations"
+    "transcriptConsequenceTerms", "sortedTranscriptConsequences", "mainTranscript"
 ]:
     combined_kt = combined_kt.annotate("%(field)s = orElse( exomes_%(field)s, genomes_%(field)s )" % locals())
     combined_kt = combined_kt.drop(["exomes_"+field, "genomes_"+field])
@@ -186,7 +186,7 @@ combined_kt = combined_kt.annotate("xpos = %s" % get_expr_for_xpos(field_prefix=
 combined_kt = combined_kt.annotate("xstart = %s" % get_expr_for_xpos(field_prefix="", pos_field="start"))
 combined_kt = combined_kt.annotate("xstop = %s" % get_expr_for_xpos(field_prefix="", pos_field="stop"))
 
-# flatten and prune mainTranscriptAnnotations
+# flatten and prune mainTranscript
 transcript_annotations_to_keep = [
     "amino_acids",
     "biotype",
@@ -218,13 +218,13 @@ transcript_annotations_to_keep = [
 
 for field_name in transcript_annotations_to_keep:
     new_field_name = "mainTranscript." + "".join(map(lambda word: word.capitalize(), field_name.split("_")))
-    combined_kt = combined_kt.annotate("%(new_field_name)s = mainTranscriptAnnotations.%(field_name)s" % locals())
+    combined_kt = combined_kt.annotate("%(new_field_name)s = mainTranscript.%(field_name)s" % locals())
 
-combined_kt = combined_kt.drop(["mainTranscriptAnnotations"])
+combined_kt = combined_kt.drop(["mainTranscript"])
 
 pprint(combined_kt.schema)
 
-DISABLE_INDEX_FOR_FIELDS=("sortedTranscriptConsequences", )
+DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
 
 print("======== Export to elasticsearch ======")
 export_kt_to_elasticsearch(
@@ -235,7 +235,8 @@ export_kt_to_elasticsearch(
     index_type_name=args.index_type,
     block_size=args.block_size,
     delete_index_before_exporting=True,
-    disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,
+    disable_doc_values_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
+    disable_index_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
     verbose=True,
 )
 
