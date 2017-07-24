@@ -24,7 +24,7 @@ p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True )
 p.add_argument("-f", "--force-vep", help="Re-run VEP even the input file is already annotated. "
     "Otherwise, VEP will be skipped if the input VDS already has a va.vep field.")
-p.add_argument("-H", "--host", help="Elasticsearch host or IP", default="10.48.0.105")
+p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="variant_callset")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
