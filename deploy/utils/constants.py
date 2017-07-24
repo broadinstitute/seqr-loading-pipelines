@@ -1,6 +1,6 @@
 import os
 
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 DEPLOYMENT_LABELS = ["local", "gcloud-dev", 'gcloud-prod']
 DEPLOYABLE_COMPONENTS = [

@@ -1,5 +1,6 @@
 DEPLOY_TO: 'local'
 DEPLOY_TO_PREFIX: 'local'
+DEPLOYMENT_TYPE: 'dev'
 
 DOCKER_IMAGE_PREFIX: 'local/hail-db'
 
