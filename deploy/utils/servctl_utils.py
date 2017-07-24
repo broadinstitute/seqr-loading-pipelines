@@ -1,13 +1,14 @@
-import base64
 import collections
 import jinja2
 import logging
 import os
 import subprocess
+import sys
+import time
 import yaml
 
-from deploy.utils.shell_utils import run_shell_command, wait_for
-from deploy.utils.constants import BASE_DIR, PORTS, COMPONENTS_TO_OPEN_IN_BROWSER
+from deploy.utils.constants import PORTS, COMPONENTS_TO_OPEN_IN_BROWSER
+from utils.shell_utils import run_shell_command, wait_for
 
 logger = logging.getLogger()
 
@@ -27,13 +28,13 @@ def get_component_port_pairs(components=[]):
     return [(component, port) for component in components for port in PORTS[component]]
 
 
-def load_settings(config_file_paths, settings=None):
+def load_settings(settings_file_paths, settings=None):
     """Reads and parses the yaml settings file(s) and returns a dictionary of settings.
     These yaml files are treated as jinja templates. If a settings dictionary is also provided
     as an argument, it will be used as context for jinja template processing.
 
     Args:
-        config_file_paths (list): a list of yaml settings file paths to load
+        settings_file_paths (list): a list of yaml settings file paths to load
         settings (dict): optional dictionary of settings files
     Return:
         dict: settings file containing all settings parsed from the given settings file
@@ -42,7 +43,7 @@ def load_settings(config_file_paths, settings=None):
     if settings is None:
         settings = collections.OrderedDict()
 
-    for settings_path in config_file_paths:
+    for settings_path in settings_file_paths:
         with open(settings_path) as f:
             try:
                 yaml_string = template_processor(f, settings)
@@ -118,26 +119,6 @@ def template_processor(template_istream, settings):
     return jinja2.Template(template_contents).render(settings)
 
 
-def show_status():
-    """Print status of various docker and kubernetes subsystems"""
-
-    run_shell_command("docker info").wait()
-    run_shell_command("docker images").wait()
-    run_shell_command("kubectl cluster-info").wait()
-    run_shell_command("kubectl config view | grep 'username\|password'").wait()
-    run_shell_command("kubectl get services").wait()
-    run_shell_command("kubectl get pods").wait()
-    run_shell_command("kubectl config current-context").wait()
-
-
-def show_dashboard():
-    """Launches the kubernetes dashboard"""
-
-    proxy = run_shell_command('kubectl proxy')
-    run_shell_command('open http://localhost:8001/ui')
-    proxy.wait()
-
-
 def render(render_func, input_base_dir, relative_file_path, settings, output_base_dir):
     """Calls the given render_func to convert the input file + settings dict to a rendered in-memory
     config which it then writes out to the output directory.
@@ -199,6 +180,92 @@ def _get_pod_name(component):
     """
     return _get_resource_name(component, resource_type="pod")
 
+
+def retrieve_settings(deployment_label):
+    settings = collections.OrderedDict()
+
+    settings['STARTED_VIA_SERVCTL'] = True
+    settings['TIMESTAMP'] = time.strftime("%Y%m%d_%H%M%S")
+    settings['HOME'] = os.path.expanduser("~")
+
+    load_settings([
+        "deploy/kubernetes/settings/shared-settings.yaml",
+        "deploy/kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
+    ], settings)
+
+    return settings
+
+
+def check_kubernetes_context(deployment_label):
+    # make sure the environment is configured to use a local kube-solo cluster, and not gcloud or something else
+    try:
+        cmd = 'kubectl config current-context'
+        kubectl_current_context = subprocess.check_output(cmd, shell=True).strip()
+    except subprocess.CalledProcessError as e:
+        logger.error('Error while running "kubectl config current-context": %s', e)
+        #i = raw_input("Continue? [Y/n] ")
+        #if i != 'Y' and i != 'y':
+        #    sys.exit('Exiting...')
+        return
+
+    if deployment_label == "local":
+        if kubectl_current_context != 'kube-solo':
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s'. For %(deployment_label)s deployment, this is "
+                          "expected to equal 'kube-solo'. Please configure your shell environment "
+                          "to point to a local kube-solo cluster by installing "
+                          "kube-solo from https://github.com/TheNewNormal/kube-solo-osx, starting the kube-solo VM, "
+                          "and then clicking on 'Preset OS Shell' in the kube-solo menu to launch a pre-configured shell.") % locals())
+            sys.exit(-1)
+
+    elif deployment_label.startswith("gcloud"):
+        suffix = deployment_label.split("-")[-1]  # "dev" or "prod"
+        if not kubectl_current_context.startswith('gke_') or not kubectl_current_context.endswith(suffix):
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_label)s. "
+                          "To fix this, run:\n\n   "
+                          "gcloud container clusters get-credentials <cluster-name>\n\n"
+                          "Using one of these clusters: " + subprocess.check_output("gcloud container clusters list", shell=True) +
+                          "\n\n") % locals())
+            sys.exit(-1)
+    else:
+        raise ValueError("Unexpected value for deployment_label: %s" % deployment_label)
+
+
+def lookup_json_path(resource_type="pod", labels={}, json_path=".items[0].metadata.name"):
+    """Runs 'kubectl get <resource_type> | grep <component>' command to retrieve the full name of this resource.
+
+    Args:
+        component (string): keyword to use for looking up a kubernetes entity (eg. 'phenotips' or 'nginx')
+        labels (dict):
+        json_path (string):
+    Returns:
+        (string) resource value (eg. "postgres-410765475-1vtkn")
+    """
+
+    l_args = " ".join(['-l %s=%s' % (key, value) for key, value in labels.items()])
+    output = subprocess.check_output("kubectl get %(resource_type)s %(l_args)s -o jsonpath={%(json_path)s}" % locals(), shell=True)
+    output = output.strip('\n')
+
+    return output
+
+
+def show_status():
+    """Print status of various docker and kubernetes subsystems"""
+
+    run_shell_command("docker info").wait()
+    run_shell_command("docker images").wait()
+    run_shell_command("kubectl cluster-info").wait()
+    run_shell_command("kubectl config view | grep 'username\|password'").wait()
+    run_shell_command("kubectl get services").wait()
+    run_shell_command("kubectl get pods").wait()
+    run_shell_command("kubectl config current-context").wait()
+
+
+def show_dashboard():
+    """Launches the kubernetes dashboard"""
+
+    proxy = run_shell_command('kubectl proxy')
+    run_shell_command('open http://localhost:8001/ui')
+    proxy.wait()
 
 
 def print_log(components, enable_stream_log, wait=True):
@@ -317,8 +384,8 @@ def kill_and_delete_all(deployment_label):
     settings = {}
 
     load_settings([
-        os.path.join(BASE_DIR, "kubernetes/settings/shared-settings.yaml"),
-        os.path.join(BASE_DIR, "kubernetes/settings/%(deployment_label)s-settings.yaml" % locals())
+        "kubernetes/settings/shared-settings.yaml",
+        "kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
     ], settings)
 
     run_shell_command("kubernetes/scripts/delete_all.sh" % locals(), env=settings).wait()
