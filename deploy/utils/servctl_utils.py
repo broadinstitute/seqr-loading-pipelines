@@ -384,9 +384,9 @@ def kill_and_delete_all(deployment_label):
     settings = {}
 
     load_settings([
-        "kubernetes/settings/shared-settings.yaml",
-        "kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
+        "deploy/kubernetes/settings/shared-settings.yaml",
+        "deploy/kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
     ], settings)
 
-    run_shell_command("kubernetes/scripts/delete_all.sh" % locals(), env=settings).wait()
+    run_shell_command("deploy/kubernetes/scripts/delete_all.sh" % locals(), env=settings).wait()
 
