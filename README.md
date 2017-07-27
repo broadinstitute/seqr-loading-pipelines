@@ -62,7 +62,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
 [Google Container Engine](https://cloud.google.com/container-engine/docs/) makes it easy to create a Kubernetes cluster and then deploy, manage, and scale an application. The following steps are necessary before `./servctl` can be used to deploy to a Google Container Engine cluster:
 
 1. Install Docker for MacOSX:  
-   https://getcarina.com/docs/tutorials/docker-install-mac/
+   https://docs.docker.com/docker-for-mac/install/
 
    It will be used to build docker images before pushing them to your private repo on Google Container Engine.
 
