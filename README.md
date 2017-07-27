@@ -3,7 +3,9 @@ This README describes how to deploy elasticsearch + kibana either locally or on 
 Prerequisites
 -------------
 
-Make sure you have python2.7 installed, and on your `PATH`.
+The pre-requisites and dependencies described below (either for local or cloud-based deployments) should be installed on your laptop. 
+
+Make sure you have python2.7 installed, and on your `PATH`. 
 
 Clone this github repo to a subdirectory of your `HOME` directory (for example: ~/code/hail-db-utils), and install python dependencies:
 
