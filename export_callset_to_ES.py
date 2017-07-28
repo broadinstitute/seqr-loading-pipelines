@@ -1,5 +1,3 @@
-# ./submit.sh export_callset_to_ES.py -g 37 gs://seqr-datasets/GRCh37/Engle_WGS/engle-macarthur-ccdd.vep.subset_DMD.vds
-
 from pprint import pprint
 
 import argparse
@@ -16,6 +14,8 @@ from utils.gcloud_utils import inputs_older_than_outputs
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 from utils.add_1kg_phase3 import add_1kg_phase3_data_struct
 from utils.add_clinvar import add_clinvar_data_struct
+from utils.add_exac import add_exac_data_struct
+from utils.add_gnomad import add_gnomad_data_struct
 from utils.add_mpc import add_mpc_data_struct
 #from utils.add_exac import add_exac_data_struct
 from utils.elasticsearch_utils import export_vds_to_elasticsearch
@@ -25,33 +25,53 @@ p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=
 p.add_argument("-f", "--force-vep", help="Re-run VEP even the input file is already annotated. "
     "Otherwise, VEP will be skipped if the input VDS already has a va.vep field.")
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
-p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
+p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="variant_callset")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=5000)
+p.add_argument("--create-subset", action="store_true")
+p.add_argument("--use-subset", action="store_true")
 p.add_argument("dataset_path", help="input VCF or VDS")
 
 # parse args
 args = p.parse_args()
 
+print("==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
-if args.dataset_path.endswith(".vds"):
-    vds = hc.read(args.dataset_path)
-else:
+print("==> import dataset: " + str(args.dataset_path))
+subset_path = args.dataset_path.replace(".vds", "").replace(".vcf", "").replace(".gz", "").replace(".bgz", "") + ".subset.vds"
+if args.create_subset:
     vds = hc.import_vcf(args.dataset_path, force_bgz=True, min_partitions=1000)
+    vds = vds_subset = vds.filter_intervals(hail.Interval.parse('X:31224000-31228000'))
+    print("==> Writing out subset")
+    vds_subset.write(subset_path, overwrite=True)
+elif args.use_subset:
+    print("==> Reading in subset")
+    vds = hc.read(subset_path)
+else:
+    if args.dataset_path.endswith(".vds"):
+        vds = hc.read(args.dataset_path)
+    else:
+        vds = hc.import_vcf(args.dataset_path, force_bgz=True, min_partitions=1000)
 
+print("==> save alleles")
 vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
 #vds = vds.annotate_variants_expr("va.vep=va.info.CSQ")
+print("==> split_multi()")
 vds = vds.split_multi()
 
-if not any(field.name == "vep" for field in vds.variant_schema.fields):
+print("==> VEP")
+if args.force_vep or not any(field.name == "vep" for field in vds.variant_schema.fields):
     vep_output_path = args.dataset_path.replace(".vds", "").replace(".vcf.gz", "").replace(".vcf.bgz", "") + ".vep.vds"
     if not inputs_older_than_outputs([args.dataset_path], [vep_output_path]):
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=1000)  #, csq=True)
+        vep_output_path = args.dataset_path.replace(".vds", "").replace(".vcf.gz", "").replace(".vcf.bgz", "") + ".vep.vds"
         vds.write(vep_output_path, overwrite=True)
     else:
         vds = vds.read(vep_output_path)
+print("==> print schema with VEP")
+pprint(vds.variant_schema)
 
 #pprint(vds.variant_schema)
 #pprint(vds.sample_ids)
@@ -81,6 +101,7 @@ vds_computed_annotations_exprs = [
     "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="end"),
 ]
 
+print("==> annotate variants expr")
 for expr in vds_computed_annotations_exprs:
     vds = vds.annotate_variants_expr(expr)
 
@@ -132,17 +153,17 @@ INPUT_SCHEMA = {
     """
 }
 
-DISABLE_INDEX_FOR_FIELDS = ("sortedTranscriptConsequences", )
-DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
-
 vds = vds.annotate_variants_expr(
     convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
 )
 vds = vds.annotate_variants_expr("va = va.clean")
 
 # add reference data
+print("==> add 1kg")
 vds = add_1kg_phase3_data_struct(hc, vds, args.genome_version, root="va.g1k")
+print("==> add clinvar")
 vds = add_clinvar_data_struct(hc, vds, args.genome_version, root="va.clinvar")
+print("==> add mpc")
 vds = add_mpc_data_struct(hc, vds, args.genome_version, root="va.mpc")
 
 # see https://hail.is/hail/annotationdb.html#query-builder
@@ -155,6 +176,11 @@ vds = add_mpc_data_struct(hc, vds, args.genome_version, root="va.mpc")
 pprint(vds.variant_schema)
 pprint(vds.sample_ids)
 
+print("==> export to elasticsearch")
+DISABLE_INDEX_FOR_FIELDS = ("sortedTranscriptConsequences", )
+DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
+
+
 export_vds_to_elasticsearch(
     vds,
     export_genotypes=True,
@@ -164,6 +190,7 @@ export_vds_to_elasticsearch(
     index_type_name=args.index_type,
     block_size=args.block_size,
     delete_index_before_exporting=True,
+    disable_doc_values_for_fields=DISABLE_DOC_VALUES_FOR_FIELDS,
     disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,
     is_split_vds=True,
     verbose=True,
