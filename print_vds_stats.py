@@ -1,9 +1,7 @@
 import argparse
 import hail
-
+from pprint import pprint
 hc = hail.HailContext()
-
-# exac, gnomad, 1kg, clinvar, cadd
 
 p = argparse.ArgumentParser()
 p.add_argument("input_path", help="input VCF or VDS")
@@ -17,7 +15,15 @@ if input_path.endswith(".vds"):
 else:
     vds = hc.import_vcf(input_path, min_partitions=1000, force_bgz=True)
 
-print(vds.sample_schema)
-print(vds.variant_schema)
-print(vds.genotype_schema)
-print(vds.split_multi().count())
+print("==> sample schema: ")
+pprint(vds.sample_schema)
+print("==> variant schema: ")
+pprint(vds.variant_schema)
+print("==> genotype_schema: ")
+pprint(vds.genotype_schema)
+
+print("==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
+
+s = vds.summarize()
+print("")
+pprint(s)

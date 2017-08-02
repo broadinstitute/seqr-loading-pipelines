@@ -226,8 +226,8 @@ def export_vds_to_elasticsearch(
         verbose (bool): whether to print schema and stats
     """
 
-    if verbose:
-        pprint(vds.sample_ids)
+    #if verbose:
+    #    pprint(vds.sample_ids)
 
     field_path_to_field_type_map = parse_vds_schema(vds.variant_schema.fields, current_parent=["va"])
     site_fields_list = sorted(
@@ -237,7 +237,8 @@ def export_vds_to_elasticsearch(
         genotype_fields_list = [
             'num_alt = if(g.isCalled) g.nNonRefAlleles else -1',
             'gq = if(g.isCalled) g.gq else NA:Int',
-            'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[0] / total).toFloat else NA:Float',
+            'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[1] / total).toFloat else NA:Float',
+            'sum_ad = g.ad.sum',
             'dp = if(g.isCalled) g.dp else NA:Int',
             #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
         ]

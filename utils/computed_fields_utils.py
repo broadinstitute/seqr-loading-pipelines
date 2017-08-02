@@ -1,5 +1,3 @@
-from pprint import pprint
-
 CONSEQUENCE_TERMS = [
     "transcript_ablation",
     "splice_acceptor_variant",

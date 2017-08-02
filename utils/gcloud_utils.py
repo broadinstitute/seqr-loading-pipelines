@@ -8,6 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 def get_gcloud_file_stats(gs_path):
+    if gs_path.endswith(".vds"):
+        gs_path += "/metadata.json.gz"  # set path to a file inside the .vds directory because gsutil stat works only on files.
+
     _, gsutil_stat_output, _ = run_shell_command("gsutil stat %(gs_path)s" % locals(), wait_and_return_log_output=True, verbose=False)
 
     """
@@ -60,6 +63,7 @@ def inputs_older_than_outputs(inputs, outputs, label=""):
 
     if max_input_ctime < min_output_ctime:
         logger.info(label + "output(s) (%s) up to date relative to input(s) (%s)" % (", ".join(outputs), ", ".join(inputs)))
-
+    else:
+        logger.info(label + "output(s) (%s) (%s) are newer than input(s) (%s) (%s)" % (", ".join(outputs), max_input_ctime, ", ".join(inputs), min_output_ctime))
     return max_input_ctime < min_output_ctime
 
