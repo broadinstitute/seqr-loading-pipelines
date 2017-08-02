@@ -1,4 +1,6 @@
 import argparse
+import hail
+from pprint import pprint
 from utils.computed_fields_utils import get_expr_for_xpos, get_expr_for_orig_alt_alleles_set, \
     get_expr_for_variant_id, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_sorted_transcript_consequences_array, \
@@ -6,9 +8,6 @@ from utils.computed_fields_utils import get_expr_for_xpos, get_expr_for_orig_alt
     get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, get_expr_for_ref_allele
 from utils.elasticsearch_utils import export_kt_to_elasticsearch
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_vds_make_table_arg
-
-import hail
-from pprint import pprint
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)

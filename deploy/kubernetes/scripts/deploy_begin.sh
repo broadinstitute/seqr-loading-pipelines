@@ -32,7 +32,7 @@ fi
 NODE_NAME="$(get_node_name $CLUSTER_NAME)"
 
 # set VM settings required for elasticsearch
-gcloud compute ssh $NODE_NAME --command "sudo /sbin/sysctl -w vm.max_map_count=4000000"
+gcloud compute ssh $NODE_NAME --zone $GCLOUD_ZONE --command "sudo /sbin/sysctl -w vm.max_map_count=4000000"
 
 
 echo Cluster Info:
