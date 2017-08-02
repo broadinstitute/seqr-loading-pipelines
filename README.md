@@ -11,7 +11,7 @@ The following dependencies must be installed on your laptop:
 
       git clone https://github.com/macarthur-lab/hail-db-utils.git 
 
-* install python dependencies:  
+* install this repo's python dependencies  
   
       cd hail-db-utils; pip install -r requirements.txt
 
