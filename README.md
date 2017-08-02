@@ -45,7 +45,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
    b. After this initial setup, you can just click `Preset OS Shell` to open a new terminal where docker and kubectl are preconfigured to use the local kubernetes cluster. 
 
 
-5.  **Trouble-shooting:** If your computer goes to sleep or reboots, the CoreOS / Kube-Solo VM may become unresponsive, requiring it to be rebooted (or possibly even reinitialized)
+5.  **Trouble-shooting Kube-Solo VM setup issues:** If your computer goes to sleep or reboots, the CoreOS / Kube-Solo VM may become unresponsive, requiring it to be rebooted (or possibly even reinitialized)
 
     For some reason,
 
@@ -76,7 +76,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
 Configuration
 -------------
 
-`settings/*-settings.yaml` - contain settings for local, dev and prod deployments.
+`settings/*-settings.yaml` - contain settings that are specific to each local, dev or prod environment, and that will most likely need to be different for different projects.
 
 
 Deployment
