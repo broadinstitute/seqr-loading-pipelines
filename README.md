@@ -21,7 +21,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
 
 1. Install CoreOS, which is required for for Kub-Solo:
 
-   a. `brew install libev`
+   a. `brew install libev`  
    b. Install the latest DMG from https://github.com/TheNewNormal/corectl.app/releases
 
    `WARNING: ` Being on a VPN connection may cause errors during CoreOS install steps that need to download components from the web.
