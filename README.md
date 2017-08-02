@@ -5,8 +5,9 @@ Prerequisites
 
 The following dependencies must be installed on your laptop:
 
-* python2.7, pip 
-* clone this github repo: 
+* python2.7
+* [pip](https://pip.pypa.io/en/stable/installing/#installing-with-get-pip-py)
+* a copy of this github repo
 
       git clone https://github.com/macarthur-lab/hail-db-utils.git 
 
