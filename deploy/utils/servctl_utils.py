@@ -7,15 +7,16 @@ import sys
 import time
 import yaml
 
-from deploy.utils.constants import PORTS, COMPONENTS_TO_OPEN_IN_BROWSER
-from utils.shell_utils import run_shell_command, wait_for
+from deploy.utils.constants import COMPONENT_PORTS, COMPONENTS_TO_OPEN_IN_BROWSER
+from utils.shell_utils import run_shell_command, wait_for, run_interactive_shell_command, \
+    run_shell_command_and_return_output as run
 
 logger = logging.getLogger()
 
 
 def get_component_port_pairs(components=[]):
-    """Uses the PORTS dictionary to return a list of (<component name>, <port>) pairs (For example:
-    [('elasticsearch', 9200), ('kibana', 5601), ... ])
+    """Uses the COMPONENT_PORTS dictionary to return a list of (<component name>, <port>) pairs
+    (For example: [('elasticsearch', 9200), ('kibana', 5601), ... ])
 
     Args:
         components (list): optional list of component names. If not specified, all components will be included.
@@ -23,9 +24,9 @@ def get_component_port_pairs(components=[]):
         list of components
     """
     if not components:
-        components = list(PORTS.keys())
+        components = list(COMPONENT_PORTS.keys())
 
-    return [(component, port) for component in components for port in PORTS[component]]
+    return [(component, port) for component in components for port in COMPONENT_PORTS[component]]
 
 
 def load_settings(settings_file_paths, settings=None):
@@ -44,11 +45,12 @@ def load_settings(settings_file_paths, settings=None):
         settings = collections.OrderedDict()
 
     for settings_path in settings_file_paths:
-        with open(settings_path) as f:
+        with open(settings_path) as settings_file:
             try:
-                yaml_string = template_processor(f, settings)
+                settings_file_contents = settings_file.read()
+                yaml_string = jinja2.Template(settings_file_contents).render(settings)
             except TypeError as e:
-                raise ValueError('unable to render file %(file_path)s: %(e)s' % locals())
+                raise ValueError('unable to render file: %(e)s' % locals())
 
             try:
                 loaded_settings = yaml.load(yaml_string)
@@ -104,32 +106,13 @@ def script_processor(bash_script_istream, settings):
     return result
 
 
-def template_processor(template_istream, settings):
-    """Returns a string representation of the given jinja template rendered using the key & values
-    from the settings dict.
-
-    Args:
-        template_istream (iter): a stream or iterator over lines in the jinja template
-        settings (dict): keys & values to use when rendering the template
-    Returns:
-        string: the same template with variables resolved to values in the settings dict.
-    """
-
-    template_contents = ''.join(template_istream)
-    return jinja2.Template(template_contents).render(settings)
-
-
-def render(render_func, input_base_dir, relative_file_path, settings, output_base_dir):
+def render(input_base_dir, relative_file_path, settings, output_base_dir):
     """Calls the given render_func to convert the input file + settings dict to a rendered in-memory
     config which it then writes out to the output directory.
 
     Args:
-        render_func: A function that takes 2 arguments -
-            1) an input stream that reads from a config template
-            2) a settings dict for resolving variables in the config template
-            It then returns the rendered string representation of the config, with the settings applied.
         input_base_dir (string): The base directory for input file paths.
-        relative_file_path (string): Config template file path relative to base_dir
+        relative_file_path (string): template file path relative to base_dir
         settings (dict): dictionary of key-value pairs for resolving any variables in the config template
         output_base_dir (string): The rendered config will be written to the file  {output_base_dir}/{relative_file_path}
     """
@@ -137,9 +120,9 @@ def render(render_func, input_base_dir, relative_file_path, settings, output_bas
     input_file_path = os.path.join(input_base_dir, relative_file_path)
     with open(input_file_path) as istream:
         try:
-            rendered_string = render_func(istream, settings)
+            rendered_string = jinja2.Template(istream.read()).render(settings)
         except TypeError as e:
-            raise ValueError('unable to render file %(file_path)s: %(e)s' % locals())
+            raise ValueError('unable to render file: %(e)s' % locals())
 
     logger.info("Parsed %s" % relative_file_path)
 
@@ -151,7 +134,8 @@ def render(render_func, input_base_dir, relative_file_path, settings, output_bas
 
     with open(output_file_path, 'w') as ostream:
         ostream.write(rendered_string)
-    os.chmod(output_file_path, 0x777)
+
+    #os.chmod(output_file_path, 0x777)
     logger.info("-- wrote rendered output to %s" % output_file_path)
 
 
@@ -184,13 +168,12 @@ def _get_pod_name(component):
 def retrieve_settings(deployment_label):
     settings = collections.OrderedDict()
 
-    settings['STARTED_VIA_SERVCTL'] = True
-    settings['TIMESTAMP'] = time.strftime("%Y%m%d_%H%M%S")
     settings['HOME'] = os.path.expanduser("~")
+    settings['TIMESTAMP'] = time.strftime("%Y%m%d_%H%M%S")
 
     load_settings([
-        "deploy/kubernetes/settings/shared-settings.yaml",
-        "deploy/kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
+        "deploy/kubernetes/shared-settings.yaml",
+        "deploy/kubernetes/%(deployment_label)s-settings.yaml" % locals(),
     ], settings)
 
     return settings
@@ -311,8 +294,10 @@ def exec_command(component, command, is_interactive=False):
     if not pod_name:
         raise ValueError("No '%(component)s' pods found. Is the kubectl environment configured in this terminal? and has this type of pod been deployed?" % locals())
 
-    it_flag = '-it' if is_interactive else ''
-    run_shell_command("kubectl exec %(it_flag)s %(pod_name)s %(command)s" % locals(), is_interactive=is_interactive).wait()
+    if not is_interactive:
+        run_shell_command("kubectl exec %(pod_name)s %(command)s" % locals(), wait_and_return_log_output=True)
+    else:
+        run_interactive_shell_command("kubectl exec -it %(pod_name)s %(command)s" % locals())
 
 
 def port_forward(component_port_pairs=[], wait=True, open_browser=False):
@@ -384,9 +369,20 @@ def kill_and_delete_all(deployment_label):
     settings = {}
 
     load_settings([
-        "deploy/kubernetes/settings/shared-settings.yaml",
-        "deploy/kubernetes/settings/%(deployment_label)s-settings.yaml" % locals(),
+        "deploy/kubernetes/shared-settings.yaml",
+        "deploy/kubernetes/%(deployment_label)s-settings.yaml" % locals(),
     ], settings)
 
-    run_shell_command("deploy/kubernetes/scripts/delete_all.sh" % locals(), env=settings).wait()
+
+    run('kubectl delete deployments --all')
+    run('kubectl delete replicationcontrollers --all')
+    run('kubectl delete services --all')
+    run('kubectl delete pods --all')
+    run('kubectl delete pods --all')
+    run('docker kill $(docker ps -q)')
+    run('docker rmi -f $(docker images -q)')
+
+    if settings.get("DEPLOY_TO_PREFIX") == "gcloud":
+        run('gcloud container clusters delete %(CLUSTER_NAME)s --zone %(GCLOUD_ZONE)s --no-async' % settings)
+        run('gcloud compute disks delete %(DEPLOY_TO)s-elasticsearch-disk --zone %(GCLOUD_ZONE)s' % settings)
 

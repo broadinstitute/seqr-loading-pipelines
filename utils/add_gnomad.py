@@ -193,7 +193,7 @@ INFO_FIELDS = """
 """
 
 
-def add_gnomad_from_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS):
+def add_gnomad_from_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
 
     if genome_version not in ("37", "38"):
         raise ValueError("Invalid genome_version: %s. Must be '37' or '38'" % str(genome_version))
@@ -212,20 +212,26 @@ def add_gnomad_from_vds(hail_context, vds, genome_version, exomes_or_genomes, ro
         # remove any *SAS* fields from genomes since South Asian population only defined for exomes
         info_fields = "\n".join(field for field in info_fields.split("\n") if "SAS" not in field)
 
+    top_fields_expr = convert_vds_schema_string_to_annotate_variants_expr(
+        root=root,
+        other_source_fields=top_level_fields,
+        other_source_root="vds",
+    )
+    if verbose:
+        print(top_fields_expr)
+
+    info_fields_expr = convert_vds_schema_string_to_annotate_variants_expr(
+        root=root,
+        other_source_fields=info_fields,
+        other_source_root="vds.info",
+    )
+    if verbose:
+        print(info_fields_expr)
+
     return (vds
-        .annotate_variants_vds(gnomad_vds, expr=
-            convert_vds_schema_string_to_annotate_variants_expr(
-                root=root,
-                other_source_fields=top_level_fields,
-                other_source_root="vds",
-            ))
-        .annotate_variants_vds(gnomad_vds, expr=
-            convert_vds_schema_string_to_annotate_variants_expr(
-                root=root,
-                other_source_fields=info_fields,
-                other_source_root="vds.info",
-            ))
-        )
+        .annotate_variants_vds(gnomad_vds, expr=top_fields_expr)
+        .annotate_variants_vds(gnomad_vds, expr=info_fields_expr)
+    )
 
 
 """

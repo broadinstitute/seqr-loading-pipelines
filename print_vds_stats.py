@@ -15,15 +15,13 @@ if input_path.endswith(".vds"):
 else:
     vds = hc.import_vcf(input_path, min_partitions=1000, force_bgz=True)
 
-print("==> sample schema: ")
+print("\n==> sample schema: ")
 pprint(vds.sample_schema)
-print("==> variant schema: ")
+print("\n==> variant schema: ")
 pprint(vds.variant_schema)
-print("==> genotype_schema: ")
+print("\n==> genotype_schema: ")
 pprint(vds.genotype_schema)
 
-print("==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
+print("\n==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
 
-s = vds.summarize()
-print("")
-pprint(s)
+print(vds.summarize())

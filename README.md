@@ -74,7 +74,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
 Configuration
 -------------
 
-`settings/*-settings.yaml` - contain settings for local, dev and prod deployments.
+`*-settings.yaml` - contain settings for local, dev and prod deployments.
 
 
 Deployment

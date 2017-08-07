@@ -13,21 +13,20 @@ from deploy.utils.servctl_utils import print_log, port_forward, exec_command, sh
 from utils.shell_utils import wait_for
 
 logging.basicConfig(stream=sys.stdout, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
-
-STATUS_SYNONYMS = ['status', 'info']
+STATUS_SYNONYMS = ['status']
 
 DEPLOY_SYNONYMS = ['deploy']
 
 LOG_SYNONYMS = ['log', 'logs']
-TROUBLESHOOT_SYNONYMS = ['troubleshoot', 'describe']
+TROUBLESHOOT_SYNONYMS = ['troubleshoot']
 
 PORT_FORWARD_SYNONYMS = ['port-forward']
-PORT_FORWARD_AND_LOG_SYNONYMS = ['connect-to', 'forward-and-log']
+PORT_FORWARD_AND_LOG_SYNONYMS = ['connect-to']
 
 SHELL_SYNONYMS = ['shell', 'bash', 'ssh']
-DASHBOARD_SYNONYMS = ['dashboard', 'proxy']
+DASHBOARD_SYNONYMS = ['dashboard']
 
 KILL_SYNONYMS = ['kill']
 KILL_AND_RESET_ALL_SYNONYMS = ['kill-and-delete-all']
@@ -43,9 +42,9 @@ for command in DEPLOY_SYNONYMS:
 
     sp = subparsers.add_parser(command, description="Deploy one or more components")
     sp.add_argument("-o", "--output-dir", help="output directory for deployment files and logs")
-    sp.add_argument("-b", "--build", action="store_true", help="use 'docker build --no-cache' to rebuild docker image from the beginning without using cache")
+    sp.add_argument("-b", "--build-docker-image", action="store_true", help="use 'docker build --no-cache' to rebuild docker image from the beginning without using cache")
     sp.add_argument("-d", "--delete-before-deploy", action="store_true", help="use 'kubectl delete' and then 'kubectl create' to deploy component(s) instead of just 'kubectl update'")
-    sp.add_argument("-f", "--force", dest="build_and_reset_db", action="store_true", help="Same as -b and -d together - reset the db and rebuild the docker image.")
+    sp.add_argument("-f", "--force", dest="build_docker_image_and_reset_db", action="store_true", help="Same as -b and -d together - reset the db and rebuild the docker image.")
     sp.add_argument("component", nargs="?", help="if provided, only this one component will be deployed. Otherwise, all components will be deployed.", choices=DEPLOYABLE_COMPONENTS)
     sp.add_argument("label", choices=DEPLOYMENT_LABELS, help="which kubernetes cluster to deploy to")
 
@@ -100,8 +99,12 @@ if hasattr(args, 'label'):
     check_kubernetes_context(args.label)
 
 if args.command in DEPLOY_SYNONYMS:
-    other_settings = {key.upper(): str(value).lower() for key, value in args.__dict__.items() if value not in (None, False)}
+    other_settings = {}
+    other_settings["DELETE_BEFORE_DEPLOY"] = True if args.delete_before_deploy or args.build_docker_image_and_reset_db else None
+    other_settings["BUILD_DOCKER_IMAGE"] = True if args.build_docker_image or args.build_docker_image_and_reset_db else None
+
     deploy(args.label, component=args.component, other_settings=other_settings)
+
     if args.component:
         logger.info("=============")
         logger.info("tail %s logs ..." % args.component)
