@@ -3,23 +3,26 @@ This README describes how to deploy elasticsearch + kibana either locally or on 
 Prerequisites
 -------------
 
-The pre-requisites and dependencies described below (either for local or cloud-based deployments) should be installed on your laptop. 
+The following dependencies must be installed on your laptop:
 
-Make sure you have python2.7 installed, and on your `PATH`. 
+* python2.7
+* [pip](https://pip.pypa.io/en/stable/installing/#installing-with-get-pip-py)
+* a copy of this github repo
 
-Clone this github repo to a subdirectory of your `HOME` directory (for example: ~/code/hail-db-utils), and install python dependencies:
+      git clone https://github.com/macarthur-lab/hail-db-utils.git 
 
-       pip install -r requirements.txt
+* install this repo's python dependencies  
+  
+      cd hail-db-utils; pip install -r requirements.txt
 
 
 **Local Dev. Instance on MacOSX**
 
-The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube-solo-osx/releases)
-- a low-overhead VM that can be used to run Kubernetes on a MacOSX laptop.
+The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube-solo-osx/releases) which is a low-overhead VM for running Kubernetes on a MacOSX laptop.
 
-1. Install CoreOS dependency:
+1. Install CoreOS, which is required for for Kub-Solo:
 
-   a. `brew install libev`
+   a. `brew install libev`  
    b. Install the latest DMG from https://github.com/TheNewNormal/corectl.app/releases
 
    `WARNING: ` Being on a VPN connection may cause errors during CoreOS install steps that need to download components from the web.
@@ -43,7 +46,7 @@ The local installation relies on Kube-Solo (https://github.com/TheNewNormal/kube
    b. After this initial setup, you can just click `Preset OS Shell` to open a new terminal where docker and kubectl are preconfigured to use the local kubernetes cluster. 
 
 
-5.  **Trouble-shooting:** If your computer goes to sleep or reboots, the CoreOS / Kube-Solo VM may become unresponsive, requiring it to be rebooted (or possibly even reinitialized)
+5.  **Trouble-shooting Kube-Solo VM setup issues:** If your computer goes to sleep or reboots, the CoreOS / Kube-Solo VM may become unresponsive, requiring it to be rebooted (or possibly even reinitialized)
 
     For some reason,
 
@@ -75,7 +78,6 @@ Configuration
 -------------
 
 `*-settings.yaml` - contain settings for local, dev and prod deployments.
-
 
 Deployment
 ----------
