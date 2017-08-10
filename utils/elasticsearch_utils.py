@@ -237,7 +237,7 @@ def export_vds_to_elasticsearch(
         genotype_fields_list = [
             'num_alt = if(g.isCalled) g.nNonRefAlleles else -1',
             'gq = if(g.isCalled) g.gq else NA:Int',
-            'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[0] / total).toFloat else NA:Float',
+            'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[1] / total).toFloat else NA:Float',
             'sum_ad = g.ad.sum',
             'dp = if(g.isCalled) g.dp else NA:Int',
             #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
@@ -295,7 +295,7 @@ def export_kt_to_elasticsearch(
     """
 
     # output .tsv for debugging
-    kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
+    #kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
 
     if verbose:
         pprint(kt.schema)
@@ -329,7 +329,16 @@ def export_kt_to_elasticsearch(
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
     # export keytable records to this index
-    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size)
+    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={ "es.nodes.client.only": "true" })
+    
+    """
+    // es.write.operation // default: index (create, update, upsert)
+    // es.http.timeout // default 1m
+    // es.http.retries // default 3
+    // es.batch.size.bytes  // default 1mb
+    // es.batch.size.entries  // default 1000
+    // es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
+    """
 
     if verbose:
         print_elasticsearch_stats(es)
