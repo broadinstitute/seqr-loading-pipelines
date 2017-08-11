@@ -6,7 +6,6 @@ GNOMAD_VDS_PATHS = {
     "exomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.0.1.sites.liftover.b38.vds",
     "genomes_37": "gs://gnomad-public/release-170228/gnomad.genomes.r2.0.1.sites.vds",
     "genomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.0.1.sites.autosomes_and_X.liftover.b38.vds",
-    
 }
 
 

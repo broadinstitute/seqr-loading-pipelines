@@ -2,64 +2,17 @@ import logging
 import os
 import StringIO
 import subprocess
-import threading
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)
 
-class _LogPipe(threading.Thread):
-    """Based on: https://codereview.stackexchange.com/questions/6567/redirecting-subprocesses-output-stdout-and-stderr-to-the-logging-module """
 
-    def __init__(self, log_level=logging.INFO, log_line_label="", verbose=True, cache_output=False):
-
-        """Thread that reads data from a pipe and forwards it to logging.log"""
-        threading.Thread.__init__(self)
-
-        self.log_level = log_level
-        self.log_line_label = log_line_label
-        self.verbose = verbose
-        self.cache_output = cache_output
-        if self.cache_output:
-            self.log_output_buffer = StringIO.StringIO()
-
-        self.fd_read, self.fd_write = os.pipe()
-        self.pipe_reader = os.fdopen(self.fd_read)
-
-    def fileno(self):
-        """Return the write file descriptor of the pipe"""
-
-        return self.fd_write
-
-    def run(self):
-        """Run the thread, forwarding pipe data to logging"""
-
-        for line in iter(self.pipe_reader.readline, ''):
-            if self.cache_output:
-                self.log_output_buffer.write(line)
-            if self.verbose:
-                logging.log(self.log_level, "%s%s" % (self.log_line_label, line.strip('\n')))
-
-        self.pipe_reader.close()
-
-    def close(self):
-        """Close the write end of the pipe."""
-        os.close(self.fd_write)
-
-    def get_log(self):
-        if not self.cache_output:
-            raise Exception("get_log() can be called if cache_output=True is passed to the constructor")
-
-        return self.log_output_buffer.getvalue()
-
-
-def run_shell_command(command, wait_and_return_log_output=False, print_command=True, verbose=True, env={}):
-    """Runs the given command in a shell.
+def run_in_background(command, print_command=True, env={}):
+    """Runs the given command in a shell and returns without waiting for the command to finish.
 
     Args:
         command (string): the command to run
-        is_interactive (bool): Whether this command expects interactive input from the user
-        wait (bool): Whether to wait for the command to finish before returning
-        verbose (bool): whether to print command to log
+        print_command (bool): whether to print command before running
         env (dict): A custom environment in which to run
     Return:
         subprocess Popen object
@@ -70,40 +23,65 @@ def run_shell_command(command, wait_and_return_log_output=False, print_command=T
     if print_command:
         logger.info("==> %(command)s" % locals())
 
-    # pipe output to log
-    stdout_pipe = _LogPipe(logging.INFO, verbose=verbose, cache_output=wait_and_return_log_output)
-    stderr_pipe = _LogPipe(logging.INFO, verbose=verbose, cache_output=wait_and_return_log_output)
-    p = subprocess.Popen(command, shell=True, stdout=stdout_pipe, stderr=stderr_pipe, env=full_env)
-    stdout_pipe.close()
-    stderr_pipe.close()
-
-    if wait_and_return_log_output:
-        stderr_pipe.start()
-        stdout_pipe.run()
-        p.wait()
-        return p, stdout_pipe.get_log(), stderr_pipe.get_log()
+    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=full_env, bufsize=1)
 
     return p
 
 
-def run_interactive_shell_command(command, verbose=True, env={}):
+def run(command,
+        ok_return_codes=(0,),
+        errors_to_ignore=None,
+        ignore_all_errors=False,
+        print_command=True,
+        verbose=True,
+        env={},
+        is_interactive=False):
+    """Runs the given command in a shell.
+
+    Args:
+        command (string): the command to run
+        ok_return_codes (list): list of returncodes that indicate the command succeeded
+        errors_to_ignore (list): if the command's return code isn't in ok_return_codes, but its
+            output contains one of the strings in this list, the bad return code will be ignored,
+            and this function will return None. Otherwise, it raises a RuntimeException.
+        ignore_all_errors (bool): if True, all non-zero return codes will be ignored.
+        print_command (bool): whether to print command before running
+        verbose (bool): whether to print command output while command is running
+        wait (bool): Whether to wait for the command to finish before returning
+        env (dict): A custom environment in which to run
+    Return:
+        string: command output (combined stdout and stderr), or if return_subprocess_obj=True the return 2-tuple: (output, subprocess Popen object)
+    """
     full_env = dict(os.environ)  # copy external environment
     full_env.update({key: str(value) for key, value in env.items()})  # make sure all values are strings
 
-    if verbose:
+    if print_command:
         logger.info("==> %(command)s" % locals())
 
-    p = subprocess.Popen(command, shell=True, env=full_env)
+    if is_interactive:
+        p = subprocess.Popen(command, shell=True, env=full_env)
+        p.wait()
+        return None
+
+    # pipe output to log
+    p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=full_env, bufsize=1)
+    log_buffer = StringIO.StringIO()
+    for line in iter(p.stdout.readline, ''):
+        log_buffer.write(line)
+        if verbose:
+            logger.info(line.strip('\n'))
+    #p.stdout.close()
+
     p.wait()
 
-    return p
-
-def run_shell_command_and_return_output(command, ok_return_codes=(0,), verbose=False, *args, **kwargs):
-    p, stdout, stderr = run_shell_command(command, *args, wait_and_return_log_output=True, verbose=verbose, **kwargs)
+    output = log_buffer.getvalue()
     if p.returncode not in ok_return_codes:
-        raise RuntimeError(stderr)
-
-    return stdout, stderr
+        if ignore_all_errors or (errors_to_ignore and any([error_to_ignore in str(output) for error_to_ignore in errors_to_ignore])):
+            return None
+        else:
+            raise RuntimeError(output)
+    else:
+        return output
 
 
 def wait_for(procs):

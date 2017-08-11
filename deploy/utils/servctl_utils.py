@@ -1,4 +1,7 @@
 import collections
+from threading import Thread
+
+import io
 import jinja2
 import logging
 import os
@@ -8,15 +11,16 @@ import time
 import yaml
 
 from deploy.utils.constants import COMPONENT_PORTS, COMPONENTS_TO_OPEN_IN_BROWSER
-from utils.shell_utils import run_shell_command, wait_for, run_interactive_shell_command, \
-    run_shell_command_and_return_output as run
+from deploy.utils.kubectl_utils import get_pod_name, get_service_name, \
+    run_in_pod, get_pod_status
+from utils.shell_utils import run, wait_for, run_in_background
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 def get_component_port_pairs(components=[]):
-    """Uses the COMPONENT_PORTS dictionary to return a list of (<component name>, <port>) pairs
-    (For example: [('elasticsearch', 9200), ('kibana', 5601), ... ])
+    """Uses the PORTS dictionary to return a list of (<component name>, <port>) pairs (For example:
+    [('postgres', 5432), ('seqr', 8000), ('seqr', 3000), ... ])
 
     Args:
         components (list): optional list of component names. If not specified, all components will be included.
@@ -45,7 +49,7 @@ def load_settings(settings_file_paths, settings=None):
         settings = collections.OrderedDict()
 
     for settings_path in settings_file_paths:
-        with open(settings_path) as settings_file:
+        with io.open(settings_path, encoding="UTF-8") as settings_file:
             try:
                 settings_file_contents = settings_file.read()
                 yaml_string = jinja2.Template(settings_file_contents).render(settings)
@@ -67,45 +71,6 @@ def load_settings(settings_file_paths, settings=None):
     return settings
 
 
-def script_processor(bash_script_istream, settings):
-    """Returns a string representation of the given bash script such that environment variables are
-    bound to their values in settings.
-
-    Args:
-        bash_script_istream (iter): a stream or iterator over lines in the bash script
-        settings (dict): a dictionary of keys & values to add to the environment of the given bash script at runtime
-    Returns:
-        string: the same bash script with variables resolved to values in the settings dict.
-    """
-    result = ""
-    for i, line in enumerate(bash_script_istream):
-        is_shebang_line = (i == 0 and line.startswith('#!'))
-        if is_shebang_line:
-            result += line  # write shebang line before settings
-
-        if i == 0:
-            # insert a line that sets a bash environment variable for each key-value pair in setting
-            result += '\n'
-            for key, value in settings.items():
-                if type(value) == str:
-                    if "'" in value:
-                        # NOTE: single quotes in settings values will break the naive approach to settings used here.
-                        raise ValueError("%(key)s=%(value)s value contains unsupported single-quote char" % locals())
-
-                    value = "'%s'" % value  # put quotes around the string in case it contains spaces
-                elif type(value) == bool:
-                    value = str(value).lower()
-
-                result += "%(key)s=%(value)s\n" % locals()
-
-            result += '\n'
-
-        if not is_shebang_line:
-            result += line  # write all other lines after settings
-
-    return result
-
-
 def render(input_base_dir, relative_file_path, settings, output_base_dir):
     """Calls the given render_func to convert the input file + settings dict to a rendered in-memory
     config which it then writes out to the output directory.
@@ -118,7 +83,7 @@ def render(input_base_dir, relative_file_path, settings, output_base_dir):
     """
 
     input_file_path = os.path.join(input_base_dir, relative_file_path)
-    with open(input_file_path) as istream:
+    with io.open(input_file_path, encoding="UTF-8") as istream:
         try:
             rendered_string = jinja2.Template(istream.read()).render(settings)
         except TypeError as e:
@@ -139,48 +104,29 @@ def render(input_base_dir, relative_file_path, settings, output_base_dir):
     logger.info("-- wrote rendered output to %s" % output_file_path)
 
 
-def _get_resource_name(component, resource_type="pod"):
-    """Runs 'kubectl get <resource_type> | grep <component>' command to retrieve the full name of this resource.
-
-    Args:
-        component (string): keyword to use for looking up a kubernetes entity (eg. 'phenotips' or 'nginx')
-    Returns:
-        (string) full resource name (eg. "postgres-410765475-1vtkn")
-    """
-
-    output = subprocess.check_output("kubectl get %(resource_type)s -l name=%(component)s -o jsonpath={.items[0].metadata.name}" % locals(), shell=True)
-    output = output.strip('\n')
-
-    return output
-
-
-def _get_pod_name(component):
-    """Runs 'kubectl get pods | grep <component>' command to retrieve the full pod name.
-
-    Args:
-        component (string): keyword to use for looking up a kubernetes pod (eg. 'phenotips' or 'nginx')
-    Returns:
-        (string) full pod name (eg. "postgres-410765475-1vtkn")
-    """
-    return _get_resource_name(component, resource_type="pod")
-
-
-def retrieve_settings(deployment_label):
+def retrieve_settings(deployment_target):
     settings = collections.OrderedDict()
 
     settings['HOME'] = os.path.expanduser("~")
     settings['TIMESTAMP'] = time.strftime("%Y%m%d_%H%M%S")
+    settings['REPO_PATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 
     load_settings([
         "deploy/kubernetes/shared-settings.yaml",
-        "deploy/kubernetes/%(deployment_label)s-settings.yaml" % locals(),
+        "deploy/kubernetes/%(deployment_target)s-settings.yaml" % locals(),
     ], settings)
 
     return settings
 
 
-def check_kubernetes_context(deployment_label):
-    # make sure the environment is configured to use a local kube-solo cluster, and not gcloud or something else
+def check_kubernetes_context(deployment_target):
+    """
+    Make sure the environment is configured correctly, so that kubectl and other commands
+    are actually aimed at the given deployment target and not some other cluster.
+
+    Args:
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
+    """
     try:
         cmd = 'kubectl config current-context'
         kubectl_current_context = subprocess.check_output(cmd, shell=True).strip()
@@ -191,75 +137,59 @@ def check_kubernetes_context(deployment_label):
         #    sys.exit('Exiting...')
         return
 
-    if deployment_label == "local":
+    if deployment_target == "local":
         if kubectl_current_context != 'kube-solo':
-            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s'. For %(deployment_label)s deployment, this is "
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s'. For %(deployment_target)s deployment, this is "
                           "expected to equal 'kube-solo'. Please configure your shell environment "
                           "to point to a local kube-solo cluster by installing "
                           "kube-solo from https://github.com/TheNewNormal/kube-solo-osx, starting the kube-solo VM, "
                           "and then clicking on 'Preset OS Shell' in the kube-solo menu to launch a pre-configured shell.") % locals())
             sys.exit(-1)
 
-    elif deployment_label.startswith("gcloud"):
-        suffix = deployment_label.split("-")[-1]  # "dev" or "prod"
+    elif deployment_target.startswith("gcloud"):
+        suffix = deployment_target.split("-")[-1]  # "dev" or "prod"
         if not kubectl_current_context.startswith('gke_') or not kubectl_current_context.endswith(suffix):
-            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_label)s. "
+            logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_target)s. "
                           "To fix this, run:\n\n   "
                           "gcloud container clusters get-credentials <cluster-name>\n\n"
                           "Using one of these clusters: " + subprocess.check_output("gcloud container clusters list", shell=True) +
                           "\n\n") % locals())
             sys.exit(-1)
     else:
-        raise ValueError("Unexpected value for deployment_label: %s" % deployment_label)
-
-
-def lookup_json_path(resource_type="pod", labels={}, json_path=".items[0].metadata.name"):
-    """Runs 'kubectl get <resource_type> | grep <component>' command to retrieve the full name of this resource.
-
-    Args:
-        component (string): keyword to use for looking up a kubernetes entity (eg. 'phenotips' or 'nginx')
-        labels (dict):
-        json_path (string):
-    Returns:
-        (string) resource value (eg. "postgres-410765475-1vtkn")
-    """
-
-    l_args = " ".join(['-l %s=%s' % (key, value) for key, value in labels.items()])
-    output = subprocess.check_output("kubectl get %(resource_type)s %(l_args)s -o jsonpath={%(json_path)s}" % locals(), shell=True)
-    output = output.strip('\n')
-
-    return output
+        raise ValueError("Unexpected value for deployment_target: %s" % deployment_target)
 
 
 def show_status():
     """Print status of various docker and kubernetes subsystems"""
 
-    run_shell_command("docker info").wait()
-    run_shell_command("docker images").wait()
-    run_shell_command("kubectl cluster-info").wait()
-    run_shell_command("kubectl config view | grep 'username\|password'").wait()
-    run_shell_command("kubectl get services").wait()
-    run_shell_command("kubectl get pods").wait()
-    run_shell_command("kubectl config current-context").wait()
+    run("docker info")
+    run("docker images")
+    run("kubectl cluster-info", ignore_all_errors=True)
+    run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)
+    run("kubectl get services", ignore_all_errors=True)
+    run("kubectl get pods", ignore_all_errors=True)
+    run("kubectl config current-context", ignore_all_errors=True)
 
 
 def show_dashboard():
-    """Launches the kubernetes dashboard"""
+    """Opens the kubernetes dashboard in a new browser window"""
 
-    proxy = run_shell_command('kubectl proxy')
-    run_shell_command('open http://localhost:8001/ui')
-    proxy.wait()
+    p = run_in_background('kubectl proxy')
+    run('open http://localhost:8001/ui')
+    p.wait()
 
 
-def print_log(components, enable_stream_log, wait=True):
-    """Executes kubernetes command to print the log for the given pod.
+def print_log(components, deployment_target, enable_stream_log, wait=True):
+    """Executes kubernetes command to print logs for the given pod.
 
     Args:
-        components (list): one or more keywords to use for looking up a kubernetes pods (eg. 'phenotips' or 'nginx').
-            If more than one is specified, logs will be printed from each component in parallel.
+        components (list): one or more kubernetes pod labels (eg. 'phenotips' or 'nginx').
+            If more than one is specified, logs will be printed from all components in parallel.
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
         enable_stream_log (bool): whether to continuously stream the log instead of just printing
             the log up to now.
-        wait (bool): Whether to block indefinitely as long as the forwarding process is running.
+        wait (bool): If False, this method will return without waiting for the log streaming process
+            to finish printing all logs.
 
     Returns:
         (list): Popen process objects for the kubectl port-forward processes.
@@ -267,12 +197,18 @@ def print_log(components, enable_stream_log, wait=True):
     stream_arg = "-f" if enable_stream_log else ""
 
     procs = []
-    for component in components:
-        pod_name = _get_pod_name(component)
-        if not pod_name:
-            raise ValueError("No '%(component)s' pods found. Is the kubectl environment configured in this terminal? and has this type of pod been deployed?" % locals())
+    for component_label in components:
+        while get_pod_status(component_label, deployment_target) != "Running":
+            time.sleep(5)
 
-        p = run_shell_command("kubectl logs %(stream_arg)s %(pod_name)s" % locals())
+        pod_name = get_pod_name(component_label, deployment_target=deployment_target)
+
+        p = run_in_background("kubectl logs %(stream_arg)s %(pod_name)s" % locals())
+        def print_command_log():
+            for line in iter(p.stdout.readline, ''):
+                logger.info(line.strip('\n'))
+        t = Thread(target=print_command_log)
+        t.start()
         procs.append(p)
 
     if wait:
@@ -281,33 +217,27 @@ def print_log(components, enable_stream_log, wait=True):
     return procs
 
 
-def exec_command(component, command, is_interactive=False):
-    """Runs a kubernetes command to execute an arbitrary linux command string on the given pod.
+def set_environment(deployment_target):
+    """Configure the shell environment to point to the given deployment_target.
 
     Args:
-        component (string): keyword to use for looking up a kubernetes pod (eg. 'phenotips' or 'nginx')
-        command (string): the command to execute.
-        is_interactive (bool): whether the command expects input from the user
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
     """
-
-    pod_name = _get_pod_name(component)
-    if not pod_name:
-        raise ValueError("No '%(component)s' pods found. Is the kubectl environment configured in this terminal? and has this type of pod been deployed?" % locals())
-
-    if not is_interactive:
-        run_shell_command("kubectl exec %(pod_name)s %(command)s" % locals(), wait_and_return_log_output=True)
-    else:
-        run_interactive_shell_command("kubectl exec -it %(pod_name)s %(command)s" % locals())
+    settings = retrieve_settings(deployment_target)
+    run("gcloud config set core/project %(GCLOUD_PROJECT)s" % settings)
+    run("gcloud config set compute/zone %(GCLOUD_ZONE)s" % settings)
+    run("gcloud container clusters get-credentials --zone=%(GCLOUD_ZONE)s %(CLUSTER_NAME)s" % settings)
 
 
-def port_forward(component_port_pairs=[], wait=True, open_browser=False):
-    """Executes kubernetes command to forward traffic on the given localhost port to the given pod.
+def port_forward(component_port_pairs=[], deployment_target=None, wait=True, open_browser=False):
+    """Executes kubectl command to forward traffic between localhost and the given pod.
     While this is running, connecting to localhost:<port> will be the same as connecting to that port
     from the pod's internal network.
 
     Args:
         component_port_pairs (list): 2-tuple(s) containing keyword to use for looking up a kubernetes
             pod, along with the port to forward to that pod (eg. ('mongo', 27017), or ('phenotips', 8080))
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
         wait (bool): Whether to block indefinitely as long as the forwarding process is running.
         open_browser (bool): If component_port_pairs includes components that have an http server
             (eg. "kibana"), then open a web browser window to the forwarded port.
@@ -315,15 +245,16 @@ def port_forward(component_port_pairs=[], wait=True, open_browser=False):
         (list): Popen process objects for the kubectl port-forward processes.
     """
     procs = []
-    for component, port in component_port_pairs:
-        pod_name = _get_pod_name(component)
-        if not pod_name:
-            raise ValueError("No '%(component)s' pods found. Is the kubectl environment configured in this terminal? and has this type of pod been deployed?" % locals())
+    for component_label, port in component_port_pairs:
+        while get_pod_status(component_label, deployment_target) != "Running":
+            time.sleep(5)
 
-        logger.info("Forwarding port %s for %s" % (port, component))
-        p = run_shell_command("kubectl port-forward %(pod_name)s %(port)s" % locals())
+        logger.info("Forwarding port %s for %s" % (port, component_label))
+        pod_name = get_pod_name(component_label, deployment_target=deployment_target)
 
-        if open_browser and component in COMPONENTS_TO_OPEN_IN_BROWSER:
+        p = run_in_background("kubectl port-forward %(pod_name)s %(port)s" % locals())
+
+        if open_browser and component_label in COMPONENTS_TO_OPEN_IN_BROWSER:
             os.system("open http://localhost:%s" % port)
 
         procs.append(p)
@@ -334,55 +265,70 @@ def port_forward(component_port_pairs=[], wait=True, open_browser=False):
     return procs
 
 
-def troubleshoot_component(component):
-    """Executes kubernetes commands to print detailed debug output."""
-
-    pod_name = _get_pod_name(component)
-
-    run_shell_command("kubectl get pods -o yaml %(pod_name)s" % locals()).wait()
-
-
-def kill_components(components=[]):
-    """Executes kubernetes commands to kill deployments, services, pods for the given component(s)
+def troubleshoot_component(component, deployment_target):
+    """Runs kubectl command to print detailed debug output for the given component.
 
     Args:
-        components (list): one or more components to kill (eg. 'phenotips' or 'nginx').
+        component (string): component label (eg. "postgres")
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
     """
-    for component in components:
-        run_shell_command("kubectl delete deployments %(component)s" % locals()).wait()
-        resource_name = _get_resource_name(component, resource_type='service')
-        run_shell_command("kubectl delete services %(resource_name)s" % locals()).wait()
-        resource_name = _get_pod_name(component)
-        run_shell_command("kubectl delete pods %(resource_name)s" % locals()).wait()
 
-        run_shell_command("kubectl get services" % locals()).wait()
-        run_shell_command("kubectl get pods" % locals()).wait()
+    pod_name = get_pod_name(component, deployment_target=deployment_target)
+
+    run("kubectl get pods -o yaml %(pod_name)s" % locals(), verbose=True)
 
 
-def kill_and_delete_all(deployment_label):
-    """Execute kill and delete.
+def kill_component(component, deployment_target=None):
+    """Runs kubectl commands to delete any running deployment, service, or pod objects for the
+    given component(s).
 
     Args:
-        deployment_label (string): one of the DEPLOYMENT_LABELS  (eg. "local", or "gcloud")
+        component (string): component to delete (eg. 'phenotips' or 'nginx').
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS.
+    """
+    if component == "cockpit":
+        run("kubectl delete rc cockpit", errors_to_ignore=["not found"])
+
+    run("kubectl delete deployments %(component)s" % locals(), errors_to_ignore=["not found"])
+    run("kubectl delete services %(component)s" % locals(), errors_to_ignore=["not found"])
+
+    pod_name = get_pod_name(component, deployment_target=deployment_target)
+    if pod_name:
+        run("kubectl delete pods %(pod_name)s" % locals(), errors_to_ignore=["not found"])
+
+    if component == "elasticsearch-sharded":
+        run("kubectl delete StatefulSet elasticsearch" % locals(), errors_to_ignore=["not found"])
+
+    run("kubectl get services" % locals())
+    run("kubectl get pods" % locals())
+
+
+
+def kill_and_delete_all(deployment_target):
+    """Runs kubectl and gcloud commands to delete the given cluster and all objects in it.
+
+    Args:
+        deployment_target (string): "local", "gcloud-dev", etc. See constants.DEPLOYMENT_TARGETS
 
     """
     settings = {}
 
     load_settings([
         "deploy/kubernetes/shared-settings.yaml",
-        "deploy/kubernetes/%(deployment_label)s-settings.yaml" % locals(),
+        "deploy/kubernetes/%(deployment_target)s-settings.yaml" % locals(),
     ], settings)
-
 
     run('kubectl delete deployments --all')
     run('kubectl delete replicationcontrollers --all')
     run('kubectl delete services --all')
+    run('kubectl delete StatefulSets --all')
     run('kubectl delete pods --all')
-    run('kubectl delete pods --all')
-    run('docker kill $(docker ps -q)')
-    run('docker rmi -f $(docker images -q)')
 
     if settings.get("DEPLOY_TO_PREFIX") == "gcloud":
-        run('gcloud container clusters delete %(CLUSTER_NAME)s --zone %(GCLOUD_ZONE)s --no-async' % settings)
-        run('gcloud compute disks delete %(DEPLOY_TO)s-elasticsearch-disk --zone %(GCLOUD_ZONE)s' % settings)
+        run("gcloud container clusters delete --zone %(GCLOUD_ZONE)s --no-async %(CLUSTER_NAME)s" % settings, is_interactive=True)
+        run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
+    else:
+        run('docker kill $(docker ps -q)', errors_to_ignore=["requires at least 1 arg"])
+        run('docker rmi -f $(docker images -q)', errors_to_ignore=["requires at least 1 arg"])
+
 

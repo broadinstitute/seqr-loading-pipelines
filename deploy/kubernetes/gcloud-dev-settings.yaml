@@ -7,4 +7,6 @@ DOCKER_IMAGE_PREFIX: 'gcr.io/broad-mpg-gnomad'
 # gcloud settings
 CLUSTER_NAME: 'hail-db-cluster-dev'
 CLUSTER_MACHINE_TYPE: 'n1-highmem-2'   # n1-standard-2, n1-standard-4 .. n1-standard-64,  n1-highmem-2, n1-highcpu-2 ..
-CLUSTER_NUM_NODES: 1
+CLUSTER_NUM_NODES: 3
+
+ELASTICSEARCH_NUM_SHARDS: 3
