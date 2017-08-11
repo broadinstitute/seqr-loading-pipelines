@@ -84,7 +84,7 @@ Deployment
 
 To deploy all services to your Kubernetes cluster, run:
 
-    ./servctl deploy {label}   # label can be 'local', 'gcloud-dev', or 'gcloud-prod'
+    ./servctl deploy {label}   # label can be 'local', 'gcloud-dev'
 
 
 The `./servctl` script also provides subcommands for performing common steps for managing and troubleshooting:
