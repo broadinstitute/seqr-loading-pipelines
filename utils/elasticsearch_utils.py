@@ -294,11 +294,15 @@ def export_kt_to_elasticsearch(
         verbose (bool): whether to print schema and stats
     """
 
+    # output .tsv for debugging
+    #kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
+
     if verbose:
         pprint(kt.schema)
 
     # create elasticsearch index with fields that match the ones in the keytable
     field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"])
+
     elasticsearch_schema = generate_elasticsearch_schema(
         field_path_to_field_type_map,
         disable_doc_values_for_fields=disable_doc_values_for_fields,
@@ -325,7 +329,16 @@ def export_kt_to_elasticsearch(
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
     # export keytable records to this index
-    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size)
+    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={ "es.nodes.client.only": "true" })
+    
+    """
+    // es.write.operation // default: index (create, update, upsert)
+    // es.http.timeout // default 1m
+    // es.http.retries // default 3
+    // es.batch.size.bytes  // default 1mb
+    // es.batch.size.entries  // default 1000
+    // es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
+    """
 
     if verbose:
         print_elasticsearch_stats(es)

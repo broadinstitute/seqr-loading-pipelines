@@ -9,7 +9,7 @@ p.add_argument("-m", "--machine-type", default="n1-highmem-4")
 p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-n", "--num-workers", default="2")
 p.add_argument("-n2", "--num-preemtible-workers", default="0")
-p.add_argument("cluster", nargs="?", default="dataproc-cluster-with-notebook")
+p.add_argument("cluster", nargs="?", default="notebook")
 args = p.parse_args()
 
 # create cluster

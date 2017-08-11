@@ -8,7 +8,7 @@ MPC_INFO_FIELDS = """
 """
 
 
-def add_mpc_from_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS):
+def add_mpc_from_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, verbose=True):
     """Add MPC annotations [Samocha 2017] to the vds"""
 
     if genome_version == "37":
@@ -25,6 +25,10 @@ def add_mpc_from_vds(hail_context, vds, genome_version, root="va.mpc", info_fiel
         other_source_fields=info_fields,
         other_source_root="vds.info",
     )
-    print("EXPRESSION: " + str(expr))
-    return vds.annotate_variants_vds(mpc_vds, expr=expr)
 
+    if verbose:
+        print(expr)
+        #print("\n==> mpc summary: ")
+        #print(mpc_vds.summarize())
+
+    return vds.annotate_variants_vds(mpc_vds, expr=expr)

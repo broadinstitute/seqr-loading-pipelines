@@ -6,7 +6,7 @@ import os
 p = argparse.ArgumentParser()
 p.add_argument("-z", "--zone", default="us-central1-b")
 p.add_argument("-m", "--machine-type", default="n1-highmem-4")
-p.add_argument("-c", "--cluster", default="dataproc-cluster-vep-grch37")
+p.add_argument("-c", "--cluster", default="vep-grch37")
 p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-n", "--num-workers", default="2")
 p.add_argument("-n2", "--num-preemtible-workers", default="0")

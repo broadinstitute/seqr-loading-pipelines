@@ -5,8 +5,7 @@ import subprocess
 import threading
 from collections import namedtuple
 
-logger = logging.getLogger()
-
+logger = logging.getLogger(__name__)
 
 class _LogPipe(threading.Thread):
     """Based on: https://codereview.stackexchange.com/questions/6567/redirecting-subprocesses-output-stdout-and-stderr-to-the-logging-module """
@@ -25,8 +24,6 @@ class _LogPipe(threading.Thread):
 
         self.fd_read, self.fd_write = os.pipe()
         self.pipe_reader = os.fdopen(self.fd_read)
-
-        self.start()
 
     def fileno(self):
         """Return the write file descriptor of the pipe"""
@@ -55,7 +52,7 @@ class _LogPipe(threading.Thread):
         return self.log_output_buffer.getvalue()
 
 
-def run_shell_command(command, is_interactive=False, wait_and_return_log_output=False, verbose=True, env={}):
+def run_shell_command(command, wait_and_return_log_output=False, print_command=True, verbose=True, env={}):
     """Runs the given command in a shell.
 
     Args:
@@ -68,29 +65,45 @@ def run_shell_command(command, is_interactive=False, wait_and_return_log_output=
         subprocess Popen object
     """
     full_env = dict(os.environ)  # copy external environment
-    full_env.update(env)
+    full_env.update({key: str(value) for key, value in env.items()})  # make sure all values are strings
 
-    full_env.update({ key: str(value) for key, value in full_env.items() })  # make sure all values are strings
+    if print_command:
+        logger.info("==> %(command)s" % locals())
 
-    if verbose:
-        with_env = ""  # ("with env: " + ", ".join("%s=%s" % (key, value) for key, value in full_env.items())) if full_env else ""
-        logger.info("run: '%(command)s' %(with_env)s" % locals())
-
-    if not is_interactive:
-        # pipe output to log
-        stdout_pipe = _LogPipe(logging.INFO, verbose=verbose, cache_output=wait_and_return_log_output)
-        stderr_pipe = _LogPipe(logging.INFO,verbose=verbose, cache_output=wait_and_return_log_output)
-        p = subprocess.Popen(command, shell=True, stdout=stdout_pipe, stderr=stderr_pipe, env=full_env)
-        stdout_pipe.close()
-        stderr_pipe.close()
-    else:
-        p = subprocess.Popen(command, shell=True, env=full_env)
+    # pipe output to log
+    stdout_pipe = _LogPipe(logging.INFO, verbose=verbose, cache_output=wait_and_return_log_output)
+    stderr_pipe = _LogPipe(logging.INFO, verbose=verbose, cache_output=wait_and_return_log_output)
+    p = subprocess.Popen(command, shell=True, stdout=stdout_pipe, stderr=stderr_pipe, env=full_env)
+    stdout_pipe.close()
+    stderr_pipe.close()
 
     if wait_and_return_log_output:
+        stderr_pipe.start()
+        stdout_pipe.run()
         p.wait()
         return p, stdout_pipe.get_log(), stderr_pipe.get_log()
 
     return p
+
+
+def run_interactive_shell_command(command, verbose=True, env={}):
+    full_env = dict(os.environ)  # copy external environment
+    full_env.update({key: str(value) for key, value in env.items()})  # make sure all values are strings
+
+    if verbose:
+        logger.info("==> %(command)s" % locals())
+
+    p = subprocess.Popen(command, shell=True, env=full_env)
+    p.wait()
+
+    return p
+
+def run_shell_command_and_return_output(command, ok_return_codes=(0,), verbose=False, *args, **kwargs):
+    p, stdout, stderr = run_shell_command(command, *args, wait_and_return_log_output=True, verbose=verbose, **kwargs)
+    if p.returncode not in ok_return_codes:
+        raise RuntimeError(stderr)
+
+    return stdout, stderr
 
 
 def wait_for(procs):
