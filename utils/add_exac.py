@@ -83,7 +83,6 @@ INFO_FIELDS = """
     Hom_CONSANGUINEOUS: Array[String],
     """
 
-
 def add_exac_from_vds(hail_context, vds, genome_version, root="va.exac", top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
     if genome_version == "37":
         exac_vds_path = 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vds'

@@ -329,7 +329,7 @@ def export_kt_to_elasticsearch(
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
     # export keytable records to this index
-    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={ "es.nodes.client.only": "true" })
+    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={}) #, config={ "es.nodes.client.only": "true" })
     
     """
     // es.write.operation // default: index (create, update, upsert)

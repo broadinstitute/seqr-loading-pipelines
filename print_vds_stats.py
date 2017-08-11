@@ -1,10 +1,13 @@
 import argparse
 import hail
 from pprint import pprint
+
 hc = hail.HailContext()
 
 p = argparse.ArgumentParser()
+p.add_argument("-s", "--schema-only", help="only print the schema, and skip running summarize()", action="store_true")
 p.add_argument("input_path", help="input VCF or VDS")
+
 args = p.parse_args()
 input_path = args.input_path
 
@@ -24,4 +27,7 @@ pprint(vds.genotype_schema)
 
 print("\n==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
 
-print(vds.summarize())
+if not args.schema_only:
+    print("==================")
+    print(vds.summarize())
+    print("==================")
