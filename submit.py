@@ -15,8 +15,11 @@ args, unknown_args = p.parse_known_args()
 #hail_zip="gs://gnomad-bw2/hail-jar/hail-python.prev.zip"
 #hail_jar="gs://gnomad-bw2/hail-jar/hail-all-spark.prev.jar"
 
-hail_zip="gs://gnomad-bw2/hail-jar/hail-python.test.zip"
-hail_jar="gs://gnomad-bw2/hail-jar/hail-all-spark.test.jar"
+#hail_zip="gs://gnomad-bw2/hail-jar/hail-python.test.zip"
+#hail_jar="gs://gnomad-bw2/hail-jar/hail-all-spark.test.jar"
+
+hail_zip="gs://gnomad-bw2/hail-jar/hail-python.test2.zip"
+hail_jar="gs://gnomad-bw2/hail-jar/hail-all-spark.test2.jar"
 
 #hash = subprocess.check_output("gsutil cat gs://hail-common/latest-hash.txt", shell=True)
 #hash = hash.strip()

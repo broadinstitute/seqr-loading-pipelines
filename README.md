@@ -92,13 +92,12 @@ The `./servctl` script also provides subcommands for performing common steps for
       deploy                        # Deploy one or more components
       logs                          # show logs for one or more components
       port-forward                  # start port-forwarding for service(s) running in the given component container(s), allowing connections via localhost
-      connect-to                    # starts port-forwarding and shows logs
+      connect-to                    # start port-forwarding and show logs for the given component
       shell                         # open a bash shell inside one of the component containers
       status                        # print status of all kubernetes and docker subsystems
       dashboard                     # open the kubernetes dasbhoard in a browser
-      kill                          # removes pods and other entities of the give component - the opposite of deploy.
-      delete                        # clears the given database - deleteing all records
-      kill-and-delete-all           # kill and deletes all resources, components and data - reseting the kubernetes environment to as close to a clean slate as possible
+      delete                        # delete pods and resources for a specific component - opposite of deploy
+      delete-all                    # delete all resources and components and also (optionally) the VM(s) they were running on
 
 
 Running

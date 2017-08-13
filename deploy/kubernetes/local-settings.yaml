@@ -22,3 +22,4 @@ CLUSTER_NAME: 'k8solo-01'
 
 ELASTICSEARCH_DBPATH: '{{ HOME }}/kube-solo/elasticsearch_data'
 
+ELASTICSEARCH_NUM_PODS: 1

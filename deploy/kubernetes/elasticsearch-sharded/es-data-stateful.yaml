@@ -7,10 +7,12 @@ metadata:
     role: data
 spec:
   serviceName: elasticsearch-data
-  replicas: {{ ELASTICSEARCH_NUM_SHARDS }}
+  replicas: {{ ELASTICSEARCH_NUM_DATA_PODS }}
   template:
     metadata:
       labels:
+        name: es-data
+        deployment: {{ DEPLOY_TO }}
         component: elasticsearch
         role: data
     spec:

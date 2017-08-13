@@ -200,6 +200,7 @@ def export_vds_to_elasticsearch(
         index_name="data",
         index_type_name="variant",
         block_size=5000,
+        num_shards=10,
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
@@ -215,6 +216,8 @@ def export_vds_to_elasticsearch(
         index_name (string): elasticsearch index name (equivalent to a database name in SQL)
         index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
         block_size (int): number of records to write in one bulk insert
+        num_shards (int): number of shards to use for this index
+            (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)
         delete_index_before_exporting (bool): Whether to drop and re-create the index before exporting.
         disable_doc_values_for_fields: (optional) list of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
@@ -256,8 +259,9 @@ def export_vds_to_elasticsearch(
         int(port),
         index_name,
         index_type_name,
-        block_size,
-        delete_index_before_exporting,
+        block_size=block_size,
+        num_shards=num_shards,
+        delete_index_before_exporting=delete_index_before_exporting,
         disable_doc_values_for_fields=disable_doc_values_for_fields,
         disable_index_for_fields=disable_index_for_fields,
         verbose=verbose)
@@ -270,6 +274,7 @@ def export_kt_to_elasticsearch(
         index_name="data",
         index_type_name="variant",
         block_size=5000,
+        num_shards=10,
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
@@ -284,6 +289,8 @@ def export_kt_to_elasticsearch(
         index_name (string): elasticsearch index name (equivalent to a database name in SQL)
         index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
         block_size (int): number of records to write in one bulk insert
+        num_shards (int): number of shards to use for this index 
+            (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)
         delete_index_before_exporting (bool): Whether to drop and re-create the index before exporting.
         disable_doc_values_for_fields: (optional) list of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
@@ -311,7 +318,7 @@ def export_kt_to_elasticsearch(
 
     elasticsearch_mapping = {
         "settings" : {
-            "number_of_shards": 1,
+            "number_of_shards": num_shards,
             "number_of_replicas": 0,
             "index.mapping.total_fields.limit": 10000,
         },
@@ -330,7 +337,7 @@ def export_kt_to_elasticsearch(
 
     # export keytable records to this index
     kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={}) #, config={ "es.nodes.client.only": "true" })
-    
+
     """
     // es.write.operation // default: index (create, update, upsert)
     // es.http.timeout // default 1m

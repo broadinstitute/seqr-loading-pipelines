@@ -6,10 +6,13 @@ metadata:
     component: elasticsearch
     role: client
 spec:
+  type: NodePort
   selector:
     component: elasticsearch
     role: client
   ports:
   - name: http
-    port: 9200
+    nodePort: {{ ELASTICSEARCH_SERVICE_PORT }}
+    port: {{ ELASTICSEARCH_SERVICE_PORT }}
+    #targetPort: 9200
     protocol: TCP

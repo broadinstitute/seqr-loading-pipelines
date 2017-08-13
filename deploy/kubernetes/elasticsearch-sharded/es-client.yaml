@@ -3,13 +3,17 @@ kind: Deployment
 metadata:
   name: es-client
   labels:
+    name: elasticsearch
+    deployment: {{ DEPLOY_TO }}
     component: elasticsearch
     role: client
 spec:
-  replicas: 2
+  replicas: {{ ELASTICSEARCH_NUM_CLIENT_PODS }}
   template:
     metadata:
       labels:
+        name: elasticsearch
+        deployment: {{ DEPLOY_TO }}
         component: elasticsearch
         role: client
     spec:
@@ -50,7 +54,7 @@ spec:
         - name: "ES_JAVA_OPTS"
           value: "-Xms2g -Xmx2g"
         ports:
-        - containerPort: 9200
+        - containerPort: {{ ELASTICSEARCH_SERVICE_PORT }}
           name: http
           protocol: TCP
         - containerPort: 9300

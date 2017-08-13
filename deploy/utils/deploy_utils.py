@@ -3,7 +3,6 @@ import logging
 import os
 import time
 
-from deploy.utils.constants import BASE_DIR
 
 from deploy.utils.kubectl_utils import get_pod_status, get_pod_name, \
     run_in_pod, get_node_name, POD_READY_STATUS, POD_RUNNING_STATUS
@@ -55,7 +54,7 @@ def deploy(deployment_target, components=None, output_dir=None, other_settings={
     for file_path in glob.glob("deploy/kubernetes/*.yaml") + glob.glob("deploy/kubernetes/*/*.yaml"):
         file_path = file_path.replace('deploy/kubernetes/', '')
 
-        input_base_dir = os.path.join(BASE_DIR, 'deploy/kubernetes')
+        input_base_dir = os.path.join(other_settings["BASE_DIR"], 'deploy/kubernetes')
         output_base_dir = os.path.join(output_dir, 'deploy/kubernetes')
 
         render(input_base_dir, file_path, settings, output_base_dir)
@@ -64,11 +63,16 @@ def deploy(deployment_target, components=None, output_dir=None, other_settings={
     deploy_init(settings)
 
     if not components or "cockpit" in components:
-        deploy_cockpit(settings)
+        if components or settings["DEPLOY_TO"] != "local":
+            deploy_cockpit(settings)
     #if not components or "elasticsearch" in components:
     #    deploy_elasticsearch(settings)
-    if not components or "elasticsearch-sharded" in components:
-        deploy_elasticsearch_sharded(settings)
+    if not components or "elasticsearch" in components:
+        if settings["DEPLOY_TO"] == "local":
+            deploy_elasticsearch(settings)
+        else:
+            deploy_elasticsearch_sharded(settings)
+
     if not components or "kibana" in components:
         deploy_kibana(settings)
 
@@ -76,22 +80,27 @@ def deploy(deployment_target, components=None, output_dir=None, other_settings={
 def deploy_elasticsearch_sharded(settings):
     print_separator("elasticsearch-sharded")
 
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-discovery-svc.yaml" % settings, errors_to_ignore=["already exists"])
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-svc.yaml" % settings, errors_to_ignore=["already exists"])
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-master.yaml" % settings, errors_to_ignore=["already exists"])
+    elasticsearch_config_files = [
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-discovery-svc.yaml",
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-svc.yaml",
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-master.yaml",
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-client.yaml",
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-data-svc.yaml",
+        "%(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-data-stateful.yaml",
+    ]
 
-    # TODO fix this:
-    #master_pod_name = get_pod_name("es-master", deployment_target=settings["DEPLOY_TO"])
-    #_wait_until_pod_is_running(master_pod_name, deployment_target=settings["DEPLOY_TO"])
-    time.sleep(60)
+    if settings["DELETE_BEFORE_DEPLOY"]:
+        for config_file in elasticsearch_config_files:
+            run("kubectl delete -f " + config_file % settings, errors_to_ignore=["not found"])
 
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-client.yaml" % settings, errors_to_ignore=["already exists"])
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-data-svc.yaml" % settings, errors_to_ignore=["already exists"])
-    run("kubectl create -f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/elasticsearch-sharded/es-data-stateful.yaml" % settings, errors_to_ignore=["already exists"])
+    for config_file in elasticsearch_config_files:
+        run("kubectl create -f " + config_file % settings, errors_to_ignore=["already exists"])
+        if config_file.endswith("es-master.yaml"):
+            _wait_until_pod_is_running("es-master", deployment_target=settings["DEPLOY_TO"])
+        elif config_file.endswith("es-data-stateful.yaml"):
+            _wait_until_pod_is_running("elasticsearch", deployment_target=settings["DEPLOY_TO"])
 
-    # TODO fix this:
-    #_wait_until_pod_is_running("es-data-%d" % (int(settings["ELASTICSEARCH_NUM_SHARDS"]) - 1), deployment_target=settings["DEPLOY_TO"])
-
+    run("kubectl describe svc elasticsearch")
 
 def _delete_pod(component_label, settings, async=False, custom_yaml_filename=None):
     yaml_filename = custom_yaml_filename or (component_label+".%(DEPLOY_TO_PREFIX)s.yaml")
@@ -103,16 +112,19 @@ def _delete_pod(component_label, settings, async=False, custom_yaml_filename=Non
             "-f %(DEPLOYMENT_TEMP_DIR)s/deploy/kubernetes/"+component_label+"/"+yaml_filename,
         ]) % settings, errors_to_ignore=["not found"])
 
+    logger.info("waiting for \"%s\" to exit Running status" % component_label)
     while get_pod_status(component_label, deployment_target) == "Running" and not async:
         time.sleep(5)
 
 
 def _wait_until_pod_is_running(component_label, deployment_target):
+    logger.info("waiting for \"%s\" to enter Running state" % component_label)
     while get_pod_status(component_label, deployment_target, status_type=POD_RUNNING_STATUS) != "Running":
         time.sleep(5)
 
 
 def _wait_until_pod_is_ready(component_label, deployment_target):
+    logger.info("waiting for \"%s\" to complete initialization" % component_label)
     while get_pod_status(component_label, deployment_target, status_type=POD_READY_STATUS) != "true":
         time.sleep(5)
 
@@ -215,24 +227,27 @@ def deploy_init(settings):
         # based on: https://medium.com/@DazWilkin/gkes-cluster-ipv4-cidr-flag-69d25884a558
         run(" ".join([
             #"gcloud compute networks create seqr-project-custom-vpc --project=%(GCLOUD_PROJECT)s --mode=custom"
-            "gcloud compute networks create seqr-project-auto-vpc",
+            "gcloud compute networks create %(GCLOUD_PROJECT)s-auto-vpc",
                 "--project=%(GCLOUD_PROJECT)s",
                 "--mode=auto"
         ]) % settings, errors_to_ignore=["already exists"])
 
         # add recommended firewall rules to enable ssh, etc.
         run(" ".join([
-            "gcloud compute firewall-rules create seqr-project-custom-vpc-allow-tcp-udp-icmp",
-            "--network seqr-project-auto-vpc",
+            "gcloud compute firewall-rules create custom-vpc-allow-tcp-udp-icmp",
+            "--project %(GCLOUD_PROJECT)s",
+            "--network %(GCLOUD_PROJECT)s-auto-vpc",
             "--allow tcp,udp,icmp",
             "--source-ranges 10.0.0.0/8",
-        ]), errors_to_ignore=["already exists"])
+        ]) % settings, errors_to_ignore=["already exists"])
 
         run(" ".join([
-            "gcloud compute firewall-rules create seqr-project-custom-vpc-allow-tcp-udp-icmp",
-                "--network seqr-project-auto-vpc",
+            "gcloud compute firewall-rules create custom-vpc-allow-ports",
+                "--project %(GCLOUD_PROJECT)s",
+                "--network %(GCLOUD_PROJECT)s-auto-vpc",
                 "--allow tcp:22,tcp:3389,icmp",
-        ]), errors_to_ignore=["already exists"])
+                "--source-ranges 10.0.0.0/8",
+        ]) % settings, errors_to_ignore=["already exists"])
 
 
         # create cluster
@@ -240,7 +255,7 @@ def deploy_init(settings):
             "gcloud container clusters create %(CLUSTER_NAME)s",
             "--project %(GCLOUD_PROJECT)s",
             "--zone %(GCLOUD_ZONE)s",
-            "--network=seqr-project-auto-vpc",
+            "--network %(GCLOUD_PROJECT)s-auto-vpc",
             "--machine-type %(CLUSTER_MACHINE_TYPE)s",
             "--num-nodes %(CLUSTER_NUM_NODES)s",
         ]) % settings, verbose=False, errors_to_ignore=["already exists"])
@@ -255,11 +270,9 @@ def deploy_init(settings):
         #    "gcloud container clusters resize %(CLUSTER_NAME)s --size %(CLUSTER_NUM_NODES)s" % settings,
         #]), is_interactive=True)
 
-# initialize the VM
-    node_name = get_node_name()
-    if not node_name:
-        raise Exception("Unable to retrieve node name. Was the cluster created successfully?")
-
+    #node_name = get_node_name()
+    #if not node_name:
+    #    raise Exception("Unable to retrieve node name. Was the cluster created successfully?")
 
     # deploy ConfigMap file so that settings key/values can be added as environment variables in each of the pods
     #with open(os.path.join(output_dir, "deploy/kubernetes/all-settings.properties"), "w") as f:

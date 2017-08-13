@@ -20,7 +20,7 @@ ENV ELASTICSEARCH_SERVICE_PORT=$ELASTICSEARCH_SERVICE_PORT
 
 EXPOSE $ELASTICSEARCH_SERVICE_PORT
 
-COPY elasticsearch.yml /usr/local/elasticsearch-${ELASTICSEARCH_VERSION}/config/elasticsearch.yml
+#COPY elasticsearch.yml /usr/local/elasticsearch-${ELASTICSEARCH_VERSION}/config/elasticsearch.yml
 COPY entrypoint.sh /
 
 CMD [ "/entrypoint.sh" ]

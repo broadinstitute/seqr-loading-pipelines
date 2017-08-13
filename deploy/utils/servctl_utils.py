@@ -109,7 +109,6 @@ def retrieve_settings(deployment_target):
 
     settings['HOME'] = os.path.expanduser("~")
     settings['TIMESTAMP'] = time.strftime("%Y%m%d_%H%M%S")
-    settings['REPO_PATH'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 
     load_settings([
         "deploy/kubernetes/shared-settings.yaml",
@@ -163,9 +162,10 @@ def show_status():
     """Print status of various docker and kubernetes subsystems"""
 
     run("docker info")
-    run("docker images")
+    #run("docker images")
     run("kubectl cluster-info", ignore_all_errors=True)
     run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)
+    run("kubectl get nodes", ignore_all_errors=True)
     run("kubectl get services", ignore_all_errors=True)
     run("kubectl get pods", ignore_all_errors=True)
     run("kubectl config current-context", ignore_all_errors=True)
@@ -278,7 +278,7 @@ def troubleshoot_component(component, deployment_target):
     run("kubectl get pods -o yaml %(pod_name)s" % locals(), verbose=True)
 
 
-def kill_component(component, deployment_target=None):
+def delete_component(component, deployment_target=None):
     """Runs kubectl commands to delete any running deployment, service, or pod objects for the
     given component(s).
 
@@ -304,7 +304,7 @@ def kill_component(component, deployment_target=None):
 
 
 
-def kill_and_delete_all(deployment_target):
+def delete_all(deployment_target):
     """Runs kubectl and gcloud commands to delete the given cluster and all objects in it.
 
     Args:
@@ -325,8 +325,8 @@ def kill_and_delete_all(deployment_target):
     run('kubectl delete pods --all')
 
     if settings.get("DEPLOY_TO_PREFIX") == "gcloud":
-        run("gcloud container clusters delete --zone %(GCLOUD_ZONE)s --no-async %(CLUSTER_NAME)s" % settings, is_interactive=True)
-        run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
+        run("gcloud container clusters delete --project %(GCLOUD_PROJECT)s --zone %(GCLOUD_ZONE)s --no-async %(CLUSTER_NAME)s" % settings, is_interactive=True)
+        #run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
     else:
         run('docker kill $(docker ps -q)', errors_to_ignore=["requires at least 1 arg"])
         run('docker rmi -f $(docker images -q)', errors_to_ignore=["requires at least 1 arg"])

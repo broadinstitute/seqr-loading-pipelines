@@ -36,8 +36,7 @@ spec:
         env:
         - name: KIBANA_SERVICE_PORT
           value: "{{ KIBANA_SERVICE_PORT }}"
-        #envFrom:  #  TODO use ConfigMap envFrom: (waiting for https://github.com/TheNewNormal/kube-solo-osx/issues/179)
-        #- configMapRef:
-        #  name: all-settings
+        - name: ELASTICSEARCH_SERVICE_PORT
+          value: "{{ ELASTICSEARCH_SERVICE_PORT }}"
       restartPolicy: Always
       dnsPolicy: ClusterFirst

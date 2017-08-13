@@ -6,10 +6,12 @@ metadata:
     component: elasticsearch
     role: master
 spec:
-  replicas: 3
+  replicas: {{ ELASTICSEARCH_NUM_MASTER_PODS }}
   template:
     metadata:
       labels:
+        name: es-master
+        deployment: {{ DEPLOY_TO }}
         component: elasticsearch
         role: master
     spec:

@@ -25,7 +25,7 @@ command = """gcloud dataproc clusters create %(cluster)s \
     --worker-boot-disk-size 75 \
     --num-worker-local-ssds 1 \
     --image-version 1.1 \
-    --network seqr-project-auto-vpc \
+    --network %(project)s-auto-vpc \
     --properties "spark:spark.driver.extraJavaOptions=-Xss4M,spark:spark.executor.extraJavaOptions=-Xss4M,spark:spark.driver.memory=45g,spark:spark.driver.maxResultSize=30g,spark:spark.task.maxFailures=20,spark:spark.yarn.executor.memoryOverhead=30,spark:spark.kryoserializer.buffer.max=1g,hdfs:dfs.replication=1"  \
     --initialization-actions gs://hail-common/hail-init.sh
 """ % args.__dict__

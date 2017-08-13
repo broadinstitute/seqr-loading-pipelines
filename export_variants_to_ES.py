@@ -13,7 +13,8 @@ p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="variant_callset")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
-p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=1000)
+p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=1000, type=int)
+p.add_argument("-s", "--num-shards", help="Number of shards to use for this index (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)", default=10, type=int)
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
@@ -33,7 +34,7 @@ logger.info("\n==> import vds: " + input_vds_path)
 vds = hc.read(input_vds_path)
 
 logger.info("\n==> imported dataset")
-plogger.info(vds.variant_schema)
+logger.info(vds.variant_schema)
 
 logger.info("\n==> exporting to ES")
 #MAX_SAMPLES_PER_INDEX = 100
@@ -41,15 +42,19 @@ logger.info("\n==> exporting to ES")
 samples = vds.sample_ids
 
 sample_groups = [
-    samples[0:100],
-    samples[100:200],
-    samples[200:300],
-    samples[300:400],
-    samples[400:501],
-    samples[501:602],
-    samples[602:701],
-    samples[701:802],
-    samples[802:905],
+#    samples[0:100],
+#    samples[100:200],
+#    samples[200:300],
+#    samples[300:400],
+#    samples[400:501],
+#    samples[501:602],
+#    samples[602:701],
+#    samples[701:802],
+#    samples[802:905],
+    samples[0:300],
+    samples[300:602],
+    samples[602:900],
+#    samples,
 ]
 
 for i, sample_group in enumerate(sample_groups): 
@@ -69,6 +74,7 @@ for i, sample_group in enumerate(sample_groups):
         index_name=index_name,
         index_type_name=args.index_type,
         block_size=args.block_size,
+        num_shards=args.num_shards,
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=DISABLE_DOC_VALUES_FOR_FIELDS,
         disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,

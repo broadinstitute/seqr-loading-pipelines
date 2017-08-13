@@ -9,7 +9,7 @@ from deploy.utils.constants import DEPLOYMENT_TARGETS, DEPLOYABLE_COMPONENTS
 from deploy.utils.deploy_utils import deploy
 from deploy.utils.kubectl_utils import run_in_pod
 from deploy.utils.servctl_utils import print_log, port_forward, show_dashboard, show_status, \
-    troubleshoot_component, kill_component, kill_and_delete_all, get_component_port_pairs, \
+    troubleshoot_component, delete_component, delete_all, get_component_port_pairs, \
     check_kubernetes_context, set_environment
 from utils.shell_utils import wait_for
 
@@ -26,8 +26,8 @@ PORT_FORWARD_COMMAND = 'port-forward'
 PORT_FORWARD_AND_LOG_COMMAND = 'connect-to'
 SHELL_COMMAND = 'shell'
 DASHBOARD_COMMAND ='dashboard'
-KILL_COMMAND = 'kill'
-KILL_AND_RESET_ALL_COMMAND = 'kill-and-delete-all'
+DELETE_COMMAND = 'delete'
+DELETE_ALL_COMMAND = 'delete-all'
 
 p = argparse.ArgumentParser()
 subparsers = p.add_subparsers(dest='command')
@@ -80,13 +80,13 @@ sp = subparsers.add_parser(STATUS_COMMAND, description="Print docker and kubectl
 sp = subparsers.add_parser(DASHBOARD_COMMAND, description="Show the kubernetes dashboard")
 sp.add_argument("deployment_target", choices=DEPLOYMENT_TARGETS, help="kubernetes cluster")
 
-## KILL_COMMAND
-sp = subparsers.add_parser(KILL_COMMAND, description="Terminate any live deployments, services, and pods for a given component")
+## DELETE_COMMAND
+sp = subparsers.add_parser(DELETE_COMMAND, description="Terminate any live deployments, services, and pods for a given component")
 sp.add_argument("components", nargs="+", help="terminate all deployments, services, and pods for the given component(s)", choices=DEPLOYABLE_COMPONENTS)
 sp.add_argument("deployment_target", choices=DEPLOYMENT_TARGETS, help="kubernetes cluster")
 
-## KILL_AND_RESET_ALL_COMMAND
-sp = subparsers.add_parser(KILL_AND_RESET_ALL_COMMAND, description="Kill and reset all components and data")
+## DELETE_ALL_COMMAND
+sp = subparsers.add_parser(DELETE_ALL_COMMAND, description="Delete all components + the cluster")
 sp.add_argument("deployment_target", choices=DEPLOYMENT_TARGETS, help="kubernetes cluster")
 
 args = p.parse_args()
@@ -95,8 +95,10 @@ args = p.parse_args()
 if hasattr(args, "deployment_target") and args.command != SET_ENVIRONMENT_COMMAND:
     check_kubernetes_context(args.deployment_target)
 
+other_settings = {}
+other_settings["BASE_DIR"] = os.path.abspath(os.path.dirname(__file__))
+
 if args.command == DEPLOY_COMMAND:
-    other_settings = {}
     other_settings["DELETE_BEFORE_DEPLOY"] = True if args.delete_before_deploy or args.build_docker_image_and_reset_db else None
     other_settings["BUILD_DOCKER_IMAGE"] = True if args.build_docker_image or args.build_docker_image_and_reset_db else None
 
@@ -139,14 +141,14 @@ elif args.command == STATUS_COMMAND:
 elif args.command == DASHBOARD_COMMAND:
     show_dashboard()
 
-elif args.command == KILL_COMMAND:
+elif args.command == DELETE_COMMAND:
     for component in args.components:
-        kill_component(component, deployment_target=args.deployment_target)
+        delete_component(component, deployment_target=args.deployment_target)
 
 elif args.command == TROUBLESHOOT_COMMAND:
     troubleshoot_component(args.component, deployment_target=args.deployment_target)
 
-elif args.command == KILL_AND_RESET_ALL_COMMAND:
-    kill_and_delete_all(args.deployment_target)
+elif args.command == DELETE_ALL_COMMAND:
+    delete_all(args.deployment_target)
 else:
     p.error("Unexpected command: " + str(args.command))
