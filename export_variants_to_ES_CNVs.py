@@ -5,7 +5,7 @@ import hail
 import logging
 from pprint import pprint
 
-from utils.computed_fields_utils import CONSEQUENCE_TERMS
+from utils.computed_fields_utils import CONSEQUENCE_TERM_RANKS, CONSEQUENCE_TERMS
 from utils.elasticsearch_utils import export_vds_to_elasticsearch
 
 logger = logging.getLogger(__name__)
@@ -17,8 +17,6 @@ p.add_argument("-i", "--index", help="Elasticsearch index name", default="varian
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=1000, type=int)
 p.add_argument("-s", "--num-shards", help="Number of shards to use for this index (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)", default=10, type=int)
-p.add_argument("--only-coding", action="store_true")
-p.add_argument("--only-non-coding", action="store_true")
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
@@ -40,15 +38,8 @@ vds = hc.read(input_vds_path)
 logger.info("\n==> imported dataset")
 logger.info(vds.variant_schema)
 
-# filter to coding or non-coding variants
-non_coding_consequence_first_index = CONSEQUENCE_TERMS.index("5_prime_UTR_variant")
-if args.only_coding:
-    logger.info("\n==> filter to coding variants only (all transcript consequences above 5_prime_UTR_variant)")
-    vds = vds.filter_variants_expr("va.mainTranscript.major_consequence_rank < %d" % non_coding_consequence_first_index, keep=True)
-elif args.only_non_coding:
-    logger.info("\n==> filter to non-coding variants only (all transcript consequences above 5_prime_UTR_variant)")
-    vds = vds.filter_variants_expr("isMissing(va.mainTranscript.major_consequence_rank) || va.mainTranscript.major_consequence_rank >= %d" % non_coding_consequence_first_index, keep=True)
-
+logger.info("\n==> filter to coding variants only (all transcript consequences above 5_prime_UTR_variant)")
+vds = vds.filter_variants_expr("va.mainTranscript.major_consequence_rank < %d" % CONSEQUENCE_TERMS.index("5_prime_UTR_variant"), keep=True)
 
 logger.info("\n==> exporting to ES")
 #MAX_SAMPLES_PER_INDEX = 100
@@ -64,17 +55,13 @@ sample_groups = [
 #   samples[602:701],
 #   samples[701:802],
 #   samples[802:905],
-
-#    vds.sample_ids[0:300],
-#    vds.sample_ids[300:602],   # split on family boundaries
-#    vds.sample_ids[602:900],
-
-    vds.sample_ids,
+    vds.sample_ids[0:300],
+    vds.sample_ids[300:602],   # split on family boundaries
+    vds.sample_ids[602:900],
 ]
 
 
-for i, sample_group in enumerate(sample_groups):
-
+for i, sample_group in enumerate(sample_groups): 
     index_name = "%s_%s" % (args.index, i)
     logger.info("\n==> loading %s samples into %s" % (len(sample_group), index_name))
 

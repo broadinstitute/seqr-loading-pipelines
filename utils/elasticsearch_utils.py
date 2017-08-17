@@ -18,8 +18,8 @@ VDS_TO_ES_TYPE_MAPPING = {
     "Boolean": "boolean",
     "Int":     "integer",
     "Long":    "long",
-    "Double":  "float",
-    "Float":   "float",
+    "Double":  "half_float",
+    "Float":   "half_float",
     "String":  "keyword",
 }
 
@@ -241,8 +241,8 @@ def export_vds_to_elasticsearch(
             'num_alt = if(g.isCalled) g.nNonRefAlleles else -1',
             'gq = if(g.isCalled) g.gq else NA:Int',
             'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[1] / total).toFloat else NA:Float',
-            'sum_ad = g.ad.sum',
-            'dp = if(g.isCalled) g.dp else NA:Int',
+            'dp = if(g.isCalled) [g.dp, 32000].min() else NA:Int',   # use 32000 as the max depth so that it doesn't overflow elasticsearch's signed-short int type.
+            #'sum_ad = g.ad.sum',   # for split VDS, this only takes into account 2 alleles at a multi-allelic site
             #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
         ]
     else:
@@ -316,6 +316,21 @@ def export_kt_to_elasticsearch(
         disable_index_for_fields=disable_index_for_fields,
     )
 
+    #pprint(elasticsearch_schema)
+    #sys.exit(0)
+
+    # set types and disable doc values for genotype fields
+    for key, value in elasticsearch_schema.items():
+        if key.endswith(".num_alt"):
+            elasticsearch_schema[key] = { "type": "byte", "doc_values": "false" }
+        elif key.endswith(".gq"):
+            elasticsearch_schema[key] = { "type": "byte", "doc_values": "false" }
+        elif key.endswith(".dp"):
+            elasticsearch_schema[key] = { "type": "short", "doc_values": "false" }
+        elif key.endswith(".ab"):
+            elasticsearch_schema[key] = { "type": "half_float", "doc_values": "false" }
+
+    # define the elasticsearch mapping
     elasticsearch_mapping = {
         "settings" : {
             "number_of_shards": num_shards,

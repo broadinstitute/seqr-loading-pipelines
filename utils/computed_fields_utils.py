@@ -58,7 +58,7 @@ def get_expr_for_vep_consequence_terms_set(vep_root="va.vep"):
     return "%(vep_root)s.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet" % locals()
 
 
-def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
+def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=True):
     """Sort transcripts by 3 properties:
 
         1. coding > non-coding
@@ -77,34 +77,65 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
         major_consequence_rank: major_consequence rank based on VEP SO ontology (most severe = 1)
             (see http://www.ensembl.org/info/genome/variation/predicted_data.html)
         category: set to one of: "lof", "missense", "synonymous", "other" based on the value of major_consequence.
+
+    Args:
+        vep_root (string): root path of the VEP struct in the VDS
+        include_coding_annotations (bool): if True, fields relevant to protein-coding variants will be included
     """
 
-    return """
+    coding_transcript_consequences = """
+        amino_acids,
+        biotype,
+        canonical,
+        cdna_start,
+        cdna_end,
+        codons,
+        consequence_terms,
+        distance,
+        domains,
+        exon,
+        gene_id,
+        transcript_id,
+        protein_id,
+        gene_symbol,
+        gene_symbol_source,
+        hgnc_id,
+        hgvsc,
+        hgvsp,
+        lof,
+        lof_flags,
+        lof_filter,
+        lof_info
+    """
+
+    non_coding_transcript_consequences = """
+        biotype,
+        canonical,
+        cdna_start,
+        cdna_end,
+        codons,
+        consequence_terms,
+        distance,
+        domains,
+        exon,
+        gene_id,
+        transcript_id,
+        gene_symbol,
+        gene_symbol_source,
+        hgnc_id,
+        hgvsc,
+        hgvsp
+    """
+
+    if include_coding_annotations:
+        transcript_consequences = coding_transcript_consequences
+    else:
+        transcript_consequences = non_coding_transcript_consequences
+
+    result = """
     let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in
         %(vep_root)s.transcript_consequences.map(
-            c => select(c,
-                amino_acids,
-                biotype,
-                canonical,
-                cdna_start,
-                cdna_end,
-                codons,
-                consequence_terms,
-                distance,
-                domains,
-                exon,
-                gene_id,
-                transcript_id,
-                protein_id,
-                gene_symbol,
-                gene_symbol_source,
-                hgnc_id,
-                hgvsc,
-                hgvsp,
-                lof,
-                lof_flags,
-                lof_filter,
-                lof_info)
+            c => select(c, %(transcript_consequences)s)
         ).map(
             c => merge(
                 drop(c, hgnc_id, domains),
@@ -148,43 +179,25 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"):
     """ % dict(locals().items()+globals().items())
 
 
+    if not include_coding_annotations:
+        # for non-coding variants, drop fields here that are hard to exclude in the above code
+        result += ".map(c => drop(c, domains, hgvsp))"
+
+    return result
+
 def get_expr_for_worst_transcript_consequence_annotations_struct(
-        vep_sorted_transcript_consequences_root="va.vep.sorted_transcript_consequences"):
+        vep_sorted_transcript_consequences_root="va.vep.sorted_transcript_consequences",
+        include_coding_annotations=True,
+    ):
     """Retrieves the top-ranked transcript annotation based on the ranking computed by
     get_expr_for_vep_sorted_transcript_consequences_array(..)
+    
+    Args:
+        vep_sorted_transcript_consequences_root (string):
+        include_coding_annotations (bool): 
     """
 
-    return """
-    let NA_type = NA:Struct{
-        amino_acids:String,
-        biotype:String,
-        canonical:Int,
-        cdna_start:Int,
-        cdna_end:Int,
-        codons:String,
-        distance:Int,
-        exon:String,
-        gene_id:String,
-        gene_symbol:String,
-        gene_symbol_source:String,
-        hgvsc:String,
-        hgvsp:String,
-        lof:String,
-        lof_flags:String,
-        lof_filter:String,
-        lof_info:String,
-        protein_id:String,
-        transcript_id:String,
-        hgnc_id:String,
-        domains:String,
-        hgvs:String,
-        major_consequence:String,
-        major_consequence_rank:Int,
-        category:String} in
-    if( %(vep_sorted_transcript_consequences_root)s.length == 0 )
-        NA_type
-    else
-        select(%(vep_sorted_transcript_consequences_root)s[0],
+    coding_transcript_consequences = """
             amino_acids,
             biotype,
             canonical,
@@ -210,7 +223,90 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
             major_consequence,
             major_consequence_rank,
             category
-        )
+    """
+
+    coding_transcript_consequences_with_types = """
+        amino_acids:String,
+        biotype:String,
+        canonical:Int,
+        cdna_start:Int,
+        cdna_end:Int,
+        codons:String,
+        distance:Int,
+        exon:String,
+        gene_id:String,
+        gene_symbol:String,
+        gene_symbol_source:String,
+        hgvsc:String,
+        hgvsp:String,
+        lof:String,
+        lof_flags:String,
+        lof_filter:String,
+        lof_info:String,
+        protein_id:String,
+        transcript_id:String,
+        hgnc_id:String,
+        domains:String,
+        hgvs:String,
+        major_consequence:String,
+        major_consequence_rank:Int,
+        category:String
+    """
+
+
+    non_coding_transcript_consequences = """
+            biotype,
+            canonical,
+            cdna_start,
+            cdna_end,
+            codons,
+            distance,
+            exon,
+            gene_id,
+            gene_symbol,
+            gene_symbol_source,
+            hgvsc,
+            transcript_id,
+            hgnc_id,
+            hgvs,
+            major_consequence,
+            major_consequence_rank,
+            category
+    """
+    
+    non_coding_transcript_consequences_with_types = """
+        biotype:String,
+        canonical:Int,
+        cdna_start:Int,
+        cdna_end:Int,
+        codons:String,
+        distance:Int,
+        exon:String,
+        gene_id:String,
+        gene_symbol:String,
+        gene_symbol_source:String,
+        hgvsc:String,
+        transcript_id:String,
+        hgnc_id:String,
+        hgvs:String,
+        major_consequence:String,
+        major_consequence_rank:Int,
+        category:String
+    """
+
+    if include_coding_annotations:
+        transcript_consequences = coding_transcript_consequences
+        transcript_consequences_with_types = coding_transcript_consequences_with_types
+    else:
+        transcript_consequences = non_coding_transcript_consequences
+        transcript_consequences_with_types = non_coding_transcript_consequences_with_types
+
+    return """
+    let NA_type = NA:Struct{ %(transcript_consequences_with_types)s } in
+    if( %(vep_sorted_transcript_consequences_root)s.length == 0 )
+        NA_type
+    else
+        select(%(vep_sorted_transcript_consequences_root)s[0], %(transcript_consequences)s)
     """ % locals()
 
 

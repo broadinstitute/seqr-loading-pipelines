@@ -6,7 +6,7 @@ CADD_FIELDS = """
 """
 
 
-def add_cadd_from_vds(hail_context, vds, genome_version, root="va.cadd", info_fields=CADD_FIELDS, verbose=True):
+def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fields=CADD_FIELDS, verbose=True):
     """Add CADD scores to the vds"""
 
     if genome_version == "37":

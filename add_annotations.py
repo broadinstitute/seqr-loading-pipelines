@@ -2,6 +2,7 @@
 
 import argparse
 import hail
+import logging
 from pprint import pprint
 
 from utils.computed_fields_utils import get_expr_for_variant_id, \
@@ -12,15 +13,24 @@ from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
     get_expr_for_ref_allele
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
-from utils.add_1kg_phase3 import add_1kg_phase3_from_vds
-from utils.add_cadd import add_cadd_from_vds
-from utils.add_clinvar import add_clinvar_from_vds
-from utils.add_exac import add_exac_from_vds
-from utils.add_gnomad import add_gnomad_from_vds
-from utils.add_mpc import add_mpc_from_vds
+from utils.add_1kg_phase3 import add_1kg_phase3_to_vds
+from utils.add_cadd import add_cadd_to_vds
+from utils.add_clinvar import add_clinvar_to_vds
+from utils.add_exac import add_exac_to_vds
+from utils.add_gnomad import add_gnomad_to_vds
+from utils.add_mpc import add_mpc_to_vds
+from utils.computed_fields_utils import CONSEQUENCE_TERM_RANKS, CONSEQUENCE_TERMS
+
+logger = logging.getLogger(__name__)
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
+p.add_argument("--only-coding", action="store_true")
+p.add_argument("--only-non-coding", action="store_true")
+p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg scores. This is mainly useful for testing.")
+p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). This is mainly useful for testing.")
+p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. This is mainly useful for testing.")
+p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. This is mainly useful for testing.")
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
@@ -29,29 +39,38 @@ args = p.parse_args()
 input_vds_path = str(args.input_vds)
 if not input_vds_path.endswith(".vds"):
     p.error("Input must be a .vds")
+if args.only_coding and args.only_non_coding:
+    p.error("Both --only-coding and --only-non-coding options used")
 
 input_vds_path_prefix = input_vds_path.replace(".vds", "")
-output_vds_path = input_vds_path_prefix + ".all_annotations.vds"
+output_vds_path = input_vds_path_prefix 
+if args.only_coding:
+    output_vds_path += ".coding"
+if args.only_non_coding:
+    output_vds_path += ".non_coding"
 
-print("Input: " + input_vds_path)
-print("Output: " + output_vds_path)
+output_vds_path += ".all_annotations.vds"
 
-print("\n==> create HailContext")
+
+logger.info("Input: " + input_vds_path)
+logger.info("Output: " + output_vds_path)
+
+logger.info("\n==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
-print("\n==> import vds: " + input_vds_path)
+logger.info("\n==> import vds: " + input_vds_path)
 vds = hc.read(input_vds_path)
 
 #vds.export_variants("gs://seqr-hail/temp/" + os.path.basename(output_vds_path).replace(".vds", "") + ".tsv", "variant = v, va.*")
 
-print("\n==> adding other annotations")
+logger.info("\n==> adding other annotations")
 
 vds_computed_annotation_exprs = [
     "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_root="va.vep"),
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_root="va.vep"),
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_root="va.vep"),
-    "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
-    "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
+    "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=not args.only_non_coding),
+    "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences", include_coding_annotations=not args.only_non_coding),
     "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
 
     "va.variantId = %s" % get_expr_for_variant_id(),
@@ -70,6 +89,15 @@ vds_computed_annotation_exprs = [
 
 for expr in vds_computed_annotation_exprs:
     vds = vds.annotate_variants_expr(expr)
+
+# filter to coding or non-coding variants
+non_coding_consequence_first_index = CONSEQUENCE_TERMS.index("5_prime_UTR_variant")
+if args.only_coding:
+    logger.info("\n==> filter to coding variants only (all transcript consequences above 5_prime_UTR_variant)")
+    vds = vds.filter_variants_expr("va.mainTranscript.major_consequence_rank < %d" % non_coding_consequence_first_index, keep=True)
+elif args.only_non_coding:
+    logger.info("\n==> filter to non-coding variants only (all transcript consequences above 5_prime_UTR_variant)")
+    vds = vds.filter_variants_expr("isMissing(va.mainTranscript.major_consequence_rank) || va.mainTranscript.major_consequence_rank >= %d" % non_coding_consequence_first_index, keep=True)
 
 
 # apply schema to dataset
@@ -119,7 +147,7 @@ INPUT_SCHEMA = {
 }
 
 expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
-print(expr)
+logger.info(expr)
 vds = vds.annotate_variants_expr(expr=expr)
 vds = vds.annotate_variants_expr("va = va.clean")
 
@@ -171,13 +199,14 @@ EXAC_INFO_FIELDS = """
     AC_NFE: Array[Int],
     AC_OTH: Array[Int],
     AC_SAS: Array[Int],
-    AN_AFR: Int,
-    AN_AMR: Int,
-    AN_EAS: Int,
-    AN_FIN: Int,
-    AN_NFE: Int,
-    AN_OTH: Int,
-    AN_SAS: Int,
+    AF_AFR: Float,
+    AF_AMR: Float,
+    AF_EAS: Float,
+    AF_FIN: Float,
+    AF_NFE: Float,
+    AF_OTH: Float,
+    AF_SAS: Float,
+    --- AF_POPMAX: Float,
     """
 
 GNOMAD_TOP_LEVEL_FIELDS = """filters: Set[String],"""
@@ -201,25 +230,38 @@ GNOMAD_INFO_FIELDS = """
     AF_NFE: Array[Double],
     AF_OTH: Array[Double],
     AF_SAS: Array[Double],
-    POPMAX: Array[String],
+    --- POPMAX: Array[String],
     AF_POPMAX: Array[Double],
 """
 
-print("\n==> add clinvar")
-vds = add_clinvar_from_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS)
-print("\n==> add cadd")
-vds = add_cadd_from_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS)
-print("\n==> add mpc")
-vds = add_mpc_from_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS)
-print("\n==> add 1kg")
-vds = add_1kg_phase3_from_vds(hc, vds, args.genome_version, root="va.g1k")
-print("\n==> add exac")
-vds = add_exac_from_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS)
-print("\n==> add gnomad exomes")
-vds = add_gnomad_from_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS)
-print("\n==> add gnomad genomes")
-vds = add_gnomad_from_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS)
-print("\n==> saving to " + output_vds_path)
+logger.info("\n==> add clinvar")
+vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS)
+
+if not args.exclude_cadd:
+    logger.info("\n==> add cadd")
+    vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS)
+
+if not args.only_non_coding:
+    logger.info("\n==> add mpc")
+    vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS)
+
+if not args.exclude_1kg:
+    logger.info("\n==> add 1kg")
+    vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k")
+
+if not args.exclude_exac:
+    logger.info("\n==> add exac")
+    vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS)
+
+if not args.exclude_gnomad:
+    logger.info("\n==> add gnomad exomes")
+    vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS)
+
+if not args.exclude_gnomad:
+    logger.info("\n==> add gnomad genomes")
+    vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS)
+
+logger.info("\n==> saving to " + output_vds_path)
 vds.write(output_vds_path, overwrite=True)
 
 #vds.export_variants("gs://seqr-hail/temp/" + os.path.basename(output_vds_path).replace(".vds", "") + ".tsv", "variant = v, va.*")
@@ -231,5 +273,5 @@ vds.write(output_vds_path, overwrite=True)
 #    'va.dann.score',
 #])
 
-#pprint(vds.summarize())
 pprint(vds.variant_schema)
+pprint(vds.summarize())

@@ -11,7 +11,7 @@ G1K_FIELDS = """
     POPMAX_AF: Float,
 """
 
-def add_1kg_phase3_from_vds(hail_context, vds, genome_version, root="va.g1k", fields=G1K_FIELDS, verbose=True):
+def add_1kg_phase3_to_vds(hail_context, vds, genome_version, root="va.g1k", fields=G1K_FIELDS, verbose=True):
     """Add 1000 genome AC and AF annotations to the vds"""
 
     if genome_version == "37":

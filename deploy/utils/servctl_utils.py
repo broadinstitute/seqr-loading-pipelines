@@ -161,7 +161,7 @@ def check_kubernetes_context(deployment_target):
 def show_status():
     """Print status of various docker and kubernetes subsystems"""
 
-    run("docker info")
+    #run("docker info")
     #run("docker images")
     run("kubectl cluster-info", ignore_all_errors=True)
     run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)

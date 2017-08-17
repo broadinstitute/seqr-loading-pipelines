@@ -8,7 +8,7 @@ MPC_INFO_FIELDS = """
 """
 
 
-def add_mpc_from_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, verbose=True):
+def add_mpc_to_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, verbose=True):
     """Add MPC annotations [Samocha 2017] to the vds"""
 
     if genome_version == "37":

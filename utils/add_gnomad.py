@@ -192,7 +192,7 @@ INFO_FIELDS = """
 """
 
 
-def add_gnomad_from_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
+def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
 
     if genome_version not in ("37", "38"):
         raise ValueError("Invalid genome_version: %s. Must be '37' or '38'" % str(genome_version))

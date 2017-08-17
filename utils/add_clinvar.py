@@ -24,7 +24,7 @@ CLINVAR_FIELDS = """
 """
 
 
-def add_clinvar_from_vds(hail_context, vds, genome_version, root="va.clinvar", info_fields=CLINVAR_FIELDS, verbose=True):
+def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", info_fields=CLINVAR_FIELDS, verbose=True):
     """Add clinvar annotations to the vds"""
 
     if genome_version == "37":
