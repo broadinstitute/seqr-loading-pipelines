@@ -54,7 +54,7 @@ spec:
         - name: "ES_JAVA_OPTS"
           value: "-Xms2g -Xmx2g"
         ports:
-        - containerPort: {{ ELASTICSEARCH_SERVICE_PORT }}
+        - containerPort: 9200
           name: http
           protocol: TCP
         - containerPort: 9300

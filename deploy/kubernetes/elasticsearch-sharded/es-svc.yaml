@@ -13,6 +13,6 @@ spec:
   ports:
   - name: http
     nodePort: {{ ELASTICSEARCH_SERVICE_PORT }}
-    port: {{ ELASTICSEARCH_SERVICE_PORT }}
+    port: 9200
     #targetPort: 9200
     protocol: TCP

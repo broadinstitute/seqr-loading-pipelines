@@ -2,7 +2,7 @@ DEPLOYMENT_TARGETS = ["local", "gcloud-dev", "gcloud-prod"]
 
 COMPONENT_PORTS = {
     "cockpit":   [9090],
-    "elasticsearch": [30001],
+    "elasticsearch": [9200],
     "kibana":        [30002],
 }
 
