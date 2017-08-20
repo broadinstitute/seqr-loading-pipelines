@@ -21,5 +21,3 @@ CLUSTER_NAME: 'k8solo-01'
 #       immediately visible inside the coreOS VM and pods)
 
 ELASTICSEARCH_DBPATH: '{{ HOME }}/kube-solo/elasticsearch_data'
-
-ELASTICSEARCH_NUM_PODS: 1

@@ -12,7 +12,7 @@ spec:
     role: client
   ports:
   - name: http
-    nodePort: {{ ELASTICSEARCH_SERVICE_PORT }}
+    nodePort: 30001
     port: 9200
     #targetPort: 9200
     protocol: TCP

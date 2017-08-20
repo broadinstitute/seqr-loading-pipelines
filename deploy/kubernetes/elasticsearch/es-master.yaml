@@ -1,21 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: es-client
+  name: es-master
   labels:
-    name: elasticsearch
-    deployment: {{ DEPLOY_TO }}
     component: elasticsearch
-    role: client
+    role: master
 spec:
-  replicas: {{ ELASTICSEARCH_NUM_CLIENT_PODS }}
+  replicas: {{ ES_MASTER_NUM_PODS }}
   template:
     metadata:
       labels:
-        name: elasticsearch
+        name: es-master
         deployment: {{ DEPLOY_TO }}
         component: elasticsearch
-        role: client
+        role: master
     spec:
       initContainers:
       - name: init-sysctl
@@ -25,7 +23,7 @@ spec:
         securityContext:
           privileged: true
       containers:
-      - name: es-client
+      - name: es-master
         securityContext:
           privileged: false
           capabilities:
@@ -45,18 +43,21 @@ spec:
               fieldPath: metadata.name
         - name: "CLUSTER_NAME"
           value: "myesdb"
+        - name: "NUMBER_OF_MASTERS"
+          value: "2"
         - name: NODE_MASTER
+          value: "true"
+        - name: NODE_INGEST
           value: "false"
         - name: NODE_DATA
           value: "false"
         - name: HTTP_ENABLE
-          value: "true"
+          value: "false"
         - name: "ES_JAVA_OPTS"
           value: "-Xms2g -Xmx2g"
+        - name: "ES_PLUGINS_INSTALL"
+          value: "mapper-size"
         ports:
-        - containerPort: 9200
-          name: http
-          protocol: TCP
         - containerPort: 9300
           name: transport
           protocol: TCP

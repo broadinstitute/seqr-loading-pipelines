@@ -20,8 +20,12 @@ from utils.add_exac import add_exac_to_vds
 from utils.add_gnomad import add_gnomad_to_vds
 from utils.add_mpc import add_mpc_to_vds
 from utils.computed_fields_utils import CONSEQUENCE_TERM_RANKS, CONSEQUENCE_TERMS
+import sys
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)

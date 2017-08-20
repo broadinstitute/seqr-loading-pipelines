@@ -6,12 +6,10 @@ metadata:
   labels:
     component: kibana
 spec:
-  type: NodePort
   selector:
     component: kibana
   ports:
   - name: http
-    nodePort: 30002
     port: 80
     targetPort: 5601
     protocol: TCP

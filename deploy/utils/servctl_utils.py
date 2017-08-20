@@ -15,7 +15,9 @@ from deploy.utils.kubectl_utils import get_pod_name, get_service_name, \
     run_in_pod, get_pod_status
 from utils.shell_utils import run, wait_for, run_in_background
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def get_component_port_pairs(components=[]):
@@ -198,6 +200,7 @@ def print_log(components, deployment_target, enable_stream_log, wait=True):
 
     procs = []
     for component_label in components:
+
         while get_pod_status(component_label, deployment_target) != "Running":
             time.sleep(5)
 
@@ -229,7 +232,7 @@ def set_environment(deployment_target):
     run("gcloud container clusters get-credentials --zone=%(GCLOUD_ZONE)s %(CLUSTER_NAME)s" % settings)
 
 
-def port_forward(component_port_pairs=[], deployment_target=None, wait=True, open_browser=False):
+def port_forward(component_port_pairs=[], deployment_target=None, wait=True, open_browser=False, use_kubectl_proxy=False):
     """Executes kubectl command to forward traffic between localhost and the given pod.
     While this is running, connecting to localhost:<port> will be the same as connecting to that port
     from the pod's internal network.
@@ -241,6 +244,8 @@ def port_forward(component_port_pairs=[], deployment_target=None, wait=True, ope
         wait (bool): Whether to block indefinitely as long as the forwarding process is running.
         open_browser (bool): If component_port_pairs includes components that have an http server
             (eg. "kibana"), then open a web browser window to the forwarded port.
+        use_kubectl_proxy (bool): Whether to use kubectl proxy instead of kubectl port-forward
+            (see https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster/#manually-constructing-apiserver-proxy-urls)
     Returns:
         (list): Popen process objects for the kubectl port-forward processes.
     """
@@ -252,10 +257,20 @@ def port_forward(component_port_pairs=[], deployment_target=None, wait=True, ope
         logger.info("Forwarding port %s for %s" % (port, component_label))
         pod_name = get_pod_name(component_label, deployment_target=deployment_target)
 
-        p = run_in_background("kubectl port-forward %(pod_name)s %(port)s" % locals())
+        if use_kubectl_proxy:
+            command = "kubectl proxy --port 8001"
+        else:
+            command = "kubectl port-forward %(pod_name)s %(port)s" % locals()
+
+        p = run_in_background(command)
 
         if open_browser and component_label in COMPONENTS_TO_OPEN_IN_BROWSER:
-            os.system("open http://localhost:%s" % port)
+            if use_kubectl_proxy:
+                url = "http://localhost:8001/api/v1/namespaces/default/services/%(component_label)s:%(port)s/proxy/" % locals()
+            else:
+                url = "http://localhost:%s" % port
+
+            os.system("open " + url)
 
         procs.append(p)
 
@@ -296,12 +311,11 @@ def delete_component(component, deployment_target=None):
     if pod_name:
         run("kubectl delete pods %(pod_name)s" % locals(), errors_to_ignore=["not found"])
 
-    if component == "elasticsearch-sharded":
+    if component == "elasticsearch" or component == "es-data":
         run("kubectl delete StatefulSet elasticsearch" % locals(), errors_to_ignore=["not found"])
 
     run("kubectl get services" % locals())
     run("kubectl get pods" % locals())
-
 
 
 def delete_all(deployment_target):
