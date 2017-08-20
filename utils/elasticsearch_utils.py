@@ -1,13 +1,22 @@
 # make sure elasticsearch is installed
+import logging
+
+handlers = set(logging.root.handlers)
+
 import pip
 pip.main(['install', 'elasticsearch'])
 
+logging.root.handlers = list(handlers)
+
 import collections
 import elasticsearch
+import logging
 from pprint import pprint
+import sys
 
 from utils.vds_schema_string_utils import _parse_fields
 
+logger = logging.getLogger()
 
 # valid types:
 #   https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
@@ -316,19 +325,21 @@ def export_kt_to_elasticsearch(
         disable_index_for_fields=disable_index_for_fields,
     )
 
-    #pprint(elasticsearch_schema)
-    #sys.exit(0)
-
     # set types and disable doc values for genotype fields
+    modified_elastsearch_schema = {}
     for key, value in elasticsearch_schema.items():
         if key.endswith(".num_alt"):
-            elasticsearch_schema[key] = { "type": "byte", "doc_values": "false" }
+            modified_elastsearch_schema[key.replace(".num_alt", "_num_alt")] = {"type": "byte", "doc_values": "false"}
         elif key.endswith(".gq"):
-            elasticsearch_schema[key] = { "type": "byte", "doc_values": "false" }
+            modified_elastsearch_schema[key.replace(".gq", "_gq")] = {"type": "byte", "doc_values": "false"}
         elif key.endswith(".dp"):
-            elasticsearch_schema[key] = { "type": "short", "doc_values": "false" }
+            modified_elastsearch_schema[key.replace(".dp", "_dp")] = {"type": "short", "doc_values": "false"}
         elif key.endswith(".ab"):
-            elasticsearch_schema[key] = { "type": "half_float", "doc_values": "false" }
+            modified_elastsearch_schema[key.replace(".ab", "_ab")] = {"type": "half_float", "doc_values": "false"}
+        else:
+            modified_elastsearch_schema[key] = value
+
+    elasticsearch_schema = modified_elastsearch_schema
 
     # define the elasticsearch mapping
     elasticsearch_mapping = {
@@ -340,16 +351,22 @@ def export_kt_to_elasticsearch(
         "mappings": {
             "variant": {
                 "_all": {"enabled": "false"},
+                "_size": {"enabled": "true" },
                 "properties": elasticsearch_schema,
             },
         }
     }
 
+    pprint(elasticsearch_mapping)
+    #sys.exit(0)
+
+    logger.info("==> Creating index %s" % index_name)
     es = elasticsearch.Elasticsearch(host, port=port)
     if delete_index_before_exporting and es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
+    logger.info("==> Exporting data to elasticasearch. Blocksize: %s" % block_size)
     # export keytable records to this index
     kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={}) #, config={ "es.nodes.client.only": "true" })
 

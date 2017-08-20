@@ -3,8 +3,11 @@ import os
 import StringIO
 import subprocess
 from collections import namedtuple
+import sys
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def run_in_background(command, print_command=True, env={}):

@@ -1,10 +1,13 @@
 import logging
 import re
 import time
+import sys
 
 from utils.shell_utils import run_shell_command, FileStats, get_file_stats
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def get_gcloud_file_stats(gs_path):
