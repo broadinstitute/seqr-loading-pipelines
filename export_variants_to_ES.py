@@ -7,8 +7,11 @@ from pprint import pprint
 
 from utils.computed_fields_utils import CONSEQUENCE_TERMS
 from utils.elasticsearch_utils import export_vds_to_elasticsearch
+import sys
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 p = argparse.ArgumentParser()
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
@@ -16,7 +19,8 @@ p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=in
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="variant_callset")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=1000, type=int)
-p.add_argument("-s", "--num-shards", help="Number of shards to use for this index (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)", default=10, type=int)
+p.add_argument("-s", "--num-shards", help="Number of shards to use for this index (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)", default=8, type=int)
+p.add_argument("--num-samples", help="Number of samples to include in the output", type=int)
 p.add_argument("--only-coding", action="store_true")
 p.add_argument("--only-non-coding", action="store_true")
 p.add_argument("input_vds", help="input VDS")
@@ -54,23 +58,31 @@ logger.info("\n==> exporting to ES")
 #MAX_SAMPLES_PER_INDEX = 100
 #NUM_INDEXES = 1 + (len(vds.sample_ids) - 1)/MAX_SAMPLES_PER_INDEX
 
-sample_groups = [
-#   samples[0:100],
-#   samples[100:200],
-#   samples[200:300],
-#   samples[300:400],
-#   samples[400:501],
-#   samples[501:602],
-#   samples[602:701],
-#   samples[701:802],
-#   samples[802:905],
+if not args.num_samples:
+    sample_groups = [
+        #   samples[0:100],
+        #   samples[100:200],
+        #   samples[200:300],
+        #   samples[300:400],
+        #   samples[400:501],
+        #   samples[501:602],
+        #   samples[602:701],
+        #   samples[701:802],
+        #   samples[802:905],
 
-#    vds.sample_ids[0:300],
-#    vds.sample_ids[300:602],   # split on family boundaries
-#    vds.sample_ids[602:900],
+        #    vds.sample_ids[0:300],
+        #    vds.sample_ids[300:602],   # split on family boundaries
+        #    vds.sample_ids[602:900],
 
-    vds.sample_ids,
-]
+        vds.sample_ids,
+    ]
+
+else:
+    sample_groups = [
+        vds.sample_ids[:args.num_samples],
+    ]
+
+
 
 
 for i, sample_group in enumerate(sample_groups):
