@@ -332,16 +332,17 @@ def delete_all(deployment_target):
         "deploy/kubernetes/%(deployment_target)s-settings.yaml" % locals(),
     ], settings)
 
-    run('kubectl delete deployments --all')
+
+    if settings.get("DEPLOY_TO_PREFIX") == "gcloud":
+        run("gcloud container clusters delete --project %(GCLOUD_PROJECT)s --zone %(GCLOUD_ZONE)s --no-async %(CLUSTER_NAME)s" % settings, is_interactive=True)
+        #run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
+
     run('kubectl delete replicationcontrollers --all')
     run('kubectl delete services --all')
     run('kubectl delete StatefulSets --all')
     run('kubectl delete pods --all')
 
-    if settings.get("DEPLOY_TO_PREFIX") == "gcloud":
-        run("gcloud container clusters delete --project %(GCLOUD_PROJECT)s --zone %(GCLOUD_ZONE)s --no-async %(CLUSTER_NAME)s" % settings, is_interactive=True)
-        #run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
-    else:
+    if settings.get("DEPLOY_TO_PREFIX") != "gcloud":
         run('docker kill $(docker ps -q)', errors_to_ignore=["requires at least 1 arg"])
         run('docker rmi -f $(docker images -q)', errors_to_ignore=["requires at least 1 arg"])
 

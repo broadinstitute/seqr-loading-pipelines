@@ -113,6 +113,21 @@ def deploy_init(settings):
             "--zone %(GCLOUD_ZONE)s",
         ]) % settings)
 
+
+        # create disks
+        run(" ".join([
+            "kubectl apply -f deploy/kubernetes/elasticsearch/ssd-storage-class.yaml",
+        ]))
+
+        for i in range(0, 1):
+            run(" ".join([
+                "gcloud compute disks create elasticsearch-disk-%d  --type=pd-ssd --zone=us-central1-b --size=220Gb" % i,
+            ]), errors_to_ignore=["already exists"])
+
+            run(" ".join([
+                "kubectl apply -f deploy/kubernetes/elasticsearch/es-persistent-volume.yaml",
+            ]))
+
         #run(" ".join([
         #    "gcloud container clusters resize %(CLUSTER_NAME)s --size %(CLUSTER_NUM_NODES)s" % settings,
         #]), is_interactive=True)
