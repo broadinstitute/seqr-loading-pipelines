@@ -347,6 +347,8 @@ def export_kt_to_elasticsearch(
             "number_of_shards": num_shards,
             "number_of_replicas": 0,
             "index.mapping.total_fields.limit": 10000,
+            "index.refresh_interval": "60s",
+            "index.store.throttle.type": "none",
         },
         "mappings": {
             "variant": {
@@ -364,6 +366,7 @@ def export_kt_to_elasticsearch(
     es = elasticsearch.Elasticsearch(host, port=port)
     if delete_index_before_exporting and es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
+
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
     logger.info("==> Exporting data to elasticasearch. Blocksize: %s" % block_size)
@@ -411,7 +414,7 @@ def print_elasticsearch_stats(es):
 
     print("CPU load: %s" % str(node_stats["nodes"][node_id]["os"]["cpu"]["load_average"]))
     print("Swap: %s (bytes used)" % str(node_stats["nodes"][node_id]["os"]["swap"]["used_in_bytes"]))
-    print("Disk type: " + ("Regular" if node_stats["nodes"][node_id]["fs"]["total"]["spins"] else "SSD"))
+    print("Disk type: " + ("Regular" if node_stats["nodes"][node_id]["fs"]["total"].get("spins") else "SSD"))
     print("==========================")
 
     # other potentially interesting fields:

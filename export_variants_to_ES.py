@@ -74,7 +74,13 @@ if not args.num_samples:
         #    vds.sample_ids[300:602],   # split on family boundaries
         #    vds.sample_ids[602:900],
 
-        vds.sample_ids,
+        #    vds.sample_ids,
+        
+        vds.sample_ids[0:200],
+        vds.sample_ids[200:400],
+        vds.sample_ids[400:602],
+        vds.sample_ids[602:802],
+        vds.sample_ids[802:905],
     ]
 
 else:
