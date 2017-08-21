@@ -148,8 +148,8 @@ def check_kubernetes_context(deployment_target):
             sys.exit(-1)
 
     elif deployment_target.startswith("gcloud"):
-        suffix = deployment_target.split("-")[-1]  # "dev" or "prod"
-        if not kubectl_current_context.startswith('gke_') or not kubectl_current_context.endswith(suffix):
+        suffix = "-%s" % deployment_target.split("-")[-1]  # "dev" or "prod"
+        if not kubectl_current_context.startswith('gke_') or suffix not in kubectl_current_context:
             logger.error(("'%(cmd)s' returned '%(kubectl_current_context)s' which doesn't match %(deployment_target)s. "
                           "To fix this, run:\n\n   "
                           "gcloud container clusters get-credentials <cluster-name>\n\n"
