@@ -50,9 +50,9 @@ spec:
         - name: HTTP_ENABLE
           value: "true"
         - name: "ES_JAVA_OPTS"
-          value: "-Xms2g -Xmx2g"
+          value: "-Xms15g -Xmx15g"
         - name: "ES_PLUGINS_INSTALL"
-          value: "mapper-size"
+          value: "repository-gcs,mapper-size"
         ports:
         - containerPort: 9300
           name: transport
@@ -60,14 +60,22 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /data
-  volumeClaimTemplates:
-  - metadata:
-      name: storage
-      annotations:
+      nodeSelector:
+        #cloud.google.com/gke-nodepool: "elasticsearch"
+        cloud.google.com/gke-local-ssd: "true"
+      volumes:
+        - hostPath:
+            path: "/mnt/disks/ssd0"
+          name: "storage"
+  #volumeClaimTemplates:
+  #- metadata:
+  #    name: storage
+  #    annotations:
         #volume.beta.kubernetes.io/storage-class: standard
-        volume.beta.kubernetes.io/storage-class: ssd-storage-class
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 200Gi
+  #      volume.beta.kubernetes.io/storage-class: ssd-storage-class
+  #  spec:
+  #    accessModes: [ "ReadWriteOnce" ]
+  #    resources:
+  #      requests:
+  #        storage: 200Gi
+
