@@ -4,6 +4,7 @@ import argparse
 import hail
 import logging
 from pprint import pprint
+import time
 
 from utils.computed_fields_utils import CONSEQUENCE_TERMS
 from utils.elasticsearch_utils import export_vds_to_elasticsearch
@@ -35,26 +36,25 @@ if not input_vds_path.endswith(".vds"):
 logger.info("Input: " + input_vds_path)
 logger.info("Output: elasticsearch index @ %(host)s:%(port)s/%(index)s/%(index_type)s" % args.__dict__)
 
-logger.info("\n==> create HailContext")
+logger.info("==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
-logger.info("\n==> import vds: " + input_vds_path)
+logger.info("==> import vds: " + input_vds_path)
 vds = hc.read(input_vds_path)
 
-logger.info("\n==> imported dataset")
+logger.info("==> imported dataset")
 logger.info(vds.variant_schema)
 
 # filter to coding or non-coding variants
 non_coding_consequence_first_index = CONSEQUENCE_TERMS.index("5_prime_UTR_variant")
 if args.only_coding:
-    logger.info("\n==> filter to coding variants only (all transcript consequences above 5_prime_UTR_variant)")
+    logger.info("==> filter to coding variants only (all transcript consequences above 5_prime_UTR_variant)")
     vds = vds.filter_variants_expr("va.mainTranscript.major_consequence_rank < %d" % non_coding_consequence_first_index, keep=True)
 elif args.only_non_coding:
-    logger.info("\n==> filter to non-coding variants only (all transcript consequences above 5_prime_UTR_variant)")
+    logger.info("==> filter to non-coding variants only (all transcript consequences above 5_prime_UTR_variant)")
     vds = vds.filter_variants_expr("isMissing(va.mainTranscript.major_consequence_rank) || va.mainTranscript.major_consequence_rank >= %d" % non_coding_consequence_first_index, keep=True)
 
 
-logger.info("\n==> exporting to ES")
 #MAX_SAMPLES_PER_INDEX = 100
 #NUM_INDEXES = 1 + (len(vds.sample_ids) - 1)/MAX_SAMPLES_PER_INDEX
 
@@ -89,19 +89,18 @@ else:
     ]
 
 
-
-
 for i, sample_group in enumerate(sample_groups):
 
     index_name = "%s_%s" % (args.index, i)
-    logger.info("\n==> loading %s samples into %s" % (len(sample_group), index_name))
+    logger.info("==> loading %s samples into %s" % (len(sample_group), index_name))
 
     vds_sample_subset = vds.filter_samples_list(sample_group, keep=True)
 
-    logger.info("\n==> export to elasticsearch")
+    logger.info("==> export to elasticsearch")
     DISABLE_INDEX_FOR_FIELDS = ("sortedTranscriptConsequences", )
     DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
 
+    timestamp1 = time.time()
     export_vds_to_elasticsearch(
         vds_sample_subset,
         export_genotypes=True,
@@ -117,3 +116,6 @@ for i, sample_group in enumerate(sample_groups):
         is_split_vds=True,
         verbose=True,
     )
+
+    timestamp2 = time.time()
+    logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
