@@ -167,6 +167,12 @@ def show_status():
     #run("docker images")
     run("kubectl cluster-info", ignore_all_errors=True)
     run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)
+
+    logger.info("==> Node IPs - for connecting to Kibana and elasticsearch via NodePorts 30002 and 30001:")
+    run("kubectl describe nodes  | grep 'Name:\|ExternalIP'", ignore_all_errors=True)
+    logger.info("==> elasticearch client IPs that hail can export to:")
+    run("kubectl describe svc elasticsearch  | grep 'Name:\|Endpoints'", ignore_all_errors=True)
+
     run("kubectl get nodes", ignore_all_errors=True)
     run("kubectl get services", ignore_all_errors=True)
     run("kubectl get pods", ignore_all_errors=True)
