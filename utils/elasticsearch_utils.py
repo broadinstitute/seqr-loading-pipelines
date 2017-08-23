@@ -499,6 +499,8 @@ def export_kt_to_elasticsearch(
     es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
     """
 
+    es.indices.forcemerge(index=index_name)
+
     if verbose:
         print_elasticsearch_stats(es)
 
