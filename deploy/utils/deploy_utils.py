@@ -104,6 +104,7 @@ def deploy_init(settings):
             "--zone %(GCLOUD_ZONE)s",
             "--network %(GCLOUD_PROJECT)s-auto-vpc",
             "--machine-type %(CLUSTER_MACHINE_TYPE)s",
+            "--local-ssd-count 1",
             "--num-nodes %(CLUSTER_NUM_NODES)s",
         ]) % settings, verbose=False, errors_to_ignore=["already exists"])
 
