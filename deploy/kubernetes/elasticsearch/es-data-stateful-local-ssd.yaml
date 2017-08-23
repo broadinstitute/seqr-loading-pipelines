@@ -60,15 +60,10 @@ spec:
         volumeMounts:
         - name: storage
           mountPath: /data
-  volumeClaimTemplates:
-  - metadata:
-      name: storage
-      annotations:
-        #volume.beta.kubernetes.io/storage-class: standard
-        volume.beta.kubernetes.io/storage-class: ssd-storage-class
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: {{ ELASTICSEARCH_DISK_SIZE }}Gi
-
+      nodeSelector:
+        #cloud.google.com/gke-nodepool: "elasticsearch"
+        cloud.google.com/gke-local-ssd: "true"
+      volumes:
+        - hostPath:
+            path: "/mnt/disks/ssd0"
+          name: "storage"

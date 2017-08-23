@@ -4,7 +4,7 @@ metadata:
     name: {{ CLUSTER_NAME }}-elasticsearch-disk-0
 spec:
   capacity:
-    storage: 220G
+    storage: {{ ELASTICSEARCH_DISK_SIZE }}G
   accessModes:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain

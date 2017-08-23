@@ -104,7 +104,7 @@ def deploy_init(settings):
             "--zone %(GCLOUD_ZONE)s",
             "--network %(GCLOUD_PROJECT)s-auto-vpc",
             "--machine-type %(CLUSTER_MACHINE_TYPE)s",
-            "--local-ssd-count 1",
+            #"--local-ssd-count 1",
             "--num-nodes %(CLUSTER_NUM_NODES)s",
         ]) % settings, verbose=False, errors_to_ignore=["already exists"])
 
@@ -121,7 +121,7 @@ def deploy_init(settings):
         ]))
 
         run(" ".join([
-            "gcloud compute disks create %(CLUSTER_NAME)s-elasticsearch-disk-0  --type=pd-ssd --zone=us-central1-b --size=220Gb" % settings,
+            "gcloud compute disks create %(CLUSTER_NAME)s-elasticsearch-disk-0  --type=pd-ssd --zone=us-central1-b --size=%(ELASTICSEARCH_DISK_SIZE)sGb" % settings,
         ]), errors_to_ignore=["already exists"])
 
         run(" ".join([

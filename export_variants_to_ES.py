@@ -5,10 +5,10 @@ import hail
 import logging
 from pprint import pprint
 import time
-
+import sys
 from utils.computed_fields_utils import CONSEQUENCE_TERMS
 from utils.elasticsearch_utils import export_vds_to_elasticsearch
-import sys
+
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -57,7 +57,6 @@ elif args.only_non_coding:
 
 #MAX_SAMPLES_PER_INDEX = 100
 #NUM_INDEXES = 1 + (len(vds.sample_ids) - 1)/MAX_SAMPLES_PER_INDEX
-
 if not args.num_samples:
     sample_groups = [
         #   samples[0:100],
@@ -70,17 +69,28 @@ if not args.num_samples:
         #   samples[701:802],
         #   samples[802:905],
 
+
+        # 5 indexes
+        #vds.sample_ids[0:200],
+        #vds.sample_ids[200:400],
+        #vds.sample_ids[400:602],
+        #vds.sample_ids[602:802],
+        #vds.sample_ids[802:905],
+
+        # 4 indexes
+        vds.sample_ids[0:225],
+        vds.sample_ids[225:449],
+        vds.sample_ids[449:674],
+        vds.sample_ids[449:674],
+        vds.sample_ids[674:900],
+
+        # 3 indexes
         #    vds.sample_ids[0:300],
         #    vds.sample_ids[300:602],   # split on family boundaries
         #    vds.sample_ids[602:900],
 
-        #    vds.sample_ids,
-        
-        vds.sample_ids[0:200],
-        vds.sample_ids[200:400],
-        vds.sample_ids[400:602],
-        vds.sample_ids[602:802],
-        vds.sample_ids[802:905],
+        # 1 index
+        #vds.sample_ids,
     ]
 
 else:
@@ -93,7 +103,7 @@ for i, sample_group in enumerate(sample_groups):
 
     index_name = "%s_%s" % (args.index, i)
     logger.info("==> loading %s samples into %s" % (len(sample_group), index_name))
-
+    logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
     vds_sample_subset = vds.filter_samples_list(sample_group, keep=True)
 
     logger.info("==> export to elasticsearch")

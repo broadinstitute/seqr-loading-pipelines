@@ -1,7 +1,15 @@
 #IP_ADDRESS=10.44.0.7
-IP_ADDRESS=10.48.3.5
+#IP_ADDRESS=10.48.3.5
+#IP_ADDRESS=10.28.4.4
 
-for i in 3 50 100 200 300 500 700 900; do
+#IP_ADDRESS=10.48.0.5
+IP_ADDRESS=10.48.5.5
+
+cd ..
+
+#for i in 3 50 100 200 300 500 700 900; do
+#for i in 200 225 250 275 300; do
+for i in 200 250 300 330; do
     echo =========================
     echo Testing with $i samples 
     echo =========================
