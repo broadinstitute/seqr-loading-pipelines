@@ -462,6 +462,7 @@ def export_kt_to_elasticsearch(
             "index.mapping.total_fields.limit": 10000,
             "index.refresh_interval": "30s",
             "index.store.throttle.type": "none",
+            "index.codec": "best_compression",
         },
         "mappings": {
             "variant": {
