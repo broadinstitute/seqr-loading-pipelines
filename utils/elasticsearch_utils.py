@@ -12,6 +12,7 @@ import collections
 import elasticsearch
 import logging
 from pprint import pprint
+import StringIO
 import sys
 
 from utils.vds_schema_string_utils import _parse_fields
@@ -36,6 +37,74 @@ VDS_TO_ES_TYPE_MAPPING = {
 for vds_type, es_type in VDS_TO_ES_TYPE_MAPPING.items():
     VDS_TO_ES_TYPE_MAPPING.update({"Array[%s]" % vds_type: es_type})
     VDS_TO_ES_TYPE_MAPPING.update({"Set[%s]" % vds_type: es_type})
+
+
+# make encoded values as human-readable as possible
+ES_FIELD_NAME_ESCAPE_CHAR = '$'
+ES_FIELD_NAME_BAD_LEADING_CHARS = set(['_', '-', '+', ES_FIELD_NAME_ESCAPE_CHAR])
+ES_FIELD_NAME_SPECIAL_CHAR_MAP = {
+    '.': '_$dot$_',
+    ',': '_$comma$_',
+    '#': '_$hash$_',
+    '*': '_$star$_',
+    '(': '_$lp$_',
+    ')': '_$rp$_',
+    '[': '_$lsb$_',
+    ']': '_$rsb$_',
+    '{': '_$lcb$_',
+    '}': '_$rcb$_',
+}
+
+
+def _encode_field_name(s):
+    """Encodes arbitrary string into an elasticsearch field name
+
+    See:
+    https://discuss.elastic.co/t/special-characters-in-field-names/10658/2
+    https://discuss.elastic.co/t/illegal-characters-in-elasticsearch-field-names/17196/2
+    """
+    field_name = StringIO.StringIO()
+    for i, c in enumerate(s):
+        if c == ES_FIELD_NAME_ESCAPE_CHAR:
+            field_name.write(2*ES_FIELD_NAME_ESCAPE_CHAR)
+        elif c in ES_FIELD_NAME_SPECIAL_CHAR_MAP:
+            field_name.write(ES_FIELD_NAME_SPECIAL_CHAR_MAP[c])  # encode the char
+        else:
+            field_name.write(c)  # write out the char as is
+
+    field_name = field_name.getvalue()
+
+    # escape 1st char if necessary
+    if any(field_name.startswith(c) for c in ES_FIELD_NAME_BAD_LEADING_CHARS):
+        return ES_FIELD_NAME_ESCAPE_CHAR + field_name
+    else:
+        return field_name
+
+
+def _decode_field_name(field_name):
+    """Converts an elasticsearch field name back to the original unencoded string"""
+
+    if field_name.startswith(ES_FIELD_NAME_ESCAPE_CHAR):
+        field_name = field_name[1:]
+
+    i = 0
+    original_string = StringIO.StringIO()
+    while i < len(field_name):
+        current_string = field_name[i:]
+        if current_string.startswith(2*ES_FIELD_NAME_ESCAPE_CHAR):
+            original_string.write(ES_FIELD_NAME_ESCAPE_CHAR)
+            i += 2
+        else:
+            for original_value, encoded_value in ES_FIELD_NAME_SPECIAL_CHAR_MAP.items():
+                if current_string.startswith(encoded_value):
+                    original_string.write(original_value)
+                    i += len(encoded_value)
+                    break
+            else:
+                original_string.write(field_name[i])
+                i += 1
+
+    return original_string.getvalue()
 
 
 def _map_vds_type_to_es_type(type_name):
@@ -262,6 +331,23 @@ def export_vds_to_elasticsearch(
         genotype_fields_list,
     )
 
+    # replace "." with "_" in genotype column names (but leave sample ids unchanged)
+    genotype_column_name_fixes = {
+        "%s.%s" % (sample_id, genotype_field): "%s_%s" % (sample_id, genotype_field)
+            for sample_id in vds.sample_ids
+                for genotype_field in ['num_alt', 'gq', 'ab', 'dp']
+    }
+
+    # replace "." with "_" in other column names
+    kt_rename_dict = genotype_column_name_fixes
+    for column_name in kt.columns:
+        if column_name not in kt_rename_dict and "." in column_name:
+            fixed_column_name = column_name.replace(".", "_")
+            print("Renaming column %s to %s" % (column_name, fixed_column_name))
+            kt_rename_dict[column_name] = fixed_column_name
+
+    kt = kt.rename(kt_rename_dict)
+
     export_kt_to_elasticsearch(
         kt,
         host,
@@ -273,6 +359,7 @@ def export_vds_to_elasticsearch(
         delete_index_before_exporting=delete_index_before_exporting,
         disable_doc_values_for_fields=disable_doc_values_for_fields,
         disable_index_for_fields=disable_index_for_fields,
+        field_names_replace_dot_with=None,
         verbose=verbose)
 
 
@@ -287,6 +374,7 @@ def export_kt_to_elasticsearch(
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
+        field_names_replace_dot_with="_",
         verbose=True,
     ):
     """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -307,11 +395,36 @@ def export_kt_to_elasticsearch(
         disable_index_for_fields: (optional) list of field names (the way they will be
             named in the elasticsearch index) that shouldn't be indexed
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
+        field_names_replace_dot_with (string): since "." chars in field names are interpreted in
+            special ways by elasticsearch, set this arg to first go through and replace "." with
+            this string in all field names. This replacement is not reversible (or atleast not
+            unambiguously in the general case) Set this to None to disable replacement, and fall back
+            on an encoding that's uglier, but reversible (eg. "." will be converted to "_$dot$_")
         verbose (bool): whether to print schema and stats
     """
 
     # output .tsv for debugging
     #kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
+
+    # encode any special chars in column names
+    rename_dict = {}
+    for column_name in kt.columns:
+        encoded_name = column_name
+
+        # optionally replace . with _ in a non-reversible way
+        if field_names_replace_dot_with is not None:
+            encoded_name = encoded_name.replace(".", field_names_replace_dot_with)
+
+        # replace all other special chars with an encoding that's uglier, but reversible
+        encoded_name = _encode_field_name(encoded_name)
+
+        if encoded_name != column_name:
+            rename_dict[column_name] = encoded_name
+
+    for original_name, encoded_name in rename_dict.items():
+        print("Encoding column name %s to %s" % (original_name, encoded_name))
+
+    kt = kt.rename(rename_dict)
 
     if verbose:
         pprint(kt.schema)
@@ -326,20 +439,20 @@ def export_kt_to_elasticsearch(
     )
 
     # set types and disable doc values for genotype fields
-    modified_elastsearch_schema = {}
+    modified_elasticsearch_schema = {}
     for key, value in elasticsearch_schema.items():
-        if key.endswith(".num_alt"):
-            modified_elastsearch_schema[key.replace(".num_alt", "_num_alt")] = {"type": "byte", "doc_values": "false"}
-        elif key.endswith(".gq"):
-            modified_elastsearch_schema[key.replace(".gq", "_gq")] = {"type": "byte", "doc_values": "false"}
-        elif key.endswith(".dp"):
-            modified_elastsearch_schema[key.replace(".dp", "_dp")] = {"type": "short", "doc_values": "false"}
-        elif key.endswith(".ab"):
-            modified_elastsearch_schema[key.replace(".ab", "_ab")] = {"type": "half_float", "doc_values": "false"}
+        if key.endswith("_num_alt"):
+            modified_elasticsearch_schema[key] = {"type": "byte", "doc_values": "false"}
+        elif key.endswith("_gq"):
+            modified_elasticsearch_schema[key] = {"type": "byte", "doc_values": "false"}
+        elif key.endswith("_dp"):
+            modified_elasticsearch_schema[key] = {"type": "short", "doc_values": "false"}
+        elif key.endswith("_ab"):
+            modified_elasticsearch_schema[key] = {"type": "half_float", "doc_values": "false"}
         else:
-            modified_elastsearch_schema[key] = value
+            modified_elasticsearch_schema[key] = value
 
-    elasticsearch_schema = modified_elastsearch_schema
+    elasticsearch_schema = modified_elasticsearch_schema
 
     # define the elasticsearch mapping
     elasticsearch_mapping = {
@@ -347,7 +460,7 @@ def export_kt_to_elasticsearch(
             "number_of_shards": num_shards,
             "number_of_replicas": 0,
             "index.mapping.total_fields.limit": 10000,
-            "index.refresh_interval": "60s",
+            "index.refresh_interval": "30s",
             "index.store.throttle.type": "none",
         },
         "mappings": {
@@ -359,8 +472,7 @@ def export_kt_to_elasticsearch(
         }
     }
 
-    pprint(elasticsearch_mapping)
-    #sys.exit(0)
+    #pprint(elasticsearch_mapping)
 
     logger.info("==> Creating index %s" % index_name)
     es = elasticsearch.Elasticsearch(host, port=port)
@@ -370,16 +482,20 @@ def export_kt_to_elasticsearch(
     es.indices.create(index=index_name, body=elasticsearch_mapping)
 
     logger.info("==> Exporting data to elasticasearch. Blocksize: %s" % block_size)
+
     # export keytable records to this index
     kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={}) #, config={ "es.nodes.client.only": "true" })
 
     """
-    // es.write.operation // default: index (create, update, upsert)
-    // es.http.timeout // default 1m
-    // es.http.retries // default 3
-    // es.batch.size.bytes  // default 1mb
-    // es.batch.size.entries  // default 1000
-    // es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
+    Potentially useful config settings for export_elasticsearch(..)
+    (https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html)
+
+    es.write.operation // default: index (create, update, upsert)
+    es.http.timeout // default 1m
+    es.http.retries // default 3
+    es.batch.size.bytes  // default 1mb
+    es.batch.size.entries  // default 1000
+    es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
     """
 
     if verbose:
