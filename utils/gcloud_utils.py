@@ -1,9 +1,8 @@
 import logging
 import re
+import subprocess
 import time
-import sys
-
-from utils.shell_utils import run_shell_command, FileStats, get_file_stats
+from utils.shell_utils import run, FileStats, get_file_stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -14,7 +13,7 @@ def get_gcloud_file_stats(gs_path):
     if gs_path.endswith(".vds"):
         gs_path += "/metadata.json.gz"  # set path to a file inside the .vds directory because gsutil stat works only on files.
 
-    _, gsutil_stat_output, _ = run_shell_command("gsutil stat %(gs_path)s" % locals(), wait_and_return_log_output=True, verbose=False)
+    gsutil_stat_output = run("gsutil stat %(gs_path)s" % locals(), print_command=False, verbose=False, ignore_all_errors=True)
 
     """
     Example gsutil stat output:
@@ -53,6 +52,18 @@ def get_local_or_gcloud_file_stats(file_path):
     else:
         file_stats = get_file_stats(file_path)
     return file_stats
+
+
+def google_bucket_file_iter(gs_path):
+    """Iterate over lines in the given file"""
+    command = "gsutil cat %(gs_path)s " % locals()
+    if gs_path.endswith("gz"):
+        command += "| gunzip -c -q - "
+
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    for line in iter(process.stdout.readline, ''):
+        yield line
+    process.wait()
 
 
 def _get_file_ctime(file_path):
