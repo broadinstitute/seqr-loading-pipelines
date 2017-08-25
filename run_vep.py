@@ -22,10 +22,10 @@ if args.input_file.endswith(".vds"):
 elif args.input_file.endswith("gz"):
     vds = hc.import_vcf(args.input_file, force_bgz=True, min_partitions=10000)
     # save alt alleles before calling split_multi
-    vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
 else:
     p.error("Invalid input file: %s" % args.input_file)
 
+vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
 vds = vds.split_multi().vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
 
 pprint.pprint(vds.variant_schema)
