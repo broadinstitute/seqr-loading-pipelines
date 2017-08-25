@@ -4,7 +4,7 @@ import argparse
 import hail
 import logging
 from pprint import pprint
-
+import sys
 from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_orig_alt_alleles_set, get_expr_for_vep_consequence_terms_set, \
@@ -20,7 +20,6 @@ from utils.add_exac import add_exac_to_vds
 from utils.add_gnomad import add_gnomad_to_vds
 from utils.add_mpc import add_mpc_to_vds
 from utils.computed_fields_utils import CONSEQUENCE_TERM_RANKS, CONSEQUENCE_TERMS
-import sys
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -36,6 +35,7 @@ p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD score
 p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. This is mainly useful for testing.")
 p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. This is mainly useful for testing.")
 p.add_argument("input_vds", help="input VDS")
+p.add_argument("output_vds", nargs="?", help="output vds")
 
 # parse args
 args = p.parse_args()
@@ -47,13 +47,16 @@ if args.only_coding and args.only_non_coding:
     p.error("Both --only-coding and --only-non-coding options used")
 
 input_vds_path_prefix = input_vds_path.replace(".vds", "")
-output_vds_path = input_vds_path_prefix 
-if args.only_coding:
-    output_vds_path += ".coding"
-if args.only_non_coding:
-    output_vds_path += ".non_coding"
+if args.output_vds:
+    output_vds_path = args.output_vds
+else:
+    output_vds_path = input_vds_path_prefix
+    if args.only_coding:
+        output_vds_path += ".coding"
+    if args.only_non_coding:
+        output_vds_path += ".non_coding"
 
-output_vds_path += ".all_annotations.vds"
+    output_vds_path += ".all_annotations.vds"
 
 
 logger.info("Input: " + input_vds_path)
