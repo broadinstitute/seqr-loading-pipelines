@@ -199,6 +199,7 @@ EXAC_INFO_FIELDS = """
     AC_Adj: Array[Int],
     AN: Int,
     AN_Adj: Int,
+    AF: Array[Double],
     AC_AFR: Array[Int],
     AC_AMR: Array[Int],
     AC_EAS: Array[Int],
@@ -213,7 +214,7 @@ EXAC_INFO_FIELDS = """
     AF_NFE: Float,
     AF_OTH: Float,
     AF_SAS: Float,
-    --- AF_POPMAX: Float,
+    AF_POPMAX: Float,
     """
 
 GNOMAD_TOP_LEVEL_FIELDS = """filters: Set[String],"""
