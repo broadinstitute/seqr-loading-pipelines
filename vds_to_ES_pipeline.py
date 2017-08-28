@@ -25,8 +25,7 @@ p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=10
 p.add_argument("-s", "--num-shards", help="Number of shards to use for this index (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)", default=8, type=int)
 p.add_argument("--num-samples", help="Number of samples to include in the output", type=int)
 
-p.add_argument("--only-coding", action="store_true")
-p.add_argument("--only-non-coding", action="store_true")
+p.add_argument("--split-coding-and-non-coding", action="store_true")
 
 p.add_argument("--skip-vep", action="store_true")
 p.add_argument("--skip-annotation", action="store_true")
@@ -72,8 +71,6 @@ def run(label, command):
         logger.info("==> finished running %s - time: %s seconds" % (label, timestamp2 - timestamp1))
 
 output_file = None
-
-
 if not skip_vep:
     logger.info("===============")
     logger.info("    RUN VEP    ")
@@ -97,18 +94,10 @@ if not skip_annotation:
     logger.info("    RUN ANNOTATION    ")
     logger.info("======================")
 
-    output_file = input_file.replace(".vds", "")
-    only_coding_arg = ""
-    if args.only_coding:
-        output_file += ".coding"
-        only_coding_arg = "--only-coding"
+    if args.split_coding_and_non_coding:
+        split_coding_and_non_coding_arg = "--split-coding-and-non-coding"
 
-    only_non_coding_arg = ""
-    if args.only_non_coding:
-        output_file += ".non_coding"
-        only_non_coding_arg = "--only-non-coding"
-
-    output_file += ".all_annotations.vds"
+    output_file = input_file.replace(".vds", "") + ".all_annotations.vds"
 
     logger.info("Input file: " + input_file)
     logger.info("Output file: " + output_file)
@@ -120,9 +109,9 @@ if not skip_annotation:
         " ".join([
             "./submit.py --cluster %(cluster)s --project %(project)s",
             "add_annotations.py",
-            "%(only_coding_arg)s %(only_non_coding_arg)s",
+            "%(split_coding_and_non_coding_arg)s",
             "-g %(genome_version)s",
-            "--exclude-cadd --exclude-gnomad",
+            #"--exclude-cadd --exclude-gnomad",
             "%(input_file)s",
             "%(output_file)s",
         ]) % locals())
