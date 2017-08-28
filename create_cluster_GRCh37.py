@@ -3,14 +3,20 @@
 import argparse
 import os
 
+from machine_types import MACHINE_TYPES, get_cost
+
 p = argparse.ArgumentParser()
 p.add_argument("-z", "--zone", default="us-central1-b")
-p.add_argument("-m", "--machine-type", default="n1-highmem-4")
+p.add_argument("-m", "--machine-type", default="n1-highmem-4", choices=MACHINE_TYPES)
 p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("cluster", nargs="?", default="vep-grch37")
-p.add_argument("num_workers", nargs="?", help="num worker nodes", default="2")
-p.add_argument("num_preemptible_workers", nargs="?", help="num preemptible worker nodes", default="0")
+p.add_argument("num_workers", nargs="?", help="num worker nodes", default=2, type=int)
+p.add_argument("num_preemptible_workers", nargs="?", help="num preemptible worker nodes", default=0, type=int)
 args = p.parse_args()
+
+cost1 = get_cost(machine_type=args.machine_type, hours=1, is_preemptible=False) * args.num_workers
+cost2 = get_cost(machine_type=args.machine_type, hours=1, is_preemptible=True) * args.num_preemptible_workers
+print("$$$ cost: $%0.2f/h + $%0.2f preemptible/h = $%0.2f / hour total" % (cost1, cost2, cost1+cost2))
 
 # create cluster
 command = """gcloud dataproc clusters create %(cluster)s \
