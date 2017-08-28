@@ -10,10 +10,13 @@ p.add_argument("job_id")
 args = p.parse_args()
 
 
-os.system(" ".join([
+cmd = " ".join([
     "gcloud dataproc jobs kill",
     "--project=%s" % args.project if args.project else "",
     "--cluster=%s" % args.cluster if args.cluster else "",
     args.job_id,
-]))
+])
+
+print(cmd)
+os.system(cmd)
 
