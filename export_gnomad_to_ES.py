@@ -15,9 +15,12 @@ p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
+p.add_argument("-E", "--exomes-vds", help="Exomes dataset to be loaded", required=True)
+p.add_argument("-G", "--genomes-vds", help="Genomes dataset to be loaded", required=True)
 p.add_argument("-i", "--index", help="Elasticsearch index name", default="gnomad_combined")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
-p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=200)
+p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=200, type=int)
+p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
 
 # parse args
 args = p.parse_args()
@@ -31,15 +34,8 @@ GNOMAD_VDS_PATHS = {
     "genomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.0.1.sites.liftover.b38.vds",
 }
 
-
-exomes_vds = hc.read(GNOMAD_VDS_PATHS["exomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('22')) # hail.Interval.parse('X:31224000-31228000'))
-exomes_vds.write("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_%s_chr22_subset.vds" % args.genome_version, overwrite=True)
-
-genomes_vds = hc.read(GNOMAD_VDS_PATHS["genomes_"+args.genome_version]).filter_intervals(hail.Interval.parse('22')) #hail.Interval.parse('X:31224000-31228000'))
-genomes_vds.write("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_%s_chr22_subset.vds" % args.genome_version, overwrite=True)
-
-#exomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.exomes.r2.0.1.vep.sites_DMD_subset.vds")
-#genomes_vds = hc.read("gs://gnomad-bw2/reference_data/GRCh37/gnomad/gnomad.genomes.r2.0.1.vep.sites_DMD_subset.vds")
+exomes_vds = hc.read(args.exomes_vds)
+genomes_vds = hc.read(args.genomes_vds)
 
 # based on output of pprint(vds.variant_schema)
 GNOMAD_SCHEMA = {
@@ -218,7 +214,7 @@ transcript_annotations_to_keep = [
 ]
 
 for field_name in transcript_annotations_to_keep:
-    new_field_name = "mainTranscript." + "".join(map(lambda word: word.capitalize(), field_name.split("_")))
+    new_field_name = field_name.split("_")[0] + "".join(map(lambda word: word.capitalize(), field_name.split("_")[1:]))
     combined_kt = combined_kt.annotate("%(new_field_name)s = mainTranscript.%(field_name)s" % locals())
 
 combined_kt = combined_kt.drop(["mainTranscript"])
@@ -235,6 +231,7 @@ export_kt_to_elasticsearch(
     index_name=args.index,
     index_type_name=args.index_type,
     block_size=args.block_size,
+    num_shards=args.num_shards,
     delete_index_before_exporting=True,
     disable_doc_values_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
     disable_index_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
