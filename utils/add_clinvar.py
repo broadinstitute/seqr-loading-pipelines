@@ -28,15 +28,15 @@ def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", inf
     """Add clinvar annotations to the vds"""
 
     if genome_version == "37":
-        clinvar_single_vcf = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar_alleles.single.b37.vcf.gz'
-        clinvar_multi_vcf = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar_alleles.multi.b37.vcf.gz'
+        clinvar_single_vds = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar_alleles.single.b37.vds'
+        clinvar_multi_vds = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar_alleles.multi.b37.vds'
     elif genome_version == "38":
-        clinvar_single_vcf = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.single.b38.vcf.gz'
-        clinvar_multi_vcf = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.multi.b38.vcf.gz'
+        clinvar_single_vds = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.single.b38.vds'
+        clinvar_multi_vds = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.multi.b38.vds'
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    clinvar_vds = hail_context.import_vcf([clinvar_single_vcf, clinvar_multi_vcf], force_bgz=True, min_partitions=1000)
+    clinvar_vds = hail_context.read([clinvar_single_vds, clinvar_multi_vds])
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
