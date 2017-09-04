@@ -64,7 +64,7 @@ def deploy(deployment_target, components=None, output_dir=None, other_settings={
     deploy_init(settings)
 
     if not components:
-        deploy_cockpit(settings)
+        _deploy_cockpit(settings)
         _deploy_elasticsearch_component("es-master", settings)
         _deploy_elasticsearch_component("es-client", settings)
         _deploy_elasticsearch_component("es-data", settings)
@@ -83,7 +83,8 @@ def deploy(deployment_target, components=None, output_dir=None, other_settings={
     elif "kibana" in components:
         _deploy_elasticsearch_component("kibana", settings)
     elif "cockpit" in components:
-        deploy_cockpit(settings)
+        _deploy_cockpit(settings)
+
 
 def deploy_init(settings):
     """Provisions a GKE cluster, persistant disks, and any other prerequisites for deployment."""
@@ -148,7 +149,7 @@ def deploy_init(settings):
     run("kubectl cluster-info", verbose=True)
 
 
-def deploy_cockpit(settings):
+def _deploy_cockpit(settings):
     print_separator("cockpit")
 
     if settings["DELETE_BEFORE_DEPLOY"]:
@@ -211,6 +212,7 @@ def _deploy_elasticsearch_component(component, settings):
 
     if component == "es-client":
        run("kubectl describe svc elasticsearch")
+
 
 def _delete_pod(component_label, settings, async=False, custom_yaml_filename=None):
     yaml_filename = custom_yaml_filename or (component_label+".%(DEPLOY_TO_PREFIX)s.yaml")
