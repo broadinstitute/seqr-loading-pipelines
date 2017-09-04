@@ -14,13 +14,14 @@ def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fiel
         cadd_indels_vds_path = 'gs://seqr-reference-data/GRCh37/CADD/InDels.vds'
 
     elif genome_version == "38":
-        cadd_snvs_vds_path = 'gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.vds'
-        cadd_indels_vds_path = 'gs://seqr-reference-data/GRCh38/CADD/InDels.liftover.GRCh38.vds'
+        cadd_snvs_vds_path = 'gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.fixed.vds'  #'gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.vds'
+        cadd_indels_vds_path = 'gs://seqr-reference-data/GRCh38/CADD/InDels.liftover.GRCh38.fixed.vds'
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     #cadd_vds = hail_context.import_vcf([cadd_snvs_vcf_path, cadd_indels_vcf_path], force_bgz=True, min_partitions=1000)
-    cadd_vds = hail_context.read([cadd_snvs_vds_path, cadd_indels_vds_path]).split_multi()
+    #cadd_vds = hail_context.read([cadd_snvs_vds_path, cadd_indels_vds_path]).split_multi()
+    cadd_vds = hail_context.read([cadd_indels_vds_path]).split_multi()
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
