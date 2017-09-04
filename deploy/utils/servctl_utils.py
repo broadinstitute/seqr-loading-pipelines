@@ -166,7 +166,7 @@ def show_status():
     #run("docker info")
     #run("docker images")
     run("kubectl cluster-info", ignore_all_errors=True)
-    run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)
+    #run("kubectl config view | grep 'username\|password'", ignore_all_errors=True)
 
     logger.info("==> Node IPs - for connecting to Kibana and elasticsearch via NodePorts 30002 and 30001:")
     run("kubectl describe nodes  | grep 'Name:\|ExternalIP'", ignore_all_errors=True)
@@ -310,15 +310,21 @@ def delete_component(component, deployment_target=None):
     if component == "cockpit":
         run("kubectl delete rc cockpit", errors_to_ignore=["not found"])
 
-    run("kubectl delete deployments %(component)s" % locals(), errors_to_ignore=["not found"])
-    run("kubectl delete services %(component)s" % locals(), errors_to_ignore=["not found"])
+    if component == "elasticsearch":
+        for subcomponent in ["es-client", "es-master"]:
+            run("kubectl delete deployments %(subcomponent)s" % locals(), errors_to_ignore=["not found"])
+        for subcomponent in ["elasticsearch-data", "elasticsearch-discovery"]:
+            run("kubectl delete services %(subcomponent)s" % locals(), errors_to_ignore=["not found"])
+    else:
+        run("kubectl delete deployments %(component)s" % locals(), errors_to_ignore=["not found"])
+        run("kubectl delete services %(component)s" % locals(), errors_to_ignore=["not found"])
 
-    pod_name = get_pod_name(component, deployment_target=deployment_target)
-    if pod_name:
-        run("kubectl delete pods %(pod_name)s" % locals(), errors_to_ignore=["not found"])
+        pod_name = get_pod_name(component, deployment_target=deployment_target)
+        if pod_name:
+            run("kubectl delete pods %(pod_name)s" % locals(), errors_to_ignore=["not found"])
 
     if component == "elasticsearch" or component == "es-data":
-        run("kubectl delete StatefulSet elasticsearch" % locals(), errors_to_ignore=["not found"])
+        run("kubectl delete StatefulSet es-data" % locals(), errors_to_ignore=["not found"])
 
     run("kubectl get services" % locals())
     run("kubectl get pods" % locals())
