@@ -46,8 +46,23 @@ CONSEQUENCE_TERM_RANK_LOOKUP = (
 ).replace("'", '"')
 
 
-def get_expr_for_vep_gene_ids_set(vep_root="va.vep"):
-    return "%(vep_root)s.transcript_consequences.map( x => x.gene_id ).toSet" % locals()
+def get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=False):
+    """Expression to compute the set of gene ids in VEP annotations for this variant.
+
+    Args:
+        vep_root (string): path of VEP root in the struct
+        only_coding_genes (bool): If set to True, non-coding genes will be excluded.
+
+    Return:
+        string: expression
+    """
+
+    expr = "%(vep_root)s.transcript_consequences" % locals()
+    if only_coding_genes:
+        expr += ".filter( x => x.biotype == 'protein_coding')"
+    expr += ".map( x => x.gene_id ).toSet"
+
+    return expr
 
 
 def get_expr_for_vep_transcript_ids_set(vep_root="va.vep"):
@@ -198,31 +213,31 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
     """
 
     coding_transcript_consequences = """
-            amino_acids,
-            biotype,
-            canonical,
-            cdna_start,
-            cdna_end,
-            codons,
-            distance,
-            exon,
-            gene_id,
-            gene_symbol,
-            gene_symbol_source,
-            hgvsc,
-            hgvsp,
-            lof,
-            lof_flags,
-            lof_filter,
-            lof_info,
-            protein_id,
-            transcript_id,
-            hgnc_id,
-            domains,
-            hgvs,
-            major_consequence,
-            major_consequence_rank,
-            category
+        amino_acids,
+        biotype,
+        canonical,
+        cdna_start,
+        cdna_end,
+        codons,
+        distance,
+        exon,
+        gene_id,
+        gene_symbol,
+        gene_symbol_source,
+        hgvsc,
+        hgvsp,
+        lof,
+        lof_flags,
+        lof_filter,
+        lof_info,
+        protein_id,
+        transcript_id,
+        hgnc_id,
+        domains,
+        hgvs,
+        major_consequence,
+        major_consequence_rank,
+        category
     """
 
     coding_transcript_consequences_with_types = """
@@ -255,23 +270,23 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
 
 
     non_coding_transcript_consequences = """
-            biotype,
-            canonical,
-            cdna_start,
-            cdna_end,
-            codons,
-            distance,
-            exon,
-            gene_id,
-            gene_symbol,
-            gene_symbol_source,
-            hgvsc,
-            transcript_id,
-            hgnc_id,
-            hgvs,
-            major_consequence,
-            major_consequence_rank,
-            category
+        biotype,
+        canonical,
+        cdna_start,
+        cdna_end,
+        codons,
+        distance,
+        exon,
+        gene_id,
+        gene_symbol,
+        gene_symbol_source,
+        hgvsc,
+        transcript_id,
+        hgnc_id,
+        hgvs,
+        major_consequence,
+        major_consequence_rank,
+        category
     """
     
     non_coding_transcript_consequences_with_types = """
@@ -361,6 +376,11 @@ def get_expr_for_xpos(field_prefix="v.", pos_field="start"):
 def get_expr_for_end_pos(field_prefix="v.", pos_field="start", ref_field="ref"):
     """Compute the end position based on start position and ref allele length"""
     return "%(field_prefix)s%(pos_field)s + %(field_prefix)s%(ref_field)s.length - 1" % locals()
+
+def get_expr_for_end_pos_from_info_field(field_prefix="va.", end_field="info.END"):
+    """Retrieve the "END" position from the INFO field. This is typically found in VCFs produced by
+    SV callers."""
+    return "%(field_prefix)s%(end_field)s" % locals()
 
 
 def copy_field(vds, dest_field="va.pos", source_field="v.start"):
