@@ -100,7 +100,7 @@ args = p.parse_args()
 if hasattr(args, "deployment_target") and args.command != SET_ENVIRONMENT_COMMAND:
     check_kubernetes_context(args.deployment_target)
 
-if getattr(args, "command") != DEPLOY_COMMAND:
+if getattr(args, "command") not in [DEPLOY_COMMAND, DELETE_COMMAND]:
     if getattr(args, "component", None) == "elasticsearch":
         args.component = "es-client"
     if getattr(args, "components", None) == ["elasticsearch"]:
