@@ -30,7 +30,7 @@ spec:
           capabilities:
             add:
               - IPC_LOCK
-        image: quay.io/pires/docker-elasticsearch-kubernetes:5.5.1
+        image: quay.io/pires/docker-elasticsearch-kubernetes:5.5.2
         imagePullPolicy: Always
         env:
         - name: NAMESPACE
@@ -50,9 +50,9 @@ spec:
         - name: HTTP_ENABLE
           value: "true"
         - name: "ES_JAVA_OPTS"
-          value: "-Xms15g -Xmx15g"
+          value: "-Xms{{ ELASTICSEARCH_JVM_MEMORY }} -Xmx{{ ELASTICSEARCH_JVM_MEMORY }}"
         - name: "ES_PLUGINS_INSTALL"
-          value: "repository-gcs,mapper-size"
+          value: "repository-gcs"  # ,mapper-size
         ports:
         - containerPort: 9300
           name: transport
