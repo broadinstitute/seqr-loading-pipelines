@@ -18,7 +18,7 @@ for vcf_path in args.vcf_path:
     print("\n")
     print("==> import_vcf: %s" % vcf_path)
 
-    output_path = vcf_path.replace(".vcf", "").replace(".gz", "") + ".vds"
+    output_path = vcf_path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "") + ".vds"
     print("==> output: %s" % output_path)
 
     vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000)
