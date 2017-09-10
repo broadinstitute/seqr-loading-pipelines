@@ -350,6 +350,7 @@ def delete_all(deployment_target):
         #run("gcloud compute disks delete --zone %(GCLOUD_ZONE)s %(DEPLOY_TO)s-elasticsearch-disk" % settings, is_interactive=True)
 
     else:
+        run('kubectl delete deployments --all')
         run('kubectl delete replicationcontrollers --all')
         run('kubectl delete services --all')
         run('kubectl delete StatefulSets --all')
