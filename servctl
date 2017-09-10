@@ -48,7 +48,7 @@ sp.add_argument("component", nargs="?", help="if provided, only this one compone
 sp.add_argument("deployment_target", choices=DEPLOYMENT_TARGETS, help="which kubernetes cluster to deploy to")
 
 ## ENVIRONMENT_COMMAND
-sp = subparsers.add_parser(SET_ENVIRONMENT_COMMAND, description="Print detailed debugging info to troubleshoot components not starting")
+sp = subparsers.add_parser(SET_ENVIRONMENT_COMMAND, description="Set terminal environment for a particular deployment target (eg. 'local', 'gcloud-dev', etc.)")
 sp.add_argument("deployment_target", choices=DEPLOYMENT_TARGETS, help="kubernetes cluster")
 
 ## LOG_COMMAND
