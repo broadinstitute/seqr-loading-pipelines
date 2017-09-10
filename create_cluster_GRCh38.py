@@ -9,6 +9,7 @@ p = argparse.ArgumentParser()
 p.add_argument("-z", "--zone", default="us-central1-b")
 p.add_argument("-m", "--machine-type", default="n1-highmem-8", choices=MACHINE_TYPES)
 p.add_argument("-p", "--project", default="seqr-project")
+p.add_argument("--max-idle", help="The duration before cluster is auto-deleted after last job completes, such as 30m, 2h or 1d", default="10m")
 p.add_argument("cluster", nargs="?", default="vep-grch38")
 p.add_argument("num_workers", nargs="?", help="num worker nodes", default=2, type=int)
 p.add_argument("num_preemptible_workers", nargs="?", help="num preemptible worker nodes", default=0, type=int)
@@ -20,6 +21,7 @@ print("$$$ cost: $%0.2f/h + $%0.2f preemptible/h = $%0.2f / hour total" % (cost1
 
 # create cluster
 command = """gcloud dataproc clusters create %(cluster)s \
+    --max-idle %(max_idle)s \
     --zone %(zone)s  \
     --master-machine-type %(machine_type)s  \
     --master-boot-disk-size 100  \
