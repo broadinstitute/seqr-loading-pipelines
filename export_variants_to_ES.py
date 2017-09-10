@@ -25,6 +25,8 @@ p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and as
   "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices", required=True)
 p.add_argument("--only-coding", action="store_true")
 p.add_argument("--only-non-coding", action="store_true")
+p.add_argument("--ignore-extra-sample-ids-in-fam-file", action="store_true")
+p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
@@ -53,10 +55,6 @@ logger.info("Parsed %s families and %s individuals from %s" % (len(family_ids), 
 input_vds_path = str(args.input_vds)
 if not input_vds_path.endswith(".vds"):
     p.error("Input must be a .vds")
-
-
-logger.info("Input: " + input_vds_path)
-logger.info("Output: elasticsearch index @ %(host)s:%(port)s/%(index)s/%(index_type)s" % args.__dict__)
 
 
 logger.info("Input: " + input_vds_path)
@@ -91,10 +89,10 @@ for sample_id in individual_id_to_family_id:
         sample_ids_in_fam_file_and_not_in_vds.append(sample_id)
 
 
-if sample_ids_in_fam_file_and_not_in_vds or sample_ids_in_vds_and_not_in_fam_file:
+if sample_ids_in_vds_and_not_in_fam_file and not args.ignore_extra_sample_ids_in_vds:
     p.error("%s sample ids from vds not found in .fam file (%s)" % (len(sample_ids_in_vds_and_not_in_fam_file), ", ".join(sample_ids_in_vds_and_not_in_fam_file)))
 
-if sample_ids_in_fam_file_and_not_in_vds or sample_ids_in_vds_and_not_in_fam_file:
+if sample_ids_in_fam_file_and_not_in_vds and not args.ignore_extra_sample_ids_in_fam_file:
     p.error("%s sample ids from .fam file not found in vds (%s)" % (len(sample_ids_in_fam_file_and_not_in_vds), ", ".join(sample_ids_in_fam_file_and_not_in_vds)))
 
 
