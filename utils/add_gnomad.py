@@ -2,9 +2,9 @@ from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_
 
 
 GNOMAD_VDS_PATHS = {
-    "exomes_37": "gs://gnomad-public/release-170228/gnomad.exomes.r2.0.1.sites.vds",
+    "exomes_37": "gs://gnomad-public/release/2.0.1/vds/exomes/gnomad.exomes.r2.0.1.sites.vds",
     "exomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.0.1.sites.liftover.b38.vds",
-    "genomes_37": "gs://gnomad-public/release-170228/gnomad.genomes.r2.0.1.sites.vds",
+    "genomes_37": "gs://gnomad-public/release/2.0.1/vds/genomes/gnomad.genomes.r2.0.1.sites.vds",
     "genomes_38": "gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.0.1.sites.autosomes_and_X.liftover.b38.vds",
 }
 
@@ -193,7 +193,6 @@ INFO_FIELDS = """
 
 
 def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
-
     if genome_version not in ("37", "38"):
         raise ValueError("Invalid genome_version: %s. Must be '37' or '38'" % str(genome_version))
 
@@ -206,6 +205,12 @@ def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root
     gnomad_vds_path = GNOMAD_VDS_PATHS["%s_%s" % (exomes_or_genomes, genome_version)]
 
     gnomad_vds = hail_context.read(gnomad_vds_path).split_multi()
+
+    #if genome_version == "38":
+        #info_fields += """
+        #    OriginalContig: String,
+        #    OriginalStart: String,
+        #"""
 
     if exomes_or_genomes == "genomes":
         # remove any *SAS* fields from genomes since South Asian population only defined for exomes
