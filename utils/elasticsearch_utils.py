@@ -466,8 +466,8 @@ def export_kt_to_elasticsearch(
         },
         "mappings": {
             "variant": {
+                #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
                 "_all": {"enabled": "false"},
-                "_size": {"enabled": "true" },
                 "properties": elasticsearch_schema,
             },
         }
