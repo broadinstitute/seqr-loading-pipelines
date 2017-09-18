@@ -6,7 +6,7 @@ CADD_FIELDS = """
 """
 
 
-def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fields=CADD_FIELDS, verbose=True):
+def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fields=CADD_FIELDS, subset=None, verbose=True):
     """Add CADD scores to the vds"""
 
     if genome_version == "37":
@@ -19,19 +19,26 @@ def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fiel
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    #cadd_vds = hail_context.import_vcf([cadd_snvs_vcf_path, cadd_indels_vcf_path], force_bgz=True, min_partitions=1000)
-    #cadd_vds = hail_context.read([cadd_snvs_vds_path, cadd_indels_vds_path]).split_multi()
-    cadd_vds = hail_context.read([cadd_indels_vds_path]).split_multi()
+    for cadd_vds_path in [cadd_snvs_vds_path, cadd_indels_vds_path]:
+        #cadd_vds = hail_context.import_vcf([cadd_snvs_vcf_path, cadd_indels_vcf_path], force_bgz=True, min_partitions=1000)
+        #cadd_vds = hail_context.read([cadd_indels_vds_path]).split_multi()
+        cadd_vds = hail_context.read(cadd_vds_path).split_multi()
 
-    expr = convert_vds_schema_string_to_annotate_variants_expr(
-        root=root,
-        other_source_fields=info_fields,
-        other_source_root="vds.info",
-    )
+        if subset:
+            import hail
+            cadd_vds = cadd_vds.filter_intervals(hail.Interval.parse(subset))
 
-    if verbose:
-        print(expr)
-        #print("\n==> cadd summary: ")
-        #print("\n" + str(cadd_vds.summarize()))
+        expr = convert_vds_schema_string_to_annotate_variants_expr(
+            root=root,
+            other_source_fields=info_fields,
+            other_source_root="vds.info",
+        )
 
-    return vds.annotate_variants_vds(cadd_vds, expr=expr)
+        if verbose:
+            print(expr)
+            #print("\n==> cadd summary: ")
+            #print("\n" + str(cadd_vds.summarize()))
+
+        vds = vds.annotate_variants_vds(cadd_vds, expr=expr)
+
+    return vds
