@@ -176,9 +176,9 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
                         "other"
             })
         ).sortBy(c => let
-            is_coding=(c.biotype == "protein_coding") and
-            is_most_severe=c.consequence_terms.toSet.contains(%(vep_root)s.most_severe_consequence) and
-            is_canonical=(c.canonical==1) in
+            is_coding = (orElse(c.biotype, "") == "protein_coding") and
+            is_most_severe = c.consequence_terms.toSet.contains(%(vep_root)s.most_severe_consequence) and
+            is_canonical = (orElse(c.canonical, 0) == 1) in
 
             if(is_coding)
                 if(is_most_severe)
@@ -199,6 +199,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         result += ".map(c => drop(c, domains, hgvsp))"
 
     return result
+
 
 def get_expr_for_worst_transcript_consequence_annotations_struct(
         vep_sorted_transcript_consequences_root="va.vep.sorted_transcript_consequences",
