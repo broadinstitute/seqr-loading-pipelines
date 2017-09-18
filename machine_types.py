@@ -47,6 +47,9 @@ for row in _pricing_table.strip().split("\n"):
 #    print("%20s: %s" % (machine_type, info))
 
 
-def get_cost(machine_type, hours=1/60., is_preemptible=False):
+def get_cost(machine_type, hours=1, is_preemptible=False):
+    if machine_type not in MACHINE_TYPES:
+        raise ValueError("Invalid machine type: " + machine_type)
+
     mt = MACHINE_TYPES[machine_type]
-    return (mt.preemptible_price_per_hour if is_preemptible else mt.price_per_hour) * hours
+    return (mt.preemptible_price_per_hour if is_preemptible else mt.price_per_hour) * float(hours)
