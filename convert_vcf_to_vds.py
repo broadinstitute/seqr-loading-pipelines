@@ -7,6 +7,7 @@ from pprint import pprint
 from utils.computed_fields_utils import get_expr_for_orig_alt_alleles_set
 
 p = ap.ArgumentParser()
+p.add_argument("--sites-only", action="store_true")
 p.add_argument("vcf_path", nargs="+")
 args = p.parse_args()
 
@@ -21,8 +22,10 @@ for vcf_path in args.vcf_path:
     output_path = vcf_path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "") + ".vds"
     print("==> output: %s" % output_path)
 
-    vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000)
-
+    if args.sites_only:
+        vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000, drop_samples=True)
+    else:
+        vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000)
 
     #vds = hc.read("gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.vds")
     #output_path = "gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.fixed.vds"
@@ -32,9 +35,13 @@ for vcf_path in args.vcf_path:
 
     print("\n==> split_multi")
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-    vds = vds.split_multi()
+    if vds.was_split():
+        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
+    else:
+        vds = vds.split_multi()
+
+
     print("")
     pprint(vds.variant_schema)
-    
 
     vds.write(output_path, overwrite=True)
