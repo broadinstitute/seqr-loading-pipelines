@@ -6,8 +6,8 @@ import subprocess
 import sys
 
 p = argparse.ArgumentParser()
-p.add_argument("-p", "--project", default="broad-mpg-gnomad")
-p.add_argument("-c", "--cluster", default="dataproc-cluster-no-vep")
+p.add_argument("-p", "--project", default="seqr-project")
+p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("script")
 
 args, unknown_args = p.parse_known_args()
@@ -25,12 +25,14 @@ hail_jar="gs://gnomad-bw2/hail-jar/hail-all-spark.test2.jar"
 #hail_zip="gs://hail-common/pyhail-hail-is-master-%(hash)s.zip" % locals()
 #hail_jar="gs://hail-common/hail-hail-is-master-all-spark2.0.2-%(hash)s.jar" % locals()
 
-hash = subprocess.check_output("gsutil cat gs://hail-common/builds/0.1/latest-hash-spark-2.0.2.txt", shell=True).strip()
-hail_zip="gs://hail-common/builds/0.1/python/hail-0.1-%(hash)s.zip" % locals()
-hail_jar="gs://hail-common/builds/0.1/jars/hail-0.1-%(hash)s-Spark-2.0.2.jar" % locals()
+#hash = subprocess.check_output("gsutil cat gs://hail-common/builds/0.1/latest-hash-spark-2.0.2.txt", shell=True).strip()
+#hail_zip="gs://hail-common/builds/0.1/python/hail-0.1-%(hash)s.zip" % locals()
+#hail_jar="gs://hail-common/builds/0.1/jars/hail-0.1-%(hash)s-Spark-2.0.2.jar" % locals()
 
 #hail_zip="gs://hail-common/0.1-vep-debug.zip"
 #hail_jar="gs://hail-common/0.1-vep-debug.jar"
+
+
 
 project = args.project
 cluster = args.cluster
