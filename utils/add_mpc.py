@@ -8,7 +8,7 @@ MPC_INFO_FIELDS = """
 """
 
 
-def add_mpc_to_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, verbose=True):
+def add_mpc_to_vds(hail_context, vds, genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=None, verbose=True):
     """Add MPC annotations [Samocha 2017] to the vds"""
 
     if genome_version == "37":
@@ -19,6 +19,10 @@ def add_mpc_to_vds(hail_context, vds, genome_version, root="va.mpc", info_fields
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     mpc_vds = hail_context.read(mpc_vds_path).split_multi()
+
+    if subset:
+        import hail
+        mpc_vds = mpc_vds.filter_intervals(hail.Interval.parse(subset))
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,

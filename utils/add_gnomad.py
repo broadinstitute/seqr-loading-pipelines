@@ -192,7 +192,7 @@ INFO_FIELDS = """
 """
 
 
-def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
+def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root=None, top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, subset=None, verbose=True):
     if genome_version not in ("37", "38"):
         raise ValueError("Invalid genome_version: %s. Must be '37' or '38'" % str(genome_version))
 
@@ -205,6 +205,10 @@ def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root
     gnomad_vds_path = GNOMAD_VDS_PATHS["%s_%s" % (exomes_or_genomes, genome_version)]
 
     gnomad_vds = hail_context.read(gnomad_vds_path).split_multi()
+
+    if subset:
+        import hail
+        gnomad_vds = gnomad_vds.filter_intervals(hail.Interval.parse(subset))
 
     #if genome_version == "38":
         #info_fields += """

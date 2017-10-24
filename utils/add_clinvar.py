@@ -24,7 +24,7 @@ CLINVAR_FIELDS = """
 """
 
 
-def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", info_fields=CLINVAR_FIELDS, verbose=True):
+def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", info_fields=CLINVAR_FIELDS, subset=None, verbose=True):
     """Add clinvar annotations to the vds"""
 
     if genome_version == "37":
@@ -36,17 +36,24 @@ def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", inf
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    clinvar_vds = hail_context.read([clinvar_single_vds, clinvar_multi_vds])
+    for clinvar_vds_path in [clinvar_single_vds, clinvar_multi_vds]:
+        clinvar_vds = hail_context.read(clinvar_vds_path)
 
-    expr = convert_vds_schema_string_to_annotate_variants_expr(
-        root=root,
-        other_source_fields=info_fields,
-        other_source_root="vds.info",
-    )
+        if subset:
+            import hail
+            clinvar_vds = clinvar_vds.filter_intervals(hail.Interval.parse(subset))
 
-    if verbose:
-        print(expr)
-        #print("\n==> clinvar vds summary: ")
-        #print("\n" + str(clinvar_vds.summarize()))
+        expr = convert_vds_schema_string_to_annotate_variants_expr(
+            root=root,
+            other_source_fields=info_fields,
+            other_source_root="vds.info",
+        )
 
-    return vds.annotate_variants_vds(clinvar_vds, expr=expr)
+        if verbose:
+            print(expr)
+            #print("\n==> clinvar vds summary: ")
+            #print("\n" + str(clinvar_vds.summarize()))
+
+        vds = vds.annotate_variants_vds(clinvar_vds, expr=expr)
+
+    return vds

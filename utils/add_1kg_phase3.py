@@ -11,7 +11,7 @@ G1K_FIELDS = """
     POPMAX_AF: Float,
 """
 
-def add_1kg_phase3_to_vds(hail_context, vds, genome_version, root="va.g1k", fields=G1K_FIELDS, verbose=True):
+def add_1kg_phase3_to_vds(hail_context, vds, genome_version, root="va.g1k", fields=G1K_FIELDS, subset=None, verbose=True):
     """Add 1000 genome AC and AF annotations to the vds"""
 
     if genome_version == "37":
@@ -22,6 +22,10 @@ def add_1kg_phase3_to_vds(hail_context, vds, genome_version, root="va.g1k", fiel
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     g1k_vds = hail_context.read(g1k_vds_path).split_multi()
+
+    if subset:
+        import hail
+        g1k_vds = g1k_vds.filter_intervals(hail.Interval.parse(subset))
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,

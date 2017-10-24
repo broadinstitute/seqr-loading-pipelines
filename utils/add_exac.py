@@ -90,7 +90,8 @@ INFO_FIELDS = """
     Hom_CONSANGUINEOUS: Array[String],
     """
 
-def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, verbose=True):
+
+def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, subset=None, verbose=True):
     if genome_version == "37":
         exac_vds_path = 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vds'
     elif genome_version == "38":
@@ -98,7 +99,17 @@ def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
+    #if genome_version == "38":
+    #    info_fields += """
+    #        OriginalContig: String,
+    #        OriginalStart: String,
+    #    """
+
     exac_vds = hail_context.read(exac_vds_path).split_multi()
+
+    if subset:
+        import hail
+        exac_vds = exac_vds.filter_intervals(hail.Interval.parse(subset))
 
     # ExAC VCF doesn't contain AF fields, so compute them here
     exac_vds = exac_vds.annotate_variants_expr("""
@@ -133,6 +144,8 @@ def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level
         .annotate_variants_vds(exac_vds, expr=top_fields_expr)
         .annotate_variants_vds(exac_vds, expr=info_fields_expr)
     )
+
+    
 
     from pprint import pprint
     pprint(vds.variant_schema)
