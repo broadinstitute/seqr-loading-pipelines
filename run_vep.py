@@ -26,8 +26,12 @@ else:
     p.error("Invalid input file: %s" % args.input_file)
 
 vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-vds = vds.split_multi()
-vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
+if vds.was_split():
+    vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
+else:
+    vds = vds.split_multi()
+
+#vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
 vds = vds.filter_intervals(hail.Interval.parse("1-MT"))
 summary = vds.summarize()
 pprint.pprint(summary)
