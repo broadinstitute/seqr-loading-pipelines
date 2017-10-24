@@ -11,7 +11,8 @@ logging.root.handlers = list(handlers)
 import collections
 import elasticsearch
 import logging
-from pprint import pprint
+from pprint import pprint, pformat
+import re
 import StringIO
 import sys
 
@@ -23,6 +24,17 @@ logger = logging.getLogger()
 #   https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
 #   long, integer, short, byte, double, float, half_float, scaled_float
 #   text and keyword
+
+
+# Elastic search write operations.
+# See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
+ELASTICSEARCH_INDEX = "index"
+ELASTICSEARCH_CREATE = "create"
+ELASTICSEARCH_UPDATE = "update"
+ELASTICSEARCH_UPSERT = "upsert"
+ELASTICSEARCH_WRITE_OPERATIONS = set([
+    ELASTICSEARCH_INDEX, ELASTICSEARCH_CREATE, ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT,
+])
 
 VDS_TO_ES_TYPE_MAPPING = {
     "Boolean": "boolean",
@@ -54,6 +66,24 @@ ES_FIELD_NAME_SPECIAL_CHAR_MAP = {
     '{': '_$lcb$_',
     '}': '_$rcb$_',
 }
+
+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
+
+DEFAULT_GENOTYPE_FIELDS_TO_EXPORT = [
+    'num_alt = if(g.isCalled()) g.nNonRefAlleles() else -1',
+    'gq = if(g.isCalled()) g.gq else NA:Int',
+    'ab = let total=g.ad.sum in if(g.isCalled() && total != 0) (g.ad[1] / total).toFloat else NA:Float',
+    'dp = if(g.isCalled()) [g.dp, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+    #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
+]
+
+DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
+    ".*_num_alt": {"type": "byte", "doc_values": "false"},
+    ".*_gq": {"type": "byte", "doc_values": "false"},
+    ".*_dp": {"type": "short", "doc_values": "false"},
+    ".*_ab": {"type": "half_float", "doc_values": "false"},
+}
+
 
 
 def _encode_field_name(s):
@@ -272,13 +302,16 @@ def convert_vds_schema_string_to_es_index_properties(
 
 def export_vds_to_elasticsearch(
         vds,
-        export_genotypes=False,
+        genotype_fields_to_export=DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
+        genotype_field_to_elasticsearch_type_map=DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
         host="10.48.0.105",   #"elasticsearch" #"localhost" #"k8solo-01"
-        port=30001, # "9200"
+        port=30001,
         index_name="data",
         index_type_name="variant",
         block_size=5000,
         num_shards=10,
+        elasticsearch_write_operation=ELASTICSEARCH_INDEX,
+        elasticsearch_mapping_id="_id",
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
@@ -289,6 +322,8 @@ def export_vds_to_elasticsearch(
 
     Args:
         kt (KeyTable): hail KeyTable object.
+        genotype_fields_to_export (list): A list of hail expressions for genotype fields to export.
+            This will be passed as the 2nd argument to vds.make_table(..)
         host (string): elasticsearch server url or IP address.
         port (int): elasticsearch server port
         index_name (string): elasticsearch index name (equivalent to a database name in SQL)
@@ -296,6 +331,12 @@ def export_vds_to_elasticsearch(
         block_size (int): number of records to write in one bulk insert
         num_shards (int): number of shards to use for this index
             (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)
+        elasticsearch_write_operation (string): Can be one of these constants:
+                ELASTICSEARCH_INDEX
+                ELASTICSEARCH_CREATE
+                ELASTICSEARCH_UPDATE
+                ELASTICSEARCH_UPSERT
+            See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
         delete_index_before_exporting (bool): Whether to drop and re-create the index before exporting.
         disable_doc_values_for_fields: (optional) list of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
@@ -314,21 +355,13 @@ def export_vds_to_elasticsearch(
     site_fields_list = sorted(
         generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=is_split_vds)
     )
-    if export_genotypes:
-        genotype_fields_list = [
-            'num_alt = if(g.isCalled) g.nNonRefAlleles else -1',
-            'gq = if(g.isCalled) g.gq else NA:Int',
-            'ab = let total=g.ad.sum in if(g.isCalled && total != 0) (g.ad[1] / total).toFloat else NA:Float',
-            'dp = if(g.isCalled) [g.dp, 32000].min() else NA:Int',   # use 32000 as the max depth so that it doesn't overflow elasticsearch's signed-short int type.
-            #'sum_ad = g.ad.sum',   # for split VDS, this only takes into account 2 alleles at a multi-allelic site
-            #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
-        ]
-    else:
-        genotype_fields_list = []
+
+    if genotype_fields_to_export is None:
+        genotype_fields_to_export = []
 
     kt = vds.make_table(
         site_fields_list,
-        genotype_fields_list,
+        genotype_fields_to_export,
     )
 
     # replace "." with "_" in genotype column names (but leave sample ids unchanged)
@@ -357,6 +390,9 @@ def export_vds_to_elasticsearch(
         block_size=block_size,
         num_shards=num_shards,
         delete_index_before_exporting=delete_index_before_exporting,
+        elasticsearch_write_operation=elasticsearch_write_operation,
+        elasticsearch_mapping_id=elasticsearch_mapping_id,
+        field_name_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
         disable_doc_values_for_fields=disable_doc_values_for_fields,
         disable_index_for_fields=disable_index_for_fields,
         field_names_replace_dot_with=None,
@@ -372,6 +408,9 @@ def export_kt_to_elasticsearch(
         block_size=5000,
         num_shards=10,
         delete_index_before_exporting=True,
+        elasticsearch_write_operation=ELASTICSEARCH_INDEX,
+        elasticsearch_mapping_id="_id",
+        field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         field_names_replace_dot_with="_",
@@ -389,10 +428,25 @@ def export_kt_to_elasticsearch(
         num_shards (int): number of shards to use for this index 
             (see https://www.elastic.co/guide/en/elasticsearch/guide/current/overallocation.html)
         delete_index_before_exporting (bool): Whether to drop and re-create the index before exporting.
-        disable_doc_values_for_fields: (optional) list of field names (the way they will be
+        elasticsearch_write_operation (string): Can be one of these constants:
+                ELASTICSEARCH_INDEX
+                ELASTICSEARCH_CREATE
+                ELASTICSEARCH_UPDATE
+                ELASTICSEARCH_UPSERT
+            See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
+        field_name_to_elasticsearch_type_map (dict): (optional) a map of keytable field names to
+            their elasticsearch field spec - for example: {
+                'allele_freq': { 'type': 'half_float' },
+                ...
+            }.
+            See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html for
+            more details. Any values in this dictionary will override
+            the default type mapping derived from the hail keytable column type.
+            Field names can be regular expressions.
+        disable_doc_values_for_fields (tuple): (optional) list of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
-        disable_index_for_fields: (optional) list of field names (the way they will be
+        disable_index_for_fields (tuple): (optional) list of field names (the way they will be
             named in the elasticsearch index) that shouldn't be indexed
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
         field_names_replace_dot_with (string): since "." chars in field names are interpreted in
@@ -405,6 +459,22 @@ def export_kt_to_elasticsearch(
 
     # output .tsv for debugging
     #kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
+
+
+    elasticsearch_config = {}
+    if elasticsearch_write_operation is not None:
+        if elasticsearch_write_operation not in [
+            ELASTICSEARCH_INDEX, ELASTICSEARCH_CREATE, ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT,
+        ]:
+            raise ValueError("Unexpected value for elasticsearch_write_operation arg: %s" % (
+                elasticsearch_write_operation,))
+
+        elasticsearch_config = {
+            "es.write.operation": elasticsearch_write_operation,
+        }
+
+        if elasticsearch_write_operation in [ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT]:
+            elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
 
     # encode any special chars in column names
     rename_dict = {}
@@ -438,21 +508,18 @@ def export_kt_to_elasticsearch(
         disable_index_for_fields=disable_index_for_fields,
     )
 
-    # set types and disable doc values for genotype fields
-    modified_elasticsearch_schema = {}
-    for key, value in elasticsearch_schema.items():
-        if key.endswith("_num_alt"):
-            modified_elasticsearch_schema[key] = {"type": "byte", "doc_values": "false"}
-        elif key.endswith("_gq"):
-            modified_elasticsearch_schema[key] = {"type": "byte", "doc_values": "false"}
-        elif key.endswith("_dp"):
-            modified_elasticsearch_schema[key] = {"type": "short", "doc_values": "false"}
-        elif key.endswith("_ab"):
-            modified_elasticsearch_schema[key] = {"type": "half_float", "doc_values": "false"}
-        else:
-            modified_elasticsearch_schema[key] = value
+    # override elasticsaerch types
+    if field_name_to_elasticsearch_type_map is not None:
+        modified_elasticsearch_schema = dict(elasticsearch_schema)  # make a copy
+        for field_name_regexp, elasticsearch_field_spec in field_name_to_elasticsearch_type_map.items():
+            for key, value in elasticsearch_schema.items():
+                if re.match(field_name_regexp, key):
+                    modified_elasticsearch_schema[key] = elasticsearch_field_spec
+                    break
+            else:
+                logger.warn("No columns matched '%s'" % (field_name_regexp,))
 
-    elasticsearch_schema = modified_elasticsearch_schema
+        elasticsearch_schema = modified_elasticsearch_schema
 
     # define the elasticsearch mapping
     elasticsearch_mapping = {
@@ -465,7 +532,7 @@ def export_kt_to_elasticsearch(
             "index.codec": "best_compression",
         },
         "mappings": {
-            "variant": {
+            index_type_name: {
                 #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
                 "_all": {"enabled": "false"},
                 "properties": elasticsearch_schema,
@@ -475,17 +542,30 @@ def export_kt_to_elasticsearch(
 
     #pprint(elasticsearch_mapping)
 
-    logger.info("==> Creating index %s" % index_name)
     es = elasticsearch.Elasticsearch(host, port=port)
     if delete_index_before_exporting and es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
 
-    es.indices.create(index=index_name, body=elasticsearch_mapping)
+    if not es.indices.exists(index=index_name):
+        logger.info("==> Creating index %s" % index_name)
+        es.indices.create(index=index_name, body=elasticsearch_mapping)
+    else:
+        existing_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+        logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
+        #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
+        #existing_properties.update(elasticsearch_schema)
 
-    logger.info("==> Exporting data to elasticasearch. Blocksize: %s" % block_size)
+        logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
+        es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
+            "properties": elasticsearch_schema
+        })
 
-    # export keytable records to this index
-    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config={}) #, config={ "es.nodes.client.only": "true" })
+        new_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+        logger.info("==> New elasticsearch %s schema. Original schema: %s" % (index_name, pformat(new_mapping)))
+
+
+    logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
+    kt.export_elasticsearch(host, int(port), index_name, index_type_name, block_size, config=elasticsearch_config)
 
     """
     Potentially useful config settings for export_elasticsearch(..)
