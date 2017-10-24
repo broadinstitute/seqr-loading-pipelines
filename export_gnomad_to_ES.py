@@ -146,6 +146,8 @@ vds_computed_annotations_exprs = [
     "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
 ]
 
+for vep_sub_field in ['transcript_consequences', 'intergenic_consequences', 'motif_feature_consequences', 'regulatory_feature_consequences']:
+    vds_computed_annotations_exprs.append('%(vep_root)s.%(vep_sub_field)s = %(vep_root)s.%(vep_sub_field)s.filter(x => x.allele_num == va.aIndex)' % locals())
 
 print("======== Exomes: KT Schema ========")
 exomes_vds = exomes_vds.annotate_variants_expr("va.exomes.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
