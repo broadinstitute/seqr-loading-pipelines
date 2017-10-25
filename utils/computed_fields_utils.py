@@ -330,14 +330,18 @@ def get_expr_for_contig(field_prefix="v."):
     """Normalized contig name"""
     return field_prefix+'contig.replace("chr", "")'
 
+
 def get_expr_for_start_pos():
     return 'v.start'
+
 
 def get_expr_for_ref_allele():
     return 'v.ref'
 
+
 def get_expr_for_alt_allele():
     return 'v.alt'
+
 
 def get_expr_for_orig_alt_alleles_set():
     """Compute an array of variant ids for each alt allele"""
@@ -345,9 +349,20 @@ def get_expr_for_orig_alt_alleles_set():
     return 'v.altAlleles.map( a => %(contig_expr)s + "-" + v.start + "-" + v.ref + "-" + a.alt ).toSet' % locals()
 
 
-def get_expr_for_variant_id():
+def get_expr_for_variant_id(max_length=None):
+    """Expression for computing <chrom>-<pos>-<ref>-<alt>
+
+    Args:
+        max_length: (optional) length at which to truncate the <chrom>-<pos>-<ref>-<alt> string
+
+    Return:
+        string: "<chrom>-<pos>-<ref>-<alt>"
+    """
     contig_expr = get_expr_for_contig()
-    return '%(contig_expr)s + "-" + v.start + "-" + v.ref + "-" + v.alt' % locals()
+    if max_length is not None:
+        return '(%(contig_expr)s + "-" + v.start + "-" + v.ref + "-" + v.alt)[0:%(max_length)s]' % locals()
+    else:
+        return '%(contig_expr)s + "-" + v.start + "-" + v.ref + "-" + v.alt' % locals()
 
 
 def get_expr_for_contig_number(field_prefix="v."):
