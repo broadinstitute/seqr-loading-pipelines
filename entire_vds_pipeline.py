@@ -154,6 +154,7 @@ if not args.skip_vep:
 
 # add computed annotations
 parallel_computed_annotation_exprs = [
+    "va.docId = %s" % get_expr_for_variant_id(512),
     "va.variantId = %s" % get_expr_for_variant_id(),
     
     "va.contig = %s" % get_expr_for_contig(),
@@ -190,6 +191,7 @@ pprint(vds.variant_schema)
 INPUT_SCHEMA  = {}
 if args.datatype == "GATK_VARIANTS":
     INPUT_SCHEMA["top_level_fields"] = """
+        docId: String,
         variantId: String,
         originalAltAlleles: Set[String],
 
@@ -236,6 +238,7 @@ if args.datatype == "GATK_VARIANTS":
     """
 elif args.datatype == "MANTA_SVS":
     INPUT_SCHEMA["top_level_fields"] = """
+        docId: String,
         variantId: String,
 
         contig: String,
@@ -500,7 +503,7 @@ for i, sample_group in enumerate(sample_groups):
         block_size=block_size,
         num_shards=num_shards,
         delete_index_before_exporting=True,
-
+        elasticsearch_mapping_id="docId",
         disable_doc_values_for_fields=DISABLE_DOC_VALUES_FOR_FIELDS,
         disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,
         is_split_vds=True,
