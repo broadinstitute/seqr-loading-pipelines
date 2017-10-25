@@ -85,7 +85,6 @@ DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
 }
 
 
-
 def _encode_field_name(s):
     """Encodes arbitrary string into an elasticsearch field name
 
@@ -311,7 +310,7 @@ def export_vds_to_elasticsearch(
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
-        elasticsearch_mapping_id="_id",
+        elasticsearch_mapping_id=None,
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
@@ -409,7 +408,7 @@ def export_kt_to_elasticsearch(
         num_shards=10,
         delete_index_before_exporting=True,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
-        elasticsearch_mapping_id="_id",
+        elasticsearch_mapping_id=None,
         field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
@@ -473,7 +472,7 @@ def export_kt_to_elasticsearch(
             "es.write.operation": elasticsearch_write_operation,
         }
 
-        if elasticsearch_write_operation in [ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT]:
+        if elasticsearch_mapping_id is not None:
             elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
 
     # encode any special chars in column names

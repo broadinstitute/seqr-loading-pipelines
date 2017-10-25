@@ -36,6 +36,8 @@ logger.setLevel(logging.INFO)
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
+p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
+    help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
 
 p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")  # "10.128.0.3"
@@ -110,6 +112,14 @@ else:
 if vds.num_partitions() < 1000:
     vds = vds.repartition(1000, shuffle=True)
 
+filter_interval = "1-MT"
+if args.subset:
+    filter_interval = args.subset
+#vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
+
+logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
+vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
+
 if args.datatype == "GATK_VARIANTS":
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
     vds = vds.split_multi()
@@ -129,7 +139,7 @@ else:
 
 # add computed annotations
 parallel_computed_annotation_exprs = [
-    "va.variantId = %s" % get_expr_for_variant_id(),
+    "va.docId = %s" % get_expr_for_variant_id(512),
 ]
 
 vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
@@ -140,7 +150,7 @@ pprint(vds.variant_schema)
 INPUT_SCHEMA  = {}
 if args.datatype == "GATK_VARIANTS":
     INPUT_SCHEMA["top_level_fields"] = """
-        variantId: String,
+        docId: String,
         wasSplit: Boolean,
         aIndex: Int,
     """
@@ -149,52 +159,11 @@ if args.datatype == "GATK_VARIANTS":
 
 elif args.datatype == "MANTA_SVS":
     INPUT_SCHEMA["top_level_fields"] = """
-        variantId: String,
-
-        contig: String,
-        start: Int,
-        pos: Int,
-        end: Int,
-        ref: String,
-        alt: String,
-
-        xpos: Long,
-        xstart: Long,
-        xstop: Long,
-
-        rsid: String,
-        qual: Double,
-        filters: Set[String],
-
-        geneIds: Set[String],
-        transcriptIds: Set[String],
-        codingGeneIds: Set[String],
-        transcriptConsequenceTerms: Set[String],
-        sortedTranscriptConsequences: String,
-        mainTranscript: Struct,
+        docId: String,
     """
-    INPUT_SCHEMA["info_fields"] = """
-        IMPRECISE: Boolean,
-        SVTYPE: String,
-        SVLEN: Array[Int],
-        END: Int,
-        CIPOS: Array[Int],
-        CIEND: Array[Int],
-        --- CIGAR: Array[String],
-        --- MATEID: Array[String],
-        EVENT: String,
-        --- HOMLEN: Array[Int],
-        --- HOMSEQ: Array[String],
-        --- SVINSLEN: Array[Int],
-        --- SVINSSEQ: Array[String],
-        --- LEFT_SVINSSEQ: Array[String],
-        --- RIGHT_SVINSSEQ: Array[String],
-        --- INV3: Boolean,
-        --- INV5: Boolean,
-        --- BND_DEPTH: Int,
-        --- MATE_BND_DEPTH: Int,
-        --- JUNCTION_QUAL: Int,
-    """
+
+    INPUT_SCHEMA["info_fields"] = ""
+
 else:
     raise ValueError("Unexpected datatype: %s" % args.datatype)
 
@@ -401,14 +370,13 @@ for i, sample_group in enumerate(sample_groups):
         num_shards=num_shards,
         delete_index_before_exporting=False,
         elasticsearch_write_operation=ELASTICSEARCH_UPDATE,
-        elasticsearch_mapping_id="variantId",
+        elasticsearch_mapping_id="docId",
         is_split_vds=True,
         verbose=True,
     )
 
     timestamp2 = time.time()
     logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
-
 
 
 # see https://hail.is/hail/annotationdb.html#query-builder
