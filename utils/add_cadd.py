@@ -1,4 +1,8 @@
+import logging
+
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
+
+logger = logging.getLogger()
 
 CADD_FIELDS = """
     PHRED: Double,
@@ -19,25 +23,27 @@ def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fiel
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
+    expr = convert_vds_schema_string_to_annotate_variants_expr(
+        root=root,
+        other_source_fields=info_fields,
+        other_source_root="vds.info",
+    )
+
+    if verbose:
+        print(expr)
+        #print("\n==> cadd summary: ")
+        #print("\n" + str(cadd_vds.summarize()))
+
     for cadd_vds_path in [cadd_snvs_vds_path, cadd_indels_vds_path]:
         #cadd_vds = hail_context.import_vcf([cadd_snvs_vcf_path, cadd_indels_vcf_path], force_bgz=True, min_partitions=1000)
         #cadd_vds = hail_context.read([cadd_indels_vds_path]).split_multi()
+
+        logger.info("==> Reading in CADD: %s" % cadd_vds_path)
         cadd_vds = hail_context.read(cadd_vds_path).split_multi()
 
         if subset:
             import hail
             cadd_vds = cadd_vds.filter_intervals(hail.Interval.parse(subset))
-
-        expr = convert_vds_schema_string_to_annotate_variants_expr(
-            root=root,
-            other_source_fields=info_fields,
-            other_source_root="vds.info",
-        )
-
-        if verbose:
-            print(expr)
-            #print("\n==> cadd summary: ")
-            #print("\n" + str(cadd_vds.summarize()))
 
         vds = vds.annotate_variants_vds(cadd_vds, expr=expr)
 
