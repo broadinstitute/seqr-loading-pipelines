@@ -491,7 +491,7 @@ def export_kt_to_elasticsearch(
             rename_dict[column_name] = encoded_name
 
     for original_name, encoded_name in rename_dict.items():
-        print("Encoding column name %s to %s" % (original_name, encoded_name))
+        logger.info("Encoding column name %s to %s" % (original_name, encoded_name))
 
     kt = kt.rename(rename_dict)
 
@@ -506,6 +506,8 @@ def export_kt_to_elasticsearch(
         disable_doc_values_for_fields=disable_doc_values_for_fields,
         disable_index_for_fields=disable_index_for_fields,
     )
+
+    logger.info(elasticsearch_schema)
 
     # override elasticsaerch types
     if field_name_to_elasticsearch_type_map is not None:
@@ -551,8 +553,8 @@ def export_kt_to_elasticsearch(
     else:
         existing_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
         logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
-        #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
-        #existing_properties.update(elasticsearch_schema)
+        existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
+        existing_properties.update(elasticsearch_schema)
 
         logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
         es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
@@ -560,7 +562,7 @@ def export_kt_to_elasticsearch(
         })
 
         new_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
-        logger.info("==> New elasticsearch %s schema. Original schema: %s" % (index_name, pformat(new_mapping)))
+        logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
 
 
     logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
