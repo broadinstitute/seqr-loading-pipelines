@@ -1,10 +1,18 @@
 import argparse
 import hail
+import logging
 import pprint
 
 from utils.computed_fields_utils import get_expr_for_orig_alt_alleles_set
 
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 p = argparse.ArgumentParser()
+p.add_argument("--block-size", help="batch size - how many variants to pass to VEP for each VEP run", type=int, default=500)
+p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
+               help="subset to this chrom:start-end range. Intended for testing.")
 p.add_argument("input_file", help="input vcf or vds")
 p.add_argument("output_vds", nargs="?", help="output vds")
 args = p.parse_args()
@@ -32,13 +40,21 @@ else:
     vds = vds.split_multi()
 
 #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
-vds = vds.filter_intervals(hail.Interval.parse("1-MT"))
+filter_interval = "1-MT"
+if args.subset:
+    filter_interval = args.subset
+#vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
+
+logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
+vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
+
 summary = vds.summarize()
 pprint.pprint(summary)
 if summary.variants == 0:
     p.error("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
 
-vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
+vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=args.block_size)
+
 vds.write(args.output_vds, overwrite=True)
 
 pprint.pprint(vds.variant_schema)
