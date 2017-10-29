@@ -15,8 +15,9 @@ from pprint import pprint, pformat
 import re
 import StringIO
 import sys
+import time
 
-from utils.vds_schema_string_utils import _parse_fields
+from utils.vds_schema_string_utils import _parse_field_names_and_types
 
 logger = logging.getLogger()
 
@@ -182,10 +183,21 @@ def generate_elasticsearch_schema(
         es_type = _map_vds_type_to_es_type(field_type)
         properties[es_field_name] = {"type": es_type}
 
-    for es_field_name in disable_doc_values_for_fields:
-        properties[es_field_name]["doc_values"] = False
-    for es_field_name in disable_index_for_fields:
-        properties[es_field_name]["index"] = False
+    if disable_doc_values_for_fields:
+        logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))
+        for es_field_name in disable_doc_values_for_fields:
+            if es_field_name not in properties:
+                raise ValueError(
+                    "'%s' in disable_doc_values_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, field_path_to_field_type_map))
+            properties[es_field_name]["doc_values"] = False
+
+    if disable_index_for_fields:
+        logger.info("==> will disable index fields for %s" % (", ".join(disable_index_for_fields)))
+        for es_field_name in disable_index_for_fields:
+            if es_field_name not in properties:
+                raise ValueError(
+                    "'%s' in disable_index_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, disable_index_for_fields))
+            properties[es_field_name]["index"] = False
 
     return properties
 
@@ -287,7 +299,7 @@ def convert_vds_schema_string_to_es_index_properties(
     properties = collections.OrderedDict()
     for fields_string in (top_level_fields, info_fields):
         field_path_to_field_type_map = {
-            (field_name,): field_type for field_name, field_type in _parse_fields(fields_string)
+            (field_name,): field_type for field_name, field_type in _parse_field_names_and_types(fields_string)
         }
         elasticsearch_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
@@ -299,14 +311,84 @@ def convert_vds_schema_string_to_es_index_properties(
     return properties
 
 
+def connect_to_elastcisearch(host="localhost", port="9200"):
+    """Returns an Elasticsearch connection object.
+
+    Args:
+        host (str): Elasticsearch server host
+        port (str): Elasticsearch server port
+    """
+
+    return elasticsearch.Elasticsearch(host, port=port)
+
+
+def print_elasticsearch_stats(host, port):
+    """Prints elastic search index stats.
+
+    Args:
+        host (string): elasticsearch server hostname or IP address.
+        port (int): elasticsearch server port
+    """
+    logger.info("==> Elasticsearch stats:")
+
+    es = connect_to_elastcisearch(host, port)
+
+    node_stats = es.nodes.stats(level="node")
+    node_id = node_stats["nodes"].keys()[0]
+
+    for index in es.indices.get('*'):
+        logger.info(index)
+
+    logger.info("Indices: %s total docs" % node_stats["nodes"][node_id]["indices"]["docs"]["count"])
+    logger.info("Free Memory: %0.1f%% (%d Gb out of %d Gb)" % (
+        node_stats["nodes"][node_id]["os"]["mem"]["free_percent"],
+        node_stats["nodes"][node_id]["os"]["mem"]["free_in_bytes"]/10**9,
+        node_stats["nodes"][node_id]["os"]["mem"]["total_in_bytes"]/10**9,
+    ))
+    logger.info("Free Disk Space: %0.1f%% (%d Gb out of %d Gb)" % (
+        (100*node_stats["nodes"][node_id]["fs"]["total"]["free_in_bytes"]/node_stats["nodes"][node_id]["fs"]["total"]["total_in_bytes"]),
+        node_stats["nodes"][node_id]["fs"]["total"]["free_in_bytes"]/10**9,
+        node_stats["nodes"][node_id]["fs"]["total"]["total_in_bytes"]/10**9,
+    ))
+
+    logger.info("CPU load: %s" % str(node_stats["nodes"][node_id]["os"]["cpu"]["load_average"]))
+    logger.info("Swap: %s (bytes used)" % str(node_stats["nodes"][node_id]["os"]["swap"]["used_in_bytes"]))
+    logger.info("Disk type: " + ("Regular" if node_stats["nodes"][node_id]["fs"]["total"].get("spins") else "SSD"))
+
+    # other potentially interesting fields:
+    """
+    logger.info("Current HTTP Connections: %s open" % node_stats["nodes"][node_id]["http"]["current_open"])
+    [
+        u'thread_pool',
+        u'transport_address',
+        u'http',
+        u'name',
+        u'roles',
+        u'script',
+        u'process',
+        u'timestamp',
+        u'ingest',
+        u'breakers',
+        u'host',
+        u'fs',
+        u'jvm',
+        u'ip',
+        u'indices',
+        u'os',
+        u'transport',
+        u'discovery',
+    ]
+    """
+
+
 def export_vds_to_elasticsearch(
         vds,
-        genotype_fields_to_export=DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
-        genotype_field_to_elasticsearch_type_map=DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
-        host="10.48.0.105",   #"elasticsearch" #"localhost" #"k8solo-01"
-        port=30001,
+        host="localhost",   #"elasticsearch" #"localhost" #"k8solo-01"
+        port=9200,
         index_name="data",
         index_type_name="variant",
+        genotype_fields_to_export=DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
+        genotype_field_to_elasticsearch_type_map=DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
@@ -323,7 +405,7 @@ def export_vds_to_elasticsearch(
         kt (KeyTable): hail KeyTable object.
         genotype_fields_to_export (list): A list of hail expressions for genotype fields to export.
             This will be passed as the 2nd argument to vds.make_table(..)
-        host (string): elasticsearch server url or IP address.
+        host (string): elasticsearch server hostname or IP address.
         port (int): elasticsearch server port
         index_name (string): elasticsearch index name (equivalent to a database name in SQL)
         index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
@@ -348,7 +430,7 @@ def export_vds_to_elasticsearch(
     """
 
     #if verbose:
-    #    pprint(vds.sample_ids)
+    #    logger.info(pformat((vds.sample_ids))
 
     field_path_to_field_type_map = parse_vds_schema(vds.variant_schema.fields, current_parent=["va"])
     site_fields_list = sorted(
@@ -375,7 +457,7 @@ def export_vds_to_elasticsearch(
     for column_name in kt.columns:
         if column_name not in kt_rename_dict and "." in column_name:
             fixed_column_name = column_name.replace(".", "_")
-            print("Renaming column %s to %s" % (column_name, fixed_column_name))
+            logger.info("Renaming column %s to %s" % (column_name, fixed_column_name))
             kt_rename_dict[column_name] = fixed_column_name
 
     kt = kt.rename(kt_rename_dict)
@@ -383,7 +465,7 @@ def export_vds_to_elasticsearch(
     export_kt_to_elasticsearch(
         kt,
         host,
-        int(port),
+        port,
         index_name,
         index_type_name,
         block_size=block_size,
@@ -400,7 +482,7 @@ def export_vds_to_elasticsearch(
 
 def export_kt_to_elasticsearch(
         kt,
-        host="10.48.0.105",   #"elasticsearch-svc" #"localhost" #"k8solo-01"
+        host="localhost",
         port="9200",
         index_name="data",
         index_type_name="variant",
@@ -419,7 +501,7 @@ def export_kt_to_elasticsearch(
 
     Args:
         kt (KeyTable): hail KeyTable object.
-        host (string): elasticsearch server url or IP address.
+        host (string): elasticsearch server hostname or IP address.
         port (int): elasticsearch server port
         index_name (string): elasticsearch index name (equivalent to a database name in SQL)
         index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
@@ -496,7 +578,7 @@ def export_kt_to_elasticsearch(
     kt = kt.rename(rename_dict)
 
     if verbose:
-        pprint(kt.schema)
+        logger.info(pformat(kt.schema))
 
     # create elasticsearch index with fields that match the ones in the keytable
     field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"])
@@ -507,7 +589,7 @@ def export_kt_to_elasticsearch(
         disable_index_for_fields=disable_index_for_fields,
     )
 
-    logger.info(elasticsearch_schema)
+    #logger.info(elasticsearch_schema)
 
     # override elasticsaerch types
     if field_name_to_elasticsearch_type_map is not None:
@@ -541,9 +623,10 @@ def export_kt_to_elasticsearch(
         }
     }
 
-    #pprint(elasticsearch_mapping)
+    #logger.info(pformat(elasticsearch_mapping))
 
-    es = elasticsearch.Elasticsearch(host, port=port)
+    es = connect_to_elastcisearch(host, port=port)
+
     if delete_index_before_exporting and es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
 
@@ -551,18 +634,18 @@ def export_kt_to_elasticsearch(
         logger.info("==> Creating index %s" % index_name)
         es.indices.create(index=index_name, body=elasticsearch_mapping)
     else:
-        existing_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
-        logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
-        existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
-        existing_properties.update(elasticsearch_schema)
+        #existing_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+        #logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
+        #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
+        #existing_properties.update(elasticsearch_schema)
 
         logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
         es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
             "properties": elasticsearch_schema
         })
 
-        new_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
-        logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
+        #new_mapping = es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+        #logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
 
 
     logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
@@ -583,61 +666,131 @@ def export_kt_to_elasticsearch(
     es.indices.forcemerge(index=index_name)
 
     if verbose:
-        print_elasticsearch_stats(es)
+        print_elasticsearch_stats(host, port)
 
 
-def print_elasticsearch_stats(es):
-    """Prints elastic search index stats.
+def create_elasticsearch_snapshot(host, port, index_name, bucket, base_path, snapshot_repo):
+    """Creates an elasticsearch snapshot in the given GCS bucket repository.
+
+    NOTE: Elasticsearch must have the GCP snapshot plugin installed - see:
+    https://www.elastic.co/guide/en/elasticsearch/plugins/master/repository-gcs.html
 
     Args:
-        es (object): An elasticsearch connection object.
+        host (string): elasticsearch server hostname or IP address.
+        port (int): elasticsearch server port
     """
-    node_stats = es.nodes.stats(level="node")
-    node_id = node_stats["nodes"].keys()[0]
 
-    print("==========================")
+    es = connect_to_elastcisearch(host, port)
 
-    for index in es.indices.get('*'):
-        print(index)
+    logger.info("==> Check if snapshot repo already exists: %s" % snapshot_repo)
+    try:
+        repo_info = es.snapshot.get_repository(repository=snapshot_repo)
+        logger.info(pformat(repo_info))
+    except elasticsearch.exceptions.NotFoundError:
+        # register repository
+        logger.info("==> Create GCS repository %s" % (snapshot_repo, ))
+        body = {
+            "type": "gcs",
+            "settings": {
+                "bucket": bucket,
+                "base_path": base_path,
+                "compress": True,
+            }
+        }
 
-    print("Indices: %s total docs" % node_stats["nodes"][node_id]["indices"]["docs"]["count"])
-    print("Free Memory: %0.1f%% (%d Gb out of %d Gb)" % (
-        node_stats["nodes"][node_id]["os"]["mem"]["free_percent"],
-        node_stats["nodes"][node_id]["os"]["mem"]["free_in_bytes"]/10**9,
-        node_stats["nodes"][node_id]["os"]["mem"]["total_in_bytes"]/10**9,
+        logger.info(pformat(body))
+
+        logger.info(pformat(
+            es.snapshot.create_repository(repository=snapshot_repo, body=body)
+        ))
+
+    # check that index exists
+    existing_indices = es.indices.get(index="*").keys()
+    if index_name not in existing_indices:
+        raise ValueError("%s index not found. Existing indices are: %s" % (index_name, existing_indices))
+
+    # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
+    snapshot_name = "snapshot_%s__%s" % (index_name.lower(), time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()))
+
+    logger.info("==> Creating snapshot in gs://%s/%s/%s" % (bucket, base_path, index_name))
+    other_snapshots_running = True
+    while other_snapshots_running:
+        try:
+            logger.info(pformat(
+                es.snapshot.create(
+                    repository=snapshot_repo,
+                    snapshot=snapshot_name,
+                    wait_for_completion=False,  # setting this to True wasn't working as expected
+                    body={
+                        "indices": index_name
+                    })
+            ))
+        except elasticsearch.exceptions.TransportError as e:
+            if "concurrent_snapshot_execution_exception" in str(e):
+                logger.info("Wait for other snapshots to complete: " + pformat(
+                    es.snapshot.status(repository=snapshot_repo)
+                ))
+                time.sleep(3)
+                continue
+
+        other_snapshots_running = False
+
+    logger.info("==> Getting snapshot status for: " + snapshot_name)
+    logger.info(pformat(
+        es.snapshot.status(repository=snapshot_repo)
     ))
-    print("Free Disk Space: %0.1f%% (%d Gb out of %d Gb)" % (
-        (100*node_stats["nodes"][node_id]["fs"]["total"]["free_in_bytes"]/node_stats["nodes"][node_id]["fs"]["total"]["total_in_bytes"]),
-        node_stats["nodes"][node_id]["fs"]["total"]["free_in_bytes"]/10**9,
-        node_stats["nodes"][node_id]["fs"]["total"]["total_in_bytes"]/10**9,
+
+
+def restore_elasticsearch_snapshot(host, port, snapshot_repo):
+    """Restore an Elasticsearch snapshot
+
+    host (string): elasticsearch server hostname or IP address.
+    port (int): elasticsearch server port
+    """
+
+    es = connect_to_elastcisearch(host, port)
+
+    # see https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-gcs-repository.html
+    logger.info("==> Check if snapshot repo exists: %s" % snapshot_repo)
+    repo_info = es.snapshot.get_repository(repository=snapshot_repo)
+    logger.info(pformat(repo_info))
+
+
+    # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
+    #response = requests.get("http://%s:%s/_snapshot/%s/_all" % (args.host, args.port, snapshot_repo))
+    #all_snapshots = json.loads(response.content).get("snapshots", [])
+
+    all_snapshots = es.snapshot.get(snapshot_repo, "_all")
+    all_snapshots.sort(key=lambda s: s["start_time_in_millis"])
+
+    latest_snapshot = all_snapshots[-1]
+
+    snapshot_name = latest_snapshot["snapshot"]
+
+    # http://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.client.SnapshotClient.restore
+    logger.info("==> Restoring snapshot: " + snapshot_name)
+    logger.info(pformat(
+        es.snapshot.restore(
+            repository=snapshot_repo,
+            snapshot=snapshot_name,
+            wait_for_completion=False,  # setting this to True wasn't working as expected
+        )
     ))
 
-    print("CPU load: %s" % str(node_stats["nodes"][node_id]["os"]["cpu"]["load_average"]))
-    print("Swap: %s (bytes used)" % str(node_stats["nodes"][node_id]["os"]["swap"]["used_in_bytes"]))
-    print("Disk type: " + ("Regular" if node_stats["nodes"][node_id]["fs"]["total"].get("spins") else "SSD"))
-    print("==========================")
+    logger.info("==> Getting snapshot status for: " + snapshot_name)
+    logger.info(pformat(
+        es.snapshot.status(repository=snapshot_repo)
+    ))
 
-    # other potentially interesting fields:
+
+def get_elasticsearch_snapshot_status(host, port, snapshot_repo):
+    """Elasticsearch runs snapshots in the background. This call retrieves snapshot status.
+
+    Args:
+        host (string): elasticsearch server hostname or IP address.
+        port (int): elasticsearch server port
     """
-    print("Current HTTP Connections: %s open" % node_stats["nodes"][node_id]["http"]["current_open"])
-    [
-        u'thread_pool',
-        u'transport_address',
-        u'http',
-        u'name',
-        u'roles',
-        u'script',
-        u'process',
-        u'timestamp',
-        u'ingest',
-        u'breakers',
-        u'host',
-        u'fs',
-        u'jvm',
-        u'ip',
-        u'indices',
-        u'os',
-        u'transport',
-        u'discovery',
-    ]
-    """
+
+    es = connect_to_elastcisearch(host, port)
+
+    return es.snapshot.status(repository=snapshot_repo)
