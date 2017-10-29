@@ -27,12 +27,6 @@ for vcf_path in args.vcf_path:
     else:
         vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000)
 
-    #vds = hc.read("gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.vds")
-    #output_path = "gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.fixed.vds"
-
-    #vds = hc.read("gs://seqr-reference-data/GRCh38/CADD/InDels.liftover.GRCh38.vds")
-    #output_path = "gs://seqr-reference-data/GRCh38/CADD/InDels.liftover.GRCh38.fixed.vds"
-
     print("\n==> split_multi")
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
     if vds.was_split():
