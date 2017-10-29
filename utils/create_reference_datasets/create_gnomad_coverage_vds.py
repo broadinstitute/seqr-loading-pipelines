@@ -3,20 +3,20 @@
 import argparse
 import hail
 from hail.expr import TInt, TDouble, TString
-from pprint import pprint
-from utils.elasticsearch_utils import export_kt_to_elasticsearch
 
 p = argparse.ArgumentParser()
 p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
+p.add_argument("-b", "--output-bucket", help="Google Storage output bucket", default="seqr-reference-datasets")
 
 # parse args
 args = p.parse_args()
 
 hc = hail.HailContext(log="/hail.log") #, branching_factor=1)
 
+
 COVERAGE_TSV_PATHS = {
-    "37": {
-        "exomes": [
+    "grch37_exomes": {
+        "input_paths": [
             "gs://gnomad-browser/exomes/coverage/exacv2.chr1.cov.txt.gz",
             "gs://gnomad-browser/exomes/coverage/exacv2.chr10.cov.txt.gz",
             "gs://gnomad-browser/exomes/coverage/exacv2.chr11.cov.txt.gz",
@@ -42,7 +42,10 @@ COVERAGE_TSV_PATHS = {
             "gs://gnomad-browser/exomes/coverage/exacv2.chrY.cov.txt.gz",
             "gs://gnomad-browser/exomes/coverage/exacv2.chrX.cov.txt.gz",
         ],
-        "genomes": [
+        "output_path": "gs://%(output_bucket)s/GRCh37/gnomad/exomes.coverage.vds" % args.__dict__,
+    },
+    "grch37_genomes": {
+        "input_paths": [
             "gs://gnomad-browser/genomes/coverage/Panel.chr1.genome.coverage.txt.gz",
             "gs://gnomad-browser/genomes/coverage/Panel.chr10.genome.coverage.txt.gz",
             "gs://gnomad-browser/genomes/coverage/Panel.chr11.genome.coverage.txt.gz",
@@ -66,10 +69,11 @@ COVERAGE_TSV_PATHS = {
             "gs://gnomad-browser/genomes/coverage/Panel.chr8.genome.coverage.txt.gz",
             "gs://gnomad-browser/genomes/coverage/Panel.chr9.genome.coverage.txt.gz",
             "gs://gnomad-browser/genomes/coverage/Panel.chrX.genome.coverage.txt.gz",
-        ]
+        ],
+        "output_path": "gs://%(output_bucket)s/GRCh37/gnomad/genomes.coverage.vds" % args.__dict__,
     },
-    "38": {
-        "exomes": [
+    "grch38_exomes": {
+        "input_paths": [
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/exacv2.chr1.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/exacv2.chr10.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/exacv2.chr11.cov.liftover.GRCh38.txt.gz",
@@ -95,7 +99,10 @@ COVERAGE_TSV_PATHS = {
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/exacv2.chrX.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/exacv2.chrY.cov.liftover.GRCh38.txt.gz",
         ],
-        "genomes": [
+        "output_path": "gs://%(output_bucket)s/GRCh38/gnomad/exomes.coverage.vds" % args.__dict__,
+    },
+    "grch38_genomes": {
+        "input_paths": [
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/gnomad.chr1.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/gnomad.chr10.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/gnomad.chr11.cov.liftover.GRCh38.txt.gz",
@@ -120,12 +127,12 @@ COVERAGE_TSV_PATHS = {
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/gnomad.chr9.cov.liftover.GRCh38.txt.gz",
             "gs://seqr-reference-data/GRCh38/gnomad/coverage/gnomad.chrX.cov.liftover.GRCh38.txt.gz",
         ],
+        "output_path": "gs://%(output_bucket)s/GRCh38/gnomad/genomes.coverage.vds" % args.__dict__,
     },
 }
 
 
-
-types = {
+field_types = {
     '#chrom': TString(),
     'pos': TInt(),
     'mean': TDouble(),
@@ -138,27 +145,25 @@ types = {
     '25': TDouble(),
     '30': TDouble(),
     '50': TDouble(),
-    '100': TDouble()
+    '100': TDouble(),
 }
 
-if args.coverage_type == 'exome':
-    COVERAGE_PATHS = EXOME_COVERAGE_CSV_PATHS
-if args.coverage_type == 'genome':
-    COVERAGE_PATHS = GENOME_COVERAGE_CSV_PATHS
-if args.coverage_type == 'test':
-    # x chromosome only
-    COVERAGE_PATHS = EXOME_COVERAGE_CSV_PATHS[-1]
 
-kt_coverage = hc.import_table(COVERAGE_PATHS, types=types).rename({
-    '#chrom': 'chrom',
-    '1': 'over1',
-    '5': 'over5',
-    '10': 'over10',
-    '15': 'over15',
-    '20': 'over20',
-    '25': 'over25',
-    '30': 'over30',
-    '50': 'over50',
-    '100': 'over100',
-})
+for data in COVERAGE_TSV_PATHS:
+
+    data["output_path"]
+
+    kt_coverage = hc.import_table(data["input_paths"], types=field_types).rename({
+        '#chrom': 'chrom',
+        '1': 'x1',
+        '5': 'x5',
+        '10': 'x10',
+        '15': 'x15',
+        '20': 'x20',
+        '25': 'x25',
+        '30': 'x30',
+        '50': 'x50',
+        '100': 'x100',
+    })
+
 
