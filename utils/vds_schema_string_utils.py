@@ -1,28 +1,50 @@
 
-def _parse_fields(fields_string):
-    """Takes a string representation of one of the TStructs in a VDS variant_schema and generates a
-    list of (field_name, field_type) tuples.
+def _parse_field_names_and_types(schema_string, to_keep=True, strip_quotes=True):
+    """Parses the string representation of a VDS schema into a list of 2-tuples: (name, type_string)
+    For example - given the string:
+        '''
+            chrom: String,
+            pos: Int,
+        ''''
+
+        It will yield the tuples:
+            ("chrom", "String"), ("pos", "Int")
 
     Args:
-        fields_string: For exapmle:
-            '''
-                rsid: String,
-                qual: Double,
-                filters: Set[String],
-                pass: Boolean,
-            '''
+        schema_string: The string created by printing str(vds.variant_schema) or str(keytable.schema).
+            For example:
+                '''
+                    rsid: String,
+                    qual: Double,
+                    filters: Set[String],
+                    pass: Boolean,
+                '''
+        to_keep (bool): If True, only schema lines that don't start with '---' will be returned.
+            If False, only schema lines that do start with '---' will be returned.
+        strip_quotes (bool): If True, the ` character will be stripped from field names, so
+            a line like
+                `chrom`: String,
+            will be parsed as ("chrom", "String")
+
     Yields:
         2-tuple:  For example: ("rsid", "String"), ("qual", "Double"), ("filters", "Set[String]") ..
     """
-    for field in fields_string.split(','):
-        field = field.strip()  # eg. "AF: Array[Double],"
-        if not field or field.startswith('---'):
+    for i, name_and_type in enumerate(schema_string.split(',')):
+        name_and_type = name_and_type.strip()  # eg. "AF: Array[Double],"
+        if not name_and_type:
             continue
 
-        assert field.count(": ") == 1, "Malformed field: %s" % str(field)
-        field_name, field_type = field.split(": ")
+        if (name_and_type.startswith("---") and to_keep) or (not name_and_type.startswith("---") and not to_keep):
+            continue
 
-        yield field_name, field_type  # eg. ("AF", "Array[Double]")
+        if len(name_and_type.split(": ")) != 2:
+            raise ValueError("Could not parse name and type from line %s in schema: '%s'" % (i, name_and_type))
+
+        field_name, field_type = name_and_type.strip(' -,').split(": ")
+        if strip_quotes:
+            field_name = field_name.strip("`")
+
+        yield field_name, field_type # eg. ("AF", "Array[Double]")
 
 
 def convert_vds_schema_string_to_annotate_variants_expr(
@@ -70,7 +92,7 @@ def convert_vds_schema_string_to_annotate_variants_expr(
         # in some cases aIndex is @ vds.aIndex instead of va.aIndex
         aIndex_root = "va" if source_root in ("v", "va") else source_root.split(".")[0]
 
-        for field_name, field_type in _parse_fields(fields_string):
+        for field_name, field_type in _parse_field_names_and_types(fields_string):
             field_expr = "%(root)s.%(field_name)s = %(source_root)s.%(field_name)s" % locals()
 
             if split_multi and field_type.startswith("Array"):
@@ -126,7 +148,7 @@ def convert_vds_schema_string_to_vds_make_table_arg(
         fields += [(other_source_root, other_source_fields)]
 
     for source_root, fields_string in fields:
-        for field_name, field_type in _parse_fields(fields_string):
+        for field_name, field_type in _parse_field_names_and_types(fields_string):
             field_expr = "%(output_field_name_prefix)s%(field_name)s = %(source_root)s.%(field_name)s" % locals()
             if split_multi and field_type.startswith("Array"):
                 field_expr += "[va.aIndex-1]"
