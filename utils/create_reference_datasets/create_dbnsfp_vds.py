@@ -2,7 +2,25 @@ import hail
 from hail.expr import TInt, TFloat
 from hail import VariantDataset
 
-from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
+def _parse_field_names_and_types(schema_string, to_keep=True, strip_quotes=True):
+    """TODO: this is copied from vds_schema_string_utils. Figure out how to submit libs to hail"""
+    for i, name_and_type in enumerate(schema_string.split(',')):
+        name_and_type = name_and_type.strip()  # eg. "AF: Array[Double],"
+        if not name_and_type:
+            continue
+
+        if (name_and_type.startswith("---") and to_keep) or (not name_and_type.startswith("---") and not to_keep):
+            continue
+
+        if len(name_and_type.split(": ")) != 2:
+            raise ValueError("Could not parse name and type from line %s in schema: '%s'" % (i, name_and_type))
+
+        field_name, field_type = name_and_type.strip(' -,').split(": ")
+        if strip_quotes:
+            field_name = field_name.strip("`")
+
+        yield field_name, field_type # eg. ("AF", "Array[Double]")
+
 
 hail_context = hail.HailContext()
 
@@ -428,21 +446,13 @@ DBNSFP_FIELDS["3.5"]["field_types"] = {
 #DBNSFP_FIELDS["2.9.3"]["pos_field"] = '`pos(1-coor)`'
 #DBNSFP_FIELDS["3.5"]["pos_field"] = '`pos(1-based)`'
 
-def _compute_field_names(field_names, to_keep=True, strip_quotes=True):
-    result = [
-        name_and_type.split(":")[0].strip(' -') for name_and_type in field_names.strip().split("\n")
-        if (not name_and_type.strip().startswith("---") and to_keep) or (name_and_type.strip().startswith("---") and not to_keep)
-        ]
-    if not strip_quotes:
-        return result
-    return [n.strip("`") for n in result]
 
 for dbnsfp_version in DBNSFP_FIELDS:
-    DBNSFP_FIELDS[dbnsfp_version]["fields_to_keep"] = _compute_field_names(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=True)
-    DBNSFP_FIELDS[dbnsfp_version]["fields_to_drop"] = _compute_field_names(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=False)
+    DBNSFP_FIELDS[dbnsfp_version]["fields_to_keep"] = [name for name, _ in _parse_field_names_and_types(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=True)]
+    DBNSFP_FIELDS[dbnsfp_version]["fields_to_drop"] = [name for name, _ in _parse_field_names_and_types(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=False)]
     DBNSFP_FIELDS[dbnsfp_version]["rename_fields"] = {
         field_name.replace("`", ""): field_name.strip(" `#").replace("(1-coor)", "").replace("(1-based)", "").replace("-", "_").replace("+", "")
-        for field_name in _compute_field_names(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=True)
+        for field_name, field_type in _parse_field_names_and_types(DBNSFP_FIELDS[dbnsfp_version]["fields"], to_keep=True)
     }
 
 for genome_version in ["37", "38"]:
