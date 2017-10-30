@@ -131,7 +131,6 @@ def add_dbnsfp_to_vds(hail_context, vds, genome_version, root="va.dbnsfp", subse
         import hail
         dbnsfp_vds = dbnsfp_vds.filter_intervals(hail.Interval.parse(subset))
 
-
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
         other_source_fields=dbnsfp_schema,
