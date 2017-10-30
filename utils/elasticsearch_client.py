@@ -39,12 +39,8 @@ class ElasticsearchClient:
 
 
     def print_elasticsearch_stats(self):
-        """Prints elastic search index stats.
+        """Prints elastic search index stats."""
 
-        Args:
-            host (string): elasticsearch server hostname or IP address.
-            port (int): elasticsearch server port
-        """
         logger.info("==> Elasticsearch stats:")
 
         node_stats = self.es.nodes.stats(level="node")
@@ -117,8 +113,6 @@ class ElasticsearchClient:
             kt (KeyTable): hail KeyTable object.
             genotype_fields_to_export (list): A list of hail expressions for genotype fields to export.
                 This will be passed as the 2nd argument to vds.make_table(..)
-            host (string): elasticsearch server hostname or IP address.
-            port (int): elasticsearch server port
             index_name (string): elasticsearch index name (equivalent to a database name in SQL)
             index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
             block_size (int): number of records to write in one bulk insert
