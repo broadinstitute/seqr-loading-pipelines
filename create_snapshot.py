@@ -39,7 +39,7 @@ print("==> Check if snapshot repo exists: %s" % args.repo)
 repo_info = es.snapshot.get_repository(repository=args.repo)
 pprint(repo_info)
 
-print("==> Creating snapshot in gs://%s/%s/%s" % (args.bucket, args.base_path, args.index))
+print("==> Creating snapshot in gs://%s/%s for index %s" % (args.bucket, args.base_path, args.index))
 pprint(
     es.snapshot.create(
         repository=args.repo,
