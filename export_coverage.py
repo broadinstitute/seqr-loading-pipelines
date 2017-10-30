@@ -4,6 +4,8 @@ import argparse
 import hail
 from hail.expr import TInt, TDouble, TString
 from pprint import pprint
+
+from utils.elasticsearch_client import ElasticsearchClient
 from utils.elasticsearch_utils import export_kt_to_elasticsearch
 
 p = argparse.ArgumentParser()
@@ -112,10 +114,14 @@ kt_coverage = kt_coverage.rename({
 })
 print(kt_coverage.schema)
 print("======== Export exome coverage to elasticsearch ======")
-export_kt_to_elasticsearch(
-    kt_coverage,
+
+es = ElasticsearchClient(
     host=args.host,
     port=args.port,
+)
+
+es.export_kt_to_elasticsearch(
+    kt_coverage,
     index_name=args.index,
     index_type_name=args.index_type,
     num_shards=args.num_shards,

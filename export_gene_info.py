@@ -3,6 +3,8 @@
 import argparse
 import hail
 from pprint import pprint
+
+from utils.elasticsearch_client import ElasticsearchClient
 from utils.elasticsearch_utils import export_kt_to_elasticsearch
 
 p = argparse.ArgumentParser()
@@ -34,7 +36,11 @@ kt_coverage = kt_coverage.rename({
 print(kt_coverage.schema)
 
 print("======== Export to elasticsearch ======")
-export_kt_to_elasticsearch(
+es = ElasticsearchClient(
+    host=args.host,
+    port=args.port,
+)
+es.export_kt_to_elasticsearch(
     kt_coverage,
     host=args.host,
     port=args.port,

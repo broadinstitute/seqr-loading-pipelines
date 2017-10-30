@@ -6,6 +6,7 @@ import logging
 import time
 from pprint import pprint
 from utils.computed_fields_utils import CONSEQUENCE_TERMS
+from utils.elasticsearch_client import ElasticsearchClient
 from utils.elasticsearch_utils import export_vds_to_elasticsearch, DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
     DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
@@ -91,7 +92,11 @@ for i, sample_group in enumerate(sample_groups):
     DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
 
     timestamp1 = time.time()
-    export_vds_to_elasticsearch(
+    es = ElasticsearchClient(
+        host=args.host,
+        port=args.port,
+    )
+    es.export_vds_to_elasticsearch(
         vds_sample_subset,
         genotype_fields_to_export=DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
         genotype_field_to_elasticsearch_type_map=DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
