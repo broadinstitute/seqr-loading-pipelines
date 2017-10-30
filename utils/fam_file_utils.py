@@ -91,14 +91,19 @@ def _check_for_extra_sample_ids_in_vds(vds_sample_ids, sample_id_to_family_id):
         raise ValueError("%s sample ids from vds not found in .fam file (%s)" % (len(sample_ids_in_vds_and_not_in_fam_file), ", ".join(sample_ids_in_vds_and_not_in_fam_file)))
 
 
-def compute_sample_groups_from_fam_file(fam_file_path, vds_sample_ids, ignore_extra_sample_ids_in_vds=False, ignore_extra_sample_ids_in_fam_file=False):
+def compute_sample_groups_from_fam_file(fam_file_path,
+                                        vds_sample_ids,
+                                        max_samples_per_index=225,
+                                        ignore_extra_sample_ids_in_vds=False,
+                                        ignore_extra_sample_ids_in_fam_file=False):
     """Takes a list of sample ids from a variant callset, and a .fam file path that describes how
     samples are related to eachother. Groups the sample ids into groups of size
-    MAX_SAMPLES_PER_INDEX, and returns the groups as a list of lists of sample ids.
+    max_samples_per_index, and returns the groups as a list of lists of sample ids.
 
     Args:
         fam_file_path (string): path of .fam file. This can be a local file path or a gs:// google bucket path.
         vds_sample_ids (list): list of sample ids from the variant callset
+        max_samples_per_index (int): max number of samples to put in one sample group.
         ignore_extra_sample_ids_in_vds (bool): if False, an error will be raised if any sample ids
             are in the vds_sample_ids but not in the .fam file.
         ignore_extra_sample_ids_in_fam_file (bool): if False, an error will be raised if any sample
@@ -107,7 +112,7 @@ def compute_sample_groups_from_fam_file(fam_file_path, vds_sample_ids, ignore_ex
         A list of lists of sample ids.
     """
 
-    NUM_INDEXES = int(math.ceil(float(len(vds_sample_ids)) / MAX_SAMPLES_PER_INDEX))
+    NUM_INDEXES = int(math.ceil(float(len(vds_sample_ids)) / min(max_samples_per_index, MAX_SAMPLES_PER_INDEX)))
     NUM_SAMPLES_PER_INDEX = int(math.ceil(float(len(vds_sample_ids)) / NUM_INDEXES))
 
     sample_id_to_family_id = _parse_family_ids_from_fam_file(fam_file_path)
