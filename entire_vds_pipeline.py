@@ -4,10 +4,11 @@ import hail
 import json
 import logging
 import requests
-import sys
 import time
-from pprint import pprint
+from pprint import pprint, pformat
 
+from utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
+    add_gnomad_genome_coverage_to_vds
 from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_orig_alt_alleles_set, get_expr_for_vep_consequence_terms_set, \
@@ -15,8 +16,10 @@ from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
     get_expr_for_ref_allele
-from utils.elasticsearch_utils import export_vds_to_elasticsearch, DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
-    ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
+from utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
+    ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
+    ELASTICSEARCH_UPSERT, ELASTICSEARCH_INDEX, ELASTICSEARCH_UPDATE
+from utils.elasticsearch_client import ElasticsearchClient
 from utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 from utils.add_1kg_phase3 import add_1kg_phase3_to_vds
@@ -28,9 +31,212 @@ from utils.add_gnomad import add_gnomad_to_vds
 from utils.add_topmed import add_topmed_to_vds
 from utils.add_mpc import add_mpc_to_vds
 
+
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+
+def read_in_dataset(input_path, datatype, filter_interval):
+    """Utility method for reading in a .vcf or .vds dataset
+
+    Args:
+        input_path (str):
+        datatype (str):
+        filter_interval (str):
+    """
+
+    logger.info("\n==> import: " + input_path)
+    if input_path.endswith(".vds"):
+        vds = hc.read(input_path)
+    else:
+        if datatype == "GATK_VARIANTS":
+            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
+        elif datatype == "MANTA_SVS":
+            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=True)
+        else:
+            raise ValueError("Unexpected datatype: %s" % datatype)
+
+    if vds.num_partitions() < 1000:
+        vds = vds.repartition(1000, shuffle=True)
+
+    #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
+
+    logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
+    vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
+
+    if datatype == "GATK_VARIANTS":
+        vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
+        vds = vds.split_multi()
+        summary = vds.summarize()
+        pprint(summary)
+        total_variants = summary.variants
+    elif datatype == "MANTA_SVS":
+        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = true')
+        _, total_variants = vds.count()
+    else:
+        raise ValueError("Unexpected datatype: %s" % datatype)
+
+    if total_variants == 0:
+        raise ValueError("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
+    else:
+        logger.info("\n==> total variants: %s" % (total_variants,))
+
+    return vds
+
+
+def compute_minimal_schema(vds, datatype):
+
+    # add computed annotations
+    parallel_computed_annotation_exprs = [
+        "va.docId = %s" % get_expr_for_variant_id(512),
+    ]
+
+    vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
+
+    #pprint(vds.variant_schema)
+
+    # apply schema to dataset
+    INPUT_SCHEMA  = {}
+    if datatype == "GATK_VARIANTS":
+        INPUT_SCHEMA["top_level_fields"] = """
+            docId: String,
+            wasSplit: Boolean,
+            aIndex: Int,
+        """
+
+        INPUT_SCHEMA["info_fields"] = ""
+
+    elif datatype == "MANTA_SVS":
+        INPUT_SCHEMA["top_level_fields"] = """
+            docId: String,
+        """
+
+        INPUT_SCHEMA["info_fields"] = ""
+
+    else:
+        raise ValueError("Unexpected datatype: %s" % datatype)
+
+    expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
+    vds = vds.annotate_variants_expr(expr=expr)
+    vds = vds.annotate_variants_expr("va = va.clean")
+
+    return vds
+
+
+def export_to_elasticsearch(
+    host,
+    port,
+    vds,
+    index_name,
+    datatype,
+    block_size,
+    num_shards,
+    operation=ELASTICSEARCH_INDEX,
+    delete_index_before_exporting=False,
+    export_genotypes=True,
+    disable_doc_values_for_fields=(),
+    disable_index_for_fields=(),
+    export_snapshot_to_google_bucket=False,
+):
+    """Utility method for exporting the given vds to an elasticsearch index.
+    """
+
+    logger.info("Input: " + input_path)
+
+    index_type = "variant"
+
+    if export_genotypes:
+        if datatype == "GATK_VARIANTS":
+            genotype_fields_to_export = DEFAULT_GENOTYPE_FIELDS_TO_EXPORT
+            genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
+        elif datatype == "MANTA_SVS":
+            genotype_fields_to_export = [
+                'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
+                'genotype_filter = g.FT',
+                'gq = g.GQ',
+                'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+                'ab = let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
+                'ab_PR = let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
+                'ab_SR = let total=g.SR.sum in if(g.GT.isCalled() && total != 0) (g.SR[1] / total).toFloat else NA:Float',
+                'dp_PR = if(g.GT.isCalled()) [g.PR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+                'dp_SR = if(g.GT.isCalled()) [g.SR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+            ]
+
+            genotype_field_to_elasticsearch_type_map = {
+                ".*_num_alt": {"type": "byte", "doc_values": "false"},
+                ".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
+                ".*_gq": {"type": "short", "doc_values": "false"},
+                ".*_dp": {"type": "short", "doc_values": "false"},
+                ".*_ab": {"type": "half_float", "doc_values": "false"},
+                ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
+                ".*_ab_SR": {"type": "half_float", "doc_values": "false"},
+                ".*_dp_PR": {"type": "short", "doc_values": "false"},
+                ".*_dp_SR": {"type": "short", "doc_values": "false"},
+            }
+        else:
+            raise ValueError("Unexpected datatype: %s" % datatype)
+    else:
+        genotype_fields_to_export = []
+        genotype_field_to_elasticsearch_type_map = {}
+
+    if len(sample_groups) > 1:
+        vds = vds.persist()
+
+    client = ElasticsearchClient(args.host, args.port,)
+    for i, sample_group in enumerate(sample_groups):
+
+        if len(sample_groups) > 1:
+            vds_sample_subset = vds.filter_samples_list(sample_group, keep=True)
+            current_index_name = "%s_%s" % (index_name, i)
+        else:
+            vds_sample_subset = vds
+            current_index_name = index_name
+
+        logger.info("==> exporting %s samples into %s" % (len(sample_group), current_index_name))
+        logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
+
+        logger.info("==> export to elasticsearch")
+        timestamp1 = time.time()
+
+        client.export_vds_to_elasticsearch(
+            vds_sample_subset,
+            genotype_fields_to_export=genotype_fields_to_export,
+            genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
+            index_name=current_index_name,
+            index_type_name=index_type,
+            block_size=block_size,
+            num_shards=num_shards,
+            delete_index_before_exporting=delete_index_before_exporting,
+            elasticsearch_write_operation=operation,
+            elasticsearch_mapping_id="docId",
+            disable_doc_values_for_fields=disable_doc_values_for_fields,
+            disable_index_for_fields=disable_index_for_fields,
+            is_split_vds=True,
+            verbose=True,
+        )
+
+        timestamp2 = time.time()
+        logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
+
+    if export_snapshot_to_google_bucket:
+
+        logger.info("==> export snapshot to google bucket")
+        client.create_elasticsearch_snapshot(
+            index_name=index_name + "*",
+            bucket="seqr-database-backups",
+            base_path="elasticsearch/snapshots",
+            snapshot_repo="callsets")
+
+#if args.output_vds:
+    #    output_vds_path = args.output_vds
+    #else:
+    #    output_vds_path = input_path_prefix
+    #logger.info("Output: " + output_vds_path)
+    #logger.info("\n==> saving to " + output_vds_path)
+    #vds.write(output_vds_path, overwrite=True)
+    #logger.info("Wrote file: " + output_vds_path)
+
 
 
 p = argparse.ArgumentParser()
@@ -55,6 +261,7 @@ p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC field
 p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
 p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar fields. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
+p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
 p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
     "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices")
@@ -71,11 +278,11 @@ args = p.parse_args()
 if args.index_name.lower() != args.index_name:
     p.error("Index name must be lowercase")
 
-input_vds_path = str(args.input_vds)
-if not (input_vds_path.endswith(".vds") or input_vds_path.endswith(".vcf.gz") or input_vds_path.endswith(".vcf.bgz")):
+input_path = str(args.input_vds)
+if not (input_path.endswith(".vds") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
 
-input_vds_path_prefix = input_vds_path.replace(".vds", "")
+input_path_prefix = input_path.replace(".vds", "")
 
 elasticsearch_url = "http://%s:%s" % (args.host, args.port)
 response = requests.get(elasticsearch_url)
@@ -85,26 +292,18 @@ if "tagline" not in elasticsearch_response:
 else:
     logger.info("Connected to %s: %s" % (elasticsearch_url, elasticsearch_response["tagline"]))
 
-host = args.host
-port = args.port
-index_name = args.index_name
-block_size = args.block_size
-num_shards = args.num_shards
-index_type = "variant"
+filter_interval = "1-MT"
+if args.subset:
+    filter_interval = args.subset
+
+
+logger.info("=============================== pipeline - step 1 ===============================")
+logger.info("read in data, run vep, compute various derived fields, export to elasticsearch")
 
 logger.info("\n==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
-logger.info("\n==> import: " + input_vds_path)
-if input_vds_path.endswith(".vds"):
-    vds = hc.read(input_vds_path)
-else:
-    if args.datatype == "GATK_VARIANTS":
-        vds = hc.import_vcf(input_vds_path, force_bgz=True, min_partitions=10000)
-    elif args.datatype == "MANTA_SVS":
-        vds = hc.import_vcf(input_vds_path, force_bgz=True, min_partitions=10000, generic=True)
-    else:
-        raise ValueError("Unexpected datatype: %s" % args.datatype)
+vds = read_in_dataset(input_path, args.datatype, filter_interval)
 
 # compute sample groups
 if len(vds.sample_ids) > args.max_samples_per_index:
@@ -114,39 +313,12 @@ if len(vds.sample_ids) > args.max_samples_per_index:
         sample_groups = compute_sample_groups_from_fam_file(
             args.fam_file,
             vds.sample_ids,
+            args.max_samples_per_index,
             args.ignore_extra_sample_ids_in_vds,
-            args.ignore_extra_sample_ids_in_fam_file
+            args.ignore_extra_sample_ids_in_fam_file,
         )
 else:
     sample_groups = [vds.sample_ids]
-
-if vds.num_partitions() < 1000:
-    vds = vds.repartition(1000, shuffle=True)
-
-filter_interval = "1-MT"
-if args.subset:
-    filter_interval = args.subset
-#vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
-
-logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
-vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
-
-if args.datatype == "GATK_VARIANTS":
-    vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-    vds = vds.split_multi()
-    summary = vds.summarize()
-    pprint(summary)
-    total_variants = summary.variants
-elif args.datatype == "MANTA_SVS":
-    vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = true')
-    _, total_variants = vds.count()
-else:
-    raise ValueError("Unexpected datatype: %s" % args.datatype)
-
-if total_variants == 0:
-    p.error("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
-else:
-    logger.info("\n==> total variants: %s" % (total_variants,))
 
 # run vep
 if not args.skip_vep:
@@ -156,14 +328,14 @@ if not args.skip_vep:
 parallel_computed_annotation_exprs = [
     "va.docId = %s" % get_expr_for_variant_id(512),
     "va.variantId = %s" % get_expr_for_variant_id(),
-    
+
     "va.contig = %s" % get_expr_for_contig(),
     "va.start = %s" % get_expr_for_start_pos(),
     "va.pos = %s" % get_expr_for_start_pos(),
     "va.end = %s" % get_expr_for_end_pos(),
     "va.ref = %s" % get_expr_for_ref_allele(),
     "va.alt = %s" % get_expr_for_alt_allele(),
-    
+
     "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
     "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
 
@@ -185,7 +357,7 @@ vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
 for expr in serial_computed_annotation_exprs:
     vds = vds.annotate_variants_expr(expr)
 
-pprint(vds.variant_schema)
+#pprint(vds.variant_schema)
 
 # apply schema to dataset
 INPUT_SCHEMA  = {}
@@ -293,28 +465,57 @@ expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **IN
 vds = vds.annotate_variants_expr(expr=expr)
 vds = vds.annotate_variants_expr("va = va.clean")
 
+export_to_elasticsearch(
+    args.host,
+    args.port,
+    vds,
+    args.index_name,
+    args.datatype,
+    operation=ELASTICSEARCH_UPSERT,
+    block_size=args.block_size,
+    num_shards=args.num_shards,
+    delete_index_before_exporting=True,
+    export_genotypes=True,
+    disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
+    disable_index_for_fields=("sortedTranscriptConsequences", ),
+    export_snapshot_to_google_bucket=False,
+)
+
+
+hc.stop()
+
+logger.info("=============================== pipeline - step 2 ===============================")
+logger.info("read in data, add in more reference datasets, export to elasticsearch")
+
+# ==========================
+# reference dataset schemas
+# ==========================
 
 # add reference data
 CLINVAR_INFO_FIELDS = """
-    --- MEASURESET_TYPE: String,
-    MEASURESET_ID: String,
-    --- RCV: String,
-    ALLELE_ID: String,
-    CLINICAL_SIGNIFICANCE: String,
-    --- PATHOGENIC: String,
-    --- BENIGN: String,
-    --- CONFLICTED: String,
-    --- REVIEW_STATUS: String,
-    GOLD_STARS: String,
-    ALL_SUBMITTERS: String,
-    --- ALL_TRAITS: String,
-    --- ALL_PMIDS: String,
-    INHERITANCE_MODES: String,
-    --- AGE_OF_ONSET: String,
-    --- PREVALENCE: String,
-    --- DISEASE_MECHANISM: String,
-    --- ORIGIN: String,
-    --- XREFS: String
+    --- variation_type: String,
+    variation_id: String,
+    --- rcv: String,
+    --- scv: String,
+    allele_id: Int,
+    clinical_significance: String,
+    pathogenic: Int,
+    likely_pathogenic: Int,
+    uncertain_significance: Int,
+    likely_benign: Int,
+    benign: Int,
+    conflicted: Int,
+    --- gold_stars: String,
+    review_status: String,
+    all_submitters: String,
+    --- all_traits: String,
+    --- all_pmids: String,
+    inheritance_modes: String,
+    --- age_of_onset: String,
+    --- prevalence: String,
+    --- disease_mechanism: String,
+    --- origin: String,
+    --- xrefs: String,
 """
 
 CADD_INFO_FIELDS = """
@@ -384,6 +585,51 @@ GNOMAD_INFO_FIELDS = """
     POPMAX: Array[String],
 """
 
+logger.info("\n==> create HailContext")
+hc = hail.HailContext(log="/hail.log")
+
+vds = read_in_dataset(input_path, args.datatype, filter_interval)
+vds = compute_minimal_schema(vds, args.datatype)
+
+if not args.skip_annotations and not args.exclude_dbnsfp:
+    logger.info("\n==> add dbnsfp")
+    vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+
+if not args.skip_annotations and not args.exclude_clinvar:
+    logger.info("\n==> add clinvar")
+    vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS, subset=filter_interval)
+
+
+export_to_elasticsearch(
+    args.host,
+    args.port,
+    vds,
+    args.index_name,
+    args.datatype,
+    operation=ELASTICSEARCH_UPDATE,
+    block_size=args.block_size,
+    num_shards=args.num_shards,
+    delete_index_before_exporting=False,
+    export_genotypes=False,
+    disable_doc_values_for_fields=(),
+    disable_index_for_fields=(),
+    export_snapshot_to_google_bucket=False,
+)
+
+
+hc.stop()
+
+
+logger.info("=============================== pipeline - step 3 ===============================")
+logger.info("read in data, add in more reference datasets, export to elasticsearch")
+
+logger.info("\n==> create HailContext")
+hc = hail.HailContext(log="/hail.log")
+
+vds = read_in_dataset(input_path, args.datatype, filter_interval)
+vds = compute_minimal_schema(vds, args.datatype)
+
+
 if not args.skip_annotations and not args.exclude_cadd:
     logger.info("\n==> add cadd")
     vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
@@ -396,9 +642,38 @@ if not args.skip_annotations and not args.exclude_gnomad:
     logger.info("\n==> add gnomad genomes")
     vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
 
-if not args.skip_annotations and not args.exclude_dbnsfp:
-    logger.info("\n==> add dbnsfp")
-    vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+if not args.skip_annotations and not args.exclude_gnomad_coverage:
+    logger.info("\n==> add gnomad coverage")
+    vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
+    vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+
+export_to_elasticsearch(
+    args.host,
+    args.port,
+    vds,
+    args.index_name,
+    args.datatype,
+    operation=ELASTICSEARCH_UPDATE,
+    block_size=args.block_size,
+    num_shards=args.num_shards,
+    delete_index_before_exporting=False,
+    export_genotypes=False,
+    disable_doc_values_for_fields=(),
+    disable_index_for_fields=(),
+    export_snapshot_to_google_bucket=False,
+)
+
+hc.stop()
+
+logger.info("=============================== pipeline - step 4 ===============================")
+logger.info("read in data, add in more reference datasets, export to elasticsearch")
+
+logger.info("\n==> create HailContext")
+hc = hail.HailContext(log="/hail.log")
+
+vds = read_in_dataset(input_path, args.datatype, filter_interval)
+vds = compute_minimal_schema(vds, args.datatype)
+
 
 if not args.skip_annotations and not args.exclude_1kg:
     logger.info("\n==> add 1kg")
@@ -408,111 +683,32 @@ if not args.skip_annotations and not args.exclude_exac:
     logger.info("\n==> add exac")
     vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS, subset=filter_interval)
 
-if not args.skip_annotations and not args.exclude_topmed:
+if not args.skip_annotations and not args.exclude_topmed and args.genome_version == "38":
     logger.info("\n==> add topmed")
     vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
-
-if not args.skip_annotations and not args.exclude_clinvar:
-    logger.info("\n==> add clinvar")
-    vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS, subset=filter_interval)
 
 if not args.skip_annotations and not args.exclude_mpc:
     logger.info("\n==> add mpc")
     vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
 
 
-# filter to coding or non-coding variants
-if args.output_vds:
-    output_vds_path = args.output_vds
-else:
-    output_vds_path = input_vds_path_prefix
+export_to_elasticsearch(
+    args.host,
+    args.port,
+    vds,
+    args.index_name,
+    args.datatype,
+    operation=ELASTICSEARCH_UPDATE,
+    block_size=args.block_size,
+    num_shards=args.num_shards,
+    delete_index_before_exporting=False,
+    export_genotypes=False,
+    disable_doc_values_for_fields=(),
+    disable_index_for_fields=(),
+    export_snapshot_to_google_bucket=True,
+)
 
-#output_vds_path = output_vds_path.replace(".vds", "") + ".annotated.vds"
-
-logger.info("Input: " + input_vds_path)
-#logger.info("Output: " + output_vds_path)
-#logger.info("\n==> saving to " + output_vds_path)
-#vds.write(output_vds_path, overwrite=True)
-#logger.info("Wrote file: " + output_vds_path)
-
-# host = "10.48.7.5"
-# host="10.56.1.5"
-# rare_genomes_project_v2
-# niaid-gatk3dot4
-
-
-if args.datatype == "GATK_VARIANTS":
-    genotype_fields_to_export = DEFAULT_GENOTYPE_FIELDS_TO_EXPORT
-    genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
-elif args.datatype == "MANTA_SVS":
-    genotype_fields_to_export = [
-        'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
-        'genotype_filter = g.FT',
-        'gq = g.GQ',
-        'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-        'ab = let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
-        'ab_PR = let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
-        'ab_SR = let total=g.SR.sum in if(g.GT.isCalled() && total != 0) (g.SR[1] / total).toFloat else NA:Float',
-        'dp_PR = if(g.GT.isCalled()) [g.PR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-        'dp_SR = if(g.GT.isCalled()) [g.SR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-    ]
-    genotype_field_to_elasticsearch_type_map = {
-        ".*_num_alt": {"type": "byte", "doc_values": "false"},
-        ".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
-        ".*_gq": {"type": "short", "doc_values": "false"},
-        ".*_dp": {"type": "short", "doc_values": "false"},
-        ".*_ab": {"type": "half_float", "doc_values": "false"},
-        ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
-        ".*_ab_SR": {"type": "half_float", "doc_values": "false"},
-        ".*_dp_PR": {"type": "short", "doc_values": "false"},
-        ".*_dp_SR": {"type": "short", "doc_values": "false"},
-    }
-else:
-    raise ValueError("Unexpected datatype: %s" % args.datatype)
-
-DISABLE_INDEX_FOR_FIELDS = ("sortedTranscriptConsequences", )
-DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
-
-for i, sample_group in enumerate(sample_groups):
-    if len(sample_groups) > 1:
-        vds_sample_subset = vds.filter_samples_list(sample_group, keep=True)
-        index_name = "%s_%s" % (args.index_name, i)
-    else:
-        vds_sample_subset = vds
-        index_name = args.index_name
-
-    logger.info("==> loading %s samples into %s" % (len(sample_group), index_name))
-    logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
-
-    logger.info("==> export to elasticsearch")
-    DISABLE_INDEX_FOR_FIELDS = ("sortedTranscriptConsequences", )
-    DISABLE_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
-
-    if i == 0:
-        print("skipping 0...")
-
-    timestamp1 = time.time()
-    export_vds_to_elasticsearch(
-        vds_sample_subset,
-        genotype_fields_to_export=genotype_fields_to_export,
-        genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
-        host=host,
-        port=port,
-        index_name=index_name,
-        index_type_name=index_type,
-        block_size=block_size,
-        num_shards=num_shards,
-        delete_index_before_exporting=True,
-        elasticsearch_mapping_id="docId",
-        disable_doc_values_for_fields=DISABLE_DOC_VALUES_FOR_FIELDS,
-        disable_index_for_fields=DISABLE_INDEX_FOR_FIELDS,
-        is_split_vds=True,
-        verbose=True,
-    )
-
-    timestamp2 = time.time()
-    logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
-
+hc.stop()
 
 
 # see https://hail.is/hail/annotationdb.html#query-builder
