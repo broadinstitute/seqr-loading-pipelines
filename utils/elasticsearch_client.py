@@ -89,7 +89,6 @@ class ElasticsearchClient:
         ]
         """
 
-
     def export_vds_to_elasticsearch(
         self,
         vds,
@@ -182,7 +181,6 @@ class ElasticsearchClient:
             disable_index_for_fields=disable_index_for_fields,
             field_names_replace_dot_with=None,
             verbose=verbose)
-
 
     def export_kt_to_elasticsearch(
             self,
@@ -425,7 +423,6 @@ class ElasticsearchClient:
         logger.info(pformat(
             self.es.snapshot.status(repository=snapshot_repo)
         ))
-
 
     def restore_elasticsearch_snapshot(self, bucket, base_path, snapshot_repo):
         """Restores an Elasticsearch snapshot from the given GCS bucket repository.
