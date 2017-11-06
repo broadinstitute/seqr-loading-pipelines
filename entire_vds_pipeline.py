@@ -138,6 +138,7 @@ def export_to_elasticsearch(
     disable_doc_values_for_fields=(),
     disable_index_for_fields=(),
     export_snapshot_to_google_bucket=False,
+    start_with_sample_group = 0,
 ):
     """Utility method for exporting the given vds to an elasticsearch index.
     """
@@ -180,11 +181,13 @@ def export_to_elasticsearch(
         genotype_fields_to_export = []
         genotype_field_to_elasticsearch_type_map = {}
 
-    if len(sample_groups) > 1:
-        vds = vds.persist()
+    vds = vds.persist()
 
     client = ElasticsearchClient(host, port)
     for i, sample_group in enumerate(sample_groups):
+
+        if i < start_with_sample_group:
+            continue
 
         #if delete_index_before_exporting and i < 4:
         #    continue
@@ -371,10 +374,12 @@ p.add_argument("--max-samples-per-index", help="Max samples per index", type=int
 p.add_argument("--ignore-extra-sample-ids-in-fam-file", action="store_true")
 p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
 p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
+p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
+    "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
+    "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
 p.add_argument("-t", "--datatype", help="What pipeline generated the data", choices=["GATK_VARIANTS", "MANTA_SVS"], default="GATK_VARIANTS")
 p.add_argument("input_vds", help="input VDS")
 p.add_argument("output_vds", nargs="?", help="output vds")
-
 
 
 # parse args
@@ -424,7 +429,12 @@ else:
 
 # run vep
 if not args.skip_vep:
+    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
+    vep_output_vds = output_vds_prefix + ".vep.vds"
     vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
+    vds.write(vep_output_vds, overwrite=True)
+
+    input_path = vep_output_vds
 
 hc.stop()
 
@@ -593,6 +603,7 @@ if args.start_with_step == 0:
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
         disable_index_for_fields=("sortedTranscriptConsequences", ),
         export_snapshot_to_google_bucket=False,
+        start_with_sample_group=args.start_with_sample_group if args.start_with_step == 0 else 0,
     )
 
     hc.stop()
@@ -607,75 +618,9 @@ if args.start_with_step <= 1:
     vds = read_in_dataset(input_path, args.datatype, filter_interval)
     vds = compute_minimal_schema(vds, args.datatype)
 
-    if not args.skip_annotations and not args.exclude_gnomad_coverage:
-        logger.info("\n==> add gnomad coverage")
-        vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
-        vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
-
-    export_to_elasticsearch(
-        args.host,
-        args.port,
-        vds,
-        args.index_name,
-        args.datatype,
-        operation=ELASTICSEARCH_UPDATE,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
-        delete_index_before_exporting=False,
-        export_genotypes=False,
-        disable_doc_values_for_fields=(),
-        disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=False,
-    )
-
-    hc.stop()
-
-
-if args.start_with_step <= 2:
-
-    logger.info("=============================== pipeline - step 2 ===============================")
-    logger.info("read in data, add in more reference datasets, export to elasticsearch")
-
-    logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
-
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
-    vds = compute_minimal_schema(vds, args.datatype)
-
     if not args.skip_annotations and not args.exclude_cadd:
         logger.info("\n==> add cadd")
         vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
-
-    export_to_elasticsearch(
-        args.host,
-        args.port,
-        vds,
-        args.index_name,
-        args.datatype,
-        operation=ELASTICSEARCH_UPDATE,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
-        delete_index_before_exporting=False,
-        export_genotypes=False,
-        disable_doc_values_for_fields=(),
-        disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=False,
-    )
-
-    hc.stop()
-
-
-if args.start_with_step <= 3:
-
-    logger.info("=============================== pipeline - step 3 ===============================")
-    logger.info("read in data, add in more reference datasets, export to elasticsearch")
-
-
-    logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
-
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
-    vds = compute_minimal_schema(vds, args.datatype)
 
     if not args.skip_annotations and not args.exclude_dbnsfp:
         logger.info("\n==> add dbnsfp")
@@ -684,35 +629,6 @@ if args.start_with_step <= 3:
     if not args.skip_annotations and not args.exclude_clinvar:
         logger.info("\n==> add clinvar")
         vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS, subset=filter_interval)
-
-    export_to_elasticsearch(
-         args.host,
-         args.port,
-         vds,
-         args.index_name,
-         args.datatype,
-         operation=ELASTICSEARCH_UPDATE,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
-        delete_index_before_exporting=False,
-        export_genotypes=False,
-        disable_doc_values_for_fields=(),
-        disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=False,
-    )
-
-    hc.stop()
-
-if args.start_with_step <= 4:
-
-    logger.info("=============================== pipeline - step 4 ===============================")
-    logger.info("read in data, add in more reference datasets, export to elasticsearch")
-
-    logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
-
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
-    vds = compute_minimal_schema(vds, args.datatype)
 
     if not args.skip_annotations and not args.exclude_1kg:
         logger.info("\n==> add 1kg")
@@ -730,36 +646,6 @@ if args.start_with_step <= 4:
         logger.info("\n==> add mpc")
         vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
 
-    export_to_elasticsearch(
-        args.host,
-        args.port,
-        vds,
-        args.index_name,
-        args.datatype,
-        operation=ELASTICSEARCH_UPDATE,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
-        delete_index_before_exporting=False,
-        export_genotypes=False,
-        disable_doc_values_for_fields=(),
-        disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=False,
-    )
-
-    hc.stop()
-
-
-if args.start_with_step <= 5:
-
-    logger.info("=============================== pipeline - step 5 ===============================")
-    logger.info("read in data, add in more reference datasets, export to elasticsearch")
-
-    logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
-
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
-    vds = compute_minimal_schema(vds, args.datatype)
-
     if not args.skip_annotations and not args.exclude_gnomad:
         logger.info("\n==> add gnomad exomes")
         vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
@@ -767,6 +653,13 @@ if args.start_with_step <= 5:
     if not args.skip_annotations and not args.exclude_gnomad:
         logger.info("\n==> add gnomad genomes")
         vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+
+    if not args.skip_annotations and not args.exclude_gnomad_coverage:
+        logger.info("\n==> add gnomad coverage")
+        vds.persist()
+
+        vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
+        vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
     export_to_elasticsearch(
         args.host,
@@ -782,6 +675,7 @@ if args.start_with_step <= 5:
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         export_snapshot_to_google_bucket=True,
+        start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
     )
 
     hc.stop()
