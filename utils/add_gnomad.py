@@ -237,8 +237,7 @@ def add_gnomad_to_vds(hail_context, vds, genome_version, exomes_or_genomes, root
         print(info_fields_expr)
 
     return (vds
-        .annotate_variants_vds(gnomad_vds, expr=top_fields_expr)
-        .annotate_variants_vds(gnomad_vds, expr=info_fields_expr)
+        .annotate_variants_vds(gnomad_vds, expr=", ".join([top_fields_expr, info_fields_expr]))
     )
 
 

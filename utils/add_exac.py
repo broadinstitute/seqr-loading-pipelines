@@ -141,8 +141,7 @@ def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level
         print(info_fields_expr)
 
     vds = (vds
-        .annotate_variants_vds(exac_vds, expr=top_fields_expr)
-        .annotate_variants_vds(exac_vds, expr=info_fields_expr)
+        .annotate_variants_vds(exac_vds, expr=", ".join([top_fields_expr, info_fields_expr]))
     )
 
     
