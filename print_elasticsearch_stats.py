@@ -1,10 +1,8 @@
 import argparse
 import pip
-
-from utils.elasticsearch_utils import print_elasticsearch_stats
-
 pip.main(['install', 'elasticsearch'])
-import elasticsearch
+
+from utils.elasticsearch_client import ElasticsearchClient
 
 p = argparse.ArgumentParser()
 p.add_argument("-H", "--host", help="elasticsearch client host. The default address works if "
@@ -17,7 +15,9 @@ args = p.parse_args()
 # to get the ip address, run  `kubectl describe pod elasticsearch-1019229749-vhghc`
 ELASTICSEARCH_HOST = args.host
 ELASTICSEARCH_PORT = args.port
-es = elasticsearch.Elasticsearch(ELASTICSEARCH_HOST, port=ELASTICSEARCH_PORT)
 
-print_elasticsearch_stats(es)
+es = ElasticsearchClient(ELASTICSEARCH_HOST, port=ELASTICSEARCH_PORT)
+es.print_elasticsearch_stats(es)
+
+
 
