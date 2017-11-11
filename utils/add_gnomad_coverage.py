@@ -131,7 +131,7 @@ def _import_coverage_keytable(hail_context, coverage_tsv_paths):
     }
 
     return (
-        hail_context.import_table(coverage_tsv_paths, types=field_types)
+        hail_context.import_table(coverage_tsv_paths, types=field_types, min_partitions=10000)
             .rename({
             "#chrom": "chrom",
             "10": "x10",
