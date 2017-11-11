@@ -385,7 +385,7 @@ class ElasticsearchClient:
             logger.info(pformat(repo_info))
         except elasticsearch.exceptions.NotFoundError:
             # register repository
-            self.create_elasticsearch_snapshot_repository(self.host, self.port, bucket, base_path, snapshot_repo)
+            self.create_elasticsearch_snapshot_repository(self._host, self._port, bucket, base_path, snapshot_repo)
 
         # check that index exists
         matching_indices = self.es.indices.get(index=index_name).keys()
