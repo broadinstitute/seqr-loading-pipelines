@@ -31,10 +31,11 @@ command = """gcloud beta dataproc clusters create %(cluster)s \
     --worker-boot-disk-size 75 \
     --num-worker-local-ssds 1 \
     --image-version 1.1 \
-    --network %(project)s-auto-vpc \
     --properties "spark:spark.executor.memory=15g,spark:spark.driver.extraJavaOptions=-Xss4M,spark:spark.executor.extraJavaOptions=-Xss4M,spark:spark.driver.memory=15g,spark:spark.driver.maxResultSize=30g,spark:spark.task.maxFailures=20,spark:spark.yarn.executor.memoryOverhead=15g,spark:spark.kryoserializer.buffer.max=1g,hdfs:dfs.replication=1"  \
     --initialization-actions gs://hail-common/init_notebook.py
 """ % args.__dict__
+
+#     --network %(project)s-auto-vpc \
 
 print(command)
 os.system(command)
