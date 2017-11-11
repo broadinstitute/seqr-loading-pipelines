@@ -67,7 +67,10 @@ def read_in_dataset(input_path, datatype, filter_interval):
 
     if datatype == "GATK_VARIANTS":
         vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-        vds = vds.split_multi()
+        if vds.was_split():
+            vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = true')
+        else:
+            vds = vds.split_multi()
         summary = vds.summarize()
         pprint(summary)
         total_variants = summary.variants
