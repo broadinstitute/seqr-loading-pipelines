@@ -660,8 +660,7 @@ if args.start_with_step <= 1:
 
     if not args.skip_annotations and not args.exclude_gnomad_coverage:
         logger.info("\n==> add gnomad coverage")
-        vds.persist()
-
+        vds = vds.persist()
         vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
         vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
