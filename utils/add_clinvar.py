@@ -31,7 +31,7 @@ def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", inf
     """Add clinvar annotations to the vds"""
 
     if genome_version == "37":
-        clinvar_vds_path = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.b37.vds'
+        clinvar_vds_path = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar_alleles.b37.vds'
     elif genome_version == "38":
         clinvar_vds_path = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar_alleles.b38.vds'
     else:
