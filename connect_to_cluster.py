@@ -45,7 +45,7 @@ dataproc_ports = {
 }
 connect_port = dataproc_ports[service]
 
-os.system("kill $( pgrep -f google_compute_engine )", shell=True)
+os.system("kill $( pgrep -f google_compute_engine )")
 # open SSH tunnel to master node
 cmd = [
     'gcloud',
