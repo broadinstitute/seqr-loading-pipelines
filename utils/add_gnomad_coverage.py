@@ -110,6 +110,28 @@ GENOME_COVERAGE_TSV_PATHS = {
 }
 
 
+EXOME_COVERAGE_KEYTABLE_PATH = {
+    "37": "gs://seqr-reference-data/GRCh37/gnomad/coverage/exome_coverage.kt",
+    "38": "gs://seqr-reference-data/GRCh38/gnomad/coverage/exome_coverage.kt",
+}
+
+GENOME_COVERAGE_KEYTABLE_PATH = {
+    "37": "gs://seqr-reference-data/GRCh37/gnomad/coverage/genome_coverage.kt",
+    "38": "gs://seqr-reference-data/GRCh38/gnomad/coverage/genome_coverage.kt",
+}
+
+
+"""
+from hail.expr import TInt, TDouble, TString
+
+field_types = {
+    '#chrom': TString(), 'pos': TInt(),
+    'mean': TDouble(), 'median': TDouble(),
+    #'1': TDouble(), '5': TDouble(),
+    '10': TDouble(),
+    #'15': TDouble(), '20': TDouble(), '25': TDouble(), '30': TDouble(), '50': TDouble(), '100': TDouble(),
+}
+"""
 
 
 COVERAGE_FIELDS = """
@@ -119,26 +141,11 @@ COVERAGE_FIELDS = """
 """
 
 
-def _import_coverage_keytable(hail_context, coverage_tsv_paths):
-    from hail.expr import TInt, TDouble, TString
-
-    field_types = {
-        '#chrom': TString(), 'pos': TInt(),
-        'mean': TDouble(), 'median': TDouble(),
-        #'1': TDouble(), '5': TDouble(),
-        '10': TDouble(),
-        #'15': TDouble(), '20': TDouble(), '25': TDouble(), '30': TDouble(), '50': TDouble(), '100': TDouble(),
-    }
-
+def _import_coverage_keytable(hail_context, keytable_path):
     return (
-        hail_context.import_table(coverage_tsv_paths, types=field_types, min_partitions=10000)
-            .rename({
-            "#chrom": "chrom",
-            "10": "x10",
-        })
-            .annotate("locus=Locus(chrom, pos)")
-            .key_by('locus')
-            .drop(["chrom", "pos", "mean", "median", "1", "5", "15", "20", "25", "30", "50", "100"])
+        hail_context.read_table(keytable_path)
+            .rename({"10": "x10"})
+            .drop(["#chrom", "pos", "mean", "median", "1", "5", "15", "20", "25", "30", "50", "100"])
     )
 
 
@@ -148,7 +155,7 @@ def add_gnomad_exome_coverage_to_vds(hail_context, vds, genome_version, root="va
     if genome_version != "37" and genome_version != "38":
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    kt = _import_coverage_keytable(hail_context, EXOME_COVERAGE_TSV_PATHS[genome_version])
+    kt = _import_coverage_keytable(hail_context, EXOME_COVERAGE_KEYTABLE_PATH[genome_version])
 
     return vds.annotate_variants_table(kt, root=root)
 
@@ -159,7 +166,7 @@ def add_gnomad_genome_coverage_to_vds(hail_context, vds, genome_version, root="v
     if genome_version != "37" and genome_version != "38":
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    kt = _import_coverage_keytable(hail_context, GENOME_COVERAGE_TSV_PATHS[genome_version])
+    kt = _import_coverage_keytable(hail_context, GENOME_COVERAGE_KEYTABLE_PATH[genome_version])
 
     return vds.annotate_variants_table(kt, root=root)
 
