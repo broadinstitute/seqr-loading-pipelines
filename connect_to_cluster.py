@@ -15,6 +15,7 @@ parser.add_argument('--service', type=str,
                     help='Web service to launch.', default="notebook")
 parser.add_argument('--port', '-p', default='10000', type=str,
                     help='Local port to use for SSH tunnel to master node (default: %(default)s).')
+parser.add_argument('--project', type=str, help='gcloud project')
 parser.add_argument('--zone', '-z', default='us-central1-b', type=str,
                     help='Compute zone for Dataproc cluster (default: %(default)s).')
 args = parser.parse_args()
@@ -44,13 +45,15 @@ dataproc_ports = {
 }
 connect_port = dataproc_ports[service]
 
+os.system("kill $( pgrep -f google_compute_engine )", shell=True)
 # open SSH tunnel to master node
 cmd = [
     'gcloud',
     'compute',
     'ssh',
     '{}-m'.format(args.name),
-    '--zone={}'.format(args.zone),
+    '--zone={}'.format(args.zone)
+] + (['--project={}'.format(args.project)] if args.project else []) + [
     '--ssh-flag=-D {}'.format(args.port),
     '--ssh-flag=-N',
     '--ssh-flag=-f',

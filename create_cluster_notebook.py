@@ -40,6 +40,6 @@ command = """gcloud beta dataproc clusters create %(cluster)s \
 print(command)
 os.system(command)
 
-command = "python connect_to_cluster.py %(cluster)s" % args.__dict__
+command = "python connect_to_cluster.py --project %(project)s %(cluster)s" % args.__dict__
 print(command)
 os.system(command)
