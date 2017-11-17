@@ -355,6 +355,8 @@ p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
 p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
     help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
+p.add_argument('--remap_sample_ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
+p.add_argument('--subset_samples', help="Filepath containing ids for samples to keep; if used with --remap_sample_ids, ids are the desired ids (post remapping)")
 
 p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")  # "10.128.0.3"
@@ -414,7 +416,27 @@ if args.subset:
 logger.info("\n==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
+logger.info("Reading in dataset...")
 vds = read_in_dataset(input_path, args.datatype, filter_interval)
+
+#NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
+if args.remap_sample_ids:
+    logger.info("Remapping sample ids...")
+    id_map = hc.import_table(args.remap_sample_ids, impute=True, no_header=True)
+    mapping = dict(zip(id_map.query('f0.collect()'), id_map.query('f1.collect()')))
+    vds = vds.rename_samples(mapping)
+    logger.info('Remapped {} sample ids...'.format(id_map.count()))
+
+
+# subset samples as desired
+if args.subset_samples:
+    logger.info("Subsetting to specified samples...")
+    keep_samples = hc.import_table(args.subset_samples, impute=True, no_header=True).key_by('f0')
+    original_sample_count, original_var_count = vds.count()
+    vds = vds.filter_samples_table(keep_samples, keep=True)
+    new_sample_count, new_var_count = vds.count()
+    logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
+
 
 # compute sample groups
 if len(vds.sample_ids) > args.max_samples_per_index:
@@ -431,8 +453,11 @@ if len(vds.sample_ids) > args.max_samples_per_index:
 else:
     sample_groups = [vds.sample_ids]
 
+
+
 # run vep
 if not args.skip_vep:
+    logger.info("Annotating with VEP...")
     output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
     vep_output_vds = output_vds_prefix + ".vep.vds"
     vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
