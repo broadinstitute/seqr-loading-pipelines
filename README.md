@@ -12,7 +12,7 @@ Scripts
 * `create_cluster_notebook.py` creates a cluster that allows hail commmands to be run interactively in an ipython notebook. 
 * `connect_to_cluster.py` connects to a cluster that was created by `create_cluster_notebook.py`, and re-opens ipython dashboard in the browser.
 
-**Scripts for describing, modifying and deleteing dataproc clusters:**
+**Scripts for describing, modifying and deleting dataproc clusters:**
 
 * `list_clusters.py` prints the names of all existing dataproc clusters in the project.
 * `list_jobs.py` lists all active dataproc jobs.
@@ -49,14 +49,14 @@ Scripts
 
 Run VEP:
 ```
-    ./create_cluster_GRCh37.py 
-    ./submit.sh run_vep.py gs://<dataset path> 
+./create_cluster_GRCh37.py 
+./submit.sh run_vep.py gs://<dataset path> 
 ```
 
 Run rare disease callset pipeline:
 ```    
-    ./create_cluster_GRCh38.py --project=seqr-project cluster1 2 24 ;   # create cluster with 2 persistant, 24 preemptible nodes
+./create_cluster_GRCh38.py --project=seqr-project cluster1 2 24 ;   # create cluster with 2 persistant, 24 preemptible nodes
 
-    ./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 gs://seqr-datasets/GRCh38/my_dataset.vcf.gz  -i my_dataset_index --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12
+./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 gs://seqr-datasets/GRCh38/my_dataset.vcf.gz  -i my_dataset_index --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12
 ```
 
