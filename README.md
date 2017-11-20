@@ -42,10 +42,21 @@ Scripts
 * `export_vds_to_tsv.py`  export a subset of vds variants to a .tsv for inspection
 
 
-**Example:**
+*NOTE:* Some of the scripts require a running elasticsearch instance. For deploying a stand-alone elasticsearch cluster see: https://github.com/macarthur-lab/elasticsearch-kubernetes-cluster or for deploying one as part of seqr see: https://github.com/macarthur-lab/seqr
+
+
+**Examples:**
+
+Run VEP:
 ```
     ./create_cluster_GRCh37.py 
-    ./submit.sh run_vep.py gs://<input dataset path>  gs://<output path>
+    ./submit.sh run_vep.py gs://<dataset path> 
 ```
 
-*NOTE:* Some of the scripts require a running elasticsearch instance. For deploying a stand-alone elasticsearch cluster see: https://github.com/macarthur-lab/elasticsearch-kubernetes-cluster or for deploying one as part of seqr see: https://github.com/macarthur-lab/seqr
+Run rare disease callset pipeline:
+```    
+    ./create_cluster_GRCh38.py --project=seqr-project cluster1 2 24 ;   # create cluster with 2 persistant, 24 preemptible nodes
+
+    ./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 gs://seqr-datasets/GRCh38/my_dataset.vcf.gz  -i my_dataset_index --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12
+```
+
