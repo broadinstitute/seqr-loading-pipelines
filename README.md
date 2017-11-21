@@ -34,13 +34,14 @@ Scripts
 
 **Other hail pipelines:**
 
+* `create_subset.py` subsets a vcf or vds to a specific chromosome or locus - useful for creating small datasets for testing. 
 * `convert_tsv_to_vds.py` converts a .tsv table to a VDS by allowing the user to specify the chrom, pos, ref, alt column names
 * `convert_vcf_to_vds.py` import a vcf and writes it out as a vds
-* `create_subset.py` subsets a vcf or vds to a specific chromosome or locus - useful for creating small datasets for testing. 
-* `print_vds_schema.py` print out the vds variant schema
-* `print_vds_stats.py`  print out vds stats such as the schema, variant count, etc.
 * `export_vds_to_tsv.py`  export a subset of vds variants to a .tsv for inspection
-
+* `print_vds_schema.py` print out the vds variant schema
+* `print_keytable_schema.py` reads in a tsv and imputes the types. Then prints out the keytable schema.
+* `print_vds_stats.py`  print out vds stats such as the schema, variant count, etc.
+* `print_elasticsearch_stats.py` connects to an elasticsearch instance and prints current indices and other stats 
 
 *NOTE:* Some of the scripts require a running elasticsearch instance. For deploying a stand-alone elasticsearch cluster see: https://github.com/macarthur-lab/elasticsearch-kubernetes-cluster or for deploying one as part of seqr see: https://github.com/macarthur-lab/seqr
 
