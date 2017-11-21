@@ -51,7 +51,7 @@ Scripts
 Run VEP:
 ```
 ./create_cluster_GRCh37.py 
-./submit.sh run_vep.py gs://<dataset path> 
+./submit.py run_vep.py gs://<dataset path> 
 ```
 
 Run rare disease callset pipeline:
