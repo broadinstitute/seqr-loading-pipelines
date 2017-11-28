@@ -39,7 +39,7 @@ command = """gcloud beta dataproc clusters create %(cluster)s \
     --num-worker-local-ssds 1 \
     --image-version 1.1 \
     --properties "spark:spark.executor.memory=15g,spark:spark.driver.extraJavaOptions=-Xss4M,spark:spark.executor.extraJavaOptions=-Xss4M,spark:spark.driver.memory=15g,spark:spark.driver.maxResultSize=30g,spark:spark.task.maxFailures=20,spark:spark.yarn.executor.memoryOverhead=15g,spark:spark.memory.fraction=0.33,spark:spark.kryoserializer.buffer.max=1g,hdfs:dfs.replication=1" \
-    --initialization-actions gs://hail-common/hail-init.sh,gs://hail-common/vep/vep/GRCh37/vep85-GRCh37-init.sh
+    --initialization-actions gs://hail-common/hail-init.sh,gs://hail-common/vep/vep/GRCh37/vep85-GRCh37-init.sh,gs://gnomad-public/tools/inits/master-init.sh
 """ % args.__dict__
 #    --network %(project)s-auto-vpc \
 

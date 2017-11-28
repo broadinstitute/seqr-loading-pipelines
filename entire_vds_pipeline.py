@@ -355,6 +355,8 @@ p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
 p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
     help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
+p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
+p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap_sample_ids, ids are the desired ids (post remapping)")
 
 p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")  # "10.128.0.3"
@@ -373,9 +375,10 @@ p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields.
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
 p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
-    "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices")
+    "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
+    "If used with --remap-sample-ids, contains IDs of samples after remapping")
 p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
-p.add_argument("--ignore-extra-sample-ids-in-fam-file", action="store_true")
+p.add_argument("--ignore-extra-sample-ids-in-tables", action="store_true")
 p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
 p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
@@ -414,7 +417,43 @@ if args.subset:
 logger.info("\n==> create HailContext")
 hc = hail.HailContext(log="/hail.log")
 
+logger.info("Reading in dataset...")
 vds = read_in_dataset(input_path, args.datatype, filter_interval)
+
+#NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
+if args.remap_sample_ids:
+    logger.info("Remapping sample ids...")
+    id_map = hc.import_table(args.remap_sample_ids, impute=True, no_header=True)
+    mapping = dict(zip(id_map.query('f0.collect()'), id_map.query('f1.collect()')))
+    # check that ids being remapped exist in VDS
+    sample_query = set(mapping.keys())
+    samples_in_vds = set(vds.sample_ids)
+    matched = sample_query.intersection(samples_in_vds)
+    if len(matched) < len(sample_query) and args.ignore_extra_sample_ids_in_tables:
+        logger.warning('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(sample_query)))
+    elif len(matched) < len(sample_query):
+        raise ValueError('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(sample_query)))
+    vds = vds.rename_samples(mapping)
+    logger.info('Remapped {} sample ids...'.format(len(matched)))
+
+
+# subset samples as desired
+if args.subset_samples:
+    logger.info("Subsetting to specified samples...")
+    keep_samples = hc.import_table(args.subset_samples, impute=True, no_header=True).key_by('f0')
+    # check that all subset samples exist in VDS
+    sample_query = set(keep_samples.query('f0.collect()'))
+    samples_in_vds = set(vds.sample_ids)
+    matched = sample_query.intersection(samples_in_vds)
+    if len(matched) < len(sample_query) and args.ignore_extra_sample_ids_in_tables:
+        logger.warning('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(sample_query)))
+    elif len(matched) < len(sample_query):
+        raise ValueError('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(sample_query)))
+    original_sample_count = vds.num_samples
+    vds = vds.filter_samples_table(keep_samples, keep=True)
+    new_sample_count = vds.num_samples
+    logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
+
 
 # compute sample groups
 if len(vds.sample_ids) > args.max_samples_per_index:
@@ -426,13 +465,16 @@ if len(vds.sample_ids) > args.max_samples_per_index:
             vds.sample_ids,
             args.max_samples_per_index,
             args.ignore_extra_sample_ids_in_vds,
-            args.ignore_extra_sample_ids_in_fam_file,
+            args.ignore_extra_sample_ids_in_tables,
         )
 else:
     sample_groups = [vds.sample_ids]
 
+
+
 # run vep
 if not args.skip_vep:
+    logger.info("Annotating with VEP...")
     output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
     vep_output_vds = output_vds_prefix + ".vep.vds"
     vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
