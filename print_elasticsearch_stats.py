@@ -17,7 +17,7 @@ ELASTICSEARCH_HOST = args.host
 ELASTICSEARCH_PORT = args.port
 
 es = ElasticsearchClient(ELASTICSEARCH_HOST, port=ELASTICSEARCH_PORT)
-es.print_elasticsearch_stats(es)
+es.print_elasticsearch_stats()
 
 
 
