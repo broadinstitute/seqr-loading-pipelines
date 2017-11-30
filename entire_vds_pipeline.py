@@ -432,9 +432,10 @@ if args.remap_sample_ids:
     if len(matched) < len(samples_in_table):
         logger.info('Failed to find the following requested IDs for remapping: {}'.format(
             [x for x in samples_in_table.difference(samples_in_vds)]))
+        warning_message = 'Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(samples_in_table))
         if not args.ignore_extra_sample_ids_in_tables:
-            raise ValueError('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(samples_in_table)))
-        logger.warning('Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(samples_in_table)))
+            raise ValueError(warning_message)
+        logger.warning(warning_message)
     vds = vds.rename_samples(mapping)
     logger.info('Remapped {} sample ids...'.format(len(matched)))
 
@@ -450,9 +451,10 @@ if args.subset_samples:
     if len(matched) < len(samples_in_table):
         logger.info('Failed to find the following requested IDs for subsetting: {}'.format(
             [x for x in samples_in_table.difference(samples_in_vds)]))
+        warning_message = 'Found only {0} out of {1} samples specified for subsetting'.format(len(matched), len(samples_in_table))
         if not args.ignore_extra_sample_ids_in_tables:
-            raise ValueError('Found only {0} out of {1} samples specified for subsetting'.format(len(matched), len(samples_in_table)))
-        logger.warning('Found only {0} out of {1} samples specified for subsetting'.format(len(matched), len(samples_in_table)))
+            raise ValueError(warning_message)
+        logger.warning(warning_message)
     original_sample_count = vds.num_samples
     vds = vds.filter_samples_table(keep_samples, keep=True)
     new_sample_count = vds.num_samples
