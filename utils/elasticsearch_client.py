@@ -46,7 +46,7 @@ class ElasticsearchClient:
         node_stats = self.es.nodes.stats(level="node")
         node_id = node_stats["nodes"].keys()[0]
 
-        logger.info("\n" + str(self.es.cat.indices()))
+        logger.info("\n" + str(self.es.cat.indices(v = True, s = "creation.date", h = "creation.date.string,health,index,pri,docs.count,store.size")))
 
         logger.info("Indices: %s total docs" % node_stats["nodes"][node_id]["indices"]["docs"]["count"])
         logger.info("Free Memory: %0.1f%% (%d Gb out of %d Gb)" % (
