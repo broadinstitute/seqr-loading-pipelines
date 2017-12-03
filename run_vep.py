@@ -27,6 +27,8 @@ print("Output VDS: %s" % (args.output_vds, ))
 hc = hail.HailContext(log="/hail.log")
 if args.input_file.endswith(".vds"):
     vds = hc.read(args.input_file)
+    if vds.num_partitions() < 50:
+        vds = vds.repartition(10000)
 elif args.input_file.endswith("gz"):
     vds = hc.import_vcf(args.input_file, force_bgz=True, min_partitions=10000)
     # save alt alleles before calling split_multi
