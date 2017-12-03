@@ -5,7 +5,8 @@ from pprint import pprint
 hc = hail.HailContext()
 
 p = argparse.ArgumentParser()
-p.add_argument("--num-variants", help="number of variants to export", default=500, type=int)
+p.add_argument("--all", action="store_true")
+p.add_argument("-n", "--num-variants", help="number of variants to export", default=500, type=int)
 p.add_argument("input_path", help="input VCF or VDS")
 
 
@@ -16,6 +17,8 @@ print("Input path: %s" % input_path)
 
 if input_path.endswith(".vds"):
     vds = hc.read(input_path)
+    if vds.num_partitions() < 50:
+        vds = vds.repartition(1000)
 else:
     vds = hc.import_vcf(input_path, min_partitions=1000, force_bgz=True)
 
@@ -34,12 +37,13 @@ print("\n==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_
 
 total_variants = vds.count()
 
-print("\n==> count: %s" % (total_variants,))
-vds = vds.sample_variants(args.num_variants / float(total_variants[1]), seed=1)
+if not args.all:
+    print("\n==> count: %s" % (total_variants,))
+    vds = vds.sample_variants(args.num_variants / float(total_variants[1]), seed=1)
 
 input_path_prefix = input_path.replace(".vds", "").replace(".vcf", "").replace(".gz", "").replace(".bgz", "")
 print("\n==> writing out: " + input_path_prefix + ".tsv")
 
-expr = "v = v, va = va.*, " + ", ".join(["%s = gs.collect()[%d]" % (sample_id, i) for i, sample_id in enumerate(vds.sample_ids)])
+expr = "v = v, va = va.*" # , " + ", ".join(["%s = gs.collect()[%d]" % (sample_id, i) for i, sample_id in enumerate(vds.sample_ids)])
 print("\n==> " + expr)
 vds.export_variants(input_path_prefix + ".tsv", expr)
