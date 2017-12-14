@@ -357,6 +357,7 @@ p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
     help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
 p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
 p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap_sample_ids, ids are the desired ids (post remapping)")
+p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
 p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")  # "10.128.0.3"
@@ -456,7 +457,7 @@ if args.subset_samples:
             raise ValueError(warning_message)
         logger.warning(warning_message)
     original_sample_count = vds.num_samples
-    vds = vds.filter_samples_table(keep_samples, keep=True)
+    vds = vds.filter_samples_table(keep_samples, keep=True).variant_qc().filter_variants_expr('va.qc.AC > 0')
     new_sample_count = vds.num_samples
     logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
 
@@ -477,16 +478,23 @@ else:
     sample_groups = [vds.sample_ids]
 
 
-
 # run vep
+output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
 if not args.skip_vep:
     logger.info("Annotating with VEP...")
-    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
     vep_output_vds = output_vds_prefix + ".vep.vds"
     vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
     vds.write(vep_output_vds, overwrite=True)
 
     input_path = vep_output_vds
+
+# write out new vcf (with new sample ids and subset
+if args.export_vcf:
+    logger.info("Writing out to VCF...")
+    if not args.skip_vep:
+        vds.export_vcf(output_vds_prefix + ".vep.vcf.bgz", overwrite=True)
+    else:
+        vds.export_vcf(output_vds_prefix + ".vcf.bgz", overwrite=True)
 
 hc.stop()
 
