@@ -488,7 +488,7 @@ if not args.skip_vep:
 
     input_path = vep_output_vds
 
-# write out new vcf (with new sample ids and subset
+# write out new vcf (after sample id remapping and subsetting if requested above)
 if args.export_vcf:
     logger.info("Writing out to VCF...")
     if not args.skip_vep:
