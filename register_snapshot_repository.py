@@ -4,11 +4,8 @@ pip.main(['install', 'elasticsearch'])
 
 import argparse
 import elasticsearch
-import json
 import logging
-import os
 from pprint import pprint
-import time
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -32,6 +29,7 @@ body = {
     "settings": {
         "bucket": args.bucket,
         "base_path": args.base_path,
+        "client": "default",   # from https://discuss.elastic.co/t/error-when-loading-google-cloud-storage-credentials-file/94370/9
         "compress": True,
     }
 }
