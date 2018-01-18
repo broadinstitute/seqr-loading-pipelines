@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import argparse
-import hail
 import json
 import logging
 import requests
@@ -416,6 +415,8 @@ if args.subset:
 
 
 logger.info("\n==> create HailContext")
+
+import hail  # import hail here so that you can run this script with --help even if hail isn't installed locally.
 hc = hail.HailContext(log="/hail.log")
 
 logger.info("Reading in dataset...")
