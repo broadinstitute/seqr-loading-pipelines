@@ -98,6 +98,8 @@ for genome_version in ["37", "38"]:
     input_paths = CLINVAR_FILES[genome_version]["input_paths"]
     output_path = CLINVAR_FILES[genome_version]["output_path"]
 
+    print("Reading in %s" % ", ".join(input_paths))
+
     fields_to_keep = _parse_field_names_and_types(CLINVAR_SCHEMA, to_keep=True)
     fields_to_drop = _parse_field_names_and_types(CLINVAR_SCHEMA, to_keep=False)
 
