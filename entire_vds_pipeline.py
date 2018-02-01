@@ -425,16 +425,15 @@ vds = read_in_dataset(input_path, args.datatype, filter_interval)
 # NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
 if args.remap_sample_ids:
     logger.info("Remapping sample ids...")
-    id_map = hc.import_table(args.remap_sample_ids, impute=True, no_header=True)
+    id_map = hc.import_table(args.remap_sample_ids, no_header=True)
     mapping = dict(zip(id_map.query('f0.collect()'), id_map.query('f1.collect()')))
     # check that ids being remapped exist in VDS
     samples_in_table = set(mapping.keys())
     samples_in_vds = set(vds.sample_ids)
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
-        logger.info('Failed to find the following requested IDs for remapping: {}'.format(
-            [x for x in samples_in_table.difference(samples_in_vds)]))
-        warning_message = 'Found only {0} out of {1} samples specified for ID remapping'.format(len(matched), len(samples_in_table))
+        warning_message = "{0} out of {1} remapping table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
+            len(matched), len(samples_in_table), [x for x in samples_in_table.difference(samples_in_vds), samples_in_vds])
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
         logger.warning(warning_message)
@@ -445,15 +444,14 @@ if args.remap_sample_ids:
 # subset samples as desired
 if args.subset_samples:
     logger.info("Subsetting to specified samples...")
-    keep_samples = hc.import_table(args.subset_samples, impute=True, no_header=True).key_by('f0')
+    keep_samples = hc.import_table(args.subset_samples, no_header=True).key_by('f0')
     # check that all subset samples exist in VDS
     samples_in_table = set(keep_samples.query('f0.collect()'))
     samples_in_vds = set(vds.sample_ids)
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
-        logger.info('Failed to find the following requested IDs for subsetting: {}'.format(
-            [x for x in samples_in_table.difference(samples_in_vds)]))
-        warning_message = 'Found only {0} out of {1} samples specified for subsetting'.format(len(matched), len(samples_in_table))
+        warning_message = "{0} out of {1} subsetting table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
+            len(matched), len(samples_in_table), [x for x in samples_in_table.difference(samples_in_vds), samples_in_vds])
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
         logger.warning(warning_message)
