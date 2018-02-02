@@ -588,8 +588,8 @@ if args.start_with_step == 0:
             --- MQRankSum: Double,
             QD: Double,
             --- ReadPosRankSum: Double,
-            VQSLOD: Double,
-            culprit: String,
+            --- VQSLOD: Double,
+            --- culprit: String,
         """
     elif args.datatype == "MANTA_SVS":
         INPUT_SCHEMA["top_level_fields"] = """
