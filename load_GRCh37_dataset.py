@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import random
 import sys
 
 unique_id = random.randint(10**5, 10**6 - 1)
-cluster_name = "vep-grch37-%s" % unique_id
+random_cluster_name = "vep-grch37-%s" % unique_id
+
+p = argparse.ArgumentParser()
+p.add_argument("-c", "--cluster-name", help="What to use", default=random_cluster_name)
+args, unparsed_args = p.parse_known_args()
+cluster_name = args.cluster_name
 
 
 def run(cmd):
@@ -28,7 +34,7 @@ run((
     "--cluster %(cluster_name)s "
     "--project seqr-project "
     "./entire_vds_pipeline.py "
-    "-g 37 " + " ".join(sys.argv[1:])
+    "-g 37 " + " ".join(unparsed_args)
 ) % locals())
 
 
