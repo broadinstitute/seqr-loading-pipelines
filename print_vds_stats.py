@@ -33,6 +33,8 @@ for input_path in args.input_path:
 
     if not args.schema_only:
         print("==================")
+        print("Total - before split_multi()")
         print(vds.summarize())
         print("==================")
-
+        print("Total - after split_multi()")
+        print(vds.split_multi().summarize())
