@@ -25,16 +25,31 @@ for input_path in args.input_path:
     print("\n==> genotype_schema: ")
     pprint(vds.genotype_schema)
 
-    #exome_calling_intervals_path = "gs://seqr-reference-data/GRCh37/exome_calling_regions.v1.interval_list"
-    #exome_intervals = hail.KeyTable.import_interval_list(exome_calling_intervals_path)
-    #vds = vds.filter_variants_table(exome_intervals, keep=False)
-
     print("\n==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
 
     if not args.schema_only:
         print("==================")
         print("Total - before split_multi()")
         print(vds.summarize())
+
         print("==================")
+        vds = vds.split_multi()
+
         print("Total - after split_multi()")
-        print(vds.split_multi().summarize())
+        print(vds.summarize())
+
+        print("==================")
+        vds = vds.impute_sex(maf_threshold=0.01)
+        print("Inferred Sex - computed by hail vds.impute_sex(maf_threshold=0.01)")
+        print("\t".join(["F stat", "Sex", "Sample Id"]))
+        for sample_id, annotations in sorted(vds.sample_annotations.items(), key=lambda i: i[0]):
+            fstat = annotations["imputesex"]["Fstat"]
+            is_female = annotations["imputesex"]["isFemale"]
+            if is_female is None:
+                sex = '?'
+            elif is_female is True:
+                sex = 'F'
+            else:
+                sex = 'M'
+
+            print("%0.3f\t%s\t%s" % (fstat, sex, sample_id))
