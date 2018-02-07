@@ -433,7 +433,7 @@ if args.remap_sample_ids:
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
         warning_message = "{0} out of {1} remapping table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
-            len(matched), len(samples_in_table), [x for x in samples_in_table.difference(samples_in_vds), samples_in_vds])
+            len(matched), len(samples_in_table), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
         logger.warning(warning_message)
@@ -451,7 +451,7 @@ if args.subset_samples:
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
         warning_message = "{0} out of {1} subsetting table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
-            len(matched), len(samples_in_table), [x for x in samples_in_table.difference(samples_in_vds), samples_in_vds])
+            len(matched), len(samples_in_table), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
         logger.warning(warning_message)
