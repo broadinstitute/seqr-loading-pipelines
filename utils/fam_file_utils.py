@@ -77,7 +77,10 @@ def _check_for_extra_sample_ids_in_fam_file(vds_sample_ids, sample_id_to_family_
             sample_ids_in_fam_file_and_not_in_vds.append(sample_id)
 
     if sample_ids_in_fam_file_and_not_in_vds:
-        raise ValueError("%s sample ids from .fam file not found in vds (%s)" % (len(sample_ids_in_fam_file_and_not_in_vds), ", ".join(sample_ids_in_fam_file_and_not_in_vds)))
+        raise ValueError("%s sample ids from .fam file not found in vds.\nvds ids: '%s'\nfam file ids not in vds: '%s'" % (
+            len(sample_ids_in_fam_file_and_not_in_vds),
+            "', '".join(vds_sample_ids),
+            "', '".join(sample_ids_in_fam_file_and_not_in_vds)))
 
 
 def _check_for_extra_sample_ids_in_vds(vds_sample_ids, sample_id_to_family_id):
