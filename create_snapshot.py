@@ -1,5 +1,7 @@
 import pip
 
+from utils.elasticsearch_client import ElasticsearchClient
+
 pip.main(['install', 'elasticsearch'])
 
 import argparse
@@ -18,9 +20,10 @@ p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this
 p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int)  # 9200
 p.add_argument("-b", "--bucket", help="Google bucket name", default="seqr-database-backups")
 p.add_argument("-d", "--base-path", help="Path within the bucket", default="elasticsearch/snapshots")
-p.add_argument("-r", "--repo", help="Repository name", default="elasticsearch-prod")
-p.add_argument("-i", "--index", help="Index name(s). One or more comma-separated index names to include in the snapshot", required=True)
+p.add_argument("-r", "--repo", help="Repository name", default="callsets")
 p.add_argument("-w", "--wait-for-completion", action="store_true", help="Whether to wait until the snapshot is created before returning")
+
+p.add_argument("index", help="Index name(s). One or more comma-separated index names to include in the snapshot")
 
 # parse args
 args = p.parse_args()
@@ -40,15 +43,14 @@ repo_info = es.snapshot.get_repository(repository=args.repo)
 pprint(repo_info)
 
 print("==> Creating snapshot in gs://%s/%s for index %s" % (args.bucket, args.base_path, args.index))
-pprint(
-    es.snapshot.create(
-        repository=args.repo,
-        snapshot=snapshot_name,
-        wait_for_completion=args.wait_for_completion,
-        body={
-            "indices": args.index
-        })
-)
+
+client = ElasticsearchClient(args.host, args.port)
+
+client.create_elasticsearch_snapshot(
+    index_name = args.index + "*",
+    bucket = args.bucket,
+    base_path = args.base_path,
+    snapshot_repo=args.repo)
 
 print("==> Getting snapshot status for: " + snapshot_name)
 pprint(

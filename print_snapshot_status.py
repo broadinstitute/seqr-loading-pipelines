@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 p = argparse.ArgumentParser()
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int)  # 9200
-p.add_argument("-r", "--repo", help="optional repository name", default="elasticsearch-prod")
+p.add_argument("-r", "--repo", help="optional repository name", default="callsets")
 
 # parse args
 args = p.parse_args()
