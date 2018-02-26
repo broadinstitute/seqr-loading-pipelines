@@ -19,7 +19,7 @@ p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this
 p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int)  # 9200
 p.add_argument("-b", "--bucket", help="Google bucket name", default="seqr-database-backups")
 p.add_argument("-d", "--base-path", help="Path within the bucket", default="elasticsearch/snapshots")
-p.add_argument("-r", "--repo", help="Repository name", default="elasticsearch-prod")
+p.add_argument("-r", "--repo", help="Repository name", default="callsets")
 p.add_argument("-i", "--index", help="Index name(s). One or more comma-separated index names to include in the snapshot", required=True)
 p.add_argument("-w", "--wait-for-completion", action="store_true", help="Whether to wait until the snapshot is created before returning")
 
