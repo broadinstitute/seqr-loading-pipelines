@@ -1,10 +1,15 @@
 #!/usr/bin/env python
+
+import pip
+for dependency in ['six==1.10.0', 'elasticsearch==5.4.0', 'requests==2.13.0']:
+    pip.main(['install', dependency])
+
 import argparse
 import json
 import logging
 import requests
 import time
-from pprint import pprint, pformat
+from pprint import pprint
 
 from utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
     add_gnomad_genome_coverage_to_vds
