@@ -2,7 +2,12 @@ from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_
 
 TOPMED_FIELDS = """
     AC: Array[Int],
+    Het: Array[Int],
+    Hom: Array[Int],
     AF: Array[Float],
+    AN: Int,
+    ---    VRT: Int,
+    ---    NS: Int,
 """
 
 def add_topmed_to_vds(hail_context, vds, genome_version, root="va.topmed", fields=TOPMED_FIELDS, subset=None, verbose=True):
