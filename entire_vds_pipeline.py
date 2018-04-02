@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-import pip
-for dependency in ['six==1.10.0', 'elasticsearch==5.4.0', 'requests==2.13.0']:
-    pip.main(['install', dependency])
+#for dependency in ['six==1.10.0', 'elasticsearch', 'requests']:
+#    pip.main(['install', dependency])
+# make sure elasticsearch is installed
+#import os
+#os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
 import argparse
 import json
