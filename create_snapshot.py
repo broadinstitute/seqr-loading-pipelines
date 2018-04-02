@@ -1,13 +1,10 @@
-import pip
+import os
+os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
 from utils.elasticsearch_client import ElasticsearchClient
-
-pip.main(['install', 'elasticsearch'])
-
 import argparse
 import elasticsearch
 import logging
-import os
 from pprint import pprint
 import time
 

@@ -1,11 +1,10 @@
+# make sure elasticsearch is installed
+import os
+os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
+
 import logging
 
 handlers = set(logging.root.handlers)
-
-# make sure elasticsearch is installed
-import pip
-pip.main(['install', 'elasticsearch'])
-
 logging.root.handlers = list(handlers)
 
 import collections
