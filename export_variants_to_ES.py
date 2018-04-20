@@ -7,7 +7,7 @@ import time
 from pprint import pprint
 from utils.computed_fields_utils import CONSEQUENCE_TERMS
 from utils.elasticsearch_client import ElasticsearchClient
-from utils.elasticsearch_utils import export_vds_to_elasticsearch, DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
+from utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
     DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from utils.gcloud_utils import get_gcloud_file_stats, google_bucket_file_iter

@@ -366,10 +366,10 @@ p.add_argument('--subset-samples', help="Filepath containing ids for samples to 
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
 p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
-p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")  # "10.128.0.3"
-p.add_argument("-p", "--port", help="Elastisearch port", default="9200")  # "10.128.0.3"
-p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=4)  # "10.128.0.3"
-p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)  # "10.128.0.3"
+p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
+p.add_argument("-p", "--port", help="Elastisearch port", default="9200")
+p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=4)
+p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")

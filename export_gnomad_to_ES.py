@@ -9,7 +9,6 @@ from utils.computed_fields_utils import get_expr_for_xpos, get_expr_for_orig_alt
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, get_expr_for_ref_allele
 from utils.elasticsearch_client import ElasticsearchClient
-from utils.elasticsearch_utils import export_kt_to_elasticsearch
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_vds_make_table_arg
 
 p = argparse.ArgumentParser()
