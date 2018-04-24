@@ -3,8 +3,8 @@
 #for dependency in ['six==1.10.0', 'elasticsearch', 'requests']:
 #    pip.main(['install', dependency])
 # make sure elasticsearch is installed
-#import os
-#os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
+import os
+os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
 import argparse
 import json
@@ -78,6 +78,7 @@ def read_in_dataset(input_path, datatype, filter_interval):
         else:
             vds = vds.split_multi()
 
+        logger.info("Callset stats:")
         summary = vds.summarize()
         pprint(summary)
         total_variants = summary.variants
@@ -392,8 +393,9 @@ p.add_argument("--start-with-sample-group", help="If the callset contains more s
     "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
     "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
 p.add_argument("-t", "--datatype", help="What pipeline generated the data", choices=["GATK_VARIANTS", "MANTA_SVS"], default="GATK_VARIANTS")
+#p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
 p.add_argument("input_vds", help="input VDS")
-p.add_argument("output_vds", nargs="?", help="output vds")
+
 
 
 # parse args
@@ -467,6 +469,10 @@ if args.subset_samples:
     new_sample_count = vds.num_samples
     logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
 
+    logger.info("Finished Subsetting samples.")
+    logger.info("Callset stats after subsetting:")
+    summary = vds.summarize()
+    pprint(summary)
 
 # compute sample groups
 if len(vds.sample_ids) > args.max_samples_per_index:
