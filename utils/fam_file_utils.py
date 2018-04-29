@@ -91,7 +91,10 @@ def _check_for_extra_sample_ids_in_vds(vds_sample_ids, sample_id_to_family_id):
             sample_ids_in_vds_and_not_in_fam_file.append(sample_id)
 
     if sample_ids_in_vds_and_not_in_fam_file:
-        raise ValueError("%s sample ids from vds not found in .fam file (%s)" % (len(sample_ids_in_vds_and_not_in_fam_file), ", ".join(sample_ids_in_vds_and_not_in_fam_file)))
+        raise ValueError("%s sample ids from vds not found in .fam file\nvds ids: '%s'\nvds ids not in fam file: '%s'" % (
+		len(sample_ids_in_vds_and_not_in_fam_file),
+		"', '".join(vds_sample_ids),
+	    	"', '".join(sample_ids_in_vds_and_not_in_fam_file)))
 
 
 def compute_sample_groups_from_fam_file(fam_file_path,
@@ -120,12 +123,20 @@ def compute_sample_groups_from_fam_file(fam_file_path,
 
     sample_id_to_family_id = _parse_family_ids_from_fam_file(fam_file_path)
 
-    if not ignore_extra_sample_ids_in_fam_file:
+    if ignore_extra_sample_ids_in_fam_file:
+        vds_sample_ids_set = set(vds_sample_ids)
+        for sample_id in list(sample_id_to_family_id.keys()):
+            if sample_id not in vds_sample_ids_set:
+                del sample_id_to_family_id[sample_id]
+    else:
         _check_for_extra_sample_ids_in_fam_file(vds_sample_ids, sample_id_to_family_id)
 
-    if not ignore_extra_sample_ids_in_vds:
+    if ignore_extra_sample_ids_in_vds:
+        vds_sample_ids = list(set(vds_sample_ids) & set(sample_id_to_family_id.keys()))
+    else:
         _check_for_extra_sample_ids_in_vds(vds_sample_ids, sample_id_to_family_id)
 
+        
     if len(sample_id_to_family_id) == len(vds_sample_ids):
         sort_order = list(sample_id_to_family_id.keys())
         sorted_vds_sample_ids = sorted(vds_sample_ids, key=lambda sample_id: sort_order.index(sample_id))
