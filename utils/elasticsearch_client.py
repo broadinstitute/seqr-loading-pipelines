@@ -13,7 +13,7 @@ handlers = set(logging.root.handlers)
 logging.root.handlers = list(handlers)
 
 import elasticsearch
-from pprint import pprint, pformat
+from pprint import pformat
 import re
 import time
 
@@ -36,7 +36,6 @@ class ElasticsearchClient:
 
         self.es = elasticsearch.Elasticsearch(host, port=port)
 
-
     def print_elasticsearch_stats(self):
         """Prints elastic search index stats."""
 
@@ -45,7 +44,10 @@ class ElasticsearchClient:
         node_stats = self.es.nodes.stats(level="node")
         node_id = node_stats["nodes"].keys()[0]
 
-        logger.info("\n" + str(self.es.cat.indices(v = True, s = "creation.date", h = "creation.date.string,health,index,pri,docs.count,store.size")))
+        logger.info("\n" + str(self.es.cat.indices(
+            v=True,
+            s="creation.date",
+            h="creation.date.string,health,index,pri,docs.count,store.size")))
 
         logger.info("Indices: %s total docs" % node_stats["nodes"][node_id]["indices"]["docs"]["count"])
         logger.info("Free Memory: %0.1f%% (%d Gb out of %d Gb)" % (
@@ -222,6 +224,8 @@ class ElasticsearchClient:
                 more details. Any values in this dictionary will override
                 the default type mapping derived from the hail keytable column type.
                 Field names can be regular expressions.
+            elasticsearch_mapping_id (str): if specified, sets the es.mapping.id which is the column name to use as an ID
+                See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             disable_doc_values_for_fields (tuple): (optional) list of field names (the way they will be
                 named in the elasticsearch index) for which to not store doc_values
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
@@ -239,21 +243,16 @@ class ElasticsearchClient:
         # output .tsv for debugging
         #kt.export("gs://seqr-hail/temp/%s_%s.tsv" % (index_name, index_type_name))
 
-
         elasticsearch_config = {}
+        if elasticsearch_write_operation is not None and elasticsearch_write_operation not in [
+                ELASTICSEARCH_INDEX, ELASTICSEARCH_CREATE, ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT]:
+            raise ValueError("Unexpected value for elasticsearch_write_operation arg: " + str(elasticsearch_write_operation))
+
         if elasticsearch_write_operation is not None:
-            if elasticsearch_write_operation not in [
-                ELASTICSEARCH_INDEX, ELASTICSEARCH_CREATE, ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT,
-            ]:
-                raise ValueError("Unexpected value for elasticsearch_write_operation arg: %s" % (
-                    elasticsearch_write_operation,))
+            elasticsearch_config["es.write.operation"] = elasticsearch_write_operation
 
-            elasticsearch_config = {
-                "es.write.operation": elasticsearch_write_operation,
-            }
-
-            if elasticsearch_mapping_id is not None:
-                elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
+        if elasticsearch_mapping_id is not None:
+            elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
 
         # encode any special chars in column names
         rename_dict = {}
@@ -289,7 +288,7 @@ class ElasticsearchClient:
 
         #logger.info(elasticsearch_schema)
 
-        # override elasticsaerch types
+        # override elasticsearch types
         if field_name_to_elasticsearch_type_map is not None:
             modified_elasticsearch_schema = dict(elasticsearch_schema)  # make a copy
             for field_name_regexp, elasticsearch_field_spec in field_name_to_elasticsearch_type_map.items():
@@ -304,14 +303,6 @@ class ElasticsearchClient:
 
         # define the elasticsearch mapping
         elasticsearch_mapping = {
-            "settings" : {
-                "number_of_shards": num_shards,
-                "number_of_replicas": 0,
-                "index.mapping.total_fields.limit": 10000,
-                "index.refresh_interval": "30s",
-                "index.store.throttle.type": "none",
-                "index.codec": "best_compression",
-            },
             "mappings": {
                 index_type_name: {
                     #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
@@ -328,6 +319,15 @@ class ElasticsearchClient:
 
         if not self.es.indices.exists(index=index_name):
             logger.info("==> Creating index %s" % index_name)
+            elasticsearch_mapping["settings"] = {
+               "number_of_shards": num_shards,
+               "number_of_replicas": 0,
+               "index.mapping.total_fields.limit": 10000,
+               "index.refresh_interval": "30s",
+               "index.store.throttle.type": "none",
+               "index.codec": "best_compression",
+            }
+
             self.es.indices.create(index=index_name, body=elasticsearch_mapping)
         else:
             #existing_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
@@ -342,7 +342,6 @@ class ElasticsearchClient:
 
             #new_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
             #logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
-
 
         logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
         kt.export_elasticsearch(self._host, int(self._port), index_name, index_type_name, block_size, config=elasticsearch_config)
@@ -492,3 +491,25 @@ class ElasticsearchClient:
         """Get status of any snapshots being created"""
 
         return self.es.snapshot.status(repository=snapshot_repo)
+
+
+    def save_dataset_metadata(
+        self,
+        dataset_index_name,
+        genome_version,
+        input_file,
+        data_type="variant",
+        fam_file=None,
+        remap_sample_ids=None,
+        subset_samples=None,
+        skip_vep=False,
+
+    ):
+        """Logs.
+        
+        Args:
+            dataset_index_name (string): elasticsearch index name
+            genome_version (string): callset version
+
+        """
+        pass
