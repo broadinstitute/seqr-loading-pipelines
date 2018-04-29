@@ -15,6 +15,7 @@ from pprint import pprint
 
 from utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
     add_gnomad_genome_coverage_to_vds
+from utils.add_hgmd import add_hgmd_to_vds
 from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_orig_alt_alleles_set, get_expr_for_vep_consequence_terms_set, \
@@ -213,6 +214,8 @@ def export_to_elasticsearch(
         logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
 
         logger.info("==> export to elasticsearch")
+        pprint(vds.variant_schema)
+
         timestamp1 = time.time()
 
         client.export_vds_to_elasticsearch(
@@ -288,7 +291,7 @@ CLINVAR_INFO_FIELDS = """
 
 CADD_INFO_FIELDS = """
     PHRED: Double,
-    RawScore: Double,
+    --- RawScore: Double,
 """
 
 MPC_INFO_FIELDS = """
@@ -378,6 +381,7 @@ p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD e
 p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. Intended for testing.")
 p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
 p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar fields. Intended for testing.")
+p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
@@ -393,7 +397,7 @@ p.add_argument("--start-with-sample-group", help="If the callset contains more s
     "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
 p.add_argument("-t", "--datatype", help="What pipeline generated the data", choices=["GATK_VARIANTS", "MANTA_SVS"], default="GATK_VARIANTS")
 p.add_argument("input_vds", help="input VDS")
-p.add_argument("output_vds", nargs="?", help="output vds")
+#p.add_argument("output_vds", nargs="?", help="output vds")
 
 
 # parse args
@@ -507,7 +511,7 @@ hc.stop()
 
 if args.start_with_step == 0:
     logger.info("=============================== pipeline - step 0 ===============================")
-    logger.info("read in data, run vep, compute various derived fields, export to elasticsearch")
+    logger.info("read in data, compute various derived fields, export to elasticsearch")
 
     logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
@@ -515,6 +519,7 @@ if args.start_with_step == 0:
     vds = read_in_dataset(input_path, args.datatype, filter_interval)
 
     # add computed annotations
+    logger.info("\n==> adding computed annotations")
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
@@ -547,7 +552,7 @@ if args.start_with_step == 0:
     for expr in serial_computed_annotation_exprs:
         vds = vds.annotate_variants_expr(expr)
 
-    #pprint(vds.variant_schema)
+    pprint(vds.variant_schema)
 
     # apply schema to dataset
     INPUT_SCHEMA  = {}
@@ -694,7 +699,11 @@ if args.start_with_step <= 1:
 
     if not args.skip_annotations and not args.exclude_clinvar:
         logger.info("\n==> add clinvar")
-        vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", info_fields=CLINVAR_INFO_FIELDS, subset=filter_interval)
+        vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
+
+    if not args.skip_annotations and not args.exclude_hgmd:
+        logger.info("\n==> add hgmd")
+        vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
     if not args.skip_annotations and not args.exclude_1kg:
         logger.info("\n==> add 1kg")
@@ -745,11 +754,3 @@ if args.start_with_step <= 1:
 
     hc.stop()
 
-
-
-    # see https://hail.is/hail/annotationdb.html#query-builder
-    #final_vds = final_vds.annotate_variants_db([
-    #    'va.cadd.PHRED',
-    #    'va.cadd.RawScore',
-    #    'va.dann.score',
-    #])
