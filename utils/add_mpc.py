@@ -2,9 +2,9 @@ from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_
 
 MPC_INFO_FIELDS = """
     MPC: Double,
-    fitted_score: Double,
-    mis_badness: Double,
-    obs_exp: Double,
+    --- fitted_score: Double,
+    --- mis_badness: Double,
+    --- obs_exp: Double,
 """
 
 

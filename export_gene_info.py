@@ -5,7 +5,6 @@ import hail
 from pprint import pprint
 
 from utils.elasticsearch_client import ElasticsearchClient
-from utils.elasticsearch_utils import export_kt_to_elasticsearch
 
 p = argparse.ArgumentParser()
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)

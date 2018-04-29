@@ -3,6 +3,7 @@ from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_
 G1K_FIELDS = """
     AC: Int,
     AF: Float,
+    AN: Int,
     EAS_AF: Float,
     EUR_AF: Float,
     AFR_AF: Float,
@@ -30,7 +31,7 @@ def add_1kg_phase3_to_vds(hail_context, vds, genome_version, root="va.g1k", fiel
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
         other_source_fields=fields,
-        other_source_root="vds.g1k",
+        other_source_root="vds.info",
     )
 
     if verbose:

@@ -44,6 +44,8 @@ for input_path in args.input_path:
         print("\t".join(["F stat", "Sex", "Sample Id"]))
         for sample_id, annotations in sorted(vds.sample_annotations.items(), key=lambda i: i[0]):
             fstat = annotations["imputesex"]["Fstat"]
+            if fstat is None:
+                fstat = float('NaN')
             is_female = annotations["imputesex"]["isFemale"]
             if is_female is None:
                 sex = '?'
