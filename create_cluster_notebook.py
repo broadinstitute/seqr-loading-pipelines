@@ -20,7 +20,7 @@ print("$$$ cost: $%0.2f/h + $%0.2f preemptible/h = $%0.2f / hour total" % (cost1
 
 # create cluster
 command = """gcloud beta dataproc clusters create %(cluster)s \
-    --max-idle 2h \
+    --max-idle 12h \
     --zone %(zone)s \
     --master-machine-type %(machine_type)s \
     --master-boot-disk-size 100  \
