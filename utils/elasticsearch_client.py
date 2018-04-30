@@ -1,7 +1,11 @@
 # make sure elasticsearch is installed
+
 import os
+
 os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
+import datetime
+import inspect
 import logging
 
 from utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
@@ -90,6 +94,52 @@ class ElasticsearchClient:
         ]
         """
 
+    def create_or_update_mapping(
+        self,
+        index_name,
+        index_type_name,
+        elasticsearch_schema,
+        num_shards=1,
+    ):
+        # define the elasticsearch mapping
+        elasticsearch_mapping = {
+            "mappings": {
+                index_type_name: {
+                    #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
+                    "_all": {"enabled": "false"},
+                    "properties": elasticsearch_schema,
+                },
+            }
+        }
+
+        #logger.info(pformat(elasticsearch_schema))
+
+        if not self.es.indices.exists(index=index_name):
+            logger.info("==> Creating index %s" % index_name)
+            elasticsearch_mapping["settings"] = {
+                "number_of_shards": num_shards,
+                "number_of_replicas": 0,
+                "index.mapping.total_fields.limit": 10000,
+                "index.refresh_interval": "30s",
+                "index.store.throttle.type": "none",
+                "index.codec": "best_compression",
+            }
+
+            self.es.indices.create(index=index_name, body=elasticsearch_mapping)
+        else:
+            #existing_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+            #logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
+            #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
+            #existing_properties.update(elasticsearch_schema)
+
+            logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
+            self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
+                "properties": elasticsearch_schema
+            })
+
+            #new_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+            #logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
+
     def export_vds_to_elasticsearch(
         self,
         vds,
@@ -100,6 +150,7 @@ class ElasticsearchClient:
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
+        ignore_elasticsearch_write_errors=False,
         elasticsearch_mapping_id=None,
         delete_index_before_exporting=True,
         disable_doc_values_for_fields=(),
@@ -124,6 +175,12 @@ class ElasticsearchClient:
                     ELASTICSEARCH_UPDATE
                     ELASTICSEARCH_UPSERT
                 See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
+            ignore_elasticsearch_write_errors (bool): If True, elasticsearch errors will be logged, but won't cause
+                the bulk write call to throw an error. This is useful when, for example,
+                elasticsearch_write_operation="update", and the desired behavior is to update all documents that exist,
+                but to ignore errors for documents that don't exist.
+            elasticsearch_mapping_id (string): if specified, sets the es.mapping.id which is the column name to use as the document ID
+                See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             delete_index_before_exporting (bool): Whether to drop and re-create the index before exporting.
             disable_doc_values_for_fields: (optional) list of field names (the way they will be
                 named in the elasticsearch index) for which to not store doc_values
@@ -176,6 +233,7 @@ class ElasticsearchClient:
             num_shards=num_shards,
             delete_index_before_exporting=delete_index_before_exporting,
             elasticsearch_write_operation=elasticsearch_write_operation,
+            ignore_elasticsearch_write_errors=ignore_elasticsearch_write_errors,
             elasticsearch_mapping_id=elasticsearch_mapping_id,
             field_name_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
@@ -184,20 +242,21 @@ class ElasticsearchClient:
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
-            self,
-            kt,
-            index_name="data",
-            index_type_name="variant",
-            block_size=5000,
-            num_shards=10,
-            delete_index_before_exporting=True,
-            elasticsearch_write_operation=ELASTICSEARCH_INDEX,
-            elasticsearch_mapping_id=None,
-            field_name_to_elasticsearch_type_map=None,
-            disable_doc_values_for_fields=(),
-            disable_index_for_fields=(),
-            field_names_replace_dot_with="_",
-            verbose=True,
+        self,
+        kt,
+        index_name="data",
+        index_type_name="variant",
+        block_size=5000,
+        num_shards=10,
+        delete_index_before_exporting=True,
+        elasticsearch_write_operation=ELASTICSEARCH_INDEX,
+        ignore_elasticsearch_write_errors=False,
+        elasticsearch_mapping_id=None,
+        field_name_to_elasticsearch_type_map=None,
+        disable_doc_values_for_fields=(),
+        disable_index_for_fields=(),
+        field_names_replace_dot_with="_",
+        verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -215,6 +274,12 @@ class ElasticsearchClient:
                     ELASTICSEARCH_UPDATE
                     ELASTICSEARCH_UPSERT
                 See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
+            ignore_elasticsearch_write_errors (bool): If True, elasticsearch errors will be logged, but won't cause
+                the bulk write call to throw an error. This is useful when, for example,
+                elasticsearch_write_operation="update", and the desired behavior is to update all documents that exist,
+                but to ignore errors for documents that don't exist.
+            elasticsearch_mapping_id (str): if specified, sets the es.mapping.id which is the column name to use as the document ID
+                See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             field_name_to_elasticsearch_type_map (dict): (optional) a map of keytable field names to
                 their elasticsearch field spec - for example: {
                     'allele_freq': { 'type': 'half_float' },
@@ -224,8 +289,6 @@ class ElasticsearchClient:
                 more details. Any values in this dictionary will override
                 the default type mapping derived from the hail keytable column type.
                 Field names can be regular expressions.
-            elasticsearch_mapping_id (str): if specified, sets the es.mapping.id which is the column name to use as an ID
-                See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             disable_doc_values_for_fields (tuple): (optional) list of field names (the way they will be
                 named in the elasticsearch index) for which to not store doc_values
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
@@ -253,6 +316,11 @@ class ElasticsearchClient:
 
         if elasticsearch_mapping_id is not None:
             elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
+
+        if ignore_elasticsearch_write_errors:
+            # see docs in https://www.elastic.co/guide/en/elasticsearch/hadoop/current/errorhandlers.html
+            elasticsearch_config["es.write.rest.error.handlers"] = "log"
+            elasticsearch_config["es.write.rest.error.handler.log.logger.name"] = "BulkErrors"
 
         # encode any special chars in column names
         rename_dict = {}
@@ -301,47 +369,15 @@ class ElasticsearchClient:
 
             elasticsearch_schema = modified_elasticsearch_schema
 
-        # define the elasticsearch mapping
-        elasticsearch_mapping = {
-            "mappings": {
-                index_type_name: {
-                    #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
-                    "_all": {"enabled": "false"},
-                    "properties": elasticsearch_schema,
-                },
-            }
-        }
-
-        #logger.info(pformat(elasticsearch_mapping))
-
+        # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
             self.es.indices.delete(index=index_name)
 
-        if not self.es.indices.exists(index=index_name):
-            logger.info("==> Creating index %s" % index_name)
-            elasticsearch_mapping["settings"] = {
-               "number_of_shards": num_shards,
-               "number_of_replicas": 0,
-               "index.mapping.total_fields.limit": 10000,
-               "index.refresh_interval": "30s",
-               "index.store.throttle.type": "none",
-               "index.codec": "best_compression",
-            }
-
-            self.es.indices.create(index=index_name, body=elasticsearch_mapping)
-        else:
-            #existing_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
-            #logger.info("==> Updating elasticsearch %s schema. Original schema: %s" % (index_name, pformat(existing_mapping)))
-            #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
-            #existing_properties.update(elasticsearch_schema)
-
-            logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
-            self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
-                "properties": elasticsearch_schema
-            })
-
-            #new_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
-            #logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
+        self.create_or_update_mapping(
+            index_name,
+            index_type_name,
+            elasticsearch_schema,
+            num_shards=num_shards)
 
         logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
         kt.export_elasticsearch(self._host, int(self._port), index_name, index_type_name, block_size, config=elasticsearch_config)
@@ -492,24 +528,42 @@ class ElasticsearchClient:
 
         return self.es.snapshot.status(repository=snapshot_repo)
 
-
-    def save_dataset_metadata(
+    def save_index_operation_metadata(
         self,
-        dataset_index_name,
+        source_file,
+        index_name,
         genome_version,
-        input_file,
-        data_type="variant",
         fam_file=None,
         remap_sample_ids=None,
         subset_samples=None,
         skip_vep=False,
-
+        project_id=None,
+        analysis_type=None,
+        sample_type=None,
+        command=None,
+        directory=None,
+        username=None,
+        operation="create_index",
+        status=None,
     ):
-        """Logs.
-        
-        Args:
-            dataset_index_name (string): elasticsearch index name
-            genome_version (string): callset version
+        """Records metadata about the operation"""
+        arg_names, _, _, _ = inspect.getargspec(self.save_index_operation_metadata)
+        arg_names = arg_names[1:]  # get all except 'self'
 
-        """
-        pass
+        INDEX_OPERATIONS_LOG = "index_operations_log"
+        DOC_TYPE = "log"
+
+        schema = {arg_name: {"type": "text"} for arg_name in arg_names}
+        schema["timestamp"] = {"type": "string"}
+
+        self.create_or_update_mapping(INDEX_OPERATIONS_LOG, DOC_TYPE, elasticsearch_schema=schema)
+
+        values = locals()
+        body = {key: values.get(key) for key in arg_names}
+
+        body["timestamp"] = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+
+        self.es.index(index=INDEX_OPERATIONS_LOG, doc_type=DOC_TYPE, op_type="index", body=body)
+
+
+
