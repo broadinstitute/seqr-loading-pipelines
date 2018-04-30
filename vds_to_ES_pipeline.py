@@ -268,12 +268,12 @@ if args.start_with_step == 0 and not args.skip_vep:
 
     hc.stop()
 
+    logger.info("\n==> Re-create HailContext")
+    hc = hail.HailContext(log="/hail.log")
+
 logger.info("=============================== pipeline - step 1 ===============================")
 logger.info("Read in data, compute various derived fields, export to elasticsearch")
 
-if args.start_with_step < 1:
-    logger.info("\n==> Re-create HailContext")
-    hc = hail.HailContext(log="/hail.log")
 
 vds = read_in_dataset(vep_output_vds, filter_interval)
 
@@ -298,13 +298,13 @@ parallel_computed_annotation_exprs = [
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_root="va.vep"),
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_root="va.vep"),
     "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
-    ]
+]
 
 serial_computed_annotation_exprs = [
     "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="end"),
     "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
     "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
-    ]
+]
 
 vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
 
@@ -331,9 +331,9 @@ INPUT_SCHEMA["top_level_fields"] = """
     xstart: Long,
     xstop: Long,
 
-    rsid: String,
-    qual: Double,
-    filters: Set[String],
+    --- rsid: String,
+    --- qual: Double,
+    --- filters: Set[String],
     wasSplit: Boolean,
     aIndex: Int,
 
