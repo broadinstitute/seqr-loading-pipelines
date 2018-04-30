@@ -408,6 +408,7 @@ p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar
 p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
+p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
 
 p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
     "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
@@ -698,6 +699,9 @@ if args.start_with_step <= 1:
         """
     else:
         raise ValueError("Unexpected analysis_type: %s" % args.analysis_type)
+
+    if args.exclude_vcf_info_field:
+        INPUT_SCHEMA["info_fields"] = ""
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
 
