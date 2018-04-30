@@ -7,11 +7,14 @@ import os
 os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
 import argparse
+import datetime
 import json
 import logging
 import requests
 import time
+import sys
 from pprint import pprint
+
 
 from utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
     add_gnomad_genome_coverage_to_vds
@@ -44,12 +47,12 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def read_in_dataset(input_path, datatype, filter_interval):
+def read_in_dataset(input_path, analysis_type, filter_interval):
     """Utility method for reading in a .vcf or .vds dataset
 
     Args:
         input_path (str):
-        datatype (str):
+        analysis_type (str):
         filter_interval (str):
     """
 
@@ -57,12 +60,12 @@ def read_in_dataset(input_path, datatype, filter_interval):
     if input_path.endswith(".vds"):
         vds = hc.read(input_path)
     else:
-        if datatype == "GATK_VARIANTS":
+        if analysis_type == "GATK_VARIANTS":
             vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
-        elif datatype == "MANTA_SVS":
+        elif analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
             vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=True)
         else:
-            raise ValueError("Unexpected datatype: %s" % datatype)
+            raise ValueError("Unexpected analysis_type: %s" % analysis_type)
 
     if vds.num_partitions() < 1000:
         vds = vds.repartition(1000, shuffle=True)
@@ -72,7 +75,7 @@ def read_in_dataset(input_path, datatype, filter_interval):
     logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
     vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
 
-    if datatype == "GATK_VARIANTS":
+    if analysis_type == "GATK_VARIANTS":
         vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
         if vds.was_split():
             vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # isDefined(va.wasSplit)
@@ -83,11 +86,11 @@ def read_in_dataset(input_path, datatype, filter_interval):
         summary = vds.summarize()
         pprint(summary)
         total_variants = summary.variants
-    elif datatype == "MANTA_SVS":
+    elif analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
         vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
         _, total_variants = vds.count()
     else:
-        raise ValueError("Unexpected datatype: %s" % datatype)
+        raise ValueError("Unexpected analysis_type: %s" % analysis_type)
 
     if total_variants == 0:
         raise ValueError("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
@@ -97,7 +100,7 @@ def read_in_dataset(input_path, datatype, filter_interval):
     return vds
 
 
-def compute_minimal_schema(vds, datatype):
+def compute_minimal_schema(vds, analysis_type):
 
     # add computed annotations
     parallel_computed_annotation_exprs = [
@@ -110,7 +113,7 @@ def compute_minimal_schema(vds, datatype):
 
     # apply schema to dataset
     INPUT_SCHEMA  = {}
-    if datatype == "GATK_VARIANTS":
+    if analysis_type == "GATK_VARIANTS":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             wasSplit: Boolean,
@@ -119,7 +122,7 @@ def compute_minimal_schema(vds, datatype):
 
         INPUT_SCHEMA["info_fields"] = ""
 
-    elif datatype == "MANTA_SVS":
+    elif analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
         """
@@ -127,7 +130,7 @@ def compute_minimal_schema(vds, datatype):
         INPUT_SCHEMA["info_fields"] = ""
 
     else:
-        raise ValueError("Unexpected datatype: %s" % datatype)
+        raise ValueError("Unexpected analysis_type: %s" % analysis_type)
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
     vds = vds.annotate_variants_expr(expr=expr)
@@ -141,16 +144,14 @@ def export_to_elasticsearch(
     port,
     vds,
     index_name,
-    datatype,
-    block_size,
-    num_shards,
+    args,
     operation=ELASTICSEARCH_INDEX,
     delete_index_before_exporting=False,
     export_genotypes=True,
     disable_doc_values_for_fields=(),
     disable_index_for_fields=(),
     export_snapshot_to_google_bucket=False,
-    start_with_sample_group = 0,
+    start_with_sample_group=0,
 ):
     """Utility method for exporting the given vds to an elasticsearch index.
     """
@@ -160,14 +161,14 @@ def export_to_elasticsearch(
     index_type = "variant"
 
     if export_genotypes:
-        if datatype == "GATK_VARIANTS":
+        if args.analysis_type == "GATK_VARIANTS":
             genotype_fields_to_export = DEFAULT_GENOTYPE_FIELDS_TO_EXPORT
             genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
-        elif datatype == "MANTA_SVS":
+        elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
             genotype_fields_to_export = [
                 'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
-                'genotype_filter = g.FT',
-                'gq = g.GQ',
+                #'genotype_filter = g.FT',
+                #'gq = g.GQ',
                 'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
                 'ab = let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
                 'ab_PR = let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
@@ -178,8 +179,8 @@ def export_to_elasticsearch(
 
             genotype_field_to_elasticsearch_type_map = {
                 ".*_num_alt": {"type": "byte", "doc_values": "false"},
-                ".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
-                ".*_gq": {"type": "short", "doc_values": "false"},
+                #".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
+                #".*_gq": {"type": "short", "doc_values": "false"},
                 ".*_dp": {"type": "short", "doc_values": "false"},
                 ".*_ab": {"type": "half_float", "doc_values": "false"},
                 ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
@@ -188,7 +189,7 @@ def export_to_elasticsearch(
                 ".*_dp_SR": {"type": "short", "doc_values": "false"},
             }
         else:
-            raise ValueError("Unexpected datatype: %s" % datatype)
+            raise ValueError("Unexpected args.analysis_type: %s" % args.analysis_type)
     else:
         genotype_fields_to_export = []
         genotype_field_to_elasticsearch_type_map = {}
@@ -225,8 +226,8 @@ def export_to_elasticsearch(
             genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             index_name=current_index_name,
             index_type_name=index_type,
-            block_size=block_size,
-            num_shards=num_shards,
+            block_size=args.block_size,
+            num_shards=args.num_shards,
             delete_index_before_exporting=delete_index_before_exporting,
             elasticsearch_write_operation=operation,
             elasticsearch_mapping_id="docId",
@@ -247,6 +248,24 @@ def export_to_elasticsearch(
             bucket="seqr-database-backups",
             base_path="elasticsearch/snapshots",
             snapshot_repo="callsets")
+
+    client.save_index_operation_metadata(
+        args.input_vds,
+        index_name,
+        args.genome_version,
+        fam_file=args.fam_file,
+        remap_sample_ids=args.remap_sample_ids,
+        subset_samples=args.subset_samples,
+        skip_vep=args.skip_vep,
+        project_id=args.project_id,
+        analysis_type=args.analysis_type,
+        sample_type=args.sample_type,
+        command=" ".join(sys.argv),
+        directory=os.getcwd(),
+        username=None,
+        operation="create_index",
+        status="success",
+    )
 
 #if args.output_vds:
     #    output_vds_path = args.output_vds
@@ -366,10 +385,14 @@ p.add_argument("--skip-annotations", action="store_true", help="Don't add any re
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
     help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
 p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
-p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap_sample_ids, ids are the desired ids (post remapping)")
+p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
-p.add_argument("-i", "--index-name", help="Elasticsearch index name", required=True)
+p.add_argument("-i", "--project-id", help="seqr Project id", required=True)
+p.add_argument("-f", "--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are specific to a family")
+p.add_argument("-t", "--sample-type", help="sample type (WES or WGS)", choices=["WES", "WGS"], required=True)
+p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
+
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
 p.add_argument("-p", "--port", help="Elastisearch port", default="9200")
 p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=4)
@@ -396,18 +419,32 @@ p.add_argument("--start-with-step", help="Which pipeline step to start with.", t
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
     "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
     "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
-p.add_argument("-t", "--datatype", help="What pipeline generated the data", choices=["GATK_VARIANTS", "MANTA_SVS"], default="GATK_VARIANTS")
 #p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
 args = p.parse_args()
 
-if args.index_name.lower() != args.index_name:
-    p.error("Index name must be lowercase")
+if args.analysis_type == "GATK_VARIANTS":
+    variant_type_string = "variants"
+elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
+    variant_type_string = "sv"
+else:
+    raise ValueError("Unexpected args.analysis_type == " + str(args.analysis_type))
+
+# generate the index name as:  <project>_<WGS_WES>_<family?>_<VARIANTS or SVs>_<YYYYMMDD>_<batch>
+index_name = "%s_%s%s_%s_%s" % (
+    args.project_id,
+    args.sample_type,
+    "_"+args.family_id if args.family_id else "",  # optional family id
+    variant_type_string,
+    datetime.datetime.now().strftime("%Y%m%d")
+)
+
+index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
 
 input_path = str(args.input_vds)
-if not (input_path.endswith(".vds") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
+if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
 
 input_path_prefix = input_path.replace(".vds", "")
@@ -431,7 +468,7 @@ import hail  # import hail here so that you can run this script with --help even
 hc = hail.HailContext(log="/hail.log")
 
 logger.info("Reading in dataset...")
-vds = read_in_dataset(input_path, args.datatype, filter_interval)
+vds = read_in_dataset(input_path, args.analysis_type, filter_interval)
 
 # NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
 if args.remap_sample_ids:
@@ -492,35 +529,38 @@ else:
     sample_groups = [vds.sample_ids]
 
 
-# run vep
 output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
-if not args.skip_vep:
-    logger.info("Annotating with VEP...")
-    vep_output_vds = output_vds_prefix + ".vep.vds"
-    vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
-    vds.write(vep_output_vds, overwrite=True)
 
-    input_path = vep_output_vds
+vep_output_vds = output_vds_prefix + ".vep.vds"
+annotated_output_vds = output_vds_prefix + ".vep_and_annotations.vds"
 
-# write out new vcf (after sample id remapping and subsetting if requested above)
-if args.export_vcf:
-    logger.info("Writing out to VCF...")
+# run vep
+if args.start_with_step == 0:
     if not args.skip_vep:
-        vds.export_vcf(output_vds_prefix + ".vep.vcf.bgz", overwrite=True)
-    else:
-        vds.export_vcf(output_vds_prefix + ".vcf.bgz", overwrite=True)
+        logger.info("Annotating with VEP...")
+
+        vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
+        vds.write(vep_output_vds, overwrite=True)
+
+    # write out new vcf (after sample id remapping and subsetting if requested above)
+    if args.export_vcf:
+        logger.info("Writing out to VCF...")
+        if not args.skip_vep:
+            vds.export_vcf(output_vds_prefix + ".vep.vcf.bgz", overwrite=True)
+        else:
+            vds.export_vcf(output_vds_prefix + ".vcf.bgz", overwrite=True)
 
 hc.stop()
 
 
-if args.start_with_step == 0:
+if args.start_with_step <= 1:
     logger.info("=============================== pipeline - step 0 ===============================")
     logger.info("read in data, compute various derived fields, export to elasticsearch")
 
     logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
+    vds = read_in_dataset(vep_output_vds, args.analysis_type, filter_interval)
 
     # add computed annotations
     logger.info("\n==> adding computed annotations")
@@ -560,7 +600,7 @@ if args.start_with_step == 0:
 
     # apply schema to dataset
     INPUT_SCHEMA  = {}
-    if args.datatype == "GATK_VARIANTS":
+    if args.analysis_type == "GATK_VARIANTS":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             variantId: String,
@@ -607,7 +647,7 @@ if args.start_with_step == 0:
             --- VQSLOD: Double,
             --- culprit: String,
         """
-    elif args.datatype == "MANTA_SVS":
+    elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             variantId: String,
@@ -637,13 +677,13 @@ if args.start_with_step == 0:
         INPUT_SCHEMA["info_fields"] = """
             IMPRECISE: Boolean,
             SVTYPE: String,
-            SVLEN: Array[Int],
+            SVLEN: Int,
             END: Int,
-            CIPOS: Array[Int],
-            CIEND: Array[Int],
+            --- CIPOS: Array[Int],
+            --- CIEND: Array[Int],
             --- CIGAR: Array[String],
             --- MATEID: Array[String],
-            EVENT: String,
+            --- EVENT: String,
             --- HOMLEN: Array[Int],
             --- HOMSEQ: Array[String],
             --- SVINSLEN: Array[Int],
@@ -657,22 +697,22 @@ if args.start_with_step == 0:
             --- JUNCTION_QUAL: Int,
         """
     else:
-        raise ValueError("Unexpected datatype: %s" % args.datatype)
+        raise ValueError("Unexpected analysis_type: %s" % args.analysis_type)
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
 
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
+    vds.write(annotated_output_vds, overwrite=True)
+
     export_to_elasticsearch(
         args.host,
         args.port,
         vds,
-        args.index_name,
-        args.datatype,
+        index_name,
+        args,
         operation=ELASTICSEARCH_UPSERT,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
         delete_index_before_exporting=True,
         export_genotypes=True,
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
@@ -683,23 +723,15 @@ if args.start_with_step == 0:
 
     hc.stop()
 
-if args.start_with_step <= 1:
+if args.start_with_step <= 2:
     logger.info("=============================== pipeline - step 1 ===============================")
     logger.info("read in data, add in more reference datasets, export to elasticsearch")
 
     logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(input_path, args.datatype, filter_interval)
-    vds = compute_minimal_schema(vds, args.datatype)
-
-    if not args.skip_annotations and not args.exclude_cadd:
-        logger.info("\n==> add cadd")
-        vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
-
-    if not args.skip_annotations and not args.exclude_dbnsfp:
-        logger.info("\n==> add dbnsfp")
-        vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+    vds = read_in_dataset(annotated_output_vds, args.analysis_type, filter_interval)
+    vds = compute_minimal_schema(vds, args.analysis_type)
 
     if not args.skip_annotations and not args.exclude_clinvar:
         logger.info("\n==> add clinvar")
@@ -709,45 +741,52 @@ if args.start_with_step <= 1:
         logger.info("\n==> add hgmd")
         vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_1kg:
-        logger.info("\n==> add 1kg")
-        vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
+    if args.analysis_type == "GATK_VARIANTS":
+        if not args.skip_annotations and not args.exclude_cadd:
+            logger.info("\n==> add cadd")
+            vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_exac:
-        logger.info("\n==> add exac")
-        vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS, subset=filter_interval)
+        if not args.skip_annotations and not args.exclude_dbnsfp:
+            logger.info("\n==> add dbnsfp")
+            vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_topmed and args.genome_version == "38":
-        logger.info("\n==> add topmed")
-        vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
+        if not args.skip_annotations and not args.exclude_1kg:
+            logger.info("\n==> add 1kg")
+            vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_mpc:
-        logger.info("\n==> add mpc")
-        vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
+        if not args.skip_annotations and not args.exclude_exac:
+            logger.info("\n==> add exac")
+            vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS, subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_gnomad:
-        logger.info("\n==> add gnomad exomes")
-        vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+        if not args.skip_annotations and not args.exclude_topmed and args.genome_version == "38":
+            logger.info("\n==> add topmed")
+            vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_gnomad:
-        logger.info("\n==> add gnomad genomes")
-        vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+        if not args.skip_annotations and not args.exclude_mpc:
+            logger.info("\n==> add mpc")
+            vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
 
-    if not args.skip_annotations and not args.exclude_gnomad_coverage:
-        logger.info("\n==> add gnomad coverage")
-        vds = vds.persist()
-        vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
-        vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+        if not args.skip_annotations and not args.exclude_gnomad:
+            logger.info("\n==> add gnomad exomes")
+            vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+
+        if not args.skip_annotations and not args.exclude_gnomad:
+            logger.info("\n==> add gnomad genomes")
+            vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+
+        if not args.skip_annotations and not args.exclude_gnomad_coverage:
+            logger.info("\n==> add gnomad coverage")
+            vds = vds.persist()
+            vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
+            vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
     export_to_elasticsearch(
         args.host,
         args.port,
         vds,
-        args.index_name,
-        args.datatype,
+        index_name,
+        args,
         operation=ELASTICSEARCH_UPDATE,
-        block_size=args.block_size,
-        num_shards=args.num_shards,
         delete_index_before_exporting=False,
         export_genotypes=False,
         disable_doc_values_for_fields=(),
@@ -756,5 +795,21 @@ if args.start_with_step <= 1:
         start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
     )
 
+    """
+    export_to_elasticsearch(
+        args.host,
+        args.port,
+        vds,
+        index_name,
+        args,
+        operation=ELASTICSEARCH_UPSERT,
+        delete_index_before_exporting=True,
+        export_genotypes=True,
+        disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
+        disable_index_for_fields=("sortedTranscriptConsequences", ),
+        export_snapshot_to_google_bucket=True,
+        start_with_sample_group=args.start_with_sample_group,
+    )
+    """
     hc.stop()
 
