@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-#for dependency in ['six==1.10.0', 'elasticsearch', 'requests']:
-#    pip.main(['install', dependency])
-# make sure elasticsearch is installed
 import os
 os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
@@ -47,16 +44,83 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+p = argparse.ArgumentParser()
+p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
+
+p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
+p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
+p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
+               help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
+p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
+p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
+p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
+
+p.add_argument("-i", "--project-id", help="seqr Project id", required=True)
+p.add_argument("-f", "--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are specific to a family")
+p.add_argument("-t", "--sample-type", help="sample type (WES or WGS)", choices=["WES", "WGS"], required=True)
+p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
+
+p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
+p.add_argument("-p", "--port", help="Elastisearch port", default="9200")
+p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=12)
+p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
+
+p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
+p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
+p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). Intended for testing.")
+p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. Intended for testing.")
+p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. Intended for testing.")
+p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
+p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar fields. Intended for testing.")
+p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
+p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
+p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
+p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
+p.add_argument("--dont-create-snapshot", action="store_true", help="Don't create an elasticsearch snapshot after indexing is complete. Intended for testing.")
+
+p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
+                                  "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
+                                  "If used with --remap-sample-ids, contains IDs of samples after remapping")
+p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
+p.add_argument("--ignore-extra-sample-ids-in-tables", action="store_true")
+p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
+p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
+p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
+                                                 "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
+                                                 "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
+#p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
+p.add_argument("input_vds", help="input VDS")
+
+# parse args
+args = p.parse_args()
+
+if args.analysis_type == "GATK_VARIANTS":
+    variant_type_string = "variants"
+elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
+    variant_type_string = "sv"
+else:
+    raise ValueError("Unexpected args.analysis_type == " + str(args.analysis_type))
+
+# generate the index name as:  <project>_<WGS_WES>_<family?>_<VARIANTS or SVs>_<YYYYMMDD>_<batch>
+index_name = "%s_%s%s_%s_%s" % (
+    args.project_id,
+    args.sample_type,
+    "_"+args.family_id if args.family_id else "",  # optional family id
+    variant_type_string,
+    datetime.datetime.now().strftime("%Y%m%d")
+)
+
+index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
+
 def read_in_dataset(input_path, analysis_type, filter_interval):
     """Utility method for reading in a .vcf or .vds dataset
 
     Args:
         input_path (str):
-        analysis_type (str):
         filter_interval (str):
     """
 
-    logger.info("\n==> import: " + input_path)
+    logger.info("\n==> Import: " + input_path)
     if input_path.endswith(".vds"):
         vds = hc.read(input_path)
     else:
@@ -72,7 +136,7 @@ def read_in_dataset(input_path, analysis_type, filter_interval):
 
     #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
 
-    logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
+    logger.info("\n==> Set filter interval to: %s" % (filter_interval, ))
     vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
 
     if analysis_type == "GATK_VARIANTS":
@@ -95,7 +159,7 @@ def read_in_dataset(input_path, analysis_type, filter_interval):
     if total_variants == 0:
         raise ValueError("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
     else:
-        logger.info("\n==> total variants: %s" % (total_variants,))
+        logger.info("\n==> Total variants: %s" % (total_variants,))
 
     return vds
 
@@ -377,73 +441,6 @@ GNOMAD_INFO_FIELDS = """
 """
 
 
-p = argparse.ArgumentParser()
-p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
-
-p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
-p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
-p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
-    help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
-p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
-p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
-p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
-
-p.add_argument("-i", "--project-id", help="seqr Project id", required=True)
-p.add_argument("-f", "--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are specific to a family")
-p.add_argument("-t", "--sample-type", help="sample type (WES or WGS)", choices=["WES", "WGS"], required=True)
-p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
-
-p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
-p.add_argument("-p", "--port", help="Elastisearch port", default="9200")
-p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=4)
-p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
-
-p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
-p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
-p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). Intended for testing.")
-p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. Intended for testing.")
-p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. Intended for testing.")
-p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
-p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar fields. Intended for testing.")
-p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
-p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
-p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
-p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
-
-p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
-    "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
-    "If used with --remap-sample-ids, contains IDs of samples after remapping")
-p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
-p.add_argument("--ignore-extra-sample-ids-in-tables", action="store_true")
-p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
-p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
-p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
-    "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
-    "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
-#p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
-p.add_argument("input_vds", help="input VDS")
-
-# parse args
-args = p.parse_args()
-
-if args.analysis_type == "GATK_VARIANTS":
-    variant_type_string = "variants"
-elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
-    variant_type_string = "sv"
-else:
-    raise ValueError("Unexpected args.analysis_type == " + str(args.analysis_type))
-
-# generate the index name as:  <project>_<WGS_WES>_<family?>_<VARIANTS or SVs>_<YYYYMMDD>_<batch>
-index_name = "%s_%s%s_%s_%s" % (
-    args.project_id,
-    args.sample_type,
-    "_"+args.family_id if args.family_id else "",  # optional family id
-    variant_type_string,
-    datetime.datetime.now().strftime("%Y%m%d")
-)
-
-index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
-
 input_path = str(args.input_vds)
 if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
@@ -463,7 +460,7 @@ if args.subset:
     filter_interval = args.subset
 
 
-logger.info("\n==> create HailContext")
+logger.info("\n==> Create HailContext")
 
 import hail  # import hail here so that you can run this script with --help even if hail isn't installed locally.
 hc = hail.HailContext(log="/hail.log")
@@ -538,7 +535,8 @@ annotated_output_vds = output_vds_prefix + ".vep_and_annotations.vds"
 # run vep
 if args.start_with_step == 0:
     if not args.skip_vep:
-        logger.info("Annotating with VEP...")
+        logger.info("=============================== pipeline - step 0 ===============================")
+        logger.info("Read in data, run vep")
 
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
         vds.write(vep_output_vds, overwrite=True)
@@ -555,16 +553,16 @@ hc.stop()
 
 
 if args.start_with_step <= 1:
-    logger.info("=============================== pipeline - step 0 ===============================")
-    logger.info("read in data, compute various derived fields, export to elasticsearch")
+    logger.info("=============================== pipeline - step 1 ===============================")
+    logger.info("Read in data, compute various derived fields, export to elasticsearch")
 
-    logger.info("\n==> create HailContext")
+    logger.info("\n==> Re-create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
     vds = read_in_dataset(vep_output_vds, args.analysis_type, filter_interval)
 
     # add computed annotations
-    logger.info("\n==> adding computed annotations")
+    logger.info("\n==> Adding computed annotations")
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
@@ -728,58 +726,58 @@ if args.start_with_step <= 1:
     hc.stop()
 
 if args.start_with_step <= 2:
-    logger.info("=============================== pipeline - step 1 ===============================")
-    logger.info("read in data, add in more reference datasets, export to elasticsearch")
+    logger.info("=============================== pipeline - step 2 ===============================")
+    logger.info("Read in data, add more reference datasets, export to elasticsearch")
 
-    logger.info("\n==> create HailContext")
+    logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
     vds = read_in_dataset(annotated_output_vds, args.analysis_type, filter_interval)
     vds = compute_minimal_schema(vds, args.analysis_type)
 
     if not args.skip_annotations and not args.exclude_clinvar:
-        logger.info("\n==> add clinvar")
+        logger.info("\n==> Add clinvar")
         vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
 
     if not args.skip_annotations and not args.exclude_hgmd:
-        logger.info("\n==> add hgmd")
+        logger.info("\n==> Add hgmd")
         vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
     if args.analysis_type == "GATK_VARIANTS":
         if not args.skip_annotations and not args.exclude_cadd:
-            logger.info("\n==> add cadd")
+            logger.info("\n==> Add cadd")
             vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_dbnsfp:
-            logger.info("\n==> add dbnsfp")
+            logger.info("\n==> Add dbnsfp")
             vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_1kg:
-            logger.info("\n==> add 1kg")
+            logger.info("\n==> Add 1kg")
             vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_exac:
-            logger.info("\n==> add exac")
+            logger.info("\n==> Add exac")
             vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_topmed and args.genome_version == "38":
-            logger.info("\n==> add topmed")
+            logger.info("\n==> Add topmed")
             vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_mpc:
-            logger.info("\n==> add mpc")
+            logger.info("\n==> Add mpc")
             vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_gnomad:
-            logger.info("\n==> add gnomad exomes")
+            logger.info("\n==> Add gnomad exomes")
             vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_gnomad:
-            logger.info("\n==> add gnomad genomes")
+            logger.info("\n==> Add gnomad genomes")
             vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_gnomad_coverage:
-            logger.info("\n==> add gnomad coverage")
+            logger.info("\n==> Add gnomad coverage")
             vds = vds.persist()
             vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
             vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
@@ -795,25 +793,9 @@ if args.start_with_step <= 2:
         export_genotypes=False,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=True,
+        export_snapshot_to_google_bucket=not args.dont_create_snapshot,
         start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
     )
 
-    """
-    export_to_elasticsearch(
-        args.host,
-        args.port,
-        vds,
-        index_name,
-        args,
-        operation=ELASTICSEARCH_UPSERT,
-        delete_index_before_exporting=True,
-        export_genotypes=True,
-        disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
-        disable_index_for_fields=("sortedTranscriptConsequences", ),
-        export_snapshot_to_google_bucket=True,
-        start_with_sample_group=args.start_with_sample_group,
-    )
-    """
     hc.stop()
 
