@@ -1,9 +1,3 @@
-from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
-
-HGMD_INFO_FIELDS = """
-    CLASS: String,
-    RANKSCORE: Double
-"""
 
 
 def read_hgmd_vds(hail_context, genome_version, subset=None):
@@ -29,6 +23,7 @@ def add_hgmd_to_vds(hail_context, vds, genome_version, root="va.hgmd", subset=No
     hgmd_vds = read_hgmd_vds(hail_context, genome_version, subset=subset)
 
     vds = vds.annotate_variants_vds(hgmd_vds, expr="""
+        %(root)s.accession = vds.rsid,
         %(root)s.class = vds.info.CLASS,
         %(root)s.rankscore = vds.info.RANKSCORE
     """ % locals())
