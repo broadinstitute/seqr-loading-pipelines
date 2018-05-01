@@ -4,11 +4,11 @@ G1K_FIELDS = """
     AC: Int,
     AF: Float,
     AN: Int,
-    EAS_AF: Float,
-    EUR_AF: Float,
-    AFR_AF: Float,
-    AMR_AF: Float,
-    SAS_AF: Float,
+    --- EAS_AF: Float,
+    --- EUR_AF: Float,
+    --- AFR_AF: Float,
+    --- AMR_AF: Float,
+    --- SAS_AF: Float,
     POPMAX_AF: Float,
 """
 
