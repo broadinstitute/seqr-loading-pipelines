@@ -54,7 +54,7 @@ def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", sub
     clinvar_vds = read_clinvar_vds(hail_context, genome_version, subset=subset)
 
     vds = vds.annotate_variants_vds(clinvar_vds, expr="""
-        %(root)s.variation_id = vds.info.ALLELEID,
+        %(root)s.allele_id = vds.info.ALLELEID,
         %(root)s.clinical_significance = vds.info.CLNSIG[0],
         %(root)s.review_status = vds.info.CLNREVSTAT[0]
     """ % locals())
