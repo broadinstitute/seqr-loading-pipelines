@@ -547,6 +547,8 @@ class ElasticsearchClient:
         status=None,
     ):
         """Records metadata about the operation"""
+
+        # use inspection to get all arg names and values
         arg_names, _, _, _ = inspect.getargspec(self.save_index_operation_metadata)
         arg_names = arg_names[1:]  # get all except 'self'
 

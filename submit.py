@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
+import getpass
 import os
-import subprocess
-import sys
+import socket
 
 p = argparse.ArgumentParser()
 p.add_argument("-p", "--project", default="seqr-project")
@@ -42,7 +42,12 @@ cluster = args.cluster
 script = args.script
 script_args = " ".join(unknown_args)
 
-utils_zip="/tmp/utils.zip"
+if "entire_vds_pipeline" in script:
+    username = getpass.getuser()
+    directory = "%s:%s" % (socket.gethostname(), os.getcwd())
+    script_args += " --username '%(username)s' --directory '%(directory)s'" % locals()
+
+utils_zip = "/tmp/utils.zip"
 
 os.system("zip -r %(utils_zip)s utils" % locals())
 

@@ -55,13 +55,15 @@ p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated c
 p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
-p.add_argument("-i", "--project-id", help="seqr Project id", required=True)
+p.add_argument("-p", "--project-id", help="seqr Project id", required=True)
 p.add_argument("-f", "--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are specific to a family")
 p.add_argument("-t", "--sample-type", help="sample type (WES or WGS)", choices=["WES", "WGS"], required=True)
 p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
 
+p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_id, family_id, sample_type and analysis_type.")
+
 p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
-p.add_argument("-p", "--port", help="Elastisearch port", default="9200")
+p.add_argument("--port", help="Elastisearch port", default="9200")
 p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=12)
 p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
 
@@ -88,6 +90,11 @@ p.add_argument("--start-with-step", help="Which pipeline step to start with.", t
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
                                                  "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
                                                  "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
+
+p.add_argument("--username", help="(optional) username for logging. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
+p.add_argument("--directory", help="(optional) working directory for logging. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
+
+
 #p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
 p.add_argument("input_vds", help="input VDS")
 
@@ -102,15 +109,21 @@ else:
     raise ValueError("Unexpected args.analysis_type == " + str(args.analysis_type))
 
 # generate the index name as:  <project>_<WGS_WES>_<family?>_<VARIANTS or SVs>_<YYYYMMDD>_<batch>
-index_name = "%s_%s%s_%s_%s" % (
-    args.project_id,
-    args.sample_type,
-    "_"+args.family_id if args.family_id else "",  # optional family id
-    variant_type_string,
-    datetime.datetime.now().strftime("%Y%m%d")
-)
+if args.index:
+    index_name = args.index.lower()
+else:
+    index_name = "%s__%s%s__%s__%s" % (
+        args.project_id,
+        args.sample_type,
+        "__"+args.family_id if args.family_id else "",  # optional family id
+        variant_type_string,
+        datetime.datetime.now().strftime("%Y%m%d")
+    )
 
-index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
+    index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
+
+logger.info("Index name: %s" % (index_name,))
+
 
 def read_in_dataset(input_path, analysis_type, filter_interval):
     """Utility method for reading in a .vcf or .vds dataset
@@ -325,8 +338,8 @@ def export_to_elasticsearch(
         analysis_type=args.analysis_type,
         sample_type=args.sample_type,
         command=" ".join(sys.argv),
-        directory=os.getcwd(),
-        username=None,
+        directory=args.directory,
+        username=args.username,
         operation="create_index",
         status="success",
     )
