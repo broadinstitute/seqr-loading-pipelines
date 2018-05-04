@@ -28,9 +28,6 @@ CLINVAR_FIELDS = """
      --- SSR: Int
 """
 
-# clinvar_clinical_significance (clinsig), clinvar_variation_id, review_status
-
-
 def read_clinvar_vds(hail_context, genome_version, subset=None):
     if genome_version == "37":
         clinvar_vds_path = CLINVAR_VDS_GRCH37

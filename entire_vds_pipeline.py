@@ -347,31 +347,6 @@ def export_to_elasticsearch(
 # ==========================
 
 # add reference data
-CLINVAR_INFO_FIELDS = """
-    --- variation_type: String,
-    variation_id: String,
-    --- rcv: String,
-    --- scv: String,
-    allele_id: Int,
-    clinical_significance: String,
-    pathogenic: Int,
-    likely_pathogenic: Int,
-    uncertain_significance: Int,
-    likely_benign: Int,
-    benign: Int,
-    conflicted: Int,
-    --- gold_stars: String,
-    review_status: String,
-    all_submitters: String,
-    --- all_traits: String,
-    --- all_pmids: String,
-    inheritance_modes: String,
-    --- age_of_onset: String,
-    --- prevalence: String,
-    --- disease_mechanism: String,
-    --- origin: String,
-    --- xrefs: String,
-"""
 
 CADD_INFO_FIELDS = """
     PHRED: Double,
@@ -574,6 +549,7 @@ if args.start_with_step <= 1:
         "va.ref = %s" % get_expr_for_ref_allele(),
         "va.alt = %s" % get_expr_for_alt_allele(),
 
+        # compute AC, Het, Hom, Hemi, AN
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
 
@@ -678,6 +654,8 @@ if args.start_with_step <= 1:
             SVTYPE: String,
             SVLEN: Int,
             END: Int,
+            OCC: Int,
+            FRQ: Double,
             --- CIPOS: Array[Int],
             --- CIEND: Array[Int],
             --- CIGAR: Array[String],
@@ -744,13 +722,13 @@ if args.start_with_step <= 2:
         vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
     if args.analysis_type == "GATK_VARIANTS":
-        if not args.skip_annotations and not args.exclude_cadd:
-            logger.info("\n==> Add cadd")
-            vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
-
         if not args.skip_annotations and not args.exclude_dbnsfp:
             logger.info("\n==> Add dbnsfp")
             vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+
+        if not args.skip_annotations and not args.exclude_cadd:
+            logger.info("\n==> Add cadd")
+            vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_1kg:
             logger.info("\n==> Add 1kg")

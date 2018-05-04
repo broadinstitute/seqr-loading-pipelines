@@ -128,32 +128,6 @@ def read_in_dataset(input_path, filter_interval):
 # reference dataset schemas
 # ==========================
 
-# add reference data
-CLINVAR_INFO_FIELDS = """
-    --- variation_type: String,
-    variation_id: String,
-    --- rcv: String,
-    --- scv: String,
-    allele_id: Int,
-    clinical_significance: String,
-    pathogenic: Int,
-    likely_pathogenic: Int,
-    uncertain_significance: Int,
-    likely_benign: Int,
-    benign: Int,
-    conflicted: Int,
-    --- gold_stars: String,
-    review_status: String,
-    all_submitters: String,
-    --- all_traits: String,
-    --- all_pmids: String,
-    inheritance_modes: String,
-    --- age_of_onset: String,
-    --- prevalence: String,
-    --- disease_mechanism: String,
-    --- origin: String,
-    --- xrefs: String,
-"""
 
 CADD_INFO_FIELDS = """
     PHRED: Double,
