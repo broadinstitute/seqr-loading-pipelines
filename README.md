@@ -56,8 +56,13 @@ Run VEP:
 
 Run rare disease callset pipeline:
 ```    
-./create_cluster_GRCh38.py --project=seqr-project cluster1 2 24 ;   # create cluster with 2 persistant, 24 preemptible nodes
+./create_cluster_GRCh38.py --project=seqr-project cluster1 2 12 ;   # create cluster with 2 persistant, 12 preemptible nodes
 
-./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 gs://seqr-datasets/GRCh38/my_dataset.vcf.gz  -i my_dataset_index --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12
+./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12  --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS  gs://my-datasets/GRCh38/my_dataset.vcf.gz
+```
+
+There's also a shortcut for running the rare disease pipeline which combines the 2 commands above into 1:
+```
+python load_GRCh38_dataset.py --host $ELASTICSEARCH_HOST_IP --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS gs://my-datasets/GRCh38/my_dataset.vcf.gz
 ```
 
