@@ -56,8 +56,9 @@ p.add_argument('--subset-samples', help="Filepath containing ids for samples to 
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
 p.add_argument("-p", "--project-id", help="seqr Project id", required=True)
-p.add_argument("-f", "--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are specific to a family")
-p.add_argument("-t", "--sample-type", help="sample type (WES or WGS)", choices=["WES", "WGS"], required=True)
+p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
+p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
+p.add_argument("-t", "--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
 p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
 
 p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_id, family_id, sample_type and analysis_type.")
@@ -94,8 +95,8 @@ p.add_argument("--start-with-sample-group", help="If the callset contains more s
 p.add_argument("--username", help="(optional) username for logging. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
 p.add_argument("--directory", help="(optional) working directory for logging. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
-
 #p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
+
 p.add_argument("input_vds", help="input VDS")
 
 # parse args
@@ -112,12 +113,14 @@ else:
 if args.index:
     index_name = args.index.lower()
 else:
-    index_name = "%s__%s%s__%s__%s" % (
+    index_name = "%s%s%s__%s__grch%s__%s__%s" % (
         args.project_id,
-        args.sample_type,
         "__"+args.family_id if args.family_id else "",  # optional family id
+        "__"+args.individual_id if args.individual_id else "",  # optional individual id
+        args.sample_type,
+        args.genome_version,
         variant_type_string,
-        datetime.datetime.now().strftime("%Y%m%d")
+        datetime.datetime.now().strftime("%Y%m%d"),
     )
 
     index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
