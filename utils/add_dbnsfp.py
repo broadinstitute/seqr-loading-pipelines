@@ -72,7 +72,7 @@ DBNSFP_SCHEMA_38 = """
      DANN_score: String,
      DANN_rankscore: String,
      --- fathmm_MKL_coding_pred: String,
-     Eigen_phred: String,
+     --- Eigen_phred: String,
      --- Eigen_PC_phred: String,
      --- GenoCanyon_score: String,
      --- GenoCanyon_score_rankscore: String,

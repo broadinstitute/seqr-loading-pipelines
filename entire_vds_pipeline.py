@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 import os
+
+from utils.add_eigen import add_eigen_to_vds
+
 os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
 import argparse
@@ -135,7 +138,7 @@ def read_in_dataset(input_path, analysis_type, filter_interval):
         input_path (str):
         filter_interval (str):
     """
-
+    input_path = input_path.rstrip("/")
     logger.info("\n==> Import: " + input_path)
     if input_path.endswith(".vds"):
         vds = hc.read(input_path)
@@ -432,7 +435,7 @@ GNOMAD_INFO_FIELDS = """
 """
 
 
-input_path = str(args.input_vds)
+input_path = str(args.input_vds).rstrip("/")
 if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
 
@@ -741,6 +744,10 @@ if args.start_with_step <= 2:
         if not args.skip_annotations and not args.exclude_dbnsfp:
             logger.info("\n==> Add dbnsfp")
             vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+
+        if not args.skip_annotations and not args.exclude_eigen:
+            logger.info("\n==> Add eigen")
+            vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_cadd:
             logger.info("\n==> Add cadd")
