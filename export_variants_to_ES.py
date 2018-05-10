@@ -35,7 +35,7 @@ p.add_argument("input_vds", help="input VDS")
 # parse args
 args = p.parse_args()
 
-input_vds_path = str(args.input_vds)
+input_vds_path = str(args.input_vds).rstrip("/")
 if not input_vds_path.endswith(".vds"):
     p.error("Input must be a .vds")
 

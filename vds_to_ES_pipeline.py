@@ -198,7 +198,7 @@ GNOMAD_INFO_FIELDS = """
 
 
 
-input_path = str(args.input_vds)
+input_path = str(args.input_vds).rstrip("/")
 if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
 

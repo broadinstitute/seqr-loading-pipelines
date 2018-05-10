@@ -17,21 +17,22 @@ p.add_argument("input_file", help="input vcf or vds")
 p.add_argument("output_vds", nargs="?", help="output vds")
 args = p.parse_args()
 
-print("Input File: %s" % (args.input_file, ))
+input_path = args.input_file.rstrip("/")
+print("Input File: %s" % (input_path, ))
 if not args.output_vds:
-    output_vds_prefix = args.input_file.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
+    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
     args.output_vds = output_vds_prefix + ".vep.vds"
 
 print("Output VDS: %s" % (args.output_vds, ))
 
 hc = hail.HailContext(log="/hail.log")
-if args.input_file.endswith(".vds"):
-    vds = hc.read(args.input_file)
-elif args.input_file.endswith(".vcf") or args.input_file.endswith("gz"):
-    vds = hc.import_vcf(args.input_file, force_bgz=True, min_partitions=10000)
+if input_path.endswith(".vds"):
+    vds = hc.read(input_path)
+elif input_path.endswith(".vcf") or input_path.endswith("gz"):
+    vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
     # save alt alleles before calling split_multi
 else:
-    p.error("Invalid input file: %s" % args.input_file)
+    p.error("Invalid input file: %s" % input_path)
 
 if vds.num_partitions() < 50:
     print("Repartitioning")

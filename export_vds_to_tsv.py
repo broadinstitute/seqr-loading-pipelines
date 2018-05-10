@@ -11,7 +11,7 @@ p.add_argument("input_path", help="input VCF or VDS")
 
 
 args = p.parse_args()
-input_path = args.input_path
+input_path = args.input_path.rstrip("/")
 
 print("Input path: %s" % input_path)
 

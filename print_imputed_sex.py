@@ -10,6 +10,7 @@ p.add_argument("input_path", nargs="+", help="input VCF or VDS")
 args = p.parse_args()
 
 for input_path in args.input_path:
+    input_path = input_path.rstrip("/")
     print("Input path: %s" % input_path)
 
     if input_path.endswith(".vds"):
