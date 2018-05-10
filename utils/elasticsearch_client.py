@@ -132,7 +132,9 @@ class ElasticsearchClient:
             #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
             #existing_properties.update(elasticsearch_schema)
 
-            logger.info("==> Updating elasticsearch %s schema. New schema: %s" % (index_name, pformat(elasticsearch_schema)))
+            logger.info("==> Updating elasticsearch %s schema. New schema:" % (index_name, ))
+            logger.info(pformat(elasticsearch_schema))
+
             self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
                 "properties": elasticsearch_schema
             })
@@ -567,5 +569,6 @@ class ElasticsearchClient:
 
         self.es.index(index=INDEX_OPERATIONS_LOG, doc_type=DOC_TYPE, op_type="index", body=body)
 
-
+        logger.info("Saved index operation metadata:")
+        logger.info(pformat(body))
 
