@@ -73,6 +73,7 @@ p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
+p.add_argument("--exclude-eigen", action="store_true", help="Don't add Eigen scores. Intended for testing.")
 p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). Intended for testing.")
 p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. Intended for testing.")
 p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. Intended for testing.")
