@@ -58,7 +58,7 @@ p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated c
 p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
-p.add_argument("-p", "--project-id", help="seqr Project id", required=True)
+p.add_argument("--project-id", help="seqr Project id", required=True)
 p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
 p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
 p.add_argument("-t", "--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
