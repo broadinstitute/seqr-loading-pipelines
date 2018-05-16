@@ -22,6 +22,6 @@ def add_eigen_to_vds(hail_context, vds, genome_version, root="va.eigen", subset=
 
     eigen_vds = read_eigen_vds(hail_context, genome_version, subset=subset)
 
-    vds = vds.annotate_variants_vds(eigen_vds, expr="%(root)s.Eigen_phred = vds.info.Eigen-phred" % locals())
+    vds = vds.annotate_variants_vds(eigen_vds, expr="%(root)s.Eigen_phred = vds.info.`Eigen-phred`" % locals())
 
     return vds
