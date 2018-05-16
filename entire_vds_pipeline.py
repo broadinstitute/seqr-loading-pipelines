@@ -52,6 +52,8 @@ p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=
 
 p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
 p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
+p.add_argument("--skip-elasticsearch", action="store_true", help="Don't load data into elasticsearch. Intended for testing.")
+
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
                help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
 p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
@@ -61,15 +63,15 @@ p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF fi
 p.add_argument("--project-id", help="seqr Project id", required=True)
 p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
 p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
-p.add_argument("-t", "--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
-p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
+p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
+p.add_argument("--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
 
 p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_id, family_id, sample_type and analysis_type.")
 
-p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
-p.add_argument("--port", help="Elastisearch port", default="9200")
-p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=12)
-p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
+p.add_argument("--elasticsearch-host", help="Elastisearch IP address", default="10.4.0.29")
+p.add_argument("--elasticsearch-port", help="Elastisearch port", default="9200")
+p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
+p.add_argument("--block-size", help="Block size", type=int, default=1000)
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
@@ -442,7 +444,7 @@ if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path
 
 input_path_prefix = input_path.replace(".vds", "")
 
-elasticsearch_url = "http://%s:%s" % (args.host, args.port)
+elasticsearch_url = "http://%s:%s" % (args.elasticsearch_host, args.elasticsearch_port)
 response = requests.get(elasticsearch_url)
 elasticsearch_response = json.loads(response.content)
 if "tagline" not in elasticsearch_response:
@@ -707,8 +709,8 @@ if args.start_with_step <= 1:
     vds.write(annotated_output_vds, overwrite=True)
 
     export_to_elasticsearch(
-        args.host,
-        args.port,
+        args.elasticsearch_host,
+        args.elasticsearch_port,
         vds,
         index_name,
         args,
@@ -784,20 +786,21 @@ if args.start_with_step <= 2:
             vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
             vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
-    export_to_elasticsearch(
-        args.host,
-        args.port,
-        vds,
-        index_name,
-        args,
-        operation=ELASTICSEARCH_UPDATE,
-        delete_index_before_exporting=False,
-        export_genotypes=False,
-        disable_doc_values_for_fields=(),
-        disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=not args.dont_create_snapshot,
-        start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
-    )
+    if not args.skip_elasticsearch:
+        export_to_elasticsearch(
+            args.elasticsearch_host,
+            args.elasticsearch_port,
+            vds,
+            index_name,
+            args,
+            operation=ELASTICSEARCH_UPDATE,
+            delete_index_before_exporting=False,
+            export_genotypes=False,
+            disable_doc_values_for_fields=(),
+            disable_index_for_fields=(),
+            export_snapshot_to_google_bucket=not args.dont_create_snapshot,
+            start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
+        )
 
     hc.stop()
 
