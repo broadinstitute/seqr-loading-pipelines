@@ -704,6 +704,11 @@ if args.start_with_step <= 1:
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
+    if args.analysis_type == "GATK_VARIANTS":
+        if not args.skip_annotations and not args.exclude_eigen:
+            logger.info("\n==> Add eigen")
+            vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
+
     vds.write(annotated_output_vds, overwrite=True)
 
     export_to_elasticsearch(
@@ -745,10 +750,6 @@ if args.start_with_step <= 2:
         if not args.skip_annotations and not args.exclude_dbnsfp:
             logger.info("\n==> Add dbnsfp")
             vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
-
-        if not args.skip_annotations and not args.exclude_eigen:
-            logger.info("\n==> Add eigen")
-            vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
 
         if not args.skip_annotations and not args.exclude_cadd:
             logger.info("\n==> Add cadd")
