@@ -463,6 +463,8 @@ hc = hail.HailContext(log="/hail.log")
 logger.info("Reading in dataset...")
 vds = read_in_dataset(input_path, args.analysis_type, filter_interval)
 
+output_vds_sample_id_hash = ""
+
 # NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
 if args.remap_sample_ids:
     logger.info("Remapping sample ids...")
@@ -501,6 +503,8 @@ if args.subset_samples:
     new_sample_count = vds.num_samples
     logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
 
+    output_vds_sample_id_hash = "_%020d" % abs(hash(",".join(sorted(list(matched)))))
+
     logger.info("Finished Subsetting samples.")
     logger.info("Callset stats after subsetting:")
     summary = vds.summarize()
@@ -522,7 +526,7 @@ else:
     sample_groups = [vds.sample_ids]
 
 
-output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "")
+output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_sample_id_hash
 
 vep_output_vds = output_vds_prefix + ".vep.vds"
 annotated_output_vds = output_vds_prefix + ".vep_and_annotations.vds"
