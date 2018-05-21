@@ -1,7 +1,7 @@
 from utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
-CLINVAR_VDS_GRCH37 = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.vcf.gz'
-CLINVAR_VDS_GRCH38 = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar.GRCh38.vcf.gz'
+CLINVAR_VDS_GRCH37 = 'gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.vds'
+CLINVAR_VDS_GRCH38 = 'gs://seqr-reference-data/GRCh38/clinvar/clinvar.GRCh38.vds'
 
 CLINVAR_FIELDS = """
      --- AF_ESP: Double,
@@ -28,6 +28,7 @@ CLINVAR_FIELDS = """
      --- SSR: Int
 """
 
+
 def read_clinvar_vds(hail_context, genome_version, subset=None):
     if genome_version == "37":
         clinvar_vds_path = CLINVAR_VDS_GRCH37
@@ -36,7 +37,8 @@ def read_clinvar_vds(hail_context, genome_version, subset=None):
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    clinvar_vds = hail_context.import_vcf(clinvar_vds_path, min_partitions=1000, force=True)
+    #clinvar_vds = hail_context.import_vcf(clinvar_vds_path, min_partitions=1000, force=True)
+    clinvar_vds = hail_context.read(clinvar_vds_path)
 
     if subset:
         import hail
