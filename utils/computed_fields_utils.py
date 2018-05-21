@@ -70,7 +70,14 @@ def get_expr_for_vep_transcript_ids_set(vep_root="va.vep"):
 
 
 def get_expr_for_vep_consequence_terms_set(vep_root="va.vep"):
-    return "%(vep_root)s.transcript_consequences.map( x => x.consequence_terms ).flatten().toSet" % locals()
+    return "%(vep_root)s.transcript_consequences.map( x => x.consequence_terms ).flatten.toSet" % locals()
+
+
+def get_expr_for_vep_protein_domains_set(vep_root="va.vep"):
+    return """%(vep_root)s.transcript_consequences
+        .filter( x => isDefined(x.domains) && x.domains.length > 0 )
+        .map( x => x.domains.map( domain => domain.db+":"+domain.name ) )
+        .flatten.toSet""" % locals()
 
 
 def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=True):
@@ -156,21 +163,21 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
                 drop(c, hgnc_id, domains),
                 {
                     hgnc_id: str(c.hgnc_id),
-                    domains: c.domains.map( domain => domain.name ).mkString(","),
+                    domains: c.domains.map( domain => domain.db+":"+domain.name ),
                     hgvs: orElse(c.hgvsp, c.hgvsc),
-                    major_consequence: if( c.consequence_terms.size() > 0)
-                            c.consequence_terms.toArray().sortBy(t => CONSEQUENCE_TERM_RANK_LOOKUP.get(t).toInt())[0]
+                    major_consequence: if( c.consequence_terms.size > 0)
+                            c.consequence_terms.toArray.sortBy(t => CONSEQUENCE_TERM_RANK_LOOKUP.get(t).toInt)[0]
                         else
                             NA:String
                 })
         ).map(c => merge(c, {
-                major_consequence_rank: CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt(),
+                major_consequence_rank: CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt,
                 category:
-                    if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("frameshift_variant").toInt())
+                    if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt <= CONSEQUENCE_TERM_RANK_LOOKUP.get("frameshift_variant").toInt)
                         "lof"
-                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("missense_variant").toInt())
+                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt <= CONSEQUENCE_TERM_RANK_LOOKUP.get("missense_variant").toInt)
                         "missense"
-                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt() <= CONSEQUENCE_TERM_RANK_LOOKUP.get("synonymous_variant").toInt())
+                    else if(CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence).toInt <= CONSEQUENCE_TERM_RANK_LOOKUP.get("synonymous_variant").toInt)
                         "synonymous"
                     else
                         "other"
@@ -262,11 +269,11 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         protein_id:String,
         transcript_id:String,
         hgnc_id:String,
-        domains:String,
         hgvs:String,
         major_consequence:String,
         major_consequence_rank:Int,
-        category:String
+        category:String,
+        domains:String
     """
 
 
@@ -322,7 +329,13 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
     if( %(vep_sorted_transcript_consequences_root)s.length == 0 )
         NA_type
     else
-        select(%(vep_sorted_transcript_consequences_root)s[0], %(transcript_consequences)s)
+        let worst_transcript_consequence = select(%(vep_sorted_transcript_consequences_root)s[0], %(transcript_consequences)s) in
+        merge(
+            drop(worst_transcript_consequence, domains),
+            { 
+                domains: worst_transcript_consequence.domains.toSet.mkString(",") 
+            }
+        )
     """ % locals()
 
 
@@ -374,7 +387,7 @@ def get_expr_for_contig_number(field_prefix="v."):
             if(contig == "X") 23
             else if (contig == "Y") 24
             else if (contig[0] == "M") 25
-            else contig.toInt()
+            else contig.toInt
     """ % locals()
 
 
@@ -385,7 +398,7 @@ def get_expr_for_xpos(field_prefix="v.", pos_field="start"):
     contig_number_expr = get_expr_for_contig_number(field_prefix)
     return """
     let contig_number = %(contig_number_expr)s and pos = %(field_prefix)s%(pos_field)s in
-        1000000000 * contig_number.toLong() + pos
+        1000000000 * contig_number.toLong + pos
     """ % locals()
 
 
