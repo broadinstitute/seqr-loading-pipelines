@@ -25,7 +25,7 @@ from utils.computed_fields_utils import get_expr_for_variant_id, \
     get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
-    get_expr_for_ref_allele
+    get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set
 from utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
     ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
     ELASTICSEARCH_UPSERT, ELASTICSEARCH_INDEX, ELASTICSEARCH_UPDATE
@@ -48,28 +48,37 @@ logger.setLevel(logging.INFO)
 
 
 p = argparse.ArgumentParser()
-p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
+p.add_argument("--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 
 p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
 p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
                help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
+
 p.add_argument('--remap-sample-ids', help="Filepath containing 2 tab-separated columns: current sample id and desired sample id")
 p.add_argument('--subset-samples', help="Filepath containing ids for samples to keep; if used with --remap-sample-ids, ids are the desired ids (post remapping)")
+p.add_argument("--ignore-extra-sample-ids-in-tables", action="store_true")
+p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
+
+p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
+                                  "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
+                                  "If used with --remap-sample-ids, contains IDs of samples after remapping")
+p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
+
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
 p.add_argument("--project-id", help="seqr Project id", required=True)
 p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
 p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
-p.add_argument("-t", "--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
-p.add_argument("-d", "--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
+p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
+p.add_argument("--analysis-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
 
 p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_id, family_id, sample_type and analysis_type.")
 
-p.add_argument("-H", "--host", help="Elastisearch IP address", default="10.4.0.29")
+p.add_argument("--host", help="Elastisearch IP address", default="10.56.10.4")
 p.add_argument("--port", help="Elastisearch port", default="9200")
-p.add_argument("-n", "--num-shards", help="Number of index shards", type=int, default=12)
-p.add_argument("-b", "--block-size", help="Block size", type=int, default=1000)
+p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
+p.add_argument("--block-size", help="Block size", type=int, default=1000)
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
@@ -85,19 +94,13 @@ p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add
 p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
 p.add_argument("--dont-create-snapshot", action="store_true", help="Don't create an elasticsearch snapshot after indexing is complete. Intended for testing.")
 
-p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
-                                  "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
-                                  "If used with --remap-sample-ids, contains IDs of samples after remapping")
-p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
-p.add_argument("--ignore-extra-sample-ids-in-tables", action="store_true")
-p.add_argument("--ignore-extra-sample-ids-in-vds", action="store_true")
 p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
                                                  "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
                                                  "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
 
-p.add_argument("--username", help="(optional) username for logging. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
-p.add_argument("--directory", help="(optional) working directory for logging. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
+p.add_argument("--username", help="(optional) user running this pipeline. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
+p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
 #p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
 
@@ -503,7 +506,7 @@ if args.subset_samples:
     new_sample_count = vds.num_samples
     logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
 
-    output_vds_sample_id_hash = "_%020d" % abs(hash(",".join(sorted(list(matched)))))
+    output_vds_sample_id_hash = "_%s_samples__%020d" % (len(matched), abs(hash(",".join(sorted(list(matched))))))
 
     logger.info("Finished Subsetting samples.")
     logger.info("Callset stats after subsetting:")
@@ -580,6 +583,7 @@ if args.start_with_step <= 1:
         "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_root="va.vep"),
         "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=True),
         "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_root="va.vep"),
+        "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_root="va.vep"),
         "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_root="va.vep"),
         "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
     ]
@@ -617,7 +621,7 @@ if args.start_with_step <= 1:
             xstop: Long,
 
             rsid: String,
-            qual: Double,
+            --- qual: Double,
             filters: Set[String],
             wasSplit: Boolean,
             aIndex: Int,
@@ -625,6 +629,7 @@ if args.start_with_step <= 1:
             geneIds: Set[String],
             transcriptIds: Set[String],
             codingGeneIds: Set[String],
+            domains: Set[String],
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
@@ -663,12 +668,13 @@ if args.start_with_step <= 1:
             xstop: Long,
 
             rsid: String,
-            qual: Double,
+            --- qual: Double,
             filters: Set[String],
 
             geneIds: Set[String],
             transcriptIds: Set[String],
             codingGeneIds: Set[String],
+            domains: Set[String],
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
