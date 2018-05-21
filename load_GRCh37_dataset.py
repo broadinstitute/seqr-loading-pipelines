@@ -34,7 +34,7 @@ run((
     "--cluster %(cluster_name)s "
     "--project seqr-project "
     "./entire_vds_pipeline.py "
-    "-g 37 " + " ".join(unparsed_args)
+    "--genome-version 37 " + " ".join(unparsed_args)
 ) % locals())
 
 
