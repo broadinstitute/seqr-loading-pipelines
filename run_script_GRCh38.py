@@ -22,7 +22,7 @@ def run(cmd):
 project = args.project
 cluster_name = args.cluster
 script = args.script
-script_args = " ".join(unparsed_args)
+script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
 run((
    "python create_cluster_GRCh38.py "
@@ -39,5 +39,4 @@ run((
     "time ./submit.py "
     "--cluster %(cluster_name)s "
     "--project seqr-project "
-    "%(script)s " +
-    " ".join(unparsed_args)) % locals())
+    "%(script)s %(script_args)s") % locals())

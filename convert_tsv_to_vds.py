@@ -5,7 +5,7 @@ import hail
 from pprint import pformat
 
 
-p = ap.ArgumentParser(help="Convert a tsv table to a .vds")
+p = ap.ArgumentParser(description="Convert a tsv table to a .vds")
 p.add_argument("-c", "--chrom-column", required=True)
 p.add_argument("-p", "--pos-column", required=True)
 p.add_argument("-r", "--ref-column", required=True)
