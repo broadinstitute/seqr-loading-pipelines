@@ -4,7 +4,7 @@ The hail scripts in this repo can be used to pre-process variant callsets and ex
 Scripts
 -------
 
-**Scripts for creating dataproc clusters:**
+**Scripts for creating dataproc clusters (in ./gcloud_dataproc/):**
 
 * `create_cluster_GRCh37.py` - creates a dataproc cluster that has VEP pre-installed with a GRCh37 cache. This allows hail pipelines to to use `vds.vep(..)` to run VEP on GRCh37-aligned datasets. 
 * `create_cluster_GRCh38.py` - creates a dataproc cluster that has VEP pre-installed with a GRCh38 cache. This allows hail pipelines to to use `vds.vep(..)` to run VEP on GRCh38-aligned datasets. 
@@ -12,7 +12,7 @@ Scripts
 * `create_cluster_notebook.py` creates a cluster that allows hail commmands to be run interactively in an ipython notebook. 
 * `connect_to_cluster.py` connects to a cluster that was created by `create_cluster_notebook.py`, and re-opens ipython dashboard in the browser.
 
-**Scripts for describing, modifying and deleting dataproc clusters:**
+**Scripts for describing, modifying and deleting dataproc clusters (in ./gcloud_dataproc/):**
 
 * `list_clusters.py` prints the names of all existing dataproc clusters in the project.
 * `list_jobs.py` lists all active dataproc jobs.
@@ -22,17 +22,17 @@ Scripts
 * `delete_cluster.py` deletes a specific dataproc cluster.
 * `delete_job.py` / `kill_job.py` kills a specific hail job.
 
-**Script for submitting jobs:**
+**Script for submitting jobs (in ./gcloud_dataproc/):**
 
 * `submit.py` submits a python hail script to the cluster.
 
-**Main hail pipelines:**
+**Main hail pipelines (in ./hail_scripts/):**
 
-* `entire_vds_pipeline.py` annotation and pre-processing pipeline for GRCh37 and GRCh38 rare disease callsets.
 * `run_vep.py` run VEP on a vcf or vds and write the result to a .vds. WARNING: this must run on a cluster created with either `create_cluster_GRCh37.py` or `create_cluster_GRCh38.py`, depending on the genome version of the dataset being annotated.
-- `export_gnomad_to_ES.py` - joins gnomad exome and genome datasets into a structure that contains the info used in the gnomAD browser, and exports this to elasticsearch.
+* `load_dataset_to_es_pipeline.py` annotation and pre-processing pipeline for GRCh37 and GRCh38 rare disease callsets.
+* `load_gnomad_to_es_pipeline.py` - joins gnomad exome and genome datasets into a structure that contains the info used in the gnomAD browser, and exports this to elasticsearch.
 
-**Other hail pipelines:**
+**Other hail pipelines (in ./hail_scripts/):**
 
 * `create_subset.py` subsets a vcf or vds to a specific chromosome or locus - useful for creating small datasets for testing. 
 * `convert_tsv_to_vds.py` converts a .tsv table to a VDS by allowing the user to specify the chrom, pos, ref, alt column names
@@ -50,19 +50,19 @@ Scripts
 
 Run VEP:
 ```
-./create_cluster_GRCh37.py 
-./submit.py run_vep.py gs://<dataset path> 
+./gcloud_dataproc/create_cluster_GRCh37.py 
+./hail_scripts/submit.py ./hail_scripts/run_vep.py gs://<dataset path> 
 ```
 
 Run rare disease callset pipeline:
 ```    
-./create_cluster_GRCh38.py --project=seqr-project cluster1 2 12 ;   # create cluster with 2 persistant, 12 preemptible nodes
+./gcloud_dataproc/create_cluster_GRCh38.py --project=seqr-project cluster1 2 12 ;   # create cluster with 2 persistant, 12 preemptible nodes
 
-./submit.py --cluster cluster1 --project seqr-project ./entire_vds_pipeline.py -g 38 --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12  --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS  gs://my-datasets/GRCh38/my_dataset.vcf.gz
+./gcloud_dataproc/submit.py --cluster cluster1 --project seqr-project ./hail_scripts/load_dataset_to_es_pipeline.py -g 38 --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12  --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS  gs://my-datasets/GRCh38/my_dataset.vcf.gz
 ```
 
 There's also a shortcut for running the rare disease pipeline which combines the 2 commands above into 1:
 ```
-python load_GRCh38_dataset.py --host $ELASTICSEARCH_HOST_IP --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS gs://my-datasets/GRCh38/my_dataset.vcf.gz
+python ./gcloud_dataproc/load_GRCh38_dataset.py --host $ELASTICSEARCH_HOST_IP --project-id my_dataset_name  --sample-type WES  -d GATK_VARIANTS gs://my-datasets/GRCh38/my_dataset.vcf.gz
 ```
 

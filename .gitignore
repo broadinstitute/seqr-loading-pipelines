@@ -5,3 +5,6 @@
 *.pyc
 *.DS_Store
 scripts
+temp
+download_and_create_reference_datasets/*.txt
+download_and_create_reference_datasets/*.gz
