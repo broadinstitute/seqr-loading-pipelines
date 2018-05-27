@@ -3,6 +3,8 @@
 import os
 
 from utils.add_eigen import add_eigen_to_vds
+from utils.add_gene_constraint import add_gene_constraint_to_vds
+from utils.add_omim import add_omim_to_vds
 
 os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
 
@@ -14,7 +16,6 @@ import requests
 import time
 import sys
 from pprint import pprint
-
 
 from utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
     add_gnomad_genome_coverage_to_vds
@@ -82,6 +83,8 @@ p.add_argument("--block-size", help="Block size", type=int, default=1000)
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
+p.add_argument("--exclude-omim", action="store_true", help="Don't add OMIM mim id column. Intended for testing.")
+p.add_argument("--exclude-gene-constraint", action="store_true", help="Don't add gene constraint columns. Intended for testing.")
 p.add_argument("--exclude-eigen", action="store_true", help="Don't add Eigen scores. Intended for testing.")
 p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). Intended for testing.")
 p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. Intended for testing.")
@@ -92,7 +95,7 @@ p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD field
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
-p.add_argument("--dont-create-snapshot", action="store_true", help="Don't create an elasticsearch snapshot after indexing is complete. Intended for testing.")
+p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
 
 p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
@@ -641,12 +644,12 @@ if args.start_with_step <= 1:
             AN: Int,
             --- BaseQRankSum: Double,
             --- ClippingRankSum: Double,
-            DP: Int,
-            FS: Double,
-            InbreedingCoeff: Double,
-            MQ: Double,
+            --- DP: Int,
+            --- FS: Double,
+            --- InbreedingCoeff: Double,
+            --- MQ: Double,
             --- MQRankSum: Double,
-            QD: Double,
+            --- QD: Double,
             --- ReadPosRankSum: Double,
             --- VQSLOD: Double,
             --- culprit: String,
@@ -715,6 +718,13 @@ if args.start_with_step <= 1:
     vds = vds.annotate_variants_expr("va = va.clean")
 
     if args.analysis_type == "GATK_VARIANTS":
+
+        if not args.skip_annotations and not args.exclude_omim:
+            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
+
+        if not args.skip_annotations and not args.exclude_gene_constraint:
+            vds = add_gene_constraint_to_vds(hc, vds)
+
         if not args.skip_annotations and not args.exclude_eigen:
             logger.info("\n==> Add eigen")
             vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
@@ -806,7 +816,7 @@ if args.start_with_step <= 2:
         export_genotypes=False,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
-        export_snapshot_to_google_bucket=not args.dont_create_snapshot,
+        export_snapshot_to_google_bucket=args.create_snapshot,
         start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
     )
 
