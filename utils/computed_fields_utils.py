@@ -165,7 +165,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
                     hgnc_id: str(c.hgnc_id),
                     domains: c.domains.map( domain => domain.db+":"+domain.name ),
                     hgvs: orElse(c.hgvsp, c.hgvsc),
-                    major_consequence: if( c.consequence_terms.size > 0)
+                    major_consequence: if(c.consequence_terms.size > 0)
                             c.consequence_terms.toArray.sortBy(t => CONSEQUENCE_TERM_RANK_LOOKUP.get(t).toInt)[0]
                         else
                             NA:String
