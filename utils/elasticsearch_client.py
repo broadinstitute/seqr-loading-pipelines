@@ -121,8 +121,8 @@ class ElasticsearchClient:
                 "number_of_replicas": 0,
                 "index.mapping.total_fields.limit": 10000,
                 "index.refresh_interval": "30s",
-                "index.store.throttle.type": "none",
-                "index.codec": "best_compression",
+                "index.codec": "best_compression",   # halves disk usage, no difference in query times
+                #"index.store.throttle.type": "none",
             }
 
             self.es.indices.create(index=index_name, body=elasticsearch_mapping)
@@ -132,9 +132,7 @@ class ElasticsearchClient:
             #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
             #existing_properties.update(elasticsearch_schema)
 
-            logger.info("==> Updating elasticsearch %s schema. New schema:" % (index_name, ))
-            logger.info(pformat(elasticsearch_schema))
-
+            logger.info("==> Updating elasticsearch %s schema. New schema:\n%s" % (index_name, pformat(elasticsearch_schema)))
             self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
                 "properties": elasticsearch_schema
             })
@@ -215,7 +213,7 @@ class ElasticsearchClient:
             "%s.%s" % (sample_id, genotype_field): "%s_%s" % (sample_id, genotype_field)
             for sample_id in vds.sample_ids
             for genotype_field in ['num_alt', 'gq', 'ab', 'dp']
-            }
+        }
 
         # replace "." with "_" in other column names
         kt_rename_dict = genotype_column_name_fixes
@@ -356,18 +354,17 @@ class ElasticsearchClient:
             disable_index_for_fields=disable_index_for_fields,
         )
 
-        #logger.info(elasticsearch_schema)
-
         # override elasticsearch types
         if field_name_to_elasticsearch_type_map is not None:
             modified_elasticsearch_schema = dict(elasticsearch_schema)  # make a copy
             for field_name_regexp, elasticsearch_field_spec in field_name_to_elasticsearch_type_map.items():
+                match_count = 0
                 for key, value in elasticsearch_schema.items():
                     if re.match(field_name_regexp, key):
                         modified_elasticsearch_schema[key] = elasticsearch_field_spec
-                        break
-                else:
-                    logger.warn("No columns matched '%s'" % (field_name_regexp,))
+                        match_count += 1
+
+                logger.info("%s columns matched '%s'" % (match_count, field_name_regexp,))
 
             elasticsearch_schema = modified_elasticsearch_schema
 
@@ -421,7 +418,7 @@ class ElasticsearchClient:
             logger.info(pformat(repo_info))
         except elasticsearch.exceptions.NotFoundError:
             # register repository
-            self.create_elasticsearch_snapshot_repository(self._host, self._port, bucket, base_path, snapshot_repo)
+            self.create_elasticsearch_snapshot_repository(bucket, base_path, snapshot_repo)
 
         # check that index exists
         matching_indices = self.es.indices.get(index=index_name).keys()
@@ -557,8 +554,8 @@ class ElasticsearchClient:
         INDEX_OPERATIONS_LOG = "index_operations_log"
         DOC_TYPE = "log"
 
-        schema = {arg_name: {"type": "text"} for arg_name in arg_names}
-        schema["timestamp"] = {"type": "string"}
+        schema = {arg_name: {"type": "keyword"} for arg_name in arg_names}
+        schema["timestamp"] = {"type": "keyword"}
 
         self.create_or_update_mapping(INDEX_OPERATIONS_LOG, DOC_TYPE, elasticsearch_schema=schema)
 
