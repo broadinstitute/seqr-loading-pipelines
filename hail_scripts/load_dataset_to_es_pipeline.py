@@ -107,7 +107,7 @@ p.add_argument("--start-with-sample-group", help="If the callset contains more s
 p.add_argument("--username", help="(optional) user running this pipeline. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
 p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
-#p.add_argument("-o", "--output-vds", help="(optional) Output vds filename")
+p.add_argument("--output-vds", help="(optional) Output vds filename prefix (eg. test-vds)")
 
 p.add_argument("input_vds", help="input VDS")
 
@@ -259,7 +259,7 @@ def export_to_elasticsearch(
             genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
         elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
             genotype_fields_to_export = [
-                'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else NA:Int',
+                'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
                 #'genotype_filter = g.FT',
                 #'gq = g.GQ',
                 'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
@@ -360,16 +360,6 @@ def export_to_elasticsearch(
             operation="create_index",
             status="success",
         )
-
-#if args.output_vds:
-    #    output_vds_path = args.output_vds
-    #else:
-    #    output_vds_path = input_path_prefix
-    #logger.info("Output: " + output_vds_path)
-    #logger.info("\n==> saving to " + output_vds_path)
-    #vds.write(output_vds_path, overwrite=True)
-    #logger.info("Wrote file: " + output_vds_path)
-
 
 
 # ==========================
@@ -473,7 +463,7 @@ hc = hail.HailContext(log="/hail.log")
 logger.info("Reading in dataset...")
 vds = read_in_dataset(input_path, args.analysis_type, filter_interval)
 
-output_vds_sample_id_hash = ""
+output_vds_hash = ""
 
 # NOTE: if sample IDs are remapped first thing, then the fam file should contain the desired (not original IDs)
 if args.remap_sample_ids:
@@ -513,7 +503,7 @@ if args.subset_samples:
     new_sample_count = vds.num_samples
     logger.info('Kept {0} out of {1} samples in vds'.format(new_sample_count, original_sample_count))
 
-    output_vds_sample_id_hash = "_%s_samples__%020d" % (len(matched), abs(hash(",".join(sorted(list(matched))))))
+    output_vds_hash = "_%s_samples__%020d" % (len(matched), abs(hash(",".join(sorted(list(matched))))))
 
     logger.info("Finished Subsetting samples.")
     logger.info("Callset stats after subsetting:")
@@ -535,8 +525,10 @@ if len(vds.sample_ids) > args.max_samples_per_index:
 else:
     sample_groups = [vds.sample_ids]
 
-
-output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_sample_id_hash
+if args.output_vds:
+    output_vds_prefix = os.path.join(os.path.dirname(input_path), args.output_vds.replace(".vds", ""))
+else:
+    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_hash
 
 vep_output_vds = output_vds_prefix + ".vep.vds"
 annotated_output_vds = output_vds_prefix + ".vep_and_annotations.vds"
@@ -548,7 +540,12 @@ if args.start_with_step == 0:
         logger.info("Read in data, run vep")
 
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
-        vds.write(vep_output_vds, overwrite=True)
+
+        step0_output_vds = vep_output_vds
+    else:
+        step0_output_vds = output_vds_prefix + ".vds"
+
+    vds.write(step0_output_vds, overwrite=True)
 
     # write out new vcf (after sample id remapping and subsetting if requested above)
     if args.export_vcf:
@@ -568,7 +565,7 @@ if args.start_with_step <= 1:
     logger.info("\n==> Re-create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(vep_output_vds, args.analysis_type, filter_interval)
+    vds = read_in_dataset(step0_output_vds, args.analysis_type, filter_interval)
 
     # add computed annotations
     logger.info("\n==> Adding computed annotations")
@@ -577,8 +574,8 @@ if args.start_with_step <= 1:
         "va.variantId = %s" % get_expr_for_variant_id(),
 
         "va.contig = %s" % get_expr_for_contig(),
-        "va.start = %s" % get_expr_for_start_pos(),
         "va.pos = %s" % get_expr_for_start_pos(),
+        "va.start = %s" % get_expr_for_start_pos(),
         "va.end = %s" % get_expr_for_end_pos(),
         "va.ref = %s" % get_expr_for_ref_allele(),
         "va.alt = %s" % get_expr_for_alt_allele(),
@@ -733,7 +730,8 @@ if args.start_with_step <= 1:
             logger.info("\n==> Add eigen")
             vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
 
-    vds.write(annotated_output_vds, overwrite=True)
+    step1_output_vds = annotated_output_vds
+    vds.write(step1_output_vds, overwrite=True)
 
     export_to_elasticsearch(
         args.host,
@@ -760,7 +758,7 @@ if args.start_with_step <= 2:
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(annotated_output_vds, args.analysis_type, filter_interval)
+    vds = read_in_dataset(step1_output_vds, args.analysis_type, filter_interval)
     vds = compute_minimal_schema(vds, args.analysis_type)
 
     if not args.skip_annotations and not args.exclude_clinvar:
