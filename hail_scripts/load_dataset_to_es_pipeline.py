@@ -95,6 +95,8 @@ p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD field
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
+
+p.add_argument("--dont-update-operations-log", action="store_true", help="Don't save metadata about this export in the operations log.")
 p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
 
 p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
@@ -241,6 +243,7 @@ def export_to_elasticsearch(
     disable_doc_values_for_fields=(),
     disable_index_for_fields=(),
     export_snapshot_to_google_bucket=False,
+    update_operations_log=False,
     start_with_sample_group=0,
 ):
     """Utility method for exporting the given vds to an elasticsearch index.
@@ -256,7 +259,7 @@ def export_to_elasticsearch(
             genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
         elif args.analysis_type in ["MANTA_SVS", "JULIA_SVS"]:
             genotype_fields_to_export = [
-                'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
+                'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else NA:Int',
                 #'genotype_filter = g.FT',
                 #'gq = g.GQ',
                 'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
@@ -331,7 +334,6 @@ def export_to_elasticsearch(
         logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
 
     if export_snapshot_to_google_bucket:
-
         logger.info("==> export snapshot to google bucket")
         client.create_elasticsearch_snapshot(
             index_name=index_name + "*",
@@ -339,23 +341,25 @@ def export_to_elasticsearch(
             base_path="elasticsearch/snapshots",
             snapshot_repo="callsets")
 
-    client.save_index_operation_metadata(
-        args.input_vds,
-        index_name,
-        args.genome_version,
-        fam_file=args.fam_file,
-        remap_sample_ids=args.remap_sample_ids,
-        subset_samples=args.subset_samples,
-        skip_vep=args.skip_vep,
-        project_id=args.project_id,
-        analysis_type=args.analysis_type,
-        sample_type=args.sample_type,
-        command=" ".join(sys.argv),
-        directory=args.directory,
-        username=args.username,
-        operation="create_index",
-        status="success",
-    )
+    if update_operations_log:
+        logger.info("==> update operations log")
+        client.save_index_operation_metadata(
+            args.input_vds,
+            index_name,
+            args.genome_version,
+            fam_file=args.fam_file,
+            remap_sample_ids=args.remap_sample_ids,
+            subset_samples=args.subset_samples,
+            skip_vep=args.skip_vep,
+            project_id=args.project_id,
+            analysis_type=args.analysis_type,
+            sample_type=args.sample_type,
+            command=" ".join(sys.argv),
+            directory=args.directory,
+            username=args.username,
+            operation="create_index",
+            status="success",
+        )
 
 #if args.output_vds:
     #    output_vds_path = args.output_vds
@@ -646,10 +650,10 @@ if args.start_with_step <= 1:
             --- ClippingRankSum: Double,
             --- DP: Int,
             --- FS: Double,
-            --- InbreedingCoeff: Double,
-            --- MQ: Double,
+            InbreedingCoeff: Double,
+            MQ: Double,
             --- MQRankSum: Double,
-            --- QD: Double,
+            QD: Double,
             --- ReadPosRankSum: Double,
             --- VQSLOD: Double,
             --- culprit: String,
@@ -743,6 +747,7 @@ if args.start_with_step <= 1:
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
         disable_index_for_fields=("sortedTranscriptConsequences", ),
         export_snapshot_to_google_bucket=False,
+        update_operations_log=False,
         start_with_sample_group=args.start_with_sample_group if args.start_with_step == 0 else 0,
     )
 
@@ -817,6 +822,7 @@ if args.start_with_step <= 2:
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         export_snapshot_to_google_bucket=args.create_snapshot,
+        update_operations_log=not args.dont_update_operations_log,
         start_with_sample_group=args.start_with_sample_group if args.start_with_step == 1 else 0,
     )
 
