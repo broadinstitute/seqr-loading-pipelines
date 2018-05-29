@@ -27,13 +27,12 @@ Struct{
 }
 """
 
+GENE_CONSTRAINT_PATH = 'gs://seqr-reference-data/gene_constraint/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt.kt'
+
 
 def add_gene_constraint_to_vds(hail_context, vds, root="va.gene_constraint", vds_key='va.mainTranscript.transcript_id', verbose=True):
-    """Add OMIM annotation"""
 
-    gene_constraint_path = 'gs://seqr-reference-data/gene_constraint/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt.kt'
-
-    kt = hail_context.read_table(gene_constraint_path).select(['transcript', 'mis_z', 'pLI'])
+    kt = hail_context.read_table(GENE_CONSTRAINT_PATH).select(['transcript', 'mis_z', 'pLI'])
 
     if verbose:
         print("Gene Constraint schema:\n" + pformat(kt.schema))

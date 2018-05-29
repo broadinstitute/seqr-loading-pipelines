@@ -19,13 +19,13 @@ Struct{
  }
 """
 
+OMIM_GENEMAP2_PATH = 'gs://seqr-reference-data/omim/genemap2.txt.kt'
+
 
 def add_omim_to_vds(hail_context, vds, root="va.omim", vds_key='va.mainTranscript.gene_id', verbose=True):
     """Add OMIM annotation"""
 
-    omim_path = 'gs://seqr-reference-data/omim/genemap2.txt.kt'
-
-    kt = hail_context.read_table(omim_path) \
+    kt = hail_context.read_table(OMIM_GENEMAP2_PATH) \
         .select(['Mim Number', 'Ensembl Gene ID']) \
         .rename({
             'Mim Number': 'mim_number',
