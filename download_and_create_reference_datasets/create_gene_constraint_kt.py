@@ -19,4 +19,10 @@ run("mv {filename}.temp {filename}".format(**locals()))
 run("gsutil -m cp {filename} {GCLOUD_BUCKET_PATH}/{filename}".format(**locals()))
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-run("python gcloud_dataproc/run_script.py --cluster gene-constraint hail_scripts/convert_tsv_to_key_table.py --key-by 'transcript' {GCLOUD_BUCKET_PATH}/{filename}".format(**locals()))
+run(" ".join([
+    "python gcloud_dataproc/run_script.py",
+    "--cluster gene-constraint",
+    "hail_scripts/convert_tsv_to_key_table.py",
+    "--key-by 'transcript'",
+    "{GCLOUD_BUCKET_PATH}/{filename}",
+]).format(**locals()))
