@@ -537,7 +537,7 @@ class ElasticsearchClient:
         subset_samples=None,
         skip_vep=False,
         project_id=None,
-        analysis_type=None,
+        dataset_type=None,
         sample_type=None,
         command=None,
         directory=None,

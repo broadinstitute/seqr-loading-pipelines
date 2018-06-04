@@ -30,6 +30,7 @@ def add_omim_to_vds(hail_context, vds, root="va.omim", vds_key='va.mainTranscrip
         .rename({
             'Mim Number': 'mim_number',
             'Ensembl Gene ID': 'gene_id',
+            #'Phenotypes': 'phenotypes',
         })
 
     if verbose:
