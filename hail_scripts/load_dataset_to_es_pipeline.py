@@ -475,7 +475,9 @@ if args.remap_sample_ids:
     samples_in_vds = set(vds.sample_ids)
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
-        warning_message = "{0} out of {1} remapping table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
+        warning_message = ("Only {0} out of {1} remapping-table IDs matched IDs in the variant callset.\n"
+            "Remapping-table IDs that aren't in the VDS: {2}\n"
+            "All VDS IDs: {3}").format(
             len(matched), len(samples_in_table), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
@@ -493,7 +495,9 @@ if args.subset_samples:
     samples_in_vds = set(vds.sample_ids)
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
-        warning_message = "{0} out of {1} subsetting table IDs: {2}\n didn't match IDs in the variant callset: {3}".format(
+        warning_message = ("Only {0} out of {1} subsetting-table IDs matched IDs in the variant callset.\n" \
+            "Subsetting-table IDs that aren't in the VDS: {2}\n"
+            "All VDS IDs: {3}").format(
             len(matched), len(samples_in_table), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
@@ -720,20 +724,6 @@ if args.start_with_step <= 1:
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
-    if args.dataset_type == "GATK_VARIANTS":
-
-        if not args.skip_annotations and not args.exclude_omim:
-            logger.info("\n==> Add omim info")
-            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
-
-        if not args.skip_annotations and not args.exclude_gene_constraint:
-            logger.info("\n==> Add gene constraint")
-            vds = add_gene_constraint_to_vds(hc, vds)
-
-        if not args.skip_annotations and not args.exclude_gnomad_coverage:
-            logger.info("\n==> Add gnomad coverage")
-            vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
-            vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
     vds.write(step1_output_vds, overwrite=True)
 
@@ -810,6 +800,11 @@ if args.start_with_step <= 2:
             logger.info("\n==> Add eigen")
             vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
 
+        if not args.skip_annotations and not args.exclude_gnomad_coverage:
+            logger.info("\n==> Add gnomad coverage")
+            vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
+            vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+
     step2_output_vds = annotated_output_vds
     vds.write(step2_output_vds, overwrite=True)
 
@@ -821,6 +816,16 @@ if args.start_with_step <= 3:
     hc = hail.HailContext(log="/hail.log")
 
     vds = read_in_dataset(step2_output_vds, args.dataset_type, filter_interval)
+
+    if args.dataset_type == "GATK_VARIANTS":
+
+        if not args.skip_annotations and not args.exclude_omim:
+            logger.info("\n==> Add omim info")
+            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
+
+        if not args.skip_annotations and not args.exclude_gene_constraint:
+            logger.info("\n==> Add gene constraint")
+            vds = add_gene_constraint_to_vds(hc, vds)
 
     export_to_elasticsearch(
         args.host,
