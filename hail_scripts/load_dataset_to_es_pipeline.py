@@ -738,15 +738,15 @@ if args.start_with_step <= 2:
 
     vds = read_in_dataset(step1_output_vds, args.dataset_type, filter_interval)
 
-    if args.dataset_type == "GATK_VARIANTS":
+    #if args.dataset_type == "GATK_VARIANTS":
 
-        if not args.skip_annotations and not args.exclude_omim:
-            logger.info("\n==> Add omim info")
-            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
+        #if not args.skip_annotations and not args.exclude_omim:
+        #    logger.info("\n==> Add omim info")
+        #    vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
 
-        if not args.skip_annotations and not args.exclude_gene_constraint:
-            logger.info("\n==> Add gene constraint")
-            vds = add_gene_constraint_to_vds(hc, vds)
+        #if not args.skip_annotations and not args.exclude_gene_constraint:
+        #    logger.info("\n==> Add gene constraint")
+        #    vds = add_gene_constraint_to_vds(hc, vds)
 
 
     export_to_elasticsearch(
