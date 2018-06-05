@@ -535,17 +535,17 @@ else:
     output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_hash
 
 vep_output_vds = output_vds_prefix + ".vep.vds"
-annotated_output_vds = output_vds_prefix + ".vep_and_annotations.vds"
+annotated_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
 
 step0_output_vds = vep_output_vds
 step1_output_vds = annotated_output_vds
-step2_output_vds = annotated_output_vds
+step3_output_vds = output_vds_prefix + ".vep_and_all_annotations.vds"
 
 # run vep
 if args.start_with_step == 0:
     if not args.skip_vep:
         logger.info("=============================== pipeline - step 0 ===============================")
-        logger.info("Read in data, run vep")
+        logger.info("Read in data, run vep, write data to VDS")
 
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
     else:
@@ -566,7 +566,7 @@ hc.stop()
 
 if args.start_with_step <= 1:
     logger.info("=============================== pipeline - step 1 ===============================")
-    logger.info("Read in data, compute various derived fields, export to elasticsearch")
+    logger.info("Read in data, compute various derived fields, write data to VDS")
 
     logger.info("\n==> Re-create HailContext")
     hc = hail.HailContext(log="/hail.log")
@@ -724,8 +724,30 @@ if args.start_with_step <= 1:
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
-
     vds.write(step1_output_vds, overwrite=True)
+
+    hc.stop()
+
+
+if args.start_with_step <= 2:
+    logger.info("=============================== pipeline - step 2 ===============================")
+    logger.info("Read in data, add more reference datasets, export to elasticsearch")
+
+    logger.info("\n==> Create HailContext")
+    hc = hail.HailContext(log="/hail.log")
+
+    vds = read_in_dataset(step1_output_vds, args.dataset_type, filter_interval)
+
+    if args.dataset_type == "GATK_VARIANTS":
+
+        if not args.skip_annotations and not args.exclude_omim:
+            logger.info("\n==> Add omim info")
+            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
+
+        if not args.skip_annotations and not args.exclude_gene_constraint:
+            logger.info("\n==> Add gene constraint")
+            vds = add_gene_constraint_to_vds(hc, vds)
+
 
     export_to_elasticsearch(
         args.host,
@@ -745,9 +767,9 @@ if args.start_with_step <= 1:
 
     hc.stop()
 
-if args.start_with_step <= 2:
-    logger.info("=============================== pipeline - step 2 ===============================")
-    logger.info("Read in data, add more reference datasets, export to elasticsearch")
+if args.start_with_step <= 3:
+    logger.info("=============================== pipeline - step 3 ===============================")
+    logger.info("Read in data, add more reference datasets, write data to VDS")
 
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
@@ -805,27 +827,19 @@ if args.start_with_step <= 2:
             vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
             vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
 
-    step2_output_vds = annotated_output_vds
-    vds.write(step2_output_vds, overwrite=True)
+    vds.write(step3_output_vds, overwrite=True)
 
     hc.stop()
 
 
-if args.start_with_step <= 3:
+if args.start_with_step <= 4:
+    logger.info("=============================== pipeline - step 4 ===============================")
+    logger.info("Read in data, export data to elasticsearch")
+
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(step2_output_vds, args.dataset_type, filter_interval)
-
-    if args.dataset_type == "GATK_VARIANTS":
-
-        if not args.skip_annotations and not args.exclude_omim:
-            logger.info("\n==> Add omim info")
-            vds = add_omim_to_vds(hc, vds, root="va.omim", vds_key='va.mainTranscript.gene_id')
-
-        if not args.skip_annotations and not args.exclude_gene_constraint:
-            logger.info("\n==> Add gene constraint")
-            vds = add_gene_constraint_to_vds(hc, vds)
+    vds = read_in_dataset(step3_output_vds, args.dataset_type, filter_interval)
 
     export_to_elasticsearch(
         args.host,
