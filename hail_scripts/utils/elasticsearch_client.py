@@ -132,7 +132,8 @@ class ElasticsearchClient:
             #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
             #existing_properties.update(elasticsearch_schema)
 
-            logger.info("==> Updating elasticsearch %s schema. New schema:\n%s" % (index_name, pformat(elasticsearch_schema)))
+            logger.info("==> Updating elasticsearch %s/%s. New schema:\n%s" % (index_name, index_type_name, pformat(elasticsearch_schema)))
+
             self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
                 "properties": elasticsearch_schema
             })
