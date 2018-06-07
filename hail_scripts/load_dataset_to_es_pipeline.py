@@ -68,13 +68,13 @@ p.add_argument("--max-samples-per-index", help="Max samples per index", type=int
 
 p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
-p.add_argument("--project-id", help="seqr Project id", required=True)
+p.add_argument("--project-guid", help="seqr Project id", required=True)
 p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
 p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
 p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
 p.add_argument("--dataset-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
 
-p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_id, family_id, sample_type and dataset_type.")
+p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
 p.add_argument("--host", help="Elastisearch IP address", default="10.56.10.4")
 p.add_argument("--port", help="Elastisearch port", default="9200")
@@ -126,7 +126,7 @@ if args.index:
     index_name = args.index.lower()
 else:
     index_name = "%s%s%s__%s__grch%s__%s__%s" % (
-        args.project_id,
+        args.project_guid,
         "__"+args.family_id if args.family_id else "",  # optional family id
         "__"+args.individual_id if args.individual_id else "",  # optional individual id
         args.sample_type,
@@ -351,7 +351,7 @@ def export_to_elasticsearch(
             remap_sample_ids=args.remap_sample_ids,
             subset_samples=args.subset_samples,
             skip_vep=args.skip_vep,
-            project_id=args.project_id,
+            project_id=args.project_guid,
             dataset_type=args.dataset_type,
             sample_type=args.sample_type,
             command=" ".join(sys.argv),
@@ -777,15 +777,12 @@ if args.start_with_step <= 3:
     vds = read_in_dataset(step1_output_vds, args.dataset_type, filter_interval)
     vds = compute_minimal_schema(vds, args.dataset_type)
 
-    if not args.skip_annotations and not args.exclude_clinvar:
-        logger.info("\n==> Add clinvar")
-        vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
-
-    if not args.skip_annotations and not args.exclude_hgmd:
-        logger.info("\n==> Add hgmd")
-        vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
-
     if args.dataset_type == "GATK_VARIANTS":
+        #if not args.skip_annotations and not args.exclude_gnomad_coverage:
+        #    logger.info("\n==> Add gnomad coverage")
+        #    vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
+        #    vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+
         if not args.skip_annotations and not args.exclude_dbnsfp:
             logger.info("\n==> Add dbnsfp")
             vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
@@ -822,10 +819,13 @@ if args.start_with_step <= 3:
             logger.info("\n==> Add eigen")
             vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_gnomad_coverage:
-            logger.info("\n==> Add gnomad coverage")
-            vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
-            vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+    if not args.skip_annotations and not args.exclude_clinvar:
+        logger.info("\n==> Add clinvar")
+        vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
+
+    if not args.skip_annotations and not args.exclude_hgmd:
+        logger.info("\n==> Add hgmd")
+        vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
     vds.write(step3_output_vds, overwrite=True)
 
