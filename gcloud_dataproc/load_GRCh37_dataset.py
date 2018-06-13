@@ -5,7 +5,7 @@ import os
 import random
 import sys
 
-from gcloud_dataproc.utils.seqr_api import download_fam_file_from_seqr
+from gcloud_dataproc.utils import seqr_api
 
 
 def run(cmd):
@@ -33,7 +33,7 @@ os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 if args.project_guid:
     unparsed_args += ["--project-guid", args.project_guid]
 
-    download_fam_file_from_seqr(args.project_guid, args.seqr_url, unparsed_args)
+    seqr_api.download_pedigree_info(args.project_guid, args.seqr_url, unparsed_args)
 
 
 cluster_name = args.cluster_name
