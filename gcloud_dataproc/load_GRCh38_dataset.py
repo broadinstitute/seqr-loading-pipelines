@@ -34,7 +34,7 @@ os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 if args.project_guid:
     unparsed_args += ["--project-guid", args.project_guid]
 
-    seqr_api.download_pedigree_info(args.project_guid, args.seqr_url, unparsed_args)
+    seqr_api.download_pedigree_info(args.project_guid, unparsed_args, seqr_url=args.seqr_url)
 
 
 cluster_name = args.cluster_name

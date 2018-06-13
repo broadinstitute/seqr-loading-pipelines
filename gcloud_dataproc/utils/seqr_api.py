@@ -5,13 +5,23 @@ import requests
 try: input = raw_input  # python2/3
 except NameError: pass
 
+SEQR_URL = "https://seqr.broadinstitute.org"
+
 
 def run(cmd):
     print(cmd)
     os.system(cmd)
 
 
-def download_fam_file_from_seqr(project_guid, seqr_url, command_line_args):
+def download_projects(seqr_username=None, seqr_password=None, seqr_url=SEQR_URL):
+    """Returns a list of json objects representing seqr projects.
+
+
+    """
+    pass
+
+
+def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL):
     for unparsed_arg in command_line_args:
         if not unparsed_arg.startswith("gs://"):
             continue
