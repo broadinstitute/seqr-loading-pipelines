@@ -6,7 +6,7 @@ import random
 import sys
 
 unique_id = random.randint(10**5, 10**6 - 1)
-random_cluster_name = "without-vep-%s" % unique_id
+random_cluster_name = "vep-grch37-%s" % unique_id
 
 p = argparse.ArgumentParser()
 p.add_argument("-p", "--project", default="seqr-project")
