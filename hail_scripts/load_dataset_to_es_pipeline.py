@@ -689,30 +689,24 @@ if args.start_with_step <= 1:
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
         """
-        INPUT_SCHEMA["info_fields"] = """
-            IMPRECISE: Boolean,
-            SVTYPE: String,
-            SVLEN: Int,
-            END: Int,
-            OCC: Int,
-            FRQ: Double,
-            --- CIPOS: Array[Int],
-            --- CIEND: Array[Int],
-            --- CIGAR: Array[String],
-            --- MATEID: Array[String],
-            --- EVENT: String,
-            --- HOMLEN: Array[Int],
-            --- HOMSEQ: Array[String],
-            --- SVINSLEN: Array[Int],
-            --- SVINSSEQ: Array[String],
-            --- LEFT_SVINSSEQ: Array[String],
-            --- RIGHT_SVINSSEQ: Array[String],
-            --- INV3: Boolean,
-            --- INV5: Boolean,
-            --- BND_DEPTH: Int,
-            --- MATE_BND_DEPTH: Int,
-            --- JUNCTION_QUAL: Int,
-        """
+
+        # END=100371979;SVTYPE=DEL;SVLEN=-70;CIGAR=1M70D	GT:FT:GQ:PL:PR:SR
+        if args.dataset_type == "MANTA_SVS":
+            INPUT_SCHEMA["info_fields"] = """
+                IMPRECISE: Boolean,
+                SVTYPE: String,
+                SVLEN: Int,
+                END: Int,
+            """
+        else:
+            INPUT_SCHEMA["info_fields"] = """
+                IMPRECISE: Boolean,
+                SVTYPE: String,
+                SVLEN: Int,
+                END: Int,
+                OCC: Int,
+                FRQ: Double,
+            """
     else:
         raise ValueError("Unexpected dataset_type: %s" % args.dataset_type)
 
