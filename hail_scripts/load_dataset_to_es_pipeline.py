@@ -7,7 +7,7 @@ from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
 from hail_scripts.utils.add_omim import add_omim_to_vds
 from hail_scripts.utils.load_vds_utils import read_in_dataset, compute_minimal_schema
 
-os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
+os.system("pip install elasticsearch")
 
 import argparse
 import datetime
@@ -444,11 +444,8 @@ if args.output_vds:
 else:
     output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_hash
 
-vep_output_vds = output_vds_prefix + ".vep.vds"
-annotated_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
-
-step0_output_vds = vep_output_vds
-step1_output_vds = annotated_output_vds
+step0_output_vds = output_vds_prefix + (".vep.vds" if not args.skip_vep else ".vds")
+step1_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
 step3_output_vds = output_vds_prefix + ".vep_and_all_annotations.vds"
 
 # run vep
@@ -456,10 +453,7 @@ if args.start_with_step == 0:
     if not args.skip_vep:
         logger.info("=============================== pipeline - step 0 ===============================")
         logger.info("Read in data, run vep, write data to VDS")
-
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
-    else:
-        step0_output_vds = output_vds_prefix + ".vds"
 
     vds.write(step0_output_vds, overwrite=True)
 
@@ -599,30 +593,24 @@ if args.start_with_step <= 1:
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
         """
-        INPUT_SCHEMA["info_fields"] = """
-            IMPRECISE: Boolean,
-            SVTYPE: String,
-            SVLEN: Int,
-            END: Int,
-            OCC: Int,
-            FRQ: Double,
-            --- CIPOS: Array[Int],
-            --- CIEND: Array[Int],
-            --- CIGAR: Array[String],
-            --- MATEID: Array[String],
-            --- EVENT: String,
-            --- HOMLEN: Array[Int],
-            --- HOMSEQ: Array[String],
-            --- SVINSLEN: Array[Int],
-            --- SVINSSEQ: Array[String],
-            --- LEFT_SVINSSEQ: Array[String],
-            --- RIGHT_SVINSSEQ: Array[String],
-            --- INV3: Boolean,
-            --- INV5: Boolean,
-            --- BND_DEPTH: Int,
-            --- MATE_BND_DEPTH: Int,
-            --- JUNCTION_QUAL: Int,
-        """
+
+        # END=100371979;SVTYPE=DEL;SVLEN=-70;CIGAR=1M70D	GT:FT:GQ:PL:PR:SR
+        if args.dataset_type == "MANTA_SVS":
+            INPUT_SCHEMA["info_fields"] = """
+                IMPRECISE: Boolean,
+                SVTYPE: String,
+                SVLEN: Int,
+                END: Int,
+            """
+        else:
+            INPUT_SCHEMA["info_fields"] = """
+                IMPRECISE: Boolean,
+                SVTYPE: String,
+                SVLEN: Int,
+                END: Int,
+                OCC: Int,
+                FRQ: Double,
+            """
     else:
         raise ValueError("Unexpected dataset_type: %s" % args.dataset_type)
 
