@@ -6,7 +6,7 @@ from hail_scripts.utils.add_eigen import add_eigen_to_vds
 from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
 from hail_scripts.utils.add_omim import add_omim_to_vds
 
-os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
+os.system("pip install elasticsearch")
 
 import argparse
 import datetime
@@ -534,11 +534,8 @@ if args.output_vds:
 else:
     output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_hash
 
-vep_output_vds = output_vds_prefix + ".vep.vds"
-annotated_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
-
-step0_output_vds = vep_output_vds
-step1_output_vds = annotated_output_vds
+step0_output_vds = output_vds_prefix + (".vep.vds" if not args.skip_vep else ".vds")
+step1_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
 step3_output_vds = output_vds_prefix + ".vep_and_all_annotations.vds"
 
 # run vep
@@ -546,10 +543,7 @@ if args.start_with_step == 0:
     if not args.skip_vep:
         logger.info("=============================== pipeline - step 0 ===============================")
         logger.info("Read in data, run vep, write data to VDS")
-
         vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
-    else:
-        step0_output_vds = output_vds_prefix + ".vds"
 
     vds.write(step0_output_vds, overwrite=True)
 

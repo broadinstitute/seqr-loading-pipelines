@@ -1,5 +1,5 @@
 import os
-os.system("pip install elasticsearch")  # this used to be `import pip; pip.main(['install', 'elasticsearch']);`, but pip.main is deprecated as of pip v10
+os.system("pip install elasticsearch")
 
 import argparse
 import elasticsearch
