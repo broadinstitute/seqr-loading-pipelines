@@ -5,6 +5,7 @@ import os
 from hail_scripts.utils.add_eigen import add_eigen_to_vds
 from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
 from hail_scripts.utils.add_omim import add_omim_to_vds
+from hail_scripts.utils.load_vds_utils import read_in_dataset, compute_minimal_schema
 
 os.system("pip install elasticsearch")
 
@@ -138,97 +139,6 @@ else:
     index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
 
 logger.info("Index name: %s" % (index_name,))
-
-
-def read_in_dataset(input_path, dataset_type, filter_interval):
-    """Utility method for reading in a .vcf or .vds dataset
-
-    Args:
-        input_path (str):
-        filter_interval (str):
-    """
-    input_path = input_path.rstrip("/")
-    logger.info("\n==> Import: " + input_path)
-    if input_path.endswith(".vds"):
-        vds = hc.read(input_path)
-    else:
-        if dataset_type == "GATK_VARIANTS":
-            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
-        elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
-            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=True)
-        else:
-            raise ValueError("Unexpected dataset_type: %s" % dataset_type)
-
-    if vds.num_partitions() < 1000:
-        vds = vds.repartition(1000, shuffle=True)
-
-    #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
-
-    logger.info("\n==> Set filter interval to: %s" % (filter_interval, ))
-    vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
-
-    if dataset_type == "GATK_VARIANTS":
-        vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-        if vds.was_split():
-            vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # isDefined(va.wasSplit)
-        else:
-            vds = vds.split_multi()
-
-        logger.info("Callset stats:")
-        summary = vds.summarize()
-        pprint(summary)
-        total_variants = summary.variants
-    elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
-        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
-        _, total_variants = vds.count()
-    else:
-        raise ValueError("Unexpected dataset_type: %s" % dataset_type)
-
-    if total_variants == 0:
-        raise ValueError("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
-    else:
-        logger.info("\n==> Total variants: %s" % (total_variants,))
-
-    return vds
-
-
-def compute_minimal_schema(vds, dataset_type):
-
-    # add computed annotations
-    parallel_computed_annotation_exprs = [
-        "va.docId = %s" % get_expr_for_variant_id(512),
-    ]
-
-    vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
-
-    #pprint(vds.variant_schema)
-
-    # apply schema to dataset
-    INPUT_SCHEMA  = {}
-    if dataset_type == "GATK_VARIANTS":
-        INPUT_SCHEMA["top_level_fields"] = """
-            docId: String,
-            wasSplit: Boolean,
-            aIndex: Int,
-        """
-
-        INPUT_SCHEMA["info_fields"] = ""
-
-    elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
-        INPUT_SCHEMA["top_level_fields"] = """
-            docId: String,
-        """
-
-        INPUT_SCHEMA["info_fields"] = ""
-
-    else:
-        raise ValueError("Unexpected dataset_type: %s" % dataset_type)
-
-    expr = convert_vds_schema_string_to_annotate_variants_expr(root="va.clean", **INPUT_SCHEMA)
-    vds = vds.annotate_variants_expr(expr=expr)
-    vds = vds.annotate_variants_expr("va = va.clean")
-
-    return vds
 
 
 def export_to_elasticsearch(
@@ -461,7 +371,7 @@ import hail  # import hail here so that you can run this script with --help even
 hc = hail.HailContext(log="/hail.log")
 
 logger.info("Reading in dataset...")
-vds = read_in_dataset(input_path, args.dataset_type, filter_interval)
+vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
 output_vds_hash = ""
 
@@ -496,9 +406,9 @@ if args.subset_samples:
     matched = samples_in_table.intersection(samples_in_vds)
     if len(matched) < len(samples_in_table):
         warning_message = ("Only {0} out of {1} subsetting-table IDs matched IDs in the variant callset.\n" \
-            "Subsetting-table IDs that aren't in the VDS: {2}\n"
-            "All VDS IDs: {3}").format(
-            len(matched), len(samples_in_table), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
+            "Dropping {2} IDs that aren't in the VDS: {3}\n"
+            "All VDS IDs: {4}").format(
+            len(matched), len(samples_in_table), len(samples_in_table) - len(matched), list(samples_in_table.difference(samples_in_vds)), samples_in_vds)
         if not args.ignore_extra_sample_ids_in_tables:
             raise ValueError(warning_message)
         logger.warning(warning_message)
@@ -509,7 +419,7 @@ if args.subset_samples:
 
     output_vds_hash = "_%s_samples__%020d" % (len(matched), abs(hash(",".join(sorted(list(matched))))))
 
-    logger.info("Finished Subsetting samples.")
+    logger.info("Finished subsetting samples.")
     logger.info("Callset stats after subsetting:")
     summary = vds.summarize()
     pprint(summary)
@@ -565,7 +475,7 @@ if args.start_with_step <= 1:
     logger.info("\n==> Re-create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(step0_output_vds, args.dataset_type, filter_interval)
+    vds = read_in_dataset(hc, step0_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
     # add computed annotations
     logger.info("\n==> Adding computed annotations")
@@ -724,7 +634,7 @@ if args.start_with_step <= 2:
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(step1_output_vds, args.dataset_type, filter_interval)
+    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
     #if args.dataset_type == "GATK_VARIANTS":
 
@@ -762,7 +672,7 @@ if args.start_with_step <= 3:
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(step1_output_vds, args.dataset_type, filter_interval)
+    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
     vds = compute_minimal_schema(vds, args.dataset_type)
 
     if args.dataset_type == "GATK_VARIANTS":
@@ -827,7 +737,7 @@ if args.start_with_step <= 4:
     logger.info("\n==> Create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(step3_output_vds, args.dataset_type, filter_interval)
+    vds = read_in_dataset(hc, step3_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
     export_to_elasticsearch(
         args.host,
