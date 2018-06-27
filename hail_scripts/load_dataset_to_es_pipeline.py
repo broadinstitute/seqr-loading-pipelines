@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 
 import os
-
-from hail_scripts.utils.add_eigen import add_eigen_to_vds
-from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
-from hail_scripts.utils.add_omim import add_omim_to_vds
-from hail_scripts.utils.load_vds_utils import read_in_dataset, compute_minimal_schema
-
 os.system("pip install elasticsearch")
 
 import argparse
 import datetime
 import json
 import logging
+from pprint import pprint
 import requests
 import time
 import sys
-from pprint import pprint
 
 from hail_scripts.utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
     add_gnomad_genome_coverage_to_vds
+from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
+from hail_scripts.utils.add_omim import add_omim_to_vds
 from hail_scripts.utils.add_hgmd import add_hgmd_to_vds
+from hail_scripts.utils.add_eigen import add_eigen_to_vds
+from hail_scripts.utils.load_vds_utils import read_in_dataset, compute_minimal_schema
 from hail_scripts.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_orig_alt_alleles_set, get_expr_for_vep_consequence_terms_set, \
