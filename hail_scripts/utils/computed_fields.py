@@ -46,7 +46,7 @@ CONSEQUENCE_TERM_RANK_LOOKUP = (
 ).replace("'", '"')
 
 
-def get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=False):
+def get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=False, exclude_upstream_downstream_genes=True):
     """Expression to compute the set of gene ids in VEP annotations for this variant.
 
     Args:
@@ -60,6 +60,8 @@ def get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=False):
     expr = "%(vep_root)s.transcript_consequences" % locals()
     if only_coding_genes:
         expr += ".filter( x => x.biotype == 'protein_coding')"
+    if exclude_upstream_downstream_genes:
+        expr += ".filter( x => x.major_consequence != 'upstream_gene_variant' && x.major_consequence != 'downstream_gene_variant' )"
     expr += ".map( x => x.gene_id ).toSet"
 
     return expr
