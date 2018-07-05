@@ -138,12 +138,12 @@ vds_computed_annotations_exprs = [
     "va.joinKey = %s" % get_expr_for_variant_id(),
     "va.variantId = %s" % get_expr_for_variant_id(),
     "va.originalAltAlleles = %s" % get_expr_for_orig_alt_alleles_set(),
-    "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(),
-    "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(),
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(),
     "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(),
     "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
     "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
+    "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(),
+    "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(),
 ]
 
 for vep_sub_field in ['transcript_consequences', 'intergenic_consequences', 'motif_feature_consequences', 'regulatory_feature_consequences']:

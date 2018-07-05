@@ -492,17 +492,17 @@ if args.start_with_step <= 1:
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
 
-        "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_root="va.vep"),
-        "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=True),
-        "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_root="va.vep"),
-        "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_root="va.vep"),
-        "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_root="va.vep"),
+        "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
+        "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
+        "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
     ]
 
     serial_computed_annotation_exprs = [
         "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="end"),
         "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
+        "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", exclude_upstream_downstream_genes=True),
+        "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
         "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
     ]
 

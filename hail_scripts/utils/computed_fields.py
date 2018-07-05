@@ -46,42 +46,6 @@ CONSEQUENCE_TERM_RANK_LOOKUP = (
 ).replace("'", '"')
 
 
-def get_expr_for_vep_gene_ids_set(vep_root="va.vep", only_coding_genes=False, exclude_upstream_downstream_genes=True):
-    """Expression to compute the set of gene ids in VEP annotations for this variant.
-
-    Args:
-        vep_root (string): path of VEP root in the struct
-        only_coding_genes (bool): If set to True, non-coding genes will be excluded.
-
-    Return:
-        string: expression
-    """
-
-    expr = "%(vep_root)s.transcript_consequences" % locals()
-    if only_coding_genes:
-        expr += ".filter( x => x.biotype == 'protein_coding')"
-    if exclude_upstream_downstream_genes:
-        expr += ".filter( x => x.major_consequence != 'upstream_gene_variant' && x.major_consequence != 'downstream_gene_variant' )"
-    expr += ".map( x => x.gene_id ).toSet"
-
-    return expr
-
-
-def get_expr_for_vep_transcript_ids_set(vep_root="va.vep"):
-    return "%(vep_root)s.transcript_consequences.map( x => x.transcript_id ).toSet" % locals()
-
-
-def get_expr_for_vep_consequence_terms_set(vep_root="va.vep"):
-    return "%(vep_root)s.transcript_consequences.map( x => x.consequence_terms ).flatten.toSet" % locals()
-
-
-def get_expr_for_vep_protein_domains_set(vep_root="va.vep"):
-    return """%(vep_root)s.transcript_consequences
-        .filter( x => isDefined(x.domains) && x.domains.length > 0 )
-        .map( x => x.domains.map( domain => domain.db+":"+domain.name ) )
-        .flatten.toSet""" % locals()
-
-
 def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=True):
     """Sort transcripts by 3 properties:
 
@@ -339,6 +303,45 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
             }
         )
     """ % locals()
+
+
+def get_expr_for_vep_gene_ids_set(
+        vep_transcript_consequences_root="va.vep.sorted_transcript_consequences",
+        only_coding_genes=False,
+        exclude_upstream_downstream_genes=False
+    ):
+    """Expression to compute the set of gene ids in VEP annotations for this variant.
+
+    Args:
+        vep_transcript_consequences_root (string): path of VEP transcript_consequences root in the struct
+        only_coding_genes (bool): If set to True, non-coding genes will be excluded.
+        exclude_upstream_downstream_genes (bool): Whether to exclude genes with major_consequece == as "upstream_gene_variant" or "downstream_gene_variant".
+    Return:
+        string: expression
+    """
+    expr = "%(vep_transcript_consequences_root)s" % locals()
+    if only_coding_genes:
+        expr += ".filter( x => x.biotype == 'protein_coding')"
+    if exclude_upstream_downstream_genes:
+        expr += ".filter( x => x.major_consequence != 'upstream_gene_variant' && x.major_consequence != 'downstream_gene_variant' )"
+    expr += ".map( x => x.gene_id ).toSet"
+
+    return expr
+
+
+def get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.vep.transcript_consequences"):
+    return "%(vep_transcript_consequences_root)s.map( x => x.transcript_id ).toSet" % locals()
+
+
+def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.vep.transcript_consequences"):
+    return "%(vep_transcript_consequences_root)s.map( x => x.consequence_terms ).flatten.toSet" % locals()
+
+
+def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"):
+    return """%(vep_transcript_consequences_root)s
+        .filter( x => isDefined(x.domains) && x.domains.length > 0 )
+        .map( x => x.domains.map( domain => domain.db+":"+domain.name ) )
+        .flatten.toSet""" % locals()
 
 
 def get_expr_for_contig(field_prefix="v."):
