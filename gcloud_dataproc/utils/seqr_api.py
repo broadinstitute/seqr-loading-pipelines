@@ -89,6 +89,8 @@ def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL):
 
             run("gsutil cp %(fam_filename)s %(fam_file_gcloud_path)s" % locals())
 
+            command_line_args.extend(["--fam-file", fam_file_gcloud_path])
+
         # upload subset-samples to same place as VCF
         if not is_subset_samples_file_specified:
             with open(subset_samples_filename, "w") as f:
@@ -96,9 +98,5 @@ def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL):
 
             run("gsutil cp %(subset_samples_filename)s %(subset_samples_file_gcloud_path)s" % locals())
 
-    if not is_fam_file_specified:
-        command_line_args.extend(["--fam-file", fam_file_gcloud_path])
-
-    if not is_subset_samples_file_specified:
-        command_line_args.extend(["--subset-samples", subset_samples_file_gcloud_path])
+            command_line_args.extend(["--subset-samples", subset_samples_file_gcloud_path])
 
