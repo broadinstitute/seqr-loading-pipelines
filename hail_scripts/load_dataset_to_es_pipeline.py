@@ -487,8 +487,6 @@ if args.start_with_step <= 1:
         "va.end = %s" % get_expr_for_end_pos(),
         "va.ref = %s" % get_expr_for_ref_allele(),
         "va.alt = %s" % get_expr_for_alt_allele(),
-
-        # compute AC, Het, Hom, Hemi, AN
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
 
