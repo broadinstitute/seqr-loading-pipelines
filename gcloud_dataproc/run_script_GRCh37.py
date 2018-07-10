@@ -30,7 +30,7 @@ os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 
 run((
    "python gcloud_dataproc/create_cluster_GRCh37.py "
-   "--project=seqr-project "
+   "--project=%(project)s "
    "%(cluster_name)s 2 24") % locals())
 
 
@@ -42,5 +42,5 @@ if "-h" in sys.argv or "--help" in sys.argv:
 run((
     "time ./gcloud_dataproc/submit.py "
     "--cluster %(cluster_name)s "
-    "--project seqr-project "
+    "--project %(project)s "
     "%(script)s %(script_args)s") % locals())
