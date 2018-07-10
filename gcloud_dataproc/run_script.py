@@ -26,7 +26,7 @@ script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
 run((
    "python gcloud_dataproc/create_cluster_without_VEP.py "
-   "--project=seqr-project "
+   "--project=%(project)s "
    "%(cluster_name)s 2 24") % locals())
 
 
@@ -38,5 +38,5 @@ if "-h" in sys.argv or "--help" in sys.argv:
 run((
     "time ./gcloud_dataproc/submit.py "
     "--cluster %(cluster_name)s "
-    "--project seqr-project "
+    "--project %(project)s "
     "%(script)s %(script_args)s") % locals())
