@@ -20,6 +20,7 @@ p.add_argument("-i", "--index-name", help="Elasticsearch index name")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-s", "--num-shards", help="Number of elasticsearch shards", default=1, type=int)
 p.add_argument("-b", "--block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
+p.add_argument("--subset", help="Specify an interval (eg. X:12345-54321 to load a subset of clinvar")
 
 # parse args
 args = p.parse_args()
@@ -50,6 +51,8 @@ run("hdfs dfs -cp file:///tmp/clinvar.vcf.gz /")
 # import vcf into hail
 vds = hc.import_vcf("/clinvar.vcf.gz", force=True).filter_intervals(hail.Interval.parse("1-MT"))  # 22:1-25000000"))
 vds = vds.repartition(2000)
+if args.subset:
+    vds = vds.filter_intervals(hail.Interval.parse(args.subset))
 
 # handle multi-allelics
 if vds.was_split():
@@ -63,6 +66,7 @@ vds = vds.filter_variants_expr("v.isBiallelic()", keep=True)
 
 
 # run VEP
+print("\n=== Running VEP ===")
 vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=1000)
 
 #pprint(vds.variant_schema)
@@ -82,8 +86,8 @@ computed_annotation_exprs = [
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.transcriptIdToConsequenceMap = %s" % get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", exclude_upstream_downstream_genes=True),
-    #"va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
     "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
+    #"va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
     #"va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
 ]
 
@@ -103,8 +107,8 @@ expr = """
     va.clean.domains = va.domains,
     va.clean.transcript_ids = va.transcriptIds,
     va.clean.gene_ids = va.geneIds,
+    va.clean.transcript_id_to_consequence_json = va.transcriptIdToConsequenceMap,
     va.clean.main_transcript = va.mainTranscript,
-    
     va.clean.allele_id = va.info.ALLELEID,
     va.clean.clinical_significance = va.info.CLNSIG.toSet.mkString(","),
     va.clean.review_status = va.info.CLNREVSTAT.toSet.mkString(",")

@@ -348,10 +348,11 @@ def get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequence
     return """[
         '{',
             %(vep_transcript_consequences_root)s
-                .map( x => ['"', x.transcript_id, '": "', x.major_consequence, '"'] )
-                .mkString(","),
+                .map( x =>  
+                    ['"', x.transcript_id, '": "', x.major_consequence, '"'].mkString("") 
+                ).mkString(", "),
         '}'
-    ].mkString('')
+    ].mkString("")
     """ % locals()
 
 
