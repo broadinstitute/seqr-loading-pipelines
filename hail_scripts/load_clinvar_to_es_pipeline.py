@@ -9,7 +9,7 @@ from hail_scripts.utils.computed_fields import get_expr_for_contig, get_expr_for
     get_expr_for_alt_allele, get_expr_for_variant_id, get_expr_for_worst_transcript_consequence_annotations_struct, \
     get_expr_for_xpos, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_sorted_transcript_consequences_array, get_expr_for_vep_protein_domains_set, \
-    get_expr_for_vep_consequence_terms_set
+    get_expr_for_vep_consequence_terms_set, get_expr_for_vep_transcript_id_to_consequence_map
 from hail_scripts.utils.elasticsearch_client import ElasticsearchClient
 
 p = argparse.ArgumentParser()
@@ -80,6 +80,7 @@ computed_annotation_exprs = [
     "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
+    "va.transcriptIdToConsequenceMap = %s" % get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", exclude_upstream_downstream_genes=True),
     #"va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
     "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
