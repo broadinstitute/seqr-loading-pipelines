@@ -12,6 +12,21 @@ from hail_scripts.utils.computed_fields import get_expr_for_contig, get_expr_for
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_transcript_id_to_consequence_map
 from hail_scripts.utils.elasticsearch_client import ElasticsearchClient
 
+
+CLINVAR_GOLD_STARS_LOOKUP = """Dict(
+    [
+        'no_interpretation_for_the_single_variant', 'no_assertion_provided', 'no_assertion_criteria_provided', 
+        'criteria_provided,_single_submitter', 'criteria_provided,_conflicting_interpretations', 
+        'criteria_provided,_multiple_submitters,_no_conflicts', 'reviewed_by_expert_panel', 'practice_guideline'
+    ], 
+    [ 
+         0, 0, 0, 
+         1, 1, 
+         2, 3, 4
+    ]
+)"""
+
+
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 p.add_argument("-H", "--host", help="Elasticsearch host or IP", required=True)
@@ -41,6 +56,7 @@ hc = hail.HailContext(log="/hail.log")
 def run(command):
     print(command)
     os.system(command)
+
 
 # download vcf
 print("Downloading clinvar vcf")
@@ -111,8 +127,9 @@ expr = """
     va.clean.main_transcript = va.mainTranscript,
     va.clean.allele_id = va.info.ALLELEID,
     va.clean.clinical_significance = va.info.CLNSIG.toSet.mkString(","),
-    va.clean.review_status = va.info.CLNREVSTAT.toSet.mkString(",")
-"""
+    va.clean.review_status = va.info.CLNREVSTAT.toSet.mkString(","),
+    va.clean.gold_stars = %(CLINVAR_GOLD_STARS_LOOKUP)s.get(va.info.CLNREVSTAT.toSet.mkString(","))
+""" % locals()
 
 vds = vds.annotate_variants_expr(expr=expr)
 vds = vds.annotate_variants_expr("va = va.clean")
@@ -134,3 +151,4 @@ client.export_vds_to_elasticsearch(
     is_split_vds=True,
     verbose=True,
 )
+
