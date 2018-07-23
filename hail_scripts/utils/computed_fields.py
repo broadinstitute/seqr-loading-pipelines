@@ -344,6 +344,18 @@ def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.ve
         .flatten.toSet""" % locals()
 
 
+def get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequences_root="va.vep.transcript_consequences"):
+    return """[
+        '{',
+            %(vep_transcript_consequences_root)s
+                .map( x =>  
+                    ['"', x.transcript_id, '": "', x.major_consequence, '"'].mkString("") 
+                ).mkString(", "),
+        '}'
+    ].mkString("")
+    """ % locals()
+
+
 def get_expr_for_contig(field_prefix="v."):
     """Normalized contig name"""
     return field_prefix+'contig.replace("chr", "")'
