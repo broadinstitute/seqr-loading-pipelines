@@ -43,7 +43,7 @@ p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields.
 p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
-p.add_argument("--start-with-step", help="Which step to start with.", type=int, default=0, choices=[0, 1, 2, 3])
+p.add_argument("--start-with-step", help="Which step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
 
 p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline from the middle using --start-with-step")
 
@@ -66,6 +66,7 @@ test_output_vds = output_vds + ".test"
 step0_output_vds = output_vds.replace(".vds", "") + "_minimal.vds"
 step1_output_vds = output_vds.replace(".vds", "") + "_with_coverage1.vds"
 step2_output_vds = output_vds.replace(".vds", "") + "_with_coverage2.vds"
+step3_output_vds = output_vds.replace(".vds", "") + "_annotations1.vds"
 
 
 if args.start_with_step == 0:
@@ -143,12 +144,43 @@ if args.start_with_step <= 2:
 
 if args.start_with_step <= 3:
 
-    logger.info("\n=============================== step 3 - read in vds and annotate it with all other reference datasets ===============================")
+    logger.info("\n=============================== step 3 - read in vds and annotate it with reference datasets ===============================")
 
     hc = hail.HailContext(log="/hail.log")
     vds = read_vds(hc, step2_output_vds)
 
     pprint(vds.variant_schema)
+
+    if not args.exclude_cadd:
+        logger.info("\n==> add cadd")
+        vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    if not args.exclude_eigen:
+        logger.info("\n==> add eigen")
+        vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    if not args.exclude_1kg:
+        logger.info("\n==> add 1kg")
+        vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    if not args.exclude_exac:
+        logger.info("\n==> add exac")
+        vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    write_vds(vds, step3_output_vds)
+
+    hc.stop()
+
+if args.start_with_step <= 4:
+
+    logger.info("\n=============================== step 4 - read in vds and annotate it with additional reference datasets ===============================")
+
+    hc = hail.HailContext(log="/hail.log")
+    vds = read_vds(hc, step3_output_vds)
 
     if not args.exclude_gnomad:
         logger.info("\n==> add gnomad exomes")
@@ -173,21 +205,6 @@ if args.start_with_step <= 3:
 
         pprint(vds.variant_schema)
 
-    if not args.exclude_cadd:
-        logger.info("\n==> add cadd")
-        vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_1kg:
-        logger.info("\n==> add 1kg")
-        vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_exac:
-        logger.info("\n==> add exac")
-        vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", subset=filter_interval)
-        pprint(vds.variant_schema)
-
     if not args.exclude_topmed:
         logger.info("\n==> add topmed")
         vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
@@ -196,11 +213,6 @@ if args.start_with_step <= 3:
     if not args.exclude_mpc:
         logger.info("\n==> add mpc")
         vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_eigen:
-        logger.info("\n==> add eigen")
-        vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
         pprint(vds.variant_schema)
 
     if not args.exclude_primate_ai:
