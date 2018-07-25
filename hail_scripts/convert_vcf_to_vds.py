@@ -1,13 +1,13 @@
-#!/usr/bin/env python
-
 import argparse as ap
 import hail
 from pprint import pprint
 
 from hail_scripts.utils.computed_fields import get_expr_for_orig_alt_alleles_set
+from hail_scripts.utils.vds_utils import write_vds
 
 p = ap.ArgumentParser()
-p.add_argument("--sites-only", action="store_true")
+p.add_argument("--sites-only", help="Ignore all genotype info in the vcf.", action="store_true")
+p.add_argument("--version", help="(optional) version string to put in VDS globals.version")
 p.add_argument("vcf_path", nargs="+")
 args = p.parse_args()
 
@@ -27,6 +27,10 @@ for vcf_path in args.vcf_path:
     else:
         vds = hc.import_vcf(vcf_path, force_bgz=True, min_partitions=10000)
 
+    vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(vcf_path))
+    if args.version:
+        vds = vds.annotate_global_expr('global.version = "{}"'.format(args.version))
+
     print("\n==> split_multi")
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
     if vds.was_split():
@@ -34,8 +38,7 @@ for vcf_path in args.vcf_path:
     else:
         vds = vds.split_multi()
 
-
     print("")
     pprint(vds.variant_schema)
 
-    vds.write(output_path, overwrite=True)
+    write_vds(vds, output_path)

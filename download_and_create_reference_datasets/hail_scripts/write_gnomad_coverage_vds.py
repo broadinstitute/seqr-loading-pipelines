@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import hail
 from hail.expr import TInt, TDouble, TString
@@ -8,7 +6,7 @@ p = argparse.ArgumentParser()
 p.add_argument("-b", "--output-bucket", help="Google Storage output bucket", default="seqr-reference-datasets")
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log") #, branching_factor=1)
+hc = hail.HailContext(log="/hail.log")
 
 
 COVERAGE_TSV_PATHS = {
@@ -146,11 +144,9 @@ field_types = {
 }
 
 
-for data in COVERAGE_TSV_PATHS:
+for label, data_paths in COVERAGE_TSV_PATHS.items():
 
-    data["output_path"]
-
-    kt_coverage = hc.import_table(data["input_paths"], types=field_types).rename({
+    kt = hc.import_table(data_paths["input_paths"], types=field_types).rename({
         '#chrom': 'chrom',
         '1': 'x1',
         '5': 'x5',
@@ -163,4 +159,8 @@ for data in COVERAGE_TSV_PATHS:
         '100': 'x100',
     })
 
+    output_path = data_paths["output_path"]
+
+    print("\n\n==> writing out {}".format(output_path))
+    kt.write(output_path, overwrite=True)
 

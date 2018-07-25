@@ -1,31 +1,15 @@
-#!/usr/bin/env python
-
 import argparse
 import hail
-import os
 from pprint import pprint
-
+from hail_scripts.utils.add_clinvar import CLINVAR_GOLD_STARS_LOOKUP, CLINVAR_VDS_PATH, \
+    download_and_import_latest_clinvar_vcf
 from hail_scripts.utils.computed_fields import get_expr_for_contig, get_expr_for_start_pos, get_expr_for_ref_allele, \
     get_expr_for_alt_allele, get_expr_for_variant_id, get_expr_for_worst_transcript_consequence_annotations_struct, \
     get_expr_for_xpos, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_sorted_transcript_consequences_array, get_expr_for_vep_protein_domains_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_transcript_id_to_consequence_map
 from hail_scripts.utils.elasticsearch_client import ElasticsearchClient
-
-
-CLINVAR_GOLD_STARS_LOOKUP = """Dict(
-    [
-        'no_interpretation_for_the_single_variant', 'no_assertion_provided', 'no_assertion_criteria_provided', 
-        'criteria_provided,_single_submitter', 'criteria_provided,_conflicting_interpretations', 
-        'criteria_provided,_multiple_submitters,_no_conflicts', 'reviewed_by_expert_panel', 'practice_guideline'
-    ], 
-    [ 
-         0, 0, 0, 
-         1, 1, 
-         2, 3, 4
-    ]
-)"""
-
+from hail_scripts.utils.vds_utils import run_vep
 
 p = argparse.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
@@ -36,8 +20,6 @@ p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="v
 p.add_argument("-s", "--num-shards", help="Number of elasticsearch shards", default=1, type=int)
 p.add_argument("-b", "--block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
 p.add_argument("--subset", help="Specify an interval (eg. X:12345-54321 to load a subset of clinvar")
-
-# parse args
 args = p.parse_args()
 
 client = ElasticsearchClient(
@@ -53,37 +35,12 @@ else:
 hc = hail.HailContext(log="/hail.log")
 
 
-def run(command):
-    print(command)
-    os.system(command)
-
-
 # download vcf
-print("Downloading clinvar vcf")
-run("wget ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{0}/clinvar.vcf.gz -O /tmp/clinvar.vcf.gz".format(args.genome_version))
-run("ls -l /tmp/clinvar.vcf.gz")
-run("hdfs dfs -cp file:///tmp/clinvar.vcf.gz /")
-
-# import vcf into hail
-vds = hc.import_vcf("/clinvar.vcf.gz", force=True).filter_intervals(hail.Interval.parse("1-MT"))  # 22:1-25000000"))
-vds = vds.repartition(2000)
-if args.subset:
-    vds = vds.filter_intervals(hail.Interval.parse(args.subset))
-
-# handle multi-allelics
-if vds.was_split():
-    vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
-else:
-    vds = vds.split_multi()
-
-# for some reason, this additional filter is necessary to avoid
-#  IllegalArgumentException: requirement failed: called altAllele on a non-biallelic variant
-vds = vds.filter_variants_expr("v.isBiallelic()", keep=True)
-
+vds = download_and_import_latest_clinvar_vcf(hc, args.genome_version)
 
 # run VEP
 print("\n=== Running VEP ===")
-vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=1000)
+vds = run_vep(vds, root='va.vep', block_size=1000)
 
 #pprint(vds.variant_schema)
 
@@ -128,8 +85,8 @@ expr = """
     va.clean.allele_id = va.info.ALLELEID,
     va.clean.clinical_significance = va.info.CLNSIG.toSet.mkString(","),
     va.clean.review_status = va.info.CLNREVSTAT.toSet.mkString(","),
-    va.clean.gold_stars = %(CLINVAR_GOLD_STARS_LOOKUP)s.get(va.info.CLNREVSTAT.toSet.mkString(","))
-""" % locals()
+    va.clean.gold_stars = {}.get(va.info.CLNREVSTAT.toSet.mkString(","))
+""".format(CLINVAR_GOLD_STARS_LOOKUP)
 
 vds = vds.annotate_variants_expr(expr=expr)
 vds = vds.annotate_variants_expr("va = va.clean")
@@ -150,5 +107,6 @@ client.export_vds_to_elasticsearch(
     #elasticsearch_mapping_id="doc_id",
     is_split_vds=True,
     verbose=True,
+    export_globals_to_index_meta=True,
 )
 

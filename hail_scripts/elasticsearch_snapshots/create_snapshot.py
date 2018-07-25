@@ -22,8 +22,6 @@ p.add_argument("-r", "--repo", help="Repository name", default="callsets")
 p.add_argument("-w", "--wait-for-completion", action="store_true", help="Whether to wait until the snapshot is created before returning")
 
 p.add_argument("index", help="Index name(s). One or more comma-separated index names to include in the snapshot")
-
-# parse args
 args = p.parse_args()
 
 es = elasticsearch.Elasticsearch(args.host, port=args.port)
@@ -36,11 +34,11 @@ if args.index not in existing_indices:
 snapshot_name = "snapshot_%s__%s" % (args.index.lower(), time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()))
 
 # see https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-gcs-repository.html
-print("==> Check if snapshot repo exists: %s" % args.repo)
+print("==> check if snapshot repo exists: %s" % args.repo)
 repo_info = es.snapshot.get_repository(repository=args.repo)
 pprint(repo_info)
 
-print("==> Creating snapshot in gs://%s/%s for index %s" % (args.bucket, args.base_path, args.index))
+print("==> creating snapshot in gs://%s/%s for index %s" % (args.bucket, args.base_path, args.index))
 
 client = ElasticsearchClient(args.host, args.port)
 
@@ -50,7 +48,7 @@ client.create_elasticsearch_snapshot(
     base_path = args.base_path,
     snapshot_repo=args.repo)
 
-print("==> Getting snapshot status for: " + snapshot_name)
+print("==> getting snapshot status for: " + snapshot_name)
 pprint(
     es.snapshot.status(repository=args.repo)
 )

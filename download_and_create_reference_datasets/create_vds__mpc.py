@@ -1,12 +1,4 @@
-import os
-
-
-def run(command):
-    print(command)
-    os.system(command)
-
-
-os.chdir(os.path.join(os.path.dirname(__file__), ".."))
+from hail_scripts.utils.shell_utils import simple_run as run
 
 for vcf_path in [
     "gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.vcf.gz",

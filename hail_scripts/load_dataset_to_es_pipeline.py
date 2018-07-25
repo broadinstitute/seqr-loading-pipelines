@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 import os
+
+from hail_scripts.utils.add_combined_reference_data import add_combined_reference_data_to_vds
+from hail_scripts.utils.add_primate_ai import add_primate_ai_to_vds
+from hail_scripts.utils.validate_vds import validate_vds_genome_version_and_sample_type
+
 os.system("pip install elasticsearch")
 
 import argparse
@@ -12,16 +17,13 @@ import requests
 import time
 import sys
 
-from hail_scripts.utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, \
-    add_gnomad_genome_coverage_to_vds
-from hail_scripts.utils.add_gene_constraint import add_gene_constraint_to_vds
-from hail_scripts.utils.add_omim import add_omim_to_vds
 from hail_scripts.utils.add_hgmd import add_hgmd_to_vds
 from hail_scripts.utils.add_eigen import add_eigen_to_vds
-from hail_scripts.utils.load_vds_utils import read_in_dataset, compute_minimal_schema
+from hail_scripts.utils.gcloud_utils import delete_gcloud_file
+from hail_scripts.utils.vds_utils import read_in_dataset, compute_minimal_schema, write_vds, run_vep
 from hail_scripts.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
-    get_expr_for_orig_alt_alleles_set, get_expr_for_vep_consequence_terms_set, \
+    get_expr_for_vep_consequence_terms_set, \
     get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
@@ -92,13 +94,15 @@ p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed A
 p.add_argument("--exclude-clinvar", action="store_true", help="Don't add clinvar fields. Intended for testing.")
 p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
+p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
 
 p.add_argument("--dont-update-operations-log", action="store_true", help="Don't save metadata about this export in the operations log.")
 p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
+p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline from the middle using --start-with-step")
 
-p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0)
+p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
 p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
                                                  "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
                                                  "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
@@ -110,7 +114,6 @@ p.add_argument("--output-vds", help="(optional) Output vds filename prefix (eg. 
 
 p.add_argument("input_vds", help="input VDS")
 
-# parse args
 args = p.parse_args()
 
 if args.dataset_type == "GATK_VARIANTS":
@@ -119,6 +122,7 @@ elif args.dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
     variant_type_string = "sv"
 else:
     raise ValueError("Unexpected args.dataset_type == " + str(args.dataset_type))
+
 
 # generate the index name as:  <project>_<WGS_WES>_<family?>_<VARIANTS or SVs>_<YYYYMMDD>_<batch>
 if args.index:
@@ -270,80 +274,6 @@ def export_to_elasticsearch(
         )
 
 
-# ==========================
-# reference dataset schemas
-# ==========================
-
-# add reference data
-
-CADD_INFO_FIELDS = """
-    PHRED: Double,
-    --- RawScore: Double,
-"""
-
-MPC_INFO_FIELDS = """
-    MPC: Double,
-    --- fitted_score: Double,
-    --- mis_badness: Double,
-    --- obs_exp: Double,
-"""
-
-EXAC_TOP_LEVEL_FIELDS = """filters: Set[String],"""
-EXAC_INFO_FIELDS = """
-    --- AC: Array[Int],
-    AC_Adj: Array[Int],
-    AC_Het: Array[Int],
-    AC_Hom: Array[Int],
-    AC_Hemi: Array[Int],
-    --- AN: Int,
-    AN_Adj: Int,
-    AF: Array[Double],
-    --- AC_AFR: Array[Int],
-    --- AC_AMR: Array[Int],
-    --- AC_EAS: Array[Int],
-    --- AC_FIN: Array[Int],
-    --- AC_NFE: Array[Int],
-    --- AC_OTH: Array[Int],
-    --- AC_SAS: Array[Int],
-    --- AF_AFR: Float,
-    --- AF_AMR: Float,
-    --- AF_EAS: Float,
-    --- AF_FIN: Float,
-    --- AF_NFE: Float,
-    --- AF_OTH: Float,
-    --- AF_SAS: Float,
-    AF_POPMAX: Float,
-    POPMAX: Array[String],
-"""
-
-GNOMAD_TOP_LEVEL_FIELDS = """filters: Set[String],"""
-GNOMAD_INFO_FIELDS = """
-    AC: Array[Int],
-    Hom: Array[Int],
-    Hemi: Array[Int],
-    AF: Array[Double],
-    AN: Int,
-    --- AC_AFR: Array[Int],
-    --- AC_AMR: Array[Int],
-    --- AC_ASJ: Array[Int],
-    --- AC_EAS: Array[Int],
-    --- AC_FIN: Array[Int],
-    --- AC_NFE: Array[Int],
-    --- AC_OTH: Array[Int],
-    --- AC_SAS: Array[Int],
-    --- AF_AFR: Array[Double],
-    --- AF_AMR: Array[Double],
-    --- AF_ASJ: Array[Double],
-    --- AF_EAS: Array[Double],
-    --- AF_FIN: Array[Double],
-    --- AF_NFE: Array[Double],
-    --- AF_OTH: Array[Double],
-    --- AF_SAS: Array[Double],
-    AF_POPMAX: Array[Double],
-    POPMAX: Array[String],
-"""
-
-
 input_path = str(args.input_vds).rstrip("/")
 if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path.endswith(".vcf.gz") or input_path.endswith(".vcf.bgz")):
     p.error("Input must be a .vds or .vcf.gz")
@@ -363,13 +293,16 @@ if args.subset:
     filter_interval = args.subset
 
 
-logger.info("\n==> Create HailContext")
+logger.info("\n==> create HailContext")
 
 import hail  # import hail here so that you can run this script with --help even if hail isn't installed locally.
 hc = hail.HailContext(log="/hail.log")
 
 logger.info("Reading in dataset...")
 vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
+
+validate_vds_genome_version_and_sample_type(hc, vds, args.genome_version, args.sample_type)
+
 
 output_vds_hash = ""
 
@@ -440,20 +373,31 @@ else:
 if args.output_vds:
     output_vds_prefix = os.path.join(os.path.dirname(input_path), args.output_vds.replace(".vds", ""))
 else:
-    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".vep", "") + output_vds_hash
+    output_vds_prefix = input_path.replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "") + output_vds_hash
 
-step0_output_vds = output_vds_prefix + (".vep.vds" if not args.skip_vep else ".vds")
+step0_output_vds = output_vds_prefix + (".vep.vds" if ".vep" not in output_vds_prefix and not args.skip_vep else ".vds")
 step1_output_vds = output_vds_prefix + ".vep_and_computed_annotations.vds"
 step3_output_vds = output_vds_prefix + ".vep_and_all_annotations.vds"
+
+# Store step0_output_vds as the cached version of the dataset in google buckets, and also set it as the global.sourceFilePath
+# because
+# 1) vep is the most time-consuming step (other than exporting to elasticsearch), so it makes sense to cache results
+# 2) at this stage, all subsetting and remapping has already been applied, so the samples in the dataset are only the ones exported to elasticsearch
+# 3) annotations may be updated / added more often than vep versions.
+
+vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(step0_output_vds))
 
 # run vep
 if args.start_with_step == 0:
     if not args.skip_vep:
-        logger.info("=============================== pipeline - step 0 ===============================")
+        logger.info("\n\n=============================== pipeline - step 0 ===============================")
         logger.info("Read in data, run vep, write data to VDS")
-        vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=500)
+        vds = run_vep(vds, block_size=500)
 
-    vds.write(step0_output_vds, overwrite=True)
+        vds = vds.annotate_global_expr('global.gencodeVersion = "{}"'.format("19" if args.genome_version == "37" else "25"))
+
+    if step0_output_vds != input_path:
+        write_vds(vds, step0_output_vds)
 
     # write out new vcf (after sample id remapping and subsetting if requested above)
     if args.export_vcf:
@@ -467,16 +411,16 @@ hc.stop()
 
 
 if args.start_with_step <= 1:
-    logger.info("=============================== pipeline - step 1 ===============================")
+    logger.info("\n\n=============================== pipeline - step 1 ===============================")
     logger.info("Read in data, compute various derived fields, write data to VDS")
 
-    logger.info("\n==> Re-create HailContext")
+    logger.info("\n==> re-create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(hc, step0_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
+    vds = read_in_dataset(hc, step0_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
     # add computed annotations
-    logger.info("\n==> Adding computed annotations")
+    logger.info("\n==> adding computed annotations")
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
@@ -618,19 +562,19 @@ if args.start_with_step <= 1:
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
-    vds.write(step1_output_vds, overwrite=True)
+    write_vds(vds, step1_output_vds)
 
     hc.stop()
 
 
 if args.start_with_step <= 2:
-    logger.info("=============================== pipeline - step 2 ===============================")
+    logger.info("\n\n=============================== pipeline - step 2 ===============================")
     logger.info("Read in data, add more reference datasets, export to elasticsearch")
 
-    logger.info("\n==> Create HailContext")
+    logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
+    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
     #if args.dataset_type == "GATK_VARIANTS":
 
@@ -641,7 +585,6 @@ if args.start_with_step <= 2:
         #if not args.skip_annotations and not args.exclude_gene_constraint:
         #    logger.info("\n==> Add gene constraint")
         #    vds = add_gene_constraint_to_vds(hc, vds)
-
 
     export_to_elasticsearch(
         args.host,
@@ -662,13 +605,13 @@ if args.start_with_step <= 2:
     hc.stop()
 
 if args.start_with_step <= 3:
-    logger.info("=============================== pipeline - step 3 ===============================")
+    logger.info("\n\n=============================== pipeline - step 3 ===============================")
     logger.info("Read in data, add more reference datasets, write data to VDS")
 
-    logger.info("\n==> Create HailContext")
+    logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
+    vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
     vds = compute_minimal_schema(vds, args.dataset_type)
 
     if args.dataset_type == "GATK_VARIANTS":
@@ -676,64 +619,77 @@ if args.start_with_step <= 3:
         #    logger.info("\n==> Add gnomad coverage")
         #    vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
         #    vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
+        if not (args.exclude_dbnsfp or args.exclude_cadd or args.exclude_1kg or args.exclude_exac or
+                args.exclude_topmed or args.exclude_mpc or args.exclude_gnomad or args.exclude_eigen):
+            # annotate with the combined reference data file which was generated using
+            # ../download_and_create_reference_datasets/create_all_variant_level_reference_data_vds.py
+            # and contains all these annotations in one .vds
+            logger.info("\n==> add combined variant-level reference data")
+            vds = add_combined_reference_data_to_vds(hc, vds, args.genome_version, subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_dbnsfp:
-            logger.info("\n==> Add dbnsfp")
-            vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
+        else:
+            # annotate with each reference data file - one-by-one
+            if not args.skip_annotations and not args.exclude_dbnsfp:
+                logger.info("\n==> add dbnsfp")
+                vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_cadd:
-            logger.info("\n==> Add cadd")
-            vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", info_fields=CADD_INFO_FIELDS, subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_cadd:
+                logger.info("\n==> add cadd")
+                vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_1kg:
-            logger.info("\n==> Add 1kg")
-            vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_1kg:
+                logger.info("\n==> add 1kg")
+                vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_exac:
-            logger.info("\n==> Add exac")
-            vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", top_level_fields=EXAC_TOP_LEVEL_FIELDS, info_fields=EXAC_INFO_FIELDS, subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_exac:
+                logger.info("\n==> add exac")
+                vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_topmed and args.genome_version == "38":
-            logger.info("\n==> Add topmed")
-            vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_topmed:
+                logger.info("\n==> add topmed")
+                vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_mpc:
-            logger.info("\n==> Add mpc")
-            vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", info_fields=MPC_INFO_FIELDS, subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_mpc:
+                logger.info("\n==> add mpc")
+                vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_gnomad:
-            logger.info("\n==> Add gnomad exomes")
-            vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_gnomad:
+                logger.info("\n==> add gnomad exomes")
+                vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_gnomad:
-            logger.info("\n==> Add gnomad genomes")
-            vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", top_level_fields=GNOMAD_TOP_LEVEL_FIELDS, info_fields=GNOMAD_INFO_FIELDS, subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_gnomad:
+                logger.info("\n==> add gnomad genomes")
+                vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", subset=filter_interval)
 
-        if not args.skip_annotations and not args.exclude_eigen:
-            logger.info("\n==> Add eigen")
-            vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
+            if not args.skip_annotations and not args.exclude_eigen:
+                logger.info("\n==> add eigen")
+                vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
+
+            if not args.exclude_primate_ai:
+                logger.info("\n==> add primate_ai")
+                vds = add_primate_ai_to_vds(hc, vds, args.genome_version, root="va.primate_ai", subset=filter_interval)
 
     if not args.skip_annotations and not args.exclude_clinvar:
-        logger.info("\n==> Add clinvar")
+        logger.info("\n==> add clinvar")
         vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
 
     if not args.skip_annotations and not args.exclude_hgmd:
-        logger.info("\n==> Add hgmd")
+        logger.info("\n==> add hgmd")
         vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
 
-    vds.write(step3_output_vds, overwrite=True)
+    write_vds(vds, step3_output_vds)
 
     hc.stop()
 
 
 if args.start_with_step <= 4:
-    logger.info("=============================== pipeline - step 4 ===============================")
+    logger.info("\n\n=============================== pipeline - step 4 ===============================")
     logger.info("Read in data, export data to elasticsearch")
 
-    logger.info("\n==> Create HailContext")
+    logger.info("\n==> create HailContext")
     hc = hail.HailContext(log="/hail.log")
 
-    vds = read_in_dataset(hc, step3_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval)
+    vds = read_in_dataset(hc, step3_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
     export_to_elasticsearch(
         args.host,
@@ -753,3 +709,8 @@ if args.start_with_step <= 4:
 
     hc.stop()
 
+
+if not args.dont_delete_intermediate_vds_files:
+    #delete_gcloud_file(step0_output_vds) -- don't delete the vep-annotated vds
+    delete_gcloud_file(step1_output_vds)
+    delete_gcloud_file(step3_output_vds)

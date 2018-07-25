@@ -24,8 +24,8 @@ def add_hgmd_to_vds(hail_context, vds, genome_version, root="va.hgmd", subset=No
 
     vds = vds.annotate_variants_vds(hgmd_vds, expr="""
         %(root)s.accession = vds.rsid,
-        %(root)s.class = vds.info.CLASS,
-        %(root)s.rankscore = vds.info.RANKSCORE
+        %(root)s.class = vds.info.CLASS
     """ % locals())
+    # %(root)s.rankscore = vds.info.RANKSCORE
 
     return vds

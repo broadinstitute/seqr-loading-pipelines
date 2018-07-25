@@ -1,14 +1,19 @@
+from pprint import pprint
 from hail_scripts.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
+EXAC_VDS_PATHS = {
+    '37': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vds',
+    '38': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vds',
+}
 
-TOP_LEVEL_FIELDS = """
+ALL_TOP_LEVEL_FIELDS = """
     rsid: String,
     qual: Double,
     filters: Set[String],
     wasSplit: Boolean,
 """
 
-INFO_FIELDS = """
+ALL_INFO_FIELDS = """
     AC: Array[Int],
     AC_AFR: Array[Int],
     AC_AMR: Array[Int],
@@ -91,25 +96,53 @@ INFO_FIELDS = """
     """
 
 
-def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level_fields=TOP_LEVEL_FIELDS, info_fields=INFO_FIELDS, subset=None, verbose=True):
-    if genome_version == "37":
-        exac_vds_path = 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vds'
-    elif genome_version == "38":
-        exac_vds_path = 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vds'
+
+USEFUL_TOP_LEVEL_FIELDS = ""
+USEFUL_INFO_FIELDS = """
+    --- AC: Array[Int],
+    AC_Adj: Array[Int],
+    AC_Het: Array[Int],
+    AC_Hom: Array[Int],
+    AC_Hemi: Array[Int],
+    --- AN: Int,
+    AN_Adj: Int,
+    AF: Array[Double],
+    --- AC_AFR: Array[Int],
+    --- AC_AMR: Array[Int],
+    --- AC_EAS: Array[Int],
+    --- AC_FIN: Array[Int],
+    --- AC_NFE: Array[Int],
+    --- AC_OTH: Array[Int],
+    --- AC_SAS: Array[Int],
+    --- AF_AFR: Float,
+    --- AF_AMR: Float,
+    --- AF_EAS: Float,
+    --- AF_FIN: Float,
+    --- AF_NFE: Float,
+    --- AF_OTH: Float,
+    --- AF_SAS: Float,
+    AF_POPMAX: Float,
+    --- POPMAX: Array[String],
+"""
+
+def read_exac_vds(hail_context, genome_version, subset=None):
+    if genome_version in ["37", "38"]:
+        exac_vds_path = EXAC_VDS_PATHS[genome_version]
     else:
         raise ValueError("Invalid genome_version: " + str(genome_version))
-
-    #if genome_version == "38":
-    #    info_fields += """
-    #        OriginalContig: String,
-    #        OriginalStart: String,
-    #    """
 
     exac_vds = hail_context.read(exac_vds_path).split_multi()
 
     if subset:
         import hail
         exac_vds = exac_vds.filter_intervals(hail.Interval.parse(subset))
+
+    return exac_vds
+
+
+def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level_fields=USEFUL_TOP_LEVEL_FIELDS, info_fields=USEFUL_INFO_FIELDS, subset=None, verbose=True):
+
+    exac_vds = read_exac_vds(hail_context, genome_version, subset=subset)
 
     # ExAC VCF doesn't contain AF fields, so compute them here
     exac_vds = exac_vds.annotate_variants_expr("""
@@ -137,16 +170,17 @@ def add_exac_to_vds(hail_context, vds, genome_version, root="va.exac", top_level
         other_source_root="vds.info",
     )
 
-    if verbose:
-        print(info_fields_expr)
-
+    expr = []
+    if top_fields_expr:
+        expr.append(top_fields_expr)
+    if info_fields_expr:
+        expr.append(info_fields_expr)
     vds = (vds
-        .annotate_variants_vds(exac_vds, expr=", ".join([top_fields_expr, info_fields_expr]))
+        .annotate_variants_vds(exac_vds, expr=", ".join(expr))
     )
 
-    
-
-    from pprint import pprint
-    pprint(vds.variant_schema)
+    if verbose:
+        print(info_fields_expr)
+        pprint(vds.variant_schema)
 
     return vds

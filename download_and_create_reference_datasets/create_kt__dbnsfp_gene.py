@@ -1,12 +1,4 @@
-import os
-
-
-def run(command):
-    print(command)
-    os.system(command)
-
-
-os.chdir(os.path.join(os.path.dirname(__file__), ".."))
+from hail_scripts.utils.shell_utils import simple_run as run
 
 for dbnsfp_gene_table_path in [
     "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9_gene",

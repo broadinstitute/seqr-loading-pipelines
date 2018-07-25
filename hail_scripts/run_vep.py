@@ -4,6 +4,7 @@ import logging
 import pprint
 
 from hail_scripts.utils.computed_fields import get_expr_for_orig_alt_alleles_set
+from hail_scripts.utils.vds_utils import write_vds, run_vep
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -48,7 +49,6 @@ else:
 filter_interval = "1-MT"
 if args.subset:
     filter_interval = args.subset
-#vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
 
 logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
 vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
@@ -58,8 +58,8 @@ pprint.pprint(summary)
 if summary.variants == 0:
     p.error("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
 
-vds = vds.vep(config="/vep/vep-gcloud.properties", root='va.vep', block_size=args.block_size)
+vds = run_vep(vds, block_size=args.block_size)
 
-vds.write(args.output_vds, overwrite=True)
+write_vds(vds, args.output_vds)
 
 pprint.pprint(vds.variant_schema)

@@ -40,7 +40,7 @@ class ElasticsearchClient:
     def print_elasticsearch_stats(self):
         """Prints elastic search index stats."""
 
-        logger.info("==> Elasticsearch stats:")
+        logger.info("==> elasticsearch stats:")
 
         node_stats = self.es.nodes.stats(level="node")
         node_id = node_stats["nodes"].keys()[0]
@@ -95,24 +95,43 @@ class ElasticsearchClient:
         self,
         index_name,
         index_type_name,
-        elasticsearch_schema,
+        elasticsearch_schema={},
         num_shards=1,
+        _meta=None,
     ):
+        """Calls es.indices.create or es.indices.put_mapping to create or update an elasticsearch index mapping.
+
+        Args:
+            index_name (str): elasticsearch index mapping
+            index_type_name (str): elasticsearch type
+            elasticsearch_schema (dict): elasticsearch mapping "properties" dictionary
+            num_shards (int): how many shards the index will contain
+            _meta (dict): optional _meta info for this index
+                (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
+        """
+
+        index_mapping = {
+            #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
+            "_all": {"enabled": "false"},
+            "properties": elasticsearch_schema,
+        }
+
+        if _meta:
+            logger.info("==> index _meta: " + pformat(_meta))
+            index_mapping["_meta"] = _meta
+
         # define the elasticsearch mapping
         elasticsearch_mapping = {
             "mappings": {
-                index_type_name: {
-                    #"_size": {"enabled": "true" },   <--- needs mapper-size plugin to be installed in elasticsearch
-                    "_all": {"enabled": "false"},
-                    "properties": elasticsearch_schema,
-                },
+                index_type_name:
+                    index_mapping,
             }
         }
 
         #logger.info(pformat(elasticsearch_schema))
 
         if not self.es.indices.exists(index=index_name):
-            logger.info("==> Creating index %s" % index_name)
+            logger.info("==> creating elasticsearch index %s" % index_name)
             elasticsearch_mapping["settings"] = {
                 "number_of_shards": num_shards,
                 "number_of_replicas": 0,
@@ -129,11 +148,9 @@ class ElasticsearchClient:
             #existing_properties = existing_mapping[index_name]["mappings"][index_type_name]["properties"]
             #existing_properties.update(elasticsearch_schema)
 
-            logger.info("==> Updating elasticsearch %s/%s. New schema:\n%s" % (index_name, index_type_name, pformat(elasticsearch_schema)))
+            logger.info("==> updating elasticsearch index %s/%s. New schema:\n%s" % (index_name, index_type_name, pformat(elasticsearch_schema)))
 
-            self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body={
-                "properties": elasticsearch_schema
-            })
+            self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body=index_mapping)
 
             #new_mapping = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
             #logger.info("==> New elasticsearch %s schema: %s" % (index_name, pformat(new_mapping)))
@@ -154,6 +171,7 @@ class ElasticsearchClient:
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         is_split_vds=True,
+        export_globals_to_index_meta=True,
         verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -187,6 +205,8 @@ class ElasticsearchClient:
                 named in the elasticsearch index) that shouldn't be indexed
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
             is_split_vds (bool): whether split_multi() has been called on this VDS
+            export_globals_to_index_meta (bool): whether to add vds.globals object to the index _meta field:
+                (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             verbose (bool): whether to print schema and stats
         """
 
@@ -223,6 +243,10 @@ class ElasticsearchClient:
 
         kt = kt.rename(kt_rename_dict)
 
+        _meta = None
+        if export_globals_to_index_meta:
+            _meta = dict(vds.globals._attrs) if vds.globals else {}
+
         self.export_kt_to_elasticsearch(
             kt,
             index_name,
@@ -237,6 +261,7 @@ class ElasticsearchClient:
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields,
             field_names_replace_dot_with=None,
+            _meta=_meta,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -254,6 +279,7 @@ class ElasticsearchClient:
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         field_names_replace_dot_with="_",
+        _meta=None,
         verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -298,6 +324,8 @@ class ElasticsearchClient:
                 this string in all field names. This replacement is not reversible (or atleast not
                 unambiguously in the general case) Set this to None to disable replacement, and fall back
                 on an encoding that's uglier, but reversible (eg. "." will be converted to "_$dot$_")
+            _meta (dict): optional _meta info for this index
+                (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             verbose (bool): whether to print schema and stats
         """
 
@@ -374,9 +402,11 @@ class ElasticsearchClient:
             index_name,
             index_type_name,
             elasticsearch_schema,
-            num_shards=num_shards)
+            num_shards=num_shards,
+            _meta=_meta,
+        )
 
-        logger.info("==> Exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
+        logger.info("==> exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
         kt.export_elasticsearch(self._host, int(self._port), index_name, index_type_name, block_size, config=elasticsearch_config)
 
         """
@@ -410,7 +440,7 @@ class ElasticsearchClient:
 
         """
 
-        logger.info("==> Check if snapshot repo already exists: %s" % snapshot_repo)
+        logger.info("==> check if snapshot repo already exists: %s" % snapshot_repo)
         try:
             repo_info = self.es.snapshot.get_repository(repository=snapshot_repo)
             logger.info(pformat(repo_info))
@@ -427,7 +457,7 @@ class ElasticsearchClient:
         # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-snapshots.html
         snapshot_name = "snapshot_%s__%s" % (index_name.replace("*", "").lower(), time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime()))
 
-        logger.info("==> Creating snapshot in gs://%s/%s/%s" % (bucket, base_path, index_name))
+        logger.info("==> creating snapshot in gs://%s/%s/%s" % (bucket, base_path, index_name))
         other_snapshots_running = True
         while other_snapshots_running:
             try:
@@ -450,7 +480,7 @@ class ElasticsearchClient:
 
             other_snapshots_running = False
 
-        logger.info("==> Getting snapshot status for: " + snapshot_name)
+        logger.info("==> getting snapshot status for: " + snapshot_name)
         logger.info(pformat(
             self.es.snapshot.status(repository=snapshot_repo)
         ))
@@ -465,7 +495,7 @@ class ElasticsearchClient:
         """
 
         # see https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-gcs-repository.html
-        logger.info("==> Check if snapshot repo exists: %s" % snapshot_repo)
+        logger.info("==> check if snapshot repo exists: %s" % snapshot_repo)
         try:
             repo_info = self.es.snapshot.get_repository(repository=snapshot_repo)
             logger.info(pformat(repo_info))
@@ -485,7 +515,7 @@ class ElasticsearchClient:
         snapshot_name = latest_snapshot["snapshot"]
 
         # http://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.client.SnapshotClient.restore
-        logger.info("==> Restoring snapshot: " + snapshot_name)
+        logger.info("==> restoring snapshot: " + snapshot_name)
         logger.info(pformat(
             self.es.snapshot.restore(
                 repository=snapshot_repo,
@@ -494,7 +524,7 @@ class ElasticsearchClient:
             )
         ))
 
-        logger.info("==> Getting snapshot status for: " + snapshot_name)
+        logger.info("==> getting snapshot status for: " + snapshot_name)
         logger.info(pformat(
             self.es.snapshot.status(repository=snapshot_repo)
         ))
@@ -502,9 +532,9 @@ class ElasticsearchClient:
     def create_elasticsearch_snapshot_repository(self, bucket, base_path, snapshot_repo):
         """Kick off snapshot creation process."""
 
-        logger.info("==> Creating GCS repository %s" % (snapshot_repo, ))
+        logger.info("==> creating GCS repository %s" % (snapshot_repo, ))
 
-        logger.info("==> Create GCS repository %s" % (snapshot_repo, ))
+        logger.info("==> create GCS repository %s" % (snapshot_repo, ))
         body = {
             "type": "gcs",
             "settings": {
@@ -567,3 +597,17 @@ class ElasticsearchClient:
         logger.info("Saved index operation metadata:")
         logger.info(pformat(body))
 
+    def get_index_meta(self, index_name, index_type_name="*"):
+        _meta = {}
+        mappings = self.es.indices.get_mapping(index=index_name, doc_type=index_type_name)
+        for index_type_name, mapping in mappings.get(index_name, {}).get('mappings', {}).items():
+            _meta.update(mapping.get("_meta", {}))
+
+        return _meta
+
+    def set_index_meta(self, index_name, index_type_name, _meta):
+        index_mapping = {
+            "_meta": _meta,
+        }
+
+        self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body=index_mapping)
