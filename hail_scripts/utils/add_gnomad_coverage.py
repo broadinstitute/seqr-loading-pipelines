@@ -152,7 +152,7 @@ def _import_coverage_keytable(hail_context, keytable_path):
 def add_gnomad_exome_coverage_to_vds(hail_context, vds, genome_version, root="va.gnomad_exome_coverage"):
     """Add ExAC v2 exome coverage to VDS"""
 
-    if genome_version != "37" and genome_version != "38":
+    if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     kt = _import_coverage_keytable(hail_context, EXOME_COVERAGE_KEYTABLE_PATH[genome_version])
@@ -163,7 +163,7 @@ def add_gnomad_exome_coverage_to_vds(hail_context, vds, genome_version, root="va
 def add_gnomad_genome_coverage_to_vds(hail_context, vds, genome_version, root="va.gnomad_genome_coverage"):
     """Add gnomAD genome coverage to VDS"""
 
-    if genome_version != "37" and genome_version != "38":
+    if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     kt = _import_coverage_keytable(hail_context, GENOME_COVERAGE_KEYTABLE_PATH[genome_version])

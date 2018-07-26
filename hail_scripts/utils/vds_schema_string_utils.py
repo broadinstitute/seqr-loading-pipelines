@@ -83,7 +83,11 @@ def convert_vds_schema_string_to_annotate_variants_expr(
         string:
 
     """
-    fields = [("va", top_level_fields), ("va.info", info_fields)]
+    fields = []
+    if top_level_fields:
+        fields += [("va", top_level_fields)]
+    if info_fields:
+        fields += [("va.info", info_fields)]
     if other_source_root and other_source_fields:
         fields += [(other_source_root, other_source_fields)]
 
@@ -143,7 +147,11 @@ def convert_vds_schema_string_to_vds_make_table_arg(
 
     result = []
 
-    fields = [("va", top_level_fields), ("va.info", info_fields)]
+    fields = []
+    if top_level_fields:
+        fields += [("va", top_level_fields)]
+    if info_fields:
+        fields += [("va.info", info_fields)]
     if other_source_root and other_source_fields:
         fields += [(other_source_root, other_source_fields)]
 

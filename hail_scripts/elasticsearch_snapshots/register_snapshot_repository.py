@@ -16,8 +16,6 @@ p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int
 p.add_argument("-b", "--bucket", help="Google bucket name", default="seqr-database-backups")
 p.add_argument("-d", "--base-path", help="Path within the bucket", default="elasticsearch/snapshots")
 p.add_argument("-r", "--repo", help="Repository name", default="callsets")
-
-# parse args
 args = p.parse_args()
 
 es = elasticsearch.Elasticsearch(args.host, port=args.port)
@@ -33,7 +31,7 @@ body = {
     }
 }
 
-print("==> Creating repository %s" % (args.repo, ))
+print("==> creating repository %s" % (args.repo, ))
 pprint(body)
 
 pprint(

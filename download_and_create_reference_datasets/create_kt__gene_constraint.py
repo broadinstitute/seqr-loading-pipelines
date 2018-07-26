@@ -1,14 +1,8 @@
 import os
-
+from hail_scripts.utils.shell_utils import simple_run as run
 
 DOWNLOAD_PATH = "ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/functional_gene_constraint/fordist_cleaned_exac_r03_march16_z_pli_rec_null_data.txt"
 GCLOUD_BUCKET_PATH = "gs://seqr-reference-data/gene_constraint"
-
-
-def run(command):
-    print(command)
-    os.system(command)
-
 
 filename = os.path.basename(DOWNLOAD_PATH)
 
@@ -18,7 +12,6 @@ run("""/bin/bash -c "cat {filename} | sed 's/\(ENST[0-9]*\)\.[0-9]/\\1/' > {file
 run("mv {filename}.temp {filename}".format(**locals()))
 run("gsutil -m cp {filename} {GCLOUD_BUCKET_PATH}/{filename}".format(**locals()))
 
-os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 run(" ".join([
     "python gcloud_dataproc/run_script.py",
     "--cluster gene-constraint",

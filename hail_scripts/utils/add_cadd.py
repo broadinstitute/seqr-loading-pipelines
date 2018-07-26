@@ -1,20 +1,31 @@
-import logging
-
 from hail_scripts.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
-
-logger = logging.getLogger()
 
 CADD_FIELDS = """
     PHRED: Double,
-    RawScore: Double,
+    --- RawScore: Double,
 """
+
+CADD_VDS_PATHS = {
+    '37': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.vds',
+    '38': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.vds',
+}
+
+
+def read_cadd_vds(hail_context, genome_version, subset=None):
+    if genome_version not in ["37", "38"]:
+        raise ValueError("Invalid genome_version: " + str(genome_version))
+
+    cadd_vds = hail_context.read(CADD_VDS_PATHS[genome_version]).split_multi()
+
+    if subset:
+        import hail
+        cadd_vds = cadd_vds.filter_intervals(hail.Interval.parse(subset))
+
+    return cadd_vds
 
 
 def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fields=CADD_FIELDS, subset=None, verbose=True):
     """Add CADD scores to the vds"""
-
-    if genome_version != "37" and genome_version != "38":
-        raise ValueError("Invalid genome_version: " + str(genome_version))
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
@@ -27,14 +38,7 @@ def add_cadd_to_vds(hail_context, vds, genome_version, root="va.cadd", info_fiel
         #print("\n==> cadd summary: ")
         #print("\n" + str(cadd_vds.summarize()))
 
-    cadd_vds_path = "gs://seqr-reference-data/GRCh%(genome_version)s/CADD/CADD_snvs_and_indels.vds" % locals()
-
-    logger.info("==> Reading in CADD: %s" % cadd_vds_path)
-    cadd_vds = hail_context.read(cadd_vds_path)
-
-    if subset:
-        import hail
-        cadd_vds = cadd_vds.filter_intervals(hail.Interval.parse(subset))
+    cadd_vds = read_cadd_vds(hail_context, genome_version, subset=subset)
 
     vds = vds.annotate_variants_vds(cadd_vds, expr=expr)
 

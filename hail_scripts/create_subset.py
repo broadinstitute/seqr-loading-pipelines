@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 import argparse as ap
 import hail
 from pprint import pprint
 
 from hail_scripts.utils.computed_fields import get_expr_for_orig_alt_alleles_set
+from hail_scripts.utils.vds_utils import write_vds
 
 p = ap.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
@@ -45,5 +44,7 @@ vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_
 vds = vds.split_multi()
 print("")
 pprint(vds.variant_schema)
+
 print("\n==> summary: %s" % str(vds.summarize()))
-vds.write(output_path, overwrite=True)
+
+write_vds(vds, output_path)

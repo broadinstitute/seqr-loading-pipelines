@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 
+import os
+os.system("pip install elasticsearch")
+
 import argparse
-import hail
+import logging
 from pprint import pprint
+
 from hail_scripts.utils.computed_fields import get_expr_for_xpos, get_expr_for_orig_alt_alleles_set, \
     get_expr_for_variant_id, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_sorted_transcript_consequences_array, \
@@ -12,7 +16,7 @@ from hail_scripts.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.utils.vds_schema_string_utils import convert_vds_schema_string_to_vds_make_table_arg
 
 p = argparse.ArgumentParser()
-p.add_argument("-g", "--genome_version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
+p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
 p.add_argument("-E", "--exomes-vds", help="Exomes dataset to be loaded", required=True)
@@ -21,11 +25,9 @@ p.add_argument("-i", "--index", help="Elasticsearch index name", default="gnomad
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=200, type=int)
 p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
-
-# parse args
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log") #, branching_factor=1)
+hc = hail.HailContext(log="/hail.log")
 
 GNOMAD_VDS_PATHS = {
     "exomes_37": "gs://gnomad-public/release-170228/gnomad.exomes.r2.0.1.sites.vds",

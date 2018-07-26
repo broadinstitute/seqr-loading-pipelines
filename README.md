@@ -1,10 +1,10 @@
 The hail scripts in this repo can be used to pre-process variant callsets and export them to elasticsearch. 
 
-
 Scripts
 -------
 
-**Scripts for creating dataproc clusters (in ./gcloud_dataproc/):**
+**./gcloud_dataproc/** - general-purpose scripts that run locally and perform various operations on dataproc clusters - such as
+submitting jobs, getting job status, creating clusters, etc.
 
 * `create_cluster_GRCh37.py` - creates a dataproc cluster that has VEP pre-installed with a GRCh37 cache. This allows hail pipelines to to use `vds.vep(..)` to run VEP on GRCh37-aligned datasets. 
 * `create_cluster_GRCh38.py` - creates a dataproc cluster that has VEP pre-installed with a GRCh38 cache. This allows hail pipelines to to use `vds.vep(..)` to run VEP on GRCh38-aligned datasets. 
@@ -12,7 +12,7 @@ Scripts
 * `create_cluster_notebook.py` creates a cluster that allows hail commmands to be run interactively in an ipython notebook. 
 * `connect_to_cluster.py` connects to a cluster that was created by `create_cluster_notebook.py`, and re-opens ipython dashboard in the browser.
 
-**Scripts for describing, modifying and deleting dataproc clusters (in ./gcloud_dataproc/):**
+**./gcloud_dataproc/** - contains scripts that run locally and perform steps necessary to download, pre-process, and create vds or keytable versions of various reference datasets.
 
 * `list_clusters.py` prints the names of all existing dataproc clusters in the project.
 * `list_jobs.py` lists all active dataproc jobs.
@@ -22,17 +22,17 @@ Scripts
 * `delete_cluster.py` deletes a specific dataproc cluster.
 * `delete_job.py` / `kill_job.py` kills a specific hail job.
 
-**Script for submitting jobs (in ./gcloud_dataproc/):**
-
 * `submit.py` submits a python hail script to the cluster.
 
-**Main hail pipelines (in ./hail_scripts/):**
+**./hail_scripts/** - contains hail scripts that can only run in a hail environment or dataproc cluster.
 
-* `run_vep.py` run VEP on a vcf or vds and write the result to a .vds. WARNING: this must run on a cluster created with either `create_cluster_GRCh37.py` or `create_cluster_GRCh38.py`, depending on the genome version of the dataset being annotated.
+Main hail pipelines:
+
 * `load_dataset_to_es_pipeline.py` annotation and pre-processing pipeline for GRCh37 and GRCh38 rare disease callsets.
 * `load_gnomad_to_es_pipeline.py` - joins gnomad exome and genome datasets into a structure that contains the info used in the gnomAD browser, and exports this to elasticsearch.
+* `run_vep.py` run VEP on a vcf or vds and write the result to a .vds. WARNING: this must run on a cluster created with either `create_cluster_GRCh37.py` or `create_cluster_GRCh38.py`, depending on the genome version of the dataset being annotated.
 
-**Other hail pipelines (in ./hail_scripts/):**
+Utilities:
 
 * `create_subset.py` subsets a vcf or vds to a specific chromosome or locus - useful for creating small datasets for testing. 
 * `convert_tsv_to_vds.py` converts a .tsv table to a VDS by allowing the user to specify the chrom, pos, ref, alt column names

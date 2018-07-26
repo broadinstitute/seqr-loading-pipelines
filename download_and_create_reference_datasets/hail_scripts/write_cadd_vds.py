@@ -3,6 +3,8 @@
 import hail
 import os
 
+from hail_scripts.utils.vds_utils import write_vds
+
 for cadd_snvs_path, cadd_indels_path in [
         (
                 'gs://seqr-reference-data/GRCh37/CADD/whole_genome_SNVs.vcf.gz',
@@ -16,7 +18,7 @@ for cadd_snvs_path, cadd_indels_path in [
 
     hail_context = hail.HailContext()
 
-    print("==> Reading in CADD: %s, %s" % (cadd_snvs_path, cadd_indels_path))
+    print("==> reading in CADD: %s, %s" % (cadd_snvs_path, cadd_indels_path))
 
     vds = hail_context.import_vcf([cadd_snvs_path, cadd_indels_path], force_bgz=True, min_partitions=10000)
 
@@ -27,8 +29,6 @@ for cadd_snvs_path, cadd_indels_path in [
 
     output_path = os.path.join(os.path.dirname(cadd_indels_path), "CADD_snvs_and_indels.vds")
 
-    print("==> Writing out " + output_path)
-
-    vds.write(output_path, overwrite=True)
+    write_vds(vds, output_path)
 
     hail_context.stop()

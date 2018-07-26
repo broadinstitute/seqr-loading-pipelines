@@ -14,11 +14,9 @@ p.add_argument("-c", "--coverage-type", help="exome/genome/test", default="test"
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="position")
 p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=100, type=int)
 p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
-
-# parse args
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log") #, branching_factor=1)
+hc = hail.HailContext(log="/hail.log")
 
 EXOME_COVERAGE_CSV_PATHS = [
     "gs://gnomad-browser/exomes/coverage/exacv2.chr1.cov.txt.gz",

@@ -1,5 +1,10 @@
 from hail_scripts.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
+DBNSFP_VDS_PATHS = {
+    "37": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.vds",
+    "38": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.vds",
+}
+
 DBNSFP_SCHEMA_37 = """
      --- chr: String,
      --- pos: Int,
@@ -19,9 +24,9 @@ DBNSFP_SCHEMA_37 = """
      --- PROVEAN_pred: String,
      --- M_CAP_pred: String,
      REVEL_score: String,
-     REVEL_rankscore: String,
+     --- REVEL_rankscore: String,
      --- MutPred_Top5features: String,
-     Eigen_phred: String,
+     --- Eigen_phred: String,
      --- Eigen_PC_phred: String,
      GERP_RS: String,
      --- GERP_RS_rankscore: String,
@@ -53,10 +58,10 @@ DBNSFP_SCHEMA_38 = """
      --- ref: String,
      --- alt: String,
      --- SIFT_score: String,
-     --- SIFT_pred: String,
+     SIFT_pred: String,
      --- Polyphen2_HDIV_score: String,
      --- Polyphen2_HVAR_score: String,
-     --- Polyphen2_HVAR_pred: String,
+     Polyphen2_HVAR_pred: String,
      --- LRT_pred: String,
      MutationTaster_pred: String,
      --- MutationAssessor_pred: String,
@@ -67,10 +72,10 @@ DBNSFP_SCHEMA_38 = """
      --- MetaLR_pred: String,
      --- M_CAP_pred: String,
      REVEL_score: String,
-     REVEL_rankscore: String,
+     --- REVEL_rankscore: String,
      --- MutPred_Top5features: String,
      DANN_score: String,
-     DANN_rankscore: String,
+     --- DANN_rankscore: String,
      --- fathmm_MKL_coding_pred: String,
      --- Eigen_phred: String,
      --- Eigen_PC_phred: String,
@@ -114,24 +119,28 @@ DBNSFP_SCHEMA_38 = """
 """
 
 
-def add_dbnsfp_to_vds(hail_context, vds, genome_version, root="va.dbnsfp", subset=None, verbose=True):
-    """Add dbNSFP fields to the VDS"""
-
-    if genome_version == "37":
-        dbnsfp_path = "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.vds"
-        dbnsfp_schema = DBNSFP_SCHEMA_37
-    elif genome_version == "38":
-        dbnsfp_path = "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.vds"
-        dbnsfp_schema = DBNSFP_SCHEMA_38
-    else:
+def read_dbnsfp_vds(hail_context, genome_version, subset=None):
+    if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    # create sites-only VDS
-    dbnsfp_vds = hail_context.read(dbnsfp_path)
+    dbnsfp_vds = hail_context.read(DBNSFP_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
         import hail
         dbnsfp_vds = dbnsfp_vds.filter_intervals(hail.Interval.parse(subset))
+
+    return dbnsfp_vds
+
+
+def add_dbnsfp_to_vds(hail_context, vds, genome_version, root="va.dbnsfp", subset=None, verbose=True):
+    """Add dbNSFP fields to the VDS"""
+
+    if genome_version == "37":
+        dbnsfp_schema = DBNSFP_SCHEMA_37
+    elif genome_version == "38":
+        dbnsfp_schema = DBNSFP_SCHEMA_38
+    else:
+        raise ValueError("Invalid genome_version: " + str(genome_version))
 
     expr = convert_vds_schema_string_to_annotate_variants_expr(
         root=root,
@@ -141,5 +150,7 @@ def add_dbnsfp_to_vds(hail_context, vds, genome_version, root="va.dbnsfp", subse
 
     if verbose:
         print(expr)
+
+    dbnsfp_vds = read_dbnsfp_vds(hail_context, genome_version, subset=subset)
 
     return vds.annotate_variants_vds(dbnsfp_vds, expr=expr)

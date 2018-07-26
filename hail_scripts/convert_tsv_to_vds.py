@@ -1,9 +1,8 @@
-#!/usr/bin/env python
-
 import argparse as ap
 import hail
-from pprint import pformat
+from pprint import pprint
 
+from hail_scripts.utils.vds_utils import write_vds
 
 p = ap.ArgumentParser(description="Convert a tsv table to a .vds")
 p.add_argument("-c", "--chrom-column", required=True)
@@ -36,5 +35,5 @@ for table_path in args.table_path:
 
     vds = hail.VariantDataset.from_table(kt)
 
-    print("==> Writing out vds: %s\n%s" % (output_path, pformat(vds.variant_schema)))
-    vds.write(output_path, overwrite=True)
+    pprint(vds.variant_schema)
+    write_vds(vds, output_path)

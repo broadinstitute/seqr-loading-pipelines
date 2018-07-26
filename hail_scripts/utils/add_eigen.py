@@ -1,15 +1,14 @@
+EIGEN_VDS_PATHS = {
+    '37': 'gs://seqr-datasets/GRCh37/eigen/EIGEN_coding_noncoding.grch37.vds',
+    '38': 'gs://seqr-datasets/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.vds',
+}
 
 
 def read_eigen_vds(hail_context, genome_version, subset=None):
-
-    if genome_version == "37":
-        eigen_vds_path = 'gs://seqr-datasets/GRCh37/eigen/EIGEN_coding_noncoding.grch37.vds'
-    elif genome_version == "38":
-        eigen_vds_path = 'gs://seqr-datasets/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.vds'
-    else:
+    if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
-    eigen_vds = hail_context.read(eigen_vds_path).split_multi()
+    eigen_vds = hail_context.read(EIGEN_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
         import hail

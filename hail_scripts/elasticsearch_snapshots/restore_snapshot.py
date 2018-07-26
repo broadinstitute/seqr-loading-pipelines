@@ -20,16 +20,13 @@ p.add_argument("-d", "--base-path", help="Path within the bucket", default="elas
 p.add_argument("-r", "--repo", help="Repository name", default="callsets")
 p.add_argument("-i", "--index", help="Index name(s). One or more comma-separated index names to include in the snapshot", required=True)
 p.add_argument("-w", "--wait-for-completion", action="store_true", help="Whether to wait until the snapshot is created before returning")
-
-
-# parse args
 args = p.parse_args()
 
 es = elasticsearch.Elasticsearch(args.host, port=args.port)
 
 
 # see https://www.elastic.co/guide/en/elasticsearch/plugins/current/repository-gcs-repository.html
-print("==> Check if snapshot repo exists: %s" % args.repo)
+print("==> check if snapshot repo exists: %s" % args.repo)
 repo_info = es.snapshot.get_repository(repository=args.repo)
 pprint(repo_info)
 
@@ -42,7 +39,7 @@ latest_snapshot = all_snapshots[-1]
 
 snapshot_name = latest_snapshot["snapshot"]
 
-print("==> Restoring snapshot: " + snapshot_name)
+print("==> restoring snapshot: " + snapshot_name)
 # http://elasticsearch-py.readthedocs.io/en/master/api.html#elasticsearch.client.SnapshotClient.restore
 pprint(
     es.snapshot.restore(
@@ -52,7 +49,7 @@ pprint(
     )
 )
 
-print("==> Getting snapshot status for: " + snapshot_name)
+print("==> getting snapshot status for: " + snapshot_name)
 pprint(
     es.snapshot.status(repository=args.repo)
 )

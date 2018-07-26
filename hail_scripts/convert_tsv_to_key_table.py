@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse as ap
 import hail
 from pprint import pformat

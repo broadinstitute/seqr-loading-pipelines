@@ -30,6 +30,11 @@ def run_in_background(command, print_command=True, env={}):
     return p
 
 
+def simple_run(command):
+    print(command)
+    os.system(command)
+
+
 def run(command,
         ok_return_codes=(0,),
         errors_to_ignore=None,

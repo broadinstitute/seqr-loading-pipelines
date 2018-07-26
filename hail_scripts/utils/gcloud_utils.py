@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import subprocess
 import time
@@ -81,3 +82,12 @@ def inputs_older_than_outputs(inputs, outputs, label=""):
         logger.info(label + "output(s) (%s) (%s) are newer than input(s) (%s) (%s)" % (", ".join(outputs), max_input_ctime, ", ".join(inputs), min_output_ctime))
     return max_input_ctime < min_output_ctime
 
+
+def delete_gcloud_file(file_path, is_directory=False):
+    if is_directory:
+        command = "gsutil -m rm -rf {}".format(file_path)
+    else:
+        command = "gsutil -m rm {}".format(file_path)
+
+    logger.info(command)
+    os.system(command)

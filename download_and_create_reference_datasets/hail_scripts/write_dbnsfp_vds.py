@@ -1,18 +1,21 @@
+from pprint import pprint
+
 import hail
 from hail.expr import TInt, TFloat
 from hail import VariantDataset
 
 from hail_scripts.utils.vds_schema_string_utils import parse_field_names_and_types
+from hail_scripts.utils.vds_utils import write_vds
 
 hail_context = hail.HailContext()
 
 DBNSFP_FIELDS = {
     "2.9.3": {
-        "source_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr*",
+        "source_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr*.gz",
         "output_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.vds"
     },
     "3.5": {
-        "source_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.chr*",
+        "source_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.chr*.gz",
         "output_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.vds",
     },
 }
@@ -181,18 +184,18 @@ DBNSFP_FIELDS["3.5"]["fields"] = """
          --- Ensembl_transcriptid: String,
          --- Ensembl_proteinid: String,
          --- aapos: String,
-         SIFT_score: String,
+         --- SIFT_score: String,
          --- SIFT_converted_rankscore: String,
-         --- SIFT_pred: String,
+         SIFT_pred: String,
          --- Uniprot_acc_Polyphen2: String,
          --- Uniprot_id_Polyphen2: String,
          --- Uniprot_aapos_Polyphen2: String,
-         Polyphen2_HDIV_score: String,
+         --- Polyphen2_HDIV_score: String,
          --- Polyphen2_HDIV_rankscore: String,
-         --- Polyphen2_HDIV_pred: String,
-         Polyphen2_HVAR_score: String,
+         Polyphen2_HDIV_pred: String,
+         --- Polyphen2_HVAR_score: String,
          --- Polyphen2_HVAR_rankscore: String,
-         --- Polyphen2_HVAR_pred: String,
+         Polyphen2_HVAR_pred: String,
          --- LRT_score: String,
          --- LRT_converted_rankscore: String,
          LRT_pred: String,
@@ -215,7 +218,7 @@ DBNSFP_FIELDS["3.5"]["fields"] = """
          PROVEAN_pred: String,
          --- Transcript_id_VEST3: String,
          --- Transcript_var_VEST3: String,
-         --- VEST3_score: String,
+         VEST3_score: String,
          VEST3_rankscore: String,
          --- MetaSVM_score: String,
          --- MetaSVM_rankscore: String,
@@ -465,4 +468,10 @@ for genome_version in ["37", "38"]:
     dbnsfp_vds = VariantDataset.from_table(kt)
 
     output_path = DBNSFP_FIELDS[dbnsfp_version]["output_path"]
-    dbnsfp_vds.write(output_path, overwrite=True)
+
+    dbnsfp_vds = dbnsfp_vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(DBNSFP_FIELDS[dbnsfp_version]["source_path"]))
+    dbnsfp_vds = dbnsfp_vds.annotate_global_expr('global.version = "{}"'.format(dbnsfp_version))
+
+    write_vds(dbnsfp_vds, output_path)
+
+    pprint(dbnsfp_vds.variant_schema)
