@@ -27,7 +27,7 @@ from hail_scripts.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
-    get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set
+    get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type
 from hail_scripts.utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
     ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
     ELASTICSEARCH_UPSERT, ELASTICSEARCH_INDEX, ELASTICSEARCH_UPDATE
@@ -425,6 +425,7 @@ if args.start_with_step <= 1:
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
 
+        "va.variantType= %s" % get_expr_for_variant_type(),
         "va.contig = %s" % get_expr_for_contig(),
         "va.pos = %s" % get_expr_for_start_pos(),
         "va.start = %s" % get_expr_for_start_pos(),

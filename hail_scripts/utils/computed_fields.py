@@ -350,6 +350,18 @@ def get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequence
     """ % locals()
 
 
+def get_expr_for_variant_type():
+    """Returns "I" (insertion), "D" (deletion), "S" (snp) or "M" (MNP)"""
+
+    return """
+        if(v.ref.length > v.alt.length) "D"
+        else if (v.ref.length < v.alt.length) "I"
+        else if (v.ref.length > 1) "M"
+        else "S"
+    """
+    
+
+
 def get_expr_for_contig(field_prefix="v."):
     """Normalized contig name"""
     return field_prefix+'contig.replace("chr", "")'
