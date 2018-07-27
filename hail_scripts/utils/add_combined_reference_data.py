@@ -27,7 +27,6 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      g1k.AN: Int,
      g1k.POPMAX_AF: Double,
      
-     exac.filters: Set[String],
      exac.AC_Adj: Int,
      exac.AC_Het: Int,
      exac.AC_Hom: Int,
@@ -35,7 +34,6 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      exac.AN_Adj: Int,
      exac.AF: Double,
      exac.AF_POPMAX: Double,
-     exac.POPMAX: String,
      
      topmed.AC: Int,
      topmed.Het: Int,
@@ -45,23 +43,19 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      
      mpc.MPC: String,
      
-     gnomad_exomes.filters: Set[String],
      gnomad_exomes.AC: Int,
      gnomad_exomes.Hom: Int,
      gnomad_exomes.Hemi: Int,
      gnomad_exomes.AF: Double,
      gnomad_exomes.AN: Int,
-     gnomad_exomes.AF_POPMAX: Double,
-     gnomad_exomes.POPMAX: String,
-     
-     gnomad_genomes.filters: Set[String],
+     gnomad_exomes.AF_POPMAX_OR_GLOBAL: Double,
+          
      gnomad_genomes.AC: Int,
      gnomad_genomes.Hom: Int,
      gnomad_genomes.Hemi: Int,
      gnomad_genomes.AF: Double,
      gnomad_genomes.AN: Int,
-     gnomad_genomes.AF_POPMAX: Double,
-     gnomad_genomes.POPMAX: String,
+     gnomad_genomes.AF_POPMAX_OR_GLOBAL: Double,
      
      eigen.Eigen_phred: Double,
 """
