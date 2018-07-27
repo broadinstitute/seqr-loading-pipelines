@@ -3,7 +3,7 @@ import hail
 import logging
 from pprint import pprint
 
-from hail_scripts.utils.add_gnomad import GNOMAD_VDS_PATHS
+from hail_scripts.utils.add_gnomad import GNOMAD_SEQR_VDS_PATHS
 from hail_scripts.utils.computed_fields import get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, CONSEQUENCE_TERM_RANK_LOOKUP
 from hail_scripts.utils.validate_vds import VALIDATION_KEYTABLE_PATHS
@@ -25,7 +25,7 @@ def read_gnomad_subset(genome_version):
 
     # select a subset of gnomad genomes variants that are in > 99% of samples
     vds = (
-        read_vds(hc, GNOMAD_VDS_PATHS["genomes_" + genome_version])
+        read_vds(hc, GNOMAD_SEQR_VDS_PATHS["genomes_" + genome_version])
             .filter_intervals(hail.Interval.parse("1"))
             .split_multi()
             .filter_variants_expr('va.info.AF[va.aIndex-1] > 0.90', keep=True)
