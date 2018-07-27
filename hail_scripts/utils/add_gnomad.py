@@ -20,34 +20,6 @@ USEFUL_INFO_FIELDS = """
     AF_POPMAX_OR_GLOBAL: Double
 """
 
-USEFUL_TOP_LEVEL_FIELDS = ""
-USEFUL_INFO_FIELDS = """
-    AC: Array[Int],
-    Hom: Array[Int],
-    Hemi: Array[Int],
-    AF: Array[Double],
-    AN: Int,
-    --- AC_AFR: Array[Int],
-    --- AC_AMR: Array[Int],
-    --- AC_ASJ: Array[Int],
-    --- AC_EAS: Array[Int],
-    --- AC_FIN: Array[Int],
-    --- AC_NFE: Array[Int],
-    --- AC_OTH: Array[Int],
-    --- AC_SAS: Array[Int],
-    --- AF_AFR: Array[Double],
-    --- AF_AMR: Array[Double],
-    --- AF_ASJ: Array[Double],
-    --- AF_EAS: Array[Double],
-    --- AF_FIN: Array[Double],
-    --- AF_NFE: Array[Double],
-    --- AF_OTH: Array[Double],
-    --- AF_SAS: Array[Double],
-    --- AF_POPMAX: Array[Double],
-    --- POPMAX: Array[String],
-    AF_POPMAX_OR_GLOBAL: Double
-"""
-
 def read_gnomad_vds(hail_context, genome_version, exomes_or_genomes, subset=None):
     if genome_version not in ("37", "38"):
         raise ValueError("Invalid genome_version: %s. Must be '37' or '38'" % str(genome_version))
