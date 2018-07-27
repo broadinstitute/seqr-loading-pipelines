@@ -171,6 +171,11 @@ if args.start_with_step <= 3:
         vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", subset=filter_interval)
         pprint(vds.variant_schema)
 
+    if not args.exclude_mpc:
+        logger.info("\n==> add mpc")
+        vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", subset=filter_interval)
+        pprint(vds.variant_schema)
+
     write_vds(vds, step3_output_vds)
 
     hc.stop()
@@ -208,11 +213,6 @@ if args.start_with_step <= 4:
     if not args.exclude_topmed:
         logger.info("\n==> add topmed")
         vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_mpc:
-        logger.info("\n==> add mpc")
-        vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", subset=filter_interval)
         pprint(vds.variant_schema)
 
     if not args.exclude_primate_ai:
