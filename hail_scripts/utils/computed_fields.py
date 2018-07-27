@@ -57,7 +57,6 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
     one exists).
 
     Also, for each transcript in the array, computes these additional fields:
-        hgnc_id: converts type to String
         domains: converts Array[Struct] to string of comma-separated domain names
         hgvs: set to hgvsp is it exists, or else hgvsc. TODO needs more work to match gnomAD browser logic.
         major_consequence: set to most severe consequence for that transcript (
@@ -79,20 +78,16 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         cdna_end,
         codons,
         consequence_terms,
-        distance,
         domains,
-        exon,
         gene_id,
         transcript_id,
         protein_id,
         gene_symbol,
-        hgnc_id,
         hgvsc,
         hgvsp,
         lof,
         lof_flags,
-        lof_filter,
-        lof_info
+        lof_filter
     """
 
     non_coding_transcript_consequences = """
@@ -102,13 +97,10 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         cdna_end,
         codons,
         consequence_terms,
-        distance,
         domains,
-        exon,
         gene_id,
         transcript_id,
         gene_symbol,
-        hgnc_id,
         hgvsc,
         hgvsp
     """
@@ -124,9 +116,8 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
             c => select(c, %(transcript_consequences)s)
         ).map(
             c => merge(
-                drop(c, hgnc_id, domains),
+                drop(c, domains),
                 {
-                    hgnc_id: str(c.hgnc_id),
                     domains: c.domains.map( domain => domain.db+":"+domain.name ),
                     hgvs: orElse(c.hgvsp, c.hgvsc),
                     major_consequence: if(c.consequence_terms.size > 0)
@@ -191,8 +182,6 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         cdna_start,
         cdna_end,
         codons,
-        distance,
-        exon,
         gene_id,
         gene_symbol,
         hgvsc,
@@ -200,10 +189,8 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         lof,
         lof_flags,
         lof_filter,
-        lof_info,
         protein_id,
         transcript_id,
-        hgnc_id,
         domains,
         hgvs,
         major_consequence,
@@ -218,8 +205,6 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         cdna_start:Int,
         cdna_end:Int,
         codons:String,
-        distance:Int,
-        exon:String,
         gene_id:String,
         gene_symbol:String,
         hgvsc:String,
@@ -227,10 +212,8 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         lof:String,
         lof_flags:String,
         lof_filter:String,
-        lof_info:String,
         protein_id:String,
         transcript_id:String,
-        hgnc_id:String,
         hgvs:String,
         major_consequence:String,
         major_consequence_rank:Int,
@@ -245,13 +228,10 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         cdna_start,
         cdna_end,
         codons,
-        distance,
-        exon,
         gene_id,
         gene_symbol,
         hgvsc,
         transcript_id,
-        hgnc_id,
         hgvs,
         major_consequence,
         major_consequence_rank,
@@ -264,13 +244,10 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         cdna_start:Int,
         cdna_end:Int,
         codons:String,
-        distance:Int,
-        exon:String,
         gene_id:String,
         gene_symbol:String,
         hgvsc:String,
         transcript_id:String,
-        hgnc_id:String,
         hgvs:String,
         major_consequence:String,
         major_consequence_rank:Int,

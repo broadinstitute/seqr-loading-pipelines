@@ -207,7 +207,6 @@ transcript_annotations_to_keep = [
     "lof",
     "lof_flags",
     "lof_filter",
-    "lof_info",
     "protein_id",
     "transcript_id",
 
