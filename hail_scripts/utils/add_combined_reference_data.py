@@ -11,6 +11,8 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      gnomad_genome_coverage: Double,
      
      cadd.PHRED: Double,
+     eigen.Eigen_phred: Double,
+     primate_ai.score: Double,
      
      dbnsfp.SIFT_pred: String,
      dbnsfp.Polyphen2_HVAR_pred: String,
@@ -35,12 +37,6 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      exac.AF: Double,
      exac.AF_POPMAX: Double,
      
-     topmed.AC: Int,
-     topmed.Het: Int,
-     topmed.Hom: Int,
-     topmed.AF: Double,
-     topmed.AN: Int,
-     
      mpc.MPC: String,
      
      gnomad_exomes.AC: Int,
@@ -57,7 +53,11 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      gnomad_genomes.AN: Int,
      gnomad_genomes.AF_POPMAX_OR_GLOBAL: Double,
      
-     eigen.Eigen_phred: Double,
+     topmed.AC: Int,
+     topmed.Het: Int,
+     topmed.Hom: Int,
+     topmed.AF: Double,
+     topmed.AN: Int,
 """
 
 
