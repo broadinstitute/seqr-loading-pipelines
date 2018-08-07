@@ -1,6 +1,6 @@
 import os
 import sys
-from hail_scripts.utils.shell_utils import simple_run as run
+from hail_scripts.v01.utils.shell_utils import simple_run as run
 
 if len(sys.argv) < 2:
     sys.exit("Must provide OMIM download key as command line arg (https://www.omim.org/downloads/)")
@@ -23,7 +23,7 @@ run("gsutil -m cp {filename} {GCLOUD_BUCKET_PATH}/{filename}".format(**locals())
 run(" ".join([
     "python gcloud_dataproc/run_script.py",
     "--cluster omim",
-    "hail_scripts/convert_tsv_to_key_table.py",
+    "hail_scripts/v01/convert_tsv_to_key_table.py",
     "--key-by 'Ensembl Gene ID'",
     "{GCLOUD_BUCKET_PATH}/{filename}"
 ]).format(**locals()))

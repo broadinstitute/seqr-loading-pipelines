@@ -14,7 +14,7 @@ def run(cmd):
 
 
 if "-h" in sys.argv or "--help" in sys.argv:
-    run("python hail_scripts/load_dataset_to_es_pipeline.py -h")
+    run("python hail_scripts/v01/load_dataset_to_es_pipeline.py -h")
     sys.exit(0)
 
 
@@ -48,7 +48,7 @@ run((
     "time ./gcloud_dataproc/submit.py "
     "--cluster %(cluster_name)s "
     "--project seqr-project "
-    "hail_scripts/load_dataset_to_es_pipeline.py "
+    "hail_scripts/v01/load_dataset_to_es_pipeline.py "
     "--genome-version 38 " + " ".join(unparsed_args)
 ) % locals())
 

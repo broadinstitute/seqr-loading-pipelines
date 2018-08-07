@@ -1,4 +1,4 @@
-from hail_scripts.utils.shell_utils import simple_run as run
+from hail_scripts.v01.utils.shell_utils import simple_run as run
 
 for dbnsfp_gene_table_path in [
     "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9_gene",
@@ -7,6 +7,6 @@ for dbnsfp_gene_table_path in [
     run(" ".join([
         "python gcloud_dataproc/run_script.py",
         "--cluster dbnsfp",
-        "hail_scripts/convert_tsv_to_key_table.py",
+        "hail_scripts/v01/convert_tsv_to_key_table.py",
         "{dbnsfp_gene_table_path}"
     ]).format(**locals()))
