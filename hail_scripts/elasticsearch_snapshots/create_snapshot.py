@@ -7,7 +7,7 @@ import logging
 from pprint import pprint
 import time
 
-from hail_scripts.utils.elasticsearch_client import ElasticsearchClient
+from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()

@@ -1,5 +1,5 @@
 import argparse
-from hail_scripts.utils.shell_utils import simple_run as run
+from hail_scripts.v01.utils.shell_utils import simple_run as run
 
 genome_versions = ['37', '38']
 
@@ -19,6 +19,6 @@ for genome_version in genome_versions:
     run(" ".join([
         "python gcloud_dataproc/run_script.py",
         "--cluster {cluster_name}",
-        "download_and_create_reference_datasets/hail_scripts/combine_all_variant_level_reference_data.py",
+        "download_and_create_reference_datasets/hail_scripts/v01/combine_all_variant_level_reference_data.py",
         "--genome-version {genome_version} {script_args}",
     ]).format(**locals()))
