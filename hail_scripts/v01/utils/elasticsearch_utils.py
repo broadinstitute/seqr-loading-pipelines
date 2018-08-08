@@ -1,6 +1,3 @@
-import os
-os.system("pip install elasticsearch")
-
 import logging
 
 handlers = set(logging.root.handlers)
@@ -8,7 +5,6 @@ logging.root.handlers = list(handlers)
 
 import collections
 import logging
-import StringIO
 
 from hail_scripts.v01.utils.vds_schema_string_utils import parse_field_names_and_types
 
@@ -18,18 +14,6 @@ logger = logging.getLogger()
 #   https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html
 #   long, integer, short, byte, double, float, half_float, scaled_float
 #   text and keyword
-
-
-# Elastic search write operations.
-# See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
-ELASTICSEARCH_INDEX = "index"
-ELASTICSEARCH_CREATE = "create"
-ELASTICSEARCH_UPDATE = "update"
-ELASTICSEARCH_UPSERT = "upsert"
-ELASTICSEARCH_WRITE_OPERATIONS = set([
-    ELASTICSEARCH_INDEX, ELASTICSEARCH_CREATE, ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT,
-])
-
 VDS_TO_ES_TYPE_MAPPING = {
     "Boolean": "boolean",
     "Int":     "integer",
@@ -44,22 +28,6 @@ for vds_type, es_type in VDS_TO_ES_TYPE_MAPPING.items():
     VDS_TO_ES_TYPE_MAPPING.update({"Array[%s]" % vds_type: es_type})
     VDS_TO_ES_TYPE_MAPPING.update({"Set[%s]" % vds_type: es_type})
 
-
-# make encoded values as human-readable as possible
-ES_FIELD_NAME_ESCAPE_CHAR = '$'
-ES_FIELD_NAME_BAD_LEADING_CHARS = set(['_', '-', '+', ES_FIELD_NAME_ESCAPE_CHAR])
-ES_FIELD_NAME_SPECIAL_CHAR_MAP = {
-    '.': '_$dot$_',
-    ',': '_$comma$_',
-    '#': '_$hash$_',
-    '*': '_$star$_',
-    '(': '_$lp$_',
-    ')': '_$rp$_',
-    '[': '_$lsb$_',
-    ']': '_$rsb$_',
-    '{': '_$lcb$_',
-    '}': '_$rcb$_',
-}
 
 ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
 
@@ -77,57 +45,6 @@ DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
     ".*_dp": {"type": "short", "doc_values": "false"},
     ".*_ab": {"type": "half_float", "doc_values": "false"},
 }
-
-
-def _encode_field_name(s):
-    """Encodes arbitrary string into an elasticsearch field name
-
-    See:
-    https://discuss.elastic.co/t/special-characters-in-field-names/10658/2
-    https://discuss.elastic.co/t/illegal-characters-in-elasticsearch-field-names/17196/2
-    """
-    field_name = StringIO.StringIO()
-    for i, c in enumerate(s):
-        if c == ES_FIELD_NAME_ESCAPE_CHAR:
-            field_name.write(2*ES_FIELD_NAME_ESCAPE_CHAR)
-        elif c in ES_FIELD_NAME_SPECIAL_CHAR_MAP:
-            field_name.write(ES_FIELD_NAME_SPECIAL_CHAR_MAP[c])  # encode the char
-        else:
-            field_name.write(c)  # write out the char as is
-
-    field_name = field_name.getvalue()
-
-    # escape 1st char if necessary
-    if any(field_name.startswith(c) for c in ES_FIELD_NAME_BAD_LEADING_CHARS):
-        return ES_FIELD_NAME_ESCAPE_CHAR + field_name
-    else:
-        return field_name
-
-
-def _decode_field_name(field_name):
-    """Converts an elasticsearch field name back to the original unencoded string"""
-
-    if field_name.startswith(ES_FIELD_NAME_ESCAPE_CHAR):
-        field_name = field_name[1:]
-
-    i = 0
-    original_string = StringIO.StringIO()
-    while i < len(field_name):
-        current_string = field_name[i:]
-        if current_string.startswith(2*ES_FIELD_NAME_ESCAPE_CHAR):
-            original_string.write(ES_FIELD_NAME_ESCAPE_CHAR)
-            i += 2
-        else:
-            for original_value, encoded_value in ES_FIELD_NAME_SPECIAL_CHAR_MAP.items():
-                if current_string.startswith(encoded_value):
-                    original_string.write(original_value)
-                    i += len(encoded_value)
-                    break
-            else:
-                original_string.write(field_name[i])
-                i += 1
-
-    return original_string.getvalue()
 
 
 def _map_vds_type_to_es_type(type_name):

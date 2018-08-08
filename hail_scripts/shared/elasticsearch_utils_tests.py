@@ -1,4 +1,5 @@
 import unittest
+
 from elasticsearch_utils import _encode_field_name, _decode_field_name
 
 

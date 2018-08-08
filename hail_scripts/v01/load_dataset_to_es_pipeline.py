@@ -17,6 +17,8 @@ import requests
 import time
 import sys
 
+from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX, \
+    ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT
 from hail_scripts.v01.utils.add_hgmd import add_hgmd_to_vds
 from hail_scripts.v01.utils.add_eigen import add_eigen_to_vds
 from hail_scripts.v01.utils.gcloud_utils import delete_gcloud_file
@@ -29,8 +31,7 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
     get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type
 from hail_scripts.v01.utils.elasticsearch_utils import DEFAULT_GENOTYPE_FIELDS_TO_EXPORT, \
-    ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
-    ELASTICSEARCH_UPSERT, ELASTICSEARCH_INDEX, ELASTICSEARCH_UPDATE
+    ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.v01.utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr

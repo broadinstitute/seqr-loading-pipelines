@@ -8,10 +8,10 @@ import hail
 from pprint import pprint
 import logging
 
+from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_UPDATE
 from hail_scripts.v01.utils.add_clinvar import add_clinvar_to_vds, download_and_import_latest_clinvar_vcf, CLINVAR_VDS_PATH, \
     reset_clinvar_fields_in_vds
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
-from hail_scripts.v01.utils.elasticsearch_utils import ELASTICSEARCH_UPDATE
 from hail_scripts.v01.utils.vds_utils import read_in_dataset, compute_minimal_schema, write_vds
 
 logger = logging.getLogger()
