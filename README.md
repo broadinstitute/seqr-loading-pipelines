@@ -45,6 +45,16 @@ Utilities:
 
 *NOTE:* Some of the scripts require a running elasticsearch instance. For deploying a stand-alone elasticsearch cluster see: https://github.com/macarthur-lab/elasticsearch-kubernetes-cluster or for deploying one as part of seqr see: https://github.com/macarthur-lab/seqr
 
+Hail 0.2 scripts:
+
+The submit scripts in `gcloud_dataproc` currently always use Hail 0.1. [cloudtools](https://github.com/Nealelab/cloudtools)
+can be used to create a cluster with Hail 0.2.
+
+```
+zip -r hail_scripts.zip hail_scripts
+cluster start --packages=elasticsearch somecluster
+gcloud dataproc jobs submit pyspark --cluster=somecluster --py-files=hail_scripts.zip ./hail_scripts/v02/load_clinvar_to_es.py -- --genome-version=37 --host=$ELASTICSEARCH_HOST_IP
+```
 
 **Examples:**
 
