@@ -1,4 +1,9 @@
-import StringIO
+import sys
+
+if sys.version_info[0] == 2:
+    from StringIO import StringIO
+else:
+    from io import StringIO
 
 
 # Elastic search write operations.
@@ -36,7 +41,7 @@ def _encode_field_name(s):
     https://discuss.elastic.co/t/special-characters-in-field-names/10658/2
     https://discuss.elastic.co/t/illegal-characters-in-elasticsearch-field-names/17196/2
     """
-    field_name = StringIO.StringIO()
+    field_name = StringIO()
     for i, c in enumerate(s):
         if c == ES_FIELD_NAME_ESCAPE_CHAR:
             field_name.write(2*ES_FIELD_NAME_ESCAPE_CHAR)
@@ -61,7 +66,7 @@ def _decode_field_name(field_name):
         field_name = field_name[1:]
 
     i = 0
-    original_string = StringIO.StringIO()
+    original_string = StringIO()
     while i < len(field_name):
         current_string = field_name[i:]
         if current_string.startswith(2*ES_FIELD_NAME_ESCAPE_CHAR):
