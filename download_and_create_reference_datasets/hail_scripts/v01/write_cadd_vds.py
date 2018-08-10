@@ -7,12 +7,12 @@ from hail_scripts.v01.utils.vds_utils import write_vds
 
 for cadd_snvs_path, cadd_indels_path in [
         (
-                'gs://seqr-reference-data/GRCh37/CADD/whole_genome_SNVs.vcf.gz',
-                'gs://seqr-reference-data/GRCh37/CADD/InDels.vcf.gz'
+                'gs://seqr-reference-data/GRCh37/CADD/whole_genome_SNVs.v1.4.vcf.gz',
+                'gs://seqr-reference-data/GRCh37/CADD/InDels.v1.4.vcf.gz'
         ),
         (
-                'gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.liftover.GRCh38.vcf.gz',
-                'gs://seqr-reference-data/GRCh38/CADD/InDels.liftover.GRCh38.vcf.gz'
+                'gs://seqr-reference-data/GRCh38/CADD/whole_genome_SNVs.v1.4.vcf.gz',
+                'gs://seqr-reference-data/GRCh38/CADD/InDels.v1.4.vcf.gz'
         )
     ]:
 
@@ -27,7 +27,7 @@ for cadd_snvs_path, cadd_indels_path in [
 
     vds = vds.persist()
 
-    output_path = os.path.join(os.path.dirname(cadd_indels_path), "CADD_snvs_and_indels.vds")
+    output_path = os.path.join(os.path.dirname(cadd_indels_path), "CADD_snvs_and_indels.v1.4.vds")
 
     write_vds(vds, output_path)
 
