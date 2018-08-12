@@ -36,7 +36,7 @@ hc = hail.HailContext(log="/hail.log")
 
 
 # download vcf
-vds = download_and_import_latest_clinvar_vcf(hc, args.genome_version)
+vds = download_and_import_latest_clinvar_vcf(hc, args.genome_version, subset=args.subset)
 
 # run VEP
 print("\n=== Running VEP ===")

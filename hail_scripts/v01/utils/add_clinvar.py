@@ -125,11 +125,12 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version, subset=
 
     # import vcf
     vds = hail_context.import_vcf(clinvar_vcf_hdfs_path, force_bgz=True, min_partitions=10000, drop_samples=True) #.filter_intervals(hail.Interval.parse("1-MT"))
-    vds = vds.repartition(10000)  # because the min_partitions arg doesn't work in some cases
 
     if subset:
-        vds = vds.filter_intervals(hail_context.Interval.parse(subset))
+        import hail
+        vds = vds.filter_intervals(hail.Interval.parse(subset))
 
+    vds = vds.repartition(10000)  # because the min_partitions arg doesn't work in some cases
     vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(clinvar_url))
     vds = vds.annotate_global_expr('global.version = "{}"'.format(clinvar_release_date))
 
