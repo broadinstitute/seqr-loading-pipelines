@@ -30,6 +30,9 @@ class ElasticsearchClient:
 
         self.es = elasticsearch.Elasticsearch(host, port=port)
 
+        # check connection
+        logger.info(pformat(self.es.info()))
+
     def print_elasticsearch_stats(self):
         """Prints elastic search index stats."""
 

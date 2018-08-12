@@ -281,14 +281,6 @@ if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path
 
 input_path_prefix = input_path.replace(".vds", "")
 
-elasticsearch_url = "http://%s:%s" % (args.host, args.port)
-response = requests.get(elasticsearch_url)
-elasticsearch_response = json.loads(response.content)
-if "tagline" not in elasticsearch_response:
-    p.error("Unexpected response from %s: %s" % (elasticsearch_url, elasticsearch_response))
-else:
-    logger.info("Connected to %s: %s" % (elasticsearch_url, elasticsearch_response["tagline"]))
-
 filter_interval = "1-MT"
 if args.subset:
     filter_interval = args.subset
