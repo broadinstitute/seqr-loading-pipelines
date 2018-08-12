@@ -11,6 +11,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 p = argparse.ArgumentParser()
+p.add_argument("--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 p.add_argument("--block-size", help="batch size - how many variants to pass to VEP for each VEP run", type=int, default=500)
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
                help="subset to this chrom:start-end range. Intended for testing.")
@@ -58,7 +59,7 @@ pprint.pprint(summary)
 if summary.variants == 0:
     p.error("0 variants in VDS. Make sure chromosome names don't contain 'chr'")
 
-vds = run_vep(vds, block_size=args.block_size)
+vds = run_vep(vds, genome_version=args.genome_version, block_size=args.block_size)
 
 write_vds(vds, args.output_vds)
 

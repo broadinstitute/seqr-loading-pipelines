@@ -28,7 +28,7 @@ p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int
 p.add_argument("-i", "--index-name", help="Elasticsearch index name")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-s", "--num-shards", help="Number of elasticsearch shards", default=1, type=int)
-p.add_argument("-b", "--block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
+p.add_argument("-b", "--es-block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
 args = p.parse_args()
 
 
@@ -98,7 +98,7 @@ es.export_table_to_elasticsearch(
     rows,
     index_name=index_name,
     index_type_name=args.index_type,
-    block_size=args.block_size,
+    block_size=args.es_block_size,
     num_shards=args.num_shards,
     delete_index_before_exporting=True,
     export_globals_to_index_meta=True,

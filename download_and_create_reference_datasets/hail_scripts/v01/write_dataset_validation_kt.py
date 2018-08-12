@@ -33,7 +33,7 @@ def read_gnomad_subset(genome_version):
 
     if genome_version == "38":
         # lifted-over gnomad vds doesn't have VEP annotations
-        vds = run_vep(vds)
+        vds = run_vep(vds, genome_version=genome_version)
 
     computed_annotation_exprs = [
         "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
