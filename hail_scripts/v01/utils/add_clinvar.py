@@ -71,10 +71,10 @@ def add_clinvar_to_vds(hail_context, vds, genome_version, root="va.clinvar", sub
     if 'version' in clinvar_vds_meta:
         vds = vds.annotate_global_expr('global.clinvarVersion = "{}"'.format(clinvar_vds_meta["version"]))
 
+    # %(root)s.review_status = vds.info.CLNREVSTAT.toSet.mkString(","),
     vds = vds.annotate_variants_vds(clinvar_vds, expr="""
         %(root)s.allele_id = vds.info.ALLELEID,
         %(root)s.clinical_significance = vds.info.CLNSIG.toSet.mkString(","),
-        %(root)s.review_status = vds.info.CLNREVSTAT.toSet.mkString(","),
         %(root)s.gold_stars = %(CLINVAR_GOLD_STARS_LOOKUP)s.get(vds.info.CLNREVSTAT.toSet.mkString(","))
     """ % dict(locals().items()+globals().items()))
 
@@ -86,10 +86,10 @@ def reset_clinvar_fields_in_vds(hail_context, vds, genome_version, root="va.clin
 
     clinvar_vds = read_clinvar_vds(hail_context, genome_version, subset=subset)
 
+    # %(root)s.review_status = NA:String,
     vds = vds.annotate_variants_vds(clinvar_vds, expr="""
         %(root)s.allele_id = NA:Int,
         %(root)s.clinical_significance = NA:String,
-        %(root)s.review_status = NA:String,
         %(root)s.gold_stars = NA:Int
     """ % locals())
 
@@ -113,7 +113,7 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version):
     # download vcf
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
     local_tmp_file_path = "/tmp/clinvar.vcf.gz"
-    clinvar_vcf_hdfs_path = "/" + os.path.basename(local_tmp_file_path)
+    clinvar_vcf_hdfs_path = "/tmp/" + os.path.basename(local_tmp_file_path)
 
     print("\n==> downloading {}".format(clinvar_url))
 
@@ -125,6 +125,7 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version):
 
     # import vcf
     vds = hail_context.import_vcf(clinvar_vcf_hdfs_path, force_bgz=True, min_partitions=10000, drop_samples=True) #.filter_intervals(hail.Interval.parse("1-MT"))
+    vds = vds.repartition(10000)  # because the min_partitions arg doesn't work in some cases
 
     vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(clinvar_url))
     vds = vds.annotate_global_expr('global.version = "{}"'.format(clinvar_release_date))

@@ -84,7 +84,6 @@ expr = """
     va.clean.main_transcript = va.mainTranscript,
     va.clean.allele_id = va.info.ALLELEID,
     va.clean.clinical_significance = va.info.CLNSIG.toSet.mkString(","),
-    va.clean.review_status = va.info.CLNREVSTAT.toSet.mkString(","),
     va.clean.gold_stars = {}.get(va.info.CLNREVSTAT.toSet.mkString(","))
 """.format(CLINVAR_GOLD_STARS_LOOKUP)
 
