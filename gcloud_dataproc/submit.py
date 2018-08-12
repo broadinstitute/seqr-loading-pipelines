@@ -34,7 +34,7 @@ hail_jar = "gs://gnomad-bw2/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
-if "load_dataset_to_es_pipeline" in script:
+if "load_dataset_to_es" in script:
     username = getpass.getuser()
     directory = "%s:%s" % (socket.gethostname(), os.getcwd())
     script_args += " --username '%(username)s' --directory '%(directory)s'" % locals()

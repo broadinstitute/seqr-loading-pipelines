@@ -18,7 +18,8 @@ p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int
 p.add_argument("-i", "--index-name", help="Elasticsearch index name")
 p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-s", "--num-shards", help="Number of elasticsearch shards", default=1, type=int)
-p.add_argument("-b", "--block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
+p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
+p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=200, type=int)
 p.add_argument("--subset", help="Specify an interval (eg. X:12345-54321 to load a subset of clinvar")
 args = p.parse_args()
 
@@ -40,7 +41,7 @@ vds = download_and_import_latest_clinvar_vcf(hc, args.genome_version, subset=arg
 
 # run VEP
 print("\n=== Running VEP ===")
-vds = run_vep(vds, root='va.vep', block_size=100, genome_version=args.genome_version)
+vds = run_vep(vds, root='va.vep', block_size=args.vep_block_size, genome_version=args.genome_version)
 
 #pprint(vds.variant_schema)
 
@@ -100,7 +101,7 @@ client.export_vds_to_elasticsearch(
     vds,
     index_name=index_name,
     index_type_name=args.index_type,
-    block_size=args.block_size,
+    block_size=args.es_block_size,
     num_shards=args.num_shards,
     delete_index_before_exporting=True,
     #elasticsearch_mapping_id="doc_id",
