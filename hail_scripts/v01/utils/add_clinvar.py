@@ -96,13 +96,13 @@ def reset_clinvar_fields_in_vds(hail_context, vds, genome_version, root="va.clin
     return vds
 
 
-def download_and_import_latest_clinvar_vcf(hail_context, genome_version):
+def download_and_import_latest_clinvar_vcf(hail_context, genome_version, subset=None):
     """Downloads the latest clinvar VCF from the NCBI FTP server, copies it to HDFS and returns the hdfs file path
     as well the clinvar release date that's specified in the VCF header.
 
     Args:
         genome_version (str): "37" or "38"
-
+        subset (str): subset by interval (eg. "X:12345-54321") - useful for testing
     Returns:
         2-tuple: (clinvar_vcf_hdfs_path, clinvar_release_date)
     """
@@ -126,6 +126,9 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version):
     # import vcf
     vds = hail_context.import_vcf(clinvar_vcf_hdfs_path, force_bgz=True, min_partitions=10000, drop_samples=True) #.filter_intervals(hail.Interval.parse("1-MT"))
     vds = vds.repartition(10000)  # because the min_partitions arg doesn't work in some cases
+
+    if subset:
+        vds = vds.filter_intervals(hail_context.Interval.parse(subset))
 
     vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(clinvar_url))
     vds = vds.annotate_global_expr('global.version = "{}"'.format(clinvar_release_date))

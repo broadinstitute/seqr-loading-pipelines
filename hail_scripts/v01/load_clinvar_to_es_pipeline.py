@@ -40,7 +40,7 @@ vds = download_and_import_latest_clinvar_vcf(hc, args.genome_version)
 
 # run VEP
 print("\n=== Running VEP ===")
-vds = run_vep(vds, root='va.vep', block_size=1000)
+vds = run_vep(vds, root='va.vep', block_size=100, genome_version=args.genome_version)
 
 #pprint(vds.variant_schema)
 
