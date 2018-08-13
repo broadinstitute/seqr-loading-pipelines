@@ -10,7 +10,7 @@ p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", default=os.environ.get("HAIL_HOME"),
     help="Run using a local hail install instead of submitting to dataproc. "
-         "The value must should be the local hail directory (default: $HAIL_HOME). "
+         "The value should be the local hail directory (default: $HAIL_HOME). "
          "Also, this assumes 'spark-submit' is on $PATH")
 p.add_argument("script")
 
