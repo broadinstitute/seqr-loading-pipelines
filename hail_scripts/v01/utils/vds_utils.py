@@ -118,12 +118,12 @@ def write_vds(vds, output_path, overwrite=True):
     vds.write(output_path, overwrite=overwrite)
 
 
-def run_vep(vds, genome_version=None, root='va.vep', block_size=1000):
+def run_vep(vds, genome_version, root='va.vep', block_size=1000):
     if genome_version == "37":
         vds = vds.annotate_global_expr('global.gencodeVersion = "19"')  # see
-    elif genome_version == "37":
+    elif genome_version == "38":
         vds = vds.annotate_global_expr('global.gencodeVersion = "25"')  # see gs://hail-common/vep/vep/homo_sapiens/85_GRCh38/info.txt
 
-    vds = vds.vep(config="/vep/vep-gcloud.properties", root=root, block_size=block_size)
+    vds = vds.vep(config="/vep/vep-gcloud-grch{}.properties".format(genome_version), root=root, block_size=block_size)
 
     return vds

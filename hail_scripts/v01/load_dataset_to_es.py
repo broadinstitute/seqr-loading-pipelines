@@ -81,7 +81,10 @@ p.add_argument("--index", help="(optional) elasticsearch index name. If not spec
 p.add_argument("--host", help="Elastisearch IP address", default="10.56.10.4")
 p.add_argument("--port", help="Elastisearch port", default="9200")
 p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
-p.add_argument("--block-size", help="Block size", type=int, default=1000)
+
+p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
+p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
+
 
 p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
 p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
@@ -232,7 +235,7 @@ def export_to_elasticsearch(
             genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             index_name=current_index_name,
             index_type_name=index_type,
-            block_size=args.block_size,
+            block_size=args.es_block_size,
             num_shards=args.num_shards,
             delete_index_before_exporting=delete_index_before_exporting,
             elasticsearch_write_operation=operation,
@@ -280,14 +283,6 @@ if not (input_path.endswith(".vds") or input_path.endswith(".vcf") or input_path
     p.error("Input must be a .vds or .vcf.gz")
 
 input_path_prefix = input_path.replace(".vds", "")
-
-elasticsearch_url = "http://%s:%s" % (args.host, args.port)
-response = requests.get(elasticsearch_url)
-elasticsearch_response = json.loads(response.content)
-if "tagline" not in elasticsearch_response:
-    p.error("Unexpected response from %s: %s" % (elasticsearch_url, elasticsearch_response))
-else:
-    logger.info("Connected to %s: %s" % (elasticsearch_url, elasticsearch_response["tagline"]))
 
 filter_interval = "1-MT"
 if args.subset:
@@ -393,7 +388,7 @@ if args.start_with_step == 0:
     if not args.skip_vep:
         logger.info("\n\n=============================== pipeline - step 0 ===============================")
         logger.info("Read in data, run vep, write data to VDS")
-        vds = run_vep(vds, block_size=500)
+        vds = run_vep(vds, genome_version=args.genome_version, block_size=args.vep_block_size)
 
         vds = vds.annotate_global_expr('global.gencodeVersion = "{}"'.format("19" if args.genome_version == "37" else "25"))
 
