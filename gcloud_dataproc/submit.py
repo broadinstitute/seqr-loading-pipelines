@@ -8,10 +8,8 @@ import socket
 p = argparse.ArgumentParser()
 p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-c", "--cluster", default="no-vep")
-p.add_argument("--run-locally", default=os.environ.get("HAIL_HOME"),
-    help="Run using a local hail install instead of submitting to dataproc. "
-         "The value should be the local hail directory (default: $HAIL_HOME). "
-         "Also, this assumes 'spark-submit' is on $PATH")
+p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
+p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The local hail directory (default: $HAIL_HOME). Required for --run-locally")
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
@@ -41,9 +39,12 @@ if "load_dataset_to_es" in script:
 
 
 if args.run_locally:
+    if not args.hail_home:
+        p.error("--hail-home not specified")
+    hail_home = args.hail_home
     command = """spark-submit \
-        --jars /hail/build/libs/hail-all-spark.jar 
-        --py-files /hail/build/distributions/hail-python.zip 
+        --jars %(hail_home)s/build/libs/hail-all-spark.jar 
+        --py-files %(hail_home)s/build/distributions/hail-python.zip 
         "%(script)s" %(script_args)s
     """ % locals()
 else:
