@@ -1,4 +1,4 @@
-
+import hail
 
 def read_hgmd_vds(hail_context, genome_version, subset=None):
 
@@ -12,7 +12,6 @@ def read_hgmd_vds(hail_context, genome_version, subset=None):
     hgmd_vds = hail_context.read(hgmd_vds_path).split_multi()
 
     if subset:
-        import hail
         hgmd_vds = hgmd_vds.filter_intervals(hail.Interval.parse(subset))
 
     return hgmd_vds

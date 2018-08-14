@@ -1,6 +1,8 @@
+import hail
+
 EIGEN_VDS_PATHS = {
-    '37': 'gs://seqr-datasets/GRCh37/eigen/EIGEN_coding_noncoding.grch37.vds',
-    '38': 'gs://seqr-datasets/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.vds',
+    '37': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.vds',
+    '38': 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.vds',
 }
 
 
@@ -11,7 +13,6 @@ def read_eigen_vds(hail_context, genome_version, subset=None):
     eigen_vds = hail_context.read(EIGEN_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         eigen_vds = eigen_vds.filter_intervals(hail.Interval.parse(subset))
 
     return eigen_vds

@@ -1,3 +1,4 @@
+import hail
 from pprint import pprint
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
@@ -134,7 +135,6 @@ def read_exac_vds(hail_context, genome_version, subset=None):
     exac_vds = hail_context.read(exac_vds_path).split_multi()
 
     if subset:
-        import hail
         exac_vds = exac_vds.filter_intervals(hail.Interval.parse(subset))
 
     return exac_vds

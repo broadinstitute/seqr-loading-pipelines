@@ -1,3 +1,5 @@
+import hail
+
 PRIMATE_AI_VDS_PATHS = {
     '37': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.vds',
     '38': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.vds',
@@ -11,7 +13,6 @@ def read_primate_ai_vds(hail_context, genome_version, subset=None):
     primate_ai_vds = hail_context.read(PRIMATE_AI_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         primate_ai_vds = primate_ai_vds.filter_intervals(hail.Interval.parse(subset))
 
     return primate_ai_vds

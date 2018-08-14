@@ -1,3 +1,4 @@
+import hail
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
 COMBINED_REFERENCE_DATA_VDS_PATHS = {
@@ -68,7 +69,6 @@ def read_combined_reference_data_vds(hail_context, genome_version, subset=None):
     combined_reference_data_vds = hail_context.read(COMBINED_REFERENCE_DATA_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         combined_reference_data_vds = combined_reference_data_vds.filter_intervals(hail.Interval.parse(subset))
 
     return combined_reference_data_vds

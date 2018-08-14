@@ -1,3 +1,4 @@
+import hail
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
 G1k_VDS_PATHS = {
@@ -24,7 +25,6 @@ def read_1kg_phase3_vds(hail_context, genome_version, subset=None):
     g1k_vds = hail_context.read(G1k_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         g1k_vds = g1k_vds.filter_intervals(hail.Interval.parse(subset))
 
     return g1k_vds

@@ -1,3 +1,4 @@
+import hail
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
 DBNSFP_VDS_PATHS = {
@@ -126,7 +127,6 @@ def read_dbnsfp_vds(hail_context, genome_version, subset=None):
     dbnsfp_vds = hail_context.read(DBNSFP_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         dbnsfp_vds = dbnsfp_vds.filter_intervals(hail.Interval.parse(subset))
 
     return dbnsfp_vds

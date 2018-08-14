@@ -1,3 +1,4 @@
+import hail
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
 TOPMED_VDS_PATHS = {
@@ -23,7 +24,6 @@ def read_topmed_vds(hail_context, genome_version, subset=None):
     topmed_vds = hail_context.read(TOPMED_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         topmed_vds = topmed_vds.filter_intervals(hail.Interval.parse(subset))
 
     return topmed_vds

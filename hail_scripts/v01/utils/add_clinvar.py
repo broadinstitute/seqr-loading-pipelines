@@ -1,4 +1,5 @@
 import gzip
+import hail
 import os
 from pprint import pprint
 
@@ -54,7 +55,6 @@ def read_clinvar_vds(hail_context, genome_version, subset=None):
     clinvar_vds = hail_context.read(clinvar_vds_path)
 
     if subset:
-        import hail
         clinvar_vds = clinvar_vds.filter_intervals(hail.Interval.parse(subset))
 
     return clinvar_vds
@@ -127,7 +127,6 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version, subset=
     vds = hail_context.import_vcf(clinvar_vcf_hdfs_path, force_bgz=True, min_partitions=10000, drop_samples=True) #.filter_intervals(hail.Interval.parse("1-MT"))
 
     if subset:
-        import hail
         vds = vds.filter_intervals(hail.Interval.parse(subset))
 
     vds = vds.repartition(10000)  # because the min_partitions arg doesn't work in some cases

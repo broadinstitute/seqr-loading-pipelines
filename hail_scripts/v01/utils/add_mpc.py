@@ -1,3 +1,4 @@
+import hail
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
 
 
@@ -21,7 +22,6 @@ def read_mpc_vds(hail_context, genome_version, subset=None):
     mpc_vds = hail_context.read(MPC_VDS_PATHS[genome_version]).split_multi()
 
     if subset:
-        import hail
         mpc_vds = mpc_vds.filter_intervals(hail.Interval.parse(subset))
 
     return mpc_vds
