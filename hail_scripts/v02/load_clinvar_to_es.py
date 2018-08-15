@@ -43,7 +43,7 @@ mt = download_and_import_latest_clinvar_vcf(args.genome_version)
 print(dict(mt.globals.value))
 
 print("\n=== Running VEP ===")
-mt = hl.vep(mt, "/vep/vep-gcloud.properties", name="vep", block_size=1000)
+mt = hl.vep(mt, "file:///vep/vep85-gcloud.json", name="vep", block_size=1000)
 
 print("\n=== Processing ===")
 mt = mt.annotate_rows(
