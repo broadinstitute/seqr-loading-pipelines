@@ -43,8 +43,8 @@ if args.run_locally:
         p.error("--hail-home not specified")
     hail_home = args.hail_home
     command = """spark-submit \
-        --jars %(hail_home)s/build/libs/hail-all-spark.jar 
-        --py-files %(hail_home)s/build/distributions/hail-python.zip 
+        --jars %(hail_home)s/build/libs/hail-all-spark.jar \
+        --py-files %(hail_home)s/build/distributions/hail-python.zip \
         "%(script)s" %(script_args)s
     """ % locals()
 else:
