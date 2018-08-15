@@ -8,7 +8,7 @@ from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_st
 logger = logging.getLogger()
 
 
-def compute_minimal_schema(vds, dataset_type="GATK_VARIANTS"):
+def compute_minimal_schema(vds, dataset_type="VARIANTS"):
 
     # add computed annotations
     vds = vds.annotate_variants_expr([
@@ -19,7 +19,7 @@ def compute_minimal_schema(vds, dataset_type="GATK_VARIANTS"):
 
     # apply schema to dataset
     INPUT_SCHEMA  = {}
-    if dataset_type == "GATK_VARIANTS":
+    if dataset_type == "VARIANTS":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             wasSplit: Boolean,
@@ -28,7 +28,7 @@ def compute_minimal_schema(vds, dataset_type="GATK_VARIANTS"):
 
         INPUT_SCHEMA["info_fields"] = ""
 
-    elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+    elif dataset_type == "SV":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
         """
@@ -45,7 +45,7 @@ def compute_minimal_schema(vds, dataset_type="GATK_VARIANTS"):
     return vds
 
 
-def read_in_dataset(hc, input_path, dataset_type="GATK_VARIANTS", filter_interval=None, skip_summary=False):
+def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=None, skip_summary=False):
     """Utility method for reading in a .vcf or .vds dataset
 
     Args:
@@ -60,9 +60,9 @@ def read_in_dataset(hc, input_path, dataset_type="GATK_VARIANTS", filter_interva
     else:
         logger.info("\n==> import: " + input_path)
 
-        if dataset_type == "GATK_VARIANTS":
+        if dataset_type == "VARIANTS":
             vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
-        elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+        elif dataset_type == "SV":
             vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=True)
         else:
             raise ValueError("Unexpected dataset_type: %s" % dataset_type)
@@ -76,7 +76,7 @@ def read_in_dataset(hc, input_path, dataset_type="GATK_VARIANTS", filter_interva
         logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
         vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
 
-    if dataset_type == "GATK_VARIANTS":
+    if dataset_type == "VARIANTS":
         vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
         if vds.was_split():
             vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # isDefined(va.wasSplit)
@@ -88,7 +88,7 @@ def read_in_dataset(hc, input_path, dataset_type="GATK_VARIANTS", filter_interva
             summary = vds.summarize()
             pprint(summary)
             total_variants = summary.variants
-    elif dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+    elif dataset_type == "SV":
         vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
         if not skip_summary:
             _, total_variants = vds.count()

@@ -73,7 +73,7 @@ p.add_argument("--project-guid", help="seqr Project id", required=True)
 p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
 p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
 p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
-p.add_argument("--dataset-type", help="what pipeline was used to generate the data", choices=["GATK_VARIANTS", "MANTA_SVS", "JULIA_SVS"], required=True)
+p.add_argument("--dataset-type", help="what pipeline was used to generate the data", choices=["VARIANTS", "SV"], required=True)
 
 p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
@@ -119,9 +119,9 @@ p.add_argument("input_vds", help="input VDS")
 
 args = p.parse_args()
 
-if args.dataset_type == "GATK_VARIANTS":
+if args.dataset_type == "VARIANTS":
     variant_type_string = "variants"
-elif args.dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+elif args.dataset_type == "SV":
     variant_type_string = "sv"
 else:
     raise ValueError("Unexpected args.dataset_type == " + str(args.dataset_type))
@@ -169,10 +169,10 @@ def export_to_elasticsearch(
     index_type = "variant"
 
     if export_genotypes:
-        if args.dataset_type == "GATK_VARIANTS":
+        if args.dataset_type == "VARIANTS":
             genotype_fields_to_export = DEFAULT_GENOTYPE_FIELDS_TO_EXPORT
             genotype_field_to_elasticsearch_type_map = DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
-        elif args.dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+        elif args.dataset_type == "SV":
             genotype_fields_to_export = [
                 'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
                 #'genotype_filter = g.FT',
@@ -380,6 +380,9 @@ step3_output_vds = output_vds_prefix + ".vep_and_all_annotations.vds"
 # 3) annotations may be updated / added more often than vep versions.
 
 vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(step0_output_vds))
+vds = vds.annotate_global_expr('global.genomeVersion = "{}"'.format(args.genome_version))
+vds = vds.annotate_global_expr('global.sampleType = "{}"'.format(args.sample_type))
+vds = vds.annotate_global_expr('global.datasetType = "{}"'.format(args.dataset_type))
 
 # run vep
 if args.start_with_step == 0:
@@ -452,7 +455,7 @@ if args.start_with_step <= 1:
 
     # apply schema to dataset
     INPUT_SCHEMA  = {}
-    if args.dataset_type == "GATK_VARIANTS":
+    if args.dataset_type == "VARIANTS":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             variantId: String,
@@ -500,7 +503,7 @@ if args.start_with_step <= 1:
             --- VQSLOD: Double,
             --- culprit: String,
         """
-    elif args.dataset_type in ["MANTA_SVS", "JULIA_SVS"]:
+    elif args.dataset_type == "SV":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
             variantId: String,
@@ -530,22 +533,14 @@ if args.start_with_step <= 1:
         """
 
         # END=100371979;SVTYPE=DEL;SVLEN=-70;CIGAR=1M70D	GT:FT:GQ:PL:PR:SR
-        if args.dataset_type == "MANTA_SVS":
-            INPUT_SCHEMA["info_fields"] = """
-                IMPRECISE: Boolean,
-                SVTYPE: String,
-                SVLEN: Int,
-                END: Int,
-            """
-        else:
-            INPUT_SCHEMA["info_fields"] = """
-                IMPRECISE: Boolean,
-                SVTYPE: String,
-                SVLEN: Int,
-                END: Int,
-                OCC: Int,
-                FRQ: Double,
-            """
+        INPUT_SCHEMA["info_fields"] = """
+            IMPRECISE: Boolean,
+            SVTYPE: String,
+            SVLEN: Int,
+            END: Int,
+            OCC: Int,
+            FRQ: Double,
+        """
     else:
         raise ValueError("Unexpected dataset_type: %s" % args.dataset_type)
 
@@ -571,7 +566,7 @@ if args.start_with_step <= 2:
 
     vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
-    #if args.dataset_type == "GATK_VARIANTS":
+    #if args.dataset_type == "VARIANTS":
 
         #if not args.skip_annotations and not args.exclude_omim:
         #    logger.info("\n==> Add omim info")
@@ -609,7 +604,7 @@ if args.start_with_step <= 3:
     vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
     vds = compute_minimal_schema(vds, args.dataset_type)
 
-    if args.dataset_type == "GATK_VARIANTS":
+    if args.dataset_type == "VARIANTS":
         #if not args.skip_annotations and not args.exclude_gnomad_coverage:
         #    logger.info("\n==> Add gnomad coverage")
         #    vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
