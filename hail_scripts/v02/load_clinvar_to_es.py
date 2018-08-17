@@ -11,6 +11,7 @@ from hail_scripts.v02.utils.computed_fields import (
     get_expr_for_variant_id,
     get_expr_for_xpos,
     get_expr_for_vep_consequence_terms_set,
+    get_expr_for_vep_gene_id_to_consequence_map,
     get_expr_for_vep_gene_ids_set,
     get_expr_for_vep_protein_domains_set,
     get_expr_for_vep_sorted_transcript_consequences_array,
@@ -56,6 +57,12 @@ mt = mt.annotate_rows(
     )
 )
 
+mt = mt.annotate_rows(
+    gene_ids=get_expr_for_vep_gene_ids_set(
+        vep_transcript_consequences_root=mt.sortedTranscriptConsequences, exclude_upstream_downstream_genes=True
+    ),
+)
+
 review_status_str = hl.delimit(hl.sorted(hl.array(hl.set(mt.info.CLNREVSTAT)), key=lambda s: s.replace("^_", "z")))
 
 mt = mt.select_rows(
@@ -64,8 +71,10 @@ mt = mt.select_rows(
     chrom=get_expr_for_contig(mt),
     clinical_significance=hl.delimit(hl.sorted(hl.array(hl.set(mt.info.CLNSIG)), key=lambda s: s.replace("^_", "z"))),
     domains=get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root=mt.vep.transcript_consequences),
-    gene_ids=get_expr_for_vep_gene_ids_set(
-        vep_transcript_consequences_root=mt.sortedTranscriptConsequences, exclude_upstream_downstream_genes=True
+    gene_ids=mt.gene_ids,
+    gene_id_to_consequence_json=get_expr_for_vep_gene_id_to_consequence_map(
+        vep_sorted_transcript_consequences_root=mt.sortedTranscriptConsequences,
+        gene_ids=mt.gene_ids
     ),
     gold_stars=CLINVAR_GOLD_STARS_LOOKUP[review_status_str],
     **{f"main_transcript_{field}": mt.main_transcript[field] for field in mt.main_transcript.dtype.fields},
