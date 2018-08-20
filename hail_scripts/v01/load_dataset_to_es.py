@@ -54,6 +54,7 @@ p.add_argument("--genome-version", help="Genome build: 37 or 38", choices=["37",
 
 p.add_argument("--skip-vep", action="store_true", help="Don't run vep.")
 p.add_argument("--skip-annotations", action="store_true", help="Don't add any reference data. Intended for testing.")
+p.add_argument("--skip-validation", action="store_true", help="Don't validate --sample-type and --genome-version. Intended for testing.")
 p.add_argument('--subset', const="X:31097677-33339441", nargs='?',
                help="All data will first be subsetted to this chrom:start-end range. Intended for testing.")
 
@@ -295,7 +296,8 @@ hc = hail.HailContext(log="/hail.log")
 logger.info("Reading in dataset...")
 vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
-validate_vds_genome_version_and_sample_type(hc, vds, args.genome_version, args.sample_type)
+if not args.skip_validation:
+    validate_vds_genome_version_and_sample_type(hc, vds, args.genome_version, args.sample_type)
 
 
 output_vds_hash = ""
