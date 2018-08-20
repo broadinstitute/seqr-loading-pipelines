@@ -4,7 +4,8 @@ import os
 
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
-from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type
+from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
+    validate_vds_has_been_filtered
 
 os.system("pip install elasticsearch")
 
@@ -297,6 +298,7 @@ logger.info("Reading in dataset...")
 vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
 if not args.skip_validation:
+    validate_vds_has_been_filtered(hc, vds)
     validate_vds_genome_version_and_sample_type(hc, vds, args.genome_version, args.sample_type)
 
 
