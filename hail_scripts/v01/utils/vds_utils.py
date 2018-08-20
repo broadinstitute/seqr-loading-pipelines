@@ -78,10 +78,8 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
 
     if dataset_type == "VARIANTS":
         vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-        if vds.was_split():
-            vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # isDefined(va.wasSplit)
-        else:
-            vds = vds.split_multi()
+
+        vds = vds.split_multi()
 
         if not skip_summary:
             logger.info("Callset stats:")
@@ -89,7 +87,9 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
             pprint(summary)
             total_variants = summary.variants
     elif dataset_type == "SV":
-        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
+
+        #vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # this line assumes there are no multiallelics
+
         if not skip_summary:
             _, total_variants = vds.count()
     else:

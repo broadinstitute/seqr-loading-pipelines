@@ -41,10 +41,8 @@ if vds.num_partitions() < 50:
     vds = vds.repartition(10000)
 
 vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-if vds.was_split():
-    vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
-else:
-    vds = vds.split_multi()
+
+vds = vds.split_multi()
 
 #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
 filter_interval = "1-MT"

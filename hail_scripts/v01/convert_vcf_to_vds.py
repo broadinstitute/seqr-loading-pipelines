@@ -33,10 +33,8 @@ for vcf_path in args.vcf_path:
 
     print("\n==> split_multi")
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-    if vds.was_split():
-        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
-    else:
-        vds = vds.split_multi()
+
+    vds = vds.split_multi()
 
     print("")
     pprint(vds.variant_schema)
