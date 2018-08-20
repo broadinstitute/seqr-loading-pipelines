@@ -25,6 +25,8 @@ def update_clinvar_in_all_datasets(host, port):
 
         if _meta and "sourceFilePath" in _meta:
             update_clinvar_in_dataset(hc, host, port, index_name)
+        else:
+            logger.info("Skipping {} because index _meta['sourceFilePath'] isn't set".format(index_name))
 
 
 def update_clinvar_in_dataset(hc, host, port, index_name, filter_interval=None, block_size=1000):
