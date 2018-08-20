@@ -187,6 +187,22 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
     return result
 
 
+def get_expr_for_vep_gene_id_to_consequence_map(vep_sorted_transcript_consequences_root, gene_ids):
+    # Manually build string because hl.json encodes a dictionary as [{ key: ..., value: ... }, ...]
+    return (
+        "{"
+        + hl.delimit(
+            gene_ids.map(
+                lambda gene_id: hl.bind(
+                    lambda worst_consequence_in_gene: '"' + gene_id + '":"' + worst_consequence_in_gene.major_consequence + '"',
+                    vep_sorted_transcript_consequences_root.find(lambda c: c.gene_id == gene_id)
+                )
+            )
+        )
+        + "}"
+    )
+
+
 def get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequences_root):
     # Manually build string because hl.json encodes a dictionary as [{ key: ..., value: ... }, ...]
     return (
