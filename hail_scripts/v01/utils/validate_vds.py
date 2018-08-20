@@ -1,10 +1,10 @@
 import logging
 
 VALIDATION_KEYTABLE_PATHS = {
-    'coding_37': 'gs://seqr-datasets/GRCh37/validate_vds/common_coding_variants.grch37.kt',
-    'coding_38': 'gs://seqr-datasets/GRCh38/validate_vds/common_coding_variants.grch38.kt',
-    'noncoding_37': 'gs://seqr-datasets/GRCh37/validate_vds/common_noncoding_variants.grch37.kt',
-    'noncoding_38': 'gs://seqr-datasets/GRCh38/validate_vds/common_noncoding_variants.grch38.kt',
+    'coding_37': 'gs://seqr-reference-data/GRCh37/validate_vds/common_coding_variants.grch37.kt',
+    'coding_38': 'gs://seqr-reference-data/GRCh38/validate_vds/common_coding_variants.grch38.kt',
+    'noncoding_37': 'gs://seqr-reference-data/GRCh37/validate_vds/common_noncoding_variants.grch37.kt',
+    'noncoding_38': 'gs://seqr-reference-data/GRCh38/validate_vds/common_noncoding_variants.grch38.kt',
 }
 
 logger = logging.getLogger(__name__)
