@@ -298,7 +298,7 @@ logger.info("Reading in dataset...")
 vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
 
 if not args.skip_validation:
-    validate_vds_has_been_filtered(hc, vds)
+    #validate_vds_has_been_filtered(hc, vds)
     validate_vds_genome_version_and_sample_type(hc, vds, args.genome_version, args.sample_type)
 
 

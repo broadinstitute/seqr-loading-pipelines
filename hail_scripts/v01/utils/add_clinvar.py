@@ -134,10 +134,7 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version, subset=
     vds = vds.annotate_global_expr('global.version = "{}"'.format(clinvar_release_date))
 
     # handle multi-allelics
-    if vds.was_split():
-        vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')
-    else:
-        vds = vds.split_multi()
+    vds = vds.split_multi()
 
     # for some reason, this additional filter is necessary to avoid
     #  IllegalArgumentException: requirement failed: called altAllele on a non-biallelic variant
