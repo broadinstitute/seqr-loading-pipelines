@@ -85,7 +85,7 @@ def validate_vds_has_been_filtered(hail_context, vds):
     Raises:
         ValueError: if none of the variants have a FILTER value.
     """
-    num_filtered_variants = vds.filter_variants_expr("va.filters.length > 0", keep=True).count_variants()
+    num_filtered_variants = vds.filter_variants_expr("va.filters.isEmpty", keep=True).count_variants()
     if num_filtered_variants == 0:
         total_variants = vds.count_variants()
         if total_variants:
