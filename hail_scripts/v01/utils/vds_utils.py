@@ -91,7 +91,7 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         #vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # this line assumes there are no multiallelics
 
         if not skip_summary:
-            _, total_variants = vds.count()
+            total_variants = vds.count_variants()
     else:
         raise ValueError("Unexpected dataset_type: %s" % dataset_type)
 

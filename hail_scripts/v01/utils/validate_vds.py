@@ -74,3 +74,21 @@ def validate_vds_genome_version_and_sample_type(hail_context, vds, genome_versio
         else:
             raise Exception("Unexpected imputed_sample_type:" + imputed_sample_type)
 
+
+def validate_vds_has_been_filtered(hail_context, vds):
+    """Checks that the VDS has been filtered.
+
+    Args:
+        hail_context:
+        vds: The vds to validate
+
+    Raises:
+        ValueError: if none of the variants have a FILTER value.
+    """
+    num_filtered_variants = vds.filter_variants_expr("va.filters.isEmpty", keep=True).count_variants()
+    if num_filtered_variants == 0:
+        total_variants = vds.count_variants()
+        if total_variants:
+            raise ValueError("None of the %d variants have a FILTER value. seqr expects VQSR or hard-filtered callsets." % total_variants)
+        else:
+            raise ValueError("The callset is empty. No variants found.")
