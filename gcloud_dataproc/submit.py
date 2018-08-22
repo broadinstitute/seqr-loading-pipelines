@@ -15,8 +15,8 @@ p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
 
-hail_zip = "gs://gnomad-bw2/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
-hail_jar = "gs://gnomad-bw2/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
+hail_zip = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
+hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
 
 #hash = subprocess.check_output("gsutil cat gs://hail-common/latest-hash.txt", shell=True).strip()
 #hail_zip="gs://hail-common/pyhail-hail-is-master-%(hash)s.zip" % locals()
