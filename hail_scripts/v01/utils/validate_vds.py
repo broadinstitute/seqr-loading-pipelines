@@ -1,10 +1,10 @@
 import logging
 
 VALIDATION_KEYTABLE_PATHS = {
-    'coding_37': 'gs://seqr-datasets/GRCh37/validate_vds/common_coding_variants.grch37.kt',
-    'coding_38': 'gs://seqr-datasets/GRCh38/validate_vds/common_coding_variants.grch38.kt',
-    'noncoding_37': 'gs://seqr-datasets/GRCh37/validate_vds/common_noncoding_variants.grch37.kt',
-    'noncoding_38': 'gs://seqr-datasets/GRCh38/validate_vds/common_noncoding_variants.grch38.kt',
+    'coding_37': 'gs://seqr-reference-data/GRCh37/validate_vds/common_coding_variants.grch37.kt',
+    'coding_38': 'gs://seqr-reference-data/GRCh38/validate_vds/common_coding_variants.grch38.kt',
+    'noncoding_37': 'gs://seqr-reference-data/GRCh37/validate_vds/common_noncoding_variants.grch37.kt',
+    'noncoding_38': 'gs://seqr-reference-data/GRCh38/validate_vds/common_noncoding_variants.grch38.kt',
 }
 
 logger = logging.getLogger(__name__)
@@ -74,3 +74,23 @@ def validate_vds_genome_version_and_sample_type(hail_context, vds, genome_versio
         else:
             raise Exception("Unexpected imputed_sample_type:" + imputed_sample_type)
 
+
+def validate_vds_has_been_filtered(hail_context, vds):
+    """Checks that the VDS has been filtered.
+
+    Args:
+        hail_context:
+        vds: The vds to validate
+
+    Raises:
+        ValueError: if none of the variants have a FILTER value.
+    """
+    logger.info("\n==> check that callset has values in FILTER")
+    num_filtered_variants = vds.filter_variants_expr("va.filters.isEmpty", keep=False).count_variants()
+    logger.info("%d variants didn't PASS" % num_filtered_variants)
+    if num_filtered_variants == 0:
+        total_variants = vds.count_variants()
+        if total_variants:
+            raise ValueError("None of the %d variants have a FILTER value. seqr expects VQSR or hard-filtered callsets." % total_variants)
+        else:
+            raise ValueError("The callset is empty. No variants found.")
