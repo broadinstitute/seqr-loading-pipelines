@@ -1,8 +1,9 @@
 import argparse
-import hail
 from pprint import pprint
 
-hc = hail.HailContext()
+from hail_scripts.v01.utils.hail_utils import create_hail_context
+
+hc = create_hail_context()
 
 p = argparse.ArgumentParser()
 p.add_argument("--all", action="store_true")

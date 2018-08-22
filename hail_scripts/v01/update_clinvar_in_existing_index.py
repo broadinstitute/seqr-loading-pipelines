@@ -1,6 +1,8 @@
 import os
 import re
 
+from hail_scripts.v01.utils.hail_utils import create_hail_context
+
 os.system("pip install elasticsearch")
 
 import argparse
@@ -82,7 +84,7 @@ g.add_argument("--all", help="Update all elasticsearch indices.", action="store_
 
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log")
+hc = create_hail_context()
 
 filter_interval = "1-MT"
 

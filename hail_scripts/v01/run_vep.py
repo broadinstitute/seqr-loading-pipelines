@@ -4,6 +4,7 @@ import logging
 import pprint
 
 from hail_scripts.v01.utils.computed_fields import get_expr_for_orig_alt_alleles_set
+from hail_scripts.v01.utils.hail_utils import create_hail_context
 from hail_scripts.v01.utils.vds_utils import write_vds, run_vep
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
@@ -27,7 +28,7 @@ if not args.output_vds:
 
 print("Output VDS: %s" % (args.output_vds, ))
 
-hc = hail.HailContext(log="/hail.log")
+hc = create_hail_context()
 if input_path.endswith(".vds"):
     vds = hc.read(input_path)
 elif input_path.endswith(".vcf") or input_path.endswith("gz"):

@@ -4,14 +4,13 @@ import os
 
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
+from hail_scripts.v01.utils.hail_utils import create_hail_context
 from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
     validate_vds_has_been_filtered
 
 os.system("pip install elasticsearch")
 
 import argparse
-import datetime
-import hail
 import logging
 from pprint import pprint
 import time
@@ -140,7 +139,7 @@ else:
         args.sample_type,
         args.genome_version,
         variant_type_string,
-        datetime.datetime.now().strftime("%Y%m%d"),
+        time.strftime("%Y%m%d"),
     )
 
     index_name = index_name.lower()  # elasticsearch requires index names to be all lower-case
@@ -292,7 +291,7 @@ if args.subset:
 
 logger.info("\n==> create HailContext")
 
-hc = hail.HailContext(log="/hail.log")
+hc = create_hail_context()
 
 logger.info("Reading in dataset...")
 vds = read_in_dataset(hc, input_path, dataset_type=args.dataset_type, filter_interval=filter_interval)
@@ -416,7 +415,7 @@ if args.start_with_step <= 1:
     logger.info("Read in data, compute various derived fields, write data to VDS")
 
     logger.info("\n==> re-create HailContext")
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
 
     vds = read_in_dataset(hc, step0_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
@@ -566,7 +565,7 @@ if args.start_with_step <= 2:
     logger.info("Read in data, add more reference datasets, export to elasticsearch")
 
     logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
 
     vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 
@@ -603,7 +602,7 @@ if args.start_with_step <= 3:
     logger.info("Read in data, add more reference datasets, write data to VDS")
 
     logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
 
     vds = read_in_dataset(hc, step1_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
     vds = compute_minimal_schema(vds, args.dataset_type)
@@ -681,7 +680,7 @@ if args.start_with_step <= 4:
     logger.info("Read in data, export data to elasticsearch")
 
     logger.info("\n==> create HailContext")
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
 
     vds = read_in_dataset(hc, step3_output_vds, dataset_type=args.dataset_type, filter_interval=filter_interval, skip_summary=True)
 

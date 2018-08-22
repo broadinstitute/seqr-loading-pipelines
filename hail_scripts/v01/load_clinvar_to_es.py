@@ -1,5 +1,4 @@
 import argparse
-import hail
 from pprint import pprint
 from hail_scripts.v01.utils.add_clinvar import CLINVAR_GOLD_STARS_LOOKUP, CLINVAR_VDS_PATH, \
     download_and_import_latest_clinvar_vcf
@@ -9,6 +8,7 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_contig, get_expr
     get_expr_for_vep_sorted_transcript_consequences_array, get_expr_for_vep_protein_domains_set, \
     get_expr_for_vep_consequence_terms_set, get_expr_for_vep_transcript_id_to_consequence_map
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
+from hail_scripts.v01.utils.hail_utils import create_hail_context
 from hail_scripts.v01.utils.vds_utils import run_vep
 
 p = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ if args.index_name:
 else:
     index_name = "clinvar_grch{}".format(args.genome_version)
 
-hc = hail.HailContext(log="/hail.log")
+hc = create_hail_context()
 
 
 # download vcf

@@ -2,6 +2,7 @@ import argparse
 import hail
 import logging
 from pprint import pprint
+import time
 
 from hail_scripts.v01.utils.add_1kg_phase3 import add_1kg_phase3_to_vds, read_1kg_phase3_vds
 from hail_scripts.v01.utils.add_cadd import add_cadd_to_vds, read_cadd_vds
@@ -14,6 +15,7 @@ from hail_scripts.v01.utils.add_mpc import add_mpc_to_vds, read_mpc_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds, read_primate_ai_vds
 from hail_scripts.v01.utils.add_topmed import add_topmed_to_vds, read_topmed_vds
 from hail_scripts.v01.utils.gcloud_utils import delete_gcloud_file
+from hail_scripts.v01.utils.hail_utils import create_hail_context
 from hail_scripts.v01.utils.vds_utils import write_vds, read_vds
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
@@ -71,7 +73,7 @@ step3_output_vds = output_vds.replace(".vds", "") + "_annotations1.vds"
 
 if args.start_with_step == 0:
     logger.info("\n=============================== step 0 - combine all datasets into 1 minimal vds ===============================")
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
 
     # check that args.output_vds path is writable
     with hail.utils.hadoop_write(test_output_vds) as f:
@@ -107,7 +109,7 @@ if args.start_with_step == 0:
 if args.start_with_step <= 1:
     logger.info("=============================== step 1 - read in minimal vds and add in gnomAD exomes coverage ===============================")
 
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
     vds = read_vds(hc, step0_output_vds)
 
     pprint(vds.variant_schema)
@@ -126,7 +128,7 @@ if args.start_with_step <= 1:
 if args.start_with_step <= 2:
     logger.info("=============================== step 2 - read in minimal vds and add in gnomAD genomes coverage ===============================")
 
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
     vds = read_vds(hc, step1_output_vds)
 
     pprint(vds.variant_schema)
@@ -146,7 +148,7 @@ if args.start_with_step <= 3:
 
     logger.info("\n=============================== step 3 - read in vds and annotate it with reference datasets ===============================")
 
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
     vds = read_vds(hc, step2_output_vds)
 
     pprint(vds.variant_schema)
@@ -184,7 +186,7 @@ if args.start_with_step <= 4:
 
     logger.info("\n=============================== step 4 - read in vds and annotate it with additional reference datasets ===============================")
 
-    hc = hail.HailContext(log="/hail.log")
+    hc = create_hail_context()
     vds = read_vds(hc, step3_output_vds)
 
     if not args.exclude_gnomad:
