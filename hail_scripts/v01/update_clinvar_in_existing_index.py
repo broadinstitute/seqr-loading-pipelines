@@ -73,7 +73,7 @@ def update_clinvar_in_dataset(hc, host, port, index_name, filter_interval=None, 
 
 
 p = argparse.ArgumentParser()
-p.add_argument("--host", help="Elastisearch IP address", required=True)
+p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME"))
 p.add_argument("--port", help="Elastisearch port", default="9200")
 p.add_argument("--skip-downloading-clinvar-vcf", action="store_true",
                help="Skip the 1st step of downloading and updating the GRCh37 and GRCh38 clinvar VDS.")

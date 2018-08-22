@@ -78,7 +78,7 @@ p.add_argument("--dataset-type", help="what pipeline was used to generate the da
 
 p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
-p.add_argument("--host", help="Elastisearch IP address", default="10.56.10.4")
+p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME"))
 p.add_argument("--port", help="Elastisearch port", default="9200")
 p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
 
