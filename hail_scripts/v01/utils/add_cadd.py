@@ -7,8 +7,8 @@ CADD_FIELDS = """
 """
 
 CADD_VDS_PATHS = {
-    '37': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.vds',
-    '38': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.vds',
+    '37': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.4.vds',
+    '38': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.4.vds',
 }
 
 
