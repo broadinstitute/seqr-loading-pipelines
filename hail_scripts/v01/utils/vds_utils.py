@@ -67,33 +67,30 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         else:
             raise ValueError("Unexpected dataset_type: %s" % dataset_type)
 
+        # ensure that va.wasSplit and va.aIndex are defined before calling split_multi() since split_multi() doesn't define these if all variants are bi-allelic
+        vds = vds.annotate_variants_expr('va.wasSplit=false, va.aIndex=1')
+
     if vds.num_partitions() < 1000:
         vds = vds.repartition(1000, shuffle=True)
 
-    #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
+    vds = vds.split_multi()
 
-    if filter_interval is not None :
+    #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False) # filter star alleles
+
+    if filter_interval is not None:
         logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
         vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
 
+    if not skip_summary:
+        logger.info("Callset stats:")
+        summary = vds.summarize()
+        pprint(summary)
+        total_variants = summary.variants
+    else:
+        total_variants = vds.count_variants()
+
     if dataset_type == "VARIANTS":
         vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-
-        vds = vds.split_multi()
-
-        if not skip_summary:
-            logger.info("Callset stats:")
-            summary = vds.summarize()
-            pprint(summary)
-            total_variants = summary.variants
-    elif dataset_type == "SV":
-
-        #vds = vds.annotate_variants_expr('va.aIndex = 1, va.wasSplit = false')  # this line assumes there are no multiallelics
-
-        if not skip_summary:
-            total_variants = vds.count_variants()
-    else:
-        raise ValueError("Unexpected dataset_type: %s" % dataset_type)
 
     if not skip_summary:
         if total_variants == 0:

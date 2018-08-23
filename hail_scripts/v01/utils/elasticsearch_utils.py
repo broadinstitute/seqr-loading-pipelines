@@ -31,7 +31,7 @@ for vds_type, es_type in VDS_TO_ES_TYPE_MAPPING.items():
 
 ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
 
-DEFAULT_GENOTYPE_FIELDS_TO_EXPORT = [
+VARIANT_GENOTYPE_FIELDS_TO_EXPORT = [
     'num_alt = if(g.isCalled()) g.nNonRefAlleles() else -1',
     'gq = if(g.isCalled()) g.gq else NA:Int',
     'ab = let total=g.ad.sum in if(g.isCalled() && total != 0) (g.ad[1] / total).toFloat else NA:Float',
@@ -39,11 +39,36 @@ DEFAULT_GENOTYPE_FIELDS_TO_EXPORT = [
     #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
 ]
 
-DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
+VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
     ".*_num_alt": {"type": "byte", "doc_values": "false"},
     ".*_gq": {"type": "byte", "doc_values": "false"},
     ".*_dp": {"type": "short", "doc_values": "false"},
     ".*_ab": {"type": "half_float", "doc_values": "false"},
+}
+
+
+SV_GENOTYPE_FIELDS_TO_EXPORT = [
+    'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
+    #'genotype_filter = g.FT',
+    #'gq = g.GQ',
+    'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+    'ab = let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
+    'ab_PR = let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
+    'ab_SR = let total=g.SR.sum in if(g.GT.isCalled() && total != 0) (g.SR[1] / total).toFloat else NA:Float',
+    'dp_PR = if(g.GT.isCalled()) [g.PR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+    'dp_SR = if(g.GT.isCalled()) [g.SR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+    ]
+
+SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
+    ".*_num_alt": {"type": "byte", "doc_values": "false"},
+    #".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
+    #".*_gq": {"type": "short", "doc_values": "false"},
+    ".*_dp": {"type": "short", "doc_values": "false"},
+    ".*_ab": {"type": "half_float", "doc_values": "false"},
+    ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
+    ".*_ab_SR": {"type": "half_float", "doc_values": "false"},
+    ".*_dp_PR": {"type": "short", "doc_values": "false"},
+    ".*_dp_SR": {"type": "short", "doc_values": "false"},
 }
 
 

@@ -6,7 +6,6 @@ from hail_scripts.v01.utils.hail_utils import create_hail_context
 os.system("pip install elasticsearch")
 
 import argparse
-import hail
 from pprint import pprint
 import logging
 

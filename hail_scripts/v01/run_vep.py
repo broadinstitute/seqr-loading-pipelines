@@ -33,7 +33,9 @@ if input_path.endswith(".vds"):
     vds = hc.read(input_path)
 elif input_path.endswith(".vcf") or input_path.endswith("gz"):
     vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
-    # save alt alleles before calling split_multi
+
+    # ensure that va.wasSplit and va.aIndex are defined before calling split_multi() since split_multi() doesn't define these if all variants are bi-allelic
+    vds = vds.annotate_variants_expr('va.wasSplit=false, va.aIndex=1')
 else:
     p.error("Invalid input file: %s" % input_path)
 
@@ -41,8 +43,7 @@ if vds.num_partitions() < 50:
     print("Repartitioning")
     vds = vds.repartition(10000)
 
-vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
-
+vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set()) # save alt alleles before calling split_multi
 vds = vds.split_multi()
 
 #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False)
