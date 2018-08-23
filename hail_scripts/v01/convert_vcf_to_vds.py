@@ -34,6 +34,8 @@ for vcf_path in args.vcf_path:
     print("\n==> split_multi")
     vds = vds.annotate_variants_expr("va.originalAltAlleles=%s" % get_expr_for_orig_alt_alleles_set())
 
+    # ensure that va.wasSplit and va.aIndex are defined before calling split_multi() since split_multi() doesn't define these if all variants are bi-allelic
+    vds = vds.annotate_variants_expr('va.wasSplit=false, va.aIndex=1')
     vds = vds.split_multi()
 
     print("")
