@@ -709,6 +709,7 @@ def run_pipeline():
     hc = create_hail_context()
 
     args.is_running_locally = hc.sc.master.startswith("local")   # is the pipeline is running locally or on dataproc
+    logger.info("is_running_locally = %s", args.is_running_locally)
 
     # pipeline steps
     vds = None
