@@ -11,8 +11,8 @@ from hail_scripts.shared.elasticsearch_utils import (
     _encode_field_name,
 )
 from hail_scripts.v01.utils.elasticsearch_utils import (
-    DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
-    DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
+    VARIANT_GENOTYPE_FIELDS_TO_EXPORT,
+    VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
     generate_elasticsearch_schema,
     generate_vds_make_table_arg,
     parse_vds_schema,
@@ -21,10 +21,8 @@ from hail_scripts.v01.utils.elasticsearch_utils import (
 handlers = set(logging.root.handlers)
 logging.root.handlers = list(handlers)
 
-import elasticsearch
 from pprint import pformat
 import re
-import time
 
 
 logger = logging.getLogger()
@@ -37,8 +35,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
         vds,
         index_name="data",
         index_type_name="variant",
-        genotype_fields_to_export=DEFAULT_GENOTYPE_FIELDS_TO_EXPORT,
-        genotype_field_to_elasticsearch_type_map=DEFAULT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
+        genotype_fields_to_export=VARIANT_GENOTYPE_FIELDS_TO_EXPORT,
+        genotype_field_to_elasticsearch_type_map=VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
