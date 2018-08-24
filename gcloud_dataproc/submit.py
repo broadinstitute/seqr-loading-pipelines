@@ -48,14 +48,15 @@ if args.run_locally:
     hail_home = args.hail_home
     spark_home = args.spark_home
     command = """%(spark_home)s/bin/spark-submit \
-        --driver-memory 5G  \
+        --driver-memory 3G  \
         --executor-memory 5G \
         --conf spark.driver.extraJavaOptions=-Xss4M \
         --conf spark.executor.extraJavaOptions=-Xss4M \
         --conf spark.executor.memoryOverhead=5g \
         --conf spark.driver.maxResultSize=30g \
         --conf spark.kryoserializer.buffer.max=1g \
-        --conf spark.memory.fraction=0.33 \
+        --conf spark.memory.fraction=0.1 \
+        --conf spark.default.parallelism=1 \
         --jars %(hail_home)s/build/libs/hail-all-spark.jar \
         --py-files %(hail_home)s/build/distributions/hail-python.zip \
         "%(script)s" %(script_args)s
