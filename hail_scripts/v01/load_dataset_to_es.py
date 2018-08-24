@@ -127,6 +127,8 @@ def init_command_line_args():
     if not (args.input_vds.rstrip("/").endswith(".vds") or args.input_vds.endswith(".vcf") or args.input_vds.endswith(".vcf.gz") or args.input_vds.endswith(".vcf.bgz")):
         p.error("Input must be a .vds or .vcf.gz")
 
+    logger.info("Command args: \n" + " ".join(sys.argv[:1]) + (" --index " + compute_index_name(args) if "--index" not in sys.argv else ""))
+
     return args
 
 
@@ -393,8 +395,7 @@ def step1_compute_derived_fields(hc, vds, args):
     if args.start_with_step > 1:
         return hc, vds
 
-    if not args.is_running_locally and not args.skip_writing_intermediate_vds:
-        logger.info("Shutting down and restarting hail context to avoid OOM errors")
+    if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
@@ -534,7 +535,7 @@ def step1_compute_derived_fields(hc, vds, args):
     vds = vds.annotate_variants_expr(expr=expr)
     vds = vds.annotate_variants_expr("va = va.clean")
 
-    if not args.is_running_locally and not args.skip_writing_intermediate_vds:
+    if not args.skip_writing_intermediate_vds:
         write_vds(vds, args.step1_output_vds)
 
     return hc, vds
@@ -544,8 +545,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 2:
         return hc, vds
 
-    if not args.is_running_locally and not args.skip_writing_intermediate_vds:
-        logger.info("Shutting down and restarting hail context to avoid OOM errors")
+    if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
@@ -569,6 +569,11 @@ def step3_add_reference_datasets(hc, vds, args):
         return hc, vds
 
     logger.info("\n\n=============================== pipeline - step 3 - add reference datasets ===============================")
+
+    if vds is None or not args.skip_writing_intermediate_vds:
+        hc.stop()
+        hc = create_hail_context()
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
     vds = compute_minimal_schema(vds, args.dataset_type)
 
@@ -643,8 +648,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 4:
         return hc, vds
 
-    if not args.is_running_locally and not args.skip_writing_intermediate_vds:
-        logger.info("Shutting down and restarting hail context to avoid OOM errors")
+    if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
