@@ -48,7 +48,7 @@ if args.run_locally:
     hail_home = args.hail_home
     spark_home = args.spark_home
     command = """%(spark_home)s/bin/spark-submit \
-        --driver-memory 3G  \
+        --driver-memory 5G  \
         --executor-memory 5G \
         --conf spark.driver.extraJavaOptions=-Xss4M \
         --conf spark.executor.extraJavaOptions=-Xss4M \
