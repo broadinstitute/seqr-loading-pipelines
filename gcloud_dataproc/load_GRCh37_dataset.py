@@ -26,6 +26,7 @@ p.add_argument("--seqr-url", help="seqr url for retrieving pedigree info", defau
 p.add_argument("--seqr-username", help="seqr username for retrieving pedigree info")
 p.add_argument("--seqr-password", help="seqr password for retrieving pedigree info")
 p.add_argument("--project-guid", help="seqr project guid")
+p.add_argument("--download-fam-file", help="download .fam file from seqr", action='store_true')
 args, unparsed_args = p.parse_known_args()
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
@@ -33,7 +34,10 @@ os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 if args.project_guid:
     unparsed_args += ["--project-guid", args.project_guid]
 
-    seqr_api.download_pedigree_info(args.project_guid, unparsed_args, seqr_url=args.seqr_url)
+    seqr_api.download_pedigree_info(
+        args.project_guid, unparsed_args, seqr_url=args.seqr_url, seqr_username=args.seqr_username,
+        seqr_password=args.seqr_password, download_fam_file=args.download_fam_file
+    )
 
 
 cluster_name = args.cluster_name
