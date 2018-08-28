@@ -12,7 +12,7 @@ p.add_argument("--run-locally", action="store_true", help="Run using a local hai
 p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The local hail directory (default: $HAIL_HOME). Required for --run-locally")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
-p.add_argument("--executor-memory", help="Spark driver memory limit when running locally", default="5G")
+p.add_argument("--executor-memory", help="Spark executor memory limit when running locally", default="5G")
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
