@@ -13,7 +13,8 @@ def run(cmd):
     os.system(cmd)
 
 
-def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL):
+def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL, seqr_username=None, seqr_password=None,
+                           download_fam_file=None):
     for unparsed_arg in command_line_args:
         if not unparsed_arg.startswith("gs://"):
             continue
@@ -31,11 +32,10 @@ def download_pedigree_info(project_guid, command_line_args, seqr_url=SEQR_URL):
     subset_samples_filename = project_guid+"_subset_samples.txt"
     subset_samples_file_gcloud_path = "%(vcf_directory)s/%(subset_samples_filename)s" % locals()
 
-    if (not is_fam_file_specified or not is_subset_samples_file_specified) and \
-            input("download .fam file from seqr? [Y/n] ").lower().startswith("y"):
+    if (not is_fam_file_specified or not is_subset_samples_file_specified) and download_fam_file:
 
-        seqr_username = input("seqr username: ")
-        seqr_password = getpass.getpass("seqr password: ")
+        seqr_username = seqr_username or input("seqr username: ")
+        seqr_password = seqr_password or getpass.getpass("seqr password: ")
 
         # download fam file for this project
         seqr_login_url = os.path.join(seqr_url, "login")
