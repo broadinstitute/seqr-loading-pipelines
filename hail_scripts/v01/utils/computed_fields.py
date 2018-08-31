@@ -276,25 +276,18 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
     """ % locals()
 
 
-def get_expr_for_vep_gene_ids_set(
-        vep_transcript_consequences_root="va.vep.sorted_transcript_consequences",
-        only_coding_genes=False,
-        exclude_upstream_downstream_genes=False
-    ):
+def get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.vep.sorted_transcript_consequences", only_coding_genes=False):
     """Expression to compute the set of gene ids in VEP annotations for this variant.
 
     Args:
         vep_transcript_consequences_root (string): path of VEP transcript_consequences root in the struct
         only_coding_genes (bool): If set to True, non-coding genes will be excluded.
-        exclude_upstream_downstream_genes (bool): Whether to exclude genes with major_consequece == as "upstream_gene_variant" or "downstream_gene_variant".
     Return:
         string: expression
     """
     expr = "%(vep_transcript_consequences_root)s" % locals()
     if only_coding_genes:
         expr += ".filter( x => x.biotype == 'protein_coding')"
-    if exclude_upstream_downstream_genes:
-        expr += ".filter( x => x.major_consequence != 'upstream_gene_variant' && x.major_consequence != 'downstream_gene_variant' )"
     expr += ".map( x => x.gene_id ).toSet"
 
     return expr

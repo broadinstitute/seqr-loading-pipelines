@@ -59,7 +59,7 @@ mt = mt.annotate_rows(
 
 mt = mt.annotate_rows(
     gene_ids=get_expr_for_vep_gene_ids_set(
-        vep_transcript_consequences_root=mt.sortedTranscriptConsequences, exclude_upstream_downstream_genes=True
+        vep_transcript_consequences_root=mt.sortedTranscriptConsequences
     ),
 )
 

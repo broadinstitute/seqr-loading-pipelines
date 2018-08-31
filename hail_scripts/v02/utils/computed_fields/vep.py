@@ -50,15 +50,12 @@ def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root):
     return hl.set(vep_transcript_consequences_root.flatmap(lambda c: c.consequence_terms))
 
 
-def get_expr_for_vep_gene_ids_set(
-    vep_transcript_consequences_root, only_coding_genes=False, exclude_upstream_downstream_genes=False
-):
+def get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root, only_coding_genes=False):
     """Expression to compute the set of gene ids in VEP annotations for this variant.
 
     Args:
         vep_transcript_consequences_root (ArrayExpression): VEP transcript_consequences root in the struct
         only_coding_genes (bool): If set to True, non-coding genes will be excluded.
-        exclude_upstream_downstream_genes (bool): Whether to exclude genes with major_consequence == as "upstream_gene_variant" or "downstream_gene_variant".
     Return:
         SetExpression: expression
     """
@@ -67,11 +64,6 @@ def get_expr_for_vep_gene_ids_set(
 
     if only_coding_genes:
         expr = expr.filter(lambda c: hl.or_else(c.biotype, "") == "protein_coding")
-    if exclude_upstream_downstream_genes:
-        expr = expr.filter(
-            lambda c: (c.major_consequence != "upstream_gene_variant")
-            & (c.major_consequence != "downstream_gene_variant")
-        )
 
     return hl.set(expr.map(lambda c: c.gene_id))
 

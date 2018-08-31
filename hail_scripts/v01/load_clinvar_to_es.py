@@ -59,7 +59,7 @@ computed_annotation_exprs = [
     "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.transcriptIdToConsequenceMap = %s" % get_expr_for_vep_transcript_id_to_consequence_map(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
-    "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", exclude_upstream_downstream_genes=True),
+    "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
     "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
     #"va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
     #"va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",

@@ -425,8 +425,8 @@ def step1_compute_derived_fields(hc, vds, args):
     serial_computed_annotation_exprs = [
         "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="end"),
         "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
-        "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", exclude_upstream_downstream_genes=True),
-        "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True, exclude_upstream_downstream_genes=True),
+        "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
+        "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True),
         "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
     ]
 
