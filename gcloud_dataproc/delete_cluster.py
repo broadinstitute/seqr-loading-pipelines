@@ -4,7 +4,9 @@ import argparse
 import os
 
 p = argparse.ArgumentParser()
-p.add_argument("cluster", nargs="?", default="vep-grch38")
+p.add_argument("cluster", nargs="+")
 args = p.parse_args()
 
-os.system("gcloud dataproc clusters delete %s" % args.cluster)
+for cluster in args.cluster:
+    os.system("(echo y | gcloud dataproc clusters delete %s >& /dev/null) &" % cluster)
+    print("Deleting %s" % cluster)
