@@ -2,15 +2,10 @@
 
 import os
 
-from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
-from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
-from hail_scripts.v01.utils.hail_utils import create_hail_context
-from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
-    validate_vds_has_been_filtered
-
 os.system("pip install elasticsearch")
 
 import argparse
+import hail
 import logging
 from pprint import pprint
 import time
@@ -32,6 +27,12 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, \
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
+from hail_scripts.shared.retry_decorator import retry
+from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
+from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
+from hail_scripts.v01.utils.hail_utils import create_hail_context
+from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
+    validate_vds_has_been_filtered
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.v01.utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
@@ -108,18 +109,19 @@ def init_command_line_args():
 
     p.add_argument("--dont-update-operations-log", action="store_true", help="Don't save metadata about this export in the operations log.")
     p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
-    p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline from the middle using --start-with-step")
+    p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline "
+        "from the middle using --start-with-step")
 
     p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
+    p.add_argument("--stop-after-step", help="Pipeline will exit after this step.", type=int, default=1000, choices=[0, 1, 2, 3, 4])
     p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
-                                                     "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
-                                                     "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
+        "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
+        "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
 
     p.add_argument("--username", help="(optional) user running this pipeline. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
     p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
     p.add_argument("--output-vds", help="(optional) Output vds filename prefix (eg. test-vds)")
-
     p.add_argument("input_vds", help="input VDS")
 
     args = p.parse_args()
@@ -362,6 +364,7 @@ def export_to_elasticsearch(
         logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
 
 
+@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step0_init_and_run_vep(hc, vds, args):
     if args.start_with_step > 0:
         return hc, vds
@@ -391,8 +394,9 @@ def step0_init_and_run_vep(hc, vds, args):
     return hc, vds
 
 
+@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step1_compute_derived_fields(hc, vds, args):
-    if args.start_with_step > 1:
+    if args.start_with_step > 1 or args.stop_after_step < 1:
         return hc, vds
 
     if vds is None or not args.skip_writing_intermediate_vds:
@@ -427,7 +431,9 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
         "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
         "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True),
+        #"va.vep = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, domains, hgvsc, hgvsp, lof, lof_flags, lof_filter))",
         "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
+
     ]
 
     vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
@@ -468,6 +474,7 @@ def step1_compute_derived_fields(hc, vds, args):
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
+            --- vep: Struct,
         """
 
         INPUT_SCHEMA["info_fields"] = """
@@ -513,6 +520,7 @@ def step1_compute_derived_fields(hc, vds, args):
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
+            --- vep: Struct,
         """
 
         # END=100371979;SVTYPE=DEL;SVLEN=-70;CIGAR=1M70D	GT:FT:GQ:PL:PR:SR
@@ -541,8 +549,9 @@ def step1_compute_derived_fields(hc, vds, args):
     return hc, vds
 
 
+@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step2_export_to_elasticsearch(hc, vds, args):
-    if args.start_with_step > 2:
+    if args.start_with_step > 2 or args.stop_after_step < 2:
         return hc, vds
 
     if vds is None or not args.skip_writing_intermediate_vds:
@@ -565,7 +574,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
 
 
 def step3_add_reference_datasets(hc, vds, args):
-    if args.start_with_step > 3:
+    if args.start_with_step > 3 or args.stop_after_step < 3:
         return hc, vds
 
     logger.info("\n\n=============================== pipeline - step 3 - add reference datasets ===============================")
@@ -645,7 +654,7 @@ def step3_add_reference_datasets(hc, vds, args):
 
 
 def step4_export_to_elasticsearch(hc, vds, args):
-    if args.start_with_step > 4:
+    if args.start_with_step > 4 or args.stop_after_step < 4:
         return hc, vds
 
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
@@ -688,11 +697,21 @@ def step4_export_to_elasticsearch(hc, vds, args):
     return hc, vds
 
 
+@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
+def steps3_and_4_add_reference_datasets_and_export_to_elasticsearch(hc, vds, args):
+    # temporary solution - group these steps together for retry since step3 results aren't written to disk
+    # when running locally, so retrying step 4 requires rerunning step 3
+    hc, vds = step3_add_reference_datasets(hc, vds, args)
+    hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+
+    return hc, vds
+
+
 def cleanup_steps(args):
     if args.dont_delete_intermediate_vds_files:
         return
 
-    #delete_gcloud_file(step0_output_vds) -- don't delete step0_output_vds since it's saved as the source file for the index
+    #delete_gcloud_file(step0_output_vds) -- don't delete since it's saved as the sourceFile in the index and seqr Sample records
     if args.step1_output_vds.startswith("gs://"):
         delete_gcloud_file(args.step1_output_vds)
     if args.step3_output_vds.startswith("gs://"):
@@ -720,10 +739,10 @@ def run_pipeline():
     hc, vds = step0_init_and_run_vep(hc, vds, args)
     hc, vds = step1_compute_derived_fields(hc, vds, args)
     hc, vds = step2_export_to_elasticsearch(hc, vds, args)
-    hc, vds = step3_add_reference_datasets(hc, vds, args)
-    hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+    hc, vds = steps3_and_4_add_reference_datasets_and_export_to_elasticsearch(hc, vds, args)
 
-    cleanup_steps(args)
+    if args.stop_after_step > 4:
+        cleanup_steps(args)
 
 
 if __name__ == "__main__":
