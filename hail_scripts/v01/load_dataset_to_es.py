@@ -27,7 +27,6 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, \
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
-from hail_scripts.shared.retry_decorator import retry
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
 from hail_scripts.v01.utils.hail_utils import create_hail_context
@@ -75,7 +74,7 @@ def init_command_line_args():
 
     p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
-    p.add_argument("--project-guid", help="seqr Project id", required=True)
+    p.add_argument("--project-guid", help="seqr project guid", required=True)
     p.add_argument("--family-id", help="(optional) seqr Family id for datasets (such as Manta SV calls) that are generated per-family")
     p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
     p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
@@ -364,10 +363,11 @@ def export_to_elasticsearch(
         logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
 
 
-@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step0_init_and_run_vep(hc, vds, args):
     if args.start_with_step > 0:
         return hc, vds
+
+    logger.info("\n\n=============================== pipeline - step 0 - run vep ===============================")
 
     vds = read_in_dataset(hc, input_path=args.input_vds.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False)
 
@@ -379,7 +379,6 @@ def step0_init_and_run_vep(hc, vds, args):
     vds = add_global_metadata(vds, args)
 
     if not args.skip_vep:
-        logger.info("\n\n=============================== pipeline - step 1 - run vep ===============================")
 
         vds = run_vep(vds, genome_version=args.genome_version, block_size=args.vep_block_size)
         vds = vds.annotate_global_expr('global.gencodeVersion = "{}"'.format("19" if args.genome_version == "37" else "25"))
@@ -391,20 +390,21 @@ def step0_init_and_run_vep(hc, vds, args):
         logger.info("Writing out to VCF...")
         vds.export_vcf(args.step0_output_vcf, overwrite=True)
 
+    args.start_with_step = 1  # step 0 finished, so, if an error occurs and it goes to retry, start with the next step
+
     return hc, vds
 
 
-@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step1_compute_derived_fields(hc, vds, args):
     if args.start_with_step > 1 or args.stop_after_step < 1:
         return hc, vds
+
+    logger.info("\n\n=============================== pipeline - step 1 - compute derived fields ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
-
-    logger.info("\n\n=============================== pipeline - step 2 - compute derived fields ===============================")
 
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
@@ -546,20 +546,22 @@ def step1_compute_derived_fields(hc, vds, args):
     if not args.skip_writing_intermediate_vds:
         write_vds(vds, args.step1_output_vds)
 
+    args.start_with_step = 2  # step 1 finished, so, if an error occurs and it goes to retry, start with the next step
+
     return hc, vds
 
 
-@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
 def step2_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 2 or args.stop_after_step < 2:
         return hc, vds
+
+    logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
-    logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
     export_to_elasticsearch(
         vds,
         args,
@@ -569,6 +571,8 @@ def step2_export_to_elasticsearch(hc, vds, args):
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
         disable_index_for_fields=("sortedTranscriptConsequences", ),
     )
+
+    args.start_with_step = 3   # step 2 finished, so, if an error occurs and it goes to retry, start with the next step
 
     return hc, vds
 
@@ -650,6 +654,8 @@ def step3_add_reference_datasets(hc, vds, args):
     if not args.is_running_locally and not args.skip_writing_intermediate_vds:
         write_vds(vds, args.step3_output_vds)
 
+    args.start_with_step = 4   # step 3 finished, so, if an error occurs and it goes to retry, start with the next step
+
     return hc, vds
 
 
@@ -657,12 +663,12 @@ def step4_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 4 or args.stop_after_step < 4:
         return hc, vds
 
+    logger.info("\n\n=============================== pipeline - step 4 - export to elasticsearch ===============================")
+
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
         hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
-
-    logger.info("\n\n=============================== pipeline - step 4 - export to elasticsearch ===============================")
 
     export_to_elasticsearch(
         vds,
@@ -672,45 +678,42 @@ def step4_export_to_elasticsearch(hc, vds, args):
         export_genotypes=False,
     )
 
-    if not args.dont_update_operations_log:
-        logger.info("==> update operations log")
-        index_name = compute_index_name(args)
-        client = ElasticsearchClient(args.host, args.port)
-        client.save_index_operation_metadata(
-            args.input_vds,
-            index_name,
-            args.genome_version,
-            fam_file=args.fam_file,
-            remap_sample_ids=args.remap_sample_ids,
-            subset_samples=args.subset_samples,
-            skip_vep=args.skip_vep,
-            project_id=args.project_guid,
-            dataset_type=args.dataset_type,
-            sample_type=args.sample_type,
-            command=" ".join(sys.argv),
-            directory=args.directory,
-            username=args.username,
-            operation="create_index",
-            status="success",
-        )
+    args.start_with_step = 5   # step 4 finished, so, if an error occurs and it goes to retry, start with the next step
 
     return hc, vds
 
 
-@retry(hail.java.FatalError, tries=3, delay=5, logger=logger)
-def steps3_and_4_add_reference_datasets_and_export_to_elasticsearch(hc, vds, args):
-    # temporary solution - group these steps together for retry since step3 results aren't written to disk
-    # when running locally, so retrying step 4 requires rerunning step 3
-    hc, vds = step3_add_reference_datasets(hc, vds, args)
-    hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+def update_operations_log(args):
+    if args.dont_update_operations_log:
+        return
 
-    return hc, vds
+    logger.info("==> update operations log")
+    index_name = compute_index_name(args)
+    client = ElasticsearchClient(args.host, args.port)
+    client.save_index_operation_metadata(
+        args.input_vds,
+        index_name,
+        args.genome_version,
+        fam_file=args.fam_file,
+        remap_sample_ids=args.remap_sample_ids,
+        subset_samples=args.subset_samples,
+        skip_vep=args.skip_vep,
+        project_id=args.project_guid,
+        dataset_type=args.dataset_type,
+        sample_type=args.sample_type,
+        command=" ".join(sys.argv),
+        directory=args.directory,
+        username=args.username,
+        operation="create_index",
+        status="success",
+    )
 
 
 def cleanup_steps(args):
     if args.dont_delete_intermediate_vds_files:
         return
 
+    logger.info("==> delete intermediate vds files")
     #delete_gcloud_file(step0_output_vds) -- don't delete since it's saved as the sourceFile in the index and seqr Sample records
     if args.step1_output_vds.startswith("gs://"):
         delete_gcloud_file(args.step1_output_vds)
@@ -736,12 +739,20 @@ def run_pipeline():
 
     # pipeline steps
     vds = None
-    hc, vds = step0_init_and_run_vep(hc, vds, args)
-    hc, vds = step1_compute_derived_fields(hc, vds, args)
-    hc, vds = step2_export_to_elasticsearch(hc, vds, args)
-    hc, vds = steps3_and_4_add_reference_datasets_and_export_to_elasticsearch(hc, vds, args)
+    NUM_RETRIES = 3
+    for retry_i in range(NUM_RETRIES):
+        try:
+            hc, vds = step0_init_and_run_vep(hc, vds, args)
+            hc, vds = step1_compute_derived_fields(hc, vds, args)
+            hc, vds = step2_export_to_elasticsearch(hc, vds, args)
+            hc, vds = step3_add_reference_datasets(hc, vds, args)
+            hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+        except hail.java.FatalError as e:
+            logger.error("***** Pipeline failed. Retry %s out of %s - starting from step: %s. %s", retry_i, NUM_RETRIES, args.start_with_step, e)
+            time.sleep(3)
 
     if args.stop_after_step > 4:
+        update_operations_log(args)
         cleanup_steps(args)
 
 
