@@ -106,7 +106,9 @@ def generate_elasticsearch_schema(
     Args:
         field_path_to_field_type_map (dict): a dictionary whose keys are tuples representing the
             path of a field in the VDS schema - for example: ("va", "info", "AC"), and values are
-            hail field types as strings - for example "Array[String]".
+            hail field types as strings (for example "Array[String]") or dicts representing nested objects.
+            The nested objects are used to represent hail "Array[Struct{..}]" and the dict contains a
+            recursively-generated field type map for the Struct in Array[Struct{..}].
         disable_doc_values_for_fields: (optional) list of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
@@ -156,7 +158,9 @@ def generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=True)
     Args:
         field_path_to_field_type_map (dict): a dictionary whose keys are tuples representing the
             path of a field in the VDS schema - for example: ("va", "info", "AC"), and values are
-            hail field types as strings - for example "Array[String]".
+            hail field types as strings (for example "Array[String]") or dicts representing nested objects.
+            The nested objects are used to represent hail "Array[Struct{..}]" and the dict contains a
+            recursively-generated field type map for the Struct in Array[Struct{..}].
         is_split_vds (bool): whether split_multi() has been called on this VDS
     Returns:
         list: A list of strings like [ "AC = va.info.AC[va.aIndex-1]", ... ]
