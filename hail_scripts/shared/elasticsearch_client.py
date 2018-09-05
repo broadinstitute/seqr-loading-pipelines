@@ -1,13 +1,15 @@
-import os
-os.system("pip install elasticsearch")
-
 import datetime
 import inspect
 import logging
 import time
 from pprint import pformat
 
-import elasticsearch
+try:
+    import elasticsearch
+except ImportError:
+    import os
+    os.system("pip install elasticsearch")
+    import elasticsearch
 
 
 handlers = set(logging.root.handlers)
