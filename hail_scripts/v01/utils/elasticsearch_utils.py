@@ -180,7 +180,7 @@ def parse_vds_schema(vds_variant_schema_fields, current_parent=()):
 
     Args:
         vds_variant_schema_fields (list): hail vds.variant_schema.fields list
-
+        current_parent (list): for example: ["va", "info"]
     Return:
         dict: a dictionary whose keys are tuples representing the path of a field in the VDS
             schema - for example: ("va", "info", "AC"), and values are hail field types as strings -
@@ -193,18 +193,19 @@ def parse_vds_schema(vds_variant_schema_fields, current_parent=()):
     for field in vds_variant_schema_fields:
         field_name = field.name
         field_type = str(field.typ)
+        field_path = current_parent + [field_name]
         try:
-            if field_type.startswith("Array[Struct{"): #and ".".join(current_parent) not in ["v", "va", "va.info"]:
+            if field_type.startswith("Array[Struct{"):
                 nested_schema = parse_vds_schema(field.typ.element_type.fields, [])
-                field_path_to_field_type_map[tuple(current_parent + [field_name])] = nested_schema
+                field_path_to_field_type_map[tuple(field_path)] = nested_schema
             elif field_type.startswith("Struct"):
-                struct_schema = parse_vds_schema(field.typ.fields, current_parent + [field_name])
+                struct_schema = parse_vds_schema(field.typ.fields, field_path)
                 field_path_to_field_type_map.update(struct_schema)
             else:
-                field_path_to_field_type_map[tuple(current_parent + [field_name])] = field_type
+                field_path_to_field_type_map[tuple(field_path)] = field_type
         except Exception as e:
             traceback.print_exc()
-            raise ValueError("Error processing field: %s[%s]: %s" % (field_name, field_type, e))
+            raise ValueError("Error processing field: %s[%s]: %s" % (".".join(field_path), field_type, e))
 
     return field_path_to_field_type_map
 
