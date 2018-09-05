@@ -5,7 +5,8 @@ logging.root.handlers = list(handlers)
 
 import collections
 import logging
-
+import re
+import traceback
 from hail_scripts.v01.utils.vds_schema_string_utils import parse_field_names_and_types
 
 logger = logging.getLogger()
@@ -28,6 +29,10 @@ for vds_type, es_type in VDS_TO_ES_TYPE_MAPPING.items():
     VDS_TO_ES_TYPE_MAPPING.update({"Array[%s]" % vds_type: es_type})
     VDS_TO_ES_TYPE_MAPPING.update({"Set[%s]" % vds_type: es_type})
 
+# nested field support (see https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html#_using_literal_nested_literal_fields_for_arrays_of_objects)
+VDS_TO_ES_TYPE_MAPPING.update({
+  'Array[Struct]': 'nested',
+})
 
 ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
 
@@ -115,8 +120,15 @@ def generate_elasticsearch_schema(
     properties = {}
     for field_path, field_type in field_path_to_field_type_map.items():
         es_field_name = _field_path_to_elasticsearch_field_name(field_path)
-        es_type = _map_vds_type_to_es_type(field_type)
-        properties[es_field_name] = {"type": es_type}
+        if isinstance(field_type, dict):
+            nested_schema = generate_elasticsearch_schema(field_type)
+            properties[es_field_name] = {
+                "type": "nested",
+                "properties": nested_schema,
+            }
+        else:
+            es_type = _map_vds_type_to_es_type(field_type)
+            properties[es_field_name] = {"type": es_type}
 
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))
@@ -155,7 +167,7 @@ def generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=True)
         # drop the 'v', 'va' root from key-table key names
         key = _field_path_to_elasticsearch_field_name(field_path)
         expr = "%s = %s" % (key, ".".join(field_path))
-        if is_split_vds and field_type.startswith("Array"):
+        if is_split_vds and isinstance(field_type, basestring) and field_type.startswith("Array"):
             expr += "[va.aIndex-1]"
         expr_list.append(expr)
 
@@ -174,17 +186,25 @@ def parse_vds_schema(vds_variant_schema_fields, current_parent=()):
             schema - for example: ("va", "info", "AC"), and values are hail field types as strings -
             for example "Array[String]".
     """
+    if not current_parent:
+        current_parent = []
+
     field_path_to_field_type_map = {}
     for field in vds_variant_schema_fields:
         field_name = field.name
         field_type = str(field.typ)
-        if field_type.startswith("Array") and ".".join(current_parent) not in ["v", "va", "va.info"]:
-            raise ValueError(".".join(current_parent)+".%(field_name)s (%(field_type)s): nested array types not yet implemented." % locals())
-        if field_type.startswith("Struct"):
-            child_schema = parse_vds_schema(field.typ.fields, current_parent + [field_name])
-            field_path_to_field_type_map.update(child_schema)
-        else:
-            field_path_to_field_type_map[tuple(current_parent + [field_name])] = field_type
+        try:
+            if field_type.startswith("Array[Struct{"): #and ".".join(current_parent) not in ["v", "va", "va.info"]:
+                nested_schema = parse_vds_schema(field.typ.element_type.fields, [])
+                field_path_to_field_type_map[tuple(current_parent + [field_name])] = nested_schema
+            elif field_type.startswith("Struct"):
+                struct_schema = parse_vds_schema(field.typ.fields, current_parent + [field_name])
+                field_path_to_field_type_map.update(struct_schema)
+            else:
+                field_path_to_field_type_map[tuple(current_parent + [field_name])] = field_type
+        except Exception as e:
+            traceback.print_exc()
+            raise ValueError("Error processing field: %s[%s]: %s" % (field_name, field_type, e))
 
     return field_path_to_field_type_map
 
