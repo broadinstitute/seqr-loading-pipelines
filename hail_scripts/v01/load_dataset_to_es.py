@@ -750,6 +750,10 @@ def run_pipeline():
         except hail.java.FatalError as e:
             logger.error("***** Pipeline failed. Retry %s out of %s - starting from step: %s. %s", retry_i, NUM_RETRIES, args.start_with_step, e)
             time.sleep(3)
+            if retry_i == NUM_RETRIES - 1:
+                raise
+        else:
+            break
 
     if args.stop_after_step > 4:
         update_operations_log(args)
