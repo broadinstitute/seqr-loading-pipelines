@@ -117,7 +117,18 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
     ]
 
     if include_coding_annotations:
-        selected_annotations.extend(["amino_acids", "lof", "lof_filter", "lof_flags", "lof_info", "protein_id"])
+        selected_annotations.extend(
+            [
+                "amino_acids",
+                "lof",
+                "lof_filter",
+                "lof_flags",
+                "lof_info",
+                "polyphen_prediction",
+                "protein_id",
+                "sift_prediction",
+            ]
+        )
 
     result = hl.sorted(
         vep_root.transcript_consequences.map(
@@ -251,7 +262,9 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
                 "lof_flags": hl.tstr,
                 "lof_filter": hl.tstr,
                 "lof_info": hl.tstr,
+                "polyphen_prediction": hl.tstr,
                 "protein_id": hl.tstr,
+                "sift_prediction": hl.tstr,
             }
         )
 
