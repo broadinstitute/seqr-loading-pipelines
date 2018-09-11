@@ -24,7 +24,10 @@ def _elasticsearch_mapping_for_type(dtype):
     if isinstance(dtype, hl.tstruct):
         return {"properties": {field: _elasticsearch_mapping_for_type(dtype[field]) for field in dtype.fields}}
     if isinstance(dtype, (hl.tarray, hl.tset)):
-        return _elasticsearch_mapping_for_type(dtype.element_type)
+        element_mapping = _elasticsearch_mapping_for_type(dtype.element_type)
+        if isinstance(dtype.element_type, hl.tstruct):
+            element_mapping["type"] = "nested"
+        return element_mapping
     if dtype in HAIL_TYPE_TO_ES_TYPE_MAPPING:
         return {"type": HAIL_TYPE_TO_ES_TYPE_MAPPING[dtype]}
 
