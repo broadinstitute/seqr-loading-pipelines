@@ -8,7 +8,7 @@ from hail_scripts.v01.utils.fam_file_utils import \
 class TestElasticsearchUtils(unittest.TestCase):
 
     def setUp(self):
-        self.vds_sample_ids = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+        self.vds_sample_ids = ["a", "b", "d", "c", "e", "f", "g", "h", "i"]
         self.individual_id_to_family_id = {
             "a": "1", "b": "1", "c": "1",
             "d": "2", "e": "2",

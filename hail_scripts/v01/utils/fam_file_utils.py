@@ -46,17 +46,22 @@ def _compute_sample_groups(vds_sample_ids, sample_id_to_family_id, num_samples_p
     Returns:
         A list of lists of samples.
     """
+    sample_groups_by_family = collections.defaultdict(list)
+    for sample_id in vds_sample_ids:
+        family_id = sample_id_to_family_id[sample_id]
+        sample_groups_by_family[family_id].append(sample_id)
 
     sample_groups = []
-    previous_family_id = None
     current_sample_group = []
     for sample_id in vds_sample_ids:
         family_id = sample_id_to_family_id[sample_id]
-        if len(current_sample_group) >= num_samples_per_group and family_id != previous_family_id:
+        sample_group = sample_groups_by_family.pop(family_id, None)
+        if not sample_group:
+            continue
+        current_sample_group += sample_group
+        if len(current_sample_group) >= num_samples_per_group:
             sample_groups.append(current_sample_group)
             current_sample_group = []
-        current_sample_group.append(sample_id)
-        previous_family_id = family_id
 
     if current_sample_group:
         sample_groups.append(current_sample_group)
