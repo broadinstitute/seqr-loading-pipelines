@@ -2,6 +2,7 @@
 
 import argparse
 import getpass
+import multiprocessing
 import os
 import socket
 
@@ -13,12 +14,19 @@ p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The loc
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
 p.add_argument("--executor-memory", help="Spark executor memory limit when running locally", default="5G")
+p.add_argument("--num-executors", help="Spark number of executors", default=str(multiprocessing.cpu_count()))
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
 
 hail_zip = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
 hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
+
+#hail_zip = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.zip"
+#hail_jar = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.jar"
+
+#hail_zip = "gs://seqr-hail/hail-jar/hail-test-9-13-2018.zip"
+#hail_jar = "gs://seqr-hail/hail-jar/hail-test-9-13-2018.jar"
 
 #hash = subprocess.check_output("gsutil cat gs://hail-common/latest-hash.txt", shell=True).strip()
 #hail_zip="gs://hail-common/pyhail-hail-is-master-%(hash)s.zip" % locals()
@@ -51,9 +59,11 @@ if args.run_locally:
     spark_home = args.spark_home
     driver_memory = args.driver_memory
     executor_memory = args.executor_memory
+    num_executors = args.num_executors
     command = """%(spark_home)s/bin/spark-submit \
         --driver-memory %(driver_memory)s \
         --executor-memory %(executor_memory)s \
+        --num-executors %(num_executors)s \
         --conf spark.driver.extraJavaOptions=-Xss4M \
         --conf spark.executor.extraJavaOptions=-Xss4M \
         --conf spark.executor.memoryOverhead=5g \
