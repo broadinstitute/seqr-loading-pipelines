@@ -127,7 +127,7 @@ sub new {
     # parameters for GERP-based filters
     $self->{tabix_path} = 'tabix' if !defined($self->{tabix_path});
     $self->{gerp_database} = 'false';
-    $self->{gerp_file} = '';  #'/vep/loftee/GERP_scores.final.sorted.txt.gz' if !defined($self->{gerp_file});
+    #$self->{gerp_file} = '/vep/loftee/GERP_scores.final.sorted.txt.gz' if !defined($self->{gerp_file});
     if (defined($self->{gerp_file})) {
         if ($self->{gerp_file} eq 'mysql') {
             my $db_info = "DBI:mysql:mysql_read_default_group=loftee;mysql_read_default_file=~/.my.cnf";
