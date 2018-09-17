@@ -89,7 +89,7 @@ def init_command_line_args():
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
 
-
+    p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects.")
     p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
     p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
     p.add_argument("--exclude-omim", action="store_true", help="Don't add OMIM mim id column. Intended for testing.")
@@ -107,15 +107,19 @@ def init_command_line_args():
     p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
 
     p.add_argument("--dont-update-operations-log", action="store_true", help="Don't save metadata about this export in the operations log.")
-    p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
     p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline "
         "from the middle using --start-with-step")
+    p.add_argument("--dont-export-to-elasticsearch-until-the-end", action="store_true", help="By default the pipeline first exports intermediate results "
+        "and then exports a 2nd set of annotations at the end to reduce the chance of out-of-memory errors. This arg makes it only export the data once "
+        "at the end. This is faster if it works, but makes it more likely the pipeline will crash before completing")
+    p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
 
     p.add_argument("--start-with-step", help="Which pipeline step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
     p.add_argument("--stop-after-step", help="Pipeline will exit after this step.", type=int, default=1000, choices=[0, 1, 2, 3, 4])
     p.add_argument("--start-with-sample-group", help="If the callset contains more samples than the limit specified by --max-samples-per-index, "
         "it will be loaded into multiple separate indices. Setting this command-line arg to a value > 0 causes the pipeline to start from sample "
         "group other than the 1st one. This is useful for restarting a failed pipeline from exactly where it left off.", type=int, default=0)
+
 
     p.add_argument("--username", help="(optional) user running this pipeline. This is the local username and it must be passed in because the script can't look it up when it runs on dataproc.")
     p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
@@ -409,7 +413,6 @@ def step1_compute_derived_fields(hc, vds, args):
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
-
         "va.variantType= %s" % get_expr_for_variant_type(),
         "va.contig = %s" % get_expr_for_contig(),
         "va.pos = %s" % get_expr_for_start_pos(),
@@ -423,7 +426,10 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
-        "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep"),
+        "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(
+            vep_root="va.vep",
+            include_coding_annotations=True,
+            add_transcript_rank=bool(args.use_nested_objects_for_vep)),
     ]
 
     serial_computed_annotation_exprs = [
@@ -431,10 +437,15 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.mainTranscript = %s" % get_expr_for_worst_transcript_consequence_annotations_struct("va.sortedTranscriptConsequences"),
         "va.geneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences"),
         "va.codingGeneIds = %s" % get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root="va.sortedTranscriptConsequences", only_coding_genes=True),
-        #"va.vep = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype, canonical, cdna_start, cdna_end, codons, consequence_terms, domains, hgvsc, hgvsp, lof, lof_flags, lof_filter))",
-        "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)",
-
     ]
+
+    # serial_computed_annotation_exprs += [
+    #   "va.sortedTranscriptConsequences = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype))"  # , canonical, cdna_start, cdna_end, codons, consequence_terms, domains, hgvsc, hgvsp, lof, lof_flags, lof_filter
+    #]
+    if not args.use_nested_objects_for_vep:
+        serial_computed_annotation_exprs += [
+            "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)"
+        ]
 
     vds = vds.annotate_variants_expr(parallel_computed_annotation_exprs)
 
@@ -474,7 +485,6 @@ def step1_compute_derived_fields(hc, vds, args):
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
-            --- vep: Struct,
         """
 
         INPUT_SCHEMA["info_fields"] = """
@@ -520,7 +530,6 @@ def step1_compute_derived_fields(hc, vds, args):
             transcriptConsequenceTerms: Set[String],
             sortedTranscriptConsequences: String,
             mainTranscript: Struct,
-            --- vep: Struct,
         """
 
         # END=100371979;SVTYPE=DEL;SVLEN=-70;CIGAR=1M70D	GT:FT:GQ:PL:PR:SR
@@ -552,7 +561,7 @@ def step1_compute_derived_fields(hc, vds, args):
 
 
 def step2_export_to_elasticsearch(hc, vds, args):
-    if args.start_with_step > 2 or args.stop_after_step < 2:
+    if args.start_with_step > 2 or args.stop_after_step < 2 or args.dont_export_to_elasticsearch_until_the_end:
         return hc, vds
 
     logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
@@ -588,7 +597,9 @@ def step3_add_reference_datasets(hc, vds, args):
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
-    vds = compute_minimal_schema(vds, args.dataset_type)
+    if not args.dont_export_to_elasticsearch_until_the_end:
+
+        vds = compute_minimal_schema(vds, args.dataset_type)
 
     if args.dataset_type == "VARIANTS":
         # annotate with the combined reference data file which was generated using
@@ -673,7 +684,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
     export_to_elasticsearch(
         vds,
         args,
-        operation=ELASTICSEARCH_UPDATE,
+        operation=ELASTICSEARCH_UPDATE if not args.dont_export_to_elasticsearch_until_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
         export_genotypes=False,
     )
