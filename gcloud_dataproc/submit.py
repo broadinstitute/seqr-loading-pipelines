@@ -11,6 +11,7 @@ p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
 p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The local hail directory (default: $HAIL_HOME). Required for --run-locally")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
+p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. Defaults to all available CPUs.", type=int)
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
 p.add_argument("--executor-memory", help="Spark executor memory limit when running locally", default="5G")
 p.add_argument("script")
@@ -48,9 +49,11 @@ if args.run_locally:
 
     hail_home = args.hail_home
     spark_home = args.spark_home
+    cpu_limit_arg = ("--master local[%s]" % args.cpu_limit) if args.cpu_limit else ""
     driver_memory = args.driver_memory
     executor_memory = args.executor_memory
     command = """%(spark_home)s/bin/spark-submit \
+        %(cpu_limit_arg)s \
         --driver-memory %(driver_memory)s \
         --executor-memory %(executor_memory)s \
         --conf spark.driver.extraJavaOptions=-Xss4M \
