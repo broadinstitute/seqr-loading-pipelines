@@ -123,4 +123,5 @@ def run_vep(vds, genome_version, root='va.vep', block_size=1000):
 
     vds = vds.vep(config="/vep/vep-gcloud-grch{}.properties".format(genome_version), root=root, block_size=block_size)
 
+    logger.info("==> Done with VEP")
     return vds

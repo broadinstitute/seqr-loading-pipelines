@@ -1,8 +1,9 @@
+from collections import namedtuple
 import logging
 import os
 import StringIO
 import subprocess
-from collections import namedtuple
+import sys
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -43,6 +44,7 @@ def run(command,
         verbose=True,
         env={},
         is_interactive=False):
+
     """Runs the given command in a shell.
 
     Args:
@@ -72,13 +74,28 @@ def run(command,
 
     # pipe output to log
     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=full_env, bufsize=1)
+    line_buffer = StringIO.StringIO()
     log_buffer = StringIO.StringIO()
-    for line in iter(p.stdout.readline, ''):
-        log_buffer.write(line)
-        if verbose:
-            logger.info(line.strip('\n'))
-    #p.stdout.close()
-
+    previous_is_slash_r = False
+    while True:
+        out = p.stdout.read(1)
+        if out == '' and p.poll() is not None:
+            break
+        if out != '':
+            log_buffer.write(out)
+            if verbose:
+                line_buffer.write(out)
+                if out.endswith('\r') or (out.endswith('\n') and previous_is_slash_r):
+                    sys.stdout.write(line_buffer.getvalue())
+                    sys.stdout.flush()
+                    line_buffer = StringIO.StringIO()
+                    previous_is_slash_r = True
+                elif out.endswith('\n'):
+                    logger.info(line_buffer.getvalue().rstrip('\n'))
+                    line_buffer = StringIO.StringIO()
+                    previous_is_slash_r = False
+                else:
+                    previous_is_slash_r = False
     p.wait()
 
     output = log_buffer.getvalue()

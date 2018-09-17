@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import argparse
-import os
 import random
 import sys
+
+from hail_scripts.v01.utils.shell_utils import simple_run as run
 
 unique_id = random.randint(10**5, 10**6 - 1)
 random_cluster_name = "without-vep-%s" % unique_id
@@ -14,10 +15,6 @@ p.add_argument("-c", "--cluster", default=random_cluster_name)
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
-
-def run(cmd):
-    print(cmd)
-    os.system(cmd)
 
 project = args.project
 cluster_name = args.cluster
