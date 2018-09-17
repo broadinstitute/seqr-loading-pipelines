@@ -157,7 +157,7 @@ sub run {
     my ($self, $transcript_variation_allele) = @_;
     my $tv = $transcript_variation_allele->transcript_variation;
     my $vf = $transcript_variation_allele->variation_feature;
-    
+
     my @consequences = map { $_->SO_term } @{ $transcript_variation_allele->get_all_OverlapConsequences };
     
     my @filters = ();
@@ -170,7 +170,10 @@ sub run {
     }
     my $confidence = '';
     my $allele = $transcript_variation_allele->allele_string();
-    
+
+    #my $transcript_id = $tv->transcript->stable_id();
+    #print STDERR "$vf->{chr} $vf->{start} $vf->{allele_string}  --- $transcript_id \n";
+
     my $genic_variant = !("upstream_gene_variant" ~~ @consequences || "downstream_gene_variant" ~~ @consequences);
     my $fiveUTR_variant = check_5UTR($tv, $vf); # includes intronic variants
     my $threeUTR_variant = check_3UTR($tv, $vf);
