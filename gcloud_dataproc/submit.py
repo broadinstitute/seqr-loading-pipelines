@@ -50,11 +50,11 @@ if args.run_locally:
 
     hail_home = args.hail_home
     spark_home = args.spark_home
-    cpu_limit = args.cpu_limit
+    cpu_limit_arg = ("--master local[%s]" % args.cpu_limit) if args.cpu_limit else ""
     driver_memory = args.driver_memory
     executor_memory = args.executor_memory
     command = """%(spark_home)s/bin/spark-submit \
-        --master local[%(cpu_limit)s] \
+        %(cpu_limit_arg)s \
         --driver-memory %(driver_memory)s \
         --executor-memory %(executor_memory)s \
         --conf spark.driver.extraJavaOptions=-Xss4M \
