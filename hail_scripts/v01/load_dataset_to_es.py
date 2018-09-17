@@ -23,7 +23,8 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, get_expr_for_end_pos, \
     get_expr_for_xpos, get_expr_for_contig, get_expr_for_start_pos, get_expr_for_alt_allele, \
-    get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type
+    get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type, \
+    get_expr_for_filtering_allele_frequency
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, \
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
@@ -406,6 +407,8 @@ def step1_compute_derived_fields(hc, vds, args):
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
+    FAF_CONFIDENCE_INTERVAL = 0.95  # based on https://macarthurlab.slack.com/archives/C027LHMPP/p1528132141000430
+
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
@@ -419,7 +422,7 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.alt = %s" % get_expr_for_alt_allele(),
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
-
+        "va.FAF = %s" % get_expr_for_filtering_allele_frequency("va.info.AC[v.aIndex - 1]", "va.info.AN", FAF_CONFIDENCE_INTERVAL),
         "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
