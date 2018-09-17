@@ -45,14 +45,16 @@ def compute_minimal_schema(vds, dataset_type="VARIANTS"):
     return vds
 
 
-def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=None, skip_summary=False):
+def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=None, skip_summary=False, num_partitions=None):
     """Utility method for reading in a .vcf or .vds dataset
 
     Args:
         hc (HailContext)
         input_path (str): vds or vcf input path
         dataset_type (str):
-        filter_interval (str): Optional chrom/pos filter interval (eg. "X:12345-54321")
+        filter_interval (str): optional chrom/pos filter interval (eg. "X:12345-54321")
+        skip_summary (bool): don't run vds.summarize()
+        num_partitions (int): if specified, runs vds.repartition(num_partitions)
     """
     input_path = input_path.rstrip("/")
     if input_path.endswith(".vds"):
@@ -70,8 +72,10 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         # ensure that va.wasSplit and va.aIndex are defined before calling split_multi() since split_multi() doesn't define these if all variants are bi-allelic
         vds = vds.annotate_variants_expr('va.wasSplit=false, va.aIndex=1')
 
-    if vds.num_partitions() < 1000:
+    if num_partitions is None and vds.num_partitions() < 1000:
         vds = vds.repartition(1000, shuffle=True)
+    elif num_partitions is not None:
+        vds = vds.repartition(num_partitions, shuffle=True)
 
     vds = vds.split_multi()
 

@@ -88,6 +88,7 @@ def init_command_line_args():
 
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
+    p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)
 
     p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects.")
     p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
@@ -109,7 +110,7 @@ def init_command_line_args():
     p.add_argument("--dont-update-operations-log", action="store_true", help="Don't save metadata about this export in the operations log.")
     p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline "
         "from the middle using --start-with-step")
-    p.add_argument("--dont-export-to-elasticsearch-until-the-end", action="store_true", help="By default the pipeline first exports intermediate results "
+    p.add_argument("--only-export-to-elasticsearch-at-the-end", action="store_true", help="By default the pipeline first exports intermediate results "
         "and then exports a 2nd set of annotations at the end to reduce the chance of out-of-memory errors. This arg makes it only export the data once "
         "at the end. This is faster if it works, but makes it more likely the pipeline will crash before completing")
     p.add_argument("--create-snapshot", action="store_true", help="Create an elasticsearch snapshot in a google bucket after indexing is complete.")
@@ -373,7 +374,7 @@ def step0_init_and_run_vep(hc, vds, args):
 
     logger.info("\n\n=============================== pipeline - step 0 - run vep ===============================")
 
-    vds = read_in_dataset(hc, input_path=args.input_vds.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False)
+    vds = read_in_dataset(hc, input_path=args.input_vds.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False, num_partitions=args.cpu_limit)
 
     validate_dataset(hc, vds, args)
 
@@ -408,7 +409,7 @@ def step1_compute_derived_fields(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
+        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
@@ -440,8 +441,9 @@ def step1_compute_derived_fields(hc, vds, args):
     ]
 
     # serial_computed_annotation_exprs += [
-    #   "va.sortedTranscriptConsequences = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype))"  # , canonical, cdna_start, cdna_end, codons, consequence_terms, domains, hgvsc, hgvsp, lof, lof_flags, lof_filter
+    #   "va.sortedTranscriptConsequences = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype))"
     #]
+
     if not args.use_nested_objects_for_vep:
         serial_computed_annotation_exprs += [
             "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)"
@@ -561,7 +563,7 @@ def step1_compute_derived_fields(hc, vds, args):
 
 
 def step2_export_to_elasticsearch(hc, vds, args):
-    if args.start_with_step > 2 or args.stop_after_step < 2 or args.dont_export_to_elasticsearch_until_the_end:
+    if args.start_with_step > 2 or args.stop_after_step < 2 or args.only_export_to_elasticsearch_at_the_end:
         return hc, vds
 
     logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
@@ -569,7 +571,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         hc.stop()
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
@@ -597,7 +599,7 @@ def step3_add_reference_datasets(hc, vds, args):
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
-    if not args.dont_export_to_elasticsearch_until_the_end:
+    if not args.only_export_to_elasticsearch_at_the_end:
 
         vds = compute_minimal_schema(vds, args.dataset_type)
 
@@ -679,12 +681,12 @@ def step4_export_to_elasticsearch(hc, vds, args):
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
         hc.stop()
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
+        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
         args,
-        operation=ELASTICSEARCH_UPDATE if not args.dont_export_to_elasticsearch_until_the_end else ELASTICSEARCH_INDEX,
+        operation=ELASTICSEARCH_UPDATE if not args.only_export_to_elasticsearch_at_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
         export_genotypes=False,
     )
