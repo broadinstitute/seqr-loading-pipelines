@@ -420,7 +420,7 @@ def get_expr_for_filtering_allele_frequency(ac_field="va.AC[va.aIndex - 1]", an_
     """Compute the filtering allele frequency for the given AC, AN and confidence interval."""
     if not (0 < confidence_interval < 1):
         raise ValueError("Invalid confidence interval: %s. Confidence interval must be between 0 and 1." % confidence_interval)
-    return "filtering_allele_frequency(%(ac_field)s, %(an_field)s, %(percent)s)" % locals()
+    return "filtering_allele_frequency(%(ac_field)s, %(an_field)s, %(confidence_interval)s)" % locals()
 
 
 def copy_field(vds, dest_field="va.pos", source_field="v.start"):

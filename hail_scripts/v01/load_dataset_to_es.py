@@ -170,7 +170,7 @@ def compute_output_vds_prefix(args):
         output_vds_prefix = os.path.join(os.path.dirname(args.input_vds), args.output_vds.replace(".vds", ""))
     else:
         if args.subset_samples:
-            output_vds_hash = "__%020d" % abs(hash(",".join([args.input_vds, args.subset_samples, args.remap_sample_ids])))
+            output_vds_hash = "__%020d" % abs(hash(",".join(map(str, [args.input_vds, args.subset_samples, args.remap_sample_ids]))))
         else:
             output_vds_hash = ""
         output_vds_prefix = args.input_vds.rstrip("/").replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "") + output_vds_hash
@@ -426,7 +426,7 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.alt = %s" % get_expr_for_alt_allele(),
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
-        "va.FAF = %s" % get_expr_for_filtering_allele_frequency("va.info.AC[v.aIndex - 1]", "va.info.AN", FAF_CONFIDENCE_INTERVAL),
+        "va.FAF = %s" % get_expr_for_filtering_allele_frequency("va.info.AC[va.aIndex - 1]", "va.info.AN", FAF_CONFIDENCE_INTERVAL),
         "va.transcriptIds = %s" % get_expr_for_vep_transcript_ids_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.domains = %s" % get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
         "va.transcriptConsequenceTerms = %s" % get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.vep.transcript_consequences"),
