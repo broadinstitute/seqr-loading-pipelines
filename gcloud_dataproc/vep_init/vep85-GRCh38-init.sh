@@ -25,6 +25,8 @@ ln -s /vep/ensembl-tools-release-85/scripts/variant_effect_predictor /vep
 #Give perms
 chmod -R 777 /vep
 
+sudo ln -s /usr/bin/perl /usr/local/bin/perl
+
 # Copy perl JSON module
 gsutil -m cp -r gs://hail-common/vep/perl-JSON/* /usr/share/perl/5.20/
 
