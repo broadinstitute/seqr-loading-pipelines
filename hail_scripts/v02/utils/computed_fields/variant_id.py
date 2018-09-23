@@ -20,6 +20,15 @@ def get_expr_for_contig_number(table):
     )
 
 
+def get_expr_for_original_alt_alleles_set(split_variant):
+    """Compute variant id for each original alt allele in a variant split with hl.split_multi"""
+    return hl.set(
+        split_variant.old_alleles[1:].map(
+            lambda alt: get_expr_for_variant_id(hl.min_rep(split_variant.old_locus, [split_variant.old_alleles[0], alt]))
+        )
+    )
+
+
 def get_expr_for_ref_allele(table):
     return table.alleles[0]
 

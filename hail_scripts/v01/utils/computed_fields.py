@@ -46,7 +46,7 @@ CONSEQUENCE_TERM_RANK_LOOKUP = (
 ).replace("'", '"')
 
 
-def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=True):
+def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", include_coding_annotations=True, add_transcript_rank=True):
     """Sort transcripts by 3 properties:
 
         1. coding > non-coding
@@ -68,6 +68,9 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
     Args:
         vep_root (string): root path of the VEP struct in the VDS
         include_coding_annotations (bool): if True, fields relevant to protein-coding variants will be included
+        add_transcript_rank (bool): if True, a 'transcript_rank' field will be added to each transcript Struct which
+            records the transcript's ranking based on the above sort order.
+
     """
 
     coding_transcript_consequences = """
@@ -111,8 +114,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         transcript_consequences = non_coding_transcript_consequences
 
     result = """
-    let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in
-        %(vep_root)s.transcript_consequences.map(
+    let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in %(vep_root)s.transcript_consequences.map(
             c => select(c, %(transcript_consequences)s)
         ).map(
             c => merge(
@@ -155,10 +157,19 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         )
     """ % dict(locals().items()+globals().items())
 
-
     if not include_coding_annotations:
         # for non-coding variants, drop fields here that are hard to exclude in the above code
         result += ".map(c => drop(c, domains, hgvsp))"
+
+    if add_transcript_rank:
+        result = """let processed_transcript_consequences = %(result)s in 
+            range(processed_transcript_consequences.length).map(array_index => 
+                merge(
+                    processed_transcript_consequences[array_index],
+                    { transcript_rank: array_index }
+                )
+            )
+        """ % locals()
 
     return result
 
@@ -329,7 +340,6 @@ def get_expr_for_variant_type():
         else if (v.ref.length > 1) "M"
         else "S"
     """
-    
 
 
 def get_expr_for_contig(field_prefix="v."):
@@ -399,10 +409,18 @@ def get_expr_for_end_pos(field_prefix="v.", pos_field="start", ref_field="ref"):
     """Compute the end position based on start position and ref allele length"""
     return "%(field_prefix)s%(pos_field)s + %(field_prefix)s%(ref_field)s.length - 1" % locals()
 
+
 def get_expr_for_end_pos_from_info_field(field_prefix="va.", end_field="info.END"):
     """Retrieve the "END" position from the INFO field. This is typically found in VCFs produced by
     SV callers."""
     return "%(field_prefix)s%(end_field)s" % locals()
+
+
+def get_expr_for_filtering_allele_frequency(ac_field="va.AC[va.aIndex - 1]", an_field="va.AN", confidence_interval=0.95):
+    """Compute the filtering allele frequency for the given AC, AN and confidence interval."""
+    if not (0 < confidence_interval < 1):
+        raise ValueError("Invalid confidence interval: %s. Confidence interval must be between 0 and 1." % confidence_interval)
+    return "filtering_allele_frequency(%(ac_field)s, %(an_field)s, %(confidence_interval)s)" % locals()
 
 
 def copy_field(vds, dest_field="va.pos", source_field="v.start"):

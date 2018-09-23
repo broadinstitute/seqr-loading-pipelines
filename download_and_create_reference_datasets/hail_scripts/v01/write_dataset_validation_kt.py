@@ -23,7 +23,7 @@ hc = hail.HailContext(log="/hail.log")
 def read_gnomad_subset(genome_version):
     logger.info("==> Read gnomAD subset")
 
-    # select a subset of gnomad genomes variants that are in > 99% of samples
+    # select a subset of gnomad genomes variants that are in > 90% of samples
     vds = (
         read_vds(hc, GNOMAD_SEQR_VDS_PATHS["genomes_" + genome_version])
             .filter_intervals(hail.Interval.parse("1"))

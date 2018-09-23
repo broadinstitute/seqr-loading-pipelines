@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from hail_scripts.v01.utils.shell_utils import simple_run as run
 import os
 import random
 import sys
@@ -14,12 +15,6 @@ p.add_argument("-c", "--cluster", default=random_cluster_name)
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
-
-
-def run(cmd):
-    print(cmd)
-    os.system(cmd)
-
 
 project = args.project
 cluster_name = args.cluster

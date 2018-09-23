@@ -74,6 +74,53 @@ def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root):
     )
 
 
+PROTEIN_LETTERS_1TO3 = hl.dict(
+    {
+        "A": "Ala",
+        "C": "Cys",
+        "D": "Asp",
+        "E": "Glu",
+        "F": "Phe",
+        "G": "Gly",
+        "H": "His",
+        "I": "Ile",
+        "K": "Lys",
+        "L": "Leu",
+        "M": "Met",
+        "N": "Asn",
+        "P": "Pro",
+        "Q": "Gln",
+        "R": "Arg",
+        "S": "Ser",
+        "T": "Thr",
+        "V": "Val",
+        "W": "Trp",
+        "Y": "Tyr",
+        "X": "Ter",
+        "*": "Ter",
+        "U": "Sec",
+    }
+)
+
+
+HGVSC_CONSEQUENCES = hl.set(["splice_donor_variant", "splice_acceptor_variant", "splice_region_variant"])
+
+
+def get_expr_for_formatted_hgvs(csq):
+    return hl.cond(
+        hl.is_missing(csq.hgvsp) | HGVSC_CONSEQUENCES.contains(csq.major_consequence),
+        csq.hgvsc.split(":")[-1],
+        hl.cond(
+            csq.hgvsp.contains("%3D"),
+            hl.bind(
+                lambda protein_letters: "p." + protein_letters + hl.str(csq.protein_start) + protein_letters,
+                hl.delimit(csq.amino_acids.split("").map(lambda l: PROTEIN_LETTERS_1TO3.get(l)), ""),
+            ),
+            csq.hgvsp.split(":")[-1],
+        ),
+    )
+
+
 def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_coding_annotations=True):
     """Sort transcripts by 3 properties:
 
@@ -87,7 +134,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
     Also, for each transcript in the array, computes these additional fields:
         hgnc_id: converts type to String
         domains: converts Array[Struct] to string of comma-separated domain names
-        hgvs: set to hgvsp is it exists, or else hgvsc. TODO needs more work to match gnomAD browser logic.
+        hgvs: set to hgvsp is it exists, or else hgvsc. formats hgvsp for synonymous variants.
         major_consequence: set to most severe consequence for that transcript (
             VEP sometimes provides multiple consequences for a single transcript)
         major_consequence_rank: major_consequence rank based on VEP SO ontology (most severe = 1)
@@ -126,6 +173,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                 "lof_info",
                 "polyphen_prediction",
                 "protein_id",
+                "protein_start",
                 "sift_prediction",
             ]
         )
@@ -136,7 +184,6 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                 *selected_annotations,
                 domains=c.domains.map(lambda domain: domain.db + ":" + domain.name),
                 hgnc_id=hl.str(c.hgnc_id),
-                hgvs=hl.or_else(c.hgvsp, c.hgvsc),
                 major_consequence=hl.cond(
                     c.consequence_terms.size() > 0,
                     hl.sorted(c.consequence_terms, key=lambda t: CONSEQUENCE_TERM_RANK_LOOKUP.get(t))[0],
@@ -164,6 +211,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                     )
                     .default("other")
                 ),
+                hgvs=get_expr_for_formatted_hgvs(c),
                 major_consequence_rank=CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence),
             )
         ),

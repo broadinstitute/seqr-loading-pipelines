@@ -12,6 +12,7 @@ p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
 p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The local hail directory (default: $HAIL_HOME). Required for --run-locally")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
+p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. Defaults to all available CPUs.", type=int)
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
 p.add_argument("--executor-memory", help="Spark executor memory limit when running locally", default="5G")
 p.add_argument("--num-executors", help="Spark number of executors", default=str(multiprocessing.cpu_count()))
@@ -19,8 +20,11 @@ p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
 
-hail_zip = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
-hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
+#hail_zip = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
+#hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
+
+hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
+hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
 
 #hail_zip = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.zip"
 #hail_jar = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.jar"
@@ -35,10 +39,6 @@ hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
 #hash = subprocess.check_output("gsutil cat gs://hail-common/builds/0.1/latest-hash-spark-2.0.2.txt", shell=True).strip()
 #hail_zip="gs://hail-common/builds/0.1/python/hail-0.1-%(hash)s.zip" % locals()
 #hail_jar="gs://hail-common/builds/0.1/jars/hail-0.1-%(hash)s-Spark-2.0.2.jar" % locals()
-
-#hail_zip="gs://hail-common/0.1-vep-debug.zip"
-#hail_jar="gs://hail-common/0.1-vep-debug.jar"
-
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
@@ -57,10 +57,12 @@ if args.run_locally:
 
     hail_home = args.hail_home
     spark_home = args.spark_home
+    cpu_limit_arg = ("--master local[%s]" % args.cpu_limit) if args.cpu_limit else ""
     driver_memory = args.driver_memory
     executor_memory = args.executor_memory
     num_executors = args.num_executors
     command = """%(spark_home)s/bin/spark-submit \
+        %(cpu_limit_arg)s \
         --driver-memory %(driver_memory)s \
         --executor-memory %(executor_memory)s \
         --num-executors %(num_executors)s \
