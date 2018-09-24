@@ -20,25 +20,11 @@ p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
 
-#hail_zip = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.zip"
-#hail_jar = "gs://seqr-hail/hail-jar/hail-0.1-es-6.2.4-with-strip-chr-prefix.jar"
+#hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
+#hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
 
-hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
-hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
-
-#hail_zip = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.zip"
-#hail_jar = "gs://seqr-hail/hail-jar/hail-test-9-2-2018.jar"
-
-#hail_zip = "gs://seqr-hail/hail-jar/hail-test-9-13-2018.zip"
-#hail_jar = "gs://seqr-hail/hail-jar/hail-test-9-13-2018.jar"
-
-#hash = subprocess.check_output("gsutil cat gs://hail-common/latest-hash.txt", shell=True).strip()
-#hail_zip="gs://hail-common/pyhail-hail-is-master-%(hash)s.zip" % locals()
-#hail_jar="gs://hail-common/hail-hail-is-master-all-spark2.0.2-%(hash)s.jar" % locals()
-
-#hash = subprocess.check_output("gsutil cat gs://hail-common/builds/0.1/latest-hash-spark-2.0.2.txt", shell=True).strip()
-#hail_zip="gs://hail-common/builds/0.1/python/hail-0.1-%(hash)s.zip" % locals()
-#hail_jar="gs://hail-common/builds/0.1/jars/hail-0.1-%(hash)s-Spark-2.0.2.jar" % locals()
+hail_zip = "hail_builds/v01/hail-9-17-2018-f3e47061.zip"
+hail_jar = "hail_builds/v01/hail-9-17-2018-f3e47061.jar"
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
