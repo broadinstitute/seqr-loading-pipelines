@@ -58,9 +58,9 @@ spec:
           value: "repository-gcs"  # ,mapper-size"
         - name: NETWORK_HOST   # workaround for https://github.com/pires/kubernetes-elasticsearch-cluster/issues/128
           value: "_site_,_lo_"
-        - name: DISCOVERY_SERVICE
-          value: "elasticsearch-discovery:9300"
-          #value: "elasticsearch-persistent-node:9300"
+        #- name: DISCOVERY_SERVICE
+        #  value: "elasticsearch-discovery:9300"
+        #  #value: "elasticsearch-persistent-node:9300"
         ports:
         - containerPort: 9200
           name: http

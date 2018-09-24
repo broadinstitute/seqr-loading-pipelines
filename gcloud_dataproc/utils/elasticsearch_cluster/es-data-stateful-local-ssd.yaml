@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: es-data
+  name: es-data-loading
   namespace: default
   labels:
-    name: es-data
-    component: elasticsearch
+    name: es-data-loading
+    component: elasticsearch-loading
     role: data
 spec:
   selector:
     matchLabels:
-      component: elasticsearch
+      component: elasticsearch-loading
       role: data
-  serviceName: elasticsearch-data
+  serviceName: es-data-loading
   replicas: 2
   template:
     metadata:
       labels:
-        name: es-data
-        component: elasticsearch
+        name: es-data-loading
+        component: elasticsearch-loading
         role: data
     spec:
       initContainers:
@@ -31,7 +31,7 @@ spec:
         securityContext:
           privileged: true
       containers:
-      - name: es-data
+      - name: es-data-loading
         image: quay.io/pires/docker-elasticsearch-kubernetes:6.3.2
         imagePullPolicy: Always
         env:
@@ -53,13 +53,14 @@ spec:
           value: "true"
         - name: ES_JAVA_OPTS
           value: "-Xms8g -Xmx8g"
-        - name: ES_PLUGINS_INSTALL
-          value: "repository-gcs"   #,mapper-size
+        #- name: ES_PLUGINS_INSTALL
+        #  value: "repository-gcs"   #,mapper-size
         ports:
         - containerPort: 9200
           name: http
         - containerPort: 9300
           name: transport
+          protocol: TCP
         volumeMounts:
         - name: storage
           mountPath: /data

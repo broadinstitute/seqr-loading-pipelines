@@ -112,14 +112,14 @@ def download_and_import_latest_clinvar_vcf(hail_context, genome_version, subset=
 
     # download vcf
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    local_tmp_file_path = "/tmp/clinvar.vcf.gz"
+    local_tmp_file_path = "/tmp/clinvar_grch{}.vcf.gz".format(genome_version)
     clinvar_vcf_hdfs_path = "/tmp/" + os.path.basename(local_tmp_file_path)
 
     print("\n==> downloading {}".format(clinvar_url))
 
     run("wget {} -O {}".format(clinvar_url, local_tmp_file_path))
 
-    run("hdfs dfs -cp file://{} {}".format(local_tmp_file_path, clinvar_vcf_hdfs_path))
+    run("hdfs dfs -copyFromLocal -f file://{} {}".format(local_tmp_file_path, clinvar_vcf_hdfs_path))
 
     clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path)
 

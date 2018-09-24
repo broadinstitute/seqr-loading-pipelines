@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: es-data
@@ -52,7 +52,7 @@ spec:
         - name: HTTP_ENABLE
           value: "true"
         - name: ES_JAVA_OPTS
-          value: -Xms8g -Xmx8g
+          value: "-Xms8g -Xmx8g"
         - name: ES_PLUGINS_INSTALL
           value: "repository-gcs"  # ,mapper-size
         ports:
@@ -60,6 +60,7 @@ spec:
           name: http
         - containerPort: 9300
           name: transport
+          protocol: TCP
         volumeMounts:
         - name: storage
           mountPath: /data
@@ -69,3 +70,14 @@ spec:
       #  - name: config
       #    configMap:
       #      name: elasticsearch-config
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      annotations:
+        volume.beta.kubernetes.io/storage-class: standard
+        #volume.beta.kubernetes.io/storage-class: ssd-storage-class
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 15Gi

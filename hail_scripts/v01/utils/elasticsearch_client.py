@@ -47,6 +47,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         disable_index_for_fields=(),
         is_split_vds=True,
         export_globals_to_index_meta=True,
+        run_after_index_exists=None,
         verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -82,6 +83,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             is_split_vds (bool): whether split_multi() has been called on this VDS
             export_globals_to_index_meta (bool): whether to add vds.globals object to the index _meta field:
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
+            run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             verbose (bool): whether to print schema and stats
         """
 
@@ -136,6 +138,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields,
             field_names_replace_dot_with=None,
+            run_after_index_exists=run_after_index_exists,
             _meta=_meta,
             verbose=verbose)
 
@@ -154,6 +157,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         field_names_replace_dot_with="_",
+        run_after_index_exists=None,
         _meta=None,
         verbose=True,
     ):
@@ -199,6 +203,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 this string in all field names. This replacement is not reversible (or atleast not
                 unambiguously in the general case) Set this to None to disable replacement, and fall back
                 on an encoding that's uglier, but reversible (eg. "." will be converted to "_$dot$_")
+            run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             _meta (dict): optional _meta info for this index
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             verbose (bool): whether to print schema and stats
@@ -280,6 +285,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
             num_shards=num_shards,
             _meta=_meta,
         )
+
+        if run_after_index_exists:
+            run_after_index_exists()
 
         logger.info("==> exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
         kt.export_elasticsearch(self._host, int(self._port), index_name, index_type_name, block_size, config=elasticsearch_config)
