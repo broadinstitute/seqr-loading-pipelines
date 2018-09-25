@@ -136,7 +136,9 @@ def init_command_line_args():
     if not (args.input_dataset.rstrip("/").endswith(".vds") or args.input_dataset.endswith(".vcf") or args.input_dataset.endswith(".vcf.gz") or args.input_dataset.endswith(".vcf.bgz")):
         p.error("Input must be a .vds or .vcf.gz")
 
-    logger.info("Command args: \n" + " ".join(sys.argv[:1]) + (" --index " + compute_index_name(args) if "--index" not in sys.argv else ""))
+    args.index = compute_index_name(args)
+
+    logger.info("Command args: \n" + " ".join(sys.argv[:1]) + ((" --index " + args.index) if "--index" not in sys.argv else ""))
 
     return args
 
@@ -310,8 +312,6 @@ def export_to_elasticsearch(
 
     start_with_sample_group = args.start_with_sample_group if args.start_with_step == 0 else 0
 
-    index_name = compute_index_name(args)
-
     if not export_genotypes:
         genotype_fields_to_export = []
         genotype_field_to_elasticsearch_type_map = {}
@@ -338,10 +338,10 @@ def export_to_elasticsearch(
 
         if len(sample_groups) > 1:
             vds_sample_subset = vds.filter_samples_list(sample_group, keep=True)
-            current_index_name = "%s_%s" % (index_name, i)
+            current_index_name = "%s_%s" % (args.index, i)
         else:
             vds_sample_subset = vds
-            current_index_name = index_name
+            current_index_name = args.index
 
         logger.info("==> exporting %s samples into %s" % (len(sample_group), current_index_name))
         logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
@@ -710,11 +710,10 @@ def update_operations_log(args):
         return
 
     logger.info("==> update operations log")
-    index_name = compute_index_name(args)
     client = ElasticsearchClient(args.host, args.port)
     client.save_index_operation_metadata(
         args.input_dataset,
-        index_name,
+        args.index,
         args.genome_version,
         fam_file=args.fam_file,
         remap_sample_ids=args.remap_sample_ids,
@@ -759,9 +758,6 @@ def route_index_to_temp_es_cluster(yes, args):
     else:
         exclude_name = "es-data-loading*"
 
-    index_name = compute_index_name(args)
-    index_name = "{}*".format(index_name)
-
     client = ElasticsearchClient(args.host, args.port)
     # Commented out because it turns out that allocation filter settings take precedence over cluster re-balancing,
     # so there's no need to disable shard re-balancing when moving shards around into an unbalanced arrangement.
@@ -770,7 +766,7 @@ def route_index_to_temp_es_cluster(yes, args):
     #    "transient": {"cluster.routing.rebalance.enable": "none"}
     #})
 
-    client.es.indices.put_settings(index=index_name, body={
+    client.es.indices.put_settings(index="{}*".format(args.index), body={
         "index.routing.allocation.require._name": require_name,
         "index.routing.allocation.exclude._name": exclude_name
     })
@@ -778,7 +774,7 @@ def route_index_to_temp_es_cluster(yes, args):
     if not yes:
         shards = None
         while shards is None or "es-data-loading" in shards:
-            shards = client.es.cat.shards(index=index_name)
+            shards = client.es.cat.shards(index="{}*".format(args.index))
             logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(len(shards.strip().split("\n")), shards))
             time.sleep(5)
 
@@ -824,6 +820,12 @@ def run_pipeline():
     if args.use_temp_es_cluster:
         # move data off of the loading nodes
         route_index_to_temp_es_cluster(False, args)
+
+    logger.info("==> Pipeline completed")
+    logger.info("")
+    logger.info("==> To add this dataset to a seqr project, go to the project page and click 'Edit Datasets'. Then enter:")
+    logger.info("    Elasticsearch Index: {} ".format(args.index))
+    logger.info("    Sample Type: {} ".format(args.sample_type))
 
 
 if __name__ == "__main__":
