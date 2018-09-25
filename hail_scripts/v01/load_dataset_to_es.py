@@ -588,7 +588,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
         export_genotypes=True,
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
         disable_index_for_fields=("sortedTranscriptConsequences", ),
-        run_after_index_exists=(lambda: put_index_on_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
     )
 
     args.start_with_step = 3   # step 2 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -697,7 +697,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
         operation=ELASTICSEARCH_UPDATE if not args.only_export_to_elasticsearch_at_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
         export_genotypes=False,
-        run_after_index_exists=(lambda: put_index_on_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
     )
 
     args.start_with_step = 5   # step 4 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -743,7 +743,7 @@ def cleanup_steps(args):
         delete_gcloud_file(args.step3_output_vds)
 
 
-def put_index_on_temp_es_cluster(yes, args):
+def route_index_to_temp_es_cluster(yes, args):
     """Apply shard allocation filtering rules for the given index to elasticsearch data nodes with *loading* in their name:
 
     If yes is True, route new documents in the given index only to nodes named "*loading*".
@@ -823,7 +823,7 @@ def run_pipeline():
 
     if args.use_temp_es_cluster:
         # move data off of the loading nodes
-        put_index_on_temp_es_cluster(False, args)
+        route_index_to_temp_es_cluster(False, args)
 
 
 if __name__ == "__main__":
