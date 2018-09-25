@@ -26,6 +26,8 @@ p.add_argument("-c", "--cluster-name", help="dataproc cluster name", default=ran
 p.add_argument("--seqr-url", help="seqr url for retrieving pedigree info", default="https://seqr.broadinstitute.org")
 p.add_argument("--seqr-username", help="seqr username for retrieving pedigree info")
 p.add_argument("--seqr-password", help="seqr password for retrieving pedigree info")
+p.add_argument("--num-workers", help="num worker nodes", default=2, type=int)
+p.add_argument("--num-preemptible-workers", help="num preemptible worker nodes", default=12, type=int)
 p.add_argument("--project-guid", help="seqr project guid")
 p.add_argument("--download-fam-file", help="download .fam file from seqr", action='store_true')
 args, unparsed_args = p.parse_known_args()
@@ -42,11 +44,13 @@ if args.project_guid:
 
 
 cluster_name = args.cluster_name
+num_workers = args.num_workers
+num_preemptible_workers = args.num_preemptible_workers
 
 run((
     "python ./gcloud_dataproc/create_cluster_GRCh38.py "
     "--project=seqr-project "
-    "%(cluster_name)s 2 24") % locals())
+    "%(cluster_name)s %(num_workers)s %(num_preemptible_workers)s") % locals())
 
 run((
     "time ./gcloud_dataproc/submit.py "
