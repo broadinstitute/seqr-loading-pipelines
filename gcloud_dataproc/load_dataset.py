@@ -26,6 +26,9 @@ def init_command_line_args():
 
     p = argparse.ArgumentParser()
     p.add_argument("-c", "--cluster-name", help="dataproc cluster name. If it doesn't exist, it will be created", default=random_cluster_name)
+    p.add_argument("--num-workers", help="num dataproc worker nodes to create", default=2, type=int)
+    p.add_argument("--num-preemptible-workers", help="num preemptible dataproc worker nodes to create", default=12, type=int)
+
     p.add_argument("--genome-version", help="genome version: 37 or 38", choices=["37", "38"], required=True)
     p.add_argument("--project-guid", help="seqr project guid", required=True)
 
@@ -36,6 +39,7 @@ def init_command_line_args():
     p.add_argument("--start-with-step", help="which pipeline step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
     p.add_argument("--stop-after-step", help="stop after this pipeline step", type=int)
     p.add_argument("--download-fam-file", help="download .fam file from seqr", action='store_true')
+
     p.add_argument("--use-temp-es-cluster", help="Before loading the dataset, add temporary elasticsearch data nodes optimized "
         "for loading data, load the new dataset only to these nodes, then transfer the dataset to the persistent nodes and "
         "delete the temporary nodes.", action='store_true')
@@ -49,10 +53,11 @@ def init_command_line_args():
     return args, unparsed_args
 
 
-def submit_load_dataset_to_es_job(genome_version, dataproc_cluster_name, start_with_step=0, stop_after_step=None, other_load_dataset_to_es_args=()):
+def submit_load_dataset_to_es_job(genome_version, dataproc_cluster_name, start_with_step=0, stop_after_step=None, other_load_dataset_to_es_args=(),
+    num_workers=2, num_preemptible_workers=12):
 
     # make sure the dataproc cluster exists
-    run("python ./gcloud_dataproc/create_cluster_GRCh%(genome_version)s.py --project=seqr-project %(dataproc_cluster_name)s 2 24" % locals(),
+    run("python ./gcloud_dataproc/create_cluster_GRCh%(genome_version)s.py --project=seqr-project %(dataproc_cluster_name)s %(num_workers)s %(num_preemptible_workers)s" % locals(),
         errors_to_ignore=["Already exists"])
 
     # submit job
@@ -282,6 +287,8 @@ def main():
             start_with_step=max(2, args.start_with_step),  # start with step 2 or later
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args + ["--host %(ip_address)s" % locals()],
+            num_workers=args.num_workers,
+            num_preemptible_workers=args.num_preemptible_workers,
         )
 
         delete_temp_es_loading_nodes()
