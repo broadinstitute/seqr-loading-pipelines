@@ -817,13 +817,10 @@ def run_pipeline():
         update_operations_log(args)
         cleanup_steps(args)
 
-<<<<<<< HEAD
     if args.use_temp_es_cluster:
         # move data off of the loading nodes
         route_index_to_temp_es_cluster(False, args)
 
-=======
->>>>>>> master
     logger.info("==> Pipeline completed")
     logger.info("")
     logger.info("==> To add this dataset to a seqr project, go to the project page and click 'Edit Datasets'. Then enter:")
