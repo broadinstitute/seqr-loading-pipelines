@@ -87,7 +87,7 @@ def init_command_line_args():
     p.add_argument("--port", help="Elastisearch port", default="9200")
     p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
 
-    p.add_argument("--use-temp-es-cluster", help="Load the new dataset only to temporary loading nodes, then transfer the "
+    p.add_argument("--use-temp-loading-nodes", help="Load the new dataset only to temporary loading nodes, then transfer the "
         "dataset off of these nodes", action='store_true')
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
@@ -588,7 +588,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
         export_genotypes=True,
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
         disable_index_for_fields=("sortedTranscriptConsequences", ),
-        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
     args.start_with_step = 3   # step 2 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -697,7 +697,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
         operation=ELASTICSEARCH_UPDATE if not args.only_export_to_elasticsearch_at_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
         export_genotypes=False,
-        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_es_cluster else None,
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
     args.start_with_step = 5   # step 4 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -817,7 +817,7 @@ def run_pipeline():
         update_operations_log(args)
         cleanup_steps(args)
 
-    if args.use_temp_es_cluster:
+    if args.use_temp_loading_nodes:
         # move data off of the loading nodes
         route_index_to_temp_es_cluster(False, args)
 
