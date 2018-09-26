@@ -776,9 +776,20 @@ def run_pipeline():
 
     logger.info("==> Pipeline completed")
     logger.info("")
-    logger.info("==> To add this dataset to a seqr project, go to the project page and click 'Edit Datasets'. Then enter:")
-    logger.info("    Elasticsearch Index: {} ".format(args.index))
-    logger.info("    Sample Type: {} ".format(args.sample_type))
+    logger.info("")
+    logger.info("")
+    logger.info("========================================================================================================")
+    logger.info("")
+    logger.info("==> To add this dataset to a seqr project, click 'Edit Datasets' on the seqr project page ")
+    logger.info("    (https://seqr.broadinstitute.org/project/{}/project_page)  and enter: ".format(args.project_guid))
+    logger.info("")
+    logger.info("        Elasticsearch Index: {} ".format(args.index))
+    logger.info("        Sample Type: {} ".format(args.sample_type))
+    logger.info("        Dataset Path: {} ".format(args.input_vds))
+    logger.info("")
+    logger.info("========================================================================================================")
+    logger.info("")
+    logger.info("")
 
 
 if __name__ == "__main__":
