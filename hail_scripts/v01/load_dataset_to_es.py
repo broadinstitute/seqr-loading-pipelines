@@ -832,7 +832,7 @@ def run_pipeline():
     logger.info("")
     logger.info("        Elasticsearch Index: {} ".format(args.index))
     logger.info("        Sample Type: {} ".format(args.sample_type))
-    logger.info("        Dataset Path: {} ".format(args.input_vds))
+    logger.info("        Dataset Path: {} ".format(args.input_dataset))
     logger.info("")
     logger.info("========================================================================================================")
     logger.info("")
