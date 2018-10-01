@@ -408,7 +408,8 @@ def step1_compute_derived_fields(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 1 - compute derived fields ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        hc.stop()
+        if hc is not None:
+            hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
@@ -572,7 +573,8 @@ def step2_export_to_elasticsearch(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        hc.stop()
+        if hc is not None:
+            hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
@@ -598,7 +600,8 @@ def step3_add_reference_datasets(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 3 - add reference datasets ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        hc.stop()
+        if hc is not None:
+            hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
@@ -682,7 +685,8 @@ def step4_export_to_elasticsearch(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 4 - export to elasticsearch ===============================")
 
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
-        hc.stop()
+        if hc is not None:
+            hc.stop()
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
