@@ -140,7 +140,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
                         "other"
             })
         ).sortBy(c => let
-            is_coding = (orElse(c.biotype, "") == "protein_coding") and
+            is_coding = (orElse(c.biotype, "") == "protein_coding" && c.major_consequence_rank <= CONSEQUENCE_TERM_RANK_LOOKUP.get("missense_variant").toInt) and
             is_most_severe = c.consequence_terms.toSet.contains(%(vep_root)s.most_severe_consequence) and
             is_canonical = (orElse(c.canonical, 0) == 1) in
 
