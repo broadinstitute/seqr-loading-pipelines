@@ -30,7 +30,7 @@ from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_T
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
-from hail_scripts.v01.utils.hail_utils import create_hail_context
+from hail_scripts.v01.utils.hail_utils import create_hail_context, stop_hail_context
 from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
     validate_vds_has_been_filtered
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
@@ -408,8 +408,7 @@ def step1_compute_derived_fields(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 1 - compute derived fields ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        if hc is not None:
-            hc.stop()
+        stop_hail_context(hc)
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
@@ -573,8 +572,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 2 - export to elasticsearch ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        if hc is not None:
-            hc.stop()
+        stop_hail_context(hc)
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
@@ -600,8 +598,7 @@ def step3_add_reference_datasets(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 3 - add reference datasets ===============================")
 
     if vds is None or not args.skip_writing_intermediate_vds:
-        if hc is not None:
-            hc.stop()
+        stop_hail_context(hc)
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
 
@@ -685,8 +682,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
     logger.info("\n\n=============================== pipeline - step 4 - export to elasticsearch ===============================")
 
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
-        if hc is not None:
-            hc.stop()
+        stop_hail_context(hc)
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
 
