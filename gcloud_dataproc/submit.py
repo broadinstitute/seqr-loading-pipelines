@@ -21,8 +21,8 @@ args, unparsed_args = p.parse_known_args()
 #hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
 #hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
 
-hail_zip = "hail_builds/v01/hail-9-17-2018-f3e47061.zip"
-hail_jar = "hail_builds/v01/hail-9-17-2018-f3e47061.jar"
+hail_zip = "hail_builds/v01/hail-v01-10-8-2018-90c855449.zip"
+hail_jar = "hail_builds/v01/hail-v01-10-8-2018-90c855449.jar"
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
