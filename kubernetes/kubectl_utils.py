@@ -1,7 +1,7 @@
 import logging
-from time import time
+import time
 
-from ..hail_scripts.v01.utils.shell_utils import run
+from .shell_utils import run
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -85,7 +85,7 @@ def wait_until_pod_is_running(pod_name, deployment_target=None, pod_number=0):
     """Sleeps until the pod enters "Running" state"""
 
     logger.info("waiting for \"%s\" pod #%s to enter Running state" % (pod_name, pod_number))
-    while is_pod_running(pod_name, deployment_target, pod_number=pod_number):
+    while not is_pod_running(pod_name, deployment_target, pod_number=pod_number):
         time.sleep(5)
 
 
@@ -93,7 +93,7 @@ def wait_until_pod_is_ready(pod_name, deployment_target=None):
     """Sleeps until the pod enters "Ready" state"""
 
     logger.info("waiting for \"%s\" to complete initialization" % pod_name)
-    while is_pod_ready(pod_name, deployment_target) != "true":
+    while not is_pod_ready(pod_name, deployment_target) != "true":
         time.sleep(5)
 
 

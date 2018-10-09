@@ -10,7 +10,7 @@ import time
 
 from gcloud_dataproc.utils import seqr_api
 from gcloud_dataproc.utils.machine_types import MACHINE_TYPES
-from hail_scripts.v01.utils.shell_utils import run
+from kubernetes.shell_utils import run
 from kubernetes.kubectl_utils import is_pod_running, wait_until_pod_is_running
 from kubernetes.yaml_settings_utils import process_jinja_template, load_settings
 

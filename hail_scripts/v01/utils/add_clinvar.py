@@ -3,7 +3,7 @@ import hail
 import os
 from pprint import pprint
 
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+from kubernetes.shell_utils import simple_run as run
 
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_VDS_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.vds'

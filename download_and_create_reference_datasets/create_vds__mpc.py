@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+from kubernetes.shell_utils import simple_run as run
 
 for vcf_path in [
     "gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.vcf.gz",
