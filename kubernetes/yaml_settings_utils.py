@@ -6,7 +6,7 @@ import os
 import time
 import yaml
 
-from kubernetes.network_utils import get_ip_address
+from .network_utils import get_ip_address
 
 logger = logging.getLogger()
 

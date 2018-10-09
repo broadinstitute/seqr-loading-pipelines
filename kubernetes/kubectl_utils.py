@@ -1,7 +1,7 @@
 import logging
 from time import time
 
-from hail_scripts.v01.utils.shell_utils import run
+from ..hail_scripts.v01.utils.shell_utils import run
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()
@@ -156,5 +156,9 @@ def run_in_pod(pod_name, command, deployment_target=None, errors_to_ignore=None,
         full_pod_name = pod_name
 
     it_arg = "-it" if is_interactive else ""
-    run("kubectl exec %(it_arg)s %(full_pod_name)s -- %(command)s" % locals(), errors_to_ignore=errors_to_ignore, print_command=print_command, verbose=verbose, is_interactive=is_interactive)
+    run("kubectl exec %(it_arg)s %(full_pod_name)s -- %(command)s" % locals(),
+        errors_to_ignore=errors_to_ignore,
+        print_command=print_command,
+        verbose=verbose,
+        is_interactive=is_interactive)
 
