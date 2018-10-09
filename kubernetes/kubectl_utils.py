@@ -40,7 +40,7 @@ def _get_resource_info(
     return output.strip('\n') if output is not None else None
 
 
-def get_pod_status(pod_name, json_path_of_status, deployment_target=None, print_status=True):
+def get_pod_status(pod_name, json_path_of_status, deployment_target=None):
     """Utility method for looking up a pod's status."""
 
     labels = {"name": pod_name}
@@ -55,9 +55,6 @@ def get_pod_status(pod_name, json_path_of_status, deployment_target=None, print_
         verbose=False,
     )
 
-    if print_status:
-        logger.info("%s status = %s" % (pod_name, result))
-
     return result
 
 
@@ -66,7 +63,10 @@ def is_pod_running(pod_name, deployment_target=None, pod_number=0, verbose=True)
 
     json_path = "{.items[%(pod_number)s].status.phase}" % locals()
 
-    status = get_pod_status(pod_name, json_path, deployment_target=deployment_target, print_status=verbose)
+    status = get_pod_status(pod_name, json_path, deployment_target=deployment_target)
+
+    if verbose:
+        logger.info("%s.is_running = %s" % (pod_name, status))
 
     return status == "Running"
 
@@ -76,7 +76,10 @@ def is_pod_ready(pod_name, deployment_target=None, pod_number=0, verbose=True):
 
     json_path = "{.items[%(pod_number)s].status.containerStatuses[0].ready}" % locals()
 
-    status = get_pod_status(pod_name, json_path, deployment_target=deployment_target, print_status=verbose)
+    status = get_pod_status(pod_name, json_path, deployment_target=deployment_target)
+
+    if verbose:
+        logger.info("%s.is_ready = %s" % (pod_name, status))
 
     return status == "true"
 
