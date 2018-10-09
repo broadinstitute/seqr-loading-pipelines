@@ -586,8 +586,8 @@ def step2_export_to_elasticsearch(hc, vds, args):
         operation=ELASTICSEARCH_UPSERT,
         delete_index_before_exporting=True,
         export_genotypes=True,
-        disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
-        disable_index_for_fields=("sortedTranscriptConsequences", ),
+        disable_doc_values_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
+        disable_index_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
         run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
