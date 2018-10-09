@@ -30,7 +30,7 @@ def download_pedigree_info(project_guid, seqr_url=SEQR_URL, seqr_username=None, 
 
     response.raise_for_status()
 
-    response = s.get(seqr_individual_api_url.format(**locals()))   # get json from API
+    response = s.get(seqr_individual_api_url)
     response.raise_for_status()
 
     content = str(response.content)
