@@ -10,7 +10,6 @@ p = argparse.ArgumentParser()
 p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
-p.add_argument("--hail-home", default=os.environ.get("HAIL_HOME"), help="The local hail directory (default: $HAIL_HOME). Required for --run-locally")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
 p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. Defaults to all available CPUs.", type=int)
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
@@ -23,8 +22,8 @@ args, unparsed_args = p.parse_known_args()
 #hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
 #hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
 
-hail_zip = "hail_builds/v01/hail-9-17-2018-f3e47061.zip"
-hail_jar = "hail_builds/v01/hail-9-17-2018-f3e47061.jar"
+hail_zip = "hail_builds/v01/hail-v01-10-8-2018-90c855449.zip"
+hail_jar = "hail_builds/v01/hail-v01-10-8-2018-90c855449.jar"
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
@@ -36,12 +35,9 @@ if "load_dataset_to_es" in script:
 
 
 if args.run_locally:
-    if not args.hail_home:
-        p.error("--hail-home is required with --run-locally")
     if not args.spark_home:
         p.error("--spark-home is required with --run-locally")
 
-    hail_home = args.hail_home
     spark_home = args.spark_home
     cpu_limit_arg = ("--master local[%s]" % args.cpu_limit) if args.cpu_limit else ""
     driver_memory = args.driver_memory
@@ -59,8 +55,8 @@ if args.run_locally:
         --conf spark.kryoserializer.buffer.max=1g \
         --conf spark.memory.fraction=0.1 \
         --conf spark.default.parallelism=1 \
-        --jars %(hail_home)s/build/libs/hail-all-spark.jar \
-        --py-files %(hail_home)s/build/distributions/hail-python.zip \
+        --jars %(hail_jar)s \
+        --py-files %(hail_zip)s \
         "%(script)s" %(script_args)s
     """ % locals()
 else:
