@@ -38,6 +38,12 @@ def load_settings(settings_file_paths, settings=None):
     if settings is None:
         settings = collections.OrderedDict()
 
+    # add generic global options
+    settings["HOME"] = os.path.expanduser("~")
+    settings["TIMESTAMP"] = time.strftime("%Y%m%d_%H%M%S")
+    settings["HOST_MACHINE_IP"] = get_ip_address()
+
+    # process settings_file_paths
     for settings_path in settings_file_paths:
         yaml_string = _parse_jinja_template(settings_path, template_variables=settings)
 
@@ -52,11 +58,6 @@ def load_settings(settings_file_paths, settings=None):
         logger.info("Parsed %3d settings from %s" % (len(settings_from_this_file), settings_path))
 
         settings.update(settings_from_this_file)
-
-    # add generic global options
-    settings["HOME"] = os.path.expanduser("~")
-    settings["TIMESTAMP"] = time.strftime("%Y%m%d_%H%M%S")
-    settings["HOST_MACHINE_IP"] = get_ip_address()
 
     return settings
 
