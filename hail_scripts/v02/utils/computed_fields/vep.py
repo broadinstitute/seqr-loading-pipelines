@@ -214,6 +214,13 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                 hgvs=get_expr_for_formatted_hgvs(c),
                 major_consequence_rank=CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence),
             )
+        )
+        .map(
+            lambda c: hl.cond(
+                (c.major_consequence_rank <= CONSEQUENCE_TERM_RANK_LOOKUP.get("frameshift_variant")) & ((c.lof == "") | hl.is_missing(c.lof)),
+                c.annotate(lof="NC", lof_filter="Non-protein-coding gene"),
+                c,
+            )
         ),
         lambda c: (
             hl.bind(
