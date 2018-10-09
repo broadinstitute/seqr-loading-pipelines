@@ -93,7 +93,7 @@ def wait_until_pod_is_ready(pod_name, deployment_target=None):
     """Sleeps until the pod enters "Ready" state"""
 
     logger.info("waiting for \"%s\" to complete initialization" % pod_name)
-    while not is_pod_ready(pod_name, deployment_target) != "true":
+    while not is_pod_ready(pod_name, deployment_target):
         time.sleep(5)
 
 
