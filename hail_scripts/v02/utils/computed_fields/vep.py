@@ -214,6 +214,13 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                 hgvs=get_expr_for_formatted_hgvs(c),
                 major_consequence_rank=CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence),
             )
+        )
+        .map(
+            lambda c: hl.cond(
+                (c.major_consequence_rank <= CONSEQUENCE_TERM_RANK_LOOKUP.get("frameshift_variant")) & ((c.lof == "") | hl.is_missing(c.lof)),
+                c.annotate(lof="NC", lof_filter="Non-protein-coding gene"),
+                c,
+            )
         ),
         lambda c: (
             hl.bind(
@@ -235,7 +242,9 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
         # for non-coding variants, drop fields here that are hard to exclude in the above code
         result = result.map(lambda c: c.drop("domains", "hgvsp"))
 
-    return result
+    return hl.zip_with_index(result).map(
+        lambda csq_with_index: csq_with_index[1].annotate(transcript_rank=csq_with_index[0])
+    )
 
 
 def get_expr_for_vep_gene_id_to_consequence_map(vep_sorted_transcript_consequences_root, gene_ids):
