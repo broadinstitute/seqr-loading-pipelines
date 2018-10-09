@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import os
 from hail_scripts.v01.utils.shell_utils import simple_run as run
 
