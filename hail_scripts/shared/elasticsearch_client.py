@@ -126,7 +126,7 @@ class ElasticsearchClient:
             }
         }
 
-        #logger.info(pformat(elasticsearch_schema))
+        logger.info("create_or_update_mapping - elasticsearch schema: \n" + pformat(elasticsearch_schema))
 
         if not self.es.indices.exists(index=index_name):
             logger.info("==> creating elasticsearch index %s" % index_name)
