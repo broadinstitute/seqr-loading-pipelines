@@ -1,5 +1,3 @@
-import datetime
-import inspect
 import logging
 
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient as BaseElasticsearchClient
@@ -15,8 +13,7 @@ from hail_scripts.v01.utils.elasticsearch_utils import (
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
     generate_elasticsearch_schema,
     generate_vds_make_table_arg,
-    parse_vds_schema,
-)
+    parse_vds_schema)
 
 handlers = set(logging.root.handlers)
 logging.root.handlers = list(handlers)
@@ -37,6 +34,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         index_type_name="variant",
         genotype_fields_to_export=VARIANT_GENOTYPE_FIELDS_TO_EXPORT,
         genotype_field_to_elasticsearch_type_map=VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
+        export_genotypes_as_nested_field=False,
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
@@ -53,8 +51,11 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
         Args:
             kt (KeyTable): hail KeyTable object.
-            genotype_fields_to_export (list): A list of hail expressions for genotype fields to export.
+            genotype_fields_to_export (dict): A dictionary that maps genotype fields (eg 'DP') to hail expressions for
+                computing these fields (eg. .
                 This will be passed as the 2nd argument to vds.make_table(..)
+            genotype_field_to_elasticsearch_type_map (list):
+            export_genotypes_as_nested_field (bool): Whether to export genotypes.
             index_name (string): elasticsearch index name (equivalent to a database name in SQL)
             index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
             block_size (int): number of records to write in one bulk insert
@@ -85,21 +86,36 @@ class ElasticsearchClient(BaseElasticsearchClient):
             verbose (bool): whether to print schema and stats
         """
 
-        #if verbose:
-        #    logger.info(pformat((vds.sample_ids))
+        # compute genotype_fields_list
+        if not genotype_fields_to_export:
+            genotype_fields_list = []
 
+        elif export_genotypes_as_nested_field:
+            # create a new variant-level "genotypes" field that stores an array of genotypes represented as structs
+            genotype_struct_expr = ", ".join([
+                "{}: {}".format(key, value) for key, value in genotype_fields_to_export.items()
+            ] + [
+                "sample_id: s",  # add sample_id to each genotype struct to keep track of
+            ])
+
+            vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %s }).collect()" % genotype_struct_expr)
+
+            genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
+
+        else:
+            genotype_fields_list = [
+                "{} = {}".format(key, value) for key, value in genotype_fields_to_export.items()
+            ]
+
+        # compute site_fields_list
         field_path_to_field_type_map = parse_vds_schema(vds.variant_schema.fields, current_parent=["va"])
         site_fields_list = sorted(
             generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=is_split_vds)
         )
 
-        if genotype_fields_to_export is None:
-            genotype_fields_to_export = []
-
         kt = vds.make_table(
             site_fields_list,
-            genotype_fields_to_export,
-        )
+            genotype_fields_list)
 
         # replace "." with "_" in genotype column names (but leave sample ids unchanged)
         genotype_column_name_fixes = {
@@ -244,45 +260,38 @@ class ElasticsearchClient(BaseElasticsearchClient):
         kt = kt.rename(rename_dict)
 
         if verbose:
-            logger.info(pformat(kt.schema))
+            logger.info("export_kt_to_elasticsearch - KeyTable schema: " + pformat(kt.schema))
 
         # create elasticsearch index with fields that match the ones in the keytable
         field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"])
 
         elasticsearch_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
+            field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
-            disable_index_for_fields=disable_index_for_fields,
-        )
-
-        # override elasticsearch types
-        if field_name_to_elasticsearch_type_map is not None:
-            modified_elasticsearch_schema = dict(elasticsearch_schema)  # make a copy
-            for field_name_regexp, elasticsearch_field_spec in field_name_to_elasticsearch_type_map.items():
-                match_count = 0
-                for key, value in elasticsearch_schema.items():
-                    if re.match(field_name_regexp, key):
-                        modified_elasticsearch_schema[key] = elasticsearch_field_spec
-                        match_count += 1
-
-                logger.info("%s columns matched '%s'" % (match_count, field_name_regexp,))
-
-            elasticsearch_schema = modified_elasticsearch_schema
+            disable_index_for_fields=disable_index_for_fields)
 
         # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
             self.es.indices.delete(index=index_name)
 
+        # create/update elasticsearch mapping
         self.create_or_update_mapping(
             index_name,
             index_type_name,
             elasticsearch_schema,
             num_shards=num_shards,
-            _meta=_meta,
-        )
+            _meta=_meta)
 
+        # export the data rows to elasticsearch
         logger.info("==> exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
-        kt.export_elasticsearch(self._host, int(self._port), index_name, index_type_name, block_size, config=elasticsearch_config)
+        kt.export_elasticsearch(
+            self._host,
+            int(self._port),
+            index_name,
+            index_type_name,
+            block_size,
+            config=elasticsearch_config)
 
         """
         Potentially useful config settings for export_elasticsearch(..)

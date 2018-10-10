@@ -7,7 +7,7 @@ os.system("pip install elasticsearch")
 import argparse
 import hail
 import logging
-from pprint import pprint
+from pprint import pprint, pformat
 import time
 import sys
 
@@ -91,7 +91,9 @@ def init_command_line_args():
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
     p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)
 
-    p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects.")
+    p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects in elasticsearch.")
+    p.add_argument("--use-nested-objects-for-genotypes", action="store_true", help="Store genotypes as nested objects in elasticsearch.")
+
     p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
     p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
     p.add_argument("--exclude-omim", action="store_true", help="Don't add OMIM mim id column. Intended for testing.")
@@ -137,6 +139,8 @@ def init_command_line_args():
     args.index = compute_index_name(args)
 
     logger.info("Command args: \n" + " ".join(sys.argv[:1]) + ((" --index " + args.index) if "--index" not in sys.argv else ""))
+
+    logger.info("Parsed args: \n" + pformat(args.__dict__))
 
     return args
 
@@ -343,8 +347,7 @@ def export_to_elasticsearch(
         logger.info("==> exporting %s samples into %s" % (len(sample_group), current_index_name))
         logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
 
-        logger.info("==> export to elasticsearch")
-        pprint(vds.variant_schema)
+        logger.info("==> export to elasticsearch - vds schema:\n" + pformat(vds.variant_schema))
 
         timestamp1 = time.time()
 
@@ -352,6 +355,7 @@ def export_to_elasticsearch(
             vds_sample_subset,
             genotype_fields_to_export=genotype_fields_to_export,
             genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
+            export_genotypes_as_nested_field=bool(args.use_nested_objects_for_genotypes),
             index_name=current_index_name,
             index_type_name="variant",
             block_size=args.es_block_size,
@@ -410,7 +414,7 @@ def step1_compute_derived_fields(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     FAF_CONFIDENCE_INTERVAL = 0.95  # based on https://macarthurlab.slack.com/archives/C027LHMPP/p1528132141000430
 
@@ -447,7 +451,8 @@ def step1_compute_derived_fields(hc, vds, args):
     #   "va.sortedTranscriptConsequences = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype))"
     #]
 
-    if not args.use_nested_objects_for_vep:
+    if not bool(args.use_nested_objects_for_vep):
+        logger.info("Using nested objects for VEP sortedTranscriptConsequences")
         serial_computed_annotation_exprs += [
             "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)"
         ]
@@ -574,7 +579,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
@@ -600,7 +605,7 @@ def step3_add_reference_datasets(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, skip_summary=True)
 
     if not args.only_export_to_elasticsearch_at_the_end:
 
@@ -684,7 +689,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
