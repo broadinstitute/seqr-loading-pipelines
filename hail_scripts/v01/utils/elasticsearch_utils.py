@@ -66,15 +66,15 @@ SV_GENOTYPE_FIELDS_TO_EXPORT = {
 }
 
 SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
-    ".*_num_alt": {"type": "byte", "doc_values": "false"},
-    #".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
-    #".*_gq": {"type": "short", "doc_values": "false"},
-    ".*_dp": {"type": "short", "doc_values": "false"},
-    ".*_ab": {"type": "half_float", "doc_values": "false"},
-    ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
-    ".*_ab_SR": {"type": "half_float", "doc_values": "false"},
-    ".*_dp_PR": {"type": "short", "doc_values": "false"},
-    ".*_dp_SR": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)num_alt$": {"type": "byte", "doc_values": "false"},
+    #"(.*[_.]|^)_genotype_filter$": {"type": "keyword", "doc_values": "false"},
+    #"(.*[_.]|^)_gq$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_dp$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_ab$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_ab_PR$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_ab_SR$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_dp_PR$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_dp_SR$": {"type": "short", "doc_values": "false"},
 }
 
 
