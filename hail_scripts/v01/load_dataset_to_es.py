@@ -26,13 +26,12 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type, \
     get_expr_for_filtering_allele_frequency
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
-    VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, \
+    VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
 from hail_scripts.v01.utils.hail_utils import create_hail_context, stop_hail_context
-from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
-    validate_vds_has_been_filtered
+from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, validate_vds_has_been_filtered
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.v01.utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
@@ -71,7 +70,7 @@ def init_command_line_args():
     p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
                                       "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
                                       "If used with --remap-sample-ids, contains IDs of samples after remapping")
-    p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
+    p.add_argument("--max-samples-per-index", help="Max samples per index. This limit is ignored when --use-nested-objects-for-genotypes is set", type=int, default=MAX_SAMPLES_PER_INDEX)
 
     p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
@@ -257,7 +256,7 @@ def compute_sample_groups(vds, args):
     Returns:
          list of lists: each list of sample ids should be put into
     """
-    if len(vds.sample_ids) > args.max_samples_per_index:
+    if len(vds.sample_ids) > args.max_samples_per_index and not args.use_nested_objects_for_genotypes:
         if not args.fam_file:
             raise ValueError("--fam-file must be specified for callsets larger than %s samples. This callset has %s samples." % (args.max_samples_per_index, len(vds.sample_ids)))
 
@@ -452,7 +451,6 @@ def step1_compute_derived_fields(hc, vds, args):
     #]
 
     if not bool(args.use_nested_objects_for_vep):
-        logger.info("Using nested objects for VEP sortedTranscriptConsequences")
         serial_computed_annotation_exprs += [
             "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)"
         ]
@@ -587,8 +585,8 @@ def step2_export_to_elasticsearch(hc, vds, args):
         operation=ELASTICSEARCH_UPSERT,
         delete_index_before_exporting=True,
         export_genotypes=True,
-        disable_doc_values_for_fields=("sortedTranscriptConsequences", ),
-        disable_index_for_fields=("sortedTranscriptConsequences", ),
+        disable_doc_values_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
+        disable_index_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
     )
 
     args.start_with_step = 3   # step 2 finished, so, if an error occurs and it goes to retry, start with the next step
