@@ -132,7 +132,12 @@ def generate_elasticsearch_schema(
     for field_path, field_type in field_path_to_field_type_map.items():
         es_field_name = _field_path_to_elasticsearch_field_name(field_path)
         if isinstance(field_type, dict):
-            nested_schema = generate_elasticsearch_schema(field_type)
+            nested_schema = generate_elasticsearch_schema(
+                field_type,
+                field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
+                disable_doc_values_for_fields=disable_doc_values_for_fields,
+                disable_index_for_fields=disable_index_for_fields)
+
             properties[es_field_name] = {
                 "type": "nested",
                 "properties": nested_schema,
@@ -155,18 +160,14 @@ def generate_elasticsearch_schema(
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))
         for es_field_name in disable_doc_values_for_fields:
-            if es_field_name not in properties:
-                raise ValueError(
-                    "'%s' in disable_doc_values_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, field_path_to_field_type_map))
-            properties[es_field_name]["doc_values"] = False
+            if es_field_name in properties:
+                properties[es_field_name]["doc_values"] = False
 
     if disable_index_for_fields:
         logger.info("==> will disable index fields for %s" % (", ".join(disable_index_for_fields)))
         for es_field_name in disable_index_for_fields:
-            if es_field_name not in properties:
-                raise ValueError(
-                    "'%s' in disable_index_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, disable_index_for_fields))
-            properties[es_field_name]["index"] = False
+            if es_field_name in properties:
+                properties[es_field_name]["index"] = False
 
     return properties
 
