@@ -73,6 +73,6 @@ Run rare disease callset pipeline:
 
 There's also a shortcut for running the rare disease pipeline which combines the 2 commands above into 1:
 ```
-python ./gcloud_dataproc/load_GRCh38_dataset.py --host $ELASTICSEARCH_HOST_IP --project-guid my_dataset_name  --sample-type WES  --dataset-type VARIANTS gs://my-datasets/GRCh38/my_dataset.vcf.gz
+python ./gcloud_dataproc/load_dataset.py --genome-version 38 --host $ELASTICSEARCH_HOST_IP --project-guid my_dataset_name  --sample-type WES  --dataset-type VARIANTS gs://my-datasets/GRCh38/my_dataset.vcf.gz
 ```
 
