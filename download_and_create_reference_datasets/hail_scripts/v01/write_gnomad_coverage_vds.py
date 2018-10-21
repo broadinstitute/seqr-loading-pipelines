@@ -6,7 +6,7 @@ p = argparse.ArgumentParser()
 p.add_argument("-b", "--output-bucket", help="Google Storage output bucket", default="seqr-reference-datasets")
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log")
+hc = hail.HailContext(log="hail.log")
 
 
 COVERAGE_TSV_PATHS = {

@@ -18,7 +18,7 @@ p.add_argument("--exomes-or-genomes", help="Exomes or genomes", choices=["exomes
 p.add_argument("--start-with-step", help="Whether to start at an intermediate step in the pipeline", type=int, default=0, choices=list(range(4)))
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log")
+hc = hail.HailContext(log="hail.log")
 
 GNOMAD_SOURCE_VDS_PATHS = {
     "exomes_37": "gs://gnomad-public/release/2.0.2/vds/exomes/gnomad.exomes.r2.0.2.sites.vds",
