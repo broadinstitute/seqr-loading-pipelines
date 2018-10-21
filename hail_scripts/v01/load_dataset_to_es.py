@@ -83,7 +83,7 @@ def init_command_line_args():
 
     p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
-    p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME"))
+    p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
     p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
 
