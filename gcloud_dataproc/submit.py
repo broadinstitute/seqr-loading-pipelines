@@ -56,6 +56,8 @@ if args.run_locally:
         --conf spark.memory.fraction=0.1 \
         --conf spark.default.parallelism=1 \
         --jars %(hail_jar)s \
+        --conf spark.driver.extraClassPath=%(hail_jar)s \
+        --conf spark.executor.extraClassPath=%(hail_jar)s \
         --py-files %(hail_zip)s \
         "%(script)s" %(script_args)s
     """ % locals()
