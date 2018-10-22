@@ -12,7 +12,7 @@ args = p.parse_args()
 
 print("Input path: " + str(args.tsv_path))
 
-hc = hail.HailContext(log="hail.log")
+hc = hail.HailContext(log="./hail.log")
 
 print("==> import_table: %s" % args.tsv_path)
 

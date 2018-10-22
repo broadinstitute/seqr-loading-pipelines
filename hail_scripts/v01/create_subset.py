@@ -11,7 +11,7 @@ p.add_argument("--chrom", help="subset to this chromosome", choices=map(str, ran
 p.add_argument("dataset_path")
 args = p.parse_args()
 
-hc = hail.HailContext(log="hail.log")
+hc = hail.HailContext(log="./hail.log")
 
 print("\n==> input: %s" % args.dataset_path)
 
