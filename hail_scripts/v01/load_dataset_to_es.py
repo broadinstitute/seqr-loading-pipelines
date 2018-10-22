@@ -797,22 +797,12 @@ def run_pipeline():
 
     # pipeline steps
     vds = None
-    NUM_RETRIES = 3
-    for retry_i in range(NUM_RETRIES):
-        try:
-            hc, vds = step0_init_and_run_vep(hc, vds, args)
-            hc, vds = step1_compute_derived_fields(hc, vds, args)
-            hc, vds = step2_export_to_elasticsearch(hc, vds, args)
-            hc, vds = step3_add_reference_datasets(hc, vds, args)
-            hc, vds = step4_export_to_elasticsearch(hc, vds, args)
-        except hail.java.FatalError as e:
-            logger.error("***** Pipeline failed. Retry %s out of %s - starting from step: %s. %s", retry_i, NUM_RETRIES, args.start_with_step, e)
-            time.sleep(3)
-            if retry_i == NUM_RETRIES - 1:
-                raise
-        else:
-            break
-
+    hc, vds = step0_init_and_run_vep(hc, vds, args)
+    hc, vds = step1_compute_derived_fields(hc, vds, args)
+    hc, vds = step2_export_to_elasticsearch(hc, vds, args)
+    hc, vds = step3_add_reference_datasets(hc, vds, args)
+    hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+    
     if args.stop_after_step > 4:
         update_operations_log(args)
         cleanup_steps(args)
