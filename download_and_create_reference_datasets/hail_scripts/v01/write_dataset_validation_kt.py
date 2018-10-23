@@ -17,7 +17,7 @@ p = ap.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 args = p.parse_args()
 
-hc = hail.HailContext(log="./hail.log")
+hc = hail.HailContext(log="/tmp/hail.log")
 
 
 def read_gnomad_subset(genome_version):
