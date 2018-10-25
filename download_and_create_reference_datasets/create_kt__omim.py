@@ -1,6 +1,8 @@
+#!/usr/bin/env python
+
 import os
 import sys
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+from kubernetes.shell_utils import simple_run as run
 
 if len(sys.argv) < 2:
     sys.exit("Must provide OMIM download key as command line arg (https://www.omim.org/downloads/)")

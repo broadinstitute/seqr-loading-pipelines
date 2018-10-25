@@ -1,8 +1,8 @@
 from collections import namedtuple, OrderedDict
 
-MACHINE_TYPES = ["n1-standard-1"] + [
-    "n1-%s-%s" % (i, j) for i in ["standard", "highmem", "highcpu"] for j in ["2", "4", "8", "16", "32", "64"]
-]
+#MACHINE_TYPES = ["n1-standard-1"] + [
+#    "n1-%s-%s" % (i, j) for i in ["standard", "highmem", "highcpu"] for j in ["2", "4", "8", "16", "32", "64"]
+#]
 
 
 # Machine type	Virtual CPUs	Memory	Price (USD)	Preemptible price (USD)
@@ -32,6 +32,7 @@ n1-highcpu-64	64	57.6GB	$2.2688	$0.4800
 
 MachineType = namedtuple("MachineType", ["machine_type", "cpus", "memory_gb", "price_per_hour", "preemptible_price_per_hour"])
 
+# parse the _pricing_table
 MACHINE_TYPES = OrderedDict()
 for row in _pricing_table.strip().split("\n"):
     fields = row.split()
@@ -46,7 +47,9 @@ for row in _pricing_table.strip().split("\n"):
 #    print("%20s: %s" % (machine_type, info))
 
 
-def get_cost(machine_type, hours=1, is_preemptible=False):
+def get_cost(machine_type, hours=1.0, is_preemptible=False):
+    """Returns floating point number = the total cost (in dollars) of running the given machine type for the given number of hours"""
+
     if machine_type not in MACHINE_TYPES:
         raise ValueError("Invalid machine type: " + machine_type)
 

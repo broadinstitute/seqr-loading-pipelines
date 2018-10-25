@@ -1,4 +1,6 @@
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+#!/usr/bin/env python
+
+from kubernetes.shell_utils import simple_run as run
 
 for vcf_path in [
     "gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.vcf.gz",

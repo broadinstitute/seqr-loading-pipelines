@@ -82,10 +82,12 @@ def init_command_line_args():
 
     p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
-    p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME"))
+    p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
     p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
 
+    p.add_argument("--use-temp-loading-nodes", help="Load the new dataset only to temporary loading nodes, then transfer the "
+        "dataset off of these nodes", action='store_true')
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
     p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)
@@ -128,11 +130,11 @@ def init_command_line_args():
     p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
     p.add_argument("--output-vds", help="(optional) Output vds filename prefix (eg. test-vds)")
-    p.add_argument("input_vds", help="input VDS")
+    p.add_argument("input_dataset", help="input VCF or VDS either on the local filesystem or in google cloud")
 
     args = p.parse_args()
 
-    if not (args.input_vds.rstrip("/").endswith(".vds") or args.input_vds.endswith(".vcf") or args.input_vds.endswith(".vcf.gz") or args.input_vds.endswith(".vcf.bgz")):
+    if not (args.input_dataset.rstrip("/").endswith(".vds") or args.input_dataset.endswith(".vcf") or args.input_dataset.endswith(".vcf.gz") or args.input_dataset.endswith(".vcf.bgz")):
         p.error("Input must be a .vds or .vcf.gz")
 
     args.index = compute_index_name(args)
@@ -172,13 +174,13 @@ def compute_output_vds_prefix(args):
     """Returns output_vds_prefix computed based on command-line args"""
 
     if args.output_vds:
-        output_vds_prefix = os.path.join(os.path.dirname(args.input_vds), args.output_vds.replace(".vds", ""))
+        output_vds_prefix = os.path.join(os.path.dirname(args.input_dataset), args.output_vds.replace(".vds", ""))
     else:
         if args.subset_samples:
-            output_vds_hash = "__%020d" % abs(hash(",".join(map(str, [args.input_vds, args.subset_samples, args.remap_sample_ids]))))
+            output_vds_hash = "__%020d" % abs(hash(",".join(map(str, [args.input_dataset, args.subset_samples, args.remap_sample_ids]))))
         else:
             output_vds_hash = ""
-        output_vds_prefix = args.input_vds.rstrip("/").replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "") + output_vds_hash
+        output_vds_prefix = args.input_dataset.rstrip("/").replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "") + output_vds_hash
 
     return output_vds_prefix
 
@@ -307,6 +309,7 @@ def export_to_elasticsearch(
         export_genotypes=True,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
+        run_after_index_exists=None,
 ):
     """Utility method for exporting the given vds to an elasticsearch index."""
 
@@ -365,6 +368,7 @@ def export_to_elasticsearch(
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields,
             is_split_vds=True,
+            run_after_index_exists=run_after_index_exists,
             verbose=True,
         )
 
@@ -378,7 +382,7 @@ def step0_init_and_run_vep(hc, vds, args):
 
     logger.info("\n\n=============================== pipeline - step 0 - run vep ===============================")
 
-    vds = read_in_dataset(hc, input_path=args.input_vds.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False, num_partitions=args.cpu_limit)
+    vds = read_in_dataset(hc, input_path=args.input_dataset.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False, num_partitions=args.cpu_limit)
 
     validate_dataset(hc, vds, args)
 
@@ -392,7 +396,7 @@ def step0_init_and_run_vep(hc, vds, args):
         vds = run_vep(vds, genome_version=args.genome_version, block_size=args.vep_block_size)
         vds = vds.annotate_global_expr('global.gencodeVersion = "{}"'.format("19" if args.genome_version == "37" else "25"))
 
-    if args.step0_output_vds != args.input_vds.rstrip("/") and not args.skip_writing_intermediate_vds:
+    if args.step0_output_vds != args.input_dataset.rstrip("/") and not args.skip_writing_intermediate_vds:
         write_vds(vds, args.step0_output_vds)
 
     if args.export_vcf:
@@ -587,6 +591,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
         export_genotypes=True,
         disable_doc_values_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
         disable_index_for_fields=("sortedTranscriptConsequences", ) if not bool(args.use_nested_objects_for_vep) else (),
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
     args.start_with_step = 3   # step 2 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -695,6 +700,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
         operation=ELASTICSEARCH_UPDATE if not args.only_export_to_elasticsearch_at_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
         export_genotypes=False,
+        run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
     args.start_with_step = 5   # step 4 finished, so, if an error occurs and it goes to retry, start with the next step
@@ -709,7 +715,7 @@ def update_operations_log(args):
     logger.info("==> update operations log")
     client = ElasticsearchClient(args.host, args.port)
     client.save_index_operation_metadata(
-        args.input_vds,
+        args.input_dataset,
         args.index,
         args.genome_version,
         fam_file=args.fam_file,
@@ -739,10 +745,47 @@ def cleanup_steps(args):
         delete_gcloud_file(args.step3_output_vds)
 
 
+def route_index_to_temp_es_cluster(yes, args):
+    """Apply shard allocation filtering rules for the given index to elasticsearch data nodes with *loading* in their name:
+
+    If yes is True, route new documents in the given index only to nodes named "*loading*".
+    Otherwise, move any shards in this index off of nodes named "*loading*"
+
+    Args:
+        yes (bool): whether to route shards in the given index to the "*loading*" nodes, or move shards off of these nodes.
+        args: args from ArgumentParser - used to compute the index name and get elasticsearch host and port.
+    """
+    exclude_name = require_name = ""
+    if yes:
+        require_name = "es-data-loading*"
+    else:
+        exclude_name = "es-data-loading*"
+
+    client = ElasticsearchClient(args.host, args.port)
+    # Commented out because it turns out that allocation filter settings take precedence over cluster re-balancing,
+    # so there's no need to disable shard re-balancing when moving shards around into an unbalanced arrangement.
+    #
+    #client.es.cluster.put_settings(body={
+    #    "transient": {"cluster.routing.rebalance.enable": "none"}
+    #})
+
+    client.es.indices.put_settings(index="{}*".format(args.index), body={
+        "index.routing.allocation.require._name": require_name,
+        "index.routing.allocation.exclude._name": exclude_name
+    })
+
+    if not yes:
+        shards = None
+        while shards is None or "es-data-loading" in shards:
+            shards = client.es.cat.shards(index="{}*".format(args.index))
+            logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(len(shards.strip().split("\n")), shards))
+            time.sleep(5)
+
+
 def run_pipeline():
     args = init_command_line_args()
 
-    # compute additional derived params and add them to args for convenience
+    # compute additional derived params and add them to the args object for convenience
     args.output_vds_prefix = compute_output_vds_prefix(args)
 
     args.step0_output_vcf = args.output_vds_prefix + (".vep.vcf.bgz" if ".vep" not in args.output_vds_prefix and not args.skip_vep else ".vcf.bgz")
@@ -757,25 +800,19 @@ def run_pipeline():
 
     # pipeline steps
     vds = None
-    NUM_RETRIES = 3
-    for retry_i in range(NUM_RETRIES):
-        try:
-            hc, vds = step0_init_and_run_vep(hc, vds, args)
-            hc, vds = step1_compute_derived_fields(hc, vds, args)
-            hc, vds = step2_export_to_elasticsearch(hc, vds, args)
-            hc, vds = step3_add_reference_datasets(hc, vds, args)
-            hc, vds = step4_export_to_elasticsearch(hc, vds, args)
-        except hail.java.FatalError as e:
-            logger.error("***** Pipeline failed. Retry %s out of %s - starting from step: %s. %s", retry_i, NUM_RETRIES, args.start_with_step, e)
-            time.sleep(3)
-            if retry_i == NUM_RETRIES - 1:
-                raise
-        else:
-            break
-
+    hc, vds = step0_init_and_run_vep(hc, vds, args)
+    hc, vds = step1_compute_derived_fields(hc, vds, args)
+    hc, vds = step2_export_to_elasticsearch(hc, vds, args)
+    hc, vds = step3_add_reference_datasets(hc, vds, args)
+    hc, vds = step4_export_to_elasticsearch(hc, vds, args)
+    
     if args.stop_after_step > 4:
         update_operations_log(args)
         cleanup_steps(args)
+
+    if args.use_temp_loading_nodes:
+        # move data off of the loading nodes
+        route_index_to_temp_es_cluster(False, args)
 
     logger.info("==> Pipeline completed")
     logger.info("")
@@ -788,7 +825,7 @@ def run_pipeline():
     logger.info("")
     logger.info("        Elasticsearch Index: {} ".format(args.index))
     logger.info("        Sample Type: {} ".format(args.sample_type))
-    logger.info("        Dataset Path: {} ".format(args.input_vds))
+    logger.info("        Dataset Path: {} ".format(args.input_dataset))
     logger.info("")
     logger.info("========================================================================================================")
     logger.info("")

@@ -3,7 +3,7 @@ import os
 import re
 import subprocess
 import time
-from hail_scripts.v01.utils.shell_utils import run, FileStats, get_file_stats
+from kubernetes.shell_utils import run, FileStats, get_file_stats
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
 logger = logging.getLogger()

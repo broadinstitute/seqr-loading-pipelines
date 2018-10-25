@@ -4,7 +4,7 @@ import argparse
 import random
 import sys
 
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+from kubernetes.shell_utils import simple_run as run
 
 unique_id = random.randint(10**5, 10**6 - 1)
 random_cluster_name = "without-vep-%s" % unique_id

@@ -1,4 +1,6 @@
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+#!/usr/bin/env python
+
+from kubernetes.shell_utils import simple_run as run
 
 run(" ".join([
     "python gcloud_dataproc/run_script.py",

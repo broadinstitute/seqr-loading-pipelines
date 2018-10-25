@@ -15,7 +15,7 @@ args = p.parse_args()
 
 print(", ".join(args.vcf_path))
 
-hc = hail.HailContext(log="/hail.log")
+hc = hail.HailContext(log="/tmp/hail.log")
 
 for table_path in args.table_path:
     print("\n")

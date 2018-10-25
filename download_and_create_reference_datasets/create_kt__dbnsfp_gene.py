@@ -1,4 +1,6 @@
-from hail_scripts.v01.utils.shell_utils import simple_run as run
+#!/usr/bin/env python
+
+from kubernetes.shell_utils import simple_run as run
 
 for dbnsfp_gene_table_path in [
     "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9_gene",
