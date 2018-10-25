@@ -36,44 +36,45 @@ VDS_TO_ES_TYPE_MAPPING.update({
 
 ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
 
-VARIANT_GENOTYPE_FIELDS_TO_EXPORT = [
-    'num_alt = if(g.isCalled()) g.nNonRefAlleles() else -1',
-    'gq = if(g.isCalled()) g.gq else NA:Int',
-    'ab = let total=g.ad.sum in if(g.isCalled() && total != 0) (g.ad[1] / total).toFloat else NA:Float',
-    'dp = if(g.isCalled()) [g.dp, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+VARIANT_GENOTYPE_FIELDS_TO_EXPORT = {
+    'num_alt': 'if(g.isCalled()) g.nNonRefAlleles() else -1',
+    'gq': 'if(g.isCalled()) g.gq else NA:Int',
+    'ab': 'let total=g.ad.sum in if(g.isCalled() && total != 0) (g.ad[1] / total).toFloat else NA:Float',
+    'dp': 'if(g.isCalled()) [g.dp, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',  # compute min() to avoid integer overflow
     #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
-]
+}
 
 VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
-    ".*_num_alt": {"type": "byte", "doc_values": "false"},
-    ".*_gq": {"type": "byte", "doc_values": "false"},
-    ".*_dp": {"type": "short", "doc_values": "false"},
-    ".*_ab": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)num_alt$": {"type": "byte", "doc_values": "false"},
+    "(.*[_.]|^)gq$": {"type": "byte", "doc_values": "false"},
+    "(.*[_.]|^)dp$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)ab$": {"type": "half_float", "doc_values": "false"},
+
 }
 
 
-SV_GENOTYPE_FIELDS_TO_EXPORT = [
-    'num_alt = if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
-    #'genotype_filter = g.FT',
-    #'gq = g.GQ',
-    'dp = if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-    'ab = let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
-    'ab_PR = let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
-    'ab_SR = let total=g.SR.sum in if(g.GT.isCalled() && total != 0) (g.SR[1] / total).toFloat else NA:Float',
-    'dp_PR = if(g.GT.isCalled()) [g.PR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-    'dp_SR = if(g.GT.isCalled()) [g.SR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
-    ]
+SV_GENOTYPE_FIELDS_TO_EXPORT = {
+    'num_alt': 'if(g.GT.isCalled()) g.GT.nNonRefAlleles() else -1',
+    #'genotype_filter': 'g.FT',
+    #'gq': 'g.GQ',
+    'dp': 'if(g.GT.isCalled()) [g.PR.sum + g.SR.sum, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',  # compute min() to avoid integer overflow
+    'ab': 'let total=g.PR.sum + g.SR.sum in if(g.GT.isCalled() && total != 0) ((g.PR[1] + g.SR[1]) / total).toFloat else NA:Float',
+    'ab_PR': 'let total=g.PR.sum in if(g.GT.isCalled() && total != 0) (g.PR[1] / total).toFloat else NA:Float',
+    'ab_SR': 'let total=g.SR.sum in if(g.GT.isCalled() && total != 0) (g.SR[1] / total).toFloat else NA:Float',
+    'dp_PR': 'if(g.GT.isCalled()) [g.PR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+    'dp_SR': 'if(g.GT.isCalled()) [g.SR.sum,'+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',
+}
 
 SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
-    ".*_num_alt": {"type": "byte", "doc_values": "false"},
-    #".*_genotype_filter": {"type": "keyword", "doc_values": "false"},
-    #".*_gq": {"type": "short", "doc_values": "false"},
-    ".*_dp": {"type": "short", "doc_values": "false"},
-    ".*_ab": {"type": "half_float", "doc_values": "false"},
-    ".*_ab_PR": {"type": "half_float", "doc_values": "false"},
-    ".*_ab_SR": {"type": "half_float", "doc_values": "false"},
-    ".*_dp_PR": {"type": "short", "doc_values": "false"},
-    ".*_dp_SR": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)num_alt$": {"type": "byte", "doc_values": "false"},
+    #"(.*[_.]|^)_genotype_filter$": {"type": "keyword", "doc_values": "false"},
+    #"(.*[_.]|^)_gq$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_dp$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_ab$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_ab_PR$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_ab_SR$": {"type": "half_float", "doc_values": "false"},
+    "(.*[_.]|^)_dp_PR$": {"type": "short", "doc_values": "false"},
+    "(.*[_.]|^)_dp_SR$": {"type": "short", "doc_values": "false"},
 }
 
 
@@ -98,6 +99,7 @@ def _field_path_to_elasticsearch_field_name(field_path):
 
 def generate_elasticsearch_schema(
         field_path_to_field_type_map,
+        field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=()):
     """Converts a dictionary of field names and types to a dictionary that can be plugged in to
@@ -109,10 +111,17 @@ def generate_elasticsearch_schema(
             hail field types as strings (for example "Array[String]") or dicts representing nested objects.
             The nested objects are used to represent hail "Array[Struct{..}]" and the dict contains a
             recursively-generated field type map for the Struct in Array[Struct{..}].
-        disable_doc_values_for_fields: (optional) list of field names (the way they will be
+        field_name_to_elasticsearch_type_map (dict): allows custom elasticsearch field types to be set for certain fields,
+            overriding the default types in VDS_TO_ES_TYPE_MAPPING. This should be a dictionary that maps regular
+            expressions for field names to the custom elasticsearch type to set for that field. For example,
+
+                field_name_to_elasticsearch_type_map[".*_num_alt"] = {"type": "byte", "doc_values": "false"}
+
+            would change the "num_alt" field from "integer" to "byte" and disable doc values.
+        disable_doc_values_for_fields (set): (optional) set of field names (the way they will be
             named in the elasticsearch index) for which to not store doc_values
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
-        disable_index_for_fields: (optional) list of field names (the way they will be
+        disable_index_for_fields (set): (optional) set of field names (the way they will be
             named in the elasticsearch index) that shouldn't be indexed
             (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-params.html)
     Returns:
@@ -123,30 +132,42 @@ def generate_elasticsearch_schema(
     for field_path, field_type in field_path_to_field_type_map.items():
         es_field_name = _field_path_to_elasticsearch_field_name(field_path)
         if isinstance(field_type, dict):
-            nested_schema = generate_elasticsearch_schema(field_type)
+            nested_schema = generate_elasticsearch_schema(
+                field_type,
+                field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
+                disable_doc_values_for_fields=disable_doc_values_for_fields,
+                disable_index_for_fields=disable_index_for_fields)
+
             properties[es_field_name] = {
                 "type": "nested",
                 "properties": nested_schema,
             }
-        else:
-            es_type = _map_vds_type_to_es_type(field_type)
-            properties[es_field_name] = {"type": es_type}
+            continue
+
+        if field_name_to_elasticsearch_type_map is not None:
+            for field_name_regexp, custom_type in field_name_to_elasticsearch_type_map.items():
+                if re.match(field_name_regexp, es_field_name):
+                    properties[es_field_name] = custom_type
+                    break
+
+            if es_field_name in properties:
+                continue
+
+        # use the default type
+        es_type = _map_vds_type_to_es_type(field_type)
+        properties[es_field_name] = {"type": es_type}
 
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))
         for es_field_name in disable_doc_values_for_fields:
-            if es_field_name not in properties:
-                raise ValueError(
-                    "'%s' in disable_doc_values_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, field_path_to_field_type_map))
-            properties[es_field_name]["doc_values"] = False
+            if es_field_name in properties:
+                properties[es_field_name]["doc_values"] = False
 
     if disable_index_for_fields:
         logger.info("==> will disable index fields for %s" % (", ".join(disable_index_for_fields)))
         for es_field_name in disable_index_for_fields:
-            if es_field_name not in properties:
-                raise ValueError(
-                    "'%s' in disable_index_for_fields arg is not in the elasticsearch schema: %s" % (es_field_name, disable_index_for_fields))
-            properties[es_field_name]["index"] = False
+            if es_field_name in properties:
+                properties[es_field_name]["index"] = False
 
     return properties
 

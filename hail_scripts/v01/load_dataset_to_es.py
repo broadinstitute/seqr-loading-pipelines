@@ -7,7 +7,7 @@ os.system("pip install elasticsearch")
 import argparse
 import hail
 import logging
-from pprint import pprint
+from pprint import pprint, pformat
 import time
 import sys
 
@@ -26,13 +26,12 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_ref_allele, get_expr_for_vep_protein_domains_set, get_expr_for_variant_type, \
     get_expr_for_filtering_allele_frequency
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
-    VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE, \
+    VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
 from hail_scripts.v01.utils.hail_utils import create_hail_context, stop_hail_context
-from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, \
-    validate_vds_has_been_filtered
+from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, validate_vds_has_been_filtered
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.v01.utils.fam_file_utils import MAX_SAMPLES_PER_INDEX, compute_sample_groups_from_fam_file
 from hail_scripts.v01.utils.vds_schema_string_utils import convert_vds_schema_string_to_annotate_variants_expr
@@ -71,7 +70,7 @@ def init_command_line_args():
     p.add_argument("--fam-file", help=".fam file used to check VDS sample IDs and assign samples to indices with "
                                       "a max of 'num_samples' per index, but making sure that samples from the same family don't end up in different indices. "
                                       "If used with --remap-sample-ids, contains IDs of samples after remapping")
-    p.add_argument("--max-samples-per-index", help="Max samples per index", type=int, default=MAX_SAMPLES_PER_INDEX)
+    p.add_argument("--max-samples-per-index", help="Max samples per index. This limit is ignored when --use-nested-objects-for-genotypes is set", type=int, default=MAX_SAMPLES_PER_INDEX)
 
     p.add_argument('--export-vcf', action="store_true", help="Write out a new VCF file after import")
 
@@ -93,7 +92,9 @@ def init_command_line_args():
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
     p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)
 
-    p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects.")
+    p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects in elasticsearch.")
+    p.add_argument("--use-nested-objects-for-genotypes", action="store_true", help="Store genotypes as nested objects in elasticsearch.")
+
     p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
     p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
     p.add_argument("--exclude-omim", action="store_true", help="Don't add OMIM mim id column. Intended for testing.")
@@ -139,6 +140,8 @@ def init_command_line_args():
     args.index = compute_index_name(args)
 
     logger.info("Command args: \n" + " ".join(sys.argv[:1]) + ((" --index " + args.index) if "--index" not in sys.argv else ""))
+
+    logger.info("Parsed args: \n" + pformat(args.__dict__))
 
     return args
 
@@ -255,7 +258,7 @@ def compute_sample_groups(vds, args):
     Returns:
          list of lists: each list of sample ids should be put into
     """
-    if len(vds.sample_ids) > args.max_samples_per_index:
+    if len(vds.sample_ids) > args.max_samples_per_index and not args.use_nested_objects_for_genotypes:
         if not args.fam_file:
             raise ValueError("--fam-file must be specified for callsets larger than %s samples. This callset has %s samples." % (args.max_samples_per_index, len(vds.sample_ids)))
 
@@ -346,8 +349,7 @@ def export_to_elasticsearch(
         logger.info("==> exporting %s samples into %s" % (len(sample_group), current_index_name))
         logger.info("Samples: %s .. %s" % (", ".join(sample_group[:3]), ", ".join(sample_group[-3:])))
 
-        logger.info("==> export to elasticsearch")
-        pprint(vds.variant_schema)
+        logger.info("==> export to elasticsearch - vds schema:\n" + pformat(vds.variant_schema))
 
         timestamp1 = time.time()
 
@@ -355,6 +357,7 @@ def export_to_elasticsearch(
             vds_sample_subset,
             genotype_fields_to_export=genotype_fields_to_export,
             genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
+            export_genotypes_as_nested_field=bool(args.use_nested_objects_for_genotypes),
             index_name=current_index_name,
             index_type_name="variant",
             block_size=args.es_block_size,
@@ -414,7 +417,7 @@ def step1_compute_derived_fields(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     FAF_CONFIDENCE_INTERVAL = 0.95  # based on https://macarthurlab.slack.com/archives/C027LHMPP/p1528132141000430
 
@@ -451,7 +454,7 @@ def step1_compute_derived_fields(hc, vds, args):
     #   "va.sortedTranscriptConsequences = va.sortedTranscriptConsequences.map(c => drop(c, amino_acids, biotype))"
     #]
 
-    if not args.use_nested_objects_for_vep:
+    if not bool(args.use_nested_objects_for_vep):
         serial_computed_annotation_exprs += [
             "va.sortedTranscriptConsequences = json(va.sortedTranscriptConsequences)"
         ]
@@ -578,7 +581,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
@@ -605,7 +608,7 @@ def step3_add_reference_datasets(hc, vds, args):
     if vds is None or not args.skip_writing_intermediate_vds:
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True)
+        vds = read_in_dataset(hc, args.step1_output_vds, dataset_type=args.dataset_type, skip_summary=True)
 
     if not args.only_export_to_elasticsearch_at_the_end:
 
@@ -689,7 +692,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
     if vds is None or (not args.is_running_locally and not args.skip_writing_intermediate_vds):
         stop_hail_context(hc)
         hc = create_hail_context()
-        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=True, num_partitions=args.cpu_limit)
+        vds = read_in_dataset(hc, args.step3_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
     export_to_elasticsearch(
         vds,
