@@ -1,13 +1,14 @@
 from pprint import pprint
 
 import hail
+import time
 from hail.expr import TInt, TFloat
 from hail import VariantDataset
 
 from hail_scripts.v01.utils.vds_schema_string_utils import parse_field_names_and_types
 from hail_scripts.v01.utils.vds_utils import write_vds
 
-hail_context = hail.HailContext()
+hail_context = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 DBNSFP_FIELDS = {
     "2.9.3": {

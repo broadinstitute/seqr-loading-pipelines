@@ -3,6 +3,7 @@
 import argparse
 import hail
 from hail.expr import TInt, TDouble, TString
+import time
 
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 
@@ -16,7 +17,7 @@ p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=10
 p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
 args = p.parse_args()
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 EXOME_COVERAGE_CSV_PATHS = [
     "gs://gnomad-browser/exomes/coverage/exacv2.chr1.cov.txt.gz",

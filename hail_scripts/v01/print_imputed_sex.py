@@ -1,7 +1,8 @@
 import argparse
 import hail
+import time
 
-hc = hail.HailContext()
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 p = argparse.ArgumentParser()
 p.add_argument("input_path", nargs="+", help="input VCF or VDS")

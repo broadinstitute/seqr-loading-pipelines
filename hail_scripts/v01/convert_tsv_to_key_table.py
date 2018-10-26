@@ -1,7 +1,7 @@
 import argparse as ap
 import hail
 from pprint import pformat
-
+import time
 
 p = ap.ArgumentParser(description="Convert a tsv table to a .kt")
 p.add_argument("--no-header", action="store_true", help="specifies that tsv table doesn't have a header")
@@ -12,7 +12,7 @@ args = p.parse_args()
 
 print("Input path: " + str(args.tsv_path))
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 print("==> import_table: %s" % args.tsv_path)
 

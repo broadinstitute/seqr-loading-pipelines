@@ -2,6 +2,7 @@
 
 import hail
 import os
+import time
 
 from hail_scripts.v01.utils.vds_utils import write_vds
 
@@ -16,7 +17,7 @@ for cadd_snvs_path, cadd_indels_path in [
         )
     ]:
 
-    hail_context = hail.HailContext()
+    hail_context = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
     print("==> reading in CADD: %s, %s" % (cadd_snvs_path, cadd_indels_path))
 
