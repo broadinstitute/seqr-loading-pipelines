@@ -115,14 +115,15 @@ class ElasticsearchClient(BaseElasticsearchClient):
             annotate_expr = [
                 "%s=%s" % (key, value) for key, value in genotype_fields_to_export.items()
             ] + [
-                 "sample_id=s"
+                "sample_id=s",
+                "%(elasticsearch_mapping_id)s=va.%(elasticsearch_mapping_id)s" % locals(),
             ]
 
             child_kt = vds.genotypes_table()
             if discard_missing_genotypes:
                 child_kt = child_kt.filter("g.isCalled()", keep=True)
 
-            child_kt = child_kt.annotate(annotate_expr).select(list(genotype_fields_to_export.keys()) + ["sample_id"])
+            child_kt = child_kt.annotate(annotate_expr).select(list(genotype_fields_to_export.keys()) + ["sample_id", elasticsearch_mapping_id])
 
         else:
             genotype_fields_list = [
@@ -337,10 +338,11 @@ class ElasticsearchClient(BaseElasticsearchClient):
             config=elasticsearch_config)
 
         if child_kt is not None:
+            elasticsearch_config["es.write.operation"] = "index"
             if "es.mapping.id" in elasticsearch_config:
                 del elasticsearch_config["es.mapping.id"]
 
-            child_kt = child_kt.annotate("join_field={'name': 'child', 'parent': va.%s }" % elasticsearch_mapping_id)
+            child_kt = child_kt.annotate("join_field={name: 'child', parent: %(elasticsearch_mapping_id)s }" % locals())
             child_kt.export_elasticsearch(
                 self._host,
                 int(self._port),
