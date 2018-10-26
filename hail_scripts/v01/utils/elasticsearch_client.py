@@ -19,8 +19,6 @@ handlers = set(logging.root.handlers)
 logging.root.handlers = list(handlers)
 
 from pprint import pformat
-import re
-
 
 logger = logging.getLogger()
 
@@ -35,6 +33,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
         genotype_fields_to_export=VARIANT_GENOTYPE_FIELDS_TO_EXPORT,
         genotype_field_to_elasticsearch_type_map=VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP,
         export_genotypes_as_nested_field=False,
+        export_genotypes_as_child_docs=False,
+        discard_missing_genotypes=False,
         block_size=5000,
         num_shards=10,
         elasticsearch_write_operation=ELASTICSEARCH_INDEX,
@@ -56,7 +56,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 computing these fields (eg. .
                 This will be passed as the 2nd argument to vds.make_table(..)
             genotype_field_to_elasticsearch_type_map (list):
-            export_genotypes_as_nested_field (bool): Whether to export genotypes.
+            export_genotypes_as_nested_field (bool): Whether to export genotypes in a "nested" field.
+            export_genotypes_as_child_docs (bool): Whether to export genotypes as child docs.
+            discard_missing_genotypes (bool): If True, missing (aka. not-called) genotypes won't be exported as nested or child docs.
             index_name (string): elasticsearch index name (equivalent to a database name in SQL)
             index_type_name (string): elasticsearch index type (equivalent to a table name in SQL)
             block_size (int): number of records to write in one bulk insert
@@ -87,6 +89,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             verbose (bool): whether to print schema and stats
         """
+        child_kt = None
 
         # compute genotype_fields_list
         if not genotype_fields_to_export:
@@ -100,9 +103,26 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 "sample_id: s",  # add sample_id to each genotype struct to keep track of
             ])
 
-            vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %s }).collect()" % genotype_struct_expr)
+            genotypes_root = "gs" if not discard_missing_genotypes else "gs.filter(g => g.isCalled())"
+            vds = vds.annotate_variants_expr("va.genotypes = %(genotypes_root)s.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
+
+        elif export_genotypes_as_child_docs:
+
+            genotype_fields_list = []  # don't add flat genotype columns to the table. Instead a separate index_name+'_genotypes' index will be created for child docs.
+
+            annotate_expr = [
+                "%s=%s" % (key, value) for key, value in genotype_fields_to_export.items()
+            ] + [
+                 "sample_id=s"
+            ]
+
+            child_kt = vds.genotypes_table()
+            if discard_missing_genotypes:
+                child_kt = child_kt.filter("g.isCalled()", keep=True)
+
+            child_kt = child_kt.annotate(annotate_expr).select(list(genotype_fields_to_export.keys()) + ["sample_id"])
 
         else:
             genotype_fields_list = [
@@ -156,6 +176,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             field_names_replace_dot_with=None,
             run_after_index_exists=run_after_index_exists,
             _meta=_meta,
+            child_kt=child_kt,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -175,6 +196,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         field_names_replace_dot_with="_",
         run_after_index_exists=None,
         _meta=None,
+        child_kt=None,
         verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -197,7 +219,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 the bulk write call to throw an error. This is useful when, for example,
                 elasticsearch_write_operation="update", and the desired behavior is to update all documents that exist,
                 but to ignore errors for documents that don't exist.
-            elasticsearch_mapping_id (str): if specified, sets the es.mapping.id which is the column name to use as the document ID
+            elasticsearch_mapping_id (str): if specified, sets the es.mapping.id which is the field name to use as the document ID
                 See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             field_name_to_elasticsearch_type_map (dict): (optional) a map of keytable field names to
                 their elasticsearch field spec - for example: {
@@ -222,6 +244,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             _meta (dict): optional _meta info for this index
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
+            child_kt (KeyTable): if not None, this KeyTable will be exported after the main KeyTable (which was passed in the kt arg) is exported.
             verbose (bool): whether to print schema and stats
         """
 
@@ -270,11 +293,23 @@ class ElasticsearchClient(BaseElasticsearchClient):
         # create elasticsearch index with fields that match the ones in the keytable
         field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"])
 
-        elasticsearch_schema = generate_elasticsearch_schema(
+        index_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
             field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields)
+
+        if child_kt is not None:
+            # see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html
+            index_schema["join_field"] = {  # since an index can only have 1 "join" field, it's ok to use generic names.
+                "type": "join",
+                "relations": {
+                    "parent": "child",
+                }
+            }
+            # see https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
+            elasticsearch_config["es.mapping.join"] = "join_field"
+            kt = kt.annotate("join_field='parent'")
 
         # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
@@ -284,7 +319,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         self.create_or_update_mapping(
             index_name,
             index_type_name,
-            elasticsearch_schema,
+            index_schema,
             num_shards=num_shards,
             _meta=_meta)
 
@@ -300,6 +335,19 @@ class ElasticsearchClient(BaseElasticsearchClient):
             index_type_name,
             block_size,
             config=elasticsearch_config)
+
+        if child_kt is not None:
+            if "es.mapping.id" in elasticsearch_config:
+                del elasticsearch_config["es.mapping.id"]
+
+            child_kt = child_kt.annotate("join_field={'name': 'child', 'parent': va.%s }" % elasticsearch_mapping_id)
+            child_kt.export_elasticsearch(
+                self._host,
+                int(self._port),
+                index_name,
+                index_type_name,
+                block_size,
+                config=elasticsearch_config)
 
         """
         Potentially useful config settings for export_elasticsearch(..)
