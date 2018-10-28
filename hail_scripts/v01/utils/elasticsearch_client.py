@@ -343,6 +343,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 del elasticsearch_config["es.mapping.id"]
 
             child_kt = child_kt.annotate("join_field={name: 'child', parent: %(elasticsearch_mapping_id)s }" % locals())
+            child_kt = child_kt.drop([elasticsearch_mapping_id])  # now that this field has been added to join_field, it can be dropped as a separate field
             child_kt.export_elasticsearch(
                 self._host,
                 int(self._port),
