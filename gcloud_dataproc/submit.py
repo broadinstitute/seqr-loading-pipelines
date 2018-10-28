@@ -68,7 +68,7 @@ else:
     hail_scripts_zip = "/tmp/hail_scripts.zip"
 
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-    os.system("zip -r %(hail_scripts_zip)s hail_scripts download_and_create_reference_datasets/hail_scripts" % locals())
+    os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes download_and_create_reference_datasets/hail_scripts" % locals())
 
     command = """gcloud dataproc jobs submit pyspark \
       --project=%(project)s \

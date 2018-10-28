@@ -93,7 +93,10 @@ def init_command_line_args():
     p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)
 
     p.add_argument("--use-nested-objects-for-vep", action="store_true", help="Store vep transcripts as nested objects in elasticsearch.")
+
     p.add_argument("--use-nested-objects-for-genotypes", action="store_true", help="Store genotypes as nested objects in elasticsearch.")
+    p.add_argument("--use-child-docs-for-genotypes", action="store_true", help="Store genotypes as child docs and variant-level annotations as parent docs.")
+    p.add_argument("--discard-missing-genotypes", action="store_true", help="Only export called genotypes to nested or child docs.")
 
     p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
     p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
@@ -258,7 +261,7 @@ def compute_sample_groups(vds, args):
     Returns:
          list of lists: each list of sample ids should be put into
     """
-    if len(vds.sample_ids) > args.max_samples_per_index and not args.use_nested_objects_for_genotypes:
+    if len(vds.sample_ids) > args.max_samples_per_index and not args.use_nested_objects_for_genotypes and not args.use_child_docs_for_genotypes:
         if not args.fam_file:
             raise ValueError("--fam-file must be specified for callsets larger than %s samples. This callset has %s samples." % (args.max_samples_per_index, len(vds.sample_ids)))
 
@@ -358,6 +361,8 @@ def export_to_elasticsearch(
             genotype_fields_to_export=genotype_fields_to_export,
             genotype_field_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             export_genotypes_as_nested_field=bool(args.use_nested_objects_for_genotypes),
+            export_genotypes_as_child_docs=bool(args.use_child_docs_for_genotypes),
+            discard_missing_genotypes=bool(args.discard_missing_genotypes),
             index_name=current_index_name,
             index_type_name="variant",
             block_size=args.es_block_size,

@@ -4,8 +4,8 @@ import os
 os.system("pip install elasticsearch")
 
 import argparse
-import logging
 from pprint import pprint
+import time
 
 from hail_scripts.v01.utils.computed_fields import get_expr_for_xpos, get_expr_for_orig_alt_alleles_set, \
     get_expr_for_variant_id, get_expr_for_vep_gene_ids_set, get_expr_for_vep_transcript_ids_set, \
@@ -27,7 +27,7 @@ p.add_argument("-b", "--block-size", help="Elasticsearch block size", default=20
 p.add_argument("-s", "--num-shards", help="Number of shards", default=1, type=int)
 args = p.parse_args()
 
-hc = hail.HailContext(log="/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 GNOMAD_VDS_PATHS = {
     "exomes_37": "gs://gnomad-public/release-170228/gnomad.exomes.r2.0.1.sites.vds",

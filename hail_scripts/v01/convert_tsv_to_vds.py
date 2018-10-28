@@ -1,6 +1,7 @@
 import argparse as ap
 import hail
 from pprint import pprint
+import time
 
 from hail_scripts.v01.utils.vds_utils import write_vds
 
@@ -15,7 +16,7 @@ args = p.parse_args()
 
 print(", ".join(args.vcf_path))
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 for table_path in args.table_path:
     print("\n")

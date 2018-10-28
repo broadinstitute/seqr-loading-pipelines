@@ -1,6 +1,7 @@
 import argparse as ap
 import hail
 from pprint import pprint
+import time
 
 from hail_scripts.v01.utils.computed_fields import get_expr_for_orig_alt_alleles_set
 from hail_scripts.v01.utils.vds_utils import write_vds
@@ -11,7 +12,7 @@ p.add_argument("--chrom", help="subset to this chromosome", choices=map(str, ran
 p.add_argument("dataset_path")
 args = p.parse_args()
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 print("\n==> input: %s" % args.dataset_path)
 

@@ -1,12 +1,13 @@
 import argparse
 import hail
 from hail.expr import TInt, TDouble, TString
+import time
 
 p = argparse.ArgumentParser()
 p.add_argument("-b", "--output-bucket", help="Google Storage output bucket", default="seqr-reference-datasets")
 args = p.parse_args()
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 
 COVERAGE_TSV_PATHS = {

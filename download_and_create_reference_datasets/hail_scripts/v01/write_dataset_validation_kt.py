@@ -2,6 +2,7 @@ import argparse as ap
 import hail
 import logging
 from pprint import pprint
+import time
 
 from hail_scripts.v01.utils.add_gnomad import GNOMAD_SEQR_VDS_PATHS
 from hail_scripts.v01.utils.computed_fields import get_expr_for_vep_sorted_transcript_consequences_array, \
@@ -17,7 +18,7 @@ p = ap.ArgumentParser()
 p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
 args = p.parse_args()
 
-hc = hail.HailContext(log="/tmp/hail.log")
+hc = hail.HailContext(log="./hail_{}.log".format(time.strftime("%y%m%d_%H%M%S")))
 
 
 def read_gnomad_subset(genome_version):
