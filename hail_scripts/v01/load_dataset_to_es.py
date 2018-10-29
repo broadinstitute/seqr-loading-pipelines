@@ -79,6 +79,7 @@ def init_command_line_args():
     p.add_argument("--individual-id", help="(optional) seqr Individual id for datasets (such as single-sample Manta SV calls) that are generated per-individual")
     p.add_argument("--sample-type", help="sample type (WES, WGS, RNA)", choices=["WES", "WGS", "RNA"], required=True)
     p.add_argument("--dataset-type", help="what pipeline was used to generate the data", choices=["VARIANTS", "SV"], required=True)
+    p.add_argument("--not-gatk-genotypes", action="store_true", help="Use for VARIANTS datasets that have genotype FORMAT other than GT:AD:DP:GQ:PL")
 
     p.add_argument("--index", help="(optional) elasticsearch index name. If not specified, the index name will be computed based on project_guid, family_id, sample_type and dataset_type.")
 
@@ -387,7 +388,15 @@ def step0_init_and_run_vep(hc, vds, args):
 
     logger.info("\n\n=============================== pipeline - step 0 - run vep ===============================")
 
-    vds = read_in_dataset(hc, input_path=args.input_dataset.rstrip("/"), dataset_type=args.dataset_type, filter_interval=args.filter_interval, skip_summary=False, num_partitions=args.cpu_limit)
+    vds = read_in_dataset(
+        hc,
+        input_path=args.input_dataset.rstrip("/"),
+        dataset_type=args.dataset_type,
+        filter_interval=args.filter_interval,
+        skip_summary=False,
+        num_partitions=args.cpu_limit,
+        not_gatk_genotypes=args.not_gatk_genotypes,
+    )
 
     validate_dataset(hc, vds, args)
 
@@ -504,22 +513,40 @@ def step1_compute_derived_fields(hc, vds, args):
             mainTranscript: Struct,
         """
 
-        INPUT_SCHEMA["info_fields"] = """
-            AC: Array[Int],
-            AF: Array[Double],
-            AN: Int,
-            --- BaseQRankSum: Double,
-            --- ClippingRankSum: Double,
-            --- DP: Int,
-            --- FS: Double,
-            InbreedingCoeff: Double,
-            MQ: Double,
-            --- MQRankSum: Double,
-            QD: Double,
-            --- ReadPosRankSum: Double,
-            --- VQSLOD: Double,
-            --- culprit: String,
-        """
+        if args.not_gatk_genotypes:
+            INPUT_SCHEMA["info_fields"] = """
+                AC: Array[Int],
+                AF: Array[Double],
+                AN: Int,
+                --- BaseQRankSum: Double,
+                --- ClippingRankSum: Double,
+                --- DP: Int,
+                --- FS: Double,
+                --- InbreedingCoeff: Double,
+                --- MQ: Double,
+                --- MQRankSum: Double,
+                --- QD: Double,
+                --- ReadPosRankSum: Double,
+                --- VQSLOD: Double,
+                --- culprit: String,
+            """
+        else:
+            INPUT_SCHEMA["info_fields"] = """
+                AC: Array[Int],
+                AF: Array[Double],
+                AN: Int,
+                --- BaseQRankSum: Double,
+                --- ClippingRankSum: Double,
+                --- DP: Int,
+                --- FS: Double,
+                InbreedingCoeff: Double,
+                MQ: Double,
+                --- MQRankSum: Double,
+                QD: Double,
+                --- ReadPosRankSum: Double,
+                --- VQSLOD: Double,
+                --- culprit: String,
+            """
     elif args.dataset_type == "SV":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
