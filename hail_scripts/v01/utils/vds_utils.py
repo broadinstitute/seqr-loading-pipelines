@@ -45,7 +45,7 @@ def compute_minimal_schema(vds, dataset_type="VARIANTS"):
     return vds
 
 
-def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=None, skip_summary=False, num_partitions=None):
+def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=None, skip_summary=False, num_partitions=None, not_gatk_genotypes=False):
     """Utility method for reading in a .vcf or .vds dataset
 
     Args:
@@ -55,6 +55,7 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         filter_interval (str): optional chrom/pos filter interval (eg. "X:12345-54321")
         skip_summary (bool): don't run vds.summarize()
         num_partitions (int): if specified, runs vds.repartition(num_partitions)
+        not_gatk_genotypes (bool): set to False if the dataset has the standard GATK genotype format (GT:AD:DP:GQ:PL)
     """
     input_path = input_path.rstrip("/")
     if input_path.endswith(".vds"):
@@ -63,7 +64,13 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         logger.info("\n==> import: " + input_path)
 
         if dataset_type == "VARIANTS":
-            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000)
+            vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=not_gatk_genotypes)
+            vds_genotype_schema = str(vds.genotype_schema)
+            if vds_genotype_schema != "Genotype":
+                if "DP:Int" in vds_genotype_schema and "GQ:Int" in vds_genotype_schema:
+                    vds = vds.annotate_genotypes_expr("g = Genotype(v, g.GT.gt, NA:Array[Int], g.DP, g.GQ, NA:Array[Int])")
+                else:
+                    vds = vds.annotate_genotypes_expr("g = g.GT.toGenotype()")
         elif dataset_type == "SV":
             vds = hc.import_vcf(input_path, force_bgz=True, min_partitions=10000, generic=True)
         else:
