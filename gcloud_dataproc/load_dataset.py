@@ -61,7 +61,7 @@ def submit_load_dataset_to_es_job(genome_version, dataproc_cluster_name, start_w
     num_workers=2, num_preemptible_workers=12):
 
     # make sure the dataproc cluster exists
-    run("python ./gcloud_dataproc/create_cluster_GRCh%(genome_version)s.py --project=seqr-project %(dataproc_cluster_name)s %(num_workers)s %(num_preemptible_workers)s" % locals(),
+    run("python ./gcloud_dataproc/create_cluster_GRCh%(genome_version)s.py %(dataproc_cluster_name)s %(num_workers)s %(num_preemptible_workers)s" % locals(),
         errors_to_ignore=["Already exists"])
 
     # submit job

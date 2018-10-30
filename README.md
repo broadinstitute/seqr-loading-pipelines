@@ -66,7 +66,7 @@ Run VEP:
 
 Run rare disease callset pipeline:
 ```    
-./gcloud_dataproc/create_cluster_GRCh38.py --project=seqr-project cluster1 2 12 ;   # create cluster with 2 persistent, 12 preemptible nodes
+./gcloud_dataproc/create_cluster_GRCh38.py cluster1 2 12 ;   # create cluster with 2 persistent, 12 preemptible nodes
 
 ./gcloud_dataproc/submit.py --cluster cluster1 --project seqr-project ./hail_scripts/v01/load_dataset_to_es.py -g 38 --max-samples-per-index 180 --host $ELASTICSEARCH_HOST_IP --num-shards 12  --project-guid my_dataset_name  --sample-type WES  --dataset-type VARIANTS  gs://my-datasets/GRCh38/my_dataset.vcf.gz
 ```

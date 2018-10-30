@@ -6,9 +6,7 @@ import os
 from gcloud_dataproc.utils.machine_types import MACHINE_TYPES, get_cost
 
 p = argparse.ArgumentParser()
-p.add_argument("-z", "--zone", default="us-central1-b")
 p.add_argument("-m", "--machine-type", default="n1-highmem-8", choices=MACHINE_TYPES)
-p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("--use-large-machine", action="store_true")
 p.add_argument("--max-idle", help="The duration before cluster is auto-deleted after last job completes, such as 30m, 2h or 1d", default="30m")
 p.add_argument("cluster", nargs="?", default="vep-grch37")
@@ -28,12 +26,10 @@ else:
 # create cluster
 command = """gcloud beta dataproc clusters create %(cluster)s \
     --max-idle %(max_idle)s \
-    --zone %(zone)s  \
     --master-machine-type %(master_machine_type)s  \
     --master-boot-disk-size 100  \
     --num-workers %(num_workers)s  \
     --num-preemptible-workers %(num_preemptible_workers)s \
-    --project %(project)s \
     --worker-machine-type %(master_machine_type)s \
     --worker-boot-disk-size 75 \
     --num-worker-local-ssds 1 \
