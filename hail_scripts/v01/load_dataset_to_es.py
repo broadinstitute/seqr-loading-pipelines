@@ -87,8 +87,7 @@ def init_command_line_args():
     p.add_argument("--port", help="Elastisearch port", default="9200")
     p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
 
-    p.add_argument("--use-temp-loading-nodes", help="Load the new dataset only to temporary loading nodes, then transfer the "
-        "dataset off of these nodes", action='store_true')
+    p.add_argument("--use-temp-loading-nodes", help="Load the new dataset only to temporary loading nodes, then transfer the dataset off of these nodes", action='store_true')
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
     p.add_argument("--es-block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
     p.add_argument("--cpu-limit", help="when running locally, limit how many CPUs are used for VEP and other CPU-heavy steps", type=int)

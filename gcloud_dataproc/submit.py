@@ -7,7 +7,6 @@ import os
 import socket
 
 p = argparse.ArgumentParser()
-p.add_argument("-p", "--project", default="seqr-project")
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
@@ -62,7 +61,6 @@ if args.run_locally:
         "%(script)s" %(script_args)s
     """ % locals()
 else:
-    project = args.project
     cluster = args.cluster
 
     hail_scripts_zip = "/tmp/hail_scripts.zip"
@@ -71,7 +69,6 @@ else:
     os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes download_and_create_reference_datasets/hail_scripts" % locals())
 
     command = """gcloud dataproc jobs submit pyspark \
-      --project=%(project)s \
       --cluster=%(cluster)s \
       --files=%(hail_jar)s \
       --py-files=%(hail_zip)s,%(hail_scripts_zip)s \
