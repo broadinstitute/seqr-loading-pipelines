@@ -11,8 +11,8 @@ p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
 p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
 p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. Defaults to all available CPUs.", type=int)
-p.add_argument("--driver-memory", help="Spark driver memory limit when running locally", default="5G")
-p.add_argument("--executor-memory", help="Spark executor memory limit when running locally", default="5G")
+p.add_argument("--driver-memory", help="Spark driver memory limit when running locally")
+p.add_argument("--executor-memory", help="Spark executor memory limit when running locally")
 p.add_argument("--num-executors", help="Spark number of executors", default=str(multiprocessing.cpu_count()))
 p.add_argument("script")
 
@@ -39,8 +39,8 @@ if args.run_locally:
 
     spark_home = args.spark_home
     cpu_limit_arg = ("--master local[%s]" % args.cpu_limit) if args.cpu_limit else ""
-    driver_memory = args.driver_memory
-    executor_memory = args.executor_memory
+    driver_memory = args.driver_memory if args.driver_memory else "5G"
+    executor_memory = args.executor_memory if args.executor_memory else "5G"
     num_executors = args.num_executors
     command = """%(spark_home)s/bin/spark-submit \
         %(cpu_limit_arg)s \
@@ -68,11 +68,24 @@ else:
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
     os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes download_and_create_reference_datasets/hail_scripts" % locals())
 
+    driver_memory = args.driver_memory
+    executor_memory = args.executor_memory
+
+    properties_arg = ",".join([
+        "spark.files=./$(basename %(hail_jar)s)",
+        "spark.driver.extraClassPath=./$(basename %(hail_jar)s)",
+        "spark.executor.extraClassPath=./$(basename %(hail_jar)s)",
+    ] + (
+        ["spark.driver.memory=%(driver_memory)s"] if driver_memory is not None else []
+    ) + (
+        ["spark.executor.memory=%(executor_memory)s,spark.yarn.executor.memoryOverhead=1g"] if executor_memory is not None else []
+    )) % locals()
+
     command = """gcloud dataproc jobs submit pyspark \
       --cluster=%(cluster)s \
       --files=%(hail_jar)s \
       --py-files=%(hail_zip)s,%(hail_scripts_zip)s \
-      --properties="spark.files=./$(basename %(hail_jar)s),spark.driver.extraClassPath=./$(basename %(hail_jar)s),spark.executor.extraClassPath=./$(basename %(hail_jar)s)" \
+      --properties="%(properties_arg)s" \
       "%(script)s" -- %(script_args)s
     """ % locals()
 
