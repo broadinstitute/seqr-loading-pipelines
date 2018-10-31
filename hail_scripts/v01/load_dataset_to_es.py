@@ -133,7 +133,8 @@ def init_command_line_args():
     p.add_argument("--directory", help="(optional) current directory. This is the local directory and it must be passed in because the script can't look it up when it runs on dataproc.")
 
     p.add_argument("--output-vds", help="(optional) Output vds filename prefix (eg. test-vds)")
-    p.add_argument("input_dataset", help="input VCF or VDS either on the local filesystem or in google cloud")
+    p.add_argument("input_dataset", help="input VCF or VDS either on the local filesystem or in google cloud. "
+        "This can also be a comma-separated list of VCFs for a dataset that's split by chromosome or genomic coordinates (for example: 'input1.vcf.gz,input2.vcf.gz,inputX.vcf.gz').")
 
     args = p.parse_args()
 
@@ -179,6 +180,9 @@ def compute_output_vds_prefix(args):
     if args.output_vds:
         output_vds_prefix = os.path.join(os.path.dirname(args.input_dataset), args.output_vds.replace(".vds", ""))
     else:
+        if "," in args.input_dataset:
+            raise ValueError("Found ',' in input_dataset path, so unable to compute output vds name for saving intermediate results. Please use --output-vds to set output vds prefix.")
+
         if args.subset_samples:
             output_vds_hash = "__%020d" % abs(hash(",".join(map(str, [args.input_dataset, args.subset_samples, args.remap_sample_ids]))))
         else:
