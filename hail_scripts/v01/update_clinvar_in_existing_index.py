@@ -27,23 +27,25 @@ def update_clinvar_in_all_datasets(host, port):
         if _meta and "sourceFilePath" in _meta:
             update_clinvar_in_dataset(hc, host, port, index_name)
         else:
-            logger.info("Skipping {} because index _meta['sourceFilePath'] isn't set".format(index_name))
+            logger.info("Skipping {} because index _meta['sourceFilePath'] isn't set: {}".format(index_name, _meta))
 
 
 def update_clinvar_in_dataset(hc, host, port, index_name, filter_interval=None, block_size=1000):
     elasticsearch_client = ElasticsearchClient(host, port)
     _meta = elasticsearch_client.get_index_meta(index_name)
     if not _meta or "sourceFilePath" not in _meta or not _meta["sourceFilePath"].endswith(".vds"):
-        logger.info("ERROR: couldn't update clinvar in {} because sourceFilePath must contain a valid .vds path. _meta['sourceFilePath'] = {}".format(index_name, _meta))
+        logger.info("ERROR: couldn't update clinvar in {} because sourceFilePath must contain a valid .vds path. _meta['sourceFilePath']: {}".format(index_name, _meta))
         return
 
     dataset_vds_path = _meta["sourceFilePath"]
+    genome_version = _meta.get("genomeVersion")
 
-    match = re.search("__grch([0-9]+)__", index_name, re.IGNORECASE)
-    if not match:
-        logger.info("ERROR: couldn't update clinvar in {} because genome_version string not found in index name.".format(index_name))
-        return
-    genome_version = match.group(1)
+    if genome_version is None:
+        match = re.search("__grch([0-9]+)__", index_name, re.IGNORECASE)
+        if not match:
+            logger.info("ERROR: couldn't update clinvar in {} because the genome version wasn't found in _meta ({}) or in the index name.".format(index_name, _meta))
+            return
+        genome_version = match.group(1)
 
     vds = read_in_dataset(hc, dataset_vds_path, filter_interval=filter_interval)
     vds = vds.drop_samples()
