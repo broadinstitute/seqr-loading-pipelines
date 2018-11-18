@@ -14,6 +14,7 @@ p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. D
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally")
 p.add_argument("--executor-memory", help="Spark executor memory limit when running locally")
 p.add_argument("--num-executors", help="Spark number of executors", default=str(multiprocessing.cpu_count()))
+p.add_argument("--hail-version", help="Hail version", choices=["0.1", "0.2"], required=True)
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
@@ -21,8 +22,12 @@ args, unparsed_args = p.parse_known_args()
 #hail_zip = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.zip"
 #hail_jar = "gs://seqr-hail/hail-jar/hail-9-17-2018-f3e47061.jar"
 
-hail_zip = "hail_builds/v01/hail-v01-10-8-2018-90c855449.zip"
-hail_jar = "hail_builds/v01/hail-v01-10-8-2018-90c855449.jar"
+if args.hail_version == "0.1":
+    hail_zip = "hail_builds/v01/hail-v01-10-8-2018-90c855449.zip"
+    hail_jar = "hail_builds/v01/hail-v01-10-8-2018-90c855449.jar"
+else:
+    hail_zip = "gs://hail-common/builds/devel/python/hail-devel-17a988f2a628.zip"
+    hail_jar = "gs://hail-common/builds/devel/jars/hail-devel-17a988f2a628-Spark-2.2.0.jar"
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
@@ -66,7 +71,7 @@ else:
     hail_scripts_zip = "/tmp/hail_scripts.zip"
 
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-    os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes download_and_create_reference_datasets/hail_scripts" % locals())
+    os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes download_and_create_reference_datasets/v01/hail_scripts" % locals())
 
     driver_memory = args.driver_memory
     executor_memory = args.executor_memory

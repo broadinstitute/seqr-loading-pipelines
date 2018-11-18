@@ -23,7 +23,7 @@ run("mv {filename}.temp {filename}".format(**locals()))
 run("gsutil -m cp {filename} {GCLOUD_BUCKET_PATH}/{filename}".format(**locals()))
 
 run(" ".join([
-    "python gcloud_dataproc/run_script.py",
+    "python gcloud_dataproc/v01/run_script.py",
     "--cluster omim",
     "hail_scripts/v01/convert_tsv_to_key_table.py",
     "--key-by 'Ensembl Gene ID'",

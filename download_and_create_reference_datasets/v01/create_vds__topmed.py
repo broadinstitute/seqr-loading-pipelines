@@ -7,7 +7,7 @@ for vcf_path in [
     "gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz"
 ]:
     run(" ".join([
-        "python gcloud_dataproc/run_script.py",
+        "python gcloud_dataproc/v01/run_script.py",
         "--cluster topmed",
         "hail_scripts/v01/convert_vcf_to_vds.py",
         "--sites-only",

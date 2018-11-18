@@ -20,9 +20,9 @@ cluster_name = args.cluster
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
-os.chdir(os.path.join(os.path.dirname(__file__), ".."))
+os.chdir(os.path.join(os.path.dirname(__file__), "../.."))
 
-run("python gcloud_dataproc/create_cluster_without_VEP.py %(cluster_name)s 2 24" % locals())
+run("python gcloud_dataproc/v01/create_cluster_without_VEP.py %(cluster_name)s 2 24" % locals())
 
 if "-h" in sys.argv or "--help" in sys.argv:
     run("python %(script)s -h" % locals())
@@ -31,5 +31,6 @@ if "-h" in sys.argv or "--help" in sys.argv:
 
 run((
     "time ./gcloud_dataproc/submit.py "
+    "--hail-version 0.1 "
     "--cluster %(cluster_name)s "
     "%(script)s %(script_args)s") % locals())
