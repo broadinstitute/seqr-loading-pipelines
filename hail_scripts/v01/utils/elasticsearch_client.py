@@ -260,6 +260,12 @@ class ElasticsearchClient(BaseElasticsearchClient):
         if elasticsearch_write_operation is not None:
             elasticsearch_config["es.write.operation"] = elasticsearch_write_operation
 
+        if elasticsearch_write_operation in (ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT):
+            # see https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html#spark-sql-write
+            # "By default, elasticsearch-hadoop will ignore null values in favor of not writing any field at all.
+            # If updating/upserting, then existing field values may need to be overwritten with nulls
+            elasticsearch_config["es.spark.dataframe.write.null"] = "true"
+
         if elasticsearch_mapping_id is not None:
             elasticsearch_config["es.mapping.id"] = elasticsearch_mapping_id
 
@@ -329,6 +335,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
         # export the data rows to elasticsearch
         logger.info("==> exporting data to elasticasearch. Write mode: %s, blocksize: %s" % (elasticsearch_write_operation, block_size))
+        kt.to_dataframe().show(n=5)
         kt.export_elasticsearch(
             self._host,
             int(self._port),
@@ -344,6 +351,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
             child_kt = child_kt.annotate("join_field={name: 'child', parent: %(elasticsearch_mapping_id)s }" % locals())
             child_kt = child_kt.drop([elasticsearch_mapping_id])  # now that this field has been added to join_field, it can be dropped as a separate field
+
+            child_kt.to_dataframe().show(n=5)
             child_kt.export_elasticsearch(
                 self._host,
                 int(self._port),

@@ -1,3 +1,14 @@
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: elasticsearch-data
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      component: elasticsearch
+      role: data
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -13,7 +24,7 @@ spec:
       component: elasticsearch
       role: data
   serviceName: elasticsearch-data
-  replicas: {{ ES_DATA_NUM_PODS }}
+    replicas: {{ ES_DATA_NUM_PODS }}
   template:
     metadata:
       labels:
@@ -78,17 +89,29 @@ spec:
         - containerPort: 9300
           name: transport
           protocol: TCP
+        livenessProbe:
+          tcpSocket:
+            port: transport
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_cluster/health
+            port: http
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
         volumeMounts:
         - name: storage
           mountPath: /data
   volumeClaimTemplates:
   - metadata:
       name: storage
-      annotations:
+      #annotations:
         #volume.beta.kubernetes.io/storage-class: standard
-        volume.beta.kubernetes.io/storage-class: ssd-storage-class
+        #volume.beta.kubernetes.io/storage-class: ssd-storage-class
     spec:
       accessModes: [ "ReadWriteOnce" ]
+      storageClassName: ssd-storage-class
       resources:
         requests:
           storage: {{ ELASTICSEARCH_DISK_SIZE }}

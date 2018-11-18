@@ -1,82 +1,77 @@
-apiVersion: v1
 kind: ConfigMap
+apiVersion: v1
 metadata:
-  name: kibana-config
+  name: es-kibana-config
   namespace: {{ NAMESPACE }}
   labels:
-    component: kibana
+    component: es-kibana
 data:
   kibana.yml: |
     ---
-    server.name: kibana
-    server.host: "0"
+    server.name: es-kibana
+    server.host: "0.0.0.0"
     elasticsearch.url: http://elasticsearch:9200
 ---
-apiVersion: v1
 kind: Service
+apiVersion: v1
 metadata:
-  name: kibana
+  name: es-kibana
   namespace: {{ NAMESPACE }}
   labels:
-    component: kibana
+    component: es-kibana
 spec:
-  type: NodePort
+  #type: NodePort
   selector:
-    component: kibana
+    component: es-kibana
   ports:
-  - name: http
-    nodePort: 30002
-    port: 80
-    targetPort: 5601
+  - name: es-kibana
+    port: {{ KIBANA_SERVICE_PORT }}
+    #nodePort: 30002
+    #targetPort: http
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: kibana
+  name: es-kibana
   namespace: {{ NAMESPACE }}
   labels:
-    component: kibana
-    name: kibana
+    component: es-kibana
+    name: es-kibana
     deployment: {{ DEPLOY_TO }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-     component: kibana
+     component: es-kibana
   template:
     metadata:
       labels:
-        component: kibana
-        name: kibana
+        component: es-kibana
+        name: es-kibana
         deployment: {{ DEPLOY_TO }}
     spec:
       containers:
-      - name: kibana
+      - name: es-kibana
         image: docker.elastic.co/kibana/kibana-oss:{{ ELASTICSEARCH_VERSION }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
         - name: CLUSTER_NAME
-          value: "{{ ES_CLUSTER_NAME }}"
-        - name: SERVER_BASEPATH
-          value: /api/v1/namespaces/default/services/kibana:http/proxy
+          value: {{ ES_CLUSTER_NAME }}
+        #- name: SERVER_BASEPATH
+        #  value: /api/v1/namespaces/{{ NAMESPACE }}/services/es-kibana:{{ KIBANA_SERVICE_PORT }}/proxy
         resources:
           requests:
             cpu: 0.01
           limits:
             cpu: 1
         ports:
-        - containerPort: 5601
-          name: http
-        readinessProbe:
-          httpGet:
-            path: /api/status
-            port: http
-          initialDelaySeconds: 20
-          timeoutSeconds: 5
+        - containerPort: {{ KIBANA_SERVICE_PORT }}
+          protocol: TCP
         volumeMounts:
           - name: config
             mountPath: /usr/share/kibana/config
+            readOnly: true
       volumes:
         - name: config
           configMap:
-            name: kibana-config
+            name: es-kibana-config

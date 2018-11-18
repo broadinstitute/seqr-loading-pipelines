@@ -51,7 +51,7 @@ def get_pod_status(pod_name, json_path_of_status, deployment_target=None):
         labels=labels,
         resource_type="pod",
         json_path=json_path_of_status,
-        errors_to_ignore=["array index out of bounds: index 0"],
+        errors_to_ignore=["array index out of bounds: index"],
         verbose=False,
     )
 
@@ -66,7 +66,7 @@ def is_pod_running(pod_name, deployment_target=None, pod_number=0, verbose=True)
     status = get_pod_status(pod_name, json_path, deployment_target=deployment_target)
 
     if verbose:
-        logger.info("%s.is_running = %s" % (pod_name, status))
+        logger.info("%s[%s].is_running = %s" % (pod_name, pod_number, status))
 
     return status == "Running"
 
@@ -79,7 +79,7 @@ def is_pod_ready(pod_name, deployment_target=None, pod_number=0, verbose=True):
     status = get_pod_status(pod_name, json_path, deployment_target=deployment_target)
 
     if verbose:
-        logger.info("%s.is_ready = %s" % (pod_name, status))
+        logger.info("%s[%s].is_ready = %s" % (pod_name, pod_number, status))
 
     return status == "true"
 
