@@ -142,7 +142,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
         category: set to one of: "lof", "missense", "synonymous", "other" based on the value of major_consequence.
 
     Args:
-        vep_root (StructExpression): root path of the VEP struct in the VDS
+        vep_root (StructExpression): root path of the VEP struct in the MT
         include_coding_annotations (bool): if True, fields relevant to protein-coding variants will be included
     """
 

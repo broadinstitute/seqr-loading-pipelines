@@ -4,9 +4,10 @@ import subprocess
 
 import hail as hl
 
+from hail_scripts.v02.utils.hail_utils import import_vcf
 
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
-
+CLINVAR_MT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.mt"
 
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
@@ -22,15 +23,12 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
 )
 
 
-def download_and_import_latest_clinvar_vcf(genome_version):
+def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTable:
     """Downloads the latest clinvar VCF from the NCBI FTP server, copies it to HDFS and returns the hdfs file path
     as well the clinvar release date that's specified in the VCF header.
 
     Args:
         genome_version (str): "37" or "38"
-
-    Returns:
-        2-tuple: (clinvar_vcf_hdfs_path, clinvar_release_date)
     """
 
     if genome_version not in ["37", "38"]:
@@ -41,19 +39,16 @@ def download_and_import_latest_clinvar_vcf(genome_version):
     clinvar_vcf_hdfs_path = "/" + os.path.basename(local_tmp_file_path)
 
     subprocess.run(["wget", clinvar_url, "-O", local_tmp_file_path], check=True)
-    subprocess.run(["hdfs", "dfs", "-cp", f"file://{local_tmp_file_path}", clinvar_vcf_hdfs_path], check=True)
-
-    mt = hl.import_vcf(clinvar_vcf_hdfs_path, force_bgz=True, drop_samples=True, skip_invalid_loci=True)
-    mt = mt.repartition(2000)
-    mt = hl.split_multi_hts(mt)
+    subprocess.run(["hdfs", "dfs", "-cp", "-f", f"file://{local_tmp_file_path}", clinvar_vcf_hdfs_path], check=True)
 
     clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path)
-    mt = mt.annotate_globals(sourceFilePath=clinvar_url, version=clinvar_release_date)
+    mt = import_vcf(clinvar_vcf_hdfs_path, genome_version, drop_samples=True, min_partitions=2000, skip_invalid_loci=True)
+    mt = mt.annotate_globals(version=clinvar_release_date)
 
     return mt
 
 
-def _parse_clinvar_release_date(local_vcf_path):
+def _parse_clinvar_release_date(local_vcf_path: str) -> str:
     """Parse clinvar release date from the VCF header.
 
     Args:

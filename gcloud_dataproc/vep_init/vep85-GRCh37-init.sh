@@ -27,14 +27,10 @@ chmod -R 777 /vep
 
 sudo ln -s /usr/bin/perl /usr/local/bin/perl
 
-# Copy perl JSON module
-gsutil -m cp -r gs://hail-common/vep/perl-JSON/* /usr/share/perl/5.20/
-
-#Copy perl DBD::SQLite module
-gsutil -m cp -r gs://hail-common/vep/perl-SQLITE/* /usr/share/perl/5.20/
-
 sudo apt-get install -y cpanminus
-sudo cpanm install DBI
+sudo cpanm install --notest DBI
+sudo cpanm install --notest JSON
+sudo cpanm install --notest DBD::SQLite
 
 # Copy htslib and samtools
 gsutil cp gs://hail-common/vep/htslib/* /usr/bin/

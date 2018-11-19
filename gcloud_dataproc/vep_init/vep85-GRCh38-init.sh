@@ -8,10 +8,10 @@ curl -Lo hail-elasticsearch-pipelines.zip https://github.com/macarthur-lab/hail-
 unzip -o -d . hail-elasticsearch-pipelines.zip
 
 mv hail-elasticsearch-pipelines-master/loftee /vep
-cp hail-elasticsearch-pipelines-master/gcloud_dataproc/cluster_init/vep-gcloud-grch38.properties /vep/vep-gcloud.properties
-cp hail-elasticsearch-pipelines-master/gcloud_dataproc/cluster_init/vep-gcloud-grch38.properties /vep/vep-gcloud-grch38.properties
-cp hail-elasticsearch-pipelines-master/gcloud_dataproc/cluster_init/1var.vcf /vep/1var.vcf
-cp hail-elasticsearch-pipelines-master/gcloud_dataproc/cluster_init/run_hail_vep85_GRCh38_vcf.sh /vep/run_hail_vep85_vcf.sh
+cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/vep-gcloud-grch38.properties /vep/vep-gcloud.properties
+cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/vep-gcloud-grch38.properties /vep/vep-gcloud-grch38.properties
+cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/1var.vcf /vep/1var.vcf
+cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/run_hail_vep85_GRCh38_vcf.sh /vep/run_hail_vep85_vcf.sh
 chmod a+rx /vep/run_hail_vep85_vcf.sh
 
 gsutil -m cp -r gs://hail-common/vep/vep/ensembl-tools-release-85 /vep
@@ -27,14 +27,10 @@ chmod -R 777 /vep
 
 sudo ln -s /usr/bin/perl /usr/local/bin/perl
 
-# Copy perl JSON module
-gsutil -m cp -r gs://hail-common/vep/perl-JSON/* /usr/share/perl/5.20/
-
-#Copy perl DBD::SQLite module
-gsutil -m cp -r gs://hail-common/vep/perl-SQLITE/* /usr/share/perl/5.20/
-
 sudo apt-get install -y cpanminus
-sudo cpanm install DBI
+sudo cpanm install --notest DBI
+sudo cpanm install --notest JSON
+sudo cpanm install --notest DBD::SQLite
 
 # Copy htslib and samtools
 gsutil cp gs://hail-common/vep/htslib/* /usr/bin/

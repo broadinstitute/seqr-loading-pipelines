@@ -7,7 +7,7 @@ for dbnsfp_gene_table_path in [
     "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5_gene"
 ]:
     run(" ".join([
-        "python gcloud_dataproc/run_script.py",
+        "python gcloud_dataproc/v01/run_script.py",
         "--cluster dbnsfp",
         "hail_scripts/v01/convert_tsv_to_key_table.py",
         "{dbnsfp_gene_table_path}"

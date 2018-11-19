@@ -21,19 +21,20 @@ logger = logging.getLogger()
 class ElasticsearchClient(BaseElasticsearchClient):
     def export_table_to_elasticsearch(
         self,
-        table,
-        index_name="data",
-        index_type_name="variant",
-        block_size=5000,
-        num_shards=10,
-        delete_index_before_exporting=True,
-        elasticsearch_write_operation=ELASTICSEARCH_INDEX,
-        ignore_elasticsearch_write_errors=False,
+        table: hl.Table,
+        index_name :str = "data",
+        index_type_name :str = "variant",
+        block_size :int = 5000,
+        num_shards :int = 10,
+        delete_index_before_exporting :bool = True,
+        elasticsearch_write_operation :str = ELASTICSEARCH_INDEX,
+        ignore_elasticsearch_write_errors :bool = False,
         elasticsearch_mapping_id=None,
         field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         field_names_replace_dot_with="_",
+        func_to_run_after_index_exists=None,
         export_globals_to_index_meta=True,
         verbose=True,
     ):
@@ -79,8 +80,10 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 this string in all field names. This replacement is not reversible (or atleast not
                 unambiguously in the general case) Set this to None to disable replacement, and fall back
                 on an encoding that's uglier, but reversible (eg. "." will be converted to "_$dot$_")
+            func_to_run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             export_globals_to_index_meta (bool): whether to add table.globals object to the index _meta field:
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
+            child_table (Table): if not None, records in this Table will be exported as children of records in the main Table.
             verbose (bool): whether to print schema and stats
         """
 
@@ -165,6 +168,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
         self.create_or_update_mapping(
             index_name, index_type_name, elasticsearch_schema, num_shards=num_shards, _meta=_meta
         )
+
+        if func_to_run_after_index_exists:
+            func_to_run_after_index_exists()
 
         logger.info(
             "==> exporting data to elasticsearch. Write mode: %s, blocksize: %d",
