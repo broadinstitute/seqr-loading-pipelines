@@ -50,9 +50,14 @@ CLINVAR_GOLD_STARS_LOOKUP = """Dict(
 )"""
 
 
+CLINVAR_VDS_CACHE = { "37": None, "38": None }
+
 def read_clinvar_vds(hail_context, genome_version, subset=None):
     if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
+
+    if CLINVAR_VDS_CACHE.get((genome_version, subset)):
+       return CLINVAR_VDS_CACHE[(genome_version, subset)]
 
     clinvar_vds_path = CLINVAR_VDS_PATH.format(genome_version=genome_version)
     logger.info("==> Reading in {}".format(clinvar_vds_path))
@@ -60,6 +65,8 @@ def read_clinvar_vds(hail_context, genome_version, subset=None):
 
     if subset:
         clinvar_vds = clinvar_vds.filter_intervals(hail.Interval.parse(subset))
+
+    CLINVAR_VDS_CACHE[(genome_version, subset)] = clinvar_vds
 
     return clinvar_vds
 
