@@ -22,7 +22,7 @@ script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
 os.chdir(os.path.join(os.path.dirname(__file__), "../.."))
 
-run("python gcloud_dataproc/v01/create_cluster_GRCh38.py %(cluster_name)s 2 24" % locals())
+run("python gcloud_dataproc/v01/create_cluster_GRCh38.py %(cluster_name)s 2 12" % locals())
 
 if "-h" in sys.argv or "--help" in sys.argv:
     run("python %(script)s -h" % locals())
