@@ -187,7 +187,7 @@ def compute_output_vds_prefix(args):
             output_vds_hash = "__%020d" % abs(hash(",".join(map(str, [args.input_dataset, args.subset_samples, args.remap_sample_ids]))))
         else:
             output_vds_hash = ""
-        output_vds_prefix = args.input_dataset.rstrip("/").replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "") + output_vds_hash
+        output_vds_prefix = args.input_dataset.rstrip("/").replace(".vcf", "").replace(".vds", "").replace(".bgz", "").replace(".gz", "").replace(".*", "").replace("*", "") + output_vds_hash
 
     return output_vds_prefix
 
@@ -378,7 +378,7 @@ def export_to_elasticsearch(
             disable_index_for_fields=disable_index_for_fields,
             is_split_vds=True,
             run_after_index_exists=run_after_index_exists,
-            verbose=True,
+            verbose=False,
         )
 
         timestamp2 = time.time()
@@ -790,24 +790,22 @@ def route_index_to_temp_es_cluster(yes, args):
         yes (bool): whether to route shards in the given index to the "*loading*" nodes, or move shards off of these nodes.
         args: args from ArgumentParser - used to compute the index name and get elasticsearch host and port.
     """
-    exclude_name = require_name = ""
     if yes:
         require_name = "es-data-loading*"
+        exclude_name = ""
     else:
+        require_name = ""
         exclude_name = "es-data-loading*"
 
-    client = ElasticsearchClient(args.host, args.port)
-    # Commented out because it turns out that allocation filter settings take precedence over cluster re-balancing,
-    # so there's no need to disable shard re-balancing when moving shards around into an unbalanced arrangement.
-    #
-    #client.es.cluster.put_settings(body={
-    #    "transient": {"cluster.routing.rebalance.enable": "none"}
-    #})
-
-    client.es.indices.put_settings(index="{}*".format(args.index), body={
+    body = {
         "index.routing.allocation.require._name": require_name,
         "index.routing.allocation.exclude._name": exclude_name
-    })
+    }
+
+    logger.info("==> Setting {}* settings = {}".format(args.index, body))
+
+    client = ElasticsearchClient(args.host, args.port)
+    client.es.indices.put_settings(index="{}*".format(args.index), body=body)
 
     if not yes:
         shards = None

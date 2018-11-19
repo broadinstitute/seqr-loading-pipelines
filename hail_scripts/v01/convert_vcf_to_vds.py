@@ -20,7 +20,7 @@ vcf_path = ",".join(args.vcf_path)
 print("\n")
 print("==> import_vcf: %s" % vcf_path)
 
-if args.output:
+if args.output_vds:
     output_path = args.output_vds
 else:
     output_path = vcf_path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "").replace(".*", "").replace("*", "")+".vds"

@@ -1,9 +1,12 @@
 import gzip
 import hail
+import logging
 import os
 from pprint import pprint
 
 from kubernetes.shell_utils import simple_run as run
+
+logger = logging.getLogger()
 
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_VDS_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.vds'
@@ -52,6 +55,7 @@ def read_clinvar_vds(hail_context, genome_version, subset=None):
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     clinvar_vds_path = CLINVAR_VDS_PATH.format(genome_version=genome_version)
+    logger.info("==> Reading in {}".format(clinvar_vds_path))
     clinvar_vds = hail_context.read(clinvar_vds_path)
 
     if subset:
