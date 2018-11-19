@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from kubernetes.shell_utils import simple_run as run
 
