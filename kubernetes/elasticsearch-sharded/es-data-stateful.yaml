@@ -24,7 +24,7 @@ spec:
       component: elasticsearch
       role: data
   serviceName: elasticsearch-data
-    replicas: {{ ES_DATA_NUM_PODS }}
+  replicas: {{ ES_DATA_NUM_PODS }}
   template:
     metadata:
       labels:
