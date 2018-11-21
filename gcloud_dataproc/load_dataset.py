@@ -319,7 +319,6 @@ def main():
             "CLUSTER_NAME": args.k8s_cluster_name,
             "ES_CLUSTER_NAME": args.k8s_cluster_name,
             "NAMESPACE": args.k8s_cluster_name,  # kubernetes namespace
-            "KUBERNETES_VERSION": "1.11.2-gke.18",
             "IMAGE_PULL_POLICY": "Always",
 
             "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
