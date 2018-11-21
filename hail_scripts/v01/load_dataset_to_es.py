@@ -291,7 +291,6 @@ def add_global_metadata(vds, args):
     # 2) at this stage, all subsetting and remapping has already been applied, so the samples in the dataset are only the ones exported to elasticsearch
     # 3) annotations may be updated / added more often than vep versions.
     vds = vds.annotate_global_expr('global.sourceFilePath = "{}"'.format(args.step0_output_vds))
-
     vds = vds.annotate_global_expr('global.genomeVersion = "{}"'.format(args.genome_version))
     vds = vds.annotate_global_expr('global.sampleType = "{}"'.format(args.sample_type))
     vds = vds.annotate_global_expr('global.datasetType = "{}"'.format(args.dataset_type))
@@ -504,7 +503,6 @@ def step1_compute_derived_fields(hc, vds, args):
             rsid: String,
             --- qual: Double,
             filters: Set[String],
-            wasSplit: Boolean,
             aIndex: Int,
 
             geneIds: Set[String],
