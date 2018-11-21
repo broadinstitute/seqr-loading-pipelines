@@ -22,7 +22,6 @@ def compute_minimal_schema(vds, dataset_type="VARIANTS"):
     if dataset_type == "VARIANTS":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
-            wasSplit: Boolean,
             aIndex: Int,
         """
 
