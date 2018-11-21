@@ -119,27 +119,25 @@ def _create_persistent_es_nodes(settings):
     ]) % settings, errors_to_ignore=["Already exists"])
 
     # deploy elasticsearch
-    for action in ["create"]:  # "delete",
-        _process_kubernetes_configs(action, template_variables=settings,
-            config_paths=[
-                #"./gcloud_dataproc/utils/elasticsearch_cluster/es-configmap.yaml",
-                "./kubernetes/elasticsearch-sharded/es-discovery-svc.yaml",
-                "./kubernetes/elasticsearch-sharded/es-master.yaml",
-                "./kubernetes/elasticsearch-sharded/es-svc.yaml",
-                #"./kubernetes/elasticsearch-sharded/es-kibana.yaml",
-            ])
+    _process_kubernetes_configs("create", template_variables=settings,
+        config_paths=[
+            #"./gcloud_dataproc/utils/elasticsearch_cluster/es-configmap.yaml",
+            "./kubernetes/elasticsearch-sharded/es-discovery-svc.yaml",
+            "./kubernetes/elasticsearch-sharded/es-master.yaml",
+            "./kubernetes/elasticsearch-sharded/es-svc.yaml",
+            "./kubernetes/elasticsearch-sharded/es-kibana.yaml",
+        ])
 
-        if action == "create":
-            wait_until_pod_is_running("es-kibana")
+    wait_until_pod_is_running("es-kibana")
 
-        _process_kubernetes_configs(action, template_variables=settings,
-            config_paths=[
-                "./kubernetes/elasticsearch-sharded/es-client.yaml",
-                "./kubernetes/elasticsearch-sharded/es-data-stateful.yaml",
-                "./kubernetes/elasticsearch-sharded/es-data-svc.yaml",
-            ])
+    _process_kubernetes_configs("create", template_variables=settings,
+        config_paths=[
+            "./kubernetes/elasticsearch-sharded/es-client.yaml",
+            "./kubernetes/elasticsearch-sharded/es-data-stateful.yaml",
+            "./kubernetes/elasticsearch-sharded/es-data-svc.yaml",
+        ])
 
-        _wait_for_data_nodes_state(action, settings)
+    _wait_for_data_nodes_state("create", settings)
 
 
 
@@ -165,13 +163,12 @@ def _create_temp_es_loading_nodes(settings):
     ]) % settings, errors_to_ignore=["lready exists"])
 
     # deploy elasticsearch
-    for action in ["create"]:  # ["delete"]:
-        _process_kubernetes_configs(action, settings=settings,
-            config_paths=[
-                "./kubernetes/elasticsearch-sharded/es-data-stateful-local-ssd.yaml",
-            ])
+    _process_kubernetes_configs("create", settings=settings,
+        config_paths=[
+            "./kubernetes/elasticsearch-sharded/es-data-stateful-local-ssd.yaml",
+        ])
 
-        _wait_for_data_nodes_state(action, settings)
+    _wait_for_data_nodes_state("create", settings)
 
     # get ip address of loading nodes
     elasticsearch_ip_address = run("kubectl get endpoints elasticsearch -o jsonpath='{.subsets[0].addresses[0].ip}'")
@@ -193,26 +190,9 @@ def _create_temp_es_loading_nodes(settings):
     return elasticsearch_ip_address
 
 
-def _create_es_nodes(k8s_cluster_name, create_persistent_es_nodes=False):
+def _create_es_nodes(settings, create_persistent_es_nodes=False):
     logger.info("==> Create ES nodes")
 
-    settings = {
-        "DEPLOY_TO": k8s_cluster_name,
-        "CLUSTER_NAME": k8s_cluster_name,
-        "ES_CLUSTER_NAME": k8s_cluster_name,
-        "NAMESPACE": k8s_cluster_name,  # kubernetes namespace
-        "KUBERNETES_VERSION": "1.11.2-gke.18",
-        "IMAGE_PULL_POLICY": "Always",
-
-        "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
-        "ELASTICSEARCH_VERSION": "6.3.2",
-        "ELASTICSEARCH_JVM_MEMORY": "13g",
-        "ELASTICSEARCH_DISK_SIZE": "100Gi",
-
-        "ES_CLIENT_NUM_PODS": 3,
-        "ES_MASTER_NUM_PODS": 2,
-        "ES_DATA_NUM_PODS": 3,
-    }
     load_settings([], settings)
 
     if create_persistent_es_nodes:
@@ -244,7 +224,13 @@ def _compute_firewall_rule_name(k8s_cluster_name):
     return "%(k8s_cluster_name)s-firewall-rule" % locals()
 
 
-def _delete_temp_es_loading_nodes(k8s_cluster_name):
+def _delete_temp_es_loading_nodes(k8s_cluster_name, settings):
+    _process_kubernetes_configs("delete", settings=settings,
+        config_paths=[
+            "./kubernetes/elasticsearch-sharded/es-data-stateful-local-ssd.yaml",
+        ])
+    _wait_for_data_nodes_state("delete", settings)
+
     loading_node_pool_name = _compute_loading_pool_name(k8s_cluster_name)
     run("echo Y | gcloud container node-pools delete --cluster %(k8s_cluster_name)s %(loading_node_pool_name)s" % locals())
 
@@ -328,7 +314,25 @@ def main():
         _enable_cluster_routing_rebalance(False, args.cluster_name, args.host, args.port)
 
         # create temp es nodes
-        ip_address = _create_es_nodes(args.k8s_cluster_name, create_persistent_es_nodes=args.create_persistent_es_nodes)
+        settings = {
+            "DEPLOY_TO": args.k8s_cluster_name,
+            "CLUSTER_NAME": args.k8s_cluster_name,
+            "ES_CLUSTER_NAME": args.k8s_cluster_name,
+            "NAMESPACE": args.k8s_cluster_name,  # kubernetes namespace
+            "KUBERNETES_VERSION": "1.11.2-gke.18",
+            "IMAGE_PULL_POLICY": "Always",
+
+            "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
+            "ELASTICSEARCH_VERSION": "6.3.2",
+            "ELASTICSEARCH_JVM_MEMORY": "13g",
+            "ELASTICSEARCH_DISK_SIZE": "100Gi",
+
+            "ES_CLIENT_NUM_PODS": 3,
+            "ES_MASTER_NUM_PODS": 2,
+            "ES_DATA_NUM_PODS": 3,
+        }
+
+        ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
 
         # continue pipeline starting with loading steps, stream data to the new elasticsearch instance at ip_address
         submit_load_dataset_to_es_job(
@@ -338,7 +342,7 @@ def main():
             other_load_dataset_to_es_args=load_dataset_to_es_args + ["--host %(ip_address)s" % locals()])
 
         if args.delete_temp_loading_nodes_when_done:
-            _delete_temp_es_loading_nodes(args.k8s_cluster_name)
+            _delete_temp_es_loading_nodes(args.k8s_cluster_name, settings)
 
             _enable_cluster_routing_rebalance(True, args.cluster_name, args.host, args.port)
 
