@@ -71,8 +71,7 @@ def import_vcf(
 
     mt = mt.annotate_globals(sourceFilePath=vcf_path, genomeVersion=genome_version)
 
-    # ensure that va.wasSplit and va.aIndex are defined before calling split_multi() since split_multi() doesn't define these if all variants are bi-allelic
-    mt = mt.annotate_rows(was_split=False, a_index=1, original_alt_alleles=get_expr_for_orig_alt_alleles(mt))
+    mt = mt.annotate_rows(original_alt_alleles=get_expr_for_orig_alt_alleles(mt))
     mt = hl.split_multi_hts(mt)
     mt = mt.key_rows_by(**hl.min_rep(mt.locus, mt.alleles))
 
