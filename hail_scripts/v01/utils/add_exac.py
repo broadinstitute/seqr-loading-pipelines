@@ -11,7 +11,6 @@ ALL_TOP_LEVEL_FIELDS = """
     rsid: String,
     qual: Double,
     filters: Set[String],
-    wasSplit: Boolean,
 """
 
 ALL_INFO_FIELDS = """
