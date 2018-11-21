@@ -50,7 +50,7 @@ CLINVAR_GOLD_STARS_LOOKUP = """Dict(
 )"""
 
 
-CLINVAR_VDS_CACHE = { "37": None, "38": None }
+CLINVAR_VDS_CACHE = {}
 
 def read_clinvar_vds(hail_context, genome_version, subset=None):
     if genome_version not in ["37", "38"]:

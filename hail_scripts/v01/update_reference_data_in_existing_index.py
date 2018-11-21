@@ -1,9 +1,6 @@
 import os
 import re
 
-from hail_scripts.v01.utils.add_hgmd import add_hgmd_to_vds, reset_hgmd_fields_in_vds
-from hail_scripts.v01.utils.hail_utils import create_hail_context
-
 os.system("pip install elasticsearch")
 
 import argparse
@@ -11,8 +8,9 @@ from pprint import pprint
 import logging
 
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_UPDATE
-from hail_scripts.v01.utils.add_clinvar import add_clinvar_to_vds, download_and_import_latest_clinvar_vcf, CLINVAR_VDS_PATH, \
-    reset_clinvar_fields_in_vds
+from hail_scripts.v01.utils.add_clinvar import add_clinvar_to_vds, download_and_import_latest_clinvar_vcf, CLINVAR_VDS_PATH
+from hail_scripts.v01.utils.add_hgmd import add_hgmd_to_vds
+from hail_scripts.v01.utils.hail_utils import create_hail_context
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
 from hail_scripts.v01.utils.vds_utils import read_in_dataset, compute_minimal_schema, write_vds
 
@@ -22,16 +20,18 @@ logger = logging.getLogger()
 def update_all_datasets(hc, host, port, **kwargs):
     client = ElasticsearchClient(host, port=port)
     indices = client.es.cat.indices(h="index", s="index").strip().split("\n")
-    for index_name in indices:
+    for i, index_name in enumerate(indices):
         _meta = client.get_index_meta(index_name)
 
+        logger.info("==> updating index {} out of {}: {}".format(i+1, len(indices), index_name))
         if _meta and "sourceFilePath" in _meta:
+            logger.info("==> skipping {} because index _meta['sourceFilePath'] isn't set: {}".format(index_name, _meta))
             try:
                 update_dataset(hc, host, port, index_name, **kwargs)
             except Exception as e:
                 logger.error("ERROR while updating %s - %s: %s", index_name, _meta["sourceFilePath"], e)
         else:
-            logger.info("Skipping {} because index _meta['sourceFilePath'] isn't set: {}".format(index_name, _meta))
+            logger.info("==> skipping {} because index _meta['sourceFilePath'] isn't set: {}".format(index_name, _meta))
 
 
 def update_dataset(hc, host, port, index_name, filter_interval=None, block_size=1000, update_clinvar=True, update_hgmd=False):
@@ -57,21 +57,29 @@ def update_dataset(hc, host, port, index_name, filter_interval=None, block_size=
     vds = read_in_dataset(hc, dataset_vds_path, filter_interval=filter_interval)
     vds = vds.drop_samples()
     vds = compute_minimal_schema(vds)
+    vds = vds.annotate_global_expr('global.genomeVersion = "{}"'.format(genome_version))
 
+    # add reference data to vds
+    filter_expr = []
     if update_clinvar:
         #vds = reset_clinvar_fields_in_vds(hc, vds, genome_version, root="va.clinvar", subset=filter_interval)
         vds = add_clinvar_to_vds(hc, vds, genome_version, root="va.clinvar", subset=filter_interval)
+        filter_expr.append("isDefined(va.clinvar.allele_id)")
 
     if update_hgmd:
         #vds = reset_hgmd_fields_in_vds(hc, vds, genome_version, root="va.hgmd", subset=filter_interval)
         vds = add_hgmd_to_vds(hc, vds, genome_version, root="va.hgmd", subset=filter_interval)
+        filter_expr.append("isDefined(va.hgmd.accession)")
 
-    vds = vds.annotate_global_expr('global.genomeVersion = "{}"'.format(genome_version))
+    # filter down to variants that have reference data
+
+    vds = vds.filter_variants_expr(" || ".join(filter_expr), keep=True)
 
     print("\n\n==> schema: ")
     pprint(vds.variant_schema)
 
-    logger.info("\n==> exporting to elasticsearch:")
+    _, variant_count = vds.count()
+    logger.info("\n==> exporting {} variants to elasticsearch:".format(variant_count))
     elasticsearch_client.export_vds_to_elasticsearch(
         vds,
         index_name=index_name,
