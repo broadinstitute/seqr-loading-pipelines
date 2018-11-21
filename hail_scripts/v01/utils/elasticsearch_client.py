@@ -178,6 +178,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
             run_after_index_exists=run_after_index_exists,
             _meta=_meta,
             child_kt=child_kt,
+            parent_doc_name="variant",
+            child_doc_name="genotype",
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -198,6 +200,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
         run_after_index_exists=None,
         _meta=None,
         child_kt=None,
+        parent_doc_name="variant",
+        child_doc_name="genotype",
         verbose=True,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
@@ -246,6 +250,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
             _meta (dict): optional _meta info for this index
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             child_kt (KeyTable): if not None, this KeyTable will be exported after the main KeyTable (which was passed in the kt arg) is exported.
+            parent_doc_name (str): if a child_kt is provided, this allows the name of parent documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
+            child_doc_name (str): if a child_kt is provided, this allows the name of child documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
             verbose (bool): whether to print schema and stats
         """
 
@@ -311,7 +317,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             index_schema["join_field"] = {  # since an index can only have 1 "join" field, it's ok to use generic names.
                 "type": "join",
                 "relations": {
-                    "parent": "child",
+                    parent_doc_name: child_doc_name,
                 }
             }
             # see https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
@@ -349,7 +355,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             if "es.mapping.id" in elasticsearch_config:
                 del elasticsearch_config["es.mapping.id"]
 
-            child_kt = child_kt.annotate("join_field={name: 'child', parent: %(elasticsearch_mapping_id)s }" % locals())
+            child_kt = child_kt.annotate("join_field={name: '%(child_doc_name)s', parent: %(elasticsearch_mapping_id)s }" % locals())
             child_kt = child_kt.drop([elasticsearch_mapping_id])  # now that this field has been added to join_field, it can be dropped as a separate field
 
             child_kt.to_dataframe().show(n=5)
