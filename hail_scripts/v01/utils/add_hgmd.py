@@ -14,7 +14,7 @@ def reset_hgmd_fields_in_vds(hail_context, vds, genome_version, root="va.hgmd", 
 
     return vds
 
-HGMD_VDS_CACHE = { "37": None, "38": None }
+HGMD_VDS_CACHE = {}
 
 def read_hgmd_vds(hail_context, genome_version, subset=None):
 
