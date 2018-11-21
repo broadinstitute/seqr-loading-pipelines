@@ -78,13 +78,13 @@ def run(command,
     log_buffer = StringIO()
     previous_is_slash_r = False
     while True:
-        out = p.stdout.read(1)
+        out = p.stdout.read(1).decode('utf-8')
         if out == '' and p.poll() is not None:
             break
         if out != '':
-            log_buffer.write(out.decode('utf-8'))
+            log_buffer.write(out)
             if verbose:
-                line_buffer.write(out.decode('utf-8'))
+                line_buffer.write(out)
                 if out.endswith('\r') or (out.endswith('\n') and previous_is_slash_r):
                     sys.stdout.write(line_buffer.getvalue())
                     sys.stdout.flush()
