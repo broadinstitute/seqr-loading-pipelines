@@ -290,18 +290,19 @@ def main():
             run("gsutil cp %(subset_samples_file_path)s %(subset_samples_file_gcloud_path)s" % locals())
             load_dataset_to_es_args.extend(["--subset-samples", subset_samples_file_gcloud_path])
 
+    # make sure kubectl is installed
+    run("kubectl version --client")
+
+    # make sure cluster exists
+    _create_dataproc_cluster(
+        args.cluster_name,
+        args.genome_version,
+        num_workers=args.num_workers,
+        num_preemptible_workers=args.num_preemptible_workers)
+
+
     # run pipeline with or without using a temp elasticsearch cluster for loading
     if args.use_temp_loading_nodes:
-
-        # make sure kubectl is installed
-        run("kubectl version --client")
-
-        # make sure cluster exists
-        _create_dataproc_cluster(
-            args.cluster_name,
-            args.genome_version,
-            num_workers=args.num_workers,
-            num_preemptible_workers=args.num_preemptible_workers)
 
         # run vep and compute derived annotations before create temp elasticsearch loading nodes
         if args.start_with_step <= 1:
