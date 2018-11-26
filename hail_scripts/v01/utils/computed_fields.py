@@ -319,7 +319,7 @@ def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root="va.
 def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root="va.vep.transcript_consequences"):
     return """%(vep_transcript_consequences_root)s
         .filter( x => isDefined(x.domains) && x.domains.length > 0 )
-        .map( x => x.domains.map( domain => domain.db+":"+domain.name ) )
+        .map( x => x.domains )
         .flatten.toSet""" % locals()
 
 
