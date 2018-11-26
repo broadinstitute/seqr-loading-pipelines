@@ -40,11 +40,11 @@ def update_dataset(hc, host, port, index_name, filter_interval=None, block_size=
 
     elasticsearch_client = ElasticsearchClient(host, port)
     _meta = elasticsearch_client.get_index_meta(index_name)
-    if not _meta or "sourceFilePath" not in _meta or not _meta["sourceFilePath"].endswith(".vds"):
-        logger.info("ERROR: couldn't update clinvar in {} because sourceFilePath must contain a valid .vds path. _meta['sourceFilePath']: {}".format(index_name, _meta))
+    if not _meta or "sourceFilePath" not in _meta:
+        logger.info("ERROR: couldn't update reference data in {} because it doesn't have a recorded sourceFilePath. _meta['sourceFilePath']: {}".format(index_name, _meta))
         return
 
-    dataset_vds_path = _meta["sourceFilePath"]
+    dataset_path = _meta["sourceFilePath"]
     genome_version = _meta.get("genomeVersion")
 
     if genome_version is None:
@@ -54,7 +54,7 @@ def update_dataset(hc, host, port, index_name, filter_interval=None, block_size=
             return
         genome_version = match.group(1)
 
-    vds = read_in_dataset(hc, dataset_vds_path, filter_interval=filter_interval)
+    vds = read_in_dataset(hc, dataset_path, filter_interval=filter_interval)
     vds = vds.drop_samples()
     vds = compute_minimal_schema(vds)
     vds = vds.annotate_global_expr('global.genomeVersion = "{}"'.format(genome_version))
