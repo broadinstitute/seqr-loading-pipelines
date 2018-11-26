@@ -320,9 +320,10 @@ class ElasticsearchClient(BaseElasticsearchClient):
                     parent_doc_name: child_doc_name,
                 }
             }
+            index_schema['sample_id'] = {'type': 'keyword'}
             # see https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             elasticsearch_config["es.mapping.join"] = "join_field"
-            kt = kt.annotate("join_field='parent'")
+            kt = kt.annotate("join_field='{}'".format(parent_doc_name))
 
         # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
