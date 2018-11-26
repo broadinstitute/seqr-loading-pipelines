@@ -37,6 +37,11 @@ CONSEQUENCE_TERMS = [
     "intergenic_variant",
 ]
 
+OMIT_CONSEQUENCE_TERMS = [
+    "upstream_gene_variant",
+    "downstream_gene_variant",
+]
+
 # hail Dict expression that maps each CONSEQUENCE_TERM to it's rank in the list
 CONSEQUENCE_TERM_RANKS = map(str, range(len(CONSEQUENCE_TERMS)))
 CONSEQUENCE_TERM_RANK_LOOKUP = (
@@ -112,14 +117,17 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
         transcript_consequences = non_coding_transcript_consequences
 
     result = """
-    let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in %(vep_root)s.transcript_consequences.map(
+    let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s and
+        OMIT_CONSEQUENCE_TERMS = %(OMIT_CONSEQUENCE_TERMS)s.toSet in %(vep_root)s.transcript_consequences.map(
             c => select(c, %(transcript_consequences)s)
         ).map(
             c => merge(
                 drop(c, consequence_terms),
                 {
-                    consequence_terms: c.consequence_terms.filter(t => CONSEQUENCE_TERM_RANK_LOOKUP.contains(t))
+                    consequence_terms: c.consequence_terms.filter(t => !OMIT_CONSEQUENCE_TERMS.contains(t))
                 })
+        ).filter(
+            c => c.consequence_terms.size > 0
         ).map(
             c => merge(
                 drop(c, domains),
