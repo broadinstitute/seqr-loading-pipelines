@@ -26,8 +26,6 @@ CONSEQUENCE_TERMS = [
     "NMD_transcript_variant",
     "non_coding_transcript_variant",
     "nc_transcript_variant",  # deprecated
-    "upstream_gene_variant",
-    "downstream_gene_variant",
     "TFBS_ablation",
     "TFBS_amplification",
     "TF_binding_site_variant",
@@ -116,6 +114,12 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root="va.vep", inc
     result = """
     let CONSEQUENCE_TERM_RANK_LOOKUP = %(CONSEQUENCE_TERM_RANK_LOOKUP)s in %(vep_root)s.transcript_consequences.map(
             c => select(c, %(transcript_consequences)s)
+        ).map(
+            c => merge(
+                drop(c, consequence_terms),
+                {
+                    consequence_terms: c.consequence_terms.filter(t => CONSEQUENCE_TERM_RANK_LOOKUP.contains(t))
+                })
         ).map(
             c => merge(
                 drop(c, domains),

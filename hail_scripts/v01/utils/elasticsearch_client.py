@@ -314,7 +314,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
         if child_kt is not None:
             # see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html
-            index_schema["join_field"] = {  # since an index can only have 1 "join" field, it's ok to use generic names.
+            index_schema["join_field"] = {
                 "type": "join",
                 "relations": {
                     parent_doc_name: child_doc_name,
