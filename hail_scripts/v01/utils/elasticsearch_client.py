@@ -314,12 +314,13 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
         if child_kt is not None:
             # see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html
-            index_schema["join_field"] = {  # since an index can only have 1 "join" field, it's ok to use generic names.
+            index_schema["join_field"] = {
                 "type": "join",
                 "relations": {
                     parent_doc_name: child_doc_name,
                 }
             }
+            index_schema['sample_id'] = {'type': 'keyword'}
             # see https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
             elasticsearch_config["es.mapping.join"] = "join_field"
             kt = kt.annotate("join_field='{}'".format(parent_doc_name))
