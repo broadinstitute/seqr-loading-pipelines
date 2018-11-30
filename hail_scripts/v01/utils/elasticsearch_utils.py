@@ -39,7 +39,7 @@ ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE = "32000"
 VARIANT_GENOTYPE_FIELDS_TO_EXPORT = {
     'num_alt': 'if(g.isCalled()) g.nNonRefAlleles() else -1',
     'gq': 'if(g.isCalled()) g.gq else NA:Int',
-    'ab': 'let total=g.ad.sum in if(g.isCalled() && total != 0) (g.ad[1] / total).toFloat else NA:Float',
+    'ab': 'let total=g.ad.sum in if(g.isCalled() && total != 0 && g.ad.length > 1) (g.ad[1] / total).toFloat else NA:Float',
     'dp': 'if(g.isCalled()) [g.dp, '+ELASTICSEARCH_MAX_SIGNED_SHORT_INT_TYPE+'].min() else NA:Int',  # compute min() to avoid integer overflow
     #'pl = if(g.isCalled) g.pl.mkString(",") else NA:String',  # store but don't index
 }
