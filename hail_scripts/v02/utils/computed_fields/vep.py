@@ -111,7 +111,7 @@ def get_expr_for_formatted_hgvs(csq):
         hl.is_missing(csq.hgvsp) | HGVSC_CONSEQUENCES.contains(csq.major_consequence),
         csq.hgvsc.split(":")[-1],
         hl.cond(
-            csq.hgvsp.contains("%3D"),
+            csq.hgvsp.contains("=") | csq.hgvsp.contains("%3D"),
             hl.bind(
                 lambda protein_letters: "p." + protein_letters + hl.str(csq.protein_start) + protein_letters,
                 hl.delimit(csq.amino_acids.split("").map(lambda l: PROTEIN_LETTERS_1TO3.get(l)), ""),
