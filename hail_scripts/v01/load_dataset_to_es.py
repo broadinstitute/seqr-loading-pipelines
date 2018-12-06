@@ -540,7 +540,7 @@ def step1_compute_derived_fields(hc, vds, args):
                 --- ClippingRankSum: Double,
                 --- DP: Int,
                 --- FS: Double,
-                InbreedingCoeff: Double,
+                --- InbreedingCoeff: Double,
                 MQ: Double,
                 --- MQRankSum: Double,
                 QD: Double,
