@@ -732,7 +732,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
         args,
         operation=ELASTICSEARCH_UPDATE if not args.only_export_to_elasticsearch_at_the_end else ELASTICSEARCH_INDEX,
         delete_index_before_exporting=False,
-        export_genotypes=False,
+        export_genotypes=args.only_export_to_elasticsearch_at_the_end,
         run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
     )
 
