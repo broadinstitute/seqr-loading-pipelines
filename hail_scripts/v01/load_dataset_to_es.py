@@ -85,7 +85,7 @@ def init_command_line_args():
 
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
-    p.add_argument("--num-shards", help="Number of index shards", type=int, default=12)
+    p.add_argument("--num-shards", help="Number of index shards", type=int, default=6)
 
     p.add_argument("--use-temp-loading-nodes", help="Load the new dataset only to temporary loading nodes, then transfer the dataset off of these nodes", action='store_true')
     p.add_argument("--vep-block-size", help="Block size to use for VEP", default=200, type=int)
