@@ -115,7 +115,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             annotate_expr = [
                 "%s=%s" % (key, value) for key, value in genotype_fields_to_export.items()
             ] + [
-                "sample_id=s",
+                "sampleId=s",
                 "%(elasticsearch_mapping_id)s=va.%(elasticsearch_mapping_id)s" % locals(),
             ]
 
@@ -123,7 +123,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             if discard_missing_genotypes:
                 child_kt = child_kt.filter("g.isCalled()", keep=True)
 
-            child_kt = child_kt.annotate(annotate_expr).select(list(genotype_fields_to_export.keys()) + ["sample_id", elasticsearch_mapping_id])
+            child_kt = child_kt.annotate(annotate_expr).select(list(genotype_fields_to_export.keys()) + ["sampleId", elasticsearch_mapping_id])
 
         else:
             genotype_fields_list = [
@@ -313,17 +313,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             disable_index_for_fields=disable_index_for_fields)
 
         if child_kt is not None:
-            # see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html
-            index_schema["join_field"] = {
-                "type": "join",
-                "relations": {
-                    parent_doc_name: child_doc_name,
-                }
-            }
-            index_schema['sample_id'] = {'type': 'keyword'}
-            # see https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#cfg-mapping
-            elasticsearch_config["es.mapping.join"] = "join_field"
-            kt = kt.annotate("join_field='{}'".format(parent_doc_name))
+            index_schema['sampleId'] = {'type': 'keyword'}
 
         # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
@@ -356,7 +346,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             if "es.mapping.id" in elasticsearch_config:
                 del elasticsearch_config["es.mapping.id"]
 
-            child_kt = child_kt.annotate("join_field={name: '%(child_doc_name)s', parent: %(elasticsearch_mapping_id)s }" % locals())
+            child_kt = child_kt.annotate("variantId=%(elasticsearch_mapping_id)s" % locals())
             child_kt = child_kt.drop([elasticsearch_mapping_id])  # now that this field has been added to join_field, it can be dropped as a separate field
 
             child_kt.to_dataframe().show(n=5)
