@@ -22,6 +22,7 @@ VDS_TO_ES_TYPE_MAPPING = {
     "Double":  "half_float",
     "Float":   "half_float",
     "String":  "keyword",
+    "Struct": "object",
 }
 
 # elasticsearch field types for arrays are the same as for simple types:
@@ -199,7 +200,7 @@ def generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=True)
     return expr_list
 
 
-def parse_vds_schema(vds_variant_schema_fields, current_parent=()):
+def parse_vds_schema(vds_variant_schema_fields, current_parent=(), export_structs_as_objects=False):
     """Takes a VDS variant schema fields list (for example: vds.variant_schema.fields)
     and converts it recursively to a field_path_to_field_type_map.
 
@@ -224,8 +225,11 @@ def parse_vds_schema(vds_variant_schema_fields, current_parent=()):
                 nested_schema = parse_vds_schema(field.typ.element_type.fields, [])
                 field_path_to_field_type_map[tuple(field_path)] = nested_schema
             elif field_type.startswith("Struct"):
-                struct_schema = parse_vds_schema(field.typ.fields, field_path)
-                field_path_to_field_type_map.update(struct_schema)
+                if export_structs_as_objects:
+                    field_path_to_field_type_map[tuple(field_path)] = "Struct"
+                else:
+                    struct_schema = parse_vds_schema(field.typ.fields, field_path)
+                    field_path_to_field_type_map.update(struct_schema)
             else:
                 field_path_to_field_type_map[tuple(field_path)] = field_type
         except Exception as e:

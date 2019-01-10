@@ -103,8 +103,15 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 "sample_id: s",  # add sample_id to each genotype struct to keep track of
             ])
 
+            genotypes_struct_expr = ", ".join([
+                '{sample_id}: GENOTYPES["{sample_id}"]'.format(sample_id=sample_id) for sample_id in vds.sample_ids
+            ])
+
             genotypes_root = "gs" if not discard_missing_genotypes else "gs.filter(g => g.isCalled())"
-            vds = vds.annotate_variants_expr("va.genotypes = %(genotypes_root)s.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
+            vds = vds.annotate_variants_expr("""
+                va.genotypes = let GENOTYPES = Dict(%(genotypes_root)s.map(g => s).collect(), %(genotypes_root)s.map(g => { %(genotype_struct_expr)s }).collect()) in
+                { %(genotypes_struct_expr)s }
+            """ % locals())
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
 
@@ -131,7 +138,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             ]
 
         # compute site_fields_list
-        field_path_to_field_type_map = parse_vds_schema(vds.variant_schema.fields, current_parent=["va"])
+        field_path_to_field_type_map = parse_vds_schema(vds.variant_schema.fields, current_parent=["va"], export_structs_as_objects=export_genotypes_as_nested_field)
         site_fields_list = sorted(
             generate_vds_make_table_arg(field_path_to_field_type_map, is_split_vds=is_split_vds)
         )
@@ -180,6 +187,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             child_kt=child_kt,
             parent_doc_name="variant",
             child_doc_name="genotype",
+            export_structs_as_objects=export_genotypes_as_nested_field,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -203,6 +211,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         parent_doc_name="variant",
         child_doc_name="genotype",
         verbose=True,
+        export_structs_as_objects=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -304,7 +313,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             logger.info("export_kt_to_elasticsearch - KeyTable schema: " + pformat(kt.schema))
 
         # create elasticsearch index with fields that match the ones in the keytable
-        field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"])
+        field_path_to_field_type_map = parse_vds_schema(kt.schema.fields, current_parent=["va"], export_structs_as_objects=export_structs_as_objects)
 
         index_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
