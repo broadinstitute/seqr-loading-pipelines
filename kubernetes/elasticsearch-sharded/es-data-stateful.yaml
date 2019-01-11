@@ -111,7 +111,7 @@ spec:
         #volume.beta.kubernetes.io/storage-class: ssd-storage-class
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: ssd-storage-class
+      #storageClassName: ssd-storage-class
       resources:
         requests:
           storage: {{ ELASTICSEARCH_DISK_SIZE }}
