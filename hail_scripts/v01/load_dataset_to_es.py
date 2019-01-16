@@ -435,8 +435,6 @@ def step1_compute_derived_fields(hc, vds, args):
         hc = create_hail_context()
         vds = read_in_dataset(hc, args.step0_output_vds, dataset_type=args.dataset_type, skip_summary=True, num_partitions=args.cpu_limit)
 
-    FAF_CONFIDENCE_INTERVAL = 0.95  # based on https://macarthurlab.slack.com/archives/C027LHMPP/p1528132141000430
-
     parallel_computed_annotation_exprs = [
         "va.docId = %s" % get_expr_for_variant_id(512),
         "va.variantId = %s" % get_expr_for_variant_id(),
@@ -449,12 +447,18 @@ def step1_compute_derived_fields(hc, vds, args):
         "va.alt = %s" % get_expr_for_alt_allele(),
         "va.xpos = %s" % get_expr_for_xpos(pos_field="start"),
         "va.xstart = %s" % get_expr_for_xpos(pos_field="start"),
-        "va.FAF = %s" % get_expr_for_filtering_allele_frequency("va.info.AC[va.aIndex - 1]", "va.info.AN", FAF_CONFIDENCE_INTERVAL),
         "va.sortedTranscriptConsequences = %s" % get_expr_for_vep_sorted_transcript_consequences_array(
             vep_root="va.vep",
             include_coding_annotations=True,
             add_transcript_rank=bool(args.use_nested_objects_for_vep)),
     ]
+
+    if args.dataset_type == "VARIANTS":
+        FAF_CONFIDENCE_INTERVAL = 0.95  # based on https://macarthurlab.slack.com/archives/C027LHMPP/p1528132141000430
+
+        parallel_computed_annotation_exprs += [
+            "va.FAF = %s" % get_expr_for_filtering_allele_frequency("va.info.AC[va.aIndex - 1]", "va.info.AN", FAF_CONFIDENCE_INTERVAL),
+        ]
 
     serial_computed_annotation_exprs = [
         "va.xstop = %s" % get_expr_for_xpos(field_prefix="va.", pos_field="end"),
@@ -567,7 +571,8 @@ def step1_compute_derived_fields(hc, vds, args):
             rsid: String,
             --- qual: Double,
             filters: Set[String],
-
+            aIndex: Int,
+            
             geneIds: Set[String],
             transcriptIds: Set[String],
             codingGeneIds: Set[String],
@@ -583,8 +588,8 @@ def step1_compute_derived_fields(hc, vds, args):
             SVTYPE: String,
             SVLEN: Int,
             END: Int,
-            OCC: Int,
-            FRQ: Double,
+            --- OCC: Int,
+            --- FRQ: Double,
         """
     else:
         raise ValueError("Unexpected dataset_type: %s" % args.dataset_type)

@@ -30,6 +30,7 @@ def compute_minimal_schema(vds, dataset_type="VARIANTS"):
     elif dataset_type == "SV":
         INPUT_SCHEMA["top_level_fields"] = """
             docId: String,
+            aIndex: Int,
         """
 
         INPUT_SCHEMA["info_fields"] = ""
@@ -83,7 +84,8 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
     elif num_partitions is not None:
         vds = vds.repartition(num_partitions, shuffle=True)
 
-    vds = vds.split_multi()
+    if dataset_type == "VARIANTS":
+        vds = vds.split_multi()
 
     #vds = vds.filter_alleles('v.altAlleles[aIndex-1].isStar()', keep=False) # filter star alleles
 
@@ -91,7 +93,7 @@ def read_in_dataset(hc, input_path, dataset_type="VARIANTS", filter_interval=Non
         logger.info("\n==> set filter interval to: %s" % (filter_interval, ))
         vds = vds.filter_intervals(hail.Interval.parse(filter_interval))
 
-    if not skip_summary:
+    if not skip_summary and dataset_type == "VARIANTS":
         logger.info("Callset stats:")
         summary = vds.summarize()
         pprint(summary)
