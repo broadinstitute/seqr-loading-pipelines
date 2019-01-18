@@ -132,7 +132,6 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
     one exists).
 
     Also, for each transcript in the array, computes these additional fields:
-        hgnc_id: converts type to String
         domains: converts Array[Struct] to string of comma-separated domain names
         hgvs: set to hgvsp is it exists, or else hgvsc. formats hgvsp for synonymous variants.
         major_consequence: set to most severe consequence for that transcript (
@@ -153,11 +152,8 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
         "cdna_end",
         "codons",
         "consequence_terms",
-        "distance",
-        "exon",
         "gene_id",
         "gene_symbol",
-        "gene_symbol_source",
         "hgvsc",
         "hgvsp",
         "transcript_id",
@@ -183,7 +179,6 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
             lambda c: c.select(
                 *selected_annotations,
                 domains=c.domains.map(lambda domain: domain.db + ":" + domain.name),
-                hgnc_id=hl.str(c.hgnc_id),
                 major_consequence=hl.cond(
                     c.consequence_terms.size() > 0,
                     hl.sorted(c.consequence_terms, key=lambda t: CONSEQUENCE_TERM_RANK_LOOKUP.get(t))[0],
@@ -289,12 +284,8 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
         "cdna_start": hl.tint,
         "cdna_end": hl.tint,
         "codons": hl.tstr,
-        "distance": hl.tint,
-        "exon": hl.tstr,
         "gene_id": hl.tstr,
         "gene_symbol": hl.tstr,
-        "gene_symbol_source": hl.tstr,
-        "hgnc_id": hl.tstr,
         "hgvs": hl.tstr,
         "hgvsc": hl.tstr,
         "major_consequence": hl.tstr,
