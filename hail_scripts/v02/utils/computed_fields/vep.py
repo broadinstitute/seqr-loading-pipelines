@@ -1,6 +1,8 @@
 import hail as hl
 
 
+# Consequence terms in order of severity (more severe to less severe) as estimated by Ensembl.
+# See https://ensembl.org/info/genome/variation/prediction/predicted_data.html
 CONSEQUENCE_TERMS = [
     "transcript_ablation",
     "splice_acceptor_variant",
@@ -17,6 +19,7 @@ CONSEQUENCE_TERMS = [
     "protein_altering_variant",  # new in v79
     "splice_region_variant",
     "incomplete_terminal_codon_variant",
+    "start_retained_variant",
     "stop_retained_variant",
     "synonymous_variant",
     "coding_sequence_variant",
