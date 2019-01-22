@@ -151,7 +151,6 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
         "cdna_start",
         "cdna_end",
         "codons",
-        "consequence_terms",
         "gene_id",
         "gene_symbol",
         "hgvsc",
@@ -174,10 +173,13 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
             ]
         )
 
+    omit_consequence_terms = hl.set(["upstream_gene_variant", "downstream_gene_variant"])
+
     result = hl.sorted(
         vep_root.transcript_consequences.map(
             lambda c: c.select(
                 *selected_annotations,
+                consequence_terms=c.consequence_terms.filter(lambda t: ~omit_consequence_terms.contains(t)),
                 domains=c.domains.map(lambda domain: domain.db + ":" + domain.name),
                 major_consequence=hl.cond(
                     c.consequence_terms.size() > 0,
@@ -185,7 +187,9 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
                     hl.null(hl.tstr),
                 )
             )
-        ).map(
+        )
+        .filter(lambda c: c.consequence_terms.size() > 0)
+        .map(
             lambda c: c.annotate(
                 category=(
                     hl.case()
