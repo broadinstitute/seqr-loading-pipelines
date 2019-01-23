@@ -372,8 +372,15 @@ def main():
     # make sure kubectl is installed
     run("kubectl version --client")
 
+    # make sure cluster exists
+    _create_dataproc_cluster(
+        args.cluster_name,
+        args.genome_version,
+        num_workers=args.num_workers,
+        num_preemptible_workers=args.num_preemptible_workers)
+
     # run pipeline with or without using a temp elasticsearch cluster for loading
-    if args.use_temp_loading_nodes:
+    if args.use_temp_loading_nodes and args.stop_after_step > 1:
 
         # run vep and compute derived annotations before create temp elasticsearch loading nodes
         if args.start_with_step <= 1:
@@ -411,13 +418,6 @@ def main():
 
         _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
 
-        # make sure cluster exists
-        _create_dataproc_cluster(
-            args.cluster_name,
-            args.genome_version,
-            num_workers=args.num_workers,
-            num_preemptible_workers=args.num_preemptible_workers)
-
         # continue pipeline starting with loading steps, stream data to the new elasticsearch instance at ip_address
         submit_load_dataset_to_es_job(
             args.cluster_name,
@@ -430,21 +430,14 @@ def main():
 
             _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
-
     else:
-        # make sure cluster exists
-        _create_dataproc_cluster(
-            args.cluster_name,
-            args.genome_version,
-            num_workers=args.num_workers,
-            num_preemptible_workers=args.num_preemptible_workers)
-
         submit_load_dataset_to_es_job(
             args.cluster_name,
             start_with_step=args.start_with_step,
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args,
         )
+
 
 if __name__ == "__main__":
     main()
