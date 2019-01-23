@@ -1,7 +1,7 @@
 import hail
 
-HGMD_PATH_GRCh37 = 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_PRO_2018.1_hg19_without_DB_field.vds'
-HGMD_PATH_GRCh38 = 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_PRO_2018.1_hg38_without_DB_field.vds'
+HGMD_PATH_GRCh37 = 'gs://seqr-reference-data-private/GRCh37/HGMD/hgmd_pro_2018.4_hg19_without_db_field.vds'
+HGMD_PATH_GRCh38 = 'gs://seqr-reference-data-private/GRCh38/HGMD/hgmd_pro_2018.4_hg38_without_db_field.vds'
 
 def reset_hgmd_fields_in_vds(hail_context, vds, genome_version, root="va.hgmd", subset=None, verbose=True):
     hgmd_vds = read_hgmd_vds(hail_context, genome_version, subset=subset)
