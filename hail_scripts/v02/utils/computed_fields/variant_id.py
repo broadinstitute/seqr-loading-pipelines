@@ -1,5 +1,5 @@
 import hail as hl
-from typing import List
+
 
 def get_expr_for_alt_allele(table:hl.Table) -> hl.str:
     return table.alleles[1]
@@ -20,20 +20,19 @@ def get_expr_for_contig_number(table:hl.Table) -> hl.int:
     )
 
 
-def get_expr_for_variant_ids(table, max_length=None) -> List[hl.str]:
+def get_expr_for_variant_ids(
+    locus: hl.expr.LocusExpression, alleles: hl.expr.ArrayExpression, max_length: int = None
+) -> hl.expr.ArrayExpression:
     """Return a list of variant ids - one for each alt allele in the variant"""
 
     def compute_variant_id(alt):
-        variant_id = get_expr_for_contig(table) + "-" + hl.str(table.locus.position) + "-" + table.alleles[0] + "-" + alt
+        variant_id = locus.contig + "-" + hl.str(locus.position) + "-" + alleles[0] + "-" + alt
         if max_length is not None:
             variant_id = variant_id[:max_length]
         return variant_id
 
-    return table.alleles[1:].map(compute_variant_id)
+    return alleles[1:].map(compute_variant_id)
 
-def get_expr_for_orig_alt_alleles(table, max_length=None):
-    """Return a list of alt-alleles. This can be used for saving original alleles before running hl.split_multi"""
-    return hl.or_missing(hl.len(table.alleles) > 2, get_expr_for_variant_ids(table, max_length=max_length))
 
 def get_expr_for_ref_allele(table):
     return table.alleles[0]

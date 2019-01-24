@@ -1,7 +1,7 @@
 import hail as hl
 import logging
 
-from hail_scripts.v02.utils.computed_fields.variant_id import get_expr_for_orig_alt_alleles
+from hail_scripts.v02.utils.computed_fields.variant_id import get_expr_for_variant_ids
 
 logger = logging.getLogger()
 
@@ -71,7 +71,9 @@ def import_vcf(
 
     mt = mt.annotate_globals(sourceFilePath=vcf_path, genomeVersion=genome_version)
 
-    mt = mt.annotate_rows(original_alt_alleles=get_expr_for_orig_alt_alleles(mt))
+    mt = mt.annotate_rows(
+        original_alt_alleles=hl.or_missing(hl.len(mt.alleles) > 2, get_expr_for_variant_ids(mt.locus, mt.alleles))
+    )
     mt = hl.split_multi_hts(mt)
     mt = mt.key_rows_by(**hl.min_rep(mt.locus, mt.alleles))
 
