@@ -1,11 +1,16 @@
 import hail as hl
 
 
-def get_expr_for_lc_lof_flag(sortedTranscriptConsequences):
-    """Flag a variant if no LoF annotations are marked HC"""
+def get_expr_for_consequence_lc_lof_flag(transcript_consequence):
+    """Flag a transcript consequence if it has an LOFTEE annotation other than HC"""
+    return hl.or_else((transcript_consequence.lof != "") & (transcript_consequence.lof != "HC"), False)
+
+
+def get_expr_for_variant_lc_lof_flag(sorted_transcript_consequences):
+    """Flag a variant if it has some transcript consequences with LOFTEE annotations and none are marked HC"""
     return hl.bind(
         lambda lof_annotations: (lof_annotations.size() > 0) & lof_annotations.all(lambda csq: csq.lof != "HC"),
-        sortedTranscriptConsequences.filter(lambda csq: csq.lof != ""),
+        sorted_transcript_consequences.filter(lambda csq: csq.lof != ""),
     )
 
 
@@ -26,11 +31,16 @@ def get_expr_for_genes_with_lc_lof_flag(sorted_transcript_consequences):
     )
 
 
-def get_expr_for_loftee_flag_flag(sortedTranscriptConsequences):
-    """Flag a variant if all annotations have LOFTEE flags"""
+def get_expr_for_consequence_loftee_flag_flag(transcript_consequence):
+    """Flag a transcript consequence if it has a LOFTEE annotation with flags"""
+    return hl.or_else((transcript_consequence.lof != "") & (transcript_consequence.lof_flags != ""), False)
+
+
+def get_expr_for_variant_loftee_flag_flag(sorted_transcript_consequences):
+    """Flag a variant if it has some transcript consequences with LOFTEE annotations and all have flags"""
     return hl.bind(
         lambda lof_annotations: (lof_annotations.size() > 0) & lof_annotations.all(lambda csq: csq.lof_flags != ""),
-        sortedTranscriptConsequences.filter(lambda csq: csq.lof != ""),
+        sorted_transcript_consequences.filter(lambda csq: csq.lof != ""),
     )
 
 
