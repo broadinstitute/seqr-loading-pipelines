@@ -3,9 +3,11 @@ import unittest
 import hail as hl
 
 from .flags import (
-    get_expr_for_lc_lof_flag,
+    get_expr_for_consequence_lc_lof_flag,
+    get_expr_for_variant_lc_lof_flag,
     get_expr_for_genes_with_lc_lof_flag,
-    get_expr_for_loftee_flag_flag,
+    get_expr_for_consequence_loftee_flag_flag,
+    get_expr_for_variant_loftee_flag_flag,
     get_expr_for_genes_with_loftee_flag_flag,
 )
 
@@ -53,17 +55,27 @@ class TestFlags(unittest.TestCase):
             ]
         )
 
-    def test_lc_lof_flag(self):
-        self.assertTrue(hl.eval(get_expr_for_lc_lof_flag(self.all_lc_lof)))
-        self.assertFalse(hl.eval(get_expr_for_lc_lof_flag(self.some_lc_lof)))
+    def test_consequence_lc_lof_flag(self):
+        self.assertTrue(hl.eval(get_expr_for_consequence_lc_lof_flag(hl.struct(lof="LC"))))
+        self.assertFalse(hl.eval(get_expr_for_consequence_lc_lof_flag(hl.struct(lof="HC"))))
+        self.assertFalse(hl.eval(get_expr_for_consequence_lc_lof_flag(hl.struct(lof=""))))
+
+    def test_variant_lc_lof_flag(self):
+        self.assertTrue(hl.eval(get_expr_for_variant_lc_lof_flag(self.all_lc_lof)))
+        self.assertFalse(hl.eval(get_expr_for_variant_lc_lof_flag(self.some_lc_lof)))
 
     def test_genes_with_lc_lof_flag(self):
         self.assertSetEqual(hl.eval(get_expr_for_genes_with_lc_lof_flag(self.all_lc_lof)), set(["foo", "bar", "baz"]))
         self.assertSetEqual(hl.eval(get_expr_for_genes_with_lc_lof_flag(self.some_lc_lof)), set(["foo", "bar"]))
 
-    def test_loftee_flag_flag(self):
-        self.assertTrue(hl.eval(get_expr_for_loftee_flag_flag(self.all_loftee_flags)))
-        self.assertFalse(hl.eval(get_expr_for_loftee_flag_flag(self.some_loftee_flags)))
+    def test_consequence_loftee_flag_flag(self):
+        self.assertTrue(hl.eval(get_expr_for_consequence_loftee_flag_flag(hl.struct(lof="HC", lof_flags="foo"))))
+        self.assertFalse(hl.eval(get_expr_for_consequence_loftee_flag_flag(hl.struct(lof="", lof_flags=""))))
+        self.assertFalse(hl.eval(get_expr_for_consequence_loftee_flag_flag(hl.struct(lof="", lof_flags="bar"))))
+
+    def test_variant_loftee_flag_flag(self):
+        self.assertTrue(hl.eval(get_expr_for_variant_loftee_flag_flag(self.all_loftee_flags)))
+        self.assertFalse(hl.eval(get_expr_for_variant_loftee_flag_flag(self.some_loftee_flags)))
 
     def test_genes_with_loftee_flag_flag(self):
         self.assertSetEqual(
