@@ -243,7 +243,7 @@ def _create_temp_es_loading_nodes(settings):
         "--machine-type %(CLUSTER_MACHINE_TYPE)s",
         "--num-nodes %(ES_DATA_NUM_PODS)s",
         "--local-ssd-count 1",
-    ]) % settings, errors_to_ignore=["lready exists"])
+    ]) % settings, errors_to_ignore=["Already exists"])
 
     # deploy elasticsearch
     _process_kubernetes_configs("create", settings=settings,
@@ -372,18 +372,17 @@ def main():
     # make sure kubectl is installed
     run("kubectl version --client")
 
-    # make sure cluster exists
-    _create_dataproc_cluster(
-        args.cluster_name,
-        args.genome_version,
-        num_workers=args.num_workers,
-        num_preemptible_workers=args.num_preemptible_workers)
-
     # run pipeline with or without using a temp elasticsearch cluster for loading
-    if args.use_temp_loading_nodes and args.stop_after_step > 1:
+    if args.use_temp_loading_nodes and (args.stop_after_step == None or args.stop_after_step > 1):
 
         # run vep and compute derived annotations before create temp elasticsearch loading nodes
         if args.start_with_step <= 1:
+            # make sure cluster exists
+            _create_dataproc_cluster(
+                args.cluster_name,
+                args.genome_version,
+                num_workers=args.num_workers,
+                num_preemptible_workers=args.num_preemptible_workers)
             submit_load_dataset_to_es_job(
                 args.cluster_name,
                 start_with_step=args.start_with_step,
@@ -415,8 +414,14 @@ def main():
 
         ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
 
-
         _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
+
+        # make sure cluster exists
+        _create_dataproc_cluster(
+            args.cluster_name,
+            args.genome_version,
+            num_workers=args.num_workers,
+            num_preemptible_workers=args.num_preemptible_workers)
 
         # continue pipeline starting with loading steps, stream data to the new elasticsearch instance at ip_address
         submit_load_dataset_to_es_job(
@@ -431,6 +436,13 @@ def main():
             _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
     else:
+        # make sure cluster exists
+        _create_dataproc_cluster(
+            args.cluster_name,
+            args.genome_version,
+            num_workers=args.num_workers,
+            num_preemptible_workers=args.num_preemptible_workers)
+
         submit_load_dataset_to_es_job(
             args.cluster_name,
             start_with_step=args.start_with_step,

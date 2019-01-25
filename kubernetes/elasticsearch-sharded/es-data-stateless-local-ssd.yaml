@@ -12,7 +12,6 @@ spec:
     matchLabels:
       component: elasticsearch-loading
       role: data
-  serviceName: es-data-loading
   replicas: {{ ES_DATA_NUM_PODS }}
   template:
     metadata:
