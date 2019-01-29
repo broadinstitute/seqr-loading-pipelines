@@ -21,6 +21,6 @@ for genome_version in genome_versions:
     run(" ".join([
         "python gcloud_dataproc/v01/run_script.py",
         "--cluster {cluster_name}",
-        "download_and_create_reference_datasets/v01/hail_scripts/v01/combine_all_variant_level_reference_data.py",
+        "download_and_create_reference_datasets/v01/hail_scripts/combine_all_variant_level_reference_data.py",
         "--genome-version {genome_version} {script_args}",
     ]).format(**locals()))

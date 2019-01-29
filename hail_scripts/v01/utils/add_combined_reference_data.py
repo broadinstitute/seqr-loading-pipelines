@@ -14,6 +14,7 @@ COMBINED_REFERENCE_DATA_FIELDS = """
      cadd.PHRED: Double,
      eigen.Eigen_phred: Double,
      primate_ai.score: Double,
+     splice_ai.delta_score: Double,
 
      dbnsfp.SIFT_pred: String,
      dbnsfp.Polyphen2_HVAR_pred: String,

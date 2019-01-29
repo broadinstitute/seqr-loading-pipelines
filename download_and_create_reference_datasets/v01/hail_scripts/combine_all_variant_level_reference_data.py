@@ -13,6 +13,7 @@ from hail_scripts.v01.utils.add_gnomad import add_gnomad_to_vds, read_gnomad_vds
 from hail_scripts.v01.utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, add_gnomad_genome_coverage_to_vds
 from hail_scripts.v01.utils.add_mpc import add_mpc_to_vds, read_mpc_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds, read_primate_ai_vds
+from hail_scripts.v01.utils.add_splice_ai import add_splice_ai_to_vds, read_splice_ai_vds
 from hail_scripts.v01.utils.add_topmed import add_topmed_to_vds, read_topmed_vds
 from hail_scripts.v01.utils.gcloud_utils import delete_gcloud_file
 from hail_scripts.v01.utils.hail_utils import create_hail_context
@@ -43,6 +44,7 @@ p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC field
 p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
+p.add_argument("--exclude-splice-ai", action="store_true", help="Don't add SpliceAI fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
 p.add_argument("--start-with-step", help="Which step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
@@ -92,6 +94,7 @@ if args.start_with_step == 0:
     if not args.exclude_gnomad: all_vds_objects.append(read_gnomad_vds(hc, args.genome_version, "genomes", subset=filter_interval))
     if not args.exclude_eigen: all_vds_objects.append(read_eigen_vds(hc, args.genome_version, subset=filter_interval))
     if not args.exclude_primate_ai: all_vds_objects.append(read_primate_ai_vds(hc, args.genome_version, subset=filter_interval))
+    if not args.exclude_splice_ai: all_vds_objects.append(read_splice_ai_vds(hc, args.genome_version, subset=filter_interval))
 
     all_vds_objects_with_minimal_schema = []
     for vds_object in all_vds_objects:
@@ -220,6 +223,11 @@ if args.start_with_step <= 4:
     if not args.exclude_primate_ai:
         logger.info("\n==> add primate_ai")
         vds = add_primate_ai_to_vds(hc, vds, args.genome_version, root="va.primate_ai", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    if not args.exclude_splice_ai:
+        logger.info("\n==> add splice_ai")
+        vds = add_splice_ai_to_vds(hc, vds, args.genome_version, root="va.splice_ai", subset=filter_interval)
         pprint(vds.variant_schema)
 
     # DON'T add clinvar because it updates frequently

@@ -30,6 +30,7 @@ from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_T
     SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
+from hail_scripts.v01.utils.add_splice_ai import add_splice_ai_to_vds
 from hail_scripts.v01.utils.hail_utils import create_hail_context, stop_hail_context
 from hail_scripts.v01.utils.validate_vds import validate_vds_genome_version_and_sample_type, validate_vds_has_been_filtered
 from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
@@ -111,6 +112,7 @@ def init_command_line_args():
     p.add_argument("--exclude-hgmd", action="store_true", help="Don't add HGMD fields. Intended for testing.")
     p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
     p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
+    p.add_argument("--exclude-splice-ai", action="store_true", help="Don't add SpliceAI fields. Intended for testing.")
     p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
     p.add_argument("--exclude-vcf-info-field", action="store_true", help="Don't add any fields from the VCF info field. Intended for testing.")
 
@@ -654,11 +656,12 @@ def step3_add_reference_datasets(hc, vds, args):
 
     if args.dataset_type == "VARIANTS":
         # annotate with the combined reference data file which was generated using
-        # ../download_and_create_reference_datasets/hail_scripts/v01/combine_all_variant_level_reference_data.py
+        # ../download_and_create_reference_datasets/v01/hail_scripts/combine_all_variant_level_reference_data.py
         # and contains all these annotations in one .vds
 
         if not (args.exclude_dbnsfp or args.exclude_cadd or args.exclude_1kg or args.exclude_exac or
-                args.exclude_topmed or args.exclude_mpc or args.exclude_gnomad or args.exclude_eigen):
+                args.exclude_topmed or args.exclude_mpc or args.exclude_gnomad or args.exclude_eigen or
+                args.exclude_primate_ai or args.exclude_splice_ai):
 
             logger.info("\n==> add combined variant-level reference data")
             vds = add_combined_reference_data_to_vds(hc, vds, args.genome_version, subset=args.filter_interval)
@@ -704,6 +707,10 @@ def step3_add_reference_datasets(hc, vds, args):
             if not args.exclude_primate_ai:
                 logger.info("\n==> add primate_ai")
                 vds = add_primate_ai_to_vds(hc, vds, args.genome_version, root="va.primate_ai", subset=args.filter_interval)
+
+            if not args.exclude_splice_ai:
+                logger.info("\n==> add splice_ai")
+                vds = add_splice_ai_to_vds(hc, vds, args.genome_version, root="va.splice_ai", subset=args.filter_interval)
 
     if not args.skip_annotations and not args.exclude_clinvar:
         logger.info("\n==> add clinvar")
