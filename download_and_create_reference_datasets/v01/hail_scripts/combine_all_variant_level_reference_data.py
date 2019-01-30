@@ -13,6 +13,7 @@ from hail_scripts.v01.utils.add_gnomad import add_gnomad_to_vds, read_gnomad_vds
 from hail_scripts.v01.utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, add_gnomad_genome_coverage_to_vds
 from hail_scripts.v01.utils.add_mpc import add_mpc_to_vds, read_mpc_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds, read_primate_ai_vds
+from hail_scripts.v01.utils.add_splice_ai import add_splice_ai_to_vds, read_splice_ai_vds
 from hail_scripts.v01.utils.add_topmed import add_topmed_to_vds, read_topmed_vds
 from hail_scripts.v01.utils.gcloud_utils import delete_gcloud_file
 from hail_scripts.v01.utils.hail_utils import create_hail_context
@@ -43,20 +44,14 @@ p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC field
 p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
 p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
 p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
+p.add_argument("--exclude-splice-ai", action="store_true", help="Don't add SpliceAI fields. Intended for testing.")
 p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
 
-p.add_argument("--start-with-step", help="Which step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4])
+p.add_argument("--start-with-step", help="Which step to start with.", type=int, default=0, choices=[0, 1, 2, 3, 4, 5])
 
-p.add_argument("--dont-delete-intermediate-vds-files", action="store_true", help="Keep intermediate VDS files to allow restarting the pipeline from the middle using --start-with-step")
-
-#p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`")
-#p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
-#p.add_argument("--export-to-vds", help="Path of vds", default="gs://seqr-reference-data/GRCh%(genome_version)s/all_reference_data/all_reference_data.vds")
-#p.add_argument("--export-to-elastic-search", help="Whether to export the data to elasticsearch", action="store_true")
-#p.add_argument("--index", help="Elasticsearch index name", default="all-reference-data")
-#p.add_argument("--index-type", help="Elasticsearch index type", default="variant")
-#p.add_argument("--block-size", help="Elasticsearch block size", default=200, type=int)
-#p.add_argument("--num-shards", help="Number of shards", default=1, type=int)
+p.add_argument("--delete-intermediate-vds-files", action="store_true", help="Delete intermediate VDS files to save space. "
+    "After this, the next run will have to be started from the beginning - it will not be possible to use "
+    "--start-with-step to restart the pipeline from an intermediate step.")
 
 args = p.parse_args()
 
@@ -69,6 +64,7 @@ step0_output_vds = output_vds.replace(".vds", "") + "_minimal.vds"
 step1_output_vds = output_vds.replace(".vds", "") + "_with_coverage1.vds"
 step2_output_vds = output_vds.replace(".vds", "") + "_with_coverage2.vds"
 step3_output_vds = output_vds.replace(".vds", "") + "_annotations1.vds"
+step4_output_vds = output_vds.replace(".vds", "") + "_annotations2.vds"
 
 
 if args.start_with_step == 0:
@@ -92,6 +88,7 @@ if args.start_with_step == 0:
     if not args.exclude_gnomad: all_vds_objects.append(read_gnomad_vds(hc, args.genome_version, "genomes", subset=filter_interval))
     if not args.exclude_eigen: all_vds_objects.append(read_eigen_vds(hc, args.genome_version, subset=filter_interval))
     if not args.exclude_primate_ai: all_vds_objects.append(read_primate_ai_vds(hc, args.genome_version, subset=filter_interval))
+    if not args.exclude_splice_ai: all_vds_objects.append(read_splice_ai_vds(hc, args.genome_version, subset=filter_interval))
 
     all_vds_objects_with_minimal_schema = []
     for vds_object in all_vds_objects:
@@ -122,8 +119,8 @@ if args.start_with_step <= 1:
 
     hc.stop()
 
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step0_output_vds, is_directory=True)
+    if args.delete_intermediate_vds_files:
+        delete_gcloud_file(step0_output_vds, is_directory=True)
 
 if args.start_with_step <= 2:
     logger.info("=============================== step 2 - read in minimal vds and add in gnomAD genomes coverage ===============================")
@@ -141,12 +138,12 @@ if args.start_with_step <= 2:
 
     hc.stop()
 
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step1_output_vds, is_directory=True)
+    if args.delete_intermediate_vds_files:
+        delete_gcloud_file(step1_output_vds, is_directory=True)
 
 if args.start_with_step <= 3:
 
-    logger.info("\n=============================== step 3 - read in vds and annotate it with reference datasets ===============================")
+    logger.info("\n=============================== step 3 - read in vds and annotate it cadd, eigen, 1kg, exac, mpc ===============================")
 
     hc = create_hail_context()
     vds = read_vds(hc, step2_output_vds)
@@ -182,9 +179,12 @@ if args.start_with_step <= 3:
 
     hc.stop()
 
+    if args.delete_intermediate_vds_files:
+        delete_gcloud_file(step2_output_vds, is_directory=True)
+
 if args.start_with_step <= 4:
 
-    logger.info("\n=============================== step 4 - read in vds and annotate it with additional reference datasets ===============================")
+    logger.info("\n=============================== step 4 - read in vds and annotate it gnomad exomes, gnomad genomes, dbnsfp, topmed ===============================")
 
     hc = create_hail_context()
     vds = read_vds(hc, step3_output_vds)
@@ -217,17 +217,36 @@ if args.start_with_step <= 4:
         vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
         pprint(vds.variant_schema)
 
+    write_vds(vds, step4_output_vds)
+
+    hc.stop()
+
+    if args.delete_intermediate_vds_files:
+        delete_gcloud_file(step3_output_vds, is_directory=True)
+
+if args.start_with_step <= 5:
+
+    logger.info("\n=============================== step 5 - read in vds and annotate it with additional reference datasets ===============================")
+
+    hc = create_hail_context()
+    vds = read_vds(hc, step4_output_vds)
+
     if not args.exclude_primate_ai:
         logger.info("\n==> add primate_ai")
         vds = add_primate_ai_to_vds(hc, vds, args.genome_version, root="va.primate_ai", subset=filter_interval)
         pprint(vds.variant_schema)
 
-    # DON'T add clinvar because it updates frequently
+    if not args.exclude_splice_ai:
+        logger.info("\n==> add splice_ai")
+        vds = add_splice_ai_to_vds(hc, vds, args.genome_version, root="va.splice_ai", subset=filter_interval)
+        pprint(vds.variant_schema)
+
+    # DON'T add clinvar to the combined reference vds because it updates frequently, so it's easier to just keep it in it's own separate vds.
     #if not args.exclude_clinvar:
     #    logger.info("\n==> Add clinvar")
     #    vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
 
-    # DON'T add hgmd because it's got a restrictive license, so only staff users can use it
+    # DON'T add hgmd to the combined reference vds because it's got a restrictive license, so only staff users can use it.
     #if not args.exclude_hgmd:
     #    logger.info("\n==> Add hgmd")
     #    vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
@@ -236,36 +255,10 @@ if args.start_with_step <= 4:
 
     write_vds(vds, output_vds)
 
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step2_output_vds)
+    if args.delete_intermediate_vds_files:
+        delete_gcloud_file(step4_output_vds, is_directory=True)
 
 
 summary = vds.summarize()
 pprint(summary)
 
-
-
-
-"""
-from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
-
-DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
-
-print("======== Export to elasticsearch ======")
-es = ElasticsearchClient(
-    host=args.host,
-    port=args.port,
-)
-
-es.export_vds_to_elasticsearch(
-    vds,
-    index_name=args.index,
-    index_type_name=args.index_type,
-    block_size=args.block_size,
-    num_shards=args.num_shards,
-    delete_index_before_exporting=True,
-    disable_doc_values_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
-    disable_index_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
-    verbose=True,
-)
-"""

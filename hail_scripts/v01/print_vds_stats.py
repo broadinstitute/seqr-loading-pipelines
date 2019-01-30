@@ -29,6 +29,8 @@ for input_path in args.input_path:
 
     print("\n==> sample_ids: " + "\t".join(["%s: %s" % (i, sample_id) for i, sample_id in enumerate(vds.sample_ids)]))
 
+    kt = vds.make_table("v=v, va=va", []).to_dataframe().show(n=50)
+
     if not args.schema_only:
         print("==================")
         print("Total - before split_multi()")
