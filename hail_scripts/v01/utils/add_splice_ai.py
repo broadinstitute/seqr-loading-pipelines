@@ -2,7 +2,7 @@ import hail
 
 SPLICE_AI_VDS_PATHS = {
     '37': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.vds',
-    '38': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.vds/',
+    '38': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.vds',
 }
 
 
