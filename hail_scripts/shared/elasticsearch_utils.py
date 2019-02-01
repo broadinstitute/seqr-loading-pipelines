@@ -1,5 +1,4 @@
-from io import StringIO
-
+from io import BytesIO as StringIO
 
 # Elastic search write operations.
 # See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
