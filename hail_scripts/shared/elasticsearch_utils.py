@@ -1,4 +1,10 @@
-from io import BytesIO as StringIO
+import sys
+
+if sys.version_info[0] < 3:
+    from StringIO import StringIO
+else:
+    from io import StringIO
+
 
 # Elastic search write operations.
 # See https://www.elastic.co/guide/en/elasticsearch/hadoop/current/configuration.html#_operation
