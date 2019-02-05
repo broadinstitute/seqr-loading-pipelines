@@ -855,9 +855,9 @@ def run_pipeline():
         update_operations_log(args)
         cleanup_steps(args)
 
-    if args.use_temp_loading_nodes:
-        # move data off of the loading nodes
-        route_index_to_temp_es_cluster(False, args)
+        if args.use_temp_loading_nodes:
+            # move data off of the loading nodes
+            route_index_to_temp_es_cluster(False, args)
 
     logger.info("==> Pipeline completed")
     logger.info("")
