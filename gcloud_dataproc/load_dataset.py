@@ -128,7 +128,6 @@ def _make_disks(settings, es_disk_snapshots=None):
 
             run(" ".join([
                 "gcloud compute disks create " + disk_name,
-                #"--zone %(GCLOUD_ZONE)s",
                 "--type pd-ssd",
                 "--source-snapshot " + snapshot_name,
                 ]) % settings, errors_to_ignore=["lready exists"])
@@ -142,7 +141,6 @@ def _make_disks(settings, es_disk_snapshots=None):
 
             run(" ".join([
                 "gcloud compute disks create " + disk_name,
-                #"--zone %(GCLOUD_ZONE)s",
                 "--type pd-ssd",
                 "--size %(ELASTICSEARCH_DISK_SIZE)s",
                 ]) % settings, errors_to_ignore=["lready exists"])
@@ -395,7 +393,6 @@ def main():
             "ES_CLUSTER_NAME": args.k8s_cluster_name,
             "NAMESPACE": args.k8s_cluster_name,  # kubernetes namespace
             "IMAGE_PULL_POLICY": "Always",
-            #"GCLOUD_ZONE": "central",
 
             "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
             "ELASTICSEARCH_VERSION": "6.3.2",
