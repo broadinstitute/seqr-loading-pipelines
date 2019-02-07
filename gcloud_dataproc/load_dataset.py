@@ -7,7 +7,6 @@ import os
 import random
 import re
 import sys
-import tempfile
 import time
 
 from gcloud_dataproc.utils import seqr_api
@@ -56,8 +55,6 @@ def init_command_line_args():
 
     group = p.add_mutually_exclusive_group()
     group.add_argument("--num-persistent-nodes", type=int, help="For use with --num-persistent-nodes. Number of persistent data nodes to create.", default=3)
-    group.add_argument("--es-disk-snapshots", help="Comma-separated list of disk snapshot names. If specified, the elasticsearch persistent nodes "
-        "will be initialized from these snapshots.")
 
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
@@ -111,68 +108,6 @@ def _wait_for_data_nodes_state(action, settings, data_node_name="es-data-loading
             is_running = is_pod_running(data_node_name, pod_number=i)
             done = not is_running if action == "delete" else is_running
             time.sleep(5)
-            
-
-def _make_disks(settings, es_disk_snapshots=None):
-    """
-
-    Args:
-        es_disk_snapshots (list): optional list of snapshot names
-    """
-
-    # create disks from snapshots
-    created_disks = []
-    if es_disk_snapshots:
-        for i, snapshot_name in enumerate(es_disk_snapshots):
-            disk_name = "es-data-%s--%d" % (settings["CLUSTER_NAME"], i)   # time.strftime("%y%m%d-%H%M%S")  - make the timestamp year-month-day so a bunch of disks don't get created accidentally
-
-            run(" ".join([
-                "gcloud compute disks create " + disk_name,
-                "--type pd-ssd",
-                "--source-snapshot " + snapshot_name,
-                ]) % settings, errors_to_ignore=["lready exists"])
-
-            disk_size =  settings["ELASTICSEARCH_DISK_SIZE"] # TODO GET SNAPSHOT DISK SIZE from gcloud compute disks describe ...
-
-            created_disks.append((disk_name, disk_size))
-    else:
-        for i in range(settings["ES_NUM_PERSISTENT_NODES"]):
-            disk_name = "es-data-%s--%d" % (settings["CLUSTER_NAME"], i)
-
-            run(" ".join([
-                "gcloud compute disks create " + disk_name,
-                "--type pd-ssd",
-                "--size %(ELASTICSEARCH_DISK_SIZE)s",
-                ]) % settings, errors_to_ignore=["lready exists"])
-
-            created_disks.append((disk_name, settings["ELASTICSEARCH_DISK_SIZE"]))
-
-
-    # create PersistentVolume objects for disk
-    namespace = settings["NAMESPACE"]
-    for i, (existing_disk_name, elasticsearch_disk_size) in enumerate(created_disks):
-
-        with tempfile.NamedTemporaryFile("w") as f:
-            f.write("""apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: %(existing_disk_name)s
-  namespace: %(namespace)s
-spec:
-  capacity:
-    storage: %(elasticsearch_disk_size)s
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: ssd-storage-class
-  gcePersistentDisk:
-    fsType: ext4
-    pdName: %(existing_disk_name)s
-""" % locals())
-            f.flush()
-            file_path = f.name
-            run("kubectl create -f %(file_path)s"  % locals(), print_command=True, errors_to_ignore=["already exists"])
-
 
 def _set_k8s_context(settings):
     run("gcloud container clusters get-credentials %(CLUSTER_NAME)s" % settings)
@@ -189,7 +124,6 @@ def _create_persistent_es_nodes(settings):
 
     _set_k8s_context(settings)
 
-
     # create additional nodes
     run(" ".join([
         "gcloud container node-pools create es-persistent-nodes",
@@ -197,8 +131,6 @@ def _create_persistent_es_nodes(settings):
         "--machine-type %(CLUSTER_MACHINE_TYPE)s",
         "--num-nodes " + str(int(settings.get("ES_DATA_NUM_PODS", 1)) - 1),
     ]) % settings, errors_to_ignore=["Already exists"])
-
-    _make_disks(settings, settings["ELASTICSEARCH_DISK_SNAPSHOTS"])
 
     # deploy elasticsearch
     _process_kubernetes_configs("create", settings=settings,
