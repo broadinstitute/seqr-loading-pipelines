@@ -4,11 +4,11 @@ from hail.expr import tint, tfloat, tstr
 DBNSFP_INFO = {
     "2.9.3": {
         "source_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr13.gz",
-        "output_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.vds"
+        "output_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht"
     },
     "3.5": {
         "source_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.chr*.gz",
-        "output_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.vds",
+        "output_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht",
     },
 }
 
@@ -103,22 +103,20 @@ def dbnsfp_to_ht(source_path, output_path, dbnsfp_version="2.9.3"):
     # Needed for matrix table conversion to denote variant data.
     ht = ht.key_by(locus=hl.locus(ht.chr, ht.pos), alleles=[ht.ref, ht.alt])
 
-    # create sites-only Matrix Table
-    mt = hl.MatrixTable.from_rows_table(ht)
 
-    mt = mt.annotate_globals(
+    ht = ht.annotate_globals(
         sourceFilePath=source_path,
         version=dbnsfp_version,
     )
 
-    mt.write(output_path)
-    return mt
+    ht.write(output_path)
+    return ht
 
 def run():
     dbnsfp_version="2.9.3"
-    mt = dbnsfp_to_ht(DBNSFP_INFO[dbnsfp_version]["source_path"],
+    ht = dbnsfp_to_ht(DBNSFP_INFO[dbnsfp_version]["source_path"],
                       DBNSFP_INFO[dbnsfp_version]["output_path"],
                       dbnsfp_version)
-    mt.describe()
+    ht.describe()
 
 run()
