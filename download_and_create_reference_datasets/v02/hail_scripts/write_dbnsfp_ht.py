@@ -113,10 +113,10 @@ def dbnsfp_to_ht(source_path, output_path, dbnsfp_version="2.9.3"):
     return ht
 
 def run():
-    dbnsfp_version="2.9.3"
-    ht = dbnsfp_to_ht(DBNSFP_INFO[dbnsfp_version]["source_path"],
-                      DBNSFP_INFO[dbnsfp_version]["output_path"],
-                      dbnsfp_version)
-    ht.describe()
+    for dbnsfp_version, config in DBNSFP_INFO.items():
+        ht = dbnsfp_to_ht(config["source_path"],
+                          config["output_path"],
+                          dbnsfp_version)
+        ht.describe()
 
 run()
