@@ -3,12 +3,8 @@ from hail.expr import tint, tfloat, tstr
 
 DBNSFP_INFO = {
     "2.9.3": {
-        "source_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr13.gz",
+        "source_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr*.gz",
         "output_path": "gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht"
-    },
-    "3.5": {
-        "source_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.chr*.gz",
-        "output_path": "gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht",
     },
 }
 

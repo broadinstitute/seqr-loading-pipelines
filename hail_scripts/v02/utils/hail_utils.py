@@ -38,7 +38,8 @@ def import_vcf(
         min_partitions: int = None,
         force_bgz: bool = True,
         drop_samples: bool = False,
-        skip_invalid_loci: bool = False):
+        skip_invalid_loci: bool = False,
+        split_multi_alleles: bool = True):
     """Import vcf and return MatrixTable.
 
     :param str vcf_path: MT to annotate with VEP
@@ -74,8 +75,10 @@ def import_vcf(
     mt = mt.annotate_rows(
         original_alt_alleles=hl.or_missing(hl.len(mt.alleles) > 2, get_expr_for_variant_ids(mt.locus, mt.alleles))
     )
-    mt = hl.split_multi_hts(mt)
-    mt = mt.key_rows_by(**hl.min_rep(mt.locus, mt.alleles))
+
+    if split_multi_alleles:
+        mt = hl.split_multi_hts(mt)
+        mt = mt.key_rows_by(**hl.min_rep(mt.locus, mt.alleles))
 
     return mt
 
