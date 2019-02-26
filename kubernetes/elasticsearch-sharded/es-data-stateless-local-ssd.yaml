@@ -1,5 +1,5 @@
-apiVersion: apps/v1
-kind: StatefulSet
+apiVersion: extensions/v1beta1
+kind: Deployment
 metadata:
   name: es-data-loading
   namespace: {{ NAMESPACE }}
@@ -12,7 +12,6 @@ spec:
     matchLabels:
       component: elasticsearch-loading
       role: data
-  serviceName: es-data-loading
   replicas: {{ ES_DATA_NUM_PODS }}
   template:
     metadata:
@@ -98,4 +97,4 @@ spec:
       volumes:
         - name: "storage"
           hostPath:
-            path: "/mnt/disks/ssd0"
+              path: "/mnt/disks/ssd0"

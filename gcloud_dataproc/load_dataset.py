@@ -19,10 +19,13 @@ logger = logging.getLogger()
 
 def init_command_line_args():
     unique_id = random.randint(10**5, 10**6 - 1)
-    random_cluster_name = "vep-%s" % unique_id
+    random_dataproc_cluster_name = "vep-%s" % unique_id
+
+    unique_id = random.randint(10**5, 10**6 - 1)
+    random_es_cluster_name = "test-es-cluster-%s" % unique_id
 
     p = argparse.ArgumentParser()
-    p.add_argument("-c", "--cluster-name", help="dataproc cluster name. If it doesn't exist, it will be created", default=random_cluster_name)
+    p.add_argument("-c", "--cluster-name", help="dataproc cluster name. If it doesn't exist, it will be created", default=random_dataproc_cluster_name)
     p.add_argument("--num-workers", help="num dataproc worker nodes to create", default=2, type=int)
     p.add_argument("--num-preemptible-workers", help="num preemptible dataproc worker nodes to create", default=12, type=int)
 
@@ -39,12 +42,19 @@ def init_command_line_args():
 
     p.add_argument("--use-temp-loading-nodes", action="store_true",
         help="If specified, temporary loading nodes will be created and added to the elasticsearch cluster")
+    p.add_argument("--num-temp-loading-nodes", type=int,
+        help="For use with --num-temp-loading-nodes. Number of temp loading nodes to create.", default=3)
+
     p.add_argument("--delete-temp-loading-nodes-when-done", help="For use with --num-temp-loading-nodes. Delete the "
         "temp loading nodes when done.", action='store_true')
+
     p.add_argument("--create-persistent-es-nodes", action="store_true",
         help="If specified, a persistent ES cluster will be created before loading data or creating temp loading nodes."
         " This is unnecessary if an elasticsearch cluster already exists.")
-    p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch.", default="gcloud-prod-es")
+    p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch.", default=random_es_cluster_name)
+
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--num-persistent-nodes", type=int, help="For use with --num-persistent-nodes. Number of persistent data nodes to create.", default=3)
 
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
@@ -90,16 +100,19 @@ def _process_kubernetes_configs(action, config_paths, settings):
             run("kubectl apply -f %(config_path)s" % locals(), errors_to_ignore=["already exists", "already allocated"])
 
 
-def _wait_for_data_nodes_state(action, settings):
+def _wait_for_data_nodes_state(action, settings, data_node_name="es-data-loading"):
     # wait for all data nodes to enter desired state
     for i in range(int(settings.get("ES_DATA_NUM_PODS", 1))):
         done = False
         while not done:
-            is_running = is_pod_running("es-data-loading", pod_number=i)
+            is_running = is_pod_running(data_node_name, pod_number=i)
             done = not is_running if action == "delete" else is_running
             time.sleep(5)
-            
-            
+
+def _set_k8s_context(settings):
+    run("gcloud container clusters get-credentials %(CLUSTER_NAME)s" % settings)
+    run("kubectl config set-context $(kubectl config current-context) --namespace=%(NAMESPACE)s" % settings)
+
 def _create_persistent_es_nodes(settings):
     # make sure cluster exists - create cluster with 1 node
     run(" ".join([
@@ -108,7 +121,8 @@ def _create_persistent_es_nodes(settings):
         "--num-nodes 1",   # "--scopes https://www.googleapis.com/auth/devstorage.read_write"
     ]) % settings, errors_to_ignore=["Already exists"])
 
-    run("gcloud container clusters get-credentials %(CLUSTER_NAME)s" % settings)
+
+    _set_k8s_context(settings)
 
     # create additional nodes
     run(" ".join([
@@ -119,9 +133,10 @@ def _create_persistent_es_nodes(settings):
     ]) % settings, errors_to_ignore=["Already exists"])
 
     # deploy elasticsearch
-    _process_kubernetes_configs("create", template_variables=settings,
+    _process_kubernetes_configs("create", settings=settings,
         config_paths=[
             #"./gcloud_dataproc/utils/elasticsearch_cluster/es-configmap.yaml",
+            "./kubernetes/elasticsearch-sharded/es-namespace.yaml",
             "./kubernetes/elasticsearch-sharded/es-discovery-svc.yaml",
             "./kubernetes/elasticsearch-sharded/es-master.yaml",
             "./kubernetes/elasticsearch-sharded/es-svc.yaml",
@@ -130,14 +145,14 @@ def _create_persistent_es_nodes(settings):
 
     wait_until_pod_is_running("es-kibana")
 
-    _process_kubernetes_configs("create", template_variables=settings,
+    _process_kubernetes_configs("create", settings=settings,
         config_paths=[
             "./kubernetes/elasticsearch-sharded/es-client.yaml",
             "./kubernetes/elasticsearch-sharded/es-data-stateful.yaml",
             "./kubernetes/elasticsearch-sharded/es-data-svc.yaml",
         ])
 
-    _wait_for_data_nodes_state("create", settings)
+    _wait_for_data_nodes_state("create", settings, data_node_name="es-data")
 
 
 
@@ -149,23 +164,21 @@ def _create_temp_es_loading_nodes(settings):
     #    "--num-nodes 1",   # "--scopes https://www.googleapis.com/auth/devstorage.read_write"
     #]) % locals(), errors_to_ignore=["Already exists"])
 
-    run("gcloud container clusters get-credentials %(CLUSTER_NAME)s" % settings)
-    run("kubectl config set-context $(kubectl config current-context) --namespace=%(NAMESPACE)s" % settings)
+    _set_k8s_context(settings)
 
     # add loading nodes
-    loading_node_pool_name = _compute_loading_pool_name(settings["CLUSTER_NAME"])
     run(" ".join([
-        "gcloud container node-pools create " + loading_node_pool_name,
+        "gcloud container node-pools create loading-cluster ",
         "--cluster %(CLUSTER_NAME)s",
         "--machine-type %(CLUSTER_MACHINE_TYPE)s",
         "--num-nodes %(ES_DATA_NUM_PODS)s",
         "--local-ssd-count 1",
-    ]) % settings, errors_to_ignore=["lready exists"])
+    ]) % settings, errors_to_ignore=["Already exists"])
 
     # deploy elasticsearch
     _process_kubernetes_configs("create", settings=settings,
         config_paths=[
-            "./kubernetes/elasticsearch-sharded/es-data-stateful-local-ssd.yaml",
+            "./kubernetes/elasticsearch-sharded/es-data-stateless-local-ssd.yaml",
         ])
 
     _wait_for_data_nodes_state("create", settings)
@@ -216,9 +229,6 @@ def _enable_cluster_routing_rebalance(enable, dataproc_cluster_name, host, port)
         "--enable" if enable else "--disable",
    ])))
 
-def _compute_loading_pool_name(k8s_cluster_name):
-    return "%(k8s_cluster_name)s-loading-cluster" % locals()
-
 
 def _compute_firewall_rule_name(k8s_cluster_name):
     return "%(k8s_cluster_name)s-firewall-rule" % locals()
@@ -227,12 +237,11 @@ def _compute_firewall_rule_name(k8s_cluster_name):
 def _delete_temp_es_loading_nodes(k8s_cluster_name, settings):
     _process_kubernetes_configs("delete", settings=settings,
         config_paths=[
-            "./kubernetes/elasticsearch-sharded/es-data-stateful-local-ssd.yaml",
+            "./kubernetes/elasticsearch-sharded/es-data-stateless-local-ssd.yaml",
         ])
     _wait_for_data_nodes_state("delete", settings)
 
-    loading_node_pool_name = _compute_loading_pool_name(k8s_cluster_name)
-    run("echo Y | gcloud container node-pools delete --cluster %(k8s_cluster_name)s %(loading_node_pool_name)s" % locals())
+    run("echo Y | gcloud container node-pools delete --cluster %(k8s_cluster_name)s loading-cluster" % locals())
 
     # delete firewall rule
     firewall_rule_name = _compute_firewall_rule_name(k8s_cluster_name)
@@ -290,30 +299,25 @@ def main():
             run("gsutil cp %(subset_samples_file_path)s %(subset_samples_file_gcloud_path)s" % locals())
             load_dataset_to_es_args.extend(["--subset-samples", subset_samples_file_gcloud_path])
 
-    # make sure kubectl is installed
-    run("kubectl version --client")
-
-    # make sure cluster exists
-    _create_dataproc_cluster(
-        args.cluster_name,
-        args.genome_version,
-        num_workers=args.num_workers,
-        num_preemptible_workers=args.num_preemptible_workers)
-
-
     # run pipeline with or without using a temp elasticsearch cluster for loading
-    if args.use_temp_loading_nodes:
+    if args.use_temp_loading_nodes and (args.stop_after_step == None or args.stop_after_step > 1):
+        # make sure kubectl is installed
+        run("kubectl version --client")
+
 
         # run vep and compute derived annotations before create temp elasticsearch loading nodes
         if args.start_with_step <= 1:
+            # make sure cluster exists
+            _create_dataproc_cluster(
+                args.cluster_name,
+                args.genome_version,
+                num_workers=args.num_workers,
+                num_preemptible_workers=args.num_preemptible_workers)
             submit_load_dataset_to_es_job(
                 args.cluster_name,
                 start_with_step=args.start_with_step,
                 stop_after_step=1,
                 other_load_dataset_to_es_args=load_dataset_to_es_args)
-
-        _enable_cluster_routing_rebalance(False, args.cluster_name, args.host, args.port)
-
         # create temp es nodes
         settings = {
             "DEPLOY_TO": args.k8s_cluster_name,
@@ -326,13 +330,27 @@ def main():
             "ELASTICSEARCH_VERSION": "6.3.2",
             "ELASTICSEARCH_JVM_MEMORY": "13g",
             "ELASTICSEARCH_DISK_SIZE": "100Gi",
+            "ELASTICSEARCH_DISK_SNAPSHOTS": args.es_disk_snapshots.split(",") if args.es_disk_snapshots else None,
+
+            "KIBANA_SERVICE_PORT": 5601,
+
+            "ES_NUM_PERSISTENT_NODES": args.num_persistent_nodes,
 
             "ES_CLIENT_NUM_PODS": 3,
             "ES_MASTER_NUM_PODS": 2,
-            "ES_DATA_NUM_PODS": 3,
+            "ES_DATA_NUM_PODS": args.num_temp_loading_nodes,
         }
 
         ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
+
+        _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
+
+        # make sure cluster exists
+        _create_dataproc_cluster(
+            args.cluster_name,
+            args.genome_version,
+            num_workers=args.num_workers,
+            num_preemptible_workers=args.num_preemptible_workers)
 
         # continue pipeline starting with loading steps, stream data to the new elasticsearch instance at ip_address
         submit_load_dataset_to_es_job(
@@ -344,16 +362,23 @@ def main():
         if args.delete_temp_loading_nodes_when_done:
             _delete_temp_es_loading_nodes(args.k8s_cluster_name, settings)
 
-            _enable_cluster_routing_rebalance(True, args.cluster_name, args.host, args.port)
-
+            _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
     else:
+        # make sure cluster exists
+        _create_dataproc_cluster(
+            args.cluster_name,
+            args.genome_version,
+            num_workers=args.num_workers,
+            num_preemptible_workers=args.num_preemptible_workers)
+
         submit_load_dataset_to_es_job(
             args.cluster_name,
             start_with_step=args.start_with_step,
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args,
         )
+
 
 if __name__ == "__main__":
     main()
