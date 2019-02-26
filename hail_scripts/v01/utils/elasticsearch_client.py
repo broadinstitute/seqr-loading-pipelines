@@ -103,8 +103,33 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 "sample_id: s",  # add sample_id to each genotype struct to keep track of
             ])
 
-            genotypes_root = "gs" if not discard_missing_genotypes else "gs.filter(g => g.isCalled())"
-            vds = vds.annotate_variants_expr("va.genotypes = %(genotypes_root)s.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
+            vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
+
+            sample_fields_annotation_template = "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet"
+            for i in range(1, 3):
+                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                    field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}'.format(i)
+                ))
+            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                field_name='no_call', field_filter='gen.num_alt == -1'
+            ))
+
+            for i in range(5, 95, 5):
+                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                    field_name='gq_gte_{}'.format(i), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i)
+                ))
+            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                field_name='gq_gte_95', field_filter='gen.gq >= 95'
+            ))
+
+            for i in range(5, 50, 5):
+                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                    field_name='ab_gte_{}'.format(i), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i)
+                ))
+
+            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
+                field_name='ab_gte_50', field_filter='gen.ab * 100 >= 50'.format(i)
+            ))
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
 

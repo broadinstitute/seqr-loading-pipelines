@@ -45,10 +45,10 @@ VARIANT_GENOTYPE_FIELDS_TO_EXPORT = {
 }
 
 VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP = {
-    "(.*[_.]|^)num_alt$": {"type": "byte"},
-    "(.*[_.]|^)gq$": {"type": "byte"},
+    "(.*[_.]|^)num_alt$": {"type": "byte", "doc_values": "false"},
+    "(.*[_.]|^)gq$": {"type": "byte", "doc_values": "false"},
     "(.*[_.]|^)dp$": {"type": "short", "doc_values": "false"},
-    "(.*[_.]|^)ab$": {"type": "half_float"},
+    "(.*[_.]|^)ab$": {"type": "half_float", "doc_values": "false"},
 
 }
 
