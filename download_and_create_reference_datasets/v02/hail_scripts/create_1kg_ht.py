@@ -7,7 +7,6 @@ from hail_scripts.v02.utils.hail_utils import import_vcf
 logger = logging.getLogger('v02.hail_scripts.create_1kg_ht')
 
 CONFIG= {
-    "37": "gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.vcf.gz",
     "38": "gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.vcf.gz"
 }
 
@@ -21,19 +20,21 @@ def vcf_to_mt(path, genome_version):
     :param genome_version: genome version
     :return:
     '''
+    # Import but do not split multis here.
     mt = import_vcf(path,
                     genome_version=genome_version,
                     min_partitions=1000,
                     split_multi_alleles=False)
 
-    multi_allelic_mt = mt.filter_rows(hl.len(mt.alleles) > 2)
-    multi_allelic_mt = hl.split_multi_hts(multi_allelic_mt)
+    multiallelic_mt = mt.filter_rows(hl.len(mt.alleles) > 2)
+    multiallelic_mt = hl.split_multi_hts(multiallelic_mt)
 
-    # We split here for standardization because split_multi_hts annotates the mt.
-    bi_allelic_mt = mt.filter_rows(hl.len(mt.alleles) == 2)
-    bi_allelic_mt = hl.split_multi_hts(bi_allelic_mt)
+    # We annotate some rows manually to conform to the multiallelic_mt (after split).
+    # Calling split_multi_hts on biallelic to annotate the rows causes problems.
+    biallelic_mt = mt.filter_rows(hl.len(mt.alleles) == 2)
+    biallelic_mt = biallelic_mt.annotate_rows(a_index=1, was_split=False)
 
-    all_mt = bi_allelic_mt.union_rows(multi_allelic_mt)
+    all_mt = biallelic_mt.union_rows(multiallelic_mt)
     all_mt = all_mt.key_rows_by(all_mt.locus, all_mt.alleles)
     return all_mt
 
@@ -45,7 +46,6 @@ def run():
 
        mt.describe()
        mt.rows().show()
-       mt.count()
 
        output_path = path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "")\
                          .replace(".*", "").replace("*", "") + ".ht"
