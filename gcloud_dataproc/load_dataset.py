@@ -330,7 +330,7 @@ def main():
             "ELASTICSEARCH_VERSION": "6.3.2",
             "ELASTICSEARCH_JVM_MEMORY": "13g",
             "ELASTICSEARCH_DISK_SIZE": "100Gi",
-            "ELASTICSEARCH_DISK_SNAPSHOTS": args.es_disk_snapshots.split(",") if args.es_disk_snapshots else None,
+            "ELASTICSEARCH_DISK_SNAPSHOTS": None,
 
             "KIBANA_SERVICE_PORT": 5601,
 
