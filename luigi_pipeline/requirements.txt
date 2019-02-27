@@ -1,0 +1,2 @@
+elasticsearch==6.2.0
+hail>=0.2.10
