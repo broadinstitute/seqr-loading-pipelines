@@ -40,15 +40,17 @@ def init_command_line_args():
     p.add_argument("--stop-after-step", help="stop after this pipeline step", type=int)
     p.add_argument("--download-fam-file", help="download .fam file from seqr", action='store_true')
 
+
     p.add_argument("--use-temp-loading-nodes", action="store_true",
         help="If specified, temporary loading nodes will be created and added to the elasticsearch cluster")
+    p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch (eg. 'gcloud-prod-es')."
+        "This name is currently also re-used as elasticsearch's internal cluster name which it uses to link up with other elasticsearch instances.", default=random_es_cluster_name)
     p.add_argument("--num-temp-loading-nodes", type=int,
         help="For use with --num-temp-loading-nodes. Number of temp loading nodes to create.", default=3)
 
     p.add_argument("--create-persistent-es-nodes", action="store_true",
         help="If specified, a persistent ES cluster will be created before loading data or creating temp loading nodes."
         " This is unnecessary if an elasticsearch cluster already exists.")
-    p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch.", default=random_es_cluster_name)
 
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
@@ -321,6 +323,7 @@ def main():
                 start_with_step=args.start_with_step,
                 stop_after_step=1,
                 other_load_dataset_to_es_args=load_dataset_to_es_args)
+
         # create temp es nodes
         settings = _get_es_node_settings(args.k8s_cluster_name, args.num_temp_loading_nodes)
 
