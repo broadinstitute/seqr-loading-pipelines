@@ -28,7 +28,7 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_filtering_allele_frequency
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
-    SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
+    SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, wait_for_loading_shards_transfer
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
 from hail_scripts.v01.utils.add_splice_ai import add_splice_ai_to_vds
@@ -841,14 +841,6 @@ def route_index_to_temp_es_cluster(yes, args):
 
     if not yes:
         wait_for_loading_shards_transfer(client, index=index_arg)
-
-
-def wait_for_loading_shards_transfer(client, index=None):
-        shards = None
-        while shards is None or "es-data-loading" in shards:
-            shards = client.es.cat.shards(index=index)
-            logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(len(shards.strip().split("\n")), shards))
-            time.sleep(5)
 
 
 def run_pipeline():

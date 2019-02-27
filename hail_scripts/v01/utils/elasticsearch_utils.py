@@ -6,6 +6,7 @@ logging.root.handlers = list(handlers)
 import collections
 import logging
 import re
+import time
 import traceback
 from hail_scripts.v01.utils.vds_schema_string_utils import parse_field_names_and_types
 
@@ -290,4 +291,12 @@ def convert_vds_schema_string_to_es_index_properties(
         properties.update(elasticsearch_schema)
 
     return properties
+
+def wait_for_loading_shards_transfer(client, index=None):
+    shards = None
+    while shards is None or "es-data-loading" in shards:
+        shards = client.es.cat.shards(index=index)
+        logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
+            len(shards.strip().split("\n")), shards))
+        time.sleep(5)
 
