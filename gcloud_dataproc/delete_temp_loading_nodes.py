@@ -15,7 +15,7 @@ p.add_argument("k8s-cluster-name", help="Specifies the kubernetes cluster name t
 args = p.parse_args()
 
 client = ElasticsearchClient(args.host, args.port)
-wait_for_loading_shards_transfer()
+wait_for_loading_shards_transfer(client)
 
 settings = _get_es_node_settings(args.k8s_cluster_name, args.num_temp_loading_nodes)
 
