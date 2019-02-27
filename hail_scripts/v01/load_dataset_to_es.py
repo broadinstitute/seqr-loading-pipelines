@@ -816,13 +816,18 @@ def route_index_to_temp_es_cluster(yes, args):
 
     logger.info("==> Setting {}* settings = {}".format(args.index, body))
 
+    index_arg = "{}*".format(args.index)
     client = ElasticsearchClient(args.host, args.port)
-    client.es.indices.put_settings(index="{}*".format(args.index), body=body)
+    client.es.indices.put_settings(index=index_arg, body=body)
 
     if not yes:
+        wait_for_loading_shards_transfer(client, index=index_arg)
+
+
+def wait_for_loading_shards_transfer(client, index=None):
         shards = None
         while shards is None or "es-data-loading" in shards:
-            shards = client.es.cat.shards(index="{}*".format(args.index))
+            shards = client.es.cat.shards(index=index)
             logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(len(shards.strip().split("\n")), shards))
             time.sleep(5)
 

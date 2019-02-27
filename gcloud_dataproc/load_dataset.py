@@ -45,9 +45,6 @@ def init_command_line_args():
     p.add_argument("--num-temp-loading-nodes", type=int,
         help="For use with --num-temp-loading-nodes. Number of temp loading nodes to create.", default=3)
 
-    p.add_argument("--delete-temp-loading-nodes-when-done", help="For use with --num-temp-loading-nodes. Delete the "
-        "temp loading nodes when done.", action='store_true')
-
     p.add_argument("--create-persistent-es-nodes", action="store_true",
         help="If specified, a persistent ES cluster will be created before loading data or creating temp loading nodes."
         " This is unnecessary if an elasticsearch cluster already exists.")
@@ -216,6 +213,30 @@ def _create_es_nodes(settings, create_persistent_es_nodes=False):
     return ip_address
 
 
+def _get_es_node_settings(k8s_cluster_name, num_temp_loading_nodes):
+    return {
+        "DEPLOY_TO": k8s_cluster_name,
+        "CLUSTER_NAME": k8s_cluster_name,
+        "ES_CLUSTER_NAME": k8s_cluster_name,
+        "NAMESPACE": k8s_cluster_name,  # kubernetes namespace
+        "IMAGE_PULL_POLICY": "Always",
+
+        "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
+        "ELASTICSEARCH_VERSION": "6.3.2",
+        "ELASTICSEARCH_JVM_MEMORY": "13g",
+        "ELASTICSEARCH_DISK_SIZE": "100Gi",
+        "ELASTICSEARCH_DISK_SNAPSHOTS": None,
+
+        "KIBANA_SERVICE_PORT": 5601,
+
+        "ES_NUM_PERSISTENT_NODES": num_persistent_nodes,
+
+        "ES_CLIENT_NUM_PODS": 3,
+        "ES_MASTER_NUM_PODS": 2,
+        "ES_DATA_NUM_PODS": num_temp_loading_nodes,
+    }
+
+
 def _enable_cluster_routing_rebalance(enable, dataproc_cluster_name, host, port):
     logger.info("==> %s cluster.routing.rebalance", "enable" if enable else "disable")
 
@@ -232,20 +253,6 @@ def _enable_cluster_routing_rebalance(enable, dataproc_cluster_name, host, port)
 
 def _compute_firewall_rule_name(k8s_cluster_name):
     return "%(k8s_cluster_name)s-firewall-rule" % locals()
-
-
-def _delete_temp_es_loading_nodes(k8s_cluster_name, settings):
-    _process_kubernetes_configs("delete", settings=settings,
-        config_paths=[
-            "./kubernetes/elasticsearch-sharded/es-data-stateless-local-ssd.yaml",
-        ])
-    _wait_for_data_nodes_state("delete", settings)
-
-    run("echo Y | gcloud container node-pools delete --cluster %(k8s_cluster_name)s loading-cluster" % locals())
-
-    # delete firewall rule
-    firewall_rule_name = _compute_firewall_rule_name(k8s_cluster_name)
-    run("echo Y | gcloud compute firewall-rules delete %(firewall_rule_name)s" % locals())
 
 
 def main():
@@ -319,27 +326,7 @@ def main():
                 stop_after_step=1,
                 other_load_dataset_to_es_args=load_dataset_to_es_args)
         # create temp es nodes
-        settings = {
-            "DEPLOY_TO": args.k8s_cluster_name,
-            "CLUSTER_NAME": args.k8s_cluster_name,
-            "ES_CLUSTER_NAME": args.k8s_cluster_name,
-            "NAMESPACE": args.k8s_cluster_name,  # kubernetes namespace
-            "IMAGE_PULL_POLICY": "Always",
-
-            "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
-            "ELASTICSEARCH_VERSION": "6.3.2",
-            "ELASTICSEARCH_JVM_MEMORY": "13g",
-            "ELASTICSEARCH_DISK_SIZE": "100Gi",
-            "ELASTICSEARCH_DISK_SNAPSHOTS": None,
-
-            "KIBANA_SERVICE_PORT": 5601,
-
-            "ES_NUM_PERSISTENT_NODES": args.num_persistent_nodes,
-
-            "ES_CLIENT_NUM_PODS": 3,
-            "ES_MASTER_NUM_PODS": 2,
-            "ES_DATA_NUM_PODS": args.num_temp_loading_nodes,
-        }
+        settings = _get_es_node_settings(args.k8s_cluster_name, args.num_temp_loading_nodes)
 
         ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
 
@@ -359,10 +346,7 @@ def main():
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args + ["--host %(ip_address)s" % locals()])
 
-        if args.delete_temp_loading_nodes_when_done:
-            _delete_temp_es_loading_nodes(args.k8s_cluster_name, settings)
-
-            _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
+        _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
     else:
         # make sure cluster exists
