@@ -5,6 +5,7 @@ import getpass
 import multiprocessing
 import os
 import socket
+import subprocess
 
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
@@ -95,4 +96,4 @@ else:
     """ % locals()
 
 print(command)
-os.system(command)
+subprocess.check_call(command, shell=True)
