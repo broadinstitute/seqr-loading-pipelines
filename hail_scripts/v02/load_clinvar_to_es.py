@@ -68,7 +68,7 @@ review_status_str = hl.delimit(hl.sorted(hl.array(hl.set(mt.info.CLNREVSTAT)), k
 mt = mt.select_rows(
     allele_id=mt.info.ALLELEID,
     alt=get_expr_for_alt_allele(mt),
-    chrom=get_expr_for_contig(mt),
+    chrom=get_expr_for_contig(mt.locus),
     clinical_significance=hl.delimit(hl.sorted(hl.array(hl.set(mt.info.CLNSIG)), key=lambda s: s.replace("^_", "z"))),
     domains=get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root=mt.vep.transcript_consequences),
     gene_ids=mt.gene_ids,
@@ -91,7 +91,7 @@ mt = mt.select_rows(
         vep_transcript_consequences_root=mt.sortedTranscriptConsequences
     ),
     variant_id=get_expr_for_variant_id(mt),
-    xpos=get_expr_for_xpos(mt),
+    xpos=get_expr_for_xpos(mt.locus),
 )
 
 print("\n=== Summary ===")
