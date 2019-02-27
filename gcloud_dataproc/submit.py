@@ -95,4 +95,7 @@ else:
     """ % locals()
 
 print(command)
-os.system(command)
+return_code = os.system(command)
+
+if return_code != 0:
+    raise ValueError("'gcloud dataproc jobs submit ..' command exited with non-zero return code: {}".format(return_code))
