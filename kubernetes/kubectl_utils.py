@@ -71,6 +71,19 @@ def is_pod_running(pod_name, deployment_target=None, pod_number=0, verbose=True)
     return status == "Running"
 
 
+def is_pod_not_running(pod_name, deployment_target=None, pod_number=0, verbose=True):
+    """Returns True if the given pod is in "Running" state, and False otherwise."""
+
+    json_path = "{.items[%(pod_number)s].status.phase}" % locals()
+
+    status = get_pod_status(pod_name, json_path, deployment_target=deployment_target)
+
+    if verbose:
+        logger.info("%s[%s].is_running = %s" % (pod_name, pod_number, status))
+
+    return status is None
+
+
 def is_pod_ready(pod_name, deployment_target=None, pod_number=0, verbose=True):
     """Returns True if the given pod is in "Ready" state, and False otherwise."""
 

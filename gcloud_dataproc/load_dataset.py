@@ -11,7 +11,7 @@ import time
 
 from gcloud_dataproc.utils import seqr_api
 from kubernetes.shell_utils import run
-from kubernetes.kubectl_utils import is_pod_running, wait_until_pod_is_running
+from kubernetes.kubectl_utils import is_pod_running, is_pod_not_running, wait_until_pod_is_running
 from kubernetes.yaml_settings_utils import process_jinja_template, load_settings
 
 logger = logging.getLogger()
@@ -49,9 +49,6 @@ def init_command_line_args():
         help="If specified, a persistent ES cluster will be created before loading data or creating temp loading nodes."
         " This is unnecessary if an elasticsearch cluster already exists.")
     p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch.", default=random_es_cluster_name)
-
-    group = p.add_mutually_exclusive_group()
-    group.add_argument("--num-persistent-nodes", type=int, help="For use with --num-persistent-nodes. Number of persistent data nodes to create.", default=3)
 
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
@@ -98,12 +95,12 @@ def _process_kubernetes_configs(action, config_paths, settings):
 
 
 def _wait_for_data_nodes_state(action, settings, data_node_name="es-data-loading"):
+    check_pod_state = is_pod_not_running if action == "delete" else is_pod_running
     # wait for all data nodes to enter desired state
     for i in range(int(settings.get("ES_DATA_NUM_PODS", 1))):
         done = False
         while not done:
-            is_running = is_pod_running(data_node_name, pod_number=i)
-            done = not is_running if action == "delete" else is_running
+            done = check_pod_state(data_node_name, pod_number=i)
             time.sleep(5)
 
 def _set_k8s_context(settings):
@@ -220,6 +217,7 @@ def _get_es_node_settings(k8s_cluster_name, num_temp_loading_nodes):
         "ES_CLUSTER_NAME": k8s_cluster_name,
         "NAMESPACE": k8s_cluster_name,  # kubernetes namespace
         "IMAGE_PULL_POLICY": "Always",
+        "TIMESTAMP": time.strftime("%Y%m%d_%H%M%S"),
 
         "CLUSTER_MACHINE_TYPE": "n1-highmem-4",
         "ELASTICSEARCH_VERSION": "6.3.2",
@@ -228,8 +226,6 @@ def _get_es_node_settings(k8s_cluster_name, num_temp_loading_nodes):
         "ELASTICSEARCH_DISK_SNAPSHOTS": None,
 
         "KIBANA_SERVICE_PORT": 5601,
-
-        "ES_NUM_PERSISTENT_NODES": num_persistent_nodes,
 
         "ES_CLIENT_NUM_PODS": 3,
         "ES_MASTER_NUM_PODS": 2,
