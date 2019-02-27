@@ -5,6 +5,7 @@ import getpass
 import multiprocessing
 import os
 import socket
+import subprocess
 
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
@@ -95,7 +96,4 @@ else:
     """ % locals()
 
 print(command)
-return_code = os.system(command)
-
-if return_code != 0:
-    raise ValueError("'gcloud dataproc jobs submit ..' command exited with non-zero return code: {}".format(return_code))
+subprocess.check_call(command, shell=True)
