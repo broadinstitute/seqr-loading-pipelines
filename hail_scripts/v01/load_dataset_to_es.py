@@ -5,6 +5,7 @@ import os
 os.system("pip install elasticsearch")
 
 import argparse
+from functools import wraps
 import hail
 import logging
 from pprint import pprint, pformat
@@ -27,7 +28,7 @@ from hail_scripts.v01.utils.computed_fields import get_expr_for_variant_id, \
     get_expr_for_filtering_allele_frequency
 from hail_scripts.v01.utils.elasticsearch_utils import VARIANT_GENOTYPE_FIELDS_TO_EXPORT, \
     VARIANT_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, \
-    SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP
+    SV_GENOTYPE_FIELDS_TO_EXPORT, SV_GENOTYPE_FIELD_TO_ELASTICSEARCH_TYPE_MAP, wait_for_loading_shards_transfer
 from hail_scripts.v01.utils.add_combined_reference_data import add_combined_reference_data_to_vds
 from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds
 from hail_scripts.v01.utils.add_splice_ai import add_splice_ai_to_vds
@@ -150,6 +151,19 @@ def init_command_line_args():
     logger.info("Parsed args: \n" + pformat(args.__dict__))
 
     return args
+
+
+def timeit(f):
+    """Decorator that prints a function's execution time"""
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = f(*args, **kwargs)
+        end = time.time()
+        logger.info('{} runtime: {}'.format(f.__name__, end - start))
+        return result
+    return wrapper
 
 
 def compute_index_name(args):
@@ -386,6 +400,7 @@ def export_to_elasticsearch(
         logger.info("==> finished exporting - time: %s seconds" % (timestamp2 - timestamp1))
 
 
+@timeit
 def step0_init_and_run_vep(hc, vds, args):
     if args.start_with_step > 0:
         return hc, vds
@@ -426,6 +441,7 @@ def step0_init_and_run_vep(hc, vds, args):
     return hc, vds
 
 
+@timeit
 def step1_compute_derived_fields(hc, vds, args):
     if args.start_with_step > 1 or args.stop_after_step < 1:
         return hc, vds
@@ -612,6 +628,7 @@ def step1_compute_derived_fields(hc, vds, args):
     return hc, vds
 
 
+@timeit
 def step2_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 2 or args.stop_after_step < 2 or args.only_export_to_elasticsearch_at_the_end:
         return hc, vds
@@ -639,6 +656,7 @@ def step2_export_to_elasticsearch(hc, vds, args):
     return hc, vds
 
 
+@timeit
 def step3_add_reference_datasets(hc, vds, args):
     if args.start_with_step > 3 or args.stop_after_step < 3:
         return hc, vds
@@ -728,6 +746,7 @@ def step3_add_reference_datasets(hc, vds, args):
     return hc, vds
 
 
+@timeit
 def step4_export_to_elasticsearch(hc, vds, args):
     if args.start_with_step > 4 or args.stop_after_step < 4:
         return hc, vds
@@ -816,15 +835,12 @@ def route_index_to_temp_es_cluster(yes, args):
 
     logger.info("==> Setting {}* settings = {}".format(args.index, body))
 
+    index_arg = "{}*".format(args.index)
     client = ElasticsearchClient(args.host, args.port)
-    client.es.indices.put_settings(index="{}*".format(args.index), body=body)
+    client.es.indices.put_settings(index=index_arg, body=body)
 
     if not yes:
-        shards = None
-        while shards is None or "es-data-loading" in shards:
-            shards = client.es.cat.shards(index="{}*".format(args.index))
-            logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(len(shards.strip().split("\n")), shards))
-            time.sleep(5)
+        wait_for_loading_shards_transfer(client, index=index_arg)
 
 
 def run_pipeline():

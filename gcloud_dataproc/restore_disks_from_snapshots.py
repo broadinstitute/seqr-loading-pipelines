@@ -11,6 +11,7 @@ logger = logging.getLogger()
 def init_command_line_args():
     p = argparse.ArgumentParser()
     p.add_argument("--k8s-cluster-name", help="Specifies the kubernetes cluster name that hosts elasticsearch.", required=True)
+    p.add_argument("--num-persistent-nodes", type=int, help="For use with --num-persistent-nodes. Number of persistent data nodes to create.", default=3)
     p.add_argument("es-disk-snapshots", help="Comma-separated list of disk snapshot names.")
 
     return p.parse_args()
@@ -24,7 +25,7 @@ def main():
         "CLUSTER_NAME": args.k8s_cluster_name,
         "NAMESPACE": args.k8s_cluster_name,  # kubernetes namespace
         "IMAGE_PULL_POLICY": "Always",
-
+        "ES_NUM_PERSISTENT_NODES": args.num_persistent_nodes,
         "ELASTICSEARCH_DISK_SIZE": "100Gi",
         "ELASTICSEARCH_DISK_SNAPSHOTS": args.es_disk_snapshots.split(",") if args.es_disk_snapshots else None,
     }
