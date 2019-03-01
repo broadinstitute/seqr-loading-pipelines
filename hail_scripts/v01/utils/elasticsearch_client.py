@@ -90,6 +90,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             verbose (bool): whether to print schema and stats
         """
         child_kt = None
+        enable_global_ordinals_for_fields = []
 
         # compute genotype_fields_list
         if not genotype_fields_to_export:
@@ -105,31 +106,26 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
             vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
 
-            sample_fields_annotation_template = "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet"
+            def _add_vds_sample_field(vds, field_name, field_filter):
+                enable_global_ordinals_for_fields.append('sample_{}'.format(field_name))
+                return vds.annotate_variants_expr(
+                    "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet" % dict(
+                        field_name=field_name, field_filter=field_filter
+                    ))
+
             for i in range(1, 3):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}'.format(i)
-                ))
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='no_call', field_filter='gen.num_alt == -1'
-            ))
+                vds = _add_vds_sample_field(vds, field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}')
+            vds = _add_vds_sample_field(vds, field_name='no_call', field_filter='gen.num_alt == -1')
 
             for i in range(5, 95, 5):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='gq_gte_{}'.format(i), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i)
-                ))
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='gq_gte_95', field_filter='gen.gq >= 95'
-            ))
+                vds = _add_vds_sample_field(vds, field_name='gq_gte_{}'.format(i), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i))
+
+            vds = _add_vds_sample_field(vds, field_name='gq_gte_95', field_filter='gen.gq >= 95')
 
             for i in range(5, 50, 5):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='ab_gte_{}'.format(i), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i)
-                ))
+                vds = _add_vds_sample_field(vds, field_name='ab_gte_{}'.format(i), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i))
 
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='ab_gte_50', field_filter='gen.ab * 100 >= 50'.format(i)
-            ))
+            vds = _add_vds_sample_field(vds, field_name='ab_gte_50', field_filter='gen.ab * 100 >= 50'.format(i))
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
 
@@ -199,6 +195,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             field_name_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields,
+            enable_global_ordinals_for_fields=enable_global_ordinals_for_fields,
             field_names_replace_dot_with=None,
             run_after_index_exists=run_after_index_exists,
             _meta=_meta,
@@ -221,6 +218,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
+        enable_global_ordinals_for_fields=(),
         field_names_replace_dot_with="_",
         run_after_index_exists=None,
         _meta=None,
@@ -334,6 +332,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         index_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
             field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
+            enable_global_ordinals_for_fields=enable_global_ordinals_for_fields,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields)
 
