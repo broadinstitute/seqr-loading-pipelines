@@ -166,7 +166,7 @@ def generate_elasticsearch_schema(
         )))
         for es_field_name in enable_global_ordinals_for_fields:
             if es_field_name in properties:
-                properties[es_field_name]["enable_global_ordinals"] = True
+                properties[es_field_name]["eager_global_ordinals"] = True
 
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))

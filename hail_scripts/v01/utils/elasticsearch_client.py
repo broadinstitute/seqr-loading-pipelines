@@ -108,7 +108,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
 
             def _add_vds_sample_field(vds, field_name, field_filter):
-                enable_global_ordinals_for_fields.append('sample_{}'.format(field_name))
+                enable_global_ordinals_for_fields.append('samples_{}'.format(field_name))
                 return vds.annotate_variants_expr(
                     "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet" % dict(
                         field_name=field_name, field_filter=field_filter
@@ -351,7 +351,6 @@ class ElasticsearchClient(BaseElasticsearchClient):
         # optionally delete the index before creating it
         if delete_index_before_exporting and self.es.indices.exists(index=index_name):
             self.es.indices.delete(index=index_name)
-            index_exists = False
 
         # create/update elasticsearch mapping
         self.create_or_update_mapping(
@@ -404,8 +403,8 @@ class ElasticsearchClient(BaseElasticsearchClient):
         es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
         """
 
+        self.es.indices.refresh(index=index_name)
         if is_final_export:
-            self.es.indices.refresh(index=index_name)
             self.es.indices.forcemerge(index=index_name)
 
         if verbose:
