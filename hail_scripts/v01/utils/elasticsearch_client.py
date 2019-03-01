@@ -47,6 +47,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         export_globals_to_index_meta=True,
         run_after_index_exists=None,
         verbose=True,
+        is_final_export=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -202,6 +203,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             child_kt=child_kt,
             parent_doc_name="variant",
             child_doc_name="genotype",
+            is_final_export=is_final_export,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -226,6 +228,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         parent_doc_name="variant",
         child_doc_name="genotype",
         verbose=True,
+        is_final_export=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -355,8 +358,12 @@ class ElasticsearchClient(BaseElasticsearchClient):
             self.es.indices.delete(index=index_name)
             index_exists = False
 
+        index_settings = {
+            "index.refresh_interval": -1
+        }
         if not index_exists:
-            self.es.indices.put_settings(index=index_name, body={"index.sort.field": "xpos"})
+            index_settings["index.sort.field"] = "xpos"
+        self.es.indices.put_settings(index=index_name, body=index_settings)
 
         # create/update elasticsearch mapping
         self.create_or_update_mapping(
@@ -409,7 +416,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
         es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
         """
 
-        self.es.indices.forcemerge(index=index_name)
+        if is_final_export:
+            self.es.indices.refresh(index=index_name)
+            self.es.indices.forcemerge(index=index_name)
 
         if verbose:
             self.print_elasticsearch_stats()
