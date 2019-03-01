@@ -115,7 +115,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                     ))
 
             for i in range(1, 3):
-                vds = _add_vds_sample_field(vds, field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}')
+                vds = _add_vds_sample_field(vds, field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}'.format(i))
             vds = _add_vds_sample_field(vds, field_name='no_call', field_filter='gen.num_alt == -1')
 
             for i in range(0, 95, 5):
@@ -349,17 +349,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
             kt = kt.annotate("join_field='{}'".format(parent_doc_name))
 
         # optionally delete the index before creating it
-        index_exists = self.es.indices.exists(index=index_name)
-        if delete_index_before_exporting and index_exists:
+        if delete_index_before_exporting and self.es.indices.exists(index=index_name):
             self.es.indices.delete(index=index_name)
             index_exists = False
-
-        index_settings = {
-            "index.refresh_interval": -1
-        }
-        if not index_exists:
-            index_settings["index.sort.field"] = "xpos"
-        self.es.indices.put_settings(index=index_name, body=index_settings)
 
         # create/update elasticsearch mapping
         self.create_or_update_mapping(

@@ -162,8 +162,8 @@ def generate_elasticsearch_schema(
 
     if enable_global_ordinals_for_fields:
         logger.info("==> will enable global ordinals for %s" % (", ".join(
-            field for field in enable_global_ordinals_for_fields if field in properties)
-        ))
+            [field for field in enable_global_ordinals_for_fields if field in properties]
+        )))
         for es_field_name in enable_global_ordinals_for_fields:
             if es_field_name in properties:
                 properties[es_field_name]["enable_global_ordinals"] = True

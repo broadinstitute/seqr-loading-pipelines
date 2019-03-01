@@ -134,7 +134,7 @@ class ElasticsearchClient:
                 "number_of_shards": num_shards,
                 "number_of_replicas": 0,
                 "index.mapping.total_fields.limit": 10000,
-                "index.refresh_interval": "30s",
+                "index.refresh_interval": -1,
                 "index.codec": "best_compression",   # halves disk usage, no difference in query times
                 #"index.store.throttle.type": "none",
             }
