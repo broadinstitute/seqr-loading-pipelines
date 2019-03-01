@@ -350,8 +350,13 @@ class ElasticsearchClient(BaseElasticsearchClient):
             kt = kt.annotate("join_field='{}'".format(parent_doc_name))
 
         # optionally delete the index before creating it
-        if delete_index_before_exporting and self.es.indices.exists(index=index_name):
+        index_exists = self.es.indices.exists(index=index_name)
+        if delete_index_before_exporting and index_exists:
             self.es.indices.delete(index=index_name)
+            index_exists = False
+
+        if not index_exists:
+            self.es.indices.put_settings(index=index_name, body={"index.sort.field": "xpos"})
 
         # create/update elasticsearch mapping
         self.create_or_update_mapping(
