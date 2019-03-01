@@ -329,7 +329,7 @@ def main():
 
         ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
 
-        _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
+        # _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
 
         # make sure cluster exists
         _create_dataproc_cluster(
@@ -345,7 +345,7 @@ def main():
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args + ["--host %(ip_address)s" % locals()])
 
-        _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
+        # _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
     else:
         # make sure cluster exists
