@@ -1,0 +1,3 @@
+elasticsearch==6.2.0
+hail>=0.2.10
+luigi>=2.8.3
