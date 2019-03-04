@@ -292,11 +292,14 @@ def convert_vds_schema_string_to_es_index_properties(
 
     return properties
 
-def wait_for_loading_shards_transfer(client, index=None):
-    shards = None
-    while shards is None or "es-data-loading" in shards:
+
+def wait_for_loading_shards_transfer(client, index=None, num_attempts=1000):
+    for i in range(num_attempts):
         shards = client.es.cat.shards(index=index)
+        if "es-data-loading" not in shards:
+            return
         logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
             len(shards.strip().split("\n")), shards))
         time.sleep(5)
 
+    raise Exception('Shards did not transfer off loading nodes')
