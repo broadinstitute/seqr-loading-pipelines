@@ -89,6 +89,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             verbose (bool): whether to print schema and stats
+            force_merge (bool): whether to force merge the index when the export is done
         """
         child_kt = None
         enable_global_ordinals_for_fields = []
@@ -275,6 +276,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             parent_doc_name (str): if a child_kt is provided, this allows the name of parent documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
             child_doc_name (str): if a child_kt is provided, this allows the name of child documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
             verbose (bool): whether to print schema and stats
+            force_merge (bool): whether to force merge the index when the export is done
         """
 
         # output .tsv for debugging
