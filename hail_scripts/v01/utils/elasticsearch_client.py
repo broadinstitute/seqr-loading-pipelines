@@ -47,7 +47,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         export_globals_to_index_meta=True,
         run_after_index_exists=None,
         verbose=True,
-        is_final_export=False,
+        force_merge=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -199,7 +199,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             child_kt=child_kt,
             parent_doc_name="variant",
             child_doc_name="genotype",
-            is_final_export=is_final_export,
+            force_merge=force_merge,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -224,7 +224,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         parent_doc_name="variant",
         child_doc_name="genotype",
         verbose=True,
-        is_final_export=False,
+        force_merge=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -404,7 +404,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         """
 
         self.es.indices.refresh(index=index_name)
-        if is_final_export:
+        if force_merge:
             self.es.indices.forcemerge(index=index_name)
 
         if verbose:
