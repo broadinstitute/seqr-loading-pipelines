@@ -101,6 +101,7 @@ def _field_path_to_elasticsearch_field_name(field_path):
 def generate_elasticsearch_schema(
         field_path_to_field_type_map,
         field_name_to_elasticsearch_type_map=None,
+        enable_global_ordinals_for_fields=(),
         disable_doc_values_for_fields=(),
         disable_index_for_fields=()):
     """Converts a dictionary of field names and types to a dictionary that can be plugged in to
@@ -136,6 +137,7 @@ def generate_elasticsearch_schema(
             nested_schema = generate_elasticsearch_schema(
                 field_type,
                 field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
+                enable_global_ordinals_for_fields=enable_global_ordinals_for_fields,
                 disable_doc_values_for_fields=disable_doc_values_for_fields,
                 disable_index_for_fields=disable_index_for_fields)
 
@@ -157,6 +159,14 @@ def generate_elasticsearch_schema(
         # use the default type
         es_type = _map_vds_type_to_es_type(field_type)
         properties[es_field_name] = {"type": es_type}
+
+    if enable_global_ordinals_for_fields:
+        logger.info("==> will enable global ordinals for %s" % (", ".join(
+            [field for field in enable_global_ordinals_for_fields if field in properties]
+        )))
+        for es_field_name in enable_global_ordinals_for_fields:
+            if es_field_name in properties:
+                properties[es_field_name]["eager_global_ordinals"] = True
 
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s" % (", ".join(disable_doc_values_for_fields)))

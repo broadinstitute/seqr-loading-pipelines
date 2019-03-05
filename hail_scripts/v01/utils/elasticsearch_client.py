@@ -47,6 +47,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         export_globals_to_index_meta=True,
         run_after_index_exists=None,
         verbose=True,
+        force_merge=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -88,8 +89,10 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             verbose (bool): whether to print schema and stats
+            force_merge (bool): whether to force merge the index when the export is done
         """
         child_kt = None
+        enable_global_ordinals_for_fields = []
 
         # compute genotype_fields_list
         if not genotype_fields_to_export:
@@ -105,31 +108,22 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
             vds = vds.annotate_variants_expr("va.genotypes = gs.map(g => { %(genotype_struct_expr)s }).collect()" % locals())
 
-            sample_fields_annotation_template = "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet"
+            def _add_vds_sample_field(vds, field_name, field_filter):
+                enable_global_ordinals_for_fields.append('samples_{}'.format(field_name))
+                return vds.annotate_variants_expr(
+                    "va.samples_%(field_name)s = va.genotypes.filter(gen => %(field_filter)s).map(gen => gen.sample_id).toSet" % dict(
+                        field_name=field_name, field_filter=field_filter
+                    ))
+
             for i in range(1, 3):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}'.format(i)
-                ))
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='no_call', field_filter='gen.num_alt == -1'
-            ))
+                vds = _add_vds_sample_field(vds, field_name='num_alt_{}'.format(i), field_filter='gen.num_alt == {}'.format(i))
+            vds = _add_vds_sample_field(vds, field_name='no_call', field_filter='gen.num_alt == -1')
 
-            for i in range(5, 95, 5):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='gq_gte_{}'.format(i), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i)
-                ))
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='gq_gte_95', field_filter='gen.gq >= 95'
-            ))
+            for i in range(0, 95, 5):
+                vds = _add_vds_sample_field(vds, field_name='gq_{}_to_{}'.format(i, i + 5), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i))
 
-            for i in range(5, 50, 5):
-                vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                    field_name='ab_gte_{}'.format(i), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i)
-                ))
-
-            vds = vds.annotate_variants_expr(sample_fields_annotation_template % dict(
-                field_name='ab_gte_50', field_filter='gen.ab * 100 >= 50'.format(i)
-            ))
+            for i in range(0, 45, 5):
+                vds = _add_vds_sample_field(vds, field_name='ab_{}_to_{}'.format(i, i + 5), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i))
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
 
@@ -199,12 +193,14 @@ class ElasticsearchClient(BaseElasticsearchClient):
             field_name_to_elasticsearch_type_map=genotype_field_to_elasticsearch_type_map,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields,
+            enable_global_ordinals_for_fields=enable_global_ordinals_for_fields,
             field_names_replace_dot_with=None,
             run_after_index_exists=run_after_index_exists,
             _meta=_meta,
             child_kt=child_kt,
             parent_doc_name="variant",
             child_doc_name="genotype",
+            force_merge=force_merge,
             verbose=verbose)
 
     def export_kt_to_elasticsearch(
@@ -221,6 +217,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         field_name_to_elasticsearch_type_map=None,
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
+        enable_global_ordinals_for_fields=(),
         field_names_replace_dot_with="_",
         run_after_index_exists=None,
         _meta=None,
@@ -228,6 +225,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         parent_doc_name="variant",
         child_doc_name="genotype",
         verbose=True,
+        force_merge=False,
     ):
         """Create a new elasticsearch index to store the records in this keytable, and then export all records to it.
 
@@ -278,6 +276,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             parent_doc_name (str): if a child_kt is provided, this allows the name of parent documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
             child_doc_name (str): if a child_kt is provided, this allows the name of child documents to be customized (see https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html)
             verbose (bool): whether to print schema and stats
+            force_merge (bool): whether to force merge the index when the export is done
         """
 
         # output .tsv for debugging
@@ -334,6 +333,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         index_schema = generate_elasticsearch_schema(
             field_path_to_field_type_map,
             field_name_to_elasticsearch_type_map=field_name_to_elasticsearch_type_map,
+            enable_global_ordinals_for_fields=enable_global_ordinals_for_fields,
             disable_doc_values_for_fields=disable_doc_values_for_fields,
             disable_index_for_fields=disable_index_for_fields)
 
@@ -405,7 +405,9 @@ class ElasticsearchClient(BaseElasticsearchClient):
         es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
         """
 
-        self.es.indices.forcemerge(index=index_name)
+        self.es.indices.refresh(index=index_name)
+        if force_merge:
+            self.es.indices.forcemerge(index=index_name)
 
         if verbose:
             self.print_elasticsearch_stats()

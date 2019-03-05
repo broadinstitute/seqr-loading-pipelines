@@ -332,6 +332,7 @@ def export_to_elasticsearch(
         disable_doc_values_for_fields=(),
         disable_index_for_fields=(),
         run_after_index_exists=None,
+        force_merge=False,
 ):
     """Utility method for exporting the given vds to an elasticsearch index."""
 
@@ -394,6 +395,7 @@ def export_to_elasticsearch(
             is_split_vds=True,
             run_after_index_exists=run_after_index_exists,
             verbose=False,
+            force_merge=force_merge,
         )
 
         timestamp2 = time.time()
@@ -767,6 +769,7 @@ def step4_export_to_elasticsearch(hc, vds, args):
         disable_doc_values_for_fields=("sortedTranscriptConsequences",) if not bool(args.use_nested_objects_for_vep) else (),
         disable_index_for_fields=("sortedTranscriptConsequences",) if not bool(args.use_nested_objects_for_vep) else (),
         run_after_index_exists=(lambda: route_index_to_temp_es_cluster(True, args)) if args.use_temp_loading_nodes else None,
+        force_merge=True,
     )
 
     args.start_with_step = 5   # step 4 finished, so, if an error occurs and it goes to retry, start with the next step
