@@ -7,6 +7,7 @@ from hail_scripts.v02.utils.hail_utils import import_vcf
 logger = logging.getLogger('v02.hail_scripts.create_1kg_ht')
 
 CONFIG= {
+    "37": "gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.vcf.gz",
     "38": "gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.vcf.gz"
 }
 
@@ -36,6 +37,13 @@ def vcf_to_mt(path, genome_version):
 
     all_mt = biallelic_mt.union_rows(multiallelic_mt)
     all_mt = all_mt.key_rows_by(all_mt.locus, all_mt.alleles)
+
+    # 37 is known to have some unneeded symbolic alleles, so we filter out.
+    all_mt = all_mt.filter_rows(
+        hl.allele_type(all_mt.alleles[0], all_mt.alleles[1]) == 'Symbolic',
+        keep=False
+    )
+
     return all_mt
 
 

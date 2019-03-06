@@ -167,7 +167,8 @@ def dbnsfp_to_ht(source_path, output_path, reference_genome='37', dbnsfp_version
     # key_by locus and allele needed for matrix table conversion to denote variant data.
     chr = ht.chr if reference_genome == '37' else hl.str('chr' + ht.chr)
     locus = hl.locus(chr, ht.pos, reference_genome='GRCh%s'%reference_genome)
-    ht = ht.key_by(locus=locus, alleles=[ht.ref, ht.alt])
+    # We have to upper because 37 is known to have some non uppercases :(
+    ht = ht.key_by(locus=locus, alleles=[ht.ref.upper(), ht.alt.upper()])
 
 
     ht = ht.annotate_globals(
