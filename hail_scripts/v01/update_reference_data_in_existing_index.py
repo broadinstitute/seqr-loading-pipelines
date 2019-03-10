@@ -41,12 +41,13 @@ def update_dataset(hc, index_name, args):
 
     elasticsearch_client = ElasticsearchClient(args.host, args.port)
     _meta = elasticsearch_client.get_index_meta(index_name)
-    if not _meta or "sourceFilePath" not in _meta:
-        logger.info("ERROR: couldn't update reference data in {} because it doesn't have a recorded sourceFilePath. _meta['sourceFilePath']: {}".format(index_name, _meta))
+    if not args.dataset_path and (not _meta or "sourceFilePath" not in _meta):
+        logger.error("Couldn't update reference data in {} because it doesn't have a recorded sourceFilePath. Please use "
+        "--index-name, --dataset-path, and --genome-version to update this index.".format(index_name))
         return
 
-    dataset_path = _meta["sourceFilePath"]
-    genome_version = _meta.get("genomeVersion")
+    dataset_path = args.dataset_path or _meta["sourceFilePath"]
+    genome_version = args.genome_version or _meta.get("genomeVersion")
 
     if genome_version is None:
         match = re.search("__grch([0-9]+)__", index_name, re.IGNORECASE)
@@ -117,9 +118,13 @@ p.add_argument("--update-hgmd", action="store_true", help="Update hgmd fields.")
 p.add_argument("--update-primate-ai", action="store_true", help="Update PrimateAI fields.")
 p.add_argument("--update-splice-ai", action="store_true", help="Update SpliceAI fields.")
 
-g = p.add_mutually_exclusive_group(required=True)
-g.add_argument("--index-name", help="Elasticsearch index name. If specified, only this index will be updated.")
-g.add_argument("--all", help="Update all elasticsearch indices.", action="store_true")
+p.add_argument("--index-name", help="Elasticsearch index name. If specified, only this index will be updated.")
+p.add_argument("--dataset-path", help="(optional) Path of variant callset. If not specified, the original "
+    "vcf/vds path from which the data was loaded will be used.")
+p.add_argument("--genome-version", help="Genome build: 37 or 38", choices=["37", "38"])
+
+p.add_argument("--all", help="Update all elasticsearch indices. This option is mutually-exclusive "
+    "with --index-name, --dataset-path, and --genome-version.", action="store_true")
 
 
 args = p.parse_args()
@@ -131,10 +136,12 @@ if args.download_latest_clinvar_vcf:
         vds = download_and_import_latest_clinvar_vcf(hc, genome_version)
         write_vds(vds, CLINVAR_VDS_PATH.format(genome_version=genome_version))
 
-if args.index_name:
+if args.index_name and not args.all:
     update_dataset(hc, args.index_name, args)
 elif args.all:
     update_all_datasets(hc, args)
+else:
+    p.exit("ERROR: must specify either --index-name or --all")
 
 
 
