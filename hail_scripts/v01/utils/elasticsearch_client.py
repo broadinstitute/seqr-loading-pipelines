@@ -123,7 +123,10 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 vds = _add_vds_sample_field(vds, field_name='gq_{}_to_{}'.format(i, i + 5), field_filter='gen.gq >= {0} && gen.gq < {0} + 5'.format(i))
 
             for i in range(0, 45, 5):
-                vds = _add_vds_sample_field(vds, field_name='ab_{}_to_{}'.format(i, i + 5), field_filter='gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i))
+                vds = _add_vds_sample_field(
+                    vds, field_name='ab_{}_to_{}'.format(i, i + 5),
+                    field_filter='gen.num_alt == 1 && gen.ab * 100 >= {0} && gen.ab * 100 < {0} + 5'.format(i)
+                )
 
             genotype_fields_list = []  # don't add flat genotype columns to the table. The new 'genotypes' field replaces these
 
