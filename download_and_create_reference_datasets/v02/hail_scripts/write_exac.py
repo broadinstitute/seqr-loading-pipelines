@@ -42,8 +42,7 @@ def run():
 
        mt.describe()
 
-       output_path = path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "")\
-                         .replace(".*", "").replace("*", "") + ".ht"
+       output_path = path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "") + ".ht"
        logger.info('writing to output path: %s' % output_path)
        mt.rows().write(output_path)
 
