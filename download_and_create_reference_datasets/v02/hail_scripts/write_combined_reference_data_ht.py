@@ -1,3 +1,5 @@
+from datetime import datetime
+from functools import reduce
 import os
 
 import hail as hl
@@ -83,11 +85,11 @@ CONFIG =  {
     'topmed': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
-            'select': {'AC': 'info.AC#'},
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.ht',
-            'select': {'AC': 'info.AC#'},
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
         },
     },
     'gnomad_exome_coverage': {
@@ -104,25 +106,31 @@ CONFIG =  {
     'gnomad_exomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-            'select': {},
             'custom_select': 'custom_gnomad_select'
         },
     },
-    'gnomad_genome': {
+    'gnomad_genomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
-            'select': {},
             'custom_select': 'custom_gnomad_select'
         },
     },
     'exac': {
         '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
-            'select': {'AC': 'info.AC'},
+            'path': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+            'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj',},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.htt',
         },
     },
 
 }
+
+def annotate_coverages(ht, coverage_dataset, reference_genome):
+    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
+    return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
 
 def custom_gnomad_select(ht):
     selects = {}
@@ -133,59 +141,69 @@ def custom_gnomad_select(ht):
     selects['hom'] = ht.freq[global_idx].homozygote_count
 
     selects['POPMAX_AF'] = ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF
+    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
     selects['hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
 
-def get_mt(dataset, reference_genome):
+def get_select_fields(config, base_ht):
+    select_fields = {}
+    selects = config.get('select') or None
+    if selects is not None:
+        if isinstance(selects, list):
+            select_fields = { selection: base_ht[selection] for selection in selects }
+        elif isinstance(selects, dict):
+            for key, val in selects.items():
+                ht = base_ht
+                for attr in val.split('.'):
+                    if attr.endswith('#'):
+                        attr = attr[:-1]
+                        ht = ht[attr][base_ht.a_index-1]
+                    else:
+                        ht = ht[attr]
+                select_fields[key] = ht
+    return select_fields
+
+def get_ht(dataset, reference_genome):
     config = CONFIG[dataset][reference_genome]
 
     base_ht = hl.read_table(config['path'])
 
-    field_name = config.get('field_name') or dataset
-    if isinstance(config['select'], list):
-        select_fields = {selection: base_ht[selection] for selection in config['select'] }
-    elif isinstance(config['select'], dict):
-        select_fields = {}
-        for key, val in config['select'].items():
-            ht = base_ht
-            for attr in val.split('.'):
-                if attr.endswith('#'):
-                    attr = attr[:-1]
-                    ht = ht[attr][base_ht.a_index-1]
-                else:
-                    ht = ht[attr]
-            select_fields[key] = ht
+    select_fields = get_select_fields(config, base_ht)
 
     if 'custom_select' in config:
         custom_select_fn_str = config['custom_select']
         select_fields = {**select_fields, **globals()[custom_select_fn_str](base_ht)}
 
     print(select_fields)
+
+    field_name = config.get('field_name') or dataset
     select_query = {
         field_name: hl.struct(**select_fields)
     }
 
-    return base_ht.select(**select_query)
+    return base_ht.select(**select_query).distinct()
 
-def join_mts(datasets, reference_genome):
-    joined_mt = None
-    for dataset in datasets:
-        dataset_mt = get_mt(dataset, reference_genome)
-        if joined_mt == None:
-            joined_mt = dataset_mt
-            continue
-        else:
-            joined_mt = joined_mt.join(dataset_mt)
-    joined_mt.describe()
-    print(os.path.join(OUTPUT_DIR, 'combined-%s.ht' % '-'.join(datasets)))
-    joined_mt.write(os.path.join(OUTPUT_DIR, 'combined%s.ht' % '-'.join(datasets)))
+def join_hts(datasets, coverage_datasets=None, reference_genome='37'):
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
+
+    for coverage_dataset in coverage_datasets:
+        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
+
+    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat())
+    joined_ht.describe()
+    print(os.path.join(OUTPUT_DIR, 'combined--%s.ht' % '-'.join(datasets + coverage_datasets)))
+
+    joined_ht.write(os.path.join(OUTPUT_DIR, 'combined--%s.ht' % '-'.join(datasets + coverage_datasets)))
 
 def run():
-    # join_mts(['1kg'], '37')
-    join_mts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'gnomad_genome', 'gnomad_exomes'],
-              '37')
-    # join_mts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai'],
+    # join_hts(['gnomad_genomes', 'exac'], ['gnomad_genome_coverage', 'gnomad_exome_coverage'], '37')
+    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+              'gnomad_genomes', 'gnomad_exomes'],
+             ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
+            '37')
+    # join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai'],
     #          '38')
 
 run()
