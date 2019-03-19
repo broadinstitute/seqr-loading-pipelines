@@ -49,6 +49,11 @@ CONSEQUENCE_TERMS = [
 CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict({term: rank for rank, term in enumerate(CONSEQUENCE_TERMS)})
 
 
+OMIT_CONSEQUENCE_TERMS = [
+    "upstream_gene_variant",
+    "downstream_gene_variant",
+]
+
 def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root):
     return hl.set(vep_transcript_consequences_root.flatmap(lambda c: c.consequence_terms))
 
@@ -124,7 +129,9 @@ def get_expr_for_formatted_hgvs(csq):
     )
 
 
-def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_coding_annotations=True):
+def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
+                                                          include_coding_annotations=True,
+                                                          omit_consequences=OMIT_CONSEQUENCE_TERMS):
     """Sort transcripts by 3 properties:
 
         1. coding > non-coding
@@ -176,7 +183,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root, include_codi
             ]
         )
 
-    omit_consequence_terms = hl.set(["upstream_gene_variant", "downstream_gene_variant"])
+    omit_consequence_terms = hl.set(omit_consequences) if len(omit_consequences) > 0 else hl.empty_set(hl.tstr)
 
     result = hl.sorted(
         vep_root.transcript_consequences.map(
