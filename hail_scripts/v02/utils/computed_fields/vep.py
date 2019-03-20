@@ -183,7 +183,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
             ]
         )
 
-    omit_consequence_terms = hl.set(omit_consequences) if len(omit_consequences) > 0 else hl.empty_set(hl.tstr)
+    omit_consequence_terms = hl.set(omit_consequences) if omit_consequences else hl.empty_set(hl.tstr)
 
     result = hl.sorted(
         vep_root.transcript_consequences.map(
