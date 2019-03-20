@@ -1,12 +1,27 @@
 from datetime import datetime
 from functools import reduce
+import logging
 import os
 
 import hail as hl
 
-OUTPUT_DIR = 'gs://seqr-kev/combined-test'
 
+OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
+                  'all_reference_data/combined_reference_data_grch{genome_version}.ht'
 
+'''
+Configurations of dataset to combine. 
+Format:
+'<Name of dataset>': {
+    '<Reference genome version>': {
+        'path': 'gs://path/to/hailtable.ht',
+        'select': '<Optional list of fields to select or dict of new field name to location of old field
+            in the reference dataset. If '#' is at the end, we know to select the appropriate biallelic
+            using the a_index.>',
+        'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
+        'custom_select': '<Optional function name of custom select function>',
+    },
+'''
 CONFIG =  {
     '1kg': {
         '37': {
@@ -125,14 +140,28 @@ CONFIG =  {
             'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.htt',
         },
     },
-
 }
 
+
 def annotate_coverages(ht, coverage_dataset, reference_genome):
+    """
+    Annotates the hail table with the coverage dataset.
+        '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
+    :param ht: hail table
+    :param coverage_dataset: coverage dataset e.g. gnomad genomes or exomes coverage
+    :param reference_genome: '37' or '38'
+    :return: hail table with proper annotation
+    """
     coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
     return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
 
 def custom_gnomad_select(ht):
+    """
+    Custom select for public gnomad dataset (which we did not generate). Extracts fields like
+    'AF', 'AN', and generates 'hemi'.
+    :param ht: hail table
+    :return: select expression dict
+    """
     selects = {}
     global_idx = hl.eval(ht.globals.freq_index_dict['gnomad'])
     selects['AF'] = ht.freq[global_idx].AF
@@ -146,16 +175,26 @@ def custom_gnomad_select(ht):
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
 
-def get_select_fields(config, base_ht):
+def get_select_fields(selects, base_ht):
+    """
+    Generic function that takes in a select config and base_ht and generates a
+    select dict that is generated from traversing the base_ht and extracting the right
+    annotation. If '#' is included at the end of a select field, the appropriate
+    biallelic position will be selected (e.g. 'x#' -> x[base_ht.a_index-1].
+    :param selects: mapping or list of selections
+    :param base_ht: base_ht to traverse
+    :return: select mapping from annotation name to base_ht annotation
+    """
     select_fields = {}
-    selects = config.get('select') or None
     if selects is not None:
         if isinstance(selects, list):
             select_fields = { selection: base_ht[selection] for selection in selects }
         elif isinstance(selects, dict):
             for key, val in selects.items():
+                # Grab the field and continually select it from the hail table.
                 ht = base_ht
                 for attr in val.split('.'):
+                    # Select from multi-allelic list.
                     if attr.endswith('#'):
                         attr = attr[:-1]
                         ht = ht[attr][base_ht.a_index-1]
@@ -165,45 +204,51 @@ def get_select_fields(config, base_ht):
     return select_fields
 
 def get_ht(dataset, reference_genome):
+    ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
-
     base_ht = hl.read_table(config['path'])
 
-    select_fields = get_select_fields(config, base_ht)
-
+    # 'select' and 'custom_select's to generate dict.
+    select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
         custom_select_fn_str = config['custom_select']
         select_fields = {**select_fields, **globals()[custom_select_fn_str](base_ht)}
 
-    print(select_fields)
 
     field_name = config.get('field_name') or dataset
     select_query = {
         field_name: hl.struct(**select_fields)
     }
 
+    print(select_fields)
     return base_ht.select(**select_query).distinct()
 
-def join_hts(datasets, coverage_datasets=None, reference_genome='37'):
+def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
+    # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
 
+    # Annotate coverages.
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
-    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat())
+    # Add metadata, but also removes previous globals.
+    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
+                                         datasets=hl.set(datasets + coverage_datasets))
     joined_ht.describe()
-    print(os.path.join(OUTPUT_DIR, 'combined--%s.ht' % '-'.join(datasets + coverage_datasets)))
 
-    joined_ht.write(os.path.join(OUTPUT_DIR, 'combined--%s.ht' % '-'.join(datasets + coverage_datasets)))
+    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome))
+    print('Writing to %s' % output_path)
+
+    joined_ht.write(os.path.join(output_path))
 
 def run():
-    # join_hts(['gnomad_genomes', 'exac'], ['gnomad_genome_coverage', 'gnomad_exome_coverage'], '37')
+    # TODO: '38' when gnomad liftover is done.
     join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
             '37')
-    # join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai'],
-    #          '38')
 
-run()
+
+if __name__ == "__main__":
+    run()
