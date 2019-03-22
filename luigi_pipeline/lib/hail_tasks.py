@@ -5,6 +5,8 @@ import hail as hl
 import luigi
 from luigi.contrib import gcs
 
+from lib.global_config import GlobalConfig
+
 
 def GCSorLocalTarget(filename):
     target = gcs.GCSTarget if filename.startswith('gs://') else luigi.LocalTarget
@@ -25,6 +27,33 @@ class HailMatrixTableTask(luigi.Task):
     """
     source_paths = luigi.ListParameter(description='List of paths to VCFs to be loaded.')
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
+    genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
+
+    @staticmethod
+    def hl_mt_impute_sample_type(mt, genome_version, threshold=0.3):
+        """
+        Impute the sample type by chcking against a list of common coding and non-coding variants.
+        If the match for each respective type is over the threshold, we return a match.
+
+        :param mt: Matrix Table to check
+        :param genome_version: reference genome version
+        :param threshold: if the matched percentage is over this threshold, we classify as match
+        :return: a dict of coding/non-coding to dict with 'matched_count', 'total_count' and 'match' boolean.
+        """
+        stats = {}
+        types_to_ht_path = {
+            'noncoding': GlobalConfig().param_kwargs['validation_%s_noncoding_ht' % genome_version],
+            'coding': GlobalConfig().param_kwargs['validation_%s_coding_ht' % genome_version]
+        }
+        for type, ht_path in types_to_ht_path.items():
+            ht = hl.read_table(ht_path)
+            stats[type] = ht_stats = {
+                'matched_count': mt.semi_join_rows(ht).count_rows(),
+                'total_count': ht.count(),
+
+            }
+            ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
+        return stats
 
     def requires(self):
         return [VcfFile(filename=s) for s in self.source_paths]
@@ -59,4 +88,3 @@ class HailElasticSearchTask(luigi.Task):
 
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
-
