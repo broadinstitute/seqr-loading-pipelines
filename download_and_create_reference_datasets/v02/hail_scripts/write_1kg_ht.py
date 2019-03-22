@@ -46,14 +46,22 @@ def vcf_to_mt(path, genome_version):
 
     return all_mt
 
+def annotate_mt(mt):
+    # Annotate POPMAX_AF, which is max of respective fields using a_index for multi-allelics.
+    return mt.annotate_rows(POPMAX_AF=hl.max(mt.info.AFR_AF[mt.a_index-1],
+                                             mt.info.AMR_AF[mt.a_index - 1],
+                                             mt.info.EAS_AF[mt.a_index - 1],
+                                             mt.info.EUR_AF[mt.a_index - 1],
+                                             mt.info.SAS_AF[mt.a_index - 1]))
 
 def run():
    for genome_version, path in CONFIG.items():
        logger.info('reading from input path: %s' % path)
+
        mt = vcf_to_mt(path, genome_version)
+       mt = annotate_mt(mt)
 
        mt.describe()
-       mt.rows().show()
 
        output_path = path.replace(".vcf", "").replace(".gz", "").replace(".bgz", "")\
                          .replace(".*", "").replace("*", "") + ".ht"

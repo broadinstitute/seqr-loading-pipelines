@@ -1,272 +1,254 @@
-import argparse
-import hail
+from datetime import datetime
+from functools import reduce
 import logging
-from pprint import pprint
-import time
-
-#from hail_scripts.v01.utils.add_1kg_phase3 import add_1kg_phase3_to_vds, read_1kg_phase3_vds
-#from hail_scripts.v01.utils.add_cadd import add_cadd_to_vds, read_cadd_vds
-#from hail_scripts.v01.utils.add_dbnsfp import add_dbnsfp_to_vds, read_dbnsfp_vds
-#from hail_scripts.v01.utils.add_eigen import add_eigen_to_vds, read_eigen_vds
-#from hail_scripts.v01.utils.add_exac import add_exac_to_vds, read_exac_vds
-#from hail_scripts.v01.utils.add_gnomad import add_gnomad_to_vds, read_gnomad_vds
-#from hail_scripts.v01.utils.add_gnomad_coverage import add_gnomad_exome_coverage_to_vds, add_gnomad_genome_coverage_to_vds
-#from hail_scripts.v01.utils.add_mpc import add_mpc_to_vds, read_mpc_vds
-#from hail_scripts.v01.utils.add_primate_ai import add_primate_ai_to_vds, read_primate_ai_vds
-#from hail_scripts.v01.utils.add_topmed import add_topmed_to_vds, read_topmed_vds
-#from hail_scripts.v01.utils.gcloud_utils import delete_gcloud_file
-#from hail_scripts.v01.utils.hail_utils import create_hail_context
-#from hail_scripts.v01.utils.vds_utils import write_vds, read_vds
-
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
-
-p = argparse.ArgumentParser()
-p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=["37", "38"], required=True)
-
-p.add_argument("--output-vds", help="Output vds path",
-               default="gs://seqr-reference-data/GRCh{genome_version}/all_reference_data/combined_reference_data_grch{genome_version}.ht")
-
-p.add_argument("--exclude-topmed", action="store_true", help="Don't add TopMed AFs. Intended for testing.")
-p.add_argument("--exclude-mpc", action="store_true", help="Don't add MPC fields. Intended for testing.")
-
-p.add_argument("--exclude-dbnsfp", action="store_true", help="Don't add annotations from dbnsfp. Intended for testing.")
-p.add_argument("--exclude-1kg", action="store_true", help="Don't add 1kg AFs. Intended for testing.")
-p.add_argument("--exclude-gene-constraint", action="store_true", help="Don't add gene constraint columns. Intended for testing.")
-p.add_argument("--exclude-eigen", action="store_true", help="Don't add Eigen scores. Intended for testing.")
-p.add_argument("--exclude-cadd", action="store_true", help="Don't add CADD scores (they take a really long time to load). Intended for testing.")
-p.add_argument("--exclude-gnomad", action="store_true", help="Don't add gnomAD exome or genome fields. Intended for testing.")
-p.add_argument("--exclude-exac", action="store_true", help="Don't add ExAC fields. Intended for testing.")
-p.add_argument("--exclude-primate-ai", action="store_true", help="Don't add PrimateAI fields. Intended for testing.")
-p.add_argument("--exclude-gnomad-coverage", action="store_true", help="Don't add gnomAD exome and genome coverage. Intended for testing.")
-
-p.add_argument("--start-with-step", help="Skip steps that completed previously", type=int, default=0, choices=[0, 1, 2, 3, 4])
-p.add_argument("--dont-delete-intermediate-files", action="store_true",
-               help="Keep intermediate VDS files to allow restarting the pipeline from the middle using --start-with-step")
-
-p.add_argument('--test', help="Test on a small subset of the data.", action="store_true")
-
-
-
-#p.add_argument("-H", "--host", help="Elasticsearch node host or IP. To look this up, run: `kubectl describe nodes | grep Addresses`")
-#p.add_argument("-p", "--port", help="Elasticsearch port", default=30001, type=int)  # 9200
-#p.add_argument("--export-to-vds", help="Path of vds", default="gs://seqr-reference-data/GRCh%(genome_version)s/all_reference_data/all_reference_data.vds")
-#p.add_argument("--export-to-elastic-search", help="Whether to export the data to elasticsearch", action="store_true")
-#p.add_argument("--index", help="Elasticsearch index name", default="all-reference-data")
-#p.add_argument("--index-type", help="Elasticsearch index type", default="variant")
-#p.add_argument("--block-size", help="Elasticsearch block size", default=200, type=int)
-#p.add_argument("--num-shards", help="Number of shards", default=1, type=int)
-
-args = p.parse_args()
-
-filter_interval = args.subset if args.subset else None  #"1-MT"
-
-output_vds = args.output_vds.format(genome_version=args.genome_version)
-
-test_output_vds = output_vds + ".test"
-step0_output_vds = output_vds.replace(".vds", "") + "_minimal.vds"
-step1_output_vds = output_vds.replace(".vds", "") + "_with_coverage1.vds"
-step2_output_vds = output_vds.replace(".vds", "") + "_with_coverage2.vds"
-step3_output_vds = output_vds.replace(".vds", "") + "_annotations1.vds"
-
-
-if args.start_with_step == 0:
-    logger.info("\n=============================== step 0 - combine all datasets into 1 minimal vds ===============================")
-    hc = create_hail_context()
-
-    # check that args.output_vds path is writable
-    with hail.utils.hadoop_write(test_output_vds) as f:
-        f.write("")
-    delete_gcloud_file(test_output_vds)
-
-    # compute a vds that contains the union of all variants from all the reference datasets
-    all_vds_objects = []
-    if not args.exclude_cadd: all_vds_objects.append(read_cadd_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_dbnsfp: all_vds_objects.append(read_dbnsfp_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_1kg: all_vds_objects.append(read_1kg_phase3_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_exac: all_vds_objects.append(read_exac_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_topmed: all_vds_objects.append(read_topmed_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_mpc: all_vds_objects.append(read_mpc_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_gnomad: all_vds_objects.append(read_gnomad_vds(hc, args.genome_version, "exomes", subset=filter_interval))
-    if not args.exclude_gnomad: all_vds_objects.append(read_gnomad_vds(hc, args.genome_version, "genomes", subset=filter_interval))
-    if not args.exclude_eigen: all_vds_objects.append(read_eigen_vds(hc, args.genome_version, subset=filter_interval))
-    if not args.exclude_primate_ai: all_vds_objects.append(read_primate_ai_vds(hc, args.genome_version, subset=filter_interval))
-
-    all_vds_objects_with_minimal_schema = []
-    for vds_object in all_vds_objects:
-        all_vds_objects_with_minimal_schema.append(
-            vds_object.annotate_variants_expr('va = {}'))  # drop all variant-level fields except chrom-pos-ref-alt
-
-    vds = hail.VariantDataset.union(*all_vds_objects_with_minimal_schema)
-    vds = vds.deduplicate()
-
-    write_vds(vds, step0_output_vds)
-
-    hc.stop()
-
-
-if args.start_with_step <= 1:
-    logger.info("=============================== step 1 - read in minimal vds and add in gnomAD exomes coverage ===============================")
-
-    hc = create_hail_context()
-    vds = read_vds(hc, step0_output_vds)
-
-    pprint(vds.variant_schema)
-
-    # start with the cadd vds since it contains all possible SNPs and common indels
-    if not args.exclude_gnomad_coverage:
-        vds = add_gnomad_exome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_exome_coverage")
-
-    write_vds(vds, step1_output_vds)
-
-    hc.stop()
-
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step0_output_vds, is_directory=True)
-
-if args.start_with_step <= 2:
-    logger.info("=============================== step 2 - read in minimal vds and add in gnomAD genomes coverage ===============================")
-
-    hc = create_hail_context()
-    vds = read_vds(hc, step1_output_vds)
-
-    pprint(vds.variant_schema)
-
-    # start with the cadd vds since it contains all possible SNPs and common indels
-    if not args.exclude_gnomad_coverage:
-        vds = add_gnomad_genome_coverage_to_vds(hc, vds, args.genome_version, root="va.gnomad_genome_coverage")
-
-    write_vds(vds, step2_output_vds)
-
-    hc.stop()
-
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step1_output_vds, is_directory=True)
-
-if args.start_with_step <= 3:
-
-    logger.info("\n=============================== step 3 - read in vds and annotate it with reference datasets ===============================")
-
-    hc = create_hail_context()
-    vds = read_vds(hc, step2_output_vds)
-
-    pprint(vds.variant_schema)
-
-    if not args.exclude_cadd:
-        logger.info("\n==> add cadd")
-        vds = add_cadd_to_vds(hc, vds, args.genome_version, root="va.cadd", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_eigen:
-        logger.info("\n==> add eigen")
-        vds = add_eigen_to_vds(hc, vds, args.genome_version, root="va.eigen", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_1kg:
-        logger.info("\n==> add 1kg")
-        vds = add_1kg_phase3_to_vds(hc, vds, args.genome_version, root="va.g1k", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_exac:
-        logger.info("\n==> add exac")
-        vds = add_exac_to_vds(hc, vds, args.genome_version, root="va.exac", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_mpc:
-        logger.info("\n==> add mpc")
-        vds = add_mpc_to_vds(hc, vds, args.genome_version, root="va.mpc", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    write_vds(vds, step3_output_vds)
-
-    hc.stop()
-
-if args.start_with_step <= 4:
-
-    logger.info("\n=============================== step 4 - read in vds and annotate it with additional reference datasets ===============================")
-
-    hc = create_hail_context()
-    vds = read_vds(hc, step3_output_vds)
-
-    if not args.exclude_gnomad:
-        logger.info("\n==> add gnomad exomes")
-        vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="exomes", root="va.gnomad_exomes", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_gnomad:
-        logger.info("\n==> add gnomad genomes")
-        vds = add_gnomad_to_vds(hc, vds, args.genome_version, exomes_or_genomes="genomes", root="va.gnomad_genomes", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_dbnsfp:
-        logger.info("\n==> add dbnsfp")
-        vds = add_dbnsfp_to_vds(hc, vds, args.genome_version, root="va.dbnsfp", subset=filter_interval)
-
-        if args.genome_version == "37":
-            # dbNSFP is missing DANN scores for GRCh37, so add it from hail annotationdb.
-            # Later when annotationdb is available GRCh38 use it for everything.
-            vds = vds.annotate_variants_db('va.dann.score')\
-                .annotate_variants_expr("va.dbnsfp.DANN_score = va.dann.score")\
-                .annotate_variants_expr("va = drop(va, dann)")
-
-        pprint(vds.variant_schema)
-
-    if not args.exclude_topmed:
-        logger.info("\n==> add topmed")
-        vds = add_topmed_to_vds(hc, vds, args.genome_version, root="va.topmed", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    if not args.exclude_primate_ai:
-        logger.info("\n==> add primate_ai")
-        vds = add_primate_ai_to_vds(hc, vds, args.genome_version, root="va.primate_ai", subset=filter_interval)
-        pprint(vds.variant_schema)
-
-    # DON'T add clinvar because it updates frequently
-    #if not args.exclude_clinvar:
-    #    logger.info("\n==> Add clinvar")
-    #    vds = add_clinvar_to_vds(hc, vds, args.genome_version, root="va.clinvar", subset=filter_interval)
-
-    # DON'T add hgmd because it's got a restrictive license, so only staff users can use it
-    #if not args.exclude_hgmd:
-    #    logger.info("\n==> Add hgmd")
-    #    vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=filter_interval)
-
-    pprint(vds.variant_schema)
-
-    write_vds(vds, output_vds)
-
-    #if not args.dont_delete_intermediate_vds_files:
-    #    delete_gcloud_file(step2_output_vds)
-
-
-summary = vds.summarize()
-pprint(summary)
-
-
-
-
-"""
-from hail_scripts.v01.utils.elasticsearch_client import ElasticsearchClient
-
-DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS = ("sortedTranscriptConsequences", )
-
-print("======== Export to elasticsearch ======")
-es = ElasticsearchClient(
-    host=args.host,
-    port=args.port,
-)
-
-es.export_vds_to_elasticsearch(
-    vds,
-    index_name=args.index,
-    index_type_name=args.index_type,
-    block_size=args.block_size,
-    num_shards=args.num_shards,
-    delete_index_before_exporting=True,
-    disable_doc_values_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
-    disable_index_for_fields=DISABLE_INDEX_AND_DOC_VALUES_FOR_FIELDS,
-    verbose=True,
-)
-"""
+import os
+
+import hail as hl
+
+
+OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
+                  'all_reference_data/combined_reference_data_grch{genome_version}.ht'
+
+'''
+Configurations of dataset to combine. 
+Format:
+'<Name of dataset>': {
+    '<Reference genome version>': {
+        'path': 'gs://path/to/hailtable.ht',
+        'select': '<Optional list of fields to select or dict of new field name to location of old field
+            in the reference dataset. If '#' is at the end, we know to select the appropriate biallelic
+            using the a_index.>',
+        'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
+        'custom_select': '<Optional function name of custom select function>',
+    },
+'''
+CONFIG =  {
+    '1kg': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
+            'field_name': 'g1k',
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
+            'field_name': 'g1k',
+        },
+    },
+    'cadd': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.4.ht',
+            'select': ['PHRED'],
+        },
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.4.ht',
+            'select': ['PHRED'],
+        },
+    },
+    'dbnsfp': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+            'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
+                          'GERP_RS', 'phastCons100way_vertebrate'],
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
+            'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
+                          'GERP_RS', 'phastCons100way_vertebrate'],
+        },
+    },
+    'eigen': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+            'select': {'Eigen_phred': 'info.Eigen-phred'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
+            'select': {'Eigen_phred': 'info.Eigen-phred'},
+        },
+    },
+    'mpc': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+            'select': {'MPC': 'info.MPC'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/MPC/fordist_constraint_official_mpc_values.liftover.GRCh38.ht',
+            'select': {'MPC': 'info.MPC'},
+        },
+    },
+    'primate_ai': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+            'select': {'score': 'info.score'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
+            'select': {'score': 'info.score'},
+        },
+    },
+    'splice_ai': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+            'select': {'delta_score': 'info.max_DS'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.ht',
+            'select': {'delta_score': 'info.max_DS'},
+        },
+    },
+    'topmed': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.ht',
+            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
+        },
+    },
+    'gnomad_exome_coverage': {
+        '37': {
+            'path': 'gs://gnomad-public/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
+        },
+    },
+    'gnomad_genome_coverage': {
+        '37': {
+            'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
+            'select': {'AC': 'info.AC'},
+        },
+    },
+    'gnomad_exomes': {
+        '37': {
+            'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+            'custom_select': 'custom_gnomad_select'
+        },
+    },
+    'gnomad_genomes': {
+        '37': {
+            'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'custom_select': 'custom_gnomad_select'
+        },
+    },
+    'exac': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+            'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj',},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.htt',
+        },
+    },
+}
+
+
+def annotate_coverages(ht, coverage_dataset, reference_genome):
+    """
+    Annotates the hail table with the coverage dataset.
+        '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
+    :param ht: hail table
+    :param coverage_dataset: coverage dataset e.g. gnomad genomes or exomes coverage
+    :param reference_genome: '37' or '38'
+    :return: hail table with proper annotation
+    """
+    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
+    return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
+
+def custom_gnomad_select(ht):
+    """
+    Custom select for public gnomad dataset (which we did not generate). Extracts fields like
+    'AF', 'AN', and generates 'hemi'.
+    :param ht: hail table
+    :return: select expression dict
+    """
+    selects = {}
+    global_idx = hl.eval(ht.globals.freq_index_dict['gnomad'])
+    selects['AF'] = ht.freq[global_idx].AF
+    selects['AN'] = ht.freq[global_idx].AN
+    selects['AC'] = ht.freq[global_idx].AC
+    selects['hom'] = ht.freq[global_idx].homozygote_count
+
+    selects['POPMAX_AF'] = ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF
+    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
+    selects['hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
+                              0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
+    return selects
+
+def get_select_fields(selects, base_ht):
+    """
+    Generic function that takes in a select config and base_ht and generates a
+    select dict that is generated from traversing the base_ht and extracting the right
+    annotation. If '#' is included at the end of a select field, the appropriate
+    biallelic position will be selected (e.g. 'x#' -> x[base_ht.a_index-1].
+    :param selects: mapping or list of selections
+    :param base_ht: base_ht to traverse
+    :return: select mapping from annotation name to base_ht annotation
+    """
+    select_fields = {}
+    if selects is not None:
+        if isinstance(selects, list):
+            select_fields = { selection: base_ht[selection] for selection in selects }
+        elif isinstance(selects, dict):
+            for key, val in selects.items():
+                # Grab the field and continually select it from the hail table.
+                ht = base_ht
+                for attr in val.split('.'):
+                    # Select from multi-allelic list.
+                    if attr.endswith('#'):
+                        attr = attr[:-1]
+                        ht = ht[attr][base_ht.a_index-1]
+                    else:
+                        ht = ht[attr]
+                select_fields[key] = ht
+    return select_fields
+
+def get_ht(dataset, reference_genome):
+    ' Returns the appropriate deduped hail table with selects applied.'
+    config = CONFIG[dataset][reference_genome]
+    base_ht = hl.read_table(config['path'])
+
+    # 'select' and 'custom_select's to generate dict.
+    select_fields = get_select_fields(config.get('select'), base_ht)
+    if 'custom_select' in config:
+        custom_select_fn_str = config['custom_select']
+        select_fields = {**select_fields, **globals()[custom_select_fn_str](base_ht)}
+
+
+    field_name = config.get('field_name') or dataset
+    select_query = {
+        field_name: hl.struct(**select_fields)
+    }
+
+    print(select_fields)
+    return base_ht.select(**select_query).distinct()
+
+def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
+    # Get a list of hail tables and combine into an outer join.
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
+
+    # Annotate coverages.
+    for coverage_dataset in coverage_datasets:
+        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
+
+    # Add metadata, but also removes previous globals.
+    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
+                                         datasets=hl.set(datasets + coverage_datasets))
+    joined_ht.describe()
+
+    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome))
+    print('Writing to %s' % output_path)
+
+    joined_ht.write(os.path.join(output_path))
+
+def run():
+    # TODO: '38' when gnomad liftover is done.
+    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+              'gnomad_genomes', 'gnomad_exomes'],
+             ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
+            '37')
+
+
+if __name__ == "__main__":
+    run()
