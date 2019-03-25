@@ -16,7 +16,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
     reference_mt_path = luigi.Parameter(description='Path to the matrix table storing the reference variants.')
-    sample_type = luigi.Parameter(description='Sample type, WGS or WES')
+    sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
 
     @staticmethod
@@ -48,8 +48,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         elif has_noncoding and not has_coding:
             # Non coding only.
             raise SeqrValidationError(
-                'Dataset is contains noncoding variants but is missing common coding variants for'
-                ' GRCh{}'.format(genome_version)
+                'Sample type validation error: Dataset contains noncoding variants but is missing common coding '
+                'variants for GRCh{}. Please verify that the dataset contains coding variants.' .format(genome_version)
             )
         elif has_coding and not has_noncoding:
             # Only coding should be WES.

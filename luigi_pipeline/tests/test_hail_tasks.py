@@ -71,8 +71,8 @@ class TestHailTasks(unittest.TestCase):
         # stats should match with noncoding (over threshold) and not coding (under threshold)
         stats = HailMatrixTableTask.hl_mt_impute_sample_type(combined_mt, '37', threshold)
         self.assertEqual(stats, {
-            'noncoding': {'matched_count': 1560, 'total_count': 2243, 'match': True},
-            'coding': {'matched_count': 119, 'total_count': 359, 'match': False}
+            'noncoding': {'matched_count': 1545, 'total_count': 2243, 'match': True},
+            'coding': {'matched_count': 118, 'total_count': 359, 'match': False}
         })
 
     def test_hail_matrix_table_and_elasticsearch_tasks(self):

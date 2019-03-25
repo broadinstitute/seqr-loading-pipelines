@@ -45,9 +45,9 @@ class HailMatrixTableTask(luigi.Task):
             'noncoding': GlobalConfig().param_kwargs['validation_%s_noncoding_ht' % genome_version],
             'coding': GlobalConfig().param_kwargs['validation_%s_coding_ht' % genome_version]
         }
-        for type, ht_path in types_to_ht_path.items():
+        for sample_type, ht_path in types_to_ht_path.items():
             ht = hl.read_table(ht_path)
-            stats[type] = ht_stats = {
+            stats[sample_type] = ht_stats = {
                 'matched_count': mt.semi_join_rows(ht).count_rows(),
                 'total_count': ht.count(),
 
