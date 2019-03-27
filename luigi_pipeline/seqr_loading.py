@@ -19,6 +19,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
 
+    def run(self):
+        mt = self.import_vcf()
+        if self.validate:
+            self.validate_mt(mt, self.genome_version, self.sample_type)
+        # TODO: Modify MT.
+        mt.write(self.output().path)
+
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):
         """
@@ -66,13 +73,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                     'WES because it contains many common non-coding variants'.format(sample_type)
                 )
         return True
-
-    def run(self):
-        mt = self.import_vcf()
-        if self.validate:
-            self.validate_mt(mt, self.genome_version, self.sample_type)
-        # TODO: Modify MT.
-        mt.write(self.output().path)
 
 
 class SeqrMTToESTask(HailElasticSearchTask):

@@ -29,6 +29,23 @@ class HailMatrixTableTask(luigi.Task):
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
 
+    def requires(self):
+        return [VcfFile(filename=s) for s in self.source_paths]
+
+    def output(self):
+        # TODO: Look into checking against the _SUCCESS file in the mt.
+        return GCSorLocalTarget(self.dest_path)
+
+    def run(self):
+        # Overwrite to do custom transformations.
+        mt = self.import_vcf()
+        mt.write(self.output().path)
+
+    def import_vcf(self):
+        # Import the VCFs from inputs.
+        return hl.import_vcf([vcf_file.path for vcf_file in self.input()],
+                             force_bgz=True)
+
     @staticmethod
     def hl_mt_impute_sample_type(mt, genome_version, threshold=0.3):
         """
@@ -54,23 +71,6 @@ class HailMatrixTableTask(luigi.Task):
             }
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
-
-    def requires(self):
-        return [VcfFile(filename=s) for s in self.source_paths]
-
-    def output(self):
-        # TODO: Look into checking against the _SUCCESS file in the mt.
-        return GCSorLocalTarget(self.dest_path)
-
-    def run(self):
-        # Overwrite to do custom transformations.
-        mt = self.import_vcf()
-        mt.write(self.output().path)
-
-    def import_vcf(self):
-        # Import the VCFs from inputs.
-        return hl.import_vcf([vcf_file.path for vcf_file in self.input()],
-                             force_bgz=True)
 
 
 class HailElasticSearchTask(luigi.Task):
