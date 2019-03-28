@@ -37,14 +37,14 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         :param sample_type: WGS or WES
         :return: True or Exception
         """
-        imputed_stats = HailMatrixTableTask.hl_mt_impute_sample_type(mt, genome_version)
+        sample_type_stats = HailMatrixTableTask.sample_type_stats(mt, genome_version)
 
-        for name, stat in imputed_stats.items():
+        for name, stat in sample_type_stats.items():
             logger.info('Table contains %i out of %i common %s variants.' %
                         (stat['matched_count'], stat['total_count'], name))
 
-        has_coding = imputed_stats['coding']['match']
-        has_noncoding = imputed_stats['noncoding']['match']
+        has_coding = sample_type_stats['coding']['match']
+        has_noncoding = sample_type_stats['noncoding']['match']
 
         if not has_coding and not has_noncoding:
             # No common variants detected.
