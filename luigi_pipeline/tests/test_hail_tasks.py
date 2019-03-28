@@ -46,17 +46,17 @@ class TestHailTasks(unittest.TestCase):
         mt = hl.read_matrix_table(self._temp_dest_path())
         self.assertEqual(mt.count(), (30, 16))
 
-    def test_mt_impute_sample_type_1kg_30(self):
+    def test_mt_sample_type_stats_1kg_30(self):
         self._set_validation_configs()
 
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
-        stats = HailMatrixTableTask.hl_mt_impute_sample_type(mt, '37', 0.3)
+        stats = HailMatrixTableTask.sample_type_stats(mt, '37', 0.3)
         self.assertEqual(stats, {
             'noncoding': {'matched_count': 1, 'total_count': 2243, 'match': False},
             'coding': {'matched_count': 4, 'total_count': 359, 'match': False}
         })
 
-    def test_mt_impute_sample_type_threshold(self):
+    def test_mt_sample_type_stats_threshold(self):
         threshold = 0.5
         self._set_validation_configs()
 
@@ -69,7 +69,7 @@ class TestHailTasks(unittest.TestCase):
         )
 
         # stats should match with noncoding (over threshold) and not coding (under threshold)
-        stats = HailMatrixTableTask.hl_mt_impute_sample_type(combined_mt, '37', threshold)
+        stats = HailMatrixTableTask.sample_type_stats(combined_mt, '37', threshold)
         self.assertEqual(stats, {
             'noncoding': {'matched_count': 1545, 'total_count': 2243, 'match': True},
             'coding': {'matched_count': 118, 'total_count': 359, 'match': False}

@@ -47,9 +47,9 @@ class HailMatrixTableTask(luigi.Task):
                              force_bgz=True)
 
     @staticmethod
-    def hl_mt_impute_sample_type(mt, genome_version, threshold=0.3):
+    def sample_type_stats(mt, genome_version, threshold=0.3):
         """
-        Impute the sample type by chcking against a list of common coding and non-coding variants.
+        Calculate stats for sample type by chcking against a list of common coding and non-coding variants.
         If the match for each respective type is over the threshold, we return a match.
 
         :param mt: Matrix Table to check
