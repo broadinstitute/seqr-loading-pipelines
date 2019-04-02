@@ -3,10 +3,11 @@ import shutil, tempfile, os, unittest
 import hail as hl
 import luigi
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
+from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, MatrixTableSampleSetError
 from lib.global_config import GlobalConfig
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
+
 
 class TestHailTasks(unittest.TestCase):
 
@@ -90,3 +91,53 @@ class TestHailTasks(unittest.TestCase):
 
         mt = es_task.import_mt()
         self.assertEqual(mt.count(), (30, 16))
+
+    def create_temp_sample_remap_file(self, mt, number_of_remaps):
+        temp_input_file = os.path.join(self.test_dir, 'temp_remap_samples.txt')
+        remap = mt.cols().head(number_of_remaps).key_by('s')
+        remap = remap.annotate(seqr_id=remap.s + '_1')
+        remap.export(temp_input_file, header=True)
+        return temp_input_file
+
+    def create_temp_sample_subset_file(self, mt, number_of_subset_samples, fail=False):
+        temp_input_file = os.path.join(self.test_dir, 'temp_subset_samples.txt')
+        subset = mt.cols().head(number_of_subset_samples)
+        if fail:
+            subset = subset.annotate(test='wrong_sample').key_by('test')
+            subset = subset.drop('s').rename({'test': 's'})
+        subset.export(temp_input_file, header=True)
+        return temp_input_file
+
+    def test_hail_matrix_table_remap_0(self):
+        task = HailMatrixTableTask(source_paths=[TEST_DATA_MT_1KG], dest_path="empty", genome_version='37')
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        remap_mt = task.remap_sample_ids(mt, self.create_temp_sample_remap_file(mt, 0))
+        self.assertEquals(remap_mt.anti_join_cols(mt.cols()).count_cols(), 0)
+
+    def test_hail_matrix_table_remap_1(self):
+        task = HailMatrixTableTask(source_paths=[TEST_DATA_MT_1KG], dest_path="empty", genome_version='37')
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        remap_mt = task.remap_sample_ids(mt, self.create_temp_sample_remap_file(mt, 1))
+        self.assertEquals(remap_mt.anti_join_cols(mt.cols()).count_cols(), 1)
+
+    def test_hail_matrix_table_subset_14(self):
+        task = HailMatrixTableTask(source_paths=[TEST_DATA_MT_1KG], dest_path="empty", genome_version='37')
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        subset_mt = task.subset_samples(mt, self.create_temp_sample_subset_file(mt, 14))
+        self.assertEqual(subset_mt.count(), (29,14))
+
+    def test_hail_matrix_table_subset_raise_e(self):
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        self.assertRaises(MatrixTableSampleSetError, HailMatrixTableTask.subset_samples, mt, self.create_temp_sample_subset_file(mt, 1, True))
+
+    def test_hail_matrix_table_subset_wrong_sample_id_correct(self):
+        task = HailMatrixTableTask(source_paths=[TEST_DATA_MT_1KG], dest_path="empty", genome_version='37')
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        try:
+            task.subset_samples(mt, self.create_temp_sample_subset_file(mt, 1, True))
+        except MatrixTableSampleSetError as e:
+            if e.missing_samples != ['wrong_sample']:
+                self.fail()
+
+
+

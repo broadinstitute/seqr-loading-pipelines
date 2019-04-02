@@ -1,17 +1,26 @@
 """
 Tasks for Hail.
 """
+import logging
+
 import hail as hl
 import luigi
 from luigi.contrib import gcs
 
 from lib.global_config import GlobalConfig
 
+logger = logging.getLogger(__name__)
+
+class MatrixTableSampleSetError(Exception):
+    def __init__(self, message, missing_samples):
+
+        super().__init__(message)
+        self.missing_samples = missing_samples
+        pass
 
 def GCSorLocalTarget(filename):
     target = gcs.GCSTarget if filename.startswith('gs://') else luigi.LocalTarget
     return target(filename)
-
 
 class VcfFile(luigi.Task):
     filename = luigi.Parameter()
@@ -49,7 +58,7 @@ class HailMatrixTableTask(luigi.Task):
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
         """
-        Calculate stats for sample type by chcking against a list of common coding and non-coding variants.
+        Calculate stats for sample type by checking against a list of common coding and non-coding variants.
         If the match for each respective type is over the threshold, we return a match.
 
         :param mt: Matrix Table to check
@@ -71,6 +80,63 @@ class HailMatrixTableTask(luigi.Task):
             }
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
+
+    @staticmethod
+    def subset_samples(mt, subset_path):
+        """
+        Subset the MatrixTable to the provided list of samples
+        :param mt: MatrixTable from VCF
+        :param subset_path: Path to a file with a single column 's'
+        :return: MatrixTable subsetted to list of samples
+        """
+        subset_ht = hl.import_table(subset_path, no_header=False).key_by('s')
+        anti_join_ht = subset_ht.anti_join(mt.cols())
+        anti_join_ht_count = anti_join_ht.count()
+        mt_sample_count = mt.cols().count()
+        missing_samples = anti_join_ht.s.collect()
+
+        if anti_join_ht_count != 0:
+            raise MatrixTableSampleSetError(
+                f'Only {mt_sample_count-anti_join_ht_count} out of {mt_sample_count} '
+                'subsetting-table IDs matched IDs in the variant callset.\n'
+                f'IDs that aren\'t in the callset: {missing_samples}\n'
+                f'All callset sample IDs:{mt.s.collect()}', missing_samples
+            )
+
+        mt = mt.semi_join_cols(subset_ht)
+        mt = mt.filter_rows((hl.agg.count_where(mt.GT.is_non_ref())) > 0)
+
+        logger.info(f'Finished subsetting samples. Kept {anti_join_ht_count} '
+                    f'out of {mt_sample_count} samples in vds')
+        return mt
+
+    @staticmethod
+    def remap_sample_ids(mt, remap_path):
+        """
+        Remap the MatrixTable's sample ID, 's', field to the sample ID used within seqr, 'seqr_id'
+        If the sample 's' does not have a 'seqr_id' in the remap file, 's' becomes 'seqr_id'
+        :param mt: MatrixTable from VCF
+        :param remap_path: Path to a file with two columns 's' and 'seqr_id'
+        :return: MatrixTable remapped and keyed to use seqr_id
+        """
+        remap_ht = hl.import_table(remap_path, no_header=False).key_by('s')
+        anti_join_ht = remap_ht.anti_join(mt.cols())
+        remap_count = remap_ht.count()
+        missing_samples = anti_join_ht.s.collect()
+
+        if anti_join_ht.count() != 0:
+            raise MatrixTableSampleSetError(
+                f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
+                'remap IDs matched IDs in the variant callset.\n'
+                f'IDs that aren\'t in the callset: {missing_samples}\n'
+                f'All callset sample IDs:{mt.s.collect()}', missing_samples
+            )
+
+        mt = mt.annotate_cols(**remap_ht[mt.s])
+        remap_expr = hl.cond(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
+        mt = mt.annotate_cols(seqr_id=remap_expr).key_cols_by('seqr_id')
+        logger.info(f'Remapped {remap_count} sample ids...')
+        return mt
 
 
 class HailElasticSearchTask(luigi.Task):
