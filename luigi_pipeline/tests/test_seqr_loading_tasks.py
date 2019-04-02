@@ -4,7 +4,9 @@ from unittest.mock import patch
 import hail as hl
 
 from seqr_loading import SeqrVCFToMTTask, SeqrValidationError
+from tests.data.sample_vep import VEP_DATA, DERIVED_DATA
 
+TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
 
 class TestSeqrLoadingTasks(unittest.TestCase):
 
@@ -49,3 +51,21 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         # Supposed to be WGS but we report as WES.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(0, 0, True, 0, 0, True)
         self.assertRaises(SeqrValidationError, SeqrVCFToMTTask.validate_mt, None, '37', 'WES')
+
+    def test_derive_fields(self):
+        rsid = 'rs35471880'
+
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        mt = hl.split_multi(mt.filter_rows(mt.rsid == rsid))
+        mt = mt.annotate_rows(**VEP_DATA[rsid])
+        mt = SeqrVCFToMTTask.derive_fields(mt, 'VARIANTS')
+
+        obj = mt.rows().collect()[0]
+
+        # Cannot do a nested compare because of nested objects, so do one by one.
+        fields = ['AC', 'AF', 'AN', 'codingGeneIds', 'docId', 'domains', 'end', 'geneIds', 'ref', 'alt', 'start',
+                  'variantId', 'transcriptIds', 'xpos', 'xstart', 'xstop', 'contig']
+        for field in fields:
+            self.assertEqual(obj[field], DERIVED_DATA[rsid][field])
+
+        self.assertEqual(obj['mainTranscript']['transcript_id'], DERIVED_DATA[rsid]['mainTranscript']['transcript_id'])

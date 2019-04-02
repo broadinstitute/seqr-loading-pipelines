@@ -22,10 +22,10 @@ $ LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg python seqr_loading.py SeqrMT
 ### Setup
 - Install https://github.com/Nealelab/cloudtools
 ```
-$ cluster start seqr-loading-dev --num-workers 2 --pkgs luigi,google-api-python-client --max-idle 60m
+$ cluster start seqr-loading-dev --num-workers 2 --pkgs luigi,google-api-python-client --max-idle 60m --vep
 ```
 
 ### Run
 ```
-$ cluster submit seqr-loading-dev seqr_loading.py --pyfiles lib --files configs/luigi.cfg --args "SeqrMTToESTask --local-scheduler"
+$ cluster submit seqr-loading-dev seqr_loading.py --pyfiles lib,../hail_scripts --files configs/luigi.cfg --args "SeqrMTToESTask --local-scheduler"
 ```

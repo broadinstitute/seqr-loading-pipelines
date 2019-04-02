@@ -78,7 +78,7 @@ def get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root, only_coding_
 
 def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root):
     return hl.set(
-        vep_transcript_consequences_root.flatmap(lambda c: c.domains.map(lambda domain: domain.db + ":" + domain.name))
+        vep_transcript_consequences_root.flatmap(lambda c: c.domains)
     )
 
 
