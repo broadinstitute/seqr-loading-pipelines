@@ -13,10 +13,9 @@ logger = logging.getLogger(__name__)
 
 class MatrixTableSampleSetError(Exception):
     def __init__(self, message, missing_samples):
-
         super().__init__(message)
         self.missing_samples = missing_samples
-        pass
+
 
 def GCSorLocalTarget(filename):
     target = gcs.GCSTarget if filename.startswith('gs://') else luigi.LocalTarget
@@ -82,20 +81,20 @@ class HailMatrixTableTask(luigi.Task):
         return stats
 
     @staticmethod
-    def subset_samples(mt, subset_path):
+    def subset_samples_and_variants(mt, subset_path):
         """
-        Subset the MatrixTable to the provided list of samples
+        Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF
         :param subset_path: Path to a file with a single column 's'
         :return: MatrixTable subsetted to list of samples
         """
-        subset_ht = hl.import_table(subset_path, no_header=False).key_by('s')
+        subset_ht = hl.import_table(subset_path, no_header=False, key='s')
         anti_join_ht = subset_ht.anti_join(mt.cols())
         anti_join_ht_count = anti_join_ht.count()
         mt_sample_count = mt.cols().count()
-        missing_samples = anti_join_ht.s.collect()
 
         if anti_join_ht_count != 0:
+            missing_samples = anti_join_ht.s.collect()
             raise MatrixTableSampleSetError(
                 f'Only {mt_sample_count-anti_join_ht_count} out of {mt_sample_count} '
                 'subsetting-table IDs matched IDs in the variant callset.\n'
@@ -119,12 +118,11 @@ class HailMatrixTableTask(luigi.Task):
         :param remap_path: Path to a file with two columns 's' and 'seqr_id'
         :return: MatrixTable remapped and keyed to use seqr_id
         """
-        remap_ht = hl.import_table(remap_path, no_header=False).key_by('s')
-        anti_join_ht = remap_ht.anti_join(mt.cols())
+        remap_ht = hl.import_table(remap_path, no_header=False, key ='s')
+        missing_samples = remap_ht.anti_join(mt.cols()).collect()
         remap_count = remap_ht.count()
-        missing_samples = anti_join_ht.s.collect()
 
-        if anti_join_ht.count() != 0:
+        if len(missing_samples) != 0:
             raise MatrixTableSampleSetError(
                 f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
                 'remap IDs matched IDs in the variant callset.\n'
@@ -134,7 +132,8 @@ class HailMatrixTableTask(luigi.Task):
 
         mt = mt.annotate_cols(**remap_ht[mt.s])
         remap_expr = hl.cond(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
-        mt = mt.annotate_cols(seqr_id=remap_expr).key_cols_by('seqr_id')
+        mt = mt.annotate_cols(seqr_id=remap_expr, vcf_id=mt.s)
+        mt = mt.key_cols_by(s=mt.seqr_id)
         logger.info(f'Remapped {remap_count} sample ids...')
         return mt
 
