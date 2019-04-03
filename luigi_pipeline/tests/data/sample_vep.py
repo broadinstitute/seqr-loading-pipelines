@@ -670,6 +670,6 @@ DERIVED_DATA = {
                    'transcriptIds': {'ENST00000483767', 'ENST00000327044', 'ENST00000477976'},
                    'variantId': '1-881918-G-A',
                    'xpos': 1000881918,
-                   'xstart': 881918,
+                   'xstart': 1000881918,
                    'xstop': 1000881919}
 }

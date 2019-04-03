@@ -78,7 +78,7 @@ def get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root, only_coding_
 
 def get_expr_for_vep_protein_domains_set(vep_transcript_consequences_root):
     return hl.set(
-        vep_transcript_consequences_root.flatmap(lambda c: c.domains)
+        vep_transcript_consequences_root.flatmap(lambda c: c.domains.map(lambda domain: domain.db + ":" + domain.name))
     )
 
 
@@ -246,6 +246,12 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
 
     return hl.zip_with_index(result).map(
         lambda csq_with_index: csq_with_index[1].annotate(transcript_rank=csq_with_index[0])
+    )
+
+
+def get_expr_for_vep_protein_domains_set_from_sorted(vep_sorted_transcript_consequences_root):
+    return hl.set(
+        vep_sorted_transcript_consequences_root.flatmap(lambda c: c.domains)
     )
 
 

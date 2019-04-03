@@ -42,15 +42,15 @@ def get_expr_for_variant_ids(
 
 def get_expr_for_variant_type(table:hl.Table) -> hl.str:
     return hl.bind(
-        lambda ref, alt: (
+        lambda ref_len, alt_len: (
             hl.case()
-                .when(hl.len(ref) > hl.len(alt), "D")
-                .when(hl.len(ref) < hl.len(alt), "I")
-                .when(hl.len(ref) > 1, "M")
+                .when(ref_len > alt_len, "D")
+                .when(ref_len < alt_len, "I")
+                .when(ref_len > 1, "M")
                 .default("S")
         ),
-        get_expr_for_ref_allele(table),
-        get_expr_for_alt_allele(table),
+        hl.len(get_expr_for_ref_allele(table)),
+        hl.len(get_expr_for_alt_allele(table)),
     )
 
 

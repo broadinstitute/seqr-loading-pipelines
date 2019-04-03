@@ -62,7 +62,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
 
         obj = mt.rows().collect()[0]
 
-        # Cannot do a nested compare because of nested objects, so do one by one.
+        # Cannot do a nested compare because of nested hail objects, so do one by one.
         fields = ['AC', 'AF', 'AN', 'codingGeneIds', 'docId', 'domains', 'end', 'geneIds', 'ref', 'alt', 'start',
                   'variantId', 'transcriptIds', 'xpos', 'xstart', 'xstop', 'contig']
         for field in fields:

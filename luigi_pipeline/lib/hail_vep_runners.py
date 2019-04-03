@@ -19,6 +19,12 @@ class HailVEPRunner(HailVEPRunnerBase):
 
 
 class HailVEPDummyRunner(HailVEPRunnerBase):
+    """ Dummy hail runner used in environments (e.g. local) when a VEP installation is not available to run.
+
+    Mocked data all from rsid `rs35471880`. Ideally this should be generic data and marked as mocked, but
+    that would require a lot of domain knowledge. 
+
+    """
 
     MOCK_VEP_DATA = hl.struct(
         **{'allele_string': 'G/A',

@@ -53,9 +53,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             ref=variant_id.get_expr_for_ref_allele(mt),
             alt=variant_id.get_expr_for_alt_allele(mt),
             xpos=variant_id.get_expr_for_xpos(mt.locus),
-            xstart=variant_id.get_expr_for_start_pos(mt),
+            xstart=variant_id.get_expr_for_xpos(mt.locus),
             transcriptIds=vep.get_expr_for_vep_transcript_ids_set(mt.sortedTranscriptConsequences),
-            domains=vep.get_expr_for_vep_protein_domains_set(mt.sortedTranscriptConsequences),
+            domains=vep.get_expr_for_vep_protein_domains_set_from_sorted(mt.sortedTranscriptConsequences),
             transcriptConsequenceTerms=vep.get_expr_for_vep_consequence_terms_set(
               mt.sortedTranscriptConsequences),
             mainTranscript=vep.get_expr_for_worst_transcript_consequence_annotations_struct(
@@ -71,7 +71,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if dataset_type == 'VARIANTS':
             mt = mt.select_rows(*common_selects, AC=mt.info.AC, AF=mt.info.AF, AN=mt.info.AN)
         elif dataset_type == 'SV':
-            mt = mt.select_rows(*common_selects, AC=mt.info.AC, AF=mt.info.AF, AN=mt.info.AN)
+            mt = mt.select_rows(*common_selects, IMPRECISE=mt.info.IMPRECISE, SVTYPE=mt.info.SVTYPE,
+                                SVLEN=mt.info.SVLEN, END=mt.info.END,)
 
         return mt
 
