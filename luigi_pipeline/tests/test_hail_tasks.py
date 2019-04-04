@@ -3,10 +3,11 @@ import shutil, tempfile, os, unittest
 import hail as hl
 import luigi
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
+from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, MatrixTableSampleSetError
 from lib.global_config import GlobalConfig
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
+
 
 class TestHailTasks(unittest.TestCase):
 
@@ -90,3 +91,52 @@ class TestHailTasks(unittest.TestCase):
 
         mt = es_task.import_mt()
         self.assertEqual(mt.count(), (30, 16))
+
+    def _create_temp_sample_remap_file(self, mt, number_of_remaps):
+        # Creates a file with two columns, s and remap_id, where remap_id is s + _1
+        temp_input_file = os.path.join(self.test_dir, 'temp_remap_samples.txt')
+        remap = mt.cols().head(number_of_remaps).key_by('s')
+        remap = remap.annotate(seqr_id=remap.s + '_1')
+        remap.export(temp_input_file, header=True)
+        return temp_input_file
+
+    def _create_temp_sample_subset_file(self, mt, number_of_subset_samples, fail=False):
+        # Creates subset file using mt.s. If fail is set to true, creates a sample ID not present in the test mt
+        temp_input_file = os.path.join(self.test_dir, 'temp_subset_samples.txt')
+        subset = mt.cols().head(number_of_subset_samples)
+        if fail:
+            subset = subset.annotate(test='wrong_sample').key_by('test')
+            subset = subset.drop('s').rename({'test': 's'})
+        subset.export(temp_input_file, header=True)
+        return temp_input_file
+
+    def test_hail_matrix_table_remap_0(self):
+        # Tests the remap_sample_id function when there are no samples to be remapped
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        remap_mt =  HailMatrixTableTask.remap_sample_ids(mt, self._create_temp_sample_remap_file(mt, 0))
+        self.assertEqual(remap_mt.anti_join_cols(mt.cols()).count_cols(), 0)
+
+    def test_hail_matrix_table_remap_1(self):
+        # Tests the remap_sample_id function when a single sample needs to be remapped
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        remap_mt = HailMatrixTableTask.remap_sample_ids(mt, self._create_temp_sample_remap_file(mt, 1))
+        self.assertEqual(remap_mt.anti_join_cols(mt.cols()).count_cols(), 1)
+
+    def test_hail_matrix_table_subset_14(self):
+        # Tests the subset_samples_and_variants function using 14 samples which should leave 29 variants
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        subset_mt = HailMatrixTableTask.subset_samples_and_variants(mt, self._create_temp_sample_subset_file(mt, 14))
+        self.assertEqual(subset_mt.count(), (29,14))
+
+    def test_hail_matrix_table_subset_raise_e(self):
+        # Tests if subsetting with an incorrect sample ID will raise the MatrixTableSampleSetError
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        self.assertRaises(MatrixTableSampleSetError, HailMatrixTableTask.subset_samples_and_varirants,
+                          mt, self._create_temp_sample_subset_file(mt, 1, True))
+
+    def test_hail_matrix_table_subset_wrong_sample_id_correct(self):
+        # Tests if subsetting with an incorrect sample ID will raise the MatrixTableSampleSetError and return the appropriate wrong id
+        mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        with self.assertRaises(MatrixTableSampleSetError) as e:
+            HailMatrixTableTask.subset_samples_and_variants(mt, self._create_temp_sample_subset_file(mt, 1, True))
+            self.assertEqual(e.missing_samples, ['wrong_sample'])
