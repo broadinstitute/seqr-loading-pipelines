@@ -131,7 +131,7 @@ class TestHailTasks(unittest.TestCase):
     def test_hail_matrix_table_subset_raise_e(self):
         # Tests if subsetting with an incorrect sample ID will raise the MatrixTableSampleSetError
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
-        self.assertRaises(MatrixTableSampleSetError, HailMatrixTableTask.subset_samples_and_varirants,
+        self.assertRaises(MatrixTableSampleSetError, HailMatrixTableTask.subset_samples_and_variants,
                           mt, self._create_temp_sample_subset_file(mt, 1, True))
 
     def test_hail_matrix_table_subset_wrong_sample_id_correct(self):
