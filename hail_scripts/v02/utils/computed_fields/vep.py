@@ -249,6 +249,12 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
     )
 
 
+def get_expr_for_vep_protein_domains_set_from_sorted(vep_sorted_transcript_consequences_root):
+    return hl.set(
+        vep_sorted_transcript_consequences_root.flatmap(lambda c: c.domains)
+    )
+
+
 def get_expr_for_vep_gene_id_to_consequence_map(vep_sorted_transcript_consequences_root, gene_ids):
     # Manually build string because hl.json encodes a dictionary as [{ key: ..., value: ... }, ...]
     return (

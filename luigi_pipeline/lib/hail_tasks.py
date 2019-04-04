@@ -8,6 +8,8 @@ import luigi
 from luigi.contrib import gcs
 
 from lib.global_config import GlobalConfig
+import lib.hail_vep_runners as vep_runners
+from hail_scripts.v02.utils import hail_utils
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ class HailMatrixTableTask(luigi.Task):
     source_paths = luigi.ListParameter(description='List of paths to VCFs to be loaded.')
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
+    vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
+                                                                                            'to annotate vep.')
 
     def requires(self):
         return [VcfFile(filename=s) for s in self.source_paths]
@@ -80,6 +84,17 @@ class HailMatrixTableTask(luigi.Task):
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
 
+    
+
+    def run_vep(mt, genome_version, runner='VEP'):
+        runners = {
+            'VEP': vep_runners.HailVEPRunner,
+            'DUMMY': vep_runners.HailVEPDummyRunner
+        }
+
+        return runners[runner]().run(mt, genome_version)
+
+      
     @staticmethod
     def subset_samples_and_variants(mt, subset_path):
         """

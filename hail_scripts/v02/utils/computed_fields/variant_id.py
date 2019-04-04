@@ -40,12 +40,30 @@ def get_expr_for_variant_ids(
     return alleles[1:].map(compute_variant_id)
 
 
+def get_expr_for_variant_type(table:hl.Table) -> hl.str:
+    return hl.bind(
+        lambda ref_len, alt_len: (
+            hl.case()
+                .when(ref_len > alt_len, "D")
+                .when(ref_len < alt_len, "I")
+                .when(ref_len > 1, "M")
+                .default("S")
+        ),
+        hl.len(get_expr_for_ref_allele(table)),
+        hl.len(get_expr_for_alt_allele(table)),
+    )
+
+
 def get_expr_for_ref_allele(table):
     return table.alleles[0]
 
 
 def get_expr_for_start_pos(table):
     return table.locus.position
+
+
+def get_expr_for_end_pos(table):
+    return table.locus.position + hl.len(get_expr_for_ref_allele(table))
 
 
 def get_expr_for_variant_id(table, max_length=None):

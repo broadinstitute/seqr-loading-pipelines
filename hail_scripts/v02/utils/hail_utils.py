@@ -115,13 +115,13 @@ def run_vep(
     :rtype: MatrixTable
     """
     if genome_version == "37":
-        mt = mt.annotate_global_expr('global.gencodeVersion = "19"')  # see
+        mt = mt.annotate_globals(gencodeVersion="19")  # see
     elif genome_version == "38":
-        mt = mt.annotate_global_expr('global.gencodeVersion = "25"')  # see gs://hail-common/vep/vep/homo_sapiens/85_GRCh38/info.txt
+        mt = mt.annotate_globals(gencodeVersion="25")  # see gs://hail-common/vep/vep/homo_sapiens/85_GRCh38/info.txt
     else:
-        raise  ValueError(f"Invalid genome version: {genome_version}")
+        raise ValueError(f"Invalid genome version: {genome_version}")
 
-    mt = hl.methods.vep(mt, config="/vep/vep-gcloud-grch{}.properties".format(genome_version), name= name, block_size=block_size)
+    mt = hl.vep(mt, config="gs://hail-common/vep/vep/vep85-loftee-gcloud.json", name= name, block_size=block_size)
 
     logger.info("==> Done with VEP")
     return mt
