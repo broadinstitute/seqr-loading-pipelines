@@ -6,6 +6,7 @@ import hail as hl
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget
 from hail_scripts.v02.utils.computed_fields import variant_id
 from hail_scripts.v02.utils.computed_fields import vep
+from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrSVSchema
 
 logger = logging.getLogger(__name__)
 
@@ -29,52 +30,12 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         mt = hl.split_multi(mt)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
-        mt = self.derive_fields(mt, self.dataset_type)
+
+        Schema = SeqrVariantSchema if self.dataset_type == 'VARIANTS' else SeqrSVSchema
+        mt = Schema(mt).annotate_all().select_annotated_mt()
+
         mt.describe()
         mt.write(self.output().path)
-
-    @staticmethod
-    def derive_fields(mt, dataset_type):
-        """
-        Transforms a mt with fields derived from `vep`, `locus`, `alleles`, `position`, etc.
-        :param mt: matrix table with required fields (e.g. `vep`, `locus`, etc.)
-        :param dataset_type: either `VARIANTS` or `SV`
-        :return: mt with selected derived fields
-        """
-        mt = mt.annotate_rows(
-            sortedTranscriptConsequences=vep.get_expr_for_vep_sorted_transcript_consequences_array(mt.vep))
-        mt = mt.annotate_rows(
-            docId=variant_id.get_expr_for_variant_id(mt, 512),
-            variantId=variant_id.get_expr_for_variant_id(mt),
-            contig=variant_id.get_expr_for_contig(mt.locus),
-            pos=variant_id.get_expr_for_start_pos(mt),
-            start=variant_id.get_expr_for_start_pos(mt),
-            end=variant_id.get_expr_for_end_pos(mt),
-            ref=variant_id.get_expr_for_ref_allele(mt),
-            alt=variant_id.get_expr_for_alt_allele(mt),
-            xpos=variant_id.get_expr_for_xpos(mt.locus),
-            xstart=variant_id.get_expr_for_xpos(mt.locus),
-            transcriptIds=vep.get_expr_for_vep_transcript_ids_set(mt.sortedTranscriptConsequences),
-            domains=vep.get_expr_for_vep_protein_domains_set_from_sorted(mt.sortedTranscriptConsequences),
-            transcriptConsequenceTerms=vep.get_expr_for_vep_consequence_terms_set(
-              mt.sortedTranscriptConsequences),
-            mainTranscript=vep.get_expr_for_worst_transcript_consequence_annotations_struct(
-              mt.sortedTranscriptConsequences),
-            geneIds=vep.get_expr_for_vep_gene_ids_set(mt.sortedTranscriptConsequences),
-            codingGeneIds=vep.get_expr_for_vep_gene_ids_set(mt.sortedTranscriptConsequences, only_coding_genes=True),
-            xstop=variant_id.get_expr_for_xpos(mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(mt))
-        )
-        common_selects = ['docId', 'variantId', 'contig', 'start', 'end', 'ref', 'alt', 'xpos', 'xstart',
-                          'xstop', 'rsid', 'filters', 'a_index', 'geneIds', 'transcriptIds', 'codingGeneIds',
-                          'domains', 'transcriptConsequenceTerms', 'sortedTranscriptConsequences',
-                          'mainTranscript']
-        if dataset_type == 'VARIANTS':
-            mt = mt.select_rows(*common_selects, AC=mt.info.AC, AF=mt.info.AF, AN=mt.info.AN)
-        elif dataset_type == 'SV':
-            mt = mt.select_rows(*common_selects, IMPRECISE=mt.info.IMPRECISE, SVTYPE=mt.info.SVTYPE,
-                                SVLEN=mt.info.SVLEN, END=mt.info.END,)
-
-        return mt
 
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):
