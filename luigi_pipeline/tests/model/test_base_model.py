@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, mt_annotation
+from lib.model.base_mt_schema import BaseMTSchema, row_annotation
 
 class TestBaseModel(unittest.TestCase):
 
@@ -12,15 +12,15 @@ class TestBaseModel(unittest.TestCase):
             def __init__(self):
                 super(TestSchema, self).__init__(hl.import_vcf('tests/data/1kg_30variants.vcf.bgz'))
 
-            @mt_annotation()
+            @row_annotation()
             def a(self):
                 return 0
 
-            @mt_annotation(fn_require=a)
+            @row_annotation(fn_require=a)
             def b(self):
                 return self.mt.a + 1
 
-            @mt_annotation(annotation='c', fn_require=a)
+            @row_annotation(name='c', fn_require=a)
             def c_1(self):
                 return self.mt.a + 2
 
@@ -76,3 +76,29 @@ class TestBaseModel(unittest.TestCase):
         self.assertEqual(first_row.a, 0)
         self.assertEqual(first_row.b, 1)
         self.assertEqual(first_row.c, 2)
+
+    def test_fn_require_error(self):
+        try:
+            class TestSchema(BaseMTSchema):
+
+                @row_annotation(fn_require='hello')
+                def a(self):
+                    return 0
+        except ValueError as e:
+            self.assertEqual(str(e), 'Schema: dependency hello is not of type function.')
+            return True
+        self.fail('Did not raise ValueError.')
+
+    def test_fn_require_error(self):
+        def dummy():
+            pass
+        try:
+            class TestSchema(BaseMTSchema):
+
+                @row_annotation(fn_require=dummy)
+                def a(self):
+                    return 0
+        except ValueError as e:
+            self.assertEqual(str(e), 'Schema: dependency dummy is not a method within class TestSchema.')
+            return True
+        self.fail('Did not raise ValueError.')

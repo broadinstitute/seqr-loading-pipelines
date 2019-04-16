@@ -10,7 +10,7 @@ $ pip install -r requirements.txt
 ### Tests
 ```
 $ pip install nose
-$ nosetests
+$ PYTHONPATH=.. nosetests
 ```
 
 ### Run
