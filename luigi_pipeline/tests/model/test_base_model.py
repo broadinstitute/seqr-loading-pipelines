@@ -62,7 +62,7 @@ class TestBaseModel(unittest.TestCase):
 
     def test_schema_annotate_all(self):
         test_schema = self._test_schema_class()()
-        test_schema.a().annotate_all()
+        test_schema.annotate_all()
 
         fns = test_schema.all_annotation_fns()
         count_dict = {fn[0]: fn[1].mt_prop_meta['annotated'] for fn in fns}
@@ -70,14 +70,14 @@ class TestBaseModel(unittest.TestCase):
 
     def test_schema_mt_select_annotated_mt(self):
         test_schema = self._test_schema_class()()
-        mt = test_schema.a().annotate_all().select_annotated_mt()
+        mt = test_schema.annotate_all().select_annotated_mt()
         first_row = mt.rows().take(1)[0]
 
         self.assertEqual(first_row.a, 0)
         self.assertEqual(first_row.b, 1)
         self.assertEqual(first_row.c, 2)
 
-    def test_fn_require_error(self):
+    def test_fn_require_type_error(self):
         try:
             class TestSchema(BaseMTSchema):
 
@@ -89,7 +89,7 @@ class TestBaseModel(unittest.TestCase):
             return True
         self.fail('Did not raise ValueError.')
 
-    def test_fn_require_error(self):
+    def test_fn_require_class_error(self):
         def dummy():
             pass
         try:
