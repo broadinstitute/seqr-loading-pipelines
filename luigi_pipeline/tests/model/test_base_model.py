@@ -16,11 +16,11 @@ class TestBaseModel(unittest.TestCase):
             def a(self):
                 return 0
 
-            @mt_annotation(fn_require='a')
+            @mt_annotation(fn_require=a)
             def b(self):
                 return self.mt.a + 1
 
-            @mt_annotation(annotation='c', fn_require='a')
+            @mt_annotation(annotation='c', fn_require=a)
             def c_1(self):
                 return self.mt.a + 2
 

@@ -12,11 +12,12 @@ def mt_annotation(annotation=None, fn_require=None):
         def a(self):
             return 'a_val'
 
-        @mt_annotation(annotation='b', fn_require='a')
+        @mt_annotation(annotation='b', fn_require=a)
         def b_1(self):
             return 'b_val'
 
     Will generate a mt with rows of {a: 'a_val', 'b': 'b_val'} if the function is called.
+    TODO: Consider changing fn_require to be a list of requirements.
 
     :param annotation: name in the final MT. If not provided, uses the function name.
     :param fn_require: method name strings in class that are dependencies.
@@ -31,7 +32,7 @@ def mt_annotation(annotation=None, fn_require=None):
             if wrapper.mt_prop_meta['annotated'] > 0:
                 return self
             if fn_require:
-                getattr(self, fn_require)()
+                getattr(self, fn_require.__name__)()
 
             # Annotate and retiurn instance for chaining.
             self.mt = self.mt.annotate_rows(**{annotation_name: func(self, *args, **kwargs)})
@@ -62,13 +63,13 @@ class BaseMTSchema:
             def a(self):
                 return 0
 
-            @mt_annotation(fn_require='a')
+            @mt_annotation(fn_require=a)
             def b(self):
-                return 1
+                return self.a + 1
 
-            @mt_annotation(annotation='c', fn_require='a')
+            @mt_annotation(annotation='c', fn_require=a)
             def c_1(self):
-                return 2
+                return self.a + 2
 
     `TestSchema(mt).b().c_1().select_annotated_mt()` will annotate with {'a': 0, 'b': 1, 'c': 2}
 
