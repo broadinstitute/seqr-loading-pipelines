@@ -1,12 +1,11 @@
 import unittest
 from unittest.mock import patch
 
-import hail as hl
-
 from seqr_loading import SeqrVCFToMTTask, SeqrValidationError
 from tests.data.sample_vep import VEP_DATA, DERIVED_DATA
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
+
 
 class TestSeqrLoadingTasks(unittest.TestCase):
 
