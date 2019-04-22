@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from hail_scripts.v02.utils.clinvar import download_and_import_latest_clinvar_vcf, CLINVAR_MT_PATH
+from hail_scripts.v02.utils.clinvar import download_and_import_latest_clinvar_vcf, CLINVAR_HT_PATH
 from hail_scripts.v02.utils.hail_utils import write_ht
 
 for genome_version in ["37", "38"]:
@@ -9,4 +9,4 @@ for genome_version in ["37", "38"]:
     ht = mt.rows()
     ht.describe()
 
-    write_ht(ht, CLINVAR_MT_PATH.format(genome_version=genome_version))
+    write_ht(ht, CLINVAR_HT_PATH.format(genome_version=genome_version))
