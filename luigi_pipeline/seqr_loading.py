@@ -21,8 +21,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
-    remap_path = luigi.OptionalParameter(default=None, description="Path to a file with two columns: s and seqr_id.")
-    subset_path = luigi.OptionalParameter(default=None, description="Path to a file with sample IDs, s, for subsetting MT.")
+    remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
+    subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
 
     def run(self):
         mt = self.import_vcf()
