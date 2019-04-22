@@ -103,7 +103,7 @@ class HailMatrixTableTask(luigi.Task):
         :param subset_path: Path to a file with a single column 's'
         :return: MatrixTable subsetted to list of samples
         """
-        subset_ht = hl.import_table(subset_path, no_header=False, key='s')
+        subset_ht = hl.import_table(subset_path, key='s')
         anti_join_ht = subset_ht.anti_join(mt.cols())
         anti_join_ht_count = anti_join_ht.count()
         mt_sample_count = mt.cols().count()
@@ -133,7 +133,7 @@ class HailMatrixTableTask(luigi.Task):
         :param remap_path: Path to a file with two columns 's' and 'seqr_id'
         :return: MatrixTable remapped and keyed to use seqr_id
         """
-        remap_ht = hl.import_table(remap_path, no_header=False, key ='s')
+        remap_ht = hl.import_table(remap_path, key ='s')
         missing_samples = remap_ht.anti_join(mt.cols()).collect()
         remap_count = remap_ht.count()
 

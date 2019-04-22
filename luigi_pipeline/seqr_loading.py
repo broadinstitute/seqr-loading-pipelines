@@ -3,7 +3,7 @@ import logging
 import luigi
 import hail as hl
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget
+from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
 from hail_scripts.v02.utils.computed_fields import variant_id
 from hail_scripts.v02.utils.computed_fields import vep
 from lib.model.seqr_mt_schema import SeqrVariantSchema
@@ -22,12 +22,17 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
+    subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
 
     def run(self):
         mt = self.import_vcf()
         if self.validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
-
+        if self.remap_path:
+            mt = self.remap_sample_ids(mt, self.remap_path)
+        if self.subset_path:
+            mt = self.subset_samples_and_variants(mt, self.subset_path)
         mt = hl.split_multi(mt)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
 
