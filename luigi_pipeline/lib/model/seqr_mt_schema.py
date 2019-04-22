@@ -101,21 +101,56 @@ class SeqrVariantSchema(SeqrSchema):
     def an(self):
         return self.mt.info.AN
 
+    @row_annotation()
+    def genotypes(self):
+        return hl.agg.collect(hl.struct(**self._genotype_fields()))
 
-class SeqrSVSchema(SeqrSchema):
+    @row_annotation(fn_require=genotypes)
+    def samples_no_call(self):
+        return self._genotype_filter_samples(lambda g: g.num_alt == -1)
 
-    @row_annotation(name='IMPRECISE')
-    def imprecise(self):
-        return self.mt.info.IMPRECISE
+    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    def samples_num_alt(self, start=1, end=3, step=1):
+        # NOTE: Multiple annotations.
+        return {
+            'samples_num_alt_%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
+            for i in range(start, end, step)
+        }
 
-    @row_annotation(name='SVTYPE')
-    def svtype(self):
-        return self.mt.info.SVTYPE
+    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    def samples_gq(self, start=0, end=95, step=5):
+        # NOTE: Multiple annotations.
+        return {
+            'samples_gq_%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
+            for i in range(start, end, step)
+        }
 
-    @row_annotation(name='SVLEN')
-    def svlen(self):
-        return self.mt.info.SVLEN
+    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    def samples_ab(self, start=0, end=45, step=5):
+        # NOTE: Multiple annotations.
+        return {
+            'samples_ab_%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+                lambda g: ((g.num_alt == 1) & ((g.ab*100) >= i) & ((g.ab*100) < i+step))
+            )
+            for i in range(start, end, step)
+        }
 
-    @row_annotation(name='END')
-    def end(self):
-        return self.mt.info.END
+    def _genotype_filter_samples(self, filter):
+        # Filter on the genotypes.
+        return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+
+    def _genotype_fields(self):
+        # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
+        is_called = hl.is_defined(self.mt.GT)
+        return {
+            'num_alt': hl.cond(is_called, self.mt.GT.n_alt_alleles(), -1),
+            'gq': hl.cond(is_called, self.mt.GQ, hl.null(hl.tint)),
+            'ab': hl.bind(
+                lambda total: hl.cond((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
+                                      hl.float(self.mt.AD[1] / total),
+                                      hl.null(hl.tfloat)),
+                hl.sum(self.mt.AD)
+            ),
+            'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
+            'sample_id': self.mt.s
+        }

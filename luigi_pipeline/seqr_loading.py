@@ -6,7 +6,7 @@ import hail as hl
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget
 from hail_scripts.v02.utils.computed_fields import variant_id
 from hail_scripts.v02.utils.computed_fields import vep
-from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrSVSchema
+from lib.model.seqr_mt_schema import SeqrVariantSchema
 
 logger = logging.getLogger(__name__)
 

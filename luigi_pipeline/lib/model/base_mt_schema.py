@@ -1,8 +1,11 @@
-from inspect import getmembers, isfunction
+from inspect import getmembers, ismethod
 from functools import wraps
+from collections import defaultdict
+
+import hail as hl
 
 
-def row_annotation(name=None, fn_require=None):
+def row_annotation(name=None, fn_require=None, multi_annotation=False):
     """
     Function decorator for methods in a subclass of BaseMTSchema.
     Allows the function to be treated like an row_annotation with annotation name and value.
@@ -20,6 +23,7 @@ def row_annotation(name=None, fn_require=None):
 
     :param name: name in the final MT. If not provided, uses the function name.
     :param fn_require: method name strings in class that are dependencies.
+    :param multi_annotation: if true, treat the return value as a dict of annotation name to value
     :return:
     """
     def mt_prop_wrapper(func):
@@ -29,28 +33,36 @@ def row_annotation(name=None, fn_require=None):
         if fn_require:
             if not callable(fn_require):
                 raise ValueError('Schema: dependency %s is not of type function.' % fn_require)
-            # Ugly, but I think this is the only way to get the class of a method in python 3.
-            func_class = func.__qualname__.split('.')[-2]
-            if func_class != fn_require.__qualname__.split('.')[-2]:
-                raise ValueError('Schema: dependency %s is not a method within class %s.' %
-                                 (fn_require.__name__, func_class))
+            if not hasattr(fn_require, 'mt_cls_meta'):
+                raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
 
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             # Called already.
-            if wrapper.mt_prop_meta['annotated'] > 0:
+            instance_metadata = self.mt_instance_meta['row_annotations'][wrapper.__name__]
+            if instance_metadata['annotated'] > 0:
                 return self
             if fn_require:
                 getattr(self, fn_require.__name__)()
 
-            # Annotate and return instance for chaining.
-            self.mt = self.mt.annotate_rows(**{annotation_name: func(self, *args, **kwargs)})
-            wrapper.mt_prop_meta['annotated'] += 1
+            func_ret = func(self, *args, **kwargs)
+            # If multiple, ret value is dict of {annotation: value} already.
+            if multi_annotation:
+                if not isinstance(func_ret, dict):
+                    raise ValueError('Return Value must be a dict.')
+                annotation = func_ret
+            else:
+                annotation = {annotation_name: func_ret}
+            self.mt = self.mt.annotate_rows(**annotation)
+
+            instance_metadata['annotated'] += 1
+            instance_metadata['result'] = func_ret
+
             return self
 
-        wrapper.mt_prop_meta = {
-            'annotated': 0,  # Counter for number of times called. Should only be 0 or 1.
-            'annotated_name': annotation_name
+        wrapper.mt_cls_meta = {
+            'annotated_name': annotation_name,
+            'multi_annotation': multi_annotation
         }
         return wrapper
     return mt_prop_wrapper
@@ -85,13 +97,19 @@ class BaseMTSchema:
     """
     def __init__(self, mt):
         self.mt = mt
+        self.mt_instance_meta = {
+            'row_annotations': defaultdict(lambda: {
+                'annotated': 0,
+                'result': {}
+            })
+        }
 
     def all_annotation_fns(self):
         """
         Get all row_annotation decorated methods using introspection.
         :return: list of all annotation functions
         """
-        return getmembers(self.__class__, lambda x: isfunction(x) and hasattr(x, 'mt_prop_meta'))
+        return getmembers(self, lambda x: ismethod(x) and hasattr(x, 'mt_cls_meta'))
 
     def annotate_all(self):
         """
@@ -106,9 +124,25 @@ class BaseMTSchema:
         """
         Returns a matrix table with an annotated rows where each row annotation is a previously called
         annotation (e.g. with the corresponding method or all in case of `annotate_all`).
+        For multi_annotations, each annotation name is selected as well.
         :return: a matrix table
         """
         # Selection field is the annotation name of any function that has been called.
-        select_fields = [fn[1].mt_prop_meta['annotated_name'] for fn in self.all_annotation_fns() if
-                         'annotated_name' in fn[1].mt_prop_meta and fn[1].mt_prop_meta['annotated'] > 0]
+        select_fields = []
+        for fn in self.all_annotation_fns():
+            cls_metadata = fn[1].mt_cls_meta
+            if fn[0] in self.mt_instance_meta['row_annotations']:
+                inst_fn_metadata = self.mt_instance_meta['row_annotations'][fn[0]]
+            else:
+                continue
+
+            # Not called.
+            if inst_fn_metadata['annotated'] <= 0:
+                continue
+
+            if cls_metadata['multi_annotation']:
+                for name, _ in inst_fn_metadata['result'].items():
+                    select_fields.append(name)
+            else:
+                select_fields.append(fn[1].mt_cls_meta['annotated_name'])
         return self.mt.select_rows(*select_fields)
