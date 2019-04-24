@@ -118,29 +118,6 @@ class TestBaseModel(unittest.TestCase):
         self.assertEqual(first_row.a, 0)
         self.assertEqual(first_row.d, 4)
 
-    def test_multi_annotation(self):
-        class TestSchema2(TestBaseModel.TestSchema):
-
-            @row_annotation(multi_annotation=True)
-            def multi(self):
-                return {'a': 1, 'b': 2}
-
-        mt = TestSchema2().multi().select_annotated_mt()
-        first_row = mt.rows().take(1)[0]
-
-        self.assertEqual(first_row.a, 1)
-        self.assertEqual(first_row.b, 2)
-
-    def test_multi_annotation_fail(self):
-        class TestSchema2(TestBaseModel.TestSchema):
-
-            @row_annotation(multi_annotation=True)
-            def multi(self):
-                return 3
-
-        test_schema = TestSchema2()
-        self.assertRaises(ValueError, test_schema.multi)
-
     def test_overwrite_default_false(self):
         # info field is already in our mt.
         class TestSchema(TestBaseModel.TestSchema):

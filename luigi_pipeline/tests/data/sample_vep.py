@@ -539,8 +539,8 @@ VEP_DATA = {
 
 # Derived from the vep annotated data (VEP_DATA).
 DERIVED_DATA = {
-    'rs35471880': {'AC': [5],
-                   'AF': [0.156],
+    'rs35471880': {'AC': 5,
+                   'AF': 0.156,
                    'AN': 32,
                    'a_index': 1,
                    'alleles': ['G', 'A'],

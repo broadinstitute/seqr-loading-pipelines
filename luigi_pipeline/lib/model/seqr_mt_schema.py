@@ -91,11 +91,11 @@ class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')
     def ac(self):
-        return self.mt.info.AC
+        return self.mt.info.AC[self.mt.a_index-1]
 
     @row_annotation(name='AF')
     def af(self):
-        return self.mt.info.AF
+        return self.mt.info.AF[self.mt.a_index-1]
 
     @row_annotation(name='AN')
     def an(self):
@@ -109,31 +109,30 @@ class SeqrVariantSchema(SeqrSchema):
     def samples_no_call(self):
         return self._genotype_filter_samples(lambda g: g.num_alt == -1)
 
-    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    @row_annotation(fn_require=genotypes)
     def samples_num_alt(self, start=1, end=3, step=1):
-        # NOTE: Multiple annotations.
-        return {
-            'samples_num_alt_%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
+        return hl.struct(**{
+            '%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
             for i in range(start, end, step)
-        }
+        })
 
-    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    @row_annotation(fn_require=genotypes)
     def samples_gq(self, start=0, end=95, step=5):
-        # NOTE: Multiple annotations.
-        return {
-            'samples_gq_%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
+        # struct of x_to_y to a set of samples in range of x and y for gq.
+        return hl.struct(**{
+            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
             for i in range(start, end, step)
-        }
+        })
 
-    @row_annotation(fn_require=genotypes, multi_annotation=True)
+    @row_annotation(fn_require=genotypes)
     def samples_ab(self, start=0, end=45, step=5):
-        # NOTE: Multiple annotations.
-        return {
-            'samples_ab_%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+        # struct of x_to_y to a set of samples in range of x and y for ab.
+        return hl.struct(**{
+            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.ab*100) >= i) & ((g.ab*100) < i+step))
             )
             for i in range(start, end, step)
-        }
+        })
 
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
