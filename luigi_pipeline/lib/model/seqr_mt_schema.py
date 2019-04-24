@@ -134,6 +134,24 @@ class SeqrVariantSchema(SeqrSchema):
             for i in range(start, end, step)
         })
 
+    def elasticsearch_row(self):
+        """
+        Prepares the mt to export using ElasticsearchClient V02.
+        - Flattens nested structs
+        - drops locus and alleles key
+
+        TODO:
+        - Call validate
+        - when all annotations are here, whitelist fields to send instead of blacklisting.
+        :return:
+        """
+        # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
+        table = self.mt.rows().flatten()
+        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
+        # be normal fields. We can also re-key, but I believe this is computational?
+        table = table.drop(table.locus, table.alleles)
+        return table
+
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
         return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))

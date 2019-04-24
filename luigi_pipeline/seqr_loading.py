@@ -100,16 +100,15 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        # Right now it writes to a file, but will export to ES in the future.
-        mt = self.import_mt()
-        # schema = SeqrVariantSchema(mt)
+        schema = SeqrVariantSchema(self.import_mt())
         es = ElasticsearchClient()
-        table = mt.rows().flatten()
-        table = table.drop(table.locus, table.alleles)
-        es.export_table_to_elasticsearch(table)
 
-        # with self.output().open('w') as out_file:
-        #     out_file.write('count: %i' % mt.count()[0])
+        row_table = schema.elasticsearch_row()
+        es.export_table_to_elasticsearch(row_table)
+
+        # This is just for debugging for now. Not needed since the ES export is the output.
+        with self.output().open('w') as out_file:
+            out_file.write('count: %i' % row_table.count())
 
 
 if __name__ == '__main__':
