@@ -1,8 +1,9 @@
 from inspect import getmembers, ismethod
 from functools import wraps
 from collections import defaultdict
+import logging
 
-import hail as hl
+logger = logging.getLogger(__name__)
 
 
 def row_annotation(name=None, fn_require=None, multi_annotation=False):
@@ -21,6 +22,9 @@ def row_annotation(name=None, fn_require=None, multi_annotation=False):
     Will generate a mt with rows of {a: 'a_val', 'b': 'b_val'} if the function is called.
     TODO: Consider changing fn_require to be a list of requirements.
 
+    When calling the function with annotation already set in the MT, the default behavior is to
+    skip unless an overwrite=True is passed into the call.
+
     :param name: name in the final MT. If not provided, uses the function name.
     :param fn_require: method name strings in class that are dependencies.
     :param multi_annotation: if true, treat the return value as a dict of annotation name to value
@@ -37,11 +41,19 @@ def row_annotation(name=None, fn_require=None, multi_annotation=False):
                 raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
 
         @wraps(func)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self, *args, overwrite=False, **kwargs):
             # Called already.
             instance_metadata = self.mt_instance_meta['row_annotations'][wrapper.__name__]
             if instance_metadata['annotated'] > 0:
                 return self
+
+            # MT already has annotation, so only continue if overwrite requested.
+            if annotation_name in self.mt.rows()._fields:
+                logger.warning('MT using schema class %s already has %s annotation.' % (self.__class__, annotation_name))
+                if not overwrite:
+                    return self
+                logger.info('Overwriting matrix table annotation %s' % annotation_name)
+
             if fn_require:
                 getattr(self, fn_require.__name__)()
 
@@ -100,7 +112,7 @@ class BaseMTSchema:
         self.mt_instance_meta = {
             'row_annotations': defaultdict(lambda: {
                 'annotated': 0,
-                'result': {}
+                'result': {},
             })
         }
 
@@ -111,13 +123,13 @@ class BaseMTSchema:
         """
         return getmembers(self, lambda x: ismethod(x) and hasattr(x, 'mt_cls_meta'))
 
-    def annotate_all(self):
+    def annotate_all(self, overwrite=False):
         """
         Iterate over all annotation functions and call them on the instance.
         :return: instance object
         """
         for atn_fn in self.all_annotation_fns():
-            getattr(self, atn_fn[0])()
+            getattr(self, atn_fn[0])(overwrite=overwrite)
         return self
 
     def select_annotated_mt(self):

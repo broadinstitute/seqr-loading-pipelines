@@ -141,3 +141,59 @@ class TestBaseModel(unittest.TestCase):
         test_schema = TestSchema2()
         self.assertRaises(ValueError, test_schema.multi)
 
+    def test_overwrite_default_false(self):
+        # info field is already in our mt.
+        class TestSchema(TestBaseModel.TestSchema):
+
+            @row_annotation()
+            def info(self):
+                return 0
+
+        # should not overwrite.
+        test_schema = TestSchema().info()
+
+        count_dict = self._count_dicts(test_schema)
+        self.assertEqual(count_dict, {'info': 0})
+
+    def test_overwrite_true(self):
+        # info field is already in our mt.
+        class TestSchema(TestBaseModel.TestSchema):
+
+            @row_annotation()
+            def info(self):
+                return 0
+
+        # should overwrite.
+        test_schema = TestSchema().info(overwrite=True)
+
+        count_dict = self._count_dicts(test_schema)
+        self.assertEqual(count_dict, {'info': 1})
+
+    def test_annotate_all_overwrite_defailt_false(self):
+        # info field is already in our mt.
+        class TestSchema(TestBaseModel.TestSchema):
+
+            @row_annotation()
+            def info(self):
+                return 0
+
+        # should overwrite.
+        test_schema = TestSchema().annotate_all()
+
+        count_dict = self._count_dicts(test_schema)
+        self.assertEqual(count_dict, {'a': 1, 'b': 1, 'c_1': 1, 'info': 0})
+
+    def test_annotate_all_overwrite_true(self):
+        # info field is already in our mt.
+        class TestSchema(TestBaseModel.TestSchema):
+
+            @row_annotation()
+            def info(self):
+                return 0
+
+        # should overwrite.
+        test_schema = TestSchema().annotate_all(overwrite=True)
+
+        count_dict = self._count_dicts(test_schema)
+        self.assertEqual(count_dict, {'a': 1, 'b': 1, 'c_1': 1, 'info': 1})
+
