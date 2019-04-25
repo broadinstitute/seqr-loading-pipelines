@@ -1,11 +1,12 @@
 from inspect import getmembers, ismethod
 from functools import wraps
 from collections import defaultdict
+import logging
 
-import hail as hl
+logger = logging.getLogger(__name__)
 
 
-def row_annotation(name=None, fn_require=None, multi_annotation=False):
+def row_annotation(name=None, fn_require=None):
     """
     Function decorator for methods in a subclass of BaseMTSchema.
     Allows the function to be treated like an row_annotation with annotation name and value.
@@ -21,9 +22,11 @@ def row_annotation(name=None, fn_require=None, multi_annotation=False):
     Will generate a mt with rows of {a: 'a_val', 'b': 'b_val'} if the function is called.
     TODO: Consider changing fn_require to be a list of requirements.
 
+    When calling the function with annotation already set in the MT, the default behavior is to
+    skip unless an overwrite=True is passed into the call.
+
     :param name: name in the final MT. If not provided, uses the function name.
     :param fn_require: method name strings in class that are dependencies.
-    :param multi_annotation: if true, treat the return value as a dict of annotation name to value
     :return:
     """
     def mt_prop_wrapper(func):
@@ -37,22 +40,24 @@ def row_annotation(name=None, fn_require=None, multi_annotation=False):
                 raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
 
         @wraps(func)
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self, *args, overwrite=False, **kwargs):
             # Called already.
             instance_metadata = self.mt_instance_meta['row_annotations'][wrapper.__name__]
             if instance_metadata['annotated'] > 0:
                 return self
+
+            # MT already has annotation, so only continue if overwrite requested.
+            if annotation_name in self.mt.rows()._fields:
+                logger.warning('MT using schema class %s already has %s annotation.' % (self.__class__, annotation_name))
+                if not overwrite:
+                    return self
+                logger.info('Overwriting matrix table annotation %s' % annotation_name)
+
             if fn_require:
                 getattr(self, fn_require.__name__)()
 
             func_ret = func(self, *args, **kwargs)
-            # If multiple, ret value is dict of {annotation: value} already.
-            if multi_annotation:
-                if not isinstance(func_ret, dict):
-                    raise ValueError('Return Value must be a dict.')
-                annotation = func_ret
-            else:
-                annotation = {annotation_name: func_ret}
+            annotation = {annotation_name: func_ret}
             self.mt = self.mt.annotate_rows(**annotation)
 
             instance_metadata['annotated'] += 1
@@ -61,8 +66,7 @@ def row_annotation(name=None, fn_require=None, multi_annotation=False):
             return self
 
         wrapper.mt_cls_meta = {
-            'annotated_name': annotation_name,
-            'multi_annotation': multi_annotation
+            'annotated_name': annotation_name
         }
         return wrapper
     return mt_prop_wrapper
@@ -100,7 +104,7 @@ class BaseMTSchema:
         self.mt_instance_meta = {
             'row_annotations': defaultdict(lambda: {
                 'annotated': 0,
-                'result': {}
+                'result': {},
             })
         }
 
@@ -111,20 +115,19 @@ class BaseMTSchema:
         """
         return getmembers(self, lambda x: ismethod(x) and hasattr(x, 'mt_cls_meta'))
 
-    def annotate_all(self):
+    def annotate_all(self, overwrite=False):
         """
         Iterate over all annotation functions and call them on the instance.
         :return: instance object
         """
         for atn_fn in self.all_annotation_fns():
-            getattr(self, atn_fn[0])()
+            getattr(self, atn_fn[0])(overwrite=overwrite)
         return self
 
     def select_annotated_mt(self):
         """
         Returns a matrix table with an annotated rows where each row annotation is a previously called
         annotation (e.g. with the corresponding method or all in case of `annotate_all`).
-        For multi_annotations, each annotation name is selected as well.
         :return: a matrix table
         """
         # Selection field is the annotation name of any function that has been called.
@@ -140,9 +143,5 @@ class BaseMTSchema:
             if inst_fn_metadata['annotated'] <= 0:
                 continue
 
-            if cls_metadata['multi_annotation']:
-                for name, _ in inst_fn_metadata['result'].items():
-                    select_fields.append(name)
-            else:
-                select_fields.append(fn[1].mt_cls_meta['annotated_name'])
+            select_fields.append(fn[1].mt_cls_meta['annotated_name'])
         return self.mt.select_rows(*select_fields)

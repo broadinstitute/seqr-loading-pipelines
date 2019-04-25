@@ -3,9 +3,8 @@ import logging
 import luigi
 import hail as hl
 
+from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
-from hail_scripts.v02.utils.computed_fields import variant_id
-from hail_scripts.v02.utils.computed_fields import vep
 from lib.model.seqr_mt_schema import SeqrVariantSchema
 
 logger = logging.getLogger(__name__)
@@ -36,8 +35,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = hl.split_multi(mt)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
 
-        Schema = SeqrVariantSchema if self.dataset_type == 'VARIANTS' else SeqrSVSchema
-        mt = Schema(mt).annotate_all().select_annotated_mt()
+        mt = SeqrVariantSchema(mt).annotate_all(overwrite=True).select_annotated_mt()
 
         mt.describe()
         mt.write(self.output().path)
@@ -102,10 +100,15 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        # Right now it writes to a file, but will export to ES in the future.
-        mt = self.import_mt()
+        schema = SeqrVariantSchema(self.import_mt())
+        es = ElasticsearchClient()
+
+        row_table = schema.elasticsearch_row()
+        es.export_table_to_elasticsearch(row_table)
+
+        # This is just for debugging for now. Not needed since the ES export is the output.
         with self.output().open('w') as out_file:
-            out_file.write('count: %i' % mt.count()[0])
+            out_file.write('count: %i' % row_table.count())
 
 
 if __name__ == '__main__':

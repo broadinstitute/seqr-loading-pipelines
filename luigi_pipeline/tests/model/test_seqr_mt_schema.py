@@ -17,7 +17,7 @@ class TestSeqrModel(unittest.TestCase):
         mt = self._get_filtered_mt(rsid).annotate_rows(**VEP_DATA[rsid])
 
         seqr_schema = SeqrVariantSchema(mt)
-        seqr_schema.sorted_transcript_consequences().doc_id(512).variant_id().contig().pos().start().end().ref().alt() \
+        seqr_schema.sorted_transcript_consequences().doc_id(length=512).variant_id().contig().pos().start().end().ref().alt() \
             .pos().xstart().xstop().xpos().transcript_consequence_terms().transcript_ids().main_transcript().gene_ids() \
             .coding_gene_ids().domains().ac().af().an().annotate_all()
         mt = seqr_schema.select_annotated_mt()
@@ -68,14 +68,14 @@ class TestSeqrModel(unittest.TestCase):
         seqr_schema = SeqrVariantSchema(mt)
 
         mt = seqr_schema.samples_no_call().samples_num_alt().select_annotated_mt()
-        row = mt.rows().collect()[0]
+        row = mt.rows().flatten().collect()[0]
         self.assertEqual(row.samples_no_call, set())
-        self.assertEqual(row.samples_num_alt_1, {'NA19679', 'NA19675', 'NA20870', 'NA20876', 'NA20872'})
-        self.assertEqual(row.samples_num_alt_2, set())
+        self.assertEqual(row['samples_num_alt.1'], {'NA19679', 'NA19675', 'NA20870', 'NA20876', 'NA20872'})
+        self.assertEqual(row['samples_num_alt.2'], set())
 
     def test_samples_gq(self):
         non_empty = {
-            'samples_gq_75_to_80': {'NA19678'}
+            'samples_gq.75_to_80': {'NA19678'}
         }
         start = 0
         end = 95
@@ -85,20 +85,20 @@ class TestSeqrModel(unittest.TestCase):
         seqr_schema = SeqrVariantSchema(mt)
 
         mt = seqr_schema.samples_gq(start, end, step).select_annotated_mt()
-        row = mt.rows().collect()[0]
+        row = mt.rows().flatten().collect()[0]
 
         for name, samples in non_empty.items():
             self.assertEqual(row[name], samples)
 
         for i in range(start, end, step):
-            name = 'samples_gq_%i_to_%i' % (i, i+step)
+            name = 'samples_gq.%i_to_%i' % (i, i+step)
             if name not in non_empty:
                 self.assertEqual(row[name], set())
 
     def test_samples_ab(self):
         non_empty = {
-            'samples_ab_35_to_40': {'NA19679'},
-            'samples_ab_40_to_45': {'NA20876'},
+            'samples_ab.35_to_40': {'NA19679'},
+            'samples_ab.40_to_45': {'NA20876'},
         }
         start = 0
         end = 45
@@ -108,12 +108,12 @@ class TestSeqrModel(unittest.TestCase):
         seqr_schema = SeqrVariantSchema(mt)
 
         mt = seqr_schema.samples_ab(start, end, step).select_annotated_mt()
-        row = mt.rows().collect()[0]
+        row = mt.rows().flatten().collect()[0]
 
         for name, samples in non_empty.items():
             self.assertEqual(row[name], samples)
 
         for i in range(start, end, step):
-            name = 'samples_ab_%i_to_%i' % (i, i+step)
+            name = 'samples_ab.%i_to_%i' % (i, i+step)
             if name not in non_empty:
                 self.assertEqual(row[name], set())
