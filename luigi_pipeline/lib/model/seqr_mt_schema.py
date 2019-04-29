@@ -146,7 +146,7 @@ class SeqrVariantSchema(SeqrSchema):
         :return:
         """
         # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = self.mt.rows().flatten()
+        table = self.mt.rows().drop('vep').flatten()
         # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
         # be normal fields. We can also re-key, but I believe this is computational?
         table = table.drop(table.locus, table.alleles)
