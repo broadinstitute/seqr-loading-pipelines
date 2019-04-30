@@ -7,9 +7,9 @@ import hail as hl
 import luigi
 from luigi.contrib import gcs
 
+from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.global_config import GlobalConfig
 import lib.hail_vep_runners as vep_runners
-from hail_scripts.v02.utils import hail_utils
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +158,12 @@ class HailElasticSearchTask(luigi.Task):
     Loads a MT to ES (TODO).
     """
     source_path = luigi.OptionalParameter(default=None)
+    es_host = luigi.Parameter(description='ElasticSearch host.')
+    es_port = luigi.Parameter(description='ElasticSearch port.')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._es = ElasticsearchClient(host=self.es_host, port=self.es_port)
 
     def requires(self):
         return [VcfFile(filename=self.source_path)]
@@ -168,3 +174,6 @@ class HailElasticSearchTask(luigi.Task):
 
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
+
+    def export_table_to_elasticsearch(self, table):
+        self._es.export_table_to_elasticsearch(table)

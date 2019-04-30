@@ -7,6 +7,7 @@ from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
 from lib.model.seqr_mt_schema import SeqrVariantSchema
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -101,10 +102,8 @@ class SeqrMTToESTask(HailElasticSearchTask):
 
     def run(self):
         schema = SeqrVariantSchema(self.import_mt())
-        es = ElasticsearchClient()
-
         row_table = schema.elasticsearch_row()
-        es.export_table_to_elasticsearch(row_table)
+        self.export_table_to_elasticsearch(row_table)
 
         # This is just for debugging for now. Not needed since the ES export is the output.
         with self.output().open('w') as out_file:

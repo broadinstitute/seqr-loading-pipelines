@@ -29,3 +29,10 @@ $ cluster start seqr-loading-dev --num-workers 2 --pkgs luigi,google-api-python-
 ```
 $ cluster submit seqr-loading-dev seqr_loading.py --pyfiles lib,../hail_scripts --files configs/luigi.cfg --args "SeqrMTToESTask --local-scheduler"
 ```
+
+### Run with dataproc and ES wrapper
+We use a ported `load_dataset_v02.py` wrapper to spin up dataproc and ES nodes.
+Sample run:
+```
+PYTHONPATH=.. ./load_dataset_v02.py --num-workers 2 --num-preemptible-workers 0 --genome-version 37 test  --project-guid test --use-temp-loading-nodes --k8s-cluster-name my-k8s-test --cluster-name dataproc-test --num-temp-loading-nodes 1 --create-persistent-es-nodes
+```
