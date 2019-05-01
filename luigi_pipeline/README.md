@@ -34,5 +34,5 @@ $ cluster submit seqr-loading-dev seqr_loading.py --pyfiles lib,../hail_scripts 
 We use a ported `load_dataset_v02.py` wrapper to spin up dataproc and ES nodes.
 Sample run:
 ```
-PYTHONPATH=.. ./load_dataset_v02.py --num-workers 2 --num-preemptible-workers 0 --genome-version 37 test  --project-guid test --use-temp-loading-nodes --k8s-cluster-name my-k8s-test --cluster-name dataproc-test --num-temp-loading-nodes 1 --create-persistent-es-nodes
+PYTHONPATH=.. ./load_dataset_v02.py --num-workers 2 --num-preemptible-workers 0 --genome-version 37 test  --project-guid test --use-temp-loading-nodes --k8s-cluster-name my-k8s-test --cluster-name dataproc-test --num-temp-loading-nodes 2 --create-persistent-es-nodes
 ```
