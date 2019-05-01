@@ -93,6 +93,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 class SeqrMTToESTask(HailElasticSearchTask):
     dest_file = luigi.Parameter()
 
+    def __init__(self, *args, **kwargs):
+        # TODO: instead of hardcoded index, generate from project_guid, etc.
+        super().__init__(es_index='data', *args, **kwargs)
+
     def requires(self):
         return [SeqrVCFToMTTask()]
 
@@ -104,6 +108,8 @@ class SeqrMTToESTask(HailElasticSearchTask):
         schema = SeqrVariantSchema(self.import_mt())
         row_table = schema.elasticsearch_row()
         self.export_table_to_elasticsearch(row_table)
+
+        self.cleanup()
 
         # This is just for debugging for now. Not needed since the ES export is the output.
         with self.output().open('w') as out_file:

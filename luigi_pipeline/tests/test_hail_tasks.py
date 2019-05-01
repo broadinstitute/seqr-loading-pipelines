@@ -1,8 +1,10 @@
 import shutil, tempfile, os, unittest
+from unittest.mock import patch, Mock
 
 import hail as hl
 import luigi
 
+from elasticsearch.client.indices import IndicesClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, MatrixTableSampleSetError
 from lib.global_config import GlobalConfig
 
@@ -79,6 +81,10 @@ class TestHailTasks(unittest.TestCase):
     def test_hail_matrix_table_and_elasticsearch_tasks(self):
         mt_task = self._hail_matrix_table_task()
         class ESTask(HailElasticSearchTask):
+
+            def __init__(self):
+                super().__init__(es_index='test')
+
             def requires(self):
                 return [
                     mt_task
@@ -140,3 +146,21 @@ class TestHailTasks(unittest.TestCase):
         with self.assertRaises(MatrixTableSampleSetError) as e:
             HailMatrixTableTask.subset_samples_and_variants(mt, self._create_temp_sample_subset_file(mt, 1, True))
             self.assertEqual(e.missing_samples, ['wrong_sample'])
+
+    @patch.object(IndicesClient, 'put_settings',)
+    def test_route_index_to_temp_es_cluster_true(self, mock_es_client_class):
+        index = 'idx'
+        task = HailElasticSearchTask(es_index=index)
+        task.route_index_to_temp_es_cluster(True)
+        self.assertEqual(mock_es_client_class.call_args[1]['index'], index + '*')
+        self.assertEqual(mock_es_client_class.call_args[1]['body'], {
+            'index.routing.allocation.require._name': 'es-data-loading*', 'index.routing.allocation.exclude._name': ''})
+
+    @patch.object(IndicesClient, 'put_settings', )
+    def test_route_index_to_temp_es_cluster_false(self, mock_es_client_class):
+        index = 'idx'
+        task = HailElasticSearchTask(es_index=index)
+        task.route_index_to_temp_es_cluster(False)
+        self.assertEqual(mock_es_client_class.call_args[1]['index'], index + '*')
+        self.assertEqual(mock_es_client_class.call_args[1]['body'], {
+            'index.routing.allocation.require._name': '', 'index.routing.allocation.exclude._name': 'es-data-loading*'})
