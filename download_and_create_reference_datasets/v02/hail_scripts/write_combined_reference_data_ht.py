@@ -115,8 +115,6 @@ CONFIG =  {
     'gnomad_genome_coverage': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
-            'select': {'AC': 'info.AC'},
-        },
     },
     'gnomad_exomes': {
         '37': {
