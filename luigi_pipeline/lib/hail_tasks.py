@@ -158,8 +158,10 @@ class HailElasticSearchTask(luigi.Task):
     Loads a MT to ES (TODO).
     """
     source_path = luigi.OptionalParameter(default=None)
-    es_host = luigi.Parameter(description='ElasticSearch host.')
-    es_port = luigi.Parameter(description='ElasticSearch port.')
+    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use termporary loading nodes.')
+    es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
+    es_port = luigi.Parameter(description='ElasticSearch port.', default=9200)
+    es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -176,4 +178,39 @@ class HailElasticSearchTask(luigi.Task):
         return hl.read_matrix_table(self.input()[0].path)
 
     def export_table_to_elasticsearch(self, table):
-        self._es.export_table_to_elasticsearch(table)
+        func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
+            lambda: self.route_index_to_temp_es_cluster(True)
+        self._es.export_table_to_elasticsearch(table,
+                                               index_name=self.es_index,
+                                               func_to_run_after_index_exists=func_to_run_after_index_exists)
+
+    def cleanup(self):
+        self.route_index_to_temp_es_cluster(False)
+
+    def route_index_to_temp_es_cluster(self, to_temp_loading):
+        """Apply shard allocation filtering rules for the given index to elasticsearch data nodes with *loading* in
+        their name:
+
+        If to_temp_loading is True, route new documents in the given index only to nodes named "*loading*".
+        Otherwise, move any shards in this index off of nodes named "*loading*"
+
+        Args:
+            to_temp_loading (bool): whether to route shards in the given index to the "*loading*" nodes, or move
+            shards off of these nodes.
+        """
+        if to_temp_loading:
+            require_name = "es-data-loading*"
+            exclude_name = ""
+        else:
+            require_name = ""
+            exclude_name = "es-data-loading*"
+
+        body = {
+            "index.routing.allocation.require._name": require_name,
+            "index.routing.allocation.exclude._name": exclude_name
+        }
+
+        logger.info("==> Setting {}* settings = {}".format(self.es_index, body))
+
+        index_arg = "{}*".format(self.es_index)
+        self._es.es.indices.put_settings(index=index_arg, body=body)
