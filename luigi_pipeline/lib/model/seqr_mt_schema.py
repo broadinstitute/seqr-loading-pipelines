@@ -8,6 +8,12 @@ from hail_scripts.v02.utils.computed_fields import vep
 
 class SeqrSchema(BaseMTSchema):
 
+    def __init__(self, *args, ref_data, clinvar_data, hgmd_data, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._ref_data = ref_data
+        self._clinvar_data = clinvar_data
+        self._hgmd_data = hgmd_data
+
     @row_annotation()
     def vep(self):
         return self.mt.vep
@@ -86,6 +92,68 @@ class SeqrSchema(BaseMTSchema):
     def coding_gene_ids(self):
         return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences, only_coding_genes=True)
 
+    @row_annotation()
+    def cadd(self):
+        return self._ref_data[self.mt.row_key].cadd
+
+    @row_annotation()
+    def dbnsfp(self):
+        return self._ref_data[self.mt.row_key].dbnsfp
+
+    @row_annotation()
+    def gnomad_exomes(self):
+        return self._ref_data[self.mt.row_key].gnomad_exomes
+
+    @row_annotation()
+    def gnomad_exome_coverage(self):
+        return self._ref_data[self.mt.row_key].gnomad_exome_coverage
+
+    @row_annotation()
+    def gnomad_genomes(self):
+        return self._ref_data[self.mt.row_key].gnomad_genomes
+
+    @row_annotation()
+    def gnomad_genome_coverage(self):
+        return self._ref_data[self.mt.row_key].gnomad_genome_coverage
+
+    @row_annotation()
+    def eigen(self):
+        return self._ref_data[self.mt.row_key].eigen
+
+    @row_annotation()
+    def exac(self):
+        return self._ref_data[self.mt.row_key].exac
+
+    @row_annotation()
+    def g1k(self):
+        return self._ref_data[self.mt.row_key].g1k
+
+    @row_annotation()
+    def mpc(self):
+        return self._ref_data[self.mt.row_key].mpc
+
+    @row_annotation()
+    def primate_ai(self):
+        return self._ref_data[self.mt.row_key].primate_ai
+
+    @row_annotation()
+    def splice_ai(self):
+        return self._ref_data[self.mt.row_key].splice_ai
+
+    @row_annotation()
+    def topmed(self):
+        return self._ref_data[self.mt.row_key].topmed
+
+    @row_annotation()
+    def hgmd(self):
+        return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
+                            'class': self._hgmd_data[self.mt.row_key].info.CLASS})
+
+    @row_annotation()
+    def clinvar(self):
+        return hl.struct(**{'allele_id': self._clinvar_data[self.mt.row_key].info.ALLELEID,
+                            'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
+                            'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
 class SeqrVariantSchema(SeqrSchema):
 
