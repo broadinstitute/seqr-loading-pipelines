@@ -18,7 +18,6 @@ class MatrixTableSampleSetError(Exception):
         super().__init__(message)
         self.missing_samples = missing_samples
 
-
 def GCSorLocalTarget(filename):
     target = gcs.GCSTarget if filename.startswith('gs://') else luigi.LocalTarget
     return target(filename)
@@ -84,8 +83,6 @@ class HailMatrixTableTask(luigi.Task):
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
 
-    
-
     def run_vep(mt, genome_version, runner='VEP'):
         runners = {
             'VEP': vep_runners.HailVEPRunner,
@@ -94,7 +91,6 @@ class HailMatrixTableTask(luigi.Task):
 
         return runners[runner]().run(mt, genome_version)
 
-      
     @staticmethod
     def subset_samples_and_variants(mt, subset_path):
         """
@@ -133,7 +129,7 @@ class HailMatrixTableTask(luigi.Task):
         :param remap_path: Path to a file with two columns 's' and 'seqr_id'
         :return: MatrixTable remapped and keyed to use seqr_id
         """
-        remap_ht = hl.import_table(remap_path, key ='s')
+        remap_ht = hl.import_table(remap_path, key='s')
         missing_samples = remap_ht.anti_join(mt.cols()).collect()
         remap_count = remap_ht.count()
 
@@ -160,7 +156,7 @@ class HailElasticSearchTask(luigi.Task):
     source_path = luigi.OptionalParameter(default=None)
     use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use termporary loading nodes.')
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
-    es_port = luigi.Parameter(description='ElasticSearch port.', default=9200)
+    es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
 
     def __init__(self, *args, **kwargs):

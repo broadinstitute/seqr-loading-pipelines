@@ -18,12 +18,17 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     """
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
-    reference_mt_path = luigi.Parameter(description='Path to the matrix table storing the reference variants.')
+    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
+    clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
+    hgmd_ht_path = luigi.Parameter(description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
-    remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
-    subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
+                                         description='VARIANTS or SV.')
+    remap_path = luigi.OptionalParameter(default=None,
+                                         description="Path to a tsv file with two columns: s and seqr_id.")
+    subset_path = luigi.OptionalParameter(default=None,
+                                          description="Path to a tsv file with one column of sample IDs: s.")
 
     def run(self):
         mt = self.import_vcf()
@@ -36,7 +41,12 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = hl.split_multi(mt)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
 
-        mt = SeqrVariantSchema(mt).annotate_all(overwrite=True).select_annotated_mt()
+        ref_data = hl.read_table(self.reference_ht_path)
+        clinvar = hl.read_table(self.clinvar_ht_path)
+        hgmd = hl.read_table(self.hgmd_ht_path)
+
+        mt = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+            overwrite=True).select_annotated_mt()
 
         mt.describe()
         mt.write(self.output().path)
