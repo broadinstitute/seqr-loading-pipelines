@@ -32,13 +32,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
     def run(self):
         mt = self.import_vcf()
+        mt = hl.split_multi_hts(mt)
         if self.validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
             mt = self.subset_samples_and_variants(mt, self.subset_path)
-        mt = hl.split_multi(mt)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
 
         ref_data = hl.read_table(self.reference_ht_path)
@@ -115,15 +115,15 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        schema = SeqrVariantSchema(self.import_mt())
+        schema = SeqrVariantSchema(self.import_mt(),ref_data=None, clinvar_data=None, hgmd_data=None)
         row_table = schema.elasticsearch_row()
         self.export_table_to_elasticsearch(row_table)
 
         self.cleanup()
 
         # This is just for debugging for now. Not needed since the ES export is the output.
-        with self.output().open('w') as out_file:
-            out_file.write('count: %i' % row_table.count())
+        # with self.output().open('w') as out_file:
+            # out_file.write('count: %i' % row_table.count())
 
 
 if __name__ == '__main__':
