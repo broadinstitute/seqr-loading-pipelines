@@ -116,7 +116,7 @@ def submit_load_dataset_to_es_job_v02(
         "%(executable)s",
         "--pyfiles %(pyfiles)s",
         "--files %(files)s",
-        "--args '%(task)s --local-scheduler'"
+        "%(task)s --local-scheduler"
         ])) % locals())
 
 
