@@ -110,23 +110,42 @@ CONFIG =  {
     'gnomad_exome_coverage': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
+            'select': {'x10': '10'}
         },
+        '38': {
+            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
+            'select': {'x10': 'over_10'}
+        }
     },
     'gnomad_genome_coverage': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
+            'select': {'x10': '10'}
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/genomes/gnomad.genomes.r2.1.coverage.liftover_grch38.ht',
+            'select': {'x10': 'over_10'}
+        }
     },
     'gnomad_exomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select'
         },
+        '38': {
+            'path': 'gs://gnomad-public/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'custom_select': 'custom_gnomad_select'
+        }
     },
     'gnomad_genomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select'
         },
+        '38': {
+            'path': 'gs:/gnomad-public/release/2.1.1/liftover_grch38/ht/genomes/gnomad.genomes.r2.1.1.sites.liftover_grch38.ht',
+            'custom_select': 'custom_gnomad_select'
+        }
     },
     'exac': {
         '37': {
@@ -135,9 +154,19 @@ CONFIG =  {
                        'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj',},
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.htt',
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.ht',
         },
     },
+    'geno2mp': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
+            'select': {'HPO_Count': 'info.HPO_CT'}
+        }
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
+            'select': {'HPO_Count': 'info.HPO_CT'}
+        }
+    }
 }
 
 
@@ -241,11 +270,14 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     joined_ht.write(os.path.join(output_path))
 
 def run():
-    # TODO: '38' when gnomad liftover is done.
     join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
-              'gnomad_genomes', 'gnomad_exomes'],
+              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-            '37')
+             '37')
+    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
+             ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
+             '38')
 
 
 if __name__ == "__main__":
