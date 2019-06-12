@@ -22,7 +22,7 @@ Format:
         'custom_select': '<Optional function name of custom select function>',
     },
 '''
-CONFIG =  {
+CONFIG = {
     '1kg': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
@@ -49,12 +49,12 @@ CONFIG =  {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                          'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate'],
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                          'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate'],
         },
     },
     'eigen': {
@@ -151,17 +151,19 @@ CONFIG =  {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
             'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
-                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj',},
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.ht',
+            'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
     },
     'geno2mp': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
-            'select': {'HPO_Count': 'info.HPO_CT'}
-        }
+            'select': {'HPO_Count': 'info.HPO_CT'},
+        },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
             'select': {'HPO_Count': 'info.HPO_CT'}
