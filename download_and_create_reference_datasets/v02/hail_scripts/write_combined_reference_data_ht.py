@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from functools import reduce
 import logging
@@ -22,7 +23,7 @@ Format:
         'custom_select': '<Optional function name of custom select function>',
     },
 '''
-CONFIG =  {
+CONFIG = {
     '1kg': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
@@ -30,7 +31,7 @@ CONFIG =  {
             'field_name': 'g1k',
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites_test.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
             'field_name': 'g1k',
         },
@@ -49,12 +50,12 @@ CONFIG =  {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                          'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate'],
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                          'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate'],
         },
     },
     'eigen': {
@@ -110,34 +111,65 @@ CONFIG =  {
     'gnomad_exome_coverage': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
+            'select': {'x10': '10'}
         },
+        '38': {
+            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
+            'select': {'x10': 'over_10'}
+        }
     },
     'gnomad_genome_coverage': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
+            'select': {'x10': '10'}
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/genomes/gnomad.genomes.r2.1.coverage.liftover_grch38.ht',
+            'select': {'x10': 'over_10'}
+        }
     },
     'gnomad_exomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select'
         },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'custom_select': 'custom_gnomad_select'
+        }
     },
     'gnomad_genomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select'
         },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.1.1.sites.liftover_grch38.ht',
+            'custom_select': 'custom_gnomad_select'
+        }
     },
     'exac': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
             'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
-                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj',},
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.htt',
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.ht',
+            'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
+                       'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
     },
+    'geno2mp': {
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
+            'select': {'HPO_Count': 'info.HPO_CT'},
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
+            'select': {'HPO_Count': 'info.HPO_CT'}
+        }
+    }
 }
 
 
@@ -240,13 +272,17 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
 
     joined_ht.write(os.path.join(output_path))
 
-def run():
-    # TODO: '38' when gnomad liftover is done.
+def run(args):
     join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
-              'gnomad_genomes', 'gnomad_exomes'],
+              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-            '37')
+             args.build)
 
 
 if __name__ == "__main__":
-    run()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
+    args = parser.parse_args()
+
+    run(args)
