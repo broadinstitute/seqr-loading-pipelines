@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from functools import reduce
 import logging
@@ -30,7 +31,7 @@ CONFIG = {
             'field_name': 'g1k',
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites_test.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
             'field_name': 'g1k',
         },
@@ -133,7 +134,7 @@ CONFIG = {
             'custom_select': 'custom_gnomad_select'
         },
         '38': {
-            'path': 'gs://gnomad-public/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
             'custom_select': 'custom_gnomad_select'
         }
     },
@@ -143,7 +144,7 @@ CONFIG = {
             'custom_select': 'custom_gnomad_select'
         },
         '38': {
-            'path': 'gs:/gnomad-public/release/2.1.1/liftover_grch38/ht/genomes/gnomad.genomes.r2.1.1.sites.liftover_grch38.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.1.1.sites.liftover_grch38.ht',
             'custom_select': 'custom_gnomad_select'
         }
     },
@@ -271,16 +272,17 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
 
     joined_ht.write(os.path.join(output_path))
 
-def run():
+def run(args):
     join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             '37')
-    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
-              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
-             ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             '38')
+             args.build)
 
 
 if __name__ == "__main__":
-    run()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
+    args = parser.parse_args()
+
+    run(args)
