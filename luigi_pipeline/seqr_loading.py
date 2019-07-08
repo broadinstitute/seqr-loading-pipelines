@@ -5,8 +5,8 @@ import hail as hl
 
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
-from lib.model.seqr_mt_schema import SeqrVariantSchema
-
+from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema
+# from gnomad_hail.utils import vep_or_lookup_vep
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +40,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.subset_path:
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
+        # mt = vep_or_lookup_vep(mt)
 
         ref_data = hl.read_table(self.reference_ht_path)
         clinvar = hl.read_table(self.clinvar_ht_path)
@@ -48,8 +49,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt()
 
+        mt = SeqrGenotypesSchema(mt).annotate_all(overwrite=True).mt
+
         mt.describe()
-        mt.write(self.output().path)
+        mt.write(self.output().path, stage_locally=True)
 
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):
