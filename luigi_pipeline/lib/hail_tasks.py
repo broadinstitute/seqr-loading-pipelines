@@ -100,14 +100,14 @@ class HailMatrixTableTask(luigi.Task):
         :return: MatrixTable subsetted to list of samples
         """
         subset_ht = hl.import_table(subset_path, key='s')
+        subset_count = subset_ht.count()
         anti_join_ht = subset_ht.anti_join(mt.cols())
         anti_join_ht_count = anti_join_ht.count()
-        mt_sample_count = mt.cols().count()
 
         if anti_join_ht_count != 0:
             missing_samples = anti_join_ht.s.collect()
             raise MatrixTableSampleSetError(
-                f'Only {mt_sample_count-anti_join_ht_count} out of {mt_sample_count} '
+                f'Only {subset_count-anti_join_ht_count} out of {subset_count} '
                 'subsetting-table IDs matched IDs in the variant callset.\n'
                 f'IDs that aren\'t in the callset: {missing_samples}\n'
                 f'All callset sample IDs:{mt.s.collect()}', missing_samples
@@ -117,7 +117,7 @@ class HailMatrixTableTask(luigi.Task):
         mt = mt.filter_rows((hl.agg.count_where(mt.GT.is_non_ref())) > 0)
 
         logger.info(f'Finished subsetting samples. Kept {anti_join_ht_count} '
-                    f'out of {mt_sample_count} samples in vds')
+                    f'out of {mt.count()} samples in vds')
         return mt
 
     @staticmethod
@@ -154,10 +154,11 @@ class HailElasticSearchTask(luigi.Task):
     Loads a MT to ES (TODO).
     """
     source_path = luigi.OptionalParameter(default=None)
-    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use termporary loading nodes.')
+    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use temporary loading nodes.')
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
+    write_null_es_fields = luigi.BoolParameter(default=True, description="Whether to write fields with null values to ES index")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -173,12 +174,13 @@ class HailElasticSearchTask(luigi.Task):
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
 
-    def export_table_to_elasticsearch(self, table):
+    def export_table_to_elasticsearch(self, table, write_null_es_fields):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
             lambda: self.route_index_to_temp_es_cluster(True)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
-                                               func_to_run_after_index_exists=func_to_run_after_index_exists)
+                                               func_to_run_after_index_exists=func_to_run_after_index_exists,
+                                               write_null_es_fields=self.write_null_es_fields)
 
     def cleanup(self):
         self.route_index_to_temp_es_cluster(False)
