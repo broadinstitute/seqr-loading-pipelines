@@ -41,7 +41,7 @@ class HailMatrixTableTask(luigi.Task):
                                                                                             'to annotate vep.')
 
     def requires(self):
-        # We need to exclude globs in source path since they aren't files.
+        # We only exclude globs in source path here so luigi does not check if the file exists
         return [VcfFile(filename=s) for s in self.source_paths if '*' not in s]
 
     def output(self):
