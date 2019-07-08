@@ -52,7 +52,7 @@ class SeqrVCFToVariantHTTask(HailMatrixTableTask):
         clinvar = hl.read_table(self.clinvar_ht_path)
         hgmd = hl.read_table(self.hgmd_ht_path)
 
-        new_ht = SeqrSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+        new_ht = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt().rows()
 
         mt.describe()
