@@ -105,7 +105,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.
-        super().__init__(es_index='data', *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def requires(self):
         return [SeqrVCFToMTTask()]
@@ -115,7 +115,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        schema = SeqrVariantSchema(self.import_mt(),ref_data=None, clinvar_data=None, hgmd_data=None)
+        schema = SeqrVariantSchema(self.import_mt(), ref_data=None, clinvar_data=None, hgmd_data=None)
         row_table = schema.elasticsearch_row()
         self.export_table_to_elasticsearch(row_table)
 

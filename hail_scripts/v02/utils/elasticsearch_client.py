@@ -37,6 +37,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         func_to_run_after_index_exists=None,
         export_globals_to_index_meta=True,
         verbose=True,
+        write_null_values=False,
     ):
         """Create a new elasticsearch index to store the records in this table, and then export all records to it.
 
@@ -85,6 +86,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
             child_table (Table): if not None, records in this Table will be exported as children of records in the main Table.
             verbose (bool): whether to print schema and stats
+            write_null_values (bool): whether to write fields that are null to the index
         """
 
         elasticsearch_config = {}
@@ -99,7 +101,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         if elasticsearch_write_operation is not None:
             elasticsearch_config["es.write.operation"] = elasticsearch_write_operation
 
-        if elasticsearch_write_operation in (ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT):
+        if elasticsearch_write_operation in (ELASTICSEARCH_UPDATE, ELASTICSEARCH_UPSERT) or write_null_values:
             # see https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html#spark-sql-write
             # "By default, elasticsearch-hadoop will ignore null values in favor of not writing any field at all.
             # If updating/upserting, then existing field values may need to be overwritten with nulls

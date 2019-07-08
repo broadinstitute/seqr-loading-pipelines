@@ -41,7 +41,8 @@ class HailMatrixTableTask(luigi.Task):
                                                                                             'to annotate vep.')
 
     def requires(self):
-        return [VcfFile(filename=s) for s in self.source_paths]
+        # We only exclude globs in source path here so luigi does not check if the file exists
+        return [VcfFile(filename=s) for s in self.source_paths if '*' not in s]
 
     def output(self):
         # TODO: Look into checking against the _SUCCESS file in the mt.
@@ -54,7 +55,8 @@ class HailMatrixTableTask(luigi.Task):
 
     def import_vcf(self):
         # Import the VCFs from inputs.
-        return hl.import_vcf([vcf_file.path for vcf_file in self.input()],
+        return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
+                             reference_genome='GRCh' + self.genome_version,
                              force_bgz=True)
 
     @staticmethod
@@ -100,14 +102,14 @@ class HailMatrixTableTask(luigi.Task):
         :return: MatrixTable subsetted to list of samples
         """
         subset_ht = hl.import_table(subset_path, key='s')
+        subset_count = subset_ht.count()
         anti_join_ht = subset_ht.anti_join(mt.cols())
         anti_join_ht_count = anti_join_ht.count()
-        mt_sample_count = mt.cols().count()
 
         if anti_join_ht_count != 0:
             missing_samples = anti_join_ht.s.collect()
             raise MatrixTableSampleSetError(
-                f'Only {mt_sample_count-anti_join_ht_count} out of {mt_sample_count} '
+                f'Only {subset_count-anti_join_ht_count} out of {subset_count} '
                 'subsetting-table IDs matched IDs in the variant callset.\n'
                 f'IDs that aren\'t in the callset: {missing_samples}\n'
                 f'All callset sample IDs:{mt.s.collect()}', missing_samples
@@ -117,7 +119,7 @@ class HailMatrixTableTask(luigi.Task):
         mt = mt.filter_rows((hl.agg.count_where(mt.GT.is_non_ref())) > 0)
 
         logger.info(f'Finished subsetting samples. Kept {anti_join_ht_count} '
-                    f'out of {mt_sample_count} samples in vds')
+                    f'out of {mt.count()} samples in vds')
         return mt
 
     @staticmethod
@@ -154,10 +156,10 @@ class HailElasticSearchTask(luigi.Task):
     Loads a MT to ES (TODO).
     """
     source_path = luigi.OptionalParameter(default=None)
-    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use termporary loading nodes.')
+    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use temporary loading nodes.')
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
-    es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
+    es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -178,7 +180,9 @@ class HailElasticSearchTask(luigi.Task):
             lambda: self.route_index_to_temp_es_cluster(True)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
-                                               func_to_run_after_index_exists=func_to_run_after_index_exists)
+                                               func_to_run_after_index_exists=func_to_run_after_index_exists,
+                                               elasticsearch_mapping_id="docId",
+                                               write_null_values=True)
 
     def cleanup(self):
         self.route_index_to_temp_es_cluster(False)
