@@ -102,12 +102,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
 class SeqrMTToESTask(HailElasticSearchTask):
     dest_file = luigi.Parameter()
-    es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
-    write_es_null_fields = luigi.BoolParameter(default=True, description="Whether to write fields with null values to ES index")
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.
-        super().__init__(es_index='data', *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def requires(self):
         return [SeqrVCFToMTTask()]
@@ -119,7 +117,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
     def run(self):
         schema = SeqrVariantSchema(self.import_mt(), ref_data=None, clinvar_data=None, hgmd_data=None)
         row_table = schema.elasticsearch_row()
-        self.export_table_to_elasticsearch(row_table, self.write_es_null_fields)
+        self.export_table_to_elasticsearch(row_table)
 
         self.cleanup()
 

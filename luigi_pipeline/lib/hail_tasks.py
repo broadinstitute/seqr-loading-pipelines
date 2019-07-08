@@ -41,7 +41,8 @@ class HailMatrixTableTask(luigi.Task):
                                                                                             'to annotate vep.')
 
     def requires(self):
-        return [VcfFile(filename=s) for s in self.source_paths]
+        # We need to exclude globs in source path since they aren't files.
+        return [VcfFile(filename=s) for s in self.source_paths if '*' not in s]
 
     def output(self):
         # TODO: Look into checking against the _SUCCESS file in the mt.
@@ -54,7 +55,8 @@ class HailMatrixTableTask(luigi.Task):
 
     def import_vcf(self):
         # Import the VCFs from inputs.
-        return hl.import_vcf([vcf_file.path for vcf_file in self.input()],
+        return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
+                             reference_genome='GRCh' + self.genome_version,
                              force_bgz=True)
 
     @staticmethod
@@ -157,8 +159,7 @@ class HailElasticSearchTask(luigi.Task):
     use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use temporary loading nodes.')
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
-    es_index = luigi.Parameter(description='ElasticSearch index.', default=None)
-    write_null_es_fields = luigi.BoolParameter(default=True, description="Whether to write fields with null values to ES index")
+    es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -174,13 +175,14 @@ class HailElasticSearchTask(luigi.Task):
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
 
-    def export_table_to_elasticsearch(self, table, write_null_es_fields):
+    def export_table_to_elasticsearch(self, table):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
             lambda: self.route_index_to_temp_es_cluster(True)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
-                                               write_null_es_fields=self.write_null_es_fields)
+                                               elasticsearch_mapping_id="docId",
+                                               write_null_values=True)
 
     def cleanup(self):
         self.route_index_to_temp_es_cluster(False)
