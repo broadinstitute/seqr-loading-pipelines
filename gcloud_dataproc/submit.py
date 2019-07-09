@@ -27,8 +27,8 @@ if args.hail_version == "0.1":
     hail_zip = "hail_builds/v01/hail-v01-10-8-2018-90c855449.zip"
     hail_jar = "hail_builds/v01/hail-v01-10-8-2018-90c855449.jar"
 else:
-    hail_zip = "gs://hail-common/builds/devel/python/hail-devel-17a988f2a628.zip"
-    hail_jar = "gs://hail-common/builds/devel/jars/hail-devel-17a988f2a628-Spark-2.2.0.jar"
+    hail_zip = "gs://hail-common/builds/0.2/python/hail-0.2-13681278eb89.zip"
+    hail_jar = "gs://hail-common/builds/0.2/jars/hail-0.2-13681278eb89-Spark-2.2.0.jar"
 
 script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
