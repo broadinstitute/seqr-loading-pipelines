@@ -98,14 +98,14 @@ def submit_load_dataset_to_es_job_v02(
         return os.path.join(CUR_DIR, rel_path)
 
     # Must use absolute path because this script changes the directory all over the place :(
-    pyfiles = ','.join([abs_path(f) for f in ['lib', '../hail_scripts', 'seqr_loading.py']])
-    files = abs_path('my-configs/luigi.cfg')
-    executable = abs_path('seqr_loading_optimized.py')
+    pyfiles = ','.join([abs_path(f) for f in ['lib', '../hail_scripts']])
+    files = abs_path('configs/luigi.cfg')
+    executable = abs_path('seqr_loading.py')
 
     if stop_after_step == 1:
-        task = 'SeqrVCFToVariantHTTask'
+        task = 'SeqrVCFToMTTask'
     else:
-        task = 'SeqrMTToESOptiimzedTask --es-host %(es_host)s --es-port %(es_port)s' % locals()
+        task = 'SeqrMTToESTask --es-host %(es_host)s --es-port %(es_port)s' % locals()
 
 
     # submit job
@@ -144,7 +144,6 @@ def _process_kubernetes_configs(action, config_paths, settings):
 
 
 def _wait_for_data_nodes_state(action, settings, data_node_name="es-data-loading"):
-    return
     check_pod_state = is_pod_not_running if action == "delete" else is_pod_running
     # wait for all data nodes to enter desired state
     for i in range(int(settings.get("ES_DATA_NUM_PODS", 1))):

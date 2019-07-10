@@ -155,6 +155,7 @@ class SeqrSchema(BaseMTSchema):
                             'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
                             'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
+
 class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')
@@ -223,7 +224,6 @@ class SeqrGenotypesSchema(BaseMTSchema):
             for i in range(start, end, step)
         })
 
-
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
         return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
@@ -243,3 +243,10 @@ class SeqrGenotypesSchema(BaseMTSchema):
             'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
             'sample_id': self.mt.s
         }
+
+
+class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
+    """
+    Combined variant and genotypes.
+    """
+    pass
