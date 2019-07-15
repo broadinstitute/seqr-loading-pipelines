@@ -17,17 +17,16 @@ logger = logging.getLogger(__name__)
 class SeqrValidationError(Exception):
     pass
 
-class SeqrVCFToVariantHTTask(HailMatrixTableTask):
+class SeqrVCFToVariantHTTask(seqr_loading.SeqrVCFToMTTask):
     """
-    Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
+    Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
     """
-    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
-    clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(description='Path to the Hail table storing the hgmd variants.')
 
     def run(self):
         mt = self.import_vcf()
         mt = hl.split_multi_hts(mt)
+        if self.validate:
+            self.validate_mt(mt, self.genome_version, self.sample_type)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
         # We're now adding ref data.
         ref_data = hl.read_table(self.reference_ht_path)
@@ -42,11 +41,15 @@ class SeqrVCFToVariantHTTask(HailMatrixTableTask):
         ht.write(self.output().path, stage_locally=True)
         hl.copy_log(self.output().path + '-logs.log')
 
-class SeqrVCFToMTTask2(seqr_loading.SeqrVCFToMTTask):
-
+class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
+    remap_path = luigi.OptionalParameter(default=None,
+                                         description="Path to a tsv file with two columns: s and seqr_id.")
+    subset_path = luigi.OptionalParameter(default=None,
+                                          description="Path to a tsv file with one column of sample IDs: s.")
     def run(self):
         mt = self.import_vcf()
         mt = hl.split_multi_hts(mt)
+
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
@@ -58,19 +61,14 @@ class SeqrVCFToMTTask2(seqr_loading.SeqrVCFToMTTask):
         mt.write(self.output().path)
 
 
-class SeqrMTToESOptiimzedTask(HailElasticSearchTask):
-    dest_file = luigi.Parameter(default='_SUCCESS')
+class SeqrMTToESOptimizedTask(HailElasticSearchTask):
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [SeqrVCFToVariantHTTask(), SeqrVCFToMTTask2()]
-
-    def output(self):
-        # TODO: Use https://luigi.readthedocs.io/en/stable/api/luigi.contrib.esindex.html.
-        return GCSorLocalTarget(filename=self.dest_file)
+        return [SeqrVCFToVariantHTTask(), SeqrVCFToGenotypesMTTask()]
 
     def run(self):
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
