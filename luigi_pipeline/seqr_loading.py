@@ -116,15 +116,10 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        schema = SeqrVariantSchema(self.import_mt(), ref_data=None, clinvar_data=None, hgmd_data=None)
-        row_table = schema.elasticsearch_row()
+        row_table = SeqrVariantsAndGenotypesSchema.elasticsearch_row(self.import_mt())
         self.export_table_to_elasticsearch(row_table)
 
         self.cleanup()
-
-        # This is just for debugging for now. Not needed since the ES export is the output.
-        # with self.output().open('w') as out_file:
-            # out_file.write('count: %i' % row_table.count())
 
 
 if __name__ == '__main__':

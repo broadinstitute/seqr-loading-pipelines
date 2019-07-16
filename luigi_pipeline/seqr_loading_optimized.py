@@ -5,17 +5,16 @@ import re
 import luigi
 import hail as hl
 
-from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
-from lib.model.seqr_mt_schema import SeqrSchema, SeqrVariantSchema, SeqrGenotypesSchema
+from lib.model.seqr_mt_schema import SeqrSchema, SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 import seqr_loading
-# from gnomad_hail.utils import vep_or_lookup_vep
 
 logger = logging.getLogger(__name__)
 
 
 class SeqrValidationError(Exception):
     pass
+
 
 class SeqrVCFToVariantHTTask(seqr_loading.SeqrVCFToMTTask):
     """
@@ -39,7 +38,7 @@ class SeqrVCFToVariantHTTask(seqr_loading.SeqrVCFToMTTask):
         ht.describe()
 
         ht.write(self.output().path, stage_locally=True)
-        hl.copy_log(self.output().path + '-logs.log')
+
 
 class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
     remap_path = luigi.OptionalParameter(default=None,
@@ -75,8 +74,7 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         variants_ht = hl.read_table(self.input()[0].path)
         row_ht = genotypes_mt.rows().join(variants_ht)
 
-        row_ht = row_ht.drop('vep').flatten()
-        row_ht = row_ht.drop(row_ht.locus, row_ht.alleles).annotate(type='optimized')
+        row_ht = SeqrVariantsAndGenotypesSchema.elasticsearch_row(row_ht)
         self.export_table_to_elasticsearch(row_ht)
 
         self.cleanup()
