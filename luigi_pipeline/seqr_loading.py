@@ -47,8 +47,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = SeqrVariantsAndGenotypesSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt()
 
-        mt = SeqrGenotypesSchema(mt).annotate_all(overwrite=True).mt
-
         mt.describe()
         mt.write(self.output().path, stage_locally=True)
 

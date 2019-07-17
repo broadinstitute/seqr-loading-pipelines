@@ -12,11 +12,7 @@ import seqr_loading
 logger = logging.getLogger(__name__)
 
 
-class SeqrValidationError(Exception):
-    pass
-
-
-class SeqrVCFToVariantHTTask(seqr_loading.SeqrVCFToMTTask):
+class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
     Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
     """
@@ -32,12 +28,10 @@ class SeqrVCFToVariantHTTask(seqr_loading.SeqrVCFToMTTask):
         clinvar = hl.read_table(self.clinvar_ht_path)
         hgmd = hl.read_table(self.hgmd_ht_path)
 
-        ht = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
-            overwrite=True).select_annotated_mt().rows()
+        mt = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+            overwrite=True).select_annotated_mt()
 
-        ht.describe()
-
-        ht.write(self.output().path, stage_locally=True)
+        mt.write(self.output().path, stage_locally=True)
 
 
 class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
@@ -45,9 +39,12 @@ class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
                                           description="Path to a tsv file with one column of sample IDs: s.")
+
+    def requires(self):
+        return [SeqrVCFToVariantMTTask()]
+
     def run(self):
-        mt = self.import_vcf()
-        mt = hl.split_multi_hts(mt)
+        mt = hl.read_matrix_table(self.input()[0].path)
 
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
@@ -67,7 +64,7 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [SeqrVCFToVariantHTTask(), SeqrVCFToGenotypesMTTask()]
+        return [SeqrVCFToGenotypesMTTask()]
 
     def run(self):
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
