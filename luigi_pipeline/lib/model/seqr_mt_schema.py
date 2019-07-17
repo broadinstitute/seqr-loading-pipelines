@@ -155,6 +155,7 @@ class SeqrSchema(BaseMTSchema):
                             'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
                             'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
+
 class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')
@@ -168,6 +169,9 @@ class SeqrVariantSchema(SeqrSchema):
     @row_annotation(name='AN')
     def an(self):
         return self.mt.info.AN
+
+
+class SeqrGenotypesSchema(BaseMTSchema):
 
     @row_annotation()
     def genotypes(self):
@@ -202,24 +206,6 @@ class SeqrVariantSchema(SeqrSchema):
             for i in range(start, end, step)
         })
 
-    def elasticsearch_row(self):
-        """
-        Prepares the mt to export using ElasticsearchClient V02.
-        - Flattens nested structs
-        - drops locus and alleles key
-
-        TODO:
-        - Call validate
-        - when all annotations are here, whitelist fields to send instead of blacklisting.
-        :return:
-        """
-        # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = self.mt.rows().drop('vep').flatten()
-        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
-        # be normal fields. We can also re-key, but I believe this is computational?
-        table = table.drop(table.locus, table.alleles)
-        return table
-
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
         return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
@@ -239,3 +225,33 @@ class SeqrVariantSchema(SeqrSchema):
             'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
             'sample_id': self.mt.s
         }
+
+
+class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
+    """
+    Combined variant and genotypes.
+    """
+
+    @staticmethod
+    def elasticsearch_row(ds):
+        """
+        Prepares the mt to export using ElasticsearchClient V02.
+        - Flattens nested structs
+        - drops locus and alleles key
+
+        TODO:
+        - Call validate
+        - when all annotations are here, whitelist fields to send instead of blacklisting.
+        :return:
+        """
+        # Converts a mt to the row equivalent.
+        if isinstance(ds, hl.MatrixTable):
+            ds = ds.rows()
+        # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
+        table = ds.drop('vep').flatten()
+        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
+        # be normal fields. We can also re-key, but I believe this is computational?
+        table = table.drop(table.locus, table.alleles)
+
+
+        return table
