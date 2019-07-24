@@ -64,12 +64,12 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [SeqrVCFToGenotypesMTTask()]
+        return [SeqrVCFToVariantMTTask(), SeqrVCFToGenotypesMTTask()]
 
     def run(self):
+        variants_mt = hl.read_matrix_table(self.input()[0].path)
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
-        variants_ht = hl.read_table(self.input()[0].path)
-        row_ht = genotypes_mt.rows().join(variants_ht)
+        row_ht = genotypes_mt.rows().join(variants_mt.rows())
 
         row_ht = SeqrVariantsAndGenotypesSchema.elasticsearch_row(row_ht)
         self.export_table_to_elasticsearch(row_ht)
