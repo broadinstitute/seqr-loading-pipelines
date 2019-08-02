@@ -82,7 +82,7 @@ class SeqrSchema(BaseMTSchema):
 
     @row_annotation()
     def xstop(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt))
+        return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
     @row_annotation(fn_require=sorted_transcript_consequences)
     def domains(self):
