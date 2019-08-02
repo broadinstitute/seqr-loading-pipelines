@@ -63,7 +63,7 @@ def get_expr_for_start_pos(table):
 
 
 def get_expr_for_end_pos(table):
-    return table.locus.position + hl.len(get_expr_for_ref_allele(table))
+    return table.locus.position + hl.len(get_expr_for_ref_allele(table)) - 1
 
 
 def get_expr_for_variant_id(table, max_length=None):

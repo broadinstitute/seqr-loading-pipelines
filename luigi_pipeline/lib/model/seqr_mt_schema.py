@@ -18,6 +18,24 @@ class SeqrSchema(BaseMTSchema):
     def vep(self):
         return self.mt.vep
 
+    @row_annotation()
+    def rsid(self):
+        return self.mt.rsid
+
+    @row_annotation()
+    def filters(self):
+        return self.mt.filters
+
+    @row_annotation()
+    def aIndex(self):
+        return self.mt.a_index
+
+    @row_annotation()
+    def originalAltAlleles(self):
+        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
+        # If we can get it to not drop it, we should revert this to `old_locus`
+        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
+
     @row_annotation(name='sortedTranscriptConsequences', fn_require=vep)
     def sorted_transcript_consequences(self):
         return vep.get_expr_for_vep_sorted_transcript_consequences_array(self.mt.vep)
