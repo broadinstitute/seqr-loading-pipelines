@@ -19,7 +19,7 @@ class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
 
     def run(self):
         mt = self.import_vcf()
-        mt = hl.split_multi_hts(mt)
+        mt = self.annotate_old_and_split_multi_hts(mt)
         if self.validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
