@@ -197,11 +197,11 @@ def custom_gnomad_select(ht):
     selects['AF'] = ht.freq[global_idx].AF
     selects['AN'] = ht.freq[global_idx].AN
     selects['AC'] = ht.freq[global_idx].AC
-    selects['hom'] = ht.freq[global_idx].homozygote_count
+    selects['Hom'] = ht.freq[global_idx].homozygote_count
 
-    selects['POPMAX_AF'] = ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF
+    selects['AF_POPMAX_OR_GLOBAL'] = ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF
     selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
-    selects['hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
+    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
 
