@@ -19,7 +19,7 @@ run(" ".join([
     "gcloud container clusters create %(CLUSTER_NAME)s",
     "--machine-type %(CLUSTER_MACHINE_TYPE)s",
     "--num-nodes 1",   # "--scopes https://www.googleapis.com/auth/devstorage.read_write"
-]) % settings, errors_to_ignore=["Already exists"])
+]) % settings)
 
 
 _set_k8s_context(settings)
@@ -30,7 +30,7 @@ run(" ".join([
     "--cluster %(CLUSTER_NAME)s",
     "--machine-type %(CLUSTER_MACHINE_TYPE)s",
     "--num-nodes " + str(int(settings.get("ES_DATA_NUM_PODS", 1)) - 1),
-]) % settings, errors_to_ignore=["Already exists"])
+]) % settings)
 
 # deploy elasticsearch
 _process_kubernetes_configs("create", settings=settings,
