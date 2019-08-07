@@ -48,10 +48,6 @@ def init_command_line_args():
     p.add_argument("--num-temp-loading-nodes", type=int,
         help="For use with --num-temp-loading-nodes. Number of temp loading nodes to create.", default=3)
 
-    p.add_argument("--create-persistent-es-nodes", action="store_true",
-        help="If specified, a persistent ES cluster will be created before loading data or creating temp loading nodes."
-        " This is unnecessary if an elasticsearch cluster already exists.")
-
     p.add_argument("--host", help="Elastisearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME", "localhost"))
     p.add_argument("--port", help="Elastisearch port", default="9200")
 
@@ -327,7 +323,7 @@ def main():
         # create temp es nodes
         settings = _get_es_node_settings(args.k8s_cluster_name, args.num_temp_loading_nodes)
 
-        ip_address = _create_es_nodes(settings, create_persistent_es_nodes=args.create_persistent_es_nodes)
+        ip_address = _create_es_nodes(settings)
 
         # _enable_cluster_routing_rebalance(False, args.cluster_name, ip_address, args.port)
 
