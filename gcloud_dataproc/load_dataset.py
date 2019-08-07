@@ -11,7 +11,7 @@ import time
 
 from gcloud_dataproc.utils import seqr_api
 from kubernetes.shell_utils import run
-from kubernetes.kubectl_utils import is_pod_running, is_pod_not_running, wait_until_pod_is_running
+from kubernetes.kubectl_utils import is_pod_running, is_pod_not_running
 from kubernetes.yaml_settings_utils import process_jinja_template, load_settings
 
 logger = logging.getLogger()
@@ -105,48 +105,6 @@ def _set_k8s_context(settings):
     run("gcloud container clusters get-credentials %(CLUSTER_NAME)s" % settings)
     run("kubectl config set-context $(kubectl config current-context) --namespace=%(NAMESPACE)s" % settings)
 
-def _create_persistent_es_nodes(settings):
-    # make sure cluster exists - create cluster with 1 node
-    run(" ".join([
-        "gcloud container clusters create %(CLUSTER_NAME)s",
-        "--machine-type %(CLUSTER_MACHINE_TYPE)s",
-        "--num-nodes 1",   # "--scopes https://www.googleapis.com/auth/devstorage.read_write"
-    ]) % settings, errors_to_ignore=["Already exists"])
-
-
-    _set_k8s_context(settings)
-
-    # create additional nodes
-    run(" ".join([
-        "gcloud container node-pools create es-persistent-nodes",
-        "--cluster %(CLUSTER_NAME)s",
-        "--machine-type %(CLUSTER_MACHINE_TYPE)s",
-        "--num-nodes " + str(int(settings.get("ES_DATA_NUM_PODS", 1)) - 1),
-    ]) % settings, errors_to_ignore=["Already exists"])
-
-    # deploy elasticsearch
-    _process_kubernetes_configs("create", settings=settings,
-        config_paths=[
-            #"./gcloud_dataproc/utils/elasticsearch_cluster/es-configmap.yaml",
-            "./kubernetes/elasticsearch-sharded/es-namespace.yaml",
-            "./kubernetes/elasticsearch-sharded/es-discovery-svc.yaml",
-            "./kubernetes/elasticsearch-sharded/es-master.yaml",
-            "./kubernetes/elasticsearch-sharded/es-svc.yaml",
-            "./kubernetes/elasticsearch-sharded/es-kibana.yaml",
-        ])
-
-    wait_until_pod_is_running("es-kibana")
-
-    _process_kubernetes_configs("create", settings=settings,
-        config_paths=[
-            "./kubernetes/elasticsearch-sharded/es-client.yaml",
-            "./kubernetes/elasticsearch-sharded/es-data-stateful.yaml",
-            "./kubernetes/elasticsearch-sharded/es-data-svc.yaml",
-        ])
-
-    _wait_for_data_nodes_state("create", settings, data_node_name="es-data")
-
-
 
 def _create_temp_es_loading_nodes(settings):
     # make sure k8s cluster exists
@@ -195,13 +153,10 @@ def _create_temp_es_loading_nodes(settings):
     return elasticsearch_ip_address
 
 
-def _create_es_nodes(settings, create_persistent_es_nodes=False):
+def _create_es_nodes(settings):
     logger.info("==> Create ES nodes")
 
     load_settings([], settings)
-
-    if create_persistent_es_nodes:
-        _create_persistent_es_nodes(settings)
 
     ip_address = _create_temp_es_loading_nodes(settings)
 
