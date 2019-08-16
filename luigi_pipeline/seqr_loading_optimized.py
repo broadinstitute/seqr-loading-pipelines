@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import re
 
 import luigi
@@ -78,4 +79,5 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
 
 
 if __name__ == '__main__':
-    luigi.run()
+    # If run does not succeed, exit with 1 status code.
+    luigi.run() or sys.exit(1)

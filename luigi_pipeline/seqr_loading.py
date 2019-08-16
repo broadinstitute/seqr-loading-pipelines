@@ -1,4 +1,5 @@
 import logging
+import sys
 
 import luigi
 import hail as hl
@@ -130,4 +131,5 @@ class SeqrMTToESTask(HailElasticSearchTask):
 
 
 if __name__ == '__main__':
-    luigi.run()
+    # If run does not succeed, exit with 1 status code.
+    luigi.run() or sys.exit(1)
