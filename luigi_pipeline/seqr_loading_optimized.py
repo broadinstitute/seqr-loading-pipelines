@@ -19,20 +19,8 @@ class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
 
     def run(self):
-        mt = self.import_vcf()
-        mt = self.annotate_old_and_split_multi_hts(mt)
-        if self.validate:
-            self.validate_mt(mt, self.genome_version, self.sample_type)
-        mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
-        # We're now adding ref data.
-        ref_data = hl.read_table(self.reference_ht_path)
-        clinvar = hl.read_table(self.clinvar_ht_path)
-        hgmd = hl.read_table(self.hgmd_ht_path)
-
-        mt = SeqrVariantSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
-            overwrite=True).select_annotated_mt()
-
-        mt.write(self.output().path, stage_locally=True)
+        # We only want to use the Variant Schema.
+        self.read_vcf_write_mt(schema_cls=SeqrVariantSchema)
 
 
 class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):

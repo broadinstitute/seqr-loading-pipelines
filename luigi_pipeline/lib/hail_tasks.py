@@ -13,14 +13,17 @@ import lib.hail_vep_runners as vep_runners
 
 logger = logging.getLogger(__name__)
 
+
 class MatrixTableSampleSetError(Exception):
     def __init__(self, message, missing_samples):
         super().__init__(message)
         self.missing_samples = missing_samples
 
+
 def GCSorLocalTarget(filename):
     target = gcs.GCSTarget if filename.startswith('gs://') else luigi.LocalTarget
     return target(filename)
+
 
 class VcfFile(luigi.Task):
     filename = luigi.Parameter()
