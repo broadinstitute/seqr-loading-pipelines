@@ -20,7 +20,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     """
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(description='Path to the Hail table storing the hgmd variants.')
+    hgmd_ht_path = luigi.Parameter(default=None,
+                                   description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
@@ -46,7 +47,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         ref_data = hl.read_table(self.reference_ht_path)
         clinvar = hl.read_table(self.clinvar_ht_path)
-        hgmd = hl.read_table(self.hgmd_ht_path)
+        # hgmd is optional.
+        hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
 
         mt = schema_cls(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt()

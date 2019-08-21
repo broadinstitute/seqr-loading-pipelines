@@ -1,14 +1,14 @@
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
+from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationSkip
 from hail_scripts.v02.utils.computed_fields import variant_id
 from hail_scripts.v02.utils.computed_fields import vep
 
 
 class SeqrSchema(BaseMTSchema):
 
-    def __init__(self, *args, ref_data, clinvar_data, hgmd_data, **kwargs):
+    def __init__(self, *args, ref_data, clinvar_data, hgmd_data=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._ref_data = ref_data
         self._clinvar_data = clinvar_data
@@ -164,6 +164,8 @@ class SeqrSchema(BaseMTSchema):
 
     @row_annotation()
     def hgmd(self):
+        if self._hgmd_data is None:
+            raise RowAnnotationSkip
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
 

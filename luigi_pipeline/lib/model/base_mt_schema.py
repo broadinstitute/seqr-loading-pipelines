@@ -6,6 +6,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class RowAnnotationSkip(Exception):
+    pass
+
+
 def row_annotation(name=None, fn_require=None):
     """
     Function decorator for methods in a subclass of BaseMTSchema.
@@ -56,7 +60,12 @@ def row_annotation(name=None, fn_require=None):
             if fn_require:
                 getattr(self, fn_require.__name__)()
 
-            func_ret = func(self, *args, **kwargs)
+            try:
+                func_ret = func(self, *args, **kwargs)
+            # Do not annotate when RowAnnotationSkip raised.
+            except RowAnnotationSkip:
+                return self
+
             annotation = {annotation_name: func_ret}
             self.mt = self.mt.annotate_rows(**annotation)
 
