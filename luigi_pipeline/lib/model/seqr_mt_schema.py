@@ -1,7 +1,7 @@
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationSkip
+from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
 from hail_scripts.v02.utils.computed_fields import variant_id
 from hail_scripts.v02.utils.computed_fields import vep
 
@@ -165,7 +165,7 @@ class SeqrSchema(BaseMTSchema):
     @row_annotation()
     def hgmd(self):
         if self._hgmd_data is None:
-            raise RowAnnotationSkip
+            raise RowAnnotationOmit
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
 

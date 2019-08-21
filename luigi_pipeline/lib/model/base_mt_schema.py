@@ -6,7 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class RowAnnotationSkip(Exception):
+class RowAnnotationOmit(Exception):
     pass
 
 
@@ -62,8 +62,8 @@ def row_annotation(name=None, fn_require=None):
 
             try:
                 func_ret = func(self, *args, **kwargs)
-            # Do not annotate when RowAnnotationSkip raised.
-            except RowAnnotationSkip:
+            # Do not annotate when RowAnnotationOmit raised.
+            except RowAnnotationOmit:
                 return self
 
             annotation = {annotation_name: func_ret}
