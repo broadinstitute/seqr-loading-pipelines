@@ -31,6 +31,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                           description="Path to a tsv file with one column of sample IDs: s.")
 
     def run(self):
+        self.read_vcf_write_mt()
+
+    def read_vcf_write_mt(self, schema_cls=SeqrVariantsAndGenotypesSchema):
         mt = self.import_vcf()
         mt = self.annotate_old_and_split_multi_hts(mt)
         if self.validate:
@@ -45,8 +48,12 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         clinvar = hl.read_table(self.clinvar_ht_path)
         hgmd = hl.read_table(self.hgmd_ht_path)
 
-        mt = SeqrVariantsAndGenotypesSchema(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+        mt = schema_cls(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt()
+
+        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+                                 genomeVersion=self.genome_version,
+                                 sampleType=self.sample_type)
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True)
