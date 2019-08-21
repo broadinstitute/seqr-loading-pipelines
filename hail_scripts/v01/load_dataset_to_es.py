@@ -740,7 +740,7 @@ def step3_add_reference_datasets(hc, vds, args):
         logger.info("\n==> add hgmd")
         vds = add_hgmd_to_vds(hc, vds, args.genome_version, root="va.hgmd", subset=args.filter_interval)
 
-    if not args.is_running_locally and not args.skip_writing_intermediate_vds:
+    if not args.skip_writing_intermediate_vds:
         write_vds(vds, args.step3_output_vds)
 
     args.start_with_step = 4   # step 3 finished, so, if an error occurs and it goes to retry, start with the next step
