@@ -58,7 +58,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                  sampleType=self.sample_type)
 
         mt.describe()
-        mt.write(self.output().path, stage_locally=True)
+        mt.write(self.output().path, stage_locally=True, overwrite=True)
 
     def annotate_old_and_split_multi_hts(self, mt):
         """

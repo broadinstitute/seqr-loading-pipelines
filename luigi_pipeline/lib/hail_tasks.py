@@ -2,6 +2,7 @@
 Tasks for Hail.
 """
 import logging
+import os
 
 import hail as hl
 import luigi
@@ -48,8 +49,13 @@ class HailMatrixTableTask(luigi.Task):
         return [VcfFile(filename=s) for s in self.source_paths if '*' not in s]
 
     def output(self):
-        # TODO: Look into checking against the _SUCCESS file in the mt.
         return GCSorLocalTarget(self.dest_path)
+
+    def complete(self):
+        # Complete is called by Luigi to check if the task is done and will skip if it is.
+        # By default it checks to see that the output exists, but we want to check for the
+        # _SUCCESS file to make sure it was not terminated halfway.
+        return GCSorLocalTarget(os.path.join(self.dest_path, '_SUCCESS')).exists()
 
     def run(self):
         # Overwrite to do custom transformations.

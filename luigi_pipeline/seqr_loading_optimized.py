@@ -43,7 +43,7 @@ class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
         mt = SeqrGenotypesSchema(mt).annotate_all(overwrite=True).select_annotated_mt()
 
         mt.describe()
-        mt.write(self.output().path)
+        mt.write(self.output().path, stage_locally=True, overwrite=True)
 
 
 class SeqrMTToESOptimizedTask(HailElasticSearchTask):
