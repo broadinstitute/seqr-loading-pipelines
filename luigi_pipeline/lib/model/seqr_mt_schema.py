@@ -119,6 +119,10 @@ class SeqrSchema(BaseMTSchema):
         return self._ref_data[self.mt.row_key].dbnsfp
 
     @row_annotation()
+    def geno2mp(self):
+        return self._ref_data[self.mt.row_key].geno2mp
+
+    @row_annotation()
     def gnomad_exomes(self):
         return self._ref_data[self.mt.row_key].gnomad_exomes
 
