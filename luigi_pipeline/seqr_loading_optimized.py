@@ -19,6 +19,8 @@ class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
 
     def run(self):
+        # Hack that fixes something in Hail. TODO: Remove when Hail fix comes.
+        hl._set_flags(newaggs=None)
         # We only want to use the Variant Schema.
         self.read_vcf_write_mt(schema_cls=SeqrVariantSchema)
 
@@ -33,6 +35,8 @@ class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
         return [SeqrVCFToVariantMTTask()]
 
     def run(self):
+        # Hack that fixes something in Hail. TODO: Remove when Hail fix comes.
+        hl._set_flags(newaggs=None)
         mt = hl.read_matrix_table(self.input()[0].path)
 
         if self.remap_path:
@@ -56,6 +60,8 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         return [SeqrVCFToVariantMTTask(), SeqrVCFToGenotypesMTTask()]
 
     def run(self):
+        # Hack that fixes something in Hail. TODO: Remove when Hail fix comes.
+        hl._set_flags(newaggs=None)
         variants_mt = hl.read_matrix_table(self.input()[0].path)
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
         row_ht = genotypes_mt.rows().join(variants_mt.rows())
