@@ -2,6 +2,7 @@
 Tasks for Hail.
 """
 import logging
+import math
 import os
 
 import hail as hl
@@ -231,5 +232,5 @@ class HailElasticSearchTask(luigi.Task):
     def _mt_num_shards(self, mt):
         # The greater of the user specified min shards and calculated based on the variants and samples
         denominator = 2147483519
-        calculated_num_shards = int((mt.count_rows() * mt.count_cols())/denominator)
+        calculated_num_shards = math.ceil((mt.count_rows() * mt.count_cols())/denominator)
         return max(self.es_index_min_num_shards, calculated_num_shards)
