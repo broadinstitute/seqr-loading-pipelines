@@ -169,6 +169,9 @@ class HailElasticSearchTask(luigi.Task):
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
+    es_index_min_num_shards = luigi.IntParameter(default=6,
+                                                 description='Number of shards for the index will be the greater of '
+                                                             'this value and a calculated value based on the matrix.')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -184,13 +187,14 @@ class HailElasticSearchTask(luigi.Task):
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
 
-    def export_table_to_elasticsearch(self, table):
+    def export_table_to_elasticsearch(self, table, num_shards):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
             lambda: self.route_index_to_temp_es_cluster(True)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
                                                elasticsearch_mapping_id="docId",
+                                               num_shards=num_shards,
                                                write_null_values=True)
 
     def cleanup(self):
@@ -223,3 +227,9 @@ class HailElasticSearchTask(luigi.Task):
 
         index_arg = "{}*".format(self.es_index)
         self._es.es.indices.put_settings(index=index_arg, body=body)
+
+    def _mt_num_shards(self, mt):
+        # The greater of the user specified min shards and calculated based on the variants and samples
+        denominator = 2147483519
+        calculated_num_shards = int((mt.count_rows() * mt.count_cols())/denominator)
+        return max(self.es_index_min_num_shards, calculated_num_shards)
