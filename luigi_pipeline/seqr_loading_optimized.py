@@ -67,7 +67,7 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         row_ht = genotypes_mt.rows().join(variants_mt.rows())
 
         row_ht = SeqrVariantsAndGenotypesSchema.elasticsearch_row(row_ht)
-        self.export_table_to_elasticsearch(row_ht)
+        self.export_table_to_elasticsearch(row_ht, self._mt_num_shards(genotypes_mt))
 
         self.cleanup()
 

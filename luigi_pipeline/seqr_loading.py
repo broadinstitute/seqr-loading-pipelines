@@ -1,4 +1,5 @@
 import logging
+import pkg_resources
 import sys
 
 import luigi
@@ -55,7 +56,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
-                                 sampleType=self.sample_type)
+                                 sampleType=self.sample_type,
+                                 hail_version=pkg_resources.get_distribution('hail').version)
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
@@ -133,8 +135,9 @@ class SeqrMTToESTask(HailElasticSearchTask):
         return GCSorLocalTarget(filename=self.dest_file)
 
     def run(self):
-        row_table = SeqrVariantsAndGenotypesSchema.elasticsearch_row(self.import_mt())
-        self.export_table_to_elasticsearch(row_table)
+        mt = self.import_mt()
+        row_table = SeqrVariantsAndGenotypesSchema.elasticsearch_row(mt)
+        self.export_table_to_elasticsearch(row_table, self._mt_num_shards(mt))
 
         self.cleanup()
 
