@@ -50,7 +50,7 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
         A dict that can be plugged in to an elasticsearch mapping as the value for "properties".
         (see https://www.elastic.co/guide/en/elasticsearch/guide/current/root-object.html)
     """
-    properties = _elasticsearch_mapping_for_type(table.row_value.dtype)["properties"]
+    properties = _elasticsearch_mapping_for_type(table.key_by().row_value.dtype)["properties"]
 
     if disable_doc_values_for_fields:
         logger.info("==> will disable doc values for %s", ", ".join(disable_doc_values_for_fields))
