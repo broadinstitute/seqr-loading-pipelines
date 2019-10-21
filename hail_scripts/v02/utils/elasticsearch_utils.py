@@ -26,6 +26,8 @@ def _elasticsearch_mapping_for_type(dtype):
         if isinstance(dtype.element_type, hl.tstruct):
             element_mapping["type"] = "nested"
         return element_mapping
+    if isinstance(dtype, hl.tlocus):
+        return {"type": "object", "properties": {"contig": {"type": "keyword"}, "position": {"type": "integer"}}}
     if dtype in HAIL_TYPE_TO_ES_TYPE_MAPPING:
         return {"type": HAIL_TYPE_TO_ES_TYPE_MAPPING[dtype]}
 
