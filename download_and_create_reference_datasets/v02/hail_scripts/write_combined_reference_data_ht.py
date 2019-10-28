@@ -6,9 +6,9 @@ import os
 
 import hail as hl
 
-
+VERSION = '2.0.1'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
-                  'all_reference_data/combined_reference_data_grch{genome_version}.ht'
+                  'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
 '''
 Configurations of dataset to combine. 
@@ -31,7 +31,7 @@ CONFIG = {
             'field_name': 'g1k',
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites_test.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
             'field_name': 'g1k',
         },
@@ -131,21 +131,21 @@ CONFIG = {
     'gnomad_exomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-            'custom_select': 'custom_gnomad_select'
+            'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
-            'custom_select': 'custom_gnomad_select'
+            'custom_select': 'custom_gnomad_select_v2'
         }
     },
     'gnomad_genomes': {
         '37': {
             'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
-            'custom_select': 'custom_gnomad_select'
+            'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.genomes.r2.1.1.sites.liftover_grch38.ht',
-            'custom_select': 'custom_gnomad_select'
+            'path': 'gs://gnomad-public/release/3.0/ht/genomes/gnomad.genomes.r3.0.sites.ht',
+            'custom_select': 'custom_gnomad_select_v3'
         }
     },
     'exac': {
@@ -185,9 +185,10 @@ def annotate_coverages(ht, coverage_dataset, reference_genome):
     coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
     return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
 
-def custom_gnomad_select(ht):
+
+def custom_gnomad_select_v2(ht):
     """
-    Custom select for public gnomad dataset (which we did not generate). Extracts fields like
+    Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
     'AF', 'AN', and generates 'hemi'.
     :param ht: hail table
     :return: select expression dict
@@ -204,6 +205,28 @@ def custom_gnomad_select(ht):
     selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
+
+
+def custom_gnomad_select_v3(ht):
+    """
+    Custom select for public gnomad v3 dataset (which we did not generate). Extracts fields like
+    'AF', 'AN', and generates 'hemi'.
+    :param ht: hail table
+    :return: select expression dict
+    """
+    selects = {}
+    global_idx = hl.eval(ht.globals.freq_index_dict['adj'])
+    selects['AF'] = ht.freq[global_idx].AF
+    selects['AN'] = ht.freq[global_idx].AN
+    selects['AC'] = ht.freq[global_idx].AC
+    selects['Hom'] = ht.freq[global_idx].homozygote_count
+
+    selects['AF_POPMAX_OR_GLOBAL'] = ht.popmax.AF
+    selects['FAF_AF'] = ht.faf[ht.globals.faf_index_dict['adj']].faf95
+    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
+                              0, ht.freq[ht.globals.freq_index_dict['adj_male']].AC)
+    return selects
+
 
 def get_select_fields(selects, base_ht):
     """
@@ -233,6 +256,7 @@ def get_select_fields(selects, base_ht):
                 select_fields[key] = ht
     return select_fields
 
+
 def get_ht(dataset, reference_genome):
     ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
@@ -253,6 +277,7 @@ def get_ht(dataset, reference_genome):
     print(select_fields)
     return base_ht.select(**select_query).distinct()
 
+
 def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
@@ -262,15 +287,19 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
+    # Track the dataset we've added as well as the source path.
+    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
     # Add metadata, but also removes previous globals.
     joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
-                                         datasets=hl.set(datasets + coverage_datasets))
+                                         datasets=hl.dict(included_dataset),
+                                         version=VERSION)
     joined_ht.describe()
 
-    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome))
+    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome, version=VERSION))
     print('Writing to %s' % output_path)
 
     joined_ht.write(os.path.join(output_path))
+
 
 def run(args):
     join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
