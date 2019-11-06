@@ -67,7 +67,7 @@ class HailMatrixTableTask(luigi.Task):
         # Import the VCFs from inputs.
         return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
                              reference_genome='GRCh' + self.genome_version,
-                             force_bgz=True)
+                             force_bgz=True, min_partitions=1000)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
