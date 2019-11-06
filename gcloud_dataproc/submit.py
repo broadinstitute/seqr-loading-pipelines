@@ -4,6 +4,7 @@ import argparse
 import getpass
 import multiprocessing
 import os
+import shlex
 import socket
 import subprocess
 
@@ -28,7 +29,7 @@ else:
     hail_jar = "hail_builds/v02/hail-0.2-3a68be23cb82d7c7fb5bf72668edcd1edf12822e-Spark-2.4.0.jar"
 
 script = args.script
-script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
+script_args = " ".join([shlex.quote(arg) for arg in unparsed_args])
 
 if "load_dataset_to_es" in script:
     username = getpass.getuser()
