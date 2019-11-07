@@ -77,7 +77,7 @@ class HailMatrixTableTask(luigi.Task):
         # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
         return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
                              reference_genome='GRCh' + self.genome_version,
-                             force_bgz=True, min_partitions=64)
+                             force_bgz=True, min_partitions=500)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
