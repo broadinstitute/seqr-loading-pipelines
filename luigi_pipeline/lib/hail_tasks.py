@@ -1,6 +1,7 @@
 """
 Tasks for Hail.
 """
+import json
 import logging
 import math
 import os
@@ -39,11 +40,20 @@ class HailMatrixTableTask(luigi.Task):
     to provide specific operations.
     Does not run if dest path exists (complete) or the source path does not (fail).
     """
-    source_paths = luigi.ListParameter(description='List of paths to VCFs to be loaded.')
+
+    source_paths = luigi.Parameter(description='Path or list of paths of VCFs to be loaded.')
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
                                                                                             'to annotate vep.')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        try:
+            self.source_paths = list(json.loads(self.source_paths, object_pairs_hook=luigi.parameter._FrozenOrderedDict))
+        except json.JSONDecodeError:
+            self.source_paths = [self.source_paths]
 
     def requires(self):
         # We only exclude globs in source path here so luigi does not check if the file exists
@@ -64,10 +74,10 @@ class HailMatrixTableTask(luigi.Task):
         mt.write(self.output().path)
 
     def import_vcf(self):
-        # Import the VCFs from inputs.
+        # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
         return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
                              reference_genome='GRCh' + self.genome_version,
-                             force_bgz=True)
+                             force_bgz=True, min_partitions=500)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
