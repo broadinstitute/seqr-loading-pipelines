@@ -18,6 +18,10 @@ from hail_scripts.v02.utils.elasticsearch_utils import elasticsearch_schema_for_
 logger = logging.getLogger()
 
 
+def struct_to_dict(struct):
+    return {k: dict(struct_to_dict(v)) if isinstance(v, hl.utils.Struct) else v for k, v in struct.items()}
+
+
 class ElasticsearchClient(BaseElasticsearchClient):
     def export_table_to_elasticsearch(
         self,
@@ -165,7 +169,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
 
         _meta = None
         if export_globals_to_index_meta:
-            _meta = dict(hl.eval(table.globals))
+            _meta = struct_to_dict(hl.eval(table.globals))
 
         self.create_or_update_mapping(
             index_name, index_type_name, elasticsearch_schema, num_shards=num_shards, _meta=_meta
