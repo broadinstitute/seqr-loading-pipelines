@@ -51,7 +51,7 @@ class HailMatrixTableTask(luigi.Task):
         super().__init__(*args, **kwargs)
 
         try:
-            self.source_paths = list(json.loads(self.source_paths, object_pairs_hook=luigi.parameter._FrozenOrderedDict))
+            self.source_paths = list(json.loads(self.source_paths, object_pairs_hook=luigi.parameter.FrozenOrderedDict))
         except json.JSONDecodeError:
             self.source_paths = [self.source_paths]
 
