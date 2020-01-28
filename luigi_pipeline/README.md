@@ -1,5 +1,5 @@
 
-# Luigi Work in Progress
+# Luigi
 
 ## Local
 ### Install
