@@ -298,12 +298,6 @@ def _compute_firewall_rule_name(k8s_cluster_name):
 
 
 def main():
-    if "-h" in sys.argv or "--help" in sys.argv:
-        run("python hail_scripts/v01/load_dataset_to_es.py -h")
-        print("====================================================================================================")
-        print("       NOTE: Any args not in the following list will be matched against args in the list above:")
-        print("====================================================================================================")
-
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 
     # get command-line args

@@ -65,7 +65,7 @@ def submit_load_dataset_to_es_job(
 
     # submit job
     run(" ".join(map(str, [
-        "./gcloud_dataproc/submit.py",
+        "python3 ./gcloud_dataproc/submit.py",
         "--hail-version 0.1",
         "--cluster %(dataproc_cluster_name)s",
         "hail_scripts/v01/load_dataset_to_es.py",

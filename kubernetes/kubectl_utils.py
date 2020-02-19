@@ -119,7 +119,7 @@ def get_pod_name(pod_name_label, deployment_target=None, pod_number=0):
 
     Args:
           pod_name_label (string): the "name" label of the pod
-          deployment_target (string): value from DEPLOYMENT_TARGETS - eg. "minikube", "gcloud-dev", etc.
+          deployment_target (string): value from DEPLOYMENT_TARGETS - eg. "gcloud-dev"
           pod_number (int): if there are multiple pods with the given label, it returns this one of the pods.
 
     Returns:
@@ -157,7 +157,7 @@ def run_in_pod(pod_name, command, deployment_target=None, errors_to_ignore=None,
     Args:
         pod_name (str): either the pod's "name" label (eg. 'phenotips' or 'nginx'), or the full pod name (eg. "phenotips-cdd4d7dc9-vgmjx")
         command (str): linux command to execute inside the pod
-        deployment_target (string): value from DEPLOYMENT_TARGETS - eg. "minikube", "gcloud-dev", etc.
+        deployment_target (string): value from DEPLOYMENT_TARGETS - eg. "gcloud-dev"
         errors_to_ignore (list): if the command's return code isn't in ok_return_codes, but its
             output contains one of the strings in this list, the bad return code will be ignored,
             and this function will return None. Otherwise, it raises a RuntimeException.
