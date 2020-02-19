@@ -48,6 +48,7 @@ def init_command_line_args():
     p.add_argument("--stop-after-step", help="stop after this pipeline step", type=int)
     p.add_argument("--download-fam-file", help="download .fam file from seqr", action='store_true')
 
+    p.add_argument("--use-seqr-loading-optimized-pipeline", action="store_true", help="Use optimized pipeline.")
 
     p.add_argument("--use-temp-loading-nodes", action="store_true",
         help="If specified, temporary loading nodes will be created and added to the elasticsearch cluster")
@@ -88,20 +89,33 @@ def submit_load_dataset_to_es_job_v02(
         stop_after_step=None,
         other_load_dataset_to_es_args=(),
         es_host='localhost',
-        es_port='9200'):
+        es_port='9200',
+        use_seqr_loading_optimized_pipeline=False):
 
     def abs_path(rel_path):
         return os.path.join(CUR_DIR, rel_path)
 
     # Must use absolute path because this script changes the directory all over the place :(
-    pyfiles = ','.join([abs_path(f) for f in ['lib', '../hail_scripts']])
-    files = abs_path('configs/luigi.cfg')
-    executable = abs_path('seqr_loading.py')
+    if use_seqr_loading_optimized_pipeline:
+        # Must use absolute path because this script changes the directory all over the place :(
+        pyfiles = ','.join([abs_path(f) for f in ['lib', '../hail_scripts', 'seqr_loading.py']])
+        files = abs_path('configs/optimized_configs/luigi.cfg')
+        executable = abs_path('seqr_loading_optimized.py')
 
-    if stop_after_step == 1:
-        task = 'SeqrVCFToMTTask'
+        if stop_after_step == 1:
+            task = 'SeqrVCFToGenotypesMTTask'
+        else:
+            task = 'SeqrMTToESOptimizedTask --es-host %(es_host)s --es-port %(es_port)s' % locals()
+
     else:
-        task = 'SeqrMTToESTask --es-host %(es_host)s --es-port %(es_port)s' % locals()
+        pyfiles = ','.join([abs_path(f) for f in ['lib', '../hail_scripts']])
+        files = abs_path('configs/luigi.cfg')
+        executable = abs_path('seqr_loading.py')
+
+        if stop_after_step == 1:
+            task = 'SeqrVCFToMTTask'
+        else:
+            task = 'SeqrMTToESTask --es-host %(es_host)s --es-port %(es_port)s' % locals()
 
 
     # submit job
@@ -192,7 +206,6 @@ def _create_persistent_es_nodes(settings):
         ])
 
     _wait_for_data_nodes_state("create", settings, data_node_name="es-data")
-
 
 
 def _create_temp_es_loading_nodes(settings):
@@ -297,12 +310,6 @@ def _compute_firewall_rule_name(k8s_cluster_name):
 
 
 def main():
-    if "-h" in sys.argv or "--help" in sys.argv:
-        run("python hail_scripts/v01/load_dataset_to_es.py -h")
-        print("====================================================================================================")
-        print("       NOTE: Any args not in the following list will be matched against args in the list above:")
-        print("====================================================================================================")
-
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
 
     # get command-line args
@@ -365,7 +372,8 @@ def main():
                 args.cluster_name,
                 start_with_step=args.start_with_step,
                 stop_after_step=1,
-                other_load_dataset_to_es_args=load_dataset_to_es_args)
+                other_load_dataset_to_es_args=load_dataset_to_es_args,
+                use_seqr_loading_optimized_pipeline=args.use_seqr_loading_optimized_pipeline)
 
         # create temp es nodes
         settings = _get_es_node_settings(args.k8s_cluster_name, args.num_temp_loading_nodes)
@@ -387,7 +395,8 @@ def main():
             start_with_step=max(2, args.start_with_step),  # start with step 2 or later
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args + ["--host %(ip_address)s" % locals()],
-            es_host=ip_address)
+            es_host=ip_address,
+            use_seqr_loading_optimized_pipeline=args.use_seqr_loading_optimized_pipeline)
 
         # _enable_cluster_routing_rebalance(True, args.cluster_name, ip_address, args.port)
 
@@ -404,6 +413,7 @@ def main():
             start_with_step=args.start_with_step,
             stop_after_step=args.stop_after_step,
             other_load_dataset_to_es_args=load_dataset_to_es_args,
+            use_seqr_loading_optimized_pipeline=args.use_seqr_loading_optimized_pipeline
         )
 
 
