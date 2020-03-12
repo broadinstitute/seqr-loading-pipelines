@@ -11,18 +11,38 @@ QS_COL = 'QS'
 CN_COL = 'CN'
 CALL_COL = 'call'
 SAMPLE_COL = 'sample'
-BATCH_COL = 'batch'
 NUM_EXON_COL = 'num_exon'
 DEFRAGGED_COL = 'defragged'
 SC_COL = 'sc'
 SF_COL = 'sf'
 VAR_NAME_COL = 'var_name'
 
-SAMPLES_COL = 'parsed_samples'
+SAMPLE_ID_FIELD = 'sample_id'
+GENOTYPES_FIELD = 'genotypes'
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, VAR_NAME_COL, CALL_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, BATCH_COL, NUM_EXON_COL, DEFRAGGED_COL]
-COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL]
+BOOL_MAP = {'TRUE': True, 'FALSE': False}
+
+COL_CONFIGS = {
+    CHR_COL: {'field_name': 'contig', 'format': lambda val: val.lstrip('chr')},
+    SC_COL: {'format': int},
+    SF_COL: {'format': float},
+    VAR_NAME_COL: {'field_name': 'variantId', 'format': lambda val, call='any': '{}_{}'.format(val, call)},
+    CALL_COL: {'field_name': 'transcriptConsequenceTerms', 'format': lambda val: [val]},
+    START_COL: {'format': int},
+    END_COL: {'format': int},
+    QS_COL: {'field_name': 'qs', 'format': int},
+    CN_COL: {'field_name': 'cn', 'format': int},
+    NUM_EXON_COL: {'format': int},
+    DEFRAGGED_COL: {'format': lambda val: BOOL_MAP[val]},
+    SAMPLE_COL: {
+        'field_name': SAMPLE_ID_FIELD,
+        'format': lambda val: re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', val).group('sample_id'),
+    },
+}
+
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
+COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
 
 
 def get_sample_subset(sample_subset_file):
@@ -33,24 +53,32 @@ def get_sample_subset(sample_subset_file):
         return {line.strip() for line in f}
 
 
-def get_seqr_sample_id(raw_sample_id):
-    m = re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', raw_sample_id)
-    return m.group('sample_id')
+def get_field_val(row, col, header_indices, format_kwargs=None):
+    val = row[header_indices[col]]
+    format_func = COL_CONFIGS[col].get('format')
+    if format_func:
+        val = format_func(val, **format_kwargs) if format_kwargs else format_func(val)
+    return val
 
 
-def parse_sv_row(row, sample_id, parsed_svs_by_name_call, header_indices):
-    sv_key = '{}-{}'.format(row[header_indices[VAR_NAME_COL]], row[header_indices[CALL_COL]])
-    sample_info = {col: row[header_indices[col]] for col in SAMPLE_COLUMNS}
-    if sv_key in parsed_svs_by_name_call:
-        existing_sv = parsed_svs_by_name_call[sv_key]
-        existing_sv[SAMPLES_COL][sample_id] = sample_info
-        # Use the largest coordinates for the merged SV
-        existing_sv[START_COL] = min(existing_sv[START_COL], row[header_indices[START_COL]])
-        existing_sv[END_COL] = max(existing_sv[END_COL], row[header_indices[END_COL]])
-    else:
-        parsed_row = {col: row[header_indices[col]] for col in CORE_COLUMNS + [START_COL, END_COL]}
-        parsed_row[SAMPLES_COL] = {sample_id: sample_info}
-        parsed_svs_by_name_call[sv_key] = parsed_row
+def get_parsed_column_values(row, header_indices, columns):
+    return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col, header_indices) for col in columns}
+
+
+def parse_sv_row(row, parsed_svs_by_id, header_indices):
+    variant_id = get_field_val(row, VAR_NAME_COL, header_indices, format_kwargs={'call': row[header_indices[CALL_COL]]})
+    if variant_id not in parsed_svs_by_id:
+        parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
+        parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
+        parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
+
+    sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
+
+    sv = parsed_svs_by_id[variant_id]
+    sv[GENOTYPES_FIELD].append(sample_info)
+    # Use the largest coordinates for the merged SV
+    sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
+    sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
 
 
 def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
@@ -65,9 +93,9 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
 
         for line in tqdm(f, unit=' rows'):
             row = line.split()
-            sample_id = get_seqr_sample_id(row[header_indices[SAMPLE_COL]])
+            sample_id = get_field_val(row, SAMPLE_COL, header_indices)
             if sample_id in sample_subset:
-                parse_sv_row(row, sample_id, parsed_svs_by_name, header_indices)
+                parse_sv_row(row, parsed_svs_by_name, header_indices)
                 found_samples.add(sample_id)
             else:
                 skipped_samples.add(sample_id)
@@ -95,20 +123,10 @@ def load_data(input_dataset, sample_subset_file, ignore_missing_samples=False):
     print('Parsing BED file')
     parsed_svs = subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples=ignore_missing_samples)
     print('Found {} SVs'.format(len(parsed_svs)))
-    
-    cn_ranges = set()
-    cns_with_variance = 0
-    multi_sample_svs = 0
-    for sv in parsed_svs:
-        if len(sv[SAMPLES_COL]) > 1:
-            multi_sample_svs += 1
-            cns = {sam[CN_COL]for sam in sv[SAMPLES_COL].values()}
-            if len(cns) > 1:
-                cns_with_variance += 1
-                cn_ranges.add(str(sorted(cns)))
-    print('{} multi sample SVs'.format(multi_sample_svs))
-    print('{} SVs with varying CN'.format(cns_with_variance))
-    print(cn_ranges) # ['4', '5']", "['2', '3']", "['3', '4']", "['3', '5']", "['3', '4', '5']", "['2', '4']", "['0', '1']"]
+
+    import json
+    for sv in parsed_svs[:5]:
+        print(json.dumps(sv, indent=2))
 
 
 if __name__ == '__main__':
