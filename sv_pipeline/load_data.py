@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+from datetime import datetime
+from elasticsearch import helpers as es_helpers
 import re
 from tqdm import tqdm
 
+from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
+from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
 GENCODE_CHR_COL_IDX = 0
 GENCODE_TYPE_COL_IDX = 2
@@ -27,8 +31,11 @@ VAR_NAME_COL = 'var_name'
 CHROM_FIELD = 'contig'
 SAMPLE_ID_FIELD = 'sample_id'
 GENOTYPES_FIELD = 'genotypes'
+CN_FIELD = 'cn'
+QS_FIELD = 'qs'
 GENES_FIELD = 'geneIds'
 TRANSCRIPTS_FIELD = 'sortedTranscriptConsequences'
+VARIANT_ID_FIELD = 'variantId'
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
@@ -36,12 +43,12 @@ COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'format': int},
     SF_COL: {'format': float},
-    VAR_NAME_COL: {'field_name': 'variantId', 'format': lambda val, call='any': '{}_{}'.format(val, call)},
+    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}'.format(val, call)},
     CALL_COL: {'field_name': 'transcriptConsequenceTerms', 'format': lambda val: [val]},
     START_COL: {'format': int},
     END_COL: {'format': int},
-    QS_COL: {'field_name': 'qs', 'format': int},
-    CN_COL: {'field_name': 'cn', 'format': int},
+    QS_COL: {'field_name': QS_FIELD, 'format': int},
+    CN_COL: {'field_name': CN_FIELD, 'format': int},
     NUM_EXON_COL: {'format': int},
     DEFRAGGED_COL: {'format': lambda val: BOOL_MAP[val]},
     SAMPLE_COL: {
@@ -54,9 +61,32 @@ CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
 SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
 
+QS_BIN_SIZE = 10
+
+CHROMOSOMES = [
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21',
+    '22', 'X', 'Y', 'M',
+]
+CHROM_TO_XPOS_OFFSET = {chrom: 1 + i*int(1e9) for i, chrom in enumerate(CHROMOSOMES)}
+
+ES_TYPE_MAP = {
+    int: 'integer',
+    float: 'double',
+    str: 'keyword',
+    bool: 'boolean',
+}
+ES_FIELD_TYPLE_MAP = {
+    'xpos': 'long',
+    'xstart': 'long',
+    'xstop': 'long',
+}
+ES_INDEX_TYPE = 'structural_variant'
+NUM_SHARDS = 6
+
 
 def get_sample_subset(sample_subset_file):
     with open(sample_subset_file, 'r') as f:
+      
         header = f.readline()
         if header.strip() != 's':
             raise Exception('Missing header for sample subset file, expected "s" but found {}'.format(header))
@@ -191,33 +221,129 @@ def add_transcripts(svs, gencode_file_path):
                 sv[TRANSCRIPTS_FIELD].append(transcript_info)
 
 
-def load_data(input_dataset, sample_subset_file, gencode_file_path, ignore_missing_samples=False):
-    sample_subset = get_sample_subset(sample_subset_file)
-    print('Subsetting to {} samples'.format(len(sample_subset)))
-    # TODO remap sample ids
+def format_sv(sv):
+    sv[GENES_FIELD] = list({transcript['gene_id'] for transcript in sv[TRANSCRIPTS_FIELD]})
+    sv['pos'] = sv[START_COL]
+    sv['xpos'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[START_COL]
+    sv['xstart'] = sv['xpos']
+    sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
+    sv['samples'] = []
+    for genotype in sv[GENOTYPES_FIELD]:
+        sample_id = genotype['sample_id']
+        sv['samples'].append(sample_id)
 
-    print('Parsing BED file')
-    parsed_svs = subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples=ignore_missing_samples)
-    print('Found {} SVs'.format(len(parsed_svs)))
+        cn_key = 'samples_cn_{}'.format(genotype['cn'])
+        if cn_key not in sv:
+            sv[cn_key] = []
+        sv[cn_key].append(sample_id)
 
-    print('Adding gene annotations')
-    add_transcripts(parsed_svs, gencode_file_path)
-    for sv in parsed_svs:
-        sv[GENES_FIELD] = list({transcript['gene_id'] for transcript in sv[TRANSCRIPTS_FIELD]})
+        if genotype[QS_FIELD] > 1000:
+            qs_key = 'samples_qs_gt_1000'
+        else:
+            qs_bin = genotype[QS_FIELD] / QS_BIN_SIZE
+            qs_key = 'samples_qs_{}_to_{}'.format(qs_bin * 10, (qs_bin + 1) * 10)
+        if qs_key not in sv:
+            sv[qs_key] = []
+        sv[qs_key].append(sample_id)
 
-    import json
-    for sv in parsed_svs[:5]:
-        print(json.dumps(sv, indent=2))
+        if sv[START_COL] == genotype[START_COL] and sv[END_COL] == genotype[END_COL]:
+            genotype.pop(START_COL)
+            genotype.pop(END_COL)
+
+
+def get_es_schema(all_fields, nested_fields):
+    schema = {
+        key: {'type': ES_FIELD_TYPLE_MAP.get(key) or ES_TYPE_MAP[type(val[0]) if isinstance(val, list) else type(val)]}
+        for key, val in all_fields.items() if key not in nested_fields
+    }
+    for key, val_dict in nested_fields.items():
+        schema[key] = {'type': 'nested', 'properties': get_es_schema(val_dict, {})}
+    return schema
+
+
+def get_es_index_name(project, meta):
+    return '{project}__structural_variants__{sample_type}__grch{genome_version}__{datestamp}'.format(
+        project=project,
+        sample_type=meta['sampleType'],
+        genome_version=meta['genomeVersion'],
+        datestamp=datetime.today().strftime('%Y%m%d'),
+    ).lower()
+
+
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
+    es_client = ElasticsearchClient(host=es_host, port=es_port)
+
+    all_fields = {}
+    nested_fields = {GENOTYPES_FIELD: {}, TRANSCRIPTS_FIELD: {}}
+    for row in rows:
+        all_fields.update(row)
+        for col, val in nested_fields.items():
+            val.update(row[col][0])
+    elasticsearch_schema = get_es_schema(all_fields, nested_fields)
+
+    if es_client.es.indices.exists(index=index_name):
+        print('Deleting existing index')
+        es_client.es.indices.delete(index=index_name)
+
+    print('Setting up index')
+    es_client.create_or_update_mapping(
+        index_name, ES_INDEX_TYPE, elasticsearch_schema, num_shards=NUM_SHARDS, _meta=meta
+    )
+
+    es_client.route_index_to_temp_es_cluster(index_name, True)
+
+    es_actions = [{
+        '_index': index_name,
+        '_type': ES_INDEX_TYPE,
+        '_op_type': ELASTICSEARCH_INDEX,
+        '_id': row[VARIANT_ID_FIELD],
+        '_source': row,
+    } for row in rows]
+
+    print('Starting bulk export')
+    success_count, _ = es_helpers.bulk(es_client.es, es_actions, chunk_size=1000)
+    print('Successfully created {} records'.format(success_count))
+
+    es_client.es.indices.forcemerge(index=index_name)
+
+    es_client.route_index_to_temp_es_cluster(index_name, False)
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('input_dataset', help='input VCF or VDS')
-    p.add_argument('--sample-subset')
+    p.add_argument('--sample-subset')  # TODO get automatically from google cloud
     p.add_argument('--gencode')
     p.add_argument('--ignore-missing-samples', action='store_true')
+    p.add_argument('--project-guid')
+    p.add_argument('--es-host', default='localhost')
+    p.add_argument('--es-port', default='9200')
 
     args = p.parse_args()
 
-    load_data(args.input_dataset, args.sample_subset, args.gencode, ignore_missing_samples=args.ignore_missing_samples)
+    sample_subset = get_sample_subset(args.sample_subset)
+    print('Subsetting to {} samples'.format(len(sample_subset)))
+    # TODO remap sample ids
 
+    print('Parsing BED file')
+    parsed_svs = subset_and_group_svs(args.input_dataset, sample_subset, ignore_missing_samples=args.ignore_missing_samples)
+    print('Found {} SVs'.format(len(parsed_svs)))
+
+    print('Adding gene annotations')
+    add_transcripts(parsed_svs, args.gencode)
+
+    print('\nFormatting for ES export')
+    for sv in tqdm(parsed_svs, unit=' sv records'):
+        format_sv(sv)
+
+    meta = {
+      'gencodeVersion': '33',  # TODO get from file path
+      'genomeVersion': '38',
+      'sampleType': 'WES',
+      'sourceFilePath': args.input_dataset,
+    }
+    index_name = get_es_index_name(args.project_guid, meta)
+    print('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
+    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta)
+
+    print('DONE')
