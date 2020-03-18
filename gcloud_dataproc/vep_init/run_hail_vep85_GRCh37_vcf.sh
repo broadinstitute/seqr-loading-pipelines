@@ -4,7 +4,7 @@ file=$1
 
 export PERL5LIB=/vep/loftee
 
-/perl.sh /vep/variant_effect_predictor/variant_effect_predictor.pl \
+perl /vep/variant_effect_predictor/variant_effect_predictor.pl \
 -i $file \
 --format vcf \
   --vcf \
