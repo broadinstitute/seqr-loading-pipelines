@@ -13,26 +13,56 @@ $ pip install nose
 $ PYTHONPATH=.. nosetests
 ```
 
+### Running Locally
+
+```
+$ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
+    --source-paths  gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
+    --genome-version 37 \
+    --sample-type WES \
+    --dest-path gs://seqr-datasets/GRCh37/1kg/1kg.mt \
+    --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
+    --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
+    --es-host 100.15.0.1 \
+    --es-index new-es-index-name \ 
+    --es-index-min-num-shards 3
+```
+Run `PYTHONPATH=.. python3 seqr_loading.py SeqrMTToESTask --help` for a description of these args.
+Optionally, any of these parameters can also be set via config file instead of on the command line. 
+`configs/luigi.cfg` provides an example. The `LUIGI_CONFIG_PATH` environment variable can be used to specify the config file path:
+```
+LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg
+```
+
+## Running on GCE Dataproc
+### Create a cluster
+
+Installing [hail](http://hail.is) also installs the hailctl utility which makes it easy to start up Dataproc clusters 
+and submitting jobs to them.   
+```
+$ hailctl dataproc start \
+    --pkgs luigi,google-api-python-client \
+    --vep GRCh37 \
+    --max-idle 30m \
+    --num-workers 2 \
+    --num-preemptible-workers 12 \
+    seqr-loading-cluster
+```
+
 ### Run
-```
-$ LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg python seqr_loading.py SeqrMTToESTask --local-scheduler
-```
 
-## GCE
-### Setup
-- Install https://github.com/Nealelab/cloudtools
+This command is identical to the one under Running Locally, except the script is submitted to Dataproc. 
 ```
-$ cluster start seqr-loading-dev --num-workers 2 --pkgs luigi,google-api-python-client --max-idle 60m --vep
-```
-
-### Run
-```
-$ cluster submit seqr-loading-dev seqr_loading.py --pyfiles lib,../hail_scripts --files configs/luigi.cfg --args "SeqrMTToESTask --local-scheduler"
-```
-
-### Run with dataproc and ES wrapper
-We use a ported `load_dataset_v02.py` wrapper to spin up dataproc and ES nodes.
-Sample run:
-```
-PYTHONPATH=.. ./load_dataset_v02.py --num-workers 2 --num-preemptible-workers 0 --genome-version 37 test  --project-guid test --use-temp-loading-nodes --k8s-cluster-name my-k8s-test --cluster-name dataproc-test --num-temp-loading-nodes 2 --create-persistent-es-nodes
+$ hailctl dataproc submit seqr-loading-cluster \
+    seqr_loading.py --pyfiles "lib,../hail_scripts" \
+    SeqrMTToESTask --local-scheduler \
+    --source-paths gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
+    --genome-version 37 \
+    --sample-type WES \
+    --dest-path gs://seqr-datasets/GRCh37/1kg/1kg.mt \
+    --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
+    --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
+    --es-host 100.15.0.1 \
+    --es-index new-es-index-name \ 
+    --es-index-min-num-shards 3
 ```
