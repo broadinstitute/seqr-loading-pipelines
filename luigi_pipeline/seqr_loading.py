@@ -1,11 +1,11 @@
 import logging
+import os
 import pkg_resources
 import sys
 
 import luigi
 import hail as hl
 
-from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
 from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
@@ -121,23 +121,60 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
 
 class SeqrMTToESTask(HailElasticSearchTask):
-    dest_file = luigi.Parameter()
+    source_paths = luigi.Parameter(description='Path or list of paths of VCFs to be loaded.')
+    dest_path = luigi.Parameter(description='Path to write the matrix table.')
+    genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
+    vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner to annotate vep.')
+
+    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
+    clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
+    hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
+    sample_type = luigi.ChoiceParameter(default=None, choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
+    validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
+    subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.
+        kwargs['source_path'] = self.dest_path
         super().__init__(*args, **kwargs)
 
+        self.completed_marker_path = os.path.join(self.dest_path, '_EXPORTED_TO_ES')
+
     def requires(self):
-        return [SeqrVCFToMTTask()]
+        return [SeqrVCFToMTTask(
+            source_paths=self.source_paths,
+            dest_path=self.dest_path,
+            genome_version=self.genome_version,
+            vep_runner=self.vep_runner,
+            reference_ht_path=self.reference_ht_path,
+            clinvar_ht_path=self.clinvar_ht_path,
+            hgmd_ht_path=self.hgmd_ht_path,
+            sample_type=self.sample_type,
+            validate=self.validate,
+            dataset_type=self.dataset_type,
+            remap_path=self.remap_path,
+            subset_path=self.subset_path,
+        )]
 
     def output(self):
         # TODO: Use https://luigi.readthedocs.io/en/stable/api/luigi.contrib.esindex.html.
-        return GCSorLocalTarget(filename=self.dest_file)
+        return GCSorLocalTarget(filename=self.completed_marker_path)
+
+    def complete(self):
+        # Complete is called by Luigi to check if the task is done and will skip if it is.
+        # By default it checks to see that the output exists, but we want to check for the
+        # _EXPORTED_TO_ES file to make sure it was not terminated halfway.
+        return GCSorLocalTarget(filename=self.completed_marker_path).exists()
 
     def run(self):
         mt = self.import_mt()
         row_table = SeqrVariantsAndGenotypesSchema.elasticsearch_row(mt)
         self.export_table_to_elasticsearch(row_table, self._mt_num_shards(mt))
+
+        with hl.hadoop_open(self.completed_marker_path, "w") as f:
+            f.write(".")
 
         self.cleanup()
 
