@@ -15,6 +15,7 @@ $ PYTHONPATH=.. nosetests
 
 ### Running Locally
 
+Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` directory.
 ```
 $ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
     --source-paths  gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
@@ -38,7 +39,7 @@ LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg
 ### Create a cluster
 
 Installing [hail](http://hail.is) also installs the hailctl utility which makes it easy to start up Dataproc clusters 
-and submitting jobs to them.   
+and submitting jobs to them. 
 ```
 $ hailctl dataproc start \
     --pkgs luigi,google-api-python-client \
@@ -52,6 +53,8 @@ $ hailctl dataproc start \
 ### Run
 
 This command is identical to the one under Running Locally, except the script is submitted to Dataproc. 
+Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` directory.
+
 ```
 $ hailctl dataproc submit seqr-loading-cluster \
     seqr_loading.py --pyfiles "lib,../hail_scripts" \
