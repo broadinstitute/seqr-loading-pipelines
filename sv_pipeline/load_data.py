@@ -125,10 +125,15 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices):
     sv[NUM_EXON_COL] = max(sv.get(NUM_EXON_COL, 0), sample_info[NUM_EXON_COL])
 
 
-def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
+def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, write_subsetted_bed=False):
     parsed_svs_by_name = {}
     found_samples = set()
     skipped_samples = set()
+    out_file = None
+    if write_subsetted_bed:
+        file_path = input_dataset.split('/')
+        file_path[-1] = 'subset_{}'.format(file_path[-1])
+        out_file = open('/'.join(file_path), 'w')
     with open(input_dataset, 'r') as f:
         header_indices = {col: i for i, col in enumerate(f.readline().split())}
         missing_cols = [col for col in COLUMNS if col not in header_indices]
@@ -141,8 +146,12 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
             if sample_id in sample_subset:
                 parse_sv_row(row, parsed_svs_by_name, header_indices)
                 found_samples.add(sample_id)
+                if out_file:
+                    out_file.write(line)
             else:
                 skipped_samples.add(sample_id)
+    if out_file:
+        out_file.close()
 
     print('Found {} sample ids'.format(len(found_samples)))
     if len(found_samples) != len(sample_subset):
@@ -322,6 +331,7 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('input_dataset', help='input VCF or VDS')
     p.add_argument('--sample-subset')  # TODO get automatically from google cloud
+    p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--gencode')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid')
@@ -335,7 +345,12 @@ if __name__ == '__main__':
     # TODO remap sample ids
 
     print('Parsing BED file')
-    parsed_svs = subset_and_group_svs(args.input_dataset, sample_subset, ignore_missing_samples=args.ignore_missing_samples)
+    parsed_svs = subset_and_group_svs(
+        args.input_dataset,
+        sample_subset,
+        ignore_missing_samples=args.ignore_missing_samples,
+        write_subsetted_bed= args.write_subsetted_bed
+    )
     print('Found {} SVs'.format(len(parsed_svs)))
 
     print('Adding gene annotations')
