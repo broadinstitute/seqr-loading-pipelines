@@ -36,6 +36,7 @@ QS_FIELD = 'qs'
 GENES_FIELD = 'geneIds'
 TRANSCRIPTS_FIELD = 'sortedTranscriptConsequences'
 VARIANT_ID_FIELD = 'variantId'
+CALL_FIELD = 'svType'
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
@@ -44,7 +45,7 @@ COL_CONFIGS = {
     SC_COL: {'format': int},
     SF_COL: {'format': float},
     VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}'.format(val, call)},
-    CALL_COL: {'field_name': 'transcriptConsequenceTerms', 'format': lambda val: [val]},
+    CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
     END_COL: {'format': int},
     QS_COL: {'field_name': QS_FIELD, 'format': int},
@@ -106,7 +107,9 @@ def get_parsed_column_values(row, header_indices, columns):
 
 
 def parse_sv_row(row, parsed_svs_by_id, header_indices):
-    variant_id = get_field_val(row, VAR_NAME_COL, header_indices, format_kwargs={'call': row[header_indices[CALL_COL]]})
+    variant_id = get_field_val(
+        row, VAR_NAME_COL, header_indices, format_kwargs={'call': get_field_val(row, CALL_COL, header_indices)},
+    )
     if variant_id not in parsed_svs_by_id:
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
@@ -119,6 +122,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices):
     # Use the largest coordinates for the merged SV
     sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
     sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
+    sv[NUM_EXON_COL] = max(sv.get(NUM_EXON_COL, 0), sample_info[NUM_EXON_COL])
 
 
 def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
@@ -149,7 +153,7 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples):
         if ignore_missing_samples:
             print(missing_sample_error)
         else:
-            missing_sample_error += '\nSkipped samples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
+            missing_sample_error += '\nSamples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
             raise Exception(missing_sample_error)
 
     return parsed_svs_by_name.values()
@@ -223,6 +227,8 @@ def add_transcripts(svs, gencode_file_path):
 
 def format_sv(sv):
     sv[GENES_FIELD] = list({transcript['gene_id'] for transcript in sv[TRANSCRIPTS_FIELD]})
+    sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
+    sv['sn'] = int(sv[SC_COL] / sv[SF_COL])
     sv['pos'] = sv[START_COL]
     sv['xpos'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[START_COL]
     sv['xstart'] = sv['xpos']
@@ -249,6 +255,9 @@ def format_sv(sv):
         if sv[START_COL] == genotype[START_COL] and sv[END_COL] == genotype[END_COL]:
             genotype.pop(START_COL)
             genotype.pop(END_COL)
+
+        if sv[NUM_EXON_COL] == genotype[NUM_EXON_COL]:
+            genotype.pop(NUM_EXON_COL)
 
 
 def get_es_schema(all_fields, nested_fields):
