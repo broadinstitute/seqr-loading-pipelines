@@ -20,13 +20,14 @@ START_COL = 'start'
 END_COL = 'end'
 QS_COL = 'QS'
 CN_COL = 'CN'
-CALL_COL = 'call'
+CALL_COL = 'svtype'
 SAMPLE_COL = 'sample'
 NUM_EXON_COL = 'num_exon'
 DEFRAGGED_COL = 'defragged'
 SC_COL = 'sc'
 SF_COL = 'sf'
 VAR_NAME_COL = 'var_name'
+IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
 SAMPLE_ID_FIELD = 'sample_id'
@@ -52,13 +53,14 @@ COL_CONFIGS = {
     CN_COL: {'field_name': CN_FIELD, 'format': int},
     NUM_EXON_COL: {'format': int},
     DEFRAGGED_COL: {'format': lambda val: BOOL_MAP[val]},
+    IN_SILICO_COL: {'field_name': 'StrVCTVRE_score', 'format': float, 'allow_missing': True},
     SAMPLE_COL: {
         'field_name': SAMPLE_ID_FIELD,
         'format': lambda val: re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', val).group('sample_id'),
     },
 }
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
 
@@ -95,6 +97,11 @@ def get_sample_subset(sample_subset_file):
 
 
 def get_field_val(row, col, header_indices, format_kwargs=None):
+    index = header_indices[col]
+    if index > len(row):
+        if COL_CONFIGS[col].get('allow_missing'):
+            return None
+        raise IndexError('Column "{}" is missing from row {}'.format(col, row))
     val = row[header_indices[col]]
     format_func = COL_CONFIGS[col].get('format')
     if format_func:
