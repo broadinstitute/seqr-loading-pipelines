@@ -16,6 +16,11 @@ $ PYTHONPATH=.. nosetests
 ### Running Locally
 
 Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` directory.
+Also, modify arguments and update the --dest-path to a path where you have write access.
+Finally, for hail to be able to read or write to google storage buckets, install the Google Cloud Storage connector by running this install script
+`python3 -m pip install git+https://github.com/bw2/hail-utils.git` or if that fails for some reason, then [manually](https://cloud.google.com/dataproc/docs/concepts/connectors/install-storage-connector).
+
+Then, to run the pipeline:
 ```
 $ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
     --source-paths  gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
@@ -28,6 +33,7 @@ $ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
     --es-index new-es-index-name \ 
     --es-index-min-num-shards 3
 ```
+
 Run `PYTHONPATH=.. python3 seqr_loading.py SeqrMTToESTask --help` for a description of these args.
 Optionally, any of these parameters can also be set via config file instead of on the command line. 
 `configs/luigi.cfg` provides an example. The `LUIGI_CONFIG_PATH` environment variable can be used to specify the config file path:
