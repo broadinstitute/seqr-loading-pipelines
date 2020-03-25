@@ -4,14 +4,20 @@ import argparse
 import getpass
 import multiprocessing
 import os
-import shlex
+import sys
 import socket
 import subprocess
+
+try:
+    from pyspark.find_spark_home import _find_spark_home
+    default_spark_home = _find_spark_home()
+except:
+    default_spark_home = os.environ.get("SPARK_HOME")
 
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--run-locally", action="store_true", help="Run using a local hail install instead of submitting to dataproc. Assumes 'spark-submit' is on $PATH.")
-p.add_argument("--spark-home", default=os.environ.get("SPARK_HOME"), help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
+p.add_argument("--spark-home", default=default_spark_home, help="The local spark directory (default: $SPARK_HOME). Required for --run-locally")
 p.add_argument("--cpu-limit", help="How many CPUs to use when running locally. Defaults to all available CPUs.", type=int)
 p.add_argument("--driver-memory", help="Spark driver memory limit when running locally")
 p.add_argument("--executor-memory", help="Spark executor memory limit when running locally")
@@ -29,7 +35,7 @@ else:
     hail_jar = "hail_builds/v02/hail-0.2-3a68be23cb82d7c7fb5bf72668edcd1edf12822e-Spark-2.4.0.jar"
 
 script = args.script
-script_args = " ".join([shlex.quote(arg) for arg in unparsed_args])
+script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
 if "load_dataset_to_es" in script:
     username = getpass.getuser()
