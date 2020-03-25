@@ -137,7 +137,7 @@ def _create_dataproc_cluster(dataproc_cluster_name, genome_version, num_workers=
 
 def _create_dataproc_cluster_v02(dataproc_cluster_name, genome_version, num_workers=2, num_preemptible_workers=12):
     run(f"hailctl dataproc start %(dataproc_cluster_name)s --num-workers %(num_workers)s --pkgs luigi,google-api-python-client "
-        "--num-preemptible-workers %(num_preemptible_workers)s --max-idle 30m --vep GRCh%(genome_version)s" % locals(),
+        "--num-secondary-workers %(num_preemptible_workers)s --max-idle 30m --vep GRCh%(genome_version)s" % locals(),
         errors_to_ignore=["Already exists"])
 
 def _process_kubernetes_configs(action, config_paths, settings):
