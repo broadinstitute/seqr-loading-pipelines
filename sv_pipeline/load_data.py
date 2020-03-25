@@ -254,7 +254,7 @@ def format_sv(sv):
         sample_id = genotype['sample_id']
         sv['samples'].append(sample_id)
 
-        cn_key = 'samples_cn_{}'.format(genotype['cn']) if genotype['cn'] < 5 else 'samples_cn_gte_4'
+        cn_key = 'samples_cn_{}'.format(genotype['cn']) if genotype['cn'] < 4 else 'samples_cn_gte_4'
         if cn_key not in sv:
             sv[cn_key] = []
         sv[cn_key].append(sample_id)
@@ -287,7 +287,6 @@ def get_es_schema(all_fields, nested_fields):
 
 
 def get_es_index_name(project, meta):
-    return 'r0474_cmg_sherr_exomes__structural_variants__wes__grch38__20200317'
     return '{project}__structural_variants__{sample_type}__grch{genome_version}__{datestamp}'.format(
         project=project,
         sample_type=meta['sampleType'],
