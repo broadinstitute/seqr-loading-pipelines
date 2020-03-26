@@ -186,6 +186,9 @@ class HailElasticSearchTask(luigi.Task):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.es_index != self.es_index.lower():
+            raise Exception(f"Invalid es_index name [{self.es_index}], must be lowercase")
+            
         self._es = ElasticsearchClient(host=self.es_host, port=self.es_port)
 
     def requires(self):
