@@ -1,6 +1,7 @@
 import logging
 import os
 import pkg_resources
+import pprint
 import sys
 
 import luigi
@@ -38,6 +39,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         self.read_vcf_write_mt()
 
     def read_vcf_write_mt(self, schema_cls=SeqrVariantsAndGenotypesSchema):
+        logger.info("Args:")
+        pprint.pprint(self.__dict__)
+
         mt = self.import_vcf()
         mt = self.annotate_old_and_split_multi_hts(mt)
         if self.validate:
@@ -159,6 +163,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
             dataset_type=self.dataset_type,
             remap_path=self.remap_path,
             subset_path=self.subset_path,
+            vep_config_json_path=self.vep_config_json_path,
         )]
 
     def output(self):
