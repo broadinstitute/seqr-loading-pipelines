@@ -24,13 +24,15 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     hgmd_ht_path = luigi.Parameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
-    validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
+    validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
                                          description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
                                           description="Path to a tsv file with one column of sample IDs: s.")
+    vep_config_json_path = luigi.OptionalParameter(default=None,
+                                        description="Path of hail vep config .json file")
 
     def run(self):
         self.read_vcf_write_mt()
@@ -44,7 +46,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
             mt = self.subset_samples_and_variants(mt, self.subset_path)
-        mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner)
+        mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner, vep_config_json_path=self.vep_config_json_path)
 
         ref_data = hl.read_table(self.reference_ht_path)
         clinvar = hl.read_table(self.clinvar_ht_path)
@@ -130,10 +132,11 @@ class SeqrMTToESTask(HailElasticSearchTask):
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default=None, choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
-    validate = luigi.BoolParameter(default=True, description='Perform validation on the dataset.')
+    validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
+    vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.

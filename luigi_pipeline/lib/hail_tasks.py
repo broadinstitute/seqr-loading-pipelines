@@ -105,13 +105,13 @@ class HailMatrixTableTask(luigi.Task):
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
 
-    def run_vep(mt, genome_version, runner='VEP'):
+    def run_vep(mt, genome_version, runner='VEP', vep_config_json_path=None):
         runners = {
             'VEP': vep_runners.HailVEPRunner,
             'DUMMY': vep_runners.HailVEPDummyRunner
         }
 
-        return runners[runner]().run(mt, genome_version)
+        return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
     @staticmethod
     def subset_samples_and_variants(mt, subset_path):
@@ -188,7 +188,7 @@ class HailElasticSearchTask(luigi.Task):
         super().__init__(*args, **kwargs)
         if self.es_index != self.es_index.lower():
             raise Exception(f"Invalid es_index name [{self.es_index}], must be lowercase")
-            
+
         self._es = ElasticsearchClient(host=self.es_host, port=self.es_port)
 
     def requires(self):
