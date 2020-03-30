@@ -371,6 +371,7 @@ if __name__ == '__main__':
       'gencodeVersion': '33',  # TODO get from file path
       'genomeVersion': '38',
       'sampleType': 'WES',
+      'datasetType': 'SV',
       'sourceFilePath': args.input_dataset,
     }
     index_name = get_es_index_name(args.project_guid, meta)
