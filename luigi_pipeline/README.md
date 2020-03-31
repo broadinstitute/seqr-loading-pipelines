@@ -63,15 +63,15 @@ Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` director
 
 ```
 $ hailctl dataproc submit seqr-loading-cluster \
-    seqr_loading.py --pyfiles "lib,../hail_scripts" \
-    SeqrMTToESTask --local-scheduler \
-    --source-paths gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
-    --genome-version 37 \
-    --sample-type WES \
-    --dest-path gs://seqr-datasets/GRCh37/1kg/1kg.mt \
-    --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
-    --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
-    --es-host 100.15.0.1 \
-    --es-index new-es-index-name \ 
-    --es-index-min-num-shards 3
-```
+       seqr_loading.py --pyfiles "lib,../hail_scripts" \
+       SeqrMTToESTask --local-scheduler \
+       --source-paths gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
+       --genome-version 37 \
+       --sample-type WES \
+       --dest-path gs://seqr-datasets/GRCh37/1kg/1kg.mt \
+       --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
+       --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
+       --es-host 100.15.0.1 \
+       --es-index new-es-index-name \ 
+       --es-index-min-num-shards 3
+   ```
