@@ -13,6 +13,11 @@ from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, Seq
 logger = logging.getLogger(__name__)
 
 
+def check_if_path_exists(path, label=""):
+    if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
+        raise ValueError(f"{label} path not found: {path}")
+
+
 class SeqrValidationError(Exception):
     pass
 
@@ -36,6 +41,16 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                         description="Path of hail vep config .json file")
 
     def run(self):
+        # first validate paths
+        for source_path in self.source_paths:
+            check_if_path_exists(source_path, "source_path")
+        check_if_path_exists(self.reference_ht_path, "reference_ht_path")
+        if self.clinvar_ht_path: check_if_path_exists(self.clinvar_ht_path, "clinvar_ht_path")
+        if self.hgmd_ht_path: check_if_path_exists(self.hgmd_ht_path, "hgmd_ht_path")
+        if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
+        if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
+        if self.vep_config_json_path: check_if_path_exists(self.vep_config_json_path, "vep_config_json_path")
+
         self.read_vcf_write_mt()
 
     def read_vcf_write_mt(self, schema_cls=SeqrVariantsAndGenotypesSchema):
@@ -132,10 +147,10 @@ class SeqrMTToESTask(HailElasticSearchTask):
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner to annotate vep.')
 
-    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
+    reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
-    sample_type = luigi.ChoiceParameter(default=None, choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
+    sample_type = luigi.ChoiceParameter(default=None, description='Sample type, WGS or WES', var_type=str)
     validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
