@@ -150,7 +150,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
-    sample_type = luigi.ChoiceParameter(default=None, description='Sample type, WGS or WES', var_type=str)
+    sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
     validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
