@@ -24,8 +24,7 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
 
 
 def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTable:
-    """Downloads the latest clinvar VCF from the NCBI FTP server, copies it to HDFS and returns the hdfs file path
-    as well the clinvar release date that's specified in the VCF header.
+    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
     Args:
         genome_version (str): "37" or "38"
@@ -36,13 +35,11 @@ def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTabl
 
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
     local_tmp_file_path = "/tmp/clinvar.vcf.gz"
-    clinvar_vcf_hdfs_path = "/" + os.path.basename(local_tmp_file_path)
 
     subprocess.run(["wget", clinvar_url, "-O", local_tmp_file_path], check=True)
-    subprocess.run(["hdfs", "dfs", "-cp", "-f", f"file://{local_tmp_file_path}", clinvar_vcf_hdfs_path], check=True)
 
     clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path)
-    mt = import_vcf(clinvar_vcf_hdfs_path, genome_version, drop_samples=True, min_partitions=2000, skip_invalid_loci=True)
+    mt = import_vcf(local_tmp_file_path, genome_version, drop_samples=True, min_partitions=2000, skip_invalid_loci=True)
     mt = mt.annotate_globals(version=clinvar_release_date)
 
     return mt
