@@ -142,7 +142,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
 
 class SeqrMTToESTask(HailElasticSearchTask):
-    source_paths = luigi.Parameter(description='Path or list of paths of VCFs to be loaded.')
+    source_paths = luigi.Parameter(default="[]", description='Path or list of paths of VCFs to be loaded.')
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner to annotate vep.')
