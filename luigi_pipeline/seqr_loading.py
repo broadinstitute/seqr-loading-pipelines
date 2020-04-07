@@ -30,7 +30,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     hgmd_ht_path = luigi.Parameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
-    validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
+    dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
+                                                    'genome version and WGS vs. WES sample type.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
                                          description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None,
@@ -59,7 +60,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         mt = self.import_vcf()
         mt = self.annotate_old_and_split_multi_hts(mt)
-        if self.validate:
+        if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
@@ -151,7 +152,8 @@ class SeqrMTToESTask(HailElasticSearchTask):
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
-    validate = luigi.BoolParameter(default=False, description='Perform validation on the dataset.')
+    dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
+                                                    'genome version and WGS vs. WES sample type.')
     dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
@@ -174,7 +176,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
             clinvar_ht_path=self.clinvar_ht_path,
             hgmd_ht_path=self.hgmd_ht_path,
             sample_type=self.sample_type,
-            validate=self.validate,
+            dont_validate=self.dont_validate,
             dataset_type=self.dataset_type,
             remap_path=self.remap_path,
             subset_path=self.subset_path,
