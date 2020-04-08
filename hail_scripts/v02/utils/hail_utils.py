@@ -119,14 +119,9 @@ def run_vep(
         config = vep_config_json_path
         mt = mt.annotate_globals(gencodeVersion="unknown")
     else:
-        if genome_version == "37":
-            mt = mt.annotate_globals(gencodeVersion="19")  # see gs://hail-common/vep/vep/homo_sapiens/85_GRCh38/info.txt
-            config = "gs://hail-us-vep/vep85-loftee-gcloud.json"
-        elif genome_version == "38":
-            mt = mt.annotate_globals(gencodeVersion="25")
-            config = "gs://hail-us-vep/vep95-GRCh38-loftee-gcloud.json"
-        else:
+        if genome_version not in ["37", "38"]:
             raise ValueError(f"Invalid genome version: {genome_version}")
+        config = "/vep_data/vep-gcloud.json"
 
     mt = hl.vep(mt, config=config, name=name, block_size=block_size)
 
