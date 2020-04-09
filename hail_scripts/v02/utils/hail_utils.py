@@ -121,7 +121,7 @@ def run_vep(
     else:
         if genome_version not in ["37", "38"]:
             raise ValueError(f"Invalid genome version: {genome_version}")
-        config = "/vep_data/vep-gcloud.json"
+        config = "file:///vep_data/vep-gcloud.json"
 
     mt = hl.vep(mt, config=config, name=name, block_size=block_size)
 
