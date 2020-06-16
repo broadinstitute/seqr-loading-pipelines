@@ -59,7 +59,11 @@ COL_CONFIGS = {
     CN_COL: {'field_name': CN_FIELD, 'format': int},
     NUM_EXON_COL: {'format': int},
     DEFRAGGED_COL: {'format': lambda val: BOOL_MAP[val]},
-    IN_SILICO_COL: {'field_name': 'StrVCTVRE_score', 'format': float, 'allow_missing': True},
+    IN_SILICO_COL: {
+        'field_name': 'StrVCTVRE_score',
+        'format': lambda val: None if val == 'not_exonic' else float(val),
+        'allow_missing': True,
+    },
     SAMPLE_COL: {
         'field_name': SAMPLE_ID_FIELD,
         'format': lambda val: re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', val).group('sample_id'),
@@ -70,6 +74,8 @@ COL_CONFIGS = {
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, GENES_COL]
 SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
+
+IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
 
 QS_BIN_SIZE = 10
 
@@ -117,14 +123,18 @@ def get_field_val(row, col, header_indices, format_kwargs=None):
     return val
 
 
+def get_variant_id(row, header_indices):
+    return get_field_val(
+        row, VAR_NAME_COL, header_indices, format_kwargs={'call': get_field_val(row, CALL_COL, header_indices)},
+    )
+
+
 def get_parsed_column_values(row, header_indices, columns):
     return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col, header_indices) for col in columns}
 
 
 def parse_sv_row(row, parsed_svs_by_id, header_indices):
-    variant_id = get_field_val(
-        row, VAR_NAME_COL, header_indices, format_kwargs={'call': get_field_val(row, CALL_COL, header_indices)},
-    )
+    variant_id = get_variant_id(row, header_indices)
     if variant_id not in parsed_svs_by_id:
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
@@ -140,33 +150,51 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices):
     sv[NUM_EXON_COL] = max(sv.get(NUM_EXON_COL, 0), sample_info[NUM_EXON_COL])
 
 
+def load_file(file_path, parse_row, out_file_path=None, columns=None):
+    out_file = None
+    if out_file_path:
+        out_file = open(out_file_path, 'w')
+
+    with open(file_path, 'r') as f:
+        header = f.readline()
+        header_indices = {col: i for i, col in enumerate(header.split())}
+        missing_cols = [col for col in columns or COLUMNS if col not in header_indices]
+        if missing_cols:
+            raise Exception('Missing expected columns: {}'.format(', '.join(missing_cols)))
+        if out_file:
+            out_file.write(header)
+
+        for line in tqdm(f, unit=' rows'):
+            row = line.split()
+            parsed = parse_row(row, header_indices)
+            if parsed and out_file:
+                out_file.write(line)
+
+    if out_file:
+        out_file.close()
+
+
 def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, write_subsetted_bed=False):
     parsed_svs_by_name = {}
     found_samples = set()
     skipped_samples = set()
-    out_file = None
+    out_file_path = None
     if write_subsetted_bed:
         file_path = input_dataset.split('/')
         file_path[-1] = 'subset_{}'.format(file_path[-1])
-        out_file = open('/'.join(file_path), 'w')
-    with open(input_dataset, 'r') as f:
-        header_indices = {col: i for i, col in enumerate(f.readline().split())}
-        missing_cols = [col for col in COLUMNS if col not in header_indices]
-        if missing_cols:
-            raise Exception('Missing expected columns: {}'.format(', '.join(missing_cols)))
+        out_file_path ='/'.join(file_path)
 
-        for line in tqdm(f, unit=' rows'):
-            row = line.split()
-            sample_id = get_field_val(row, SAMPLE_COL, header_indices)
-            if sample_subset is None or sample_id in sample_subset:
-                parse_sv_row(row, parsed_svs_by_name, header_indices)
-                found_samples.add(sample_id)
-                if out_file:
-                    out_file.write(line)
-            else:
-                skipped_samples.add(sample_id)
-    if out_file:
-        out_file.close()
+    def _parse_row(row, header_indices):
+        sample_id = get_field_val(row, SAMPLE_COL, header_indices)
+        if sample_subset is None or sample_id in sample_subset:
+            parse_sv_row(row, parsed_svs_by_name, header_indices)
+            found_samples.add(sample_id)
+            return True
+        else:
+            skipped_samples.add(sample_id)
+            return False
+
+    load_file(input_dataset, _parse_row, out_file_path=out_file_path)
 
     print('Found {} sample ids'.format(len(found_samples)))
     if sample_subset:
@@ -181,13 +209,23 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
                 missing_sample_error += '\nSamples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
                 raise Exception(missing_sample_error)
 
-    return parsed_svs_by_name.values()
+    return parsed_svs_by_name
+
+
+def add_in_silico(svs_by_variant_id, file_path):
+    def _parse_row(row, header_indices):
+        variant_id = get_variant_id(row, header_indices)
+        if variant_id in svs_by_variant_id:
+            svs_by_variant_id[variant_id].update(get_parsed_column_values(row, header_indices, [IN_SILICO_COL]))
+
+    load_file(file_path, _parse_row, columns=IN_SILICO_COLS)
 
 
 def format_sv(sv):
     sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
     sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
-    sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
+    if sv[SF_FIELD]:
+        sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
     sv['xpos'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[START_COL]
     sv['xstart'] = sv['xpos']
@@ -283,6 +321,7 @@ if __name__ == '__main__':
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
+    p.add_argument('--in-silico')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -296,16 +335,18 @@ if __name__ == '__main__':
         print('Subsetting to {} samples'.format(len(sample_subset)))
 
     print('Parsing BED file')
-    parsed_svs = subset_and_group_svs(
+    parsed_svs_by_name = subset_and_group_svs(
         args.input_dataset,
         sample_subset,
         ignore_missing_samples=args.ignore_missing_samples,
         write_subsetted_bed=args.write_subsetted_bed
     )
-    print('Found {} SVs'.format(len(parsed_svs)))
+    print('Found {} SVs'.format(len(parsed_svs_by_name)))
 
     print('Adding in silico predictors')
-    add_in_silico(parsed_svs)
+    add_in_silico(parsed_svs_by_name, args.in_silico)
+
+    parsed_svs = parsed_svs_by_name.values()
 
     print('\nFormatting for ES export')
     for sv in tqdm(parsed_svs, unit=' sv records'):
