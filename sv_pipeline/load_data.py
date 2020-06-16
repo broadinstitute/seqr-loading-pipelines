@@ -30,6 +30,7 @@ DEFRAGGED_COL = 'defragged'
 SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'name'
+GENES_COL = 'genes_Ensemble_ID'
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -63,9 +64,10 @@ COL_CONFIGS = {
         'field_name': SAMPLE_ID_FIELD,
         'format': lambda val: re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', val).group('sample_id'),
     },
+    GENES_COL: {'field_name': GENES_FIELD, 'format': lambda genes: [gene.split('.')[0] for gene in genes.split(',')]},
 }
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, GENES_COL]
 SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
 
@@ -182,74 +184,8 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
     return parsed_svs_by_name.values()
 
 
-def add_transcripts(svs, gencode_file_path):
-    svs.sort(key=lambda sv: (
-        int(sv[CHROM_FIELD]) if sv[CHROM_FIELD].isdigit() else sv[CHROM_FIELD], sv[END_COL], sv[START_COL]
-    ))
-    for sv in svs:
-        sv[TRANSCRIPTS_FIELD] = []
-    current_sv_idx = 0
-    new_chrom = None
-
-    with open(gencode_file_path) as gencode_file:
-        for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
-            line = line.rstrip('\r\n')
-            if not line or line.startswith('#'):
-                continue
-            fields = line.split('\t')
-
-            if fields[GENCODE_TYPE_COL_IDX] != 'transcript':
-                continue
-
-            chrom = fields[GENCODE_CHR_COL_IDX].lstrip('chr')
-            start = int(fields[GENCODE_START_COL_IDX])
-            end = int(fields[GENCODE_END_COL_IDX])
-            transcript_info = None
-
-            if new_chrom:
-                if chrom != new_chrom:
-                    continue
-                else:
-                    new_chrom = None
-
-            while chrom != svs[current_sv_idx][CHROM_FIELD]:
-                current_sv_idx += 1
-                if current_sv_idx == len(svs):
-                    # all SVs have been annotated
-                    return
-
-            while svs[current_sv_idx][END_COL] < start:
-                current_sv_idx += 1
-                if current_sv_idx == len(svs):
-                    # all SVs have been annotated
-                    return
-                if svs[current_sv_idx][CHROM_FIELD] != chrom:
-                    new_chrom = svs[current_sv_idx][CHROM_FIELD]
-                    break
-
-            if new_chrom:
-                continue
-
-            for sv in svs[current_sv_idx:]:
-                if sv[CHROM_FIELD] != chrom or sv[START_COL] > end:
-                    break
-                if not transcript_info:
-                    # Info field in the format "gene_id "ENSG00000223972.5"; transcript_id "ENST00000450305.2"; gene_type ..."
-                    info_fields = {
-                        x.strip().split()[0]: x.strip().split()[1].strip('"')
-                        for x in fields[GENCODE_INFO_COL_IDX].split(';') if x != ''
-                    }
-                    transcript_info = {
-                        'gene_id': info_fields['gene_id'].split('.')[0],
-                        'transcript_id': info_fields['transcript_id'].split('.')[0],
-                        'biotype': info_fields['gene_type'],
-                    }
-
-                sv[TRANSCRIPTS_FIELD].append(transcript_info)
-
-
 def format_sv(sv):
-    sv[GENES_FIELD] = list({transcript['gene_id'] for transcript in sv[TRANSCRIPTS_FIELD]})
+    sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
     sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
     sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
@@ -346,7 +282,6 @@ if __name__ == '__main__':
     p.add_argument('input_dataset', help='input VCF or VDS')
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
-    p.add_argument('--gencode')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
@@ -369,15 +304,14 @@ if __name__ == '__main__':
     )
     print('Found {} SVs'.format(len(parsed_svs)))
 
-    print('Adding gene annotations')
-    add_transcripts(parsed_svs, args.gencode)
+    print('Adding in silico predictors')
+    add_in_silico(parsed_svs)
 
     print('\nFormatting for ES export')
     for sv in tqdm(parsed_svs, unit=' sv records'):
         format_sv(sv)
 
     meta = {
-      'gencodeVersion': '33',  # TODO get from file path
       'genomeVersion': '38',
       'sampleType': 'WES',
       'datasetType': 'SV',
