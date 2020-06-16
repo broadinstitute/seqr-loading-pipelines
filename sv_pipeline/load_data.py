@@ -282,7 +282,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
     all_fields = {}
     nested_fields = {GENOTYPES_FIELD: {}, TRANSCRIPTS_FIELD: {}}
     for row in rows:
-        all_fields.update(row)
+        all_fields.update({k: v for k, v in row.items() if v})
         for col, val in nested_fields.items():
             val.update(row[col][0])
     elasticsearch_schema = get_es_schema(all_fields, nested_fields)
