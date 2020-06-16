@@ -4,10 +4,13 @@ import argparse
 from datetime import datetime
 from elasticsearch import helpers as es_helpers
 import re
+import subprocess
 from tqdm import tqdm
 
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
+
+SAMPLE_SUBSET_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/{project_guid}/{project_guid}_ids.txt'
 
 GENCODE_CHR_COL_IDX = 0
 GENCODE_TYPE_COL_IDX = 2
@@ -24,9 +27,9 @@ CALL_COL = 'svtype'
 SAMPLE_COL = 'sample'
 NUM_EXON_COL = 'num_exon'
 DEFRAGGED_COL = 'defragged'
-SC_COL = 'sc'
-SF_COL = 'sf'
-VAR_NAME_COL = 'var_name'
+SC_COL = 'vac'
+SF_COL = 'vaf'
+VAR_NAME_COL = 'name'
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -36,6 +39,8 @@ CN_FIELD = 'cn'
 QS_FIELD = 'qs'
 GENES_FIELD = 'geneIds'
 TRANSCRIPTS_FIELD = 'sortedTranscriptConsequences'
+SF_FIELD = 'sf'
+SC_FIELD = 'sc'
 VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 
@@ -43,8 +48,8 @@ BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
-    SC_COL: {'format': int},
-    SF_COL: {'format': float},
+    SC_COL: {'field_name': SC_FIELD, 'format': int},
+    SF_COL: {'field_name': SF_FIELD, 'format': float},
     VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}'.format(val, call)},
     CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
@@ -60,7 +65,7 @@ COL_CONFIGS = {
     },
 }
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
 SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
 
@@ -87,13 +92,14 @@ ES_INDEX_TYPE = 'structural_variant'
 NUM_SHARDS = 6
 
 
-def get_sample_subset(sample_subset_file):
-    with open(sample_subset_file, 'r') as f:
-      
-        header = f.readline()
-        if header.strip() != 's':
-            raise Exception('Missing header for sample subset file, expected "s" but found {}'.format(header))
-        return {line.strip() for line in f}
+def get_sample_subset(project_guid):
+    file = SAMPLE_SUBSET_PATH.format(project_guid=project_guid)
+    process = subprocess.Popen(
+        'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    header = next(process.stdout)
+    if header.strip() != 's':
+        raise Exception('Missing header for sample subset file, expected "s" but found {}'.format(header))
+    return {line.strip() for line in process.stdout}
 
 
 def get_field_val(row, col, header_indices, format_kwargs=None):
@@ -150,7 +156,7 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
         for line in tqdm(f, unit=' rows'):
             row = line.split()
             sample_id = get_field_val(row, SAMPLE_COL, header_indices)
-            if sample_id in sample_subset:
+            if sample_subset is None or sample_id in sample_subset:
                 parse_sv_row(row, parsed_svs_by_name, header_indices)
                 found_samples.add(sample_id)
                 if out_file:
@@ -161,16 +167,17 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
         out_file.close()
 
     print('Found {} sample ids'.format(len(found_samples)))
-    if len(found_samples) != len(sample_subset):
-        missed_samples = sample_subset - found_samples
-        missing_sample_error = 'Missing the following {} samples:\n{}'.format(
-            len(missed_samples), ', '.join(sorted(missed_samples))
-        )
-        if ignore_missing_samples:
-            print(missing_sample_error)
-        else:
-            missing_sample_error += '\nSamples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
-            raise Exception(missing_sample_error)
+    if sample_subset:
+        if len(found_samples) != len(sample_subset):
+            missed_samples = sample_subset - found_samples
+            missing_sample_error = 'Missing the following {} samples:\n{}'.format(
+                len(missed_samples), ', '.join(sorted(missed_samples))
+            )
+            if ignore_missing_samples:
+                print(missing_sample_error)
+            else:
+                missing_sample_error += '\nSamples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
+                raise Exception(missing_sample_error)
 
     return parsed_svs_by_name.values()
 
@@ -244,7 +251,7 @@ def add_transcripts(svs, gencode_file_path):
 def format_sv(sv):
     sv[GENES_FIELD] = list({transcript['gene_id'] for transcript in sv[TRANSCRIPTS_FIELD]})
     sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
-    sv['sn'] = int(sv[SC_COL] / sv[SF_COL])
+    sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
     sv['xpos'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[START_COL]
     sv['xstart'] = sv['xpos']
@@ -337,7 +344,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('input_dataset', help='input VCF or VDS')
-    p.add_argument('--sample-subset')  # TODO get automatically from google cloud
+    p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--gencode')
     p.add_argument('--ignore-missing-samples', action='store_true')
@@ -347,16 +354,18 @@ if __name__ == '__main__':
 
     args = p.parse_args()
 
-    sample_subset = get_sample_subset(args.sample_subset)
-    print('Subsetting to {} samples'.format(len(sample_subset)))
-    # TODO remap sample ids
+    if args.skip_sample_subset:
+        sample_subset = None
+    else:
+        sample_subset = get_sample_subset(args.project_guid)
+        print('Subsetting to {} samples'.format(len(sample_subset)))
 
     print('Parsing BED file')
     parsed_svs = subset_and_group_svs(
         args.input_dataset,
         sample_subset,
         ignore_missing_samples=args.ignore_missing_samples,
-        write_subsetted_bed= args.write_subsetted_bed
+        write_subsetted_bed=args.write_subsetted_bed
     )
     print('Found {} SVs'.format(len(parsed_svs)))
 
