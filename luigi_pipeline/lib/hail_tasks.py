@@ -75,8 +75,16 @@ class HailMatrixTableTask(luigi.Task):
 
     def import_vcf(self):
         # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
+        recode = {}
+        if self.genome_version == "38":
+            recode = {f"{i}": f"chr{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
+        elif self.genome_version == "37":
+            recode = {f"chr{i}": f"{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
+
         return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
                              reference_genome='GRCh' + self.genome_version,
+                             skip_invalid_loci=True,
+                             contig_recoding=recode,
                              force_bgz=True, min_partitions=500)
 
     @staticmethod
