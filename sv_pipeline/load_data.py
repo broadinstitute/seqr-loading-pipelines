@@ -25,12 +25,12 @@ QS_COL = 'QS'
 CN_COL = 'CN'
 CALL_COL = 'svtype'
 SAMPLE_COL = 'sample'
-NUM_EXON_COL = 'num_exon'
-DEFRAGGED_COL = 'defragged'
+NUM_EXON_COL = 'genes_any_overlap_totalExons'
+DEFRAGGED_COL = 'defragmented'
 SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'name'
-GENES_COL = 'genes_Ensemble_ID'
+GENES_COL = 'genes_any_overlap_Ensemble_ID'
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -44,6 +44,8 @@ SF_FIELD = 'sf'
 SC_FIELD = 'sc'
 VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
+DEFRAGGED_FIELD = 'defragged'
+NUM_EXON_FIELD = 'num_exon'
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
@@ -57,8 +59,8 @@ COL_CONFIGS = {
     END_COL: {'format': int},
     QS_COL: {'field_name': QS_FIELD, 'format': int},
     CN_COL: {'field_name': CN_FIELD, 'format': int},
-    NUM_EXON_COL: {'format': int},
-    DEFRAGGED_COL: {'format': lambda val: BOOL_MAP[val]},
+    NUM_EXON_COL: {'field_name': NUM_EXON_FIELD, 'format': lambda val: 0 if val == 'NA' else int(val)},
+    DEFRAGGED_COL: {'field_name': DEFRAGGED_FIELD, 'format': lambda val: BOOL_MAP[val]},
     IN_SILICO_COL: {
         'field_name': 'StrVCTVRE_score',
         'format': lambda val: None if val == 'not_exonic' else float(val),
@@ -147,7 +149,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices):
     # Use the largest coordinates for the merged SV
     sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
     sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
-    sv[NUM_EXON_COL] = max(sv.get(NUM_EXON_COL, 0), sample_info[NUM_EXON_COL])
+    sv[NUM_EXON_FIELD] = max(sv.get(NUM_EXON_FIELD, 0), sample_info[NUM_EXON_FIELD])
 
 
 def load_file(file_path, parse_row, out_file_path=None, columns=None):
@@ -206,7 +208,7 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
             if ignore_missing_samples:
                 print(missing_sample_error)
             else:
-                missing_sample_error += '\nSamples in callset:\n{}'.format(', '.join(sorted(skipped_samples)))
+                print('Samples in callset:\n{}'.format(', '.join(sorted(skipped_samples))))
                 raise Exception(missing_sample_error)
 
     return parsed_svs_by_name
@@ -253,8 +255,8 @@ def format_sv(sv):
             genotype.pop(START_COL)
             genotype.pop(END_COL)
 
-        if sv[NUM_EXON_COL] == genotype[NUM_EXON_COL]:
-            genotype.pop(NUM_EXON_COL)
+        if sv[NUM_EXON_FIELD] == genotype[NUM_EXON_FIELD]:
+            genotype.pop(NUM_EXON_FIELD)
 
 
 def get_es_schema(all_fields, nested_fields):
