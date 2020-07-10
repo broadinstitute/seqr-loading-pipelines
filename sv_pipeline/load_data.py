@@ -10,7 +10,7 @@ from tqdm import tqdm
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
-SAMPLE_SUBSET_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/{project_guid}/{project_guid}_ids.txt'
+GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
 GENCODE_CHR_COL_IDX = 0
 GENCODE_TYPE_COL_IDX = 2
@@ -102,14 +102,31 @@ ES_INDEX_TYPE = 'structural_variant'
 NUM_SHARDS = 6
 
 
-def get_sample_subset(project_guid):
-    file = SAMPLE_SUBSET_PATH.format(project_guid=project_guid)
+def _get_gs_samples(project_guid, file_ext, expected_header):
+    file = GS_SAMPLE_PATH.format(project_guid=project_guid, file_ext=file_ext)
     process = subprocess.Popen(
         'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    if process.wait() != 0:
+        return None
     header = next(process.stdout)
-    if header.strip() != 's':
-        raise Exception('Missing header for sample subset file, expected "s" but found {}'.format(header))
-    return {line.strip() for line in process.stdout}
+    if header.strip() != expected_header:
+        raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
+            expected_header, header))
+    return [line.strip().split('\t') for line in process.stdout]
+
+
+def get_sample_subset(project_guid):
+    subset = _get_gs_samples(project_guid, file_ext='ids.txt', expected_header='s')
+    if not subset:
+        raise Exception('No sample subset file found')
+    return {row[0] for row in subset}
+
+
+def get_sample_remap(project_guid):
+    remap = _get_gs_samples(project_guid, file_ext='remap.tsv', expected_header='s\tseqr_id')
+    if remap:
+        remap = {row[0]: row[1] for row in remap}
+    return remap
 
 
 def get_field_val(row, col, header_indices, format_kwargs=None):
@@ -135,7 +152,7 @@ def get_parsed_column_values(row, header_indices, columns):
     return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col, header_indices) for col in columns}
 
 
-def parse_sv_row(row, parsed_svs_by_id, header_indices):
+def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
     variant_id = get_variant_id(row, header_indices)
     if variant_id not in parsed_svs_by_id:
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
@@ -143,6 +160,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices):
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
 
     sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
+    sample_info[SAMPLE_ID_FIELD] = sample_id
 
     sv = parsed_svs_by_id[variant_id]
     sv[GENOTYPES_FIELD].append(sample_info)
@@ -176,7 +194,7 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
         out_file.close()
 
 
-def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, write_subsetted_bed=False):
+def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=False):
     parsed_svs_by_name = {}
     found_samples = set()
     skipped_samples = set()
@@ -188,8 +206,10 @@ def subset_and_group_svs(input_dataset, sample_subset, ignore_missing_samples, w
 
     def _parse_row(row, header_indices):
         sample_id = get_field_val(row, SAMPLE_COL, header_indices)
+        if sample_remap and sample_id in sample_remap:
+            sample_id = sample_remap[sample_id]
         if sample_subset is None or sample_id in sample_subset:
-            parse_sv_row(row, parsed_svs_by_name, header_indices)
+            parse_sv_row(row, parsed_svs_by_name, header_indices, sample_id)
             found_samples.add(sample_id)
             return True
         else:
@@ -330,16 +350,21 @@ if __name__ == '__main__':
 
     args = p.parse_args()
 
-    if args.skip_sample_subset:
-        sample_subset = None
-    else:
+    sample_subset = None
+    sample_remap = None
+    if not args.skip_sample_subset:
         sample_subset = get_sample_subset(args.project_guid)
-        print('Subsetting to {} samples'.format(len(sample_subset)))
+        sample_remap = get_sample_remap(args.project_guid)
+        message = 'Subsetting to {} samples'.format(len(sample_subset))
+        if sample_remap:
+            message += ' (remapping {} samples)'.format(len(sample_remap))
+        print(message)
 
     print('Parsing BED file')
     parsed_svs_by_name = subset_and_group_svs(
         args.input_dataset,
         sample_subset,
+        sample_remap,
         ignore_missing_samples=args.ignore_missing_samples,
         write_subsetted_bed=args.write_subsetted_bed
     )
