@@ -104,7 +104,8 @@ def run_vep(
         mt: hl.MatrixTable,
         genome_version: str,
         name: str = 'vep',
-        block_size: int = 1000) -> hl.MatrixTable:
+        block_size: int = 1000,
+        vep_config_json_path = None) -> hl.MatrixTable:
     """Runs VEP.
 
     :param MatrixTable mt: MT to annotate with VEP
@@ -114,14 +115,13 @@ def run_vep(
     :return: annotated MT
     :rtype: MatrixTable
     """
-    if genome_version == "37":
-        mt = mt.annotate_globals(gencodeVersion="19")  # see gs://hail-common/vep/vep/homo_sapiens/85_GRCh38/info.txt
-        config = "gs://seqr-hail/vep/vep85-loftee-gcloud.json"
-    elif genome_version == "38":
-        mt = mt.annotate_globals(gencodeVersion="25")
-        config = "gs://seqr-hail/vep/vep95-GRCh38-loftee-gcloud.json"
+    if vep_config_json_path is not None:
+        config = vep_config_json_path
+        mt = mt.annotate_globals(gencodeVersion="unknown")
     else:
-        raise ValueError(f"Invalid genome version: {genome_version}")
+        if genome_version not in ["37", "38"]:
+            raise ValueError(f"Invalid genome version: {genome_version}")
+        config = "file:///vep_data/vep-gcloud.json"
 
     mt = hl.vep(mt, config=config, name=name, block_size=block_size)
 

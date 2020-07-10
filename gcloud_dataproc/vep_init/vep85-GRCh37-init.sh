@@ -2,7 +2,8 @@
 
 
 # copy VEP and LoFTEE
-mkdir -p /vep/homo_sapiens /vep/loftee_data_grch37
+mkdir -p /vep/homo_sapiens
+#chmod -R 777 /vep
 
 curl -Lo hail-elasticsearch-pipelines.zip https://github.com/macarthur-lab/hail-elasticsearch-pipelines/archive/master.zip
 unzip -o -d . hail-elasticsearch-pipelines.zip
@@ -14,15 +15,19 @@ cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/1var.vcf /vep/1v
 cp hail-elasticsearch-pipelines-master/gcloud_dataproc/vep_init/run_hail_vep85_GRCh37_vcf.sh /vep/run_hail_vep85_vcf.sh
 chmod a+rx /vep/run_hail_vep85_vcf.sh
 
-gsutil -m cp -r gs://hail-common/vep/vep/ensembl-tools-release-85 /vep
-gsutil -m cp -r gs://hail-common/vep/vep/GRCh37/loftee_data /vep/loftee_data_grch37
-gsutil -m cp -r gs://hail-common/vep/vep/Plugins /vep
-gsutil -m cp -r gs://hail-common/vep/vep/homo_sapiens/85_GRCh37 /vep/homo_sapiens/
+cd /vep
+gsutil -m cp -r gs://seqr-reference-data/vep/ensembl-tools-release-85.zip /vep
+unzip ensembl-tools-release-85.zip
+
+gsutil cat gs://seqr-reference-data/vep_data/loftee-beta/GRCh37.tar | tar xf - -C /vep/
+mv /vep/loftee_data /vep/loftee_data_grch37
+
+gsutil cat gs://seqr-reference-data/vep_data/Plugins.tar | tar xf - -C /vep/
+gsutil cat gs://seqr-reference-data/vep_data/homo-sapiens/85_GRCh37.tar | tar xf - -C /vep/homo_sapiens/
+
 
 # create symlink to vep
 ln -s /vep/ensembl-tools-release-85/scripts/variant_effect_predictor /vep
-
-chmod -R 777 /vep
 
 # install docker - based on https://docs.docker.com/install/linux/docker-ce/debian/#install-using-the-repository
 sudo apt-get update
@@ -61,8 +66,8 @@ EOF
 chmod +x /perl.sh
 
 # copy htslib and samtools
-gsutil cp gs://hail-common/vep/htslib/* /usr/local/sbin/
-gsutil cp gs://hail-common/vep/samtools /usr/local/sbin/
+gsutil cp gs://seqr-reference-data/vep/htslib/* /usr/local/sbin/
+gsutil cp gs://seqr-reference-data/vep/samtools /usr/local/sbin/
 chmod a+rx /usr/local/sbin/tabix
 chmod a+rx /usr/local/sbin/bgzip
 chmod a+rx /usr/local/sbin/htsfile

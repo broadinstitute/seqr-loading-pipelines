@@ -75,8 +75,16 @@ class HailMatrixTableTask(luigi.Task):
 
     def import_vcf(self):
         # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
+        recode = {}
+        if self.genome_version == "38":
+            recode = {f"{i}": f"chr{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
+        elif self.genome_version == "37":
+            recode = {f"chr{i}": f"{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
+
         return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
                              reference_genome='GRCh' + self.genome_version,
+                             skip_invalid_loci=True,
+                             contig_recoding=recode,
                              force_bgz=True, min_partitions=500)
 
     @staticmethod
@@ -105,13 +113,13 @@ class HailMatrixTableTask(luigi.Task):
             ht_stats['match'] = (ht_stats['matched_count']/ht_stats['total_count']) >= threshold
         return stats
 
-    def run_vep(mt, genome_version, runner='VEP'):
+    def run_vep(mt, genome_version, runner='VEP', vep_config_json_path=None):
         runners = {
             'VEP': vep_runners.HailVEPRunner,
             'DUMMY': vep_runners.HailVEPDummyRunner
         }
 
-        return runners[runner]().run(mt, genome_version)
+        return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
     @staticmethod
     def subset_samples_and_variants(mt, subset_path):
@@ -170,6 +178,18 @@ class HailMatrixTableTask(luigi.Task):
         logger.info(f'Remapped {remap_count} sample ids...')
         return mt
 
+    @staticmethod
+    def add_37_coordinates(mt):
+        """Annotates the GRCh38 MT with 37 coordinates using hail's built-in liftover
+        :param mt: MatrixTable from VCF
+        :return: MatrixTable annotated with GRCh37 coordinates
+        """
+        rg37 = hl.get_reference('GRCh37')
+        rg38 = hl.get_reference('GRCh38')
+        rg38.add_liftover('gs://hail-common/references/grch38_to_grch37.over.chain.gz', rg37)
+        mt = mt.annotate_rows(rg37_locus=hl.liftover(mt.locus, 'GRCh37'))
+        return mt
+
 
 class HailElasticSearchTask(luigi.Task):
     """
@@ -186,6 +206,9 @@ class HailElasticSearchTask(luigi.Task):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.es_index != self.es_index.lower():
+            raise Exception(f"Invalid es_index name [{self.es_index}], must be lowercase")
+
         self._es = ElasticsearchClient(host=self.es_host, port=self.es_port)
 
     def requires(self):
