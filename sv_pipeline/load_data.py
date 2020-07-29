@@ -1,36 +1,36 @@
 #!/usr/bin/env python
 
 import argparse
-from datetime import datetime
-from elasticsearch import helpers as es_helpers
+import logging
+import os.path
 import re
 import subprocess
+
+from datetime import datetime
+from elasticsearch import helpers as es_helpers
 from tqdm import tqdm
 
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
-GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
-GENCODE_CHR_COL_IDX = 0
-GENCODE_TYPE_COL_IDX = 2
-GENCODE_START_COL_IDX = 3
-GENCODE_END_COL_IDX = 4
-GENCODE_INFO_COL_IDX = 8
+logger = logging.getLogger()
+
+GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
 CHR_COL = 'chr'
 START_COL = 'start'
 END_COL = 'end'
-QS_COL = 'QS'
-CN_COL = 'CN'
+QS_COL = 'qs'
+CN_COL = 'cn'
 CALL_COL = 'svtype'
 SAMPLE_COL = 'sample'
-NUM_EXON_COL = 'genes_any_overlap_totalExons'
+NUM_EXON_COL = 'genes_any_overlap_totalexons'
 DEFRAGGED_COL = 'defragmented'
 SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'name'
-GENES_COL = 'genes_any_overlap_Ensemble_ID'
+GENES_COL = 'genes_any_overlap_ensemble_id'
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -48,6 +48,23 @@ DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
+SAMPLE_TYPE_MAP = {
+    'WES': 'Exome',
+    'WGS': 'Genome',
+}
+
+def _get_seqr_sample_id(raw_sample_id, sample_type='WES'):
+    """
+    Extract the seqr sample ID from the raw dataset sample id
+
+    :param raw_sample_id: dataset sample id
+    :param sample_type: sample type (WES/WGS)
+    :return: seqr sample id
+    """
+    if sample_type not in SAMPLE_TYPE_MAP:
+        raise Exception('Unsupported sample type {}'.format(sample_type))
+    sample_id_regex = '(\d+)_(?P<sample_id>.+)_v\d_{sample_type}_GCP'.format(sample_type=SAMPLE_TYPE_MAP[sample_type])
+    return re.search(sample_id_regex, raw_sample_id).group('sample_id')
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
@@ -68,14 +85,14 @@ COL_CONFIGS = {
     },
     SAMPLE_COL: {
         'field_name': SAMPLE_ID_FIELD,
-        'format': lambda val: re.search('(\d+)_(?P<sample_id>.+)_v\d_Exome_GCP', val).group('sample_id'),
+        'format': _get_seqr_sample_id,
     },
     GENES_COL: {'field_name': GENES_FIELD, 'format': lambda genes: [gene.split('.')[0] for gene in genes.split(',')]},
 }
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, GENES_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL,  NUM_EXON_COL, DEFRAGGED_COL, SAMPLE_COL]
-COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [VAR_NAME_COL]
+SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, DEFRAGGED_COL]
+COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
 
@@ -99,11 +116,19 @@ ES_FIELD_TYPLE_MAP = {
     'xstop': 'long',
 }
 ES_INDEX_TYPE = 'structural_variant'
-NUM_SHARDS = 6
 
 
-def _get_gs_samples(project_guid, file_ext, expected_header):
-    file = GS_SAMPLE_PATH.format(project_guid=project_guid, file_ext=file_ext)
+def _get_gs_samples(project_guid, file_ext, expected_header, sample_type):
+    """
+    Get sample metadata from files in google cloud
+
+    :param project_guid: seqr project identifier
+    :param file_ext: extension for the desired sample file
+    :param expected_header: expected header to validate file
+    :param sample_type: sample type (WES/WGS)
+    :return: parsed data from the sample file as a list of lists
+    """
+    file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext)
     process = subprocess.Popen(
         'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if process.wait() != 0:
@@ -115,21 +140,44 @@ def _get_gs_samples(project_guid, file_ext, expected_header):
     return [line.strip().split('\t') for line in process.stdout]
 
 
-def get_sample_subset(project_guid):
-    subset = _get_gs_samples(project_guid, file_ext='ids.txt', expected_header='s')
+def get_sample_subset(project_guid, sample_type):
+    """
+    Get sample id subset for a given project
+
+    :param project_guid: seqr project identifier
+    :param sample_type: sample type (WES/WGS)
+    :return: set of sample ids
+    """
+    subset = _get_gs_samples(project_guid, file_ext='ids.txt', sample_type=sample_type, expected_header='s')
     if not subset:
         raise Exception('No sample subset file found')
     return {row[0] for row in subset}
 
 
-def get_sample_remap(project_guid):
-    remap = _get_gs_samples(project_guid, file_ext='remap.tsv', expected_header='s\tseqr_id')
+def get_sample_remap(project_guid, sample_type):
+    """
+    Get an optional remapping for sample ids in the given project
+
+    :param project_guid: seqr project identifier
+    :param sample_type: sample type (WES/WGS)
+    :return: dictionary mapping VCF sample ids to seqr sample ids, or None if no mapping available
+    """
+    remap = _get_gs_samples(project_guid, file_ext='remap.tsv', sample_type=sample_type, expected_header='s\tseqr_id')
     if remap:
         remap = {row[0]: row[1] for row in remap}
     return remap
 
 
 def get_field_val(row, col, header_indices, format_kwargs=None):
+    """
+    Get the parsed output value of a field in the raw data
+
+    :param row: list representing the raw input row
+    :param col: string identifier for the column
+    :param header_indices: mapping of column identifiers to row indices
+    :param format_kwargs: optional arguments to pass to the value formatter
+    :return: parsed value
+    """
     index = header_indices[col]
     if index > len(row):
         if COL_CONFIGS[col].get('allow_missing'):
@@ -143,16 +191,40 @@ def get_field_val(row, col, header_indices, format_kwargs=None):
 
 
 def get_variant_id(row, header_indices):
+    """
+    Get the variant id associated with the given row
+
+    :param row: list representing the raw input row
+    :param header_indices: mapping of column identifiers to row indices
+    :return: variant id
+    """
     return get_field_val(
         row, VAR_NAME_COL, header_indices, format_kwargs={'call': get_field_val(row, CALL_COL, header_indices)},
     )
 
 
 def get_parsed_column_values(row, header_indices, columns):
+    """
+    Get the parsed values from a given row for a given set of columns
+
+    :param row: list representing the raw input row
+    :param header_indices: mapping of column identifiers to row indices
+    :param columns: list of string identifiers for the desired columns
+    :return: dictionary representation of a parsed row
+    """
     return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col, header_indices) for col in columns}
 
 
 def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
+    """
+    Parse the given row into the desired SV output format and add it to the dictionary of parsed SVs
+
+    :param row: list representing the raw input row
+    :param parsed_svs_by_id: dictionary of parsed SVs keyed by ID
+    :param header_indices: mapping of column identifiers to row indices
+    :param sample_id: the sample id for the row
+    :return: none
+    """
     variant_id = get_variant_id(row, header_indices)
     if variant_id not in parsed_svs_by_id:
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
@@ -171,13 +243,22 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
 
 
 def load_file(file_path, parse_row, out_file_path=None, columns=None):
+    """
+    Validate and parse the given file using the given parse functionality
+
+    :param file_path: path to the file for parsing
+    :param parse_row: function to run on each row in the file, returns a boolean indicator if parsing was successful
+    :param out_file_path: optional path to a file to write out the raw rows that were successfully parsed
+    :param columns: expected columns in the input file
+    :return: none
+    """
     out_file = None
     if out_file_path:
         out_file = open(out_file_path, 'w')
 
     with open(file_path, 'r') as f:
         header = f.readline()
-        header_indices = {col: i for i, col in enumerate(header.split())}
+        header_indices = {col.lower(): i for i, col in enumerate(header.split())}
         missing_cols = [col for col in columns or COLUMNS if col not in header_indices]
         if missing_cols:
             raise Exception('Missing expected columns: {}'.format(', '.join(missing_cols)))
@@ -194,18 +275,28 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
         out_file.close()
 
 
-def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=False):
+def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type, ignore_missing_samples, write_subsetted_bed=False):
+    """
+    Parses raw SV calls from the input file into the desired SV output format for samples in the given subset
+
+    :param input_dataset: file path for the raw SV calls
+    :param sample_subset: optional list of samples to subset to
+    :param sample_remap: optional mapping of raw sample ids to seqr sample ids
+    :param sample_type: sample type (WES/WGS)
+    :param ignore_missing_samples: whether or not to fail if samples in the subset have no raw data
+    :param write_subsetted_bed: whether or not to write a bed file with only the subsetted samples
+    :return: dictionary of parsed SVs keyed by ID
+    """
     parsed_svs_by_name = {}
     found_samples = set()
     skipped_samples = set()
     out_file_path = None
     if write_subsetted_bed:
-        file_path = input_dataset.split('/')
-        file_path[-1] = 'subset_{}'.format(file_path[-1])
-        out_file_path ='/'.join(file_path)
+        file_name = 'subset_{}'.format(os.path.basename(input_dataset))
+        out_file_path = os.path.join(os.path.dirname(input_dataset), file_name)
 
     def _parse_row(row, header_indices):
-        sample_id = get_field_val(row, SAMPLE_COL, header_indices)
+        sample_id = get_field_val(row, SAMPLE_COL, header_indices, format_kwargs={'sample_type': sample_type})
         if sample_remap and sample_id in sample_remap:
             sample_id = sample_remap[sample_id]
         if sample_subset is None or sample_id in sample_subset:
@@ -228,13 +319,20 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
             if ignore_missing_samples:
                 print(missing_sample_error)
             else:
-                print('Samples in callset:\n{}'.format(', '.join(sorted(skipped_samples))))
+                print('Samples in callset but skipped:\n{}'.format(', '.join(sorted(skipped_samples))))
                 raise Exception(missing_sample_error)
 
     return parsed_svs_by_name
 
 
 def add_in_silico(svs_by_variant_id, file_path):
+    """
+    Add in silico predictors to the parsed SVs
+
+    :param svs_by_variant_id: dictionary of parsed SVs keyed by ID
+    :param file_path: path to the file with in silico predictors
+    :return: none
+    """
     def _parse_row(row, header_indices):
         variant_id = get_variant_id(row, header_indices)
         if variant_id in svs_by_variant_id:
@@ -244,6 +342,12 @@ def add_in_silico(svs_by_variant_id, file_path):
 
 
 def format_sv(sv):
+    """
+    Post-processing to format SVs for export
+
+    :param sv: parsed SV
+    :return: none
+    """
     sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
     sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
     if sv[SF_FIELD]:
@@ -280,6 +384,13 @@ def format_sv(sv):
 
 
 def get_es_schema(all_fields, nested_fields):
+    """
+    Get the elasticsearch schema based on the given fields
+
+    :param all_fields: mapping of top-level field names to example value
+    :param nested_fields: mapping of nested field name to example value dictionary
+    :return: elasticsearch schema
+    """
     schema = {
         key: {'type': ES_FIELD_TYPLE_MAP.get(key) or ES_TYPE_MAP[type(val[0]) if isinstance(val, list) else type(val)]}
         for key, val in all_fields.items() if key not in nested_fields
@@ -290,6 +401,13 @@ def get_es_schema(all_fields, nested_fields):
 
 
 def get_es_index_name(project, meta):
+    """
+    Get the name for the output ES index
+
+    :param project: seqr project identifier
+    :param meta: index metadata
+    :return: index name
+    """
     return '{project}__structural_variants__{sample_type}__grch{genome_version}__{datestamp}'.format(
         project=project,
         sample_type=meta['sampleType'],
@@ -298,7 +416,18 @@ def get_es_index_name(project, meta):
     ).lower()
 
 
-def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards=6):
+    """
+    Export SV data to elasticsearch
+
+    :param es_host: elasticsearch server host
+    :param es_port: elasticsearch server port
+    :param rows: parsed SV rows to export
+    :param index_name: elasticsearch index name
+    :param meta: index metadata
+    :param num_shards: number of shards for the index
+    :return: none
+    """
     es_client = ElasticsearchClient(host=es_host, port=es_port)
 
     all_fields = {}
@@ -315,7 +444,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
 
     print('Setting up index')
     es_client.create_or_update_mapping(
-        index_name, ES_INDEX_TYPE, elasticsearch_schema, num_shards=NUM_SHARDS, _meta=meta
+        index_name, ES_INDEX_TYPE, elasticsearch_schema, num_shards=num_shards, _meta=meta
     )
 
     es_client.route_index_to_temp_es_cluster(index_name, True)
@@ -337,16 +466,18 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta):
     es_client.route_index_to_temp_es_cluster(index_name, False)
 
 
-if __name__ == '__main__':
+def main():
     p = argparse.ArgumentParser()
-    p.add_argument('input_dataset', help='input VCF or VDS')
+    p.add_argument('input_dataset', help='input BAM file')
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--in-silico')
     p.add_argument('--project-guid')
+    p.add_argument('--sample-type', default='WES')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
+    p.add_argument('--num-shard', default=6)
 
     args = p.parse_args()
 
@@ -358,35 +489,39 @@ if __name__ == '__main__':
         message = 'Subsetting to {} samples'.format(len(sample_subset))
         if sample_remap:
             message += ' (remapping {} samples)'.format(len(sample_remap))
-        print(message)
+        logger.info(message)
 
-    print('Parsing BED file')
+    logger.info('Parsing BED file')
     parsed_svs_by_name = subset_and_group_svs(
         args.input_dataset,
         sample_subset,
         sample_remap,
+        args.sample_type,
         ignore_missing_samples=args.ignore_missing_samples,
         write_subsetted_bed=args.write_subsetted_bed
     )
-    print('Found {} SVs'.format(len(parsed_svs_by_name)))
+    logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
-    print('Adding in silico predictors')
+    logger.info('Adding in silico predictors')
     add_in_silico(parsed_svs_by_name, args.in_silico)
 
     parsed_svs = parsed_svs_by_name.values()
 
-    print('\nFormatting for ES export')
+    logger.info('\nFormatting for ES export')
     for sv in tqdm(parsed_svs, unit=' sv records'):
         format_sv(sv)
 
     meta = {
       'genomeVersion': '38',
-      'sampleType': 'WES',
+      'sampleType': args.sample_type,
       'datasetType': 'SV',
       'sourceFilePath': args.input_dataset,
     }
     index_name = get_es_index_name(args.project_guid, meta)
-    print('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
-    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta)
+    logger.info('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
+    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta, num_shards=args.num_shards)
 
-    print('DONE')
+    logger.info('DONE')
+
+if __name__ == '__main__':
+    main()
