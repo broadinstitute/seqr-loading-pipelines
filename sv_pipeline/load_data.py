@@ -309,7 +309,7 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type
 
     load_file(input_dataset, _parse_row, out_file_path=out_file_path)
 
-    print('Found {} sample ids'.format(len(found_samples)))
+    logger.info('Found {} sample ids'.format(len(found_samples)))
     if sample_subset:
         if len(found_samples) != len(sample_subset):
             missed_samples = sample_subset - found_samples
@@ -317,9 +317,9 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type
                 len(missed_samples), ', '.join(sorted(missed_samples))
             )
             if ignore_missing_samples:
-                print(missing_sample_error)
+                logger.info(missing_sample_error)
             else:
-                print('Samples in callset but skipped:\n{}'.format(', '.join(sorted(skipped_samples))))
+                logger.info('Samples in callset but skipped:\n{}'.format(', '.join(sorted(skipped_samples))))
                 raise Exception(missing_sample_error)
 
     return parsed_svs_by_name
@@ -439,10 +439,10 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
     elasticsearch_schema = get_es_schema(all_fields, nested_fields)
 
     if es_client.es.indices.exists(index=index_name):
-        print('Deleting existing index')
+        logger.info('Deleting existing index')
         es_client.es.indices.delete(index=index_name)
 
-    print('Setting up index')
+    logger.info('Setting up index')
     es_client.create_or_update_mapping(
         index_name, ES_INDEX_TYPE, elasticsearch_schema, num_shards=num_shards, _meta=meta
     )
@@ -457,9 +457,9 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
         '_source': row,
     } for row in rows]
 
-    print('Starting bulk export')
+    logger.info('Starting bulk export')
     success_count, _ = es_helpers.bulk(es_client.es, es_actions, chunk_size=1000)
-    print('Successfully created {} records'.format(success_count))
+    logger.info('Successfully created {} records'.format(success_count))
 
     es_client.es.indices.forcemerge(index=index_name)
 
