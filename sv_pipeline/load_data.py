@@ -110,7 +110,7 @@ ES_TYPE_MAP = {
     str: 'keyword',
     bool: 'boolean',
 }
-ES_FIELD_TYPLE_MAP = {
+ES_FIELD_TYPE_MAP = {
     'xpos': 'long',
     'xstart': 'long',
     'xstop': 'long',
@@ -392,7 +392,7 @@ def get_es_schema(all_fields, nested_fields):
     :return: elasticsearch schema
     """
     schema = {
-        key: {'type': ES_FIELD_TYPLE_MAP.get(key) or ES_TYPE_MAP[type(val[0]) if isinstance(val, list) else type(val)]}
+        key: {'type': ES_FIELD_TYPE_MAP.get(key) or ES_TYPE_MAP[type(val[0]) if isinstance(val, list) else type(val)]}
         for key, val in all_fields.items() if key not in nested_fields
     }
     for key, val_dict in nested_fields.items():
