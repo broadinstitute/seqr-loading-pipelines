@@ -339,3 +339,31 @@ class ElasticsearchClient:
         }
 
         self.es.indices.put_mapping(index=index_name, doc_type=index_type_name, body=index_mapping)
+
+    def route_index_to_temp_es_cluster(self, index_name, to_temp_loading):
+        """Apply shard allocation filtering rules for the given index to elasticsearch data nodes with *loading* in
+        their name:
+
+        If to_temp_loading is True, route new documents in the given index only to nodes named "*loading*".
+        Otherwise, move any shards in this index off of nodes named "*loading*"
+
+        Args:
+            to_temp_loading (bool): whether to route shards in the given index to the "*loading*" nodes, or move
+            shards off of these nodes.
+        """
+        if to_temp_loading:
+            require_name = "es-data-loading*"
+            exclude_name = ""
+        else:
+            require_name = ""
+            exclude_name = "es-data-loading*"
+
+        body = {
+            "index.routing.allocation.require._name": require_name,
+            "index.routing.allocation.exclude._name": exclude_name
+        }
+
+        logger.info("==> Setting {}* settings = {}".format(index_name, body))
+
+        index_arg = "{}*".format(index_name)
+        self.es.indices.put_settings(index=index_arg, body=body)

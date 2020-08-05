@@ -223,7 +223,7 @@ class HailElasticSearchTask(luigi.Task):
 
     def export_table_to_elasticsearch(self, table, num_shards):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
-            lambda: self.route_index_to_temp_es_cluster(True)
+            lambda: self._es.route_index_to_temp_es_cluster(self.es_index, True)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
@@ -232,35 +232,8 @@ class HailElasticSearchTask(luigi.Task):
                                                write_null_values=True)
 
     def cleanup(self):
-        self.route_index_to_temp_es_cluster(False)
+        self._es.route_index_to_temp_es_cluster(self.es_index, False)
 
-    def route_index_to_temp_es_cluster(self, to_temp_loading):
-        """Apply shard allocation filtering rules for the given index to elasticsearch data nodes with *loading* in
-        their name:
-
-        If to_temp_loading is True, route new documents in the given index only to nodes named "*loading*".
-        Otherwise, move any shards in this index off of nodes named "*loading*"
-
-        Args:
-            to_temp_loading (bool): whether to route shards in the given index to the "*loading*" nodes, or move
-            shards off of these nodes.
-        """
-        if to_temp_loading:
-            require_name = "es-data-loading*"
-            exclude_name = ""
-        else:
-            require_name = ""
-            exclude_name = "es-data-loading*"
-
-        body = {
-            "index.routing.allocation.require._name": require_name,
-            "index.routing.allocation.exclude._name": exclude_name
-        }
-
-        logger.info("==> Setting {}* settings = {}".format(self.es_index, body))
-
-        index_arg = "{}*".format(self.es_index)
-        self._es.es.indices.put_settings(index=index_arg, body=body)
 
     def _mt_num_shards(self, mt):
         # The greater of the user specified min shards and calculated based on the variants and samples
