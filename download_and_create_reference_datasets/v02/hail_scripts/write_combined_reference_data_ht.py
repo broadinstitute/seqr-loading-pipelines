@@ -91,11 +91,11 @@ CONFIG = {
     'splice_ai': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
-            'select': {'delta_score': 'info.max_DS'},
+            'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.ht',
-            'select': {'delta_score': 'info.max_DS'},
+            'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
         },
     },
     'topmed': {
