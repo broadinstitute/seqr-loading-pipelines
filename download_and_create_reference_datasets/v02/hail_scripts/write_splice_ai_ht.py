@@ -84,7 +84,7 @@ def run():
         mt = vcf_to_mt(config[0], config[1], version)
 
         # Write mt as a ht to the same directory as the snv source.
-        dest = os.path.join(os.path.dirname(CONFIG[version][0]), "spliceai_scores_8102020.ht")
+        dest = os.path.join(os.path.dirname(CONFIG[version][0]), "spliceai_scores.ht")
         logger.info("===> Writing to %s" % dest)
         ht = mt.rows()
         ht.write(dest)
