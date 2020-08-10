@@ -66,9 +66,6 @@ def _get_seqr_sample_id(raw_sample_id, sample_type='WES'):
     sample_id_regex = '(\d+)_(?P<sample_id>.+)_v\d_{sample_type}_GCP'.format(sample_type=SAMPLE_TYPE_MAP[sample_type])
     return re.search(sample_id_regex, raw_sample_id).group('sample_id')
 
-def _get_genes(genes):
-    return
-
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
