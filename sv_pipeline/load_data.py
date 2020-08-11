@@ -13,8 +13,8 @@ from tqdm import tqdm
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
-
-logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
