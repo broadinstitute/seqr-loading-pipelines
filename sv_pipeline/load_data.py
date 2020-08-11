@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import logging
@@ -13,8 +13,8 @@ from tqdm import tqdm
 from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
-
-logger = logging.getLogger()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
@@ -66,6 +66,7 @@ def _get_seqr_sample_id(raw_sample_id, sample_type='WES'):
     sample_id_regex = '(\d+)_(?P<sample_id>.+)_v\d_{sample_type}_GCP'.format(sample_type=SAMPLE_TYPE_MAP[sample_type])
     return re.search(sample_id_regex, raw_sample_id).group('sample_id')
 
+
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
@@ -87,7 +88,10 @@ COL_CONFIGS = {
         'field_name': SAMPLE_ID_FIELD,
         'format': _get_seqr_sample_id,
     },
-    GENES_COL: {'field_name': GENES_FIELD, 'format': lambda genes: [gene.split('.')[0] for gene in genes.split(',')]},
+    GENES_COL: {
+        'field_name': GENES_FIELD,
+        'format': lambda genes: [] if genes == 'None' else [gene.split('.')[0] for gene in genes.split(',')],
+    },
 }
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, GENES_COL]
@@ -133,11 +137,11 @@ def _get_gs_samples(project_guid, file_ext, expected_header, sample_type):
         'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if process.wait() != 0:
         return None
-    header = next(process.stdout)
+    header = next(process.stdout).decode('utf-8')
     if header.strip() != expected_header:
         raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
             expected_header, header))
-    return [line.strip().split('\t') for line in process.stdout]
+    return [line.decode('utf-8').strip().split('\t') for line in process.stdout]
 
 
 def get_sample_subset(project_guid, sample_type):
@@ -369,7 +373,7 @@ def format_sv(sv):
         if genotype[QS_FIELD] > 1000:
             qs_key = 'samples_qs_gt_1000'
         else:
-            qs_bin = genotype[QS_FIELD] / QS_BIN_SIZE
+            qs_bin = genotype[QS_FIELD] // QS_BIN_SIZE
             qs_key = 'samples_qs_{}_to_{}'.format(qs_bin * 10, (qs_bin + 1) * 10)
         if qs_key not in sv:
             sv[qs_key] = []
@@ -435,7 +439,8 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
     for row in rows:
         all_fields.update({k: v for k, v in row.items() if v})
         for col, val in nested_fields.items():
-            val.update(row[col][0])
+            if row[col]:
+                val.update(row[col][0])
     elasticsearch_schema = get_es_schema(all_fields, nested_fields)
 
     if es_client.es.indices.exists(index=index_name):
@@ -477,15 +482,15 @@ def main():
     p.add_argument('--sample-type', default='WES')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
-    p.add_argument('--num-shard', default=6)
+    p.add_argument('--num-shards', default=6)
 
     args = p.parse_args()
 
     sample_subset = None
     sample_remap = None
     if not args.skip_sample_subset:
-        sample_subset = get_sample_subset(args.project_guid)
-        sample_remap = get_sample_remap(args.project_guid)
+        sample_subset = get_sample_subset(args.project_guid, args.sample_type)
+        sample_remap = get_sample_remap(args.project_guid, args.sample_type)
         message = 'Subsetting to {} samples'.format(len(sample_subset))
         if sample_remap:
             message += ' (remapping {} samples)'.format(len(sample_remap))
