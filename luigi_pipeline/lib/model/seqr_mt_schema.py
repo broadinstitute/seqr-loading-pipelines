@@ -1,4 +1,3 @@
-
 import hail as hl
 
 from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
@@ -29,6 +28,10 @@ class SeqrSchema(BaseMTSchema):
     @row_annotation()
     def aIndex(self):
         return self.mt.a_index
+    
+    @row_annotation()
+    def wasSplit(self):
+        return self.mt.was_split
 
     @row_annotation()
     def originalAltAlleles(self):
