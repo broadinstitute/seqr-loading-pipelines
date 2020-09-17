@@ -23,7 +23,8 @@ cidr_ht_path='/seqr-reference-data/GRCh37/CIDR/Holland_20190829_no_genotypes_sel
 
 
 def update_all_datasets(hc, args):
-    client = ElasticsearchClient(host=args.host, port=args.port)
+    client = ElasticsearchClient(
+        host=args.host, port=args.port, es_username=args.es_username, es_password=args.es_password)
     indices = client.es.cat.indices(h="index", s="index").strip().split("\n")
     for i, index_name in enumerate(indices):
         _meta = client.get_index_meta(index_name)
@@ -40,7 +41,8 @@ def update_all_datasets(hc, args):
 
 
 def update_dataset(index_name, args):
-    elasticsearch_client = ElasticsearchClient(host=args.host, port=args.port)
+    elasticsearch_client = ElasticsearchClient(
+        host=args.host, port=args.port, es_username=args.es_username, es_password=args.es_password)
     _meta = elasticsearch_client.get_index_meta(index_name)
     if not args.dataset_path and (not _meta or "sourceFilePath" not in _meta):
         raise ValueError("Couldn't update reference data in {} because it doesn't have a recorded sourceFilePath. Please use "
@@ -90,7 +92,6 @@ def update_dataset(index_name, args):
     elasticsearch_client.export_table_to_elasticsearch(
         row_table,
         index_name=index_name,
-        index_type_name="variant",
         block_size=args.block_size,
         elasticsearch_write_operation=ELASTICSEARCH_UPDATE,
         elasticsearch_mapping_id="docId",
@@ -105,6 +106,8 @@ p = argparse.ArgumentParser()
 p.add_argument("--host", help="Elasticsearch host", default=os.environ.get("ELASTICSEARCH_SERVICE_HOSTNAME"))
 p.add_argument("--port", help="Elasticsearch port", default="9200")
 p.add_argument("--block-size", help="Block size to use when exporting to elasticsearch", default=1000, type=int)
+p.add_argument("--es-username", help="Elasticsearch username")
+p.add_argument("--es-password", help="Elasticsearch password")
 
 #p.add_argument("--download-latest-clinvar-vcf", action="store_true", help="First download the latest GRCh37 and GRCh38 clinvar VCFs from NCBI.")
 p.add_argument("--update-clinvar", action="store_true", help="Update clinvar fields.")

@@ -4,7 +4,7 @@ from pprint import pformat
 
 import hail as hl
 
-from hail_scripts.shared.elasticsearch_client import ElasticsearchClient as BaseElasticsearchClient
+from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient as BaseElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import (
     ELASTICSEARCH_INDEX,
     ELASTICSEARCH_UPDATE,
@@ -27,7 +27,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         self,
         table: hl.Table,
         index_name :str = "data",
-        index_type_name :str = "variant",
+        index_type_name :str = '_doc',
         block_size :int = 5000,
         num_shards :int = 10,
         delete_index_before_exporting :bool = True,
@@ -119,6 +119,12 @@ class ElasticsearchClient(BaseElasticsearchClient):
             elasticsearch_config["es.write.rest.error.handlers"] = "log"
             elasticsearch_config["es.write.rest.error.handler.log.logger.name"] = "BulkErrors"
 
+        if self._es_password:
+            elasticsearch_config.update({
+                'es.net.http.auth.user': self._es_username,
+                'es.net.http.auth.pass': self._es_password,
+            })
+
         # encode any special chars in column names
         rename_dict = {}
         for field_name in table.row_value.dtype.fields:
@@ -171,9 +177,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         if export_globals_to_index_meta:
             _meta = struct_to_dict(hl.eval(table.globals))
 
-        self.create_or_update_mapping(
-            index_name, index_type_name, elasticsearch_schema, num_shards=num_shards, _meta=_meta
-        )
+        self.create_or_update_mapping(index_name, elasticsearch_schema, num_shards=num_shards, _meta=_meta)
 
         if func_to_run_after_index_exists:
             func_to_run_after_index_exists()

@@ -432,7 +432,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_passwor
     :param num_shards: number of shards for the index
     :return: none
     """
-    es_client = ElasticsearchClient(host=es_host, port=es_port, http_auth=('pipeline', es_password))
+    es_client = ElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     all_fields = {}
     nested_fields = {GENOTYPES_FIELD: {}, TRANSCRIPTS_FIELD: {}}
