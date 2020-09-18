@@ -9,6 +9,7 @@ import os
 import hail as hl
 import luigi
 from luigi.contrib import gcs
+from luigi.parameter import ParameterVisibility
 
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.global_config import GlobalConfig
@@ -201,8 +202,7 @@ class HailElasticSearchTask(luigi.Task):
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
     es_username = luigi.Parameter(description='ElasticSearch username.', default='pipeline')
-    # TODO secure password
-    es_password = luigi.Parameter(description='ElasticSearch password.', default=None)
+    es_password = luigi.Parameter(description='ElasticSearch password.', visibility=ParameterVisibility.PRIVATE, default=None)
     es_index_min_num_shards = luigi.IntParameter(default=6,
                                                  description='Number of shards for the index will be the greater of '
                                                              'this value and a calculated value based on the matrix.')
