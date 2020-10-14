@@ -27,11 +27,9 @@ p.add_argument("-g", "--genome-version", help="Genome build: 37 or 38", choices=
 p.add_argument("-H", "--host", help="Elasticsearch host or IP", required=True)
 p.add_argument("-p", "--port", help="Elasticsearch port", default=9200, type=int)
 p.add_argument("-i", "--index-name", help="Elasticsearch index name")
-p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="_doc")
+p.add_argument("-t", "--index-type", help="Elasticsearch index type", default="variant")
 p.add_argument("-s", "--num-shards", help="Number of elasticsearch shards", default=1, type=int)
 p.add_argument("-b", "--es-block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
-p.add_argument("-u", "--es-username", help="Elasticsearch username")
-p.add_argument("-p", "--es-password", help="Elasticsearch password")
 args = p.parse_args()
 
 
@@ -104,7 +102,7 @@ rows = mt.rows()
 rows = rows.order_by(rows.variant_id).drop("locus", "alleles")
 
 print("\n=== Exporting to Elasticsearch ===")
-es = ElasticsearchClient(args.host, args.port, es_username=args.es_username, es_password=args.es_password)
+es = ElasticsearchClient(args.host, args.port)
 es.export_table_to_elasticsearch(
     rows,
     index_name=index_name,
