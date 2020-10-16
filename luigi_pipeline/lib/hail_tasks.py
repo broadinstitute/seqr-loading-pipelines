@@ -9,6 +9,7 @@ import os
 import hail as hl
 import luigi
 from luigi.contrib import gcs
+from luigi.parameter import ParameterVisibility
 
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from lib.global_config import GlobalConfig
@@ -200,6 +201,8 @@ class HailElasticSearchTask(luigi.Task):
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
+    es_username = luigi.Parameter(description='ElasticSearch username.', default='pipeline')
+    es_password = luigi.Parameter(description='ElasticSearch password.', visibility=ParameterVisibility.PRIVATE, default=None)
     es_index_min_num_shards = luigi.IntParameter(default=6,
                                                  description='Number of shards for the index will be the greater of '
                                                              'this value and a calculated value based on the matrix.')
@@ -209,7 +212,8 @@ class HailElasticSearchTask(luigi.Task):
         if self.es_index != self.es_index.lower():
             raise Exception(f"Invalid es_index name [{self.es_index}], must be lowercase")
 
-        self._es = ElasticsearchClient(host=self.es_host, port=self.es_port)
+        self._es = ElasticsearchClient(
+            host=self.es_host, port=self.es_port, es_username=self.es_username, es_password=self.es_password)
 
     def requires(self):
         return [VcfFile(filename=self.source_path)]
@@ -223,7 +227,7 @@ class HailElasticSearchTask(luigi.Task):
 
     def export_table_to_elasticsearch(self, table, num_shards):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
-            lambda: self._es.route_index_to_temp_es_cluster(self.es_index, True)
+            lambda: self._es.route_index_to_temp_es_cluster(self.es_index)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
@@ -232,7 +236,7 @@ class HailElasticSearchTask(luigi.Task):
                                                write_null_values=True)
 
     def cleanup(self):
-        self._es.route_index_to_temp_es_cluster(self.es_index, False)
+        self._es.route_index_off_temp_es_cluster(self.es_index)
 
 
     def _mt_num_shards(self, mt):

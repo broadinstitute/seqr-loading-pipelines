@@ -27,7 +27,7 @@ def main():
     p.add_argument("--host", help="Elasticsearch host or IP address", required=True)
     p.add_argument("--port", help="Elasticsearch port", default=9200, type=int)
     p.add_argument("--index-name", help="Elasticsearch index name", required=True)
-    p.add_argument("--index-type", help="Elasticsearch index type", required=True)
+    p.add_argument("--index-type", help="Elasticsearch index type", default='_doc')
     p.add_argument("--num-shards", help="Number of Elasticsearch shards", default=1, type=int)
     p.add_argument("--block-size", help="Elasticsearch block size to use when exporting", default=200, type=int)
     args = p.parse_args()

@@ -2,15 +2,16 @@
 
 import argparse
 import logging
-import os.path
+import os
 import re
 import subprocess
 
 from datetime import datetime
 from elasticsearch import helpers as es_helpers
+from getpass import getpass
 from tqdm import tqdm
 
-from hail_scripts.shared.elasticsearch_client import ElasticsearchClient
+from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
 logging.basicConfig(level=logging.INFO)
@@ -119,7 +120,6 @@ ES_FIELD_TYPE_MAP = {
     'xstart': 'long',
     'xstop': 'long',
 }
-ES_INDEX_TYPE = 'structural_variant'
 
 
 def _get_gs_samples(project_guid, file_ext, expected_header, sample_type):
@@ -420,7 +420,7 @@ def get_es_index_name(project, meta):
     ).lower()
 
 
-def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards=6):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6):
     """
     Export SV data to elasticsearch
 
@@ -432,7 +432,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
     :param num_shards: number of shards for the index
     :return: none
     """
-    es_client = ElasticsearchClient(host=es_host, port=es_port)
+    es_client = ElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     all_fields = {}
     nested_fields = {GENOTYPES_FIELD: {}, TRANSCRIPTS_FIELD: {}}
@@ -448,15 +448,12 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
         es_client.es.indices.delete(index=index_name)
 
     logger.info('Setting up index')
-    es_client.create_or_update_mapping(
-        index_name, ES_INDEX_TYPE, elasticsearch_schema, num_shards=num_shards, _meta=meta
-    )
+    es_client.create_index(index_name, elasticsearch_schema, num_shards=num_shards, _meta=meta)
 
-    es_client.route_index_to_temp_es_cluster(index_name, True)
+    es_client.route_index_to_temp_es_cluster(index_name)
 
     es_actions = [{
         '_index': index_name,
-        '_type': ES_INDEX_TYPE,
         '_op_type': ELASTICSEARCH_INDEX,
         '_id': row[VARIANT_ID_FIELD],
         '_source': row,
@@ -468,7 +465,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, num_shards
 
     es_client.es.indices.forcemerge(index=index_name)
 
-    es_client.route_index_to_temp_es_cluster(index_name, False)
+    es_client.route_index_off_temp_es_cluster(index_name)
 
 
 def main():
@@ -485,6 +482,10 @@ def main():
     p.add_argument('--num-shards', default=6)
 
     args = p.parse_args()
+
+    es_password = os.environ.get('PIPELINE_ES_PASSWORD')
+    if not es_password:
+        es_password = getpass(prompt='Enter ES password: ')
 
     sample_subset = None
     sample_remap = None
@@ -524,7 +525,7 @@ def main():
     }
     index_name = get_es_index_name(args.project_guid, meta)
     logger.info('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
-    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta, num_shards=args.num_shards)
+    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta, es_password, num_shards=args.num_shards)
 
     logger.info('DONE')
 
