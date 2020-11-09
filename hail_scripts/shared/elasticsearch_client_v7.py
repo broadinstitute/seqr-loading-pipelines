@@ -6,6 +6,14 @@ import time
 from pprint import pformat
 
 
+try:
+    import elasticsearch
+except ImportError:
+    import os
+    os.system("pip install elasticsearch")
+    import elasticsearch
+
+
 handlers = set(logging.root.handlers)
 logging.root.handlers = list(handlers)
 logger = logging.getLogger()
