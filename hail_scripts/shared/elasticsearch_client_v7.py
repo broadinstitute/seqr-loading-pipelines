@@ -1,5 +1,4 @@
 import datetime
-import elasticsearch
 import inspect
 import logging
 import time
