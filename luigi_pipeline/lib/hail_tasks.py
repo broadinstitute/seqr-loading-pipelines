@@ -197,7 +197,7 @@ class HailElasticSearchTask(luigi.Task):
     Loads a MT to ES (TODO).
     """
     source_path = luigi.OptionalParameter(default=None)
-    use_temp_loading_nodes = luigi.BoolParameter(default=True, description='Whether to use temporary loading nodes.')
+    use_temp_loading_nodes = luigi.BoolParameter(default=False, description='Whether to use temporary loading nodes.')
     es_host = luigi.Parameter(description='ElasticSearch host.', default='localhost')
     es_port = luigi.IntParameter(description='ElasticSearch port.', default=9200)
     es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
