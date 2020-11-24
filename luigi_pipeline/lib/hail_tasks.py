@@ -233,6 +233,7 @@ class HailElasticSearchTask(luigi.Task):
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
                                                elasticsearch_mapping_id="docId",
                                                num_shards=num_shards,
+                                               block_size=500,
                                                write_null_values=True)
 
     def cleanup(self):
