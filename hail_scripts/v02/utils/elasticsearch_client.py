@@ -204,4 +204,4 @@ class ElasticsearchClient(BaseElasticsearchClient):
         es.batch.write.refresh // default true  (Whether to invoke an index refresh or not after a bulk update has been completed)
         """
 
-        self.es.indices.forcemerge(index=index_name)
+        self.es.indices.forcemerge(index=index_name, request_timeout=60)
