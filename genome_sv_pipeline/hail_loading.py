@@ -1,33 +1,68 @@
 import hail as hl
 import logging
+from tqdm import tqdm
 
 from sv_pipeline.load_data import get_sample_subset
+from genome_sv_pipeline.load_data import GENES_COLUMNS, GENES_FIELD
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def sub_setting_mt(guid, mt):
-    sample_subset = hl.literal(get_sample_subset(guid, 'WGS'))
-    mt1 = mt.filter_cols(sample_subset.contains(mt['s']))
-    sample_cnt = mt1.count_cols()
-    mt2 = mt1.annotate_rows(gt=hl.agg.counter(mt1.GT.is_hom_ref()))
-    return mt2.filter_rows(mt2.gt.get(True, 0) < sample_cnt)
+    sample_subset = get_sample_subset(guid, 'WGS')
+    logger.info('Total {} samples in project {}'.format(len(sample_subset), guid))
+    mt1 = mt.filter_cols(hl.literal(sample_subset).contains(mt['s']))
+
+    missing_samples = sample_subset - {col.s for col in mt1.key_cols_by().cols().collect()}
+    logger.info('{} missing samples: {}'.format(len(missing_samples), missing_samples))
+
+    samples = hl.agg.filter(mt1.GT.is_non_ref(), hl.agg.collect(hl.struct(id=mt1.s, gq=mt1.GQ, cn=mt1.RD_CN)))
+    mt2 = mt1.annotate_rows(samples=samples)
+    mt3 = mt2.filter_rows(mt2.samples != hl.empty_array(hl.dtype('struct{id: str, gq: int32, cn: int32}')))
+    return mt3.rows()
 
 
 def main():
     hl.init()
     # hl.import_vcf('vcf/sv.vcf.gz', force=True, reference_genome='GRCh38').write('vcf/svs.mt', overwrite=True)
     mt = hl.read_matrix_table('vcf/svs.mt')
-    mt1 = sub_setting_mt('R0332_cmg_estonia_wgs', mt)
-    logger.info('Data counts: {}'.format(mt1.count()))
+    rows = sub_setting_mt('R0332_cmg_estonia_wgs', mt)
+    logger.info('Variant counts: {}'.format(rows.count()))
 
-    # query the svtype's for which RD_CN is not None
-    mt4 = mt1.annotate_rows(cnt=hl.agg.counter(hl.is_defined(mt1.RD_CN)))
-    mt5 = mt4.filter_rows(mt4.cnt.get(True, 0) > 0)
-    rows = mt5.rows()
-    counts = rows.aggregate(hl.agg.counter(rows.info.SVTYPE))
-    logger.info('{}'.format(counts))
+    kwargs = {
+        'contig': hl.int(rows.locus.contig.split('chr')[1]),
+        'sc': rows.info.AC,
+        'sf': rows.info.AF,
+        'sn': rows.info.AN,
+        'svDetail': hl.if_else(hl.is_defined(rows.info.CPX_TYPE), rows.info.CPX_TYPE, rows.info.SVTYPE),
+        'start': rows.locus.position,
+        'end': rows.info.END,
+        'sv_callset_Hemi': rows.info.N_HET,
+        'sv_callset_Hom': rows.info.N_HOMALT,
+        'gnomad_svs_ID': rows.info.gnomAD_V2_SVID,
+        'gnomad_svs_AF': rows.info.gnomAD_V2_AF,
+        'chr2': rows.info.CHR2,
+        'end2': rows.info.END2,
+        GENES_FIELD: hl.flatten(
+            [hl.if_else(hl.is_defined(rows.info[field_name]), rows.info[field_name], hl.empty_array('str'))
+             for field_name in GENES_COLUMNS]),
+    }
+    rows = rows.annotate(**kwargs)
+
+    mapping = {
+        'rsid': 'variantId',
+        'alleles': 'svType',
+        # 'filters': 'filters',
+    }
+    rows = rows.rename(mapping)
+
+    fields = list(mapping.values()) + list(kwargs.keys()) + ['samples']
+    rows = rows.key_by('locus').select(*fields)
+
+    rows.show(width=200)
+
+    logger.info('Variants: {}'.format(rows.count()))
 
 if __name__ == '__main__':
     main()
