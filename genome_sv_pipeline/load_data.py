@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 from sv_pipeline.load_data import get_sample_subset, get_sample_remap,\
     CHROM_FIELD, SC_FIELD, SF_FIELD, GENES_FIELD, VARIANT_ID_FIELD, CALL_FIELD, START_COL, \
-    END_COL, QS_FIELD, CN_FIELD, SAMPLE_ID_FIELD, GENOTYPES_FIELD
+    END_COL, QS_FIELD, CN_FIELD, SAMPLE_ID_FIELD, GENOTYPES_FIELD, TRANSCRIPTS_FIELD, CHROM_TO_XPOS_OFFSET
 
 CHR_ATTR = 'CHROM'
 AC_ATTR = 'AC'
@@ -19,19 +19,19 @@ VAR_NAME_ATTR = 'ID'
 CALL_ATTR = 'ALT'
 START_ATTR = 'POS'
 END_ATTR = 'END'
-GQ_ATTR = 'GQ'
-RD_GQ_ATTR = 'RD_GQ'
-RD_CN_ATTR = 'RD_CN'
 INFO_ATTR = 'INFO'
 FILTER_ATTR = 'FILTER'
 N_HET_ATTR = 'N_HET'
 N_HOMALT_ATTR = 'N_HOMALT'
 GNOMAND_SVS_ID_ATTR = 'gnomAD_V2_SVID'
 GNOMAND_SVS_AF_ATTR = 'gnomAD_V2_AF'
-CTX_TYPE_ATTR = 'CTX_TYPE'
+CPX_TYPE_ATTR = 'CPX_TYPE'
+CPX_INTERVALS_ATTR = 'CPX_INTERVALS'
 CHR2_ATTR = 'CHR2'
 END2_ATTR = 'END2'
-CN_ATTR = 'CN'
+GQ_ATTR = 'GQ'
+RD_CN_ATTR = 'RD_CN'
+GT_ATTR = 'GT'
 
 SN_FIELD = 'sn'
 FILTER_FIELD = 'filters'
@@ -39,22 +39,26 @@ N_HET_FIELD = 'sv_callset_Hemi'
 N_HOMALT_FIELD = 'sv_callset_Hom'
 GNOMAD_SVS_ID_FIELD = 'gnomad_svs_ID'
 GNOMAD_SVS_AF_FIELD = 'gnomad_svs_AF'
+CPX_TYPE_FIELD = 'cpx_type'
+CPX_INTERVALS_FIELD = 'cpx_intervals'
 SV_DETAIL_FIELD = 'svDetail'
 CHR2_FIELD = 'chr2'
 END2_FIELD = 'end2'
-RD_QS_FIELD = 'rd_qs'
+GQ_FIELD = 'gq'
+NUM_ALT_FIELD = 'num_alt'
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 COL_CONFIGS = {
     CHR_ATTR: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
-    AC_ATTR: {'root_attr': INFO_ATTR, 'field_name': SC_FIELD},
-    AF_ATTR: {'root_attr': INFO_ATTR, 'field_name': SF_FIELD},
+    AC_ATTR: {'root_attr': INFO_ATTR, 'field_name': SC_FIELD, 'format': lambda val: val[0]},
+    AF_ATTR: {'root_attr': INFO_ATTR, 'field_name': SF_FIELD, 'format': lambda val: val[0]},
     AN_ATTR: {'root_attr': INFO_ATTR, 'field_name': SN_FIELD},
     VAR_NAME_ATTR: {'field_name': VARIANT_ID_FIELD},
     CALL_ATTR: {'field_name': CALL_FIELD, 'format': lambda val: val[0].type},
-    CTX_TYPE_ATTR: {'root_attr': INFO_ATTR, 'field_name': SV_DETAIL_FIELD, 'allow_missing': True},
+    CPX_TYPE_ATTR: {'root_attr': INFO_ATTR, 'field_name': CPX_TYPE_FIELD, 'allow_missing': True},
+    CPX_INTERVALS_ATTR: {'root_attr': INFO_ATTR, 'field_name': CPX_INTERVALS_FIELD, 'allow_missing': True},
     START_ATTR: {'field_name': START_COL},
     END_ATTR: {'root_attr': INFO_ATTR, 'field_name': END_COL},
     FILTER_ATTR: {'field_name': FILTER_FIELD, 'allow_missing': True, 'format': lambda val: val.remove('PASS') if 'PASS' in val else val},
@@ -62,23 +66,16 @@ COL_CONFIGS = {
     N_HOMALT_ATTR: {'root_attr': INFO_ATTR, 'field_name': N_HOMALT_FIELD},
     GNOMAND_SVS_ID_ATTR: {'root_attr': INFO_ATTR, 'field_name': GNOMAD_SVS_ID_FIELD, 'allow_missing': True},
     GNOMAND_SVS_AF_ATTR: {'root_attr': INFO_ATTR, 'field_name': GNOMAD_SVS_AF_FIELD, 'allow_missing': True},
-    CHR2_ATTR:  {'root_attr': INFO_ATTR, 'field_name': CHR2_FIELD, 'allow_missing': True},
+    CHR2_ATTR:  {'root_attr': INFO_ATTR, 'field_name': CHR2_FIELD, 'format': lambda val: val.lstrip('chr'), 'allow_missing': True},
     END2_ATTR: {'root_attr': INFO_ATTR, 'field_name': END2_FIELD, 'allow_missing': True},
-    GQ_ATTR: {'root_attr': 'data', 'field_name': QS_FIELD, 'allow_missing': True},
-    RD_GQ_ATTR: {'root_attr': 'data', 'field_name': RD_QS_FIELD, 'allow_missing': True},
+    GQ_ATTR: {'root_attr': 'data', 'field_name': GQ_FIELD, 'allow_missing': True},
     RD_CN_ATTR: {'root_attr': 'data', 'field_name': CN_FIELD, 'allow_missing': True},
-    CN_ATTR: {'root_attr': 'data', 'field_name': CN_FIELD, 'allow_missing': True},
+    GT_ATTR: {'root_attr': 'data', 'field_name': NUM_ALT_FIELD, 'allow_missing': True, 'format': lambda val: int(val[0])+int(val[2])},
 }
 
-GENES_COLUMNS = ['PROTEIN_CODING__LOF', 'LINCRNA__LOF', 'PROTEIN_CODING__DUP_LOF', 'LINCRNA__DUP_LOF',
-                 'PROTEIN_CODING__COPY_GAIN', 'LINCRNA__COPY_GAIN', 'PROTEIN_CODING__DUP_PARTIAL', 'LINCRNA__DUP_PARTIAL',
-                 'PROTEIN_CODING__MSV_EXON_OVR', 'LINCRNA__MSV_EXON_OVR', 'PROTEIN_CODING__INTRONIC', 'LINCRNA__INTRONIC',
-                 'PROTEIN_CODING__INV_SPAN', 'LINCRNA__INV_SPAN', 'PROTEIN_CODING__UTR', 'LINCRNA__UTR',
-                 'PROTEIN_CODING__PROMOTER']
-
-CORE_COLUMNS = [CHR_ATTR, AC_ATTR, AF_ATTR, AN_ATTR, VAR_NAME_ATTR, CALL_ATTR, CTX_TYPE_ATTR, START_ATTR, END_ATTR,
+CORE_COLUMNS = [CHR_ATTR, AC_ATTR, AF_ATTR, AN_ATTR, VAR_NAME_ATTR, CALL_ATTR, CPX_TYPE_ATTR, CPX_INTERVALS_ATTR, START_ATTR, END_ATTR,
                 FILTER_ATTR, N_HET_ATTR, N_HOMALT_ATTR, GNOMAND_SVS_ID_ATTR, GNOMAND_SVS_AF_ATTR, CHR2_ATTR, END2_ATTR]
-SAMPLE_COLUMNS = [GQ_ATTR, RD_GQ_ATTR, CN_ATTR, RD_CN_ATTR]
+SAMPLE_COLUMNS = [GQ_ATTR, RD_CN_ATTR, GT_ATTR]
 
 
 def get_field_val(row, col, format_kwargs=None):
@@ -117,13 +114,20 @@ def get_parsed_column_values(row, columns):
     return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col) for col in columns}
 
 
-def parse_gene_ids(info):
-    gene_ids = []
-    keys = info.keys()
-    genes_cols = [col for col in GENES_COLUMNS if col in keys]
-    for col in genes_cols:
-        gene_ids += info.get(col)
-    return gene_ids
+def _get_gene_id(gene_symbol):
+    # to be implemented
+    return ''
+
+
+def parse_sorted_transcript_consequences(info):
+    trans = []
+    for col in info.keys():
+        if col.startswith('PROTEIN_CODING_') and isinstance(info[col], list):
+            trans += [{'gene_symbol': gene,
+                       'gene_id': _get_gene_id(gene),
+                       'predicted_consequence': col.split('__')[-1]
+                       } for gene in info[col]]
+    return trans
 
 
 def parse_sv_row(row, parsed_svs_by_id):
@@ -150,7 +154,9 @@ def parse_sv_row(row, parsed_svs_by_id):
     variant_id = parsed_row.get(VARIANT_ID_FIELD)
     parsed_svs_by_id[variant_id] = parsed_row
 
-    parsed_svs_by_id[variant_id][GENES_FIELD] = parse_gene_ids(row.INFO)
+    parsed_svs_by_id[variant_id][TRANSCRIPTS_FIELD] = parse_sorted_transcript_consequences(row.INFO)
+    parsed_svs_by_id[variant_id][GENES_FIELD] = [trans['gene_symbol'] for trans in
+                                                 parsed_svs_by_id[variant_id][TRANSCRIPTS_FIELD]]
 
     parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = samples
 
@@ -230,6 +236,67 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type
     return parsed_svs_by_name
 
 
+def load_vcf_data(vcf_reader, sample_subset):
+    if not sample_subset:
+        return []
+    rows = []
+    for row in tqdm(vcf_reader, unit=' rows'):
+        samples = [sample for sample in row.samples if sample.sample in sample_subset]
+        row.samples = samples
+        for sample in row.samples:
+            if sample.gt_alleles[0] != '0' or sample.gt_alleles[1] != '0':
+                rows.append(row)
+                break
+    return rows
+
+
+def parse_cpx_intervals(cpx_intervals):
+    intervals = []
+    for interval in cpx_intervals:
+        types = interval.split('_chr')
+        chrs = types[1].split(':')
+        pos = chrs[1].split('-')
+        intervals.append({'type': types[0], 'chrom':chrs[0], 'start': int(pos[0]), 'end': int(pos[1])})
+    return intervals
+
+
+def format_sv(sv):
+    """
+    Post-processing to format SVs for export
+
+    :param sv: parsed SV
+    :return: none
+    """
+    if sv[CALL_FIELD].startswith('INS:'):
+        sv[SV_DETAIL_FIELD] = {'detailType': sv[CALL_FIELD].split(':', 1)[1]}
+        sv[CALL_FIELD] = 'INS'
+    elif sv[CALL_FIELD] == 'CPX':
+        sv[SV_DETAIL_FIELD] = {'detailType': sv[CPX_TYPE_FIELD], 'intervals': parse_cpx_intervals(sv[CPX_INTERVALS_FIELD])}
+
+    sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
+    sv['pos'] = sv[START_COL]
+    sv['xpos'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[START_COL]
+    sv['xstart'] = sv['xpos']
+    sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHR2_FIELD]] + sv[END2_FIELD] if sv[END2_FIELD] else\
+        CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
+
+    sv['samples'] = []
+    for genotype in sv[GENOTYPES_FIELD]:
+        sample_id = genotype['sample_id']
+        sv['samples'].append(sample_id)
+
+        if genotype[CN_FIELD]:
+            cn_key = 'samples_cn_{}'.format(genotype[CN_FIELD]) if genotype[CN_FIELD] < 4 else 'samples_cn_gte_4'
+            if cn_key not in sv:
+                sv[cn_key] = []
+            sv[cn_key].append(sample_id)
+
+        num_alt_key = 'sample_num_alt_{}'.format(genotype[NUM_ALT_FIELD])
+        if num_alt_key not in sv:
+            sv[num_alt_key] = []
+        sv[num_alt_key].append(sample_id)
+
+
 def test_data_parsing(guid, input_dataset, sample_type='WGS'):
     sample_subset = get_sample_subset(guid, sample_type)
     sample_remap = get_sample_remap(guid, sample_type)
@@ -247,15 +314,13 @@ def test_data_parsing(guid, input_dataset, sample_type='WGS'):
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
+    parsed_svs = parsed_svs_by_name.values()
 
-def stat_sv_type():
-    vcf_reader = vcf.Reader(filename='vcf/sv.vcf.gz')
-    stat = defaultdict(int)
-    for row in tqdm(vcf_reader, unit=' rows'):
-        if len(row.ALT) != 1:
-            print("Warning: Multiple ALTs.", row)
-        stat[row.ALT[0].type] += 1
-    print(stat)
+    logger.info('\nFormatting for ES export')
+    for sv in tqdm(parsed_svs, unit=' sv records'):
+        format_sv(sv)
+
+    logger.info('DONE')
 
 
 def subset_vcf_rows_to_file(reader, writer, sample_subset):
@@ -287,20 +352,6 @@ def subset_rows_to_file(guid):
     print(cnt)
 
 
-def load_vcf_data(vcf_reader, sample_subset):
-    if not sample_subset:
-        return []
-    rows = []
-    for row in tqdm(vcf_reader, unit=' rows'):
-        samples = [sample for sample in row.samples if sample.sample in sample_subset]
-        row.samples = samples
-        for sample in row.samples:
-            if sample.gt_alleles[0] != '0' or sample.gt_alleles[1] != '0':
-                rows.append(row)
-                break
-    return rows
-
-
 def get_all_sample_rows(guid):
     print('\nguid', guid)
     sample_subset = get_sample_subset(guid, 'WGS')
@@ -314,7 +365,24 @@ def get_all_sample_rows(guid):
     print(len(rows))
 
 
-test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
+def stat_sv_type():
+    vcf_reader = vcf.Reader(filename='vcf/sv.vcf')
+    stat = defaultdict(int)
+    for row in tqdm(vcf_reader, unit=' rows'):
+        if len(row.ALT) != 1:
+            print("Warning: Multiple ALTs.", row)
+        stat[row.ALT[0].type] += 1
+    print(stat)
+
+
+def main():
+    test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
+
+
+if __name__ == '__main__':
+    main()
+
+# test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
 # Outputs:
 # INFO:__main__:Subsetting to 167 samples
 # 145568 rows [14:52, 163.09 rows/s]
