@@ -323,60 +323,8 @@ def test_data_parsing(guid, input_dataset, sample_type='WGS'):
     logger.info('DONE')
 
 
-def subset_vcf_rows_to_file(reader, writer, sample_subset):
-    if not sample_subset:
-        return 0
-    cnt = 0
-    for row in tqdm(reader, unit=' rows'):
-        samples = [sample for sample in row.samples if sample.sample in sample_subset]
-        row.samples = samples
-        for sample in row.samples:
-            if sample.gt_alleles[0] != '0' or sample.gt_alleles[1] != '0':
-                writer.write_record(row)
-                cnt += 1
-                break
-    return cnt
-
-
-def subset_rows_to_file(guid):
-    print('\nguid', guid)
-    sample_subset = get_sample_subset(guid, 'WGS')
-    print('Project samples', len(sample_subset))
-    vcf_reader = vcf.Reader(filename='vcf/sv.vcf.gz')
-    vcf_writer = vcf.Writer(open('vcf/sv.subset.{}.vcf'.format(guid), 'w'), vcf_reader)
-    samples = vcf_reader.samples
-    missed_sample = [sample for sample in sample_subset if not sample in samples]
-    print('Samples missed from the VCF data', len(missed_sample))
-    sample_subset = [sample for sample in sample_subset if sample in samples]
-    cnt = subset_vcf_rows_to_file(vcf_reader, vcf_writer, sample_subset)
-    print(cnt)
-
-
-def get_all_sample_rows(guid):
-    print('\nguid', guid)
-    sample_subset = get_sample_subset(guid, 'WGS')
-    print('Project samples', len(sample_subset))
-    vcf_reader = vcf.Reader(filename='vcf/sv.vcf.gz')
-    samples = vcf_reader.samples
-    missed_sample = [sample for sample in sample_subset if not sample in samples]
-    print('Samples missed from the VCF data', len(missed_sample))
-    sample_subset = [sample for sample in sample_subset if sample in samples]
-    rows = load_vcf_data(vcf_reader, sample_subset)
-    print(len(rows))
-
-
-def stat_sv_type():
-    vcf_reader = vcf.Reader(filename='vcf/sv.vcf')
-    stat = defaultdict(int)
-    for row in tqdm(vcf_reader, unit=' rows'):
-        if len(row.ALT) != 1:
-            print("Warning: Multiple ALTs.", row)
-        stat[row.ALT[0].type] += 1
-    print(stat)
-
-
 def main():
-    test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
+    test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf')
 
 
 if __name__ == '__main__':
@@ -385,65 +333,31 @@ if __name__ == '__main__':
 # test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
 # Outputs:
 # INFO:__main__:Subsetting to 167 samples
-# 145568 rows [14:52, 163.09 rows/s]
+# 145568 rows [14:50, 163.52 rows/s]
 # INFO:__main__:Found 106 sample ids
 # INFO:__main__:Missing the following 61 samples:
 # E00859946, HK015_0036, HK015_0038_D2, HK017-0044, HK017-0045, HK017-0046, HK032_0081, HK032_0081_2_D2, HK035_0089, HK060-0154_1, HK060-0155_1, HK060-0156_1, HK061-0157_D1, HK061-0158_D1, HK061-0159_D1, HK079-001_D2, HK079-002_D2, HK079-003_D2, HK080-001_D2, HK080-002_D2, HK080-003_D2, HK081-001_D2, HK081-002_D2, HK081-003_D2, HK085-001_D2, HK085-002_D2, HK085-004_D2, HK085-006_D2, HK100-001_D1, HK100-002_D1, HK100-003_D1, HK100-004_D1, HK104-001_D2, HK104-002_D2, HK108-001_1, HK108-002_1, HK108-003_1, HK112-001_1, HK112-002_1, HK112-003_1, HK115-001_1, HK115-002_1, HK115-003_1, HK117-001_1, HK117-002_1, HK117-003_1, HK119-001_1, HK119-002_1, HK119-003_1, OUN_HK124_001_D1, OUN_HK124_002_D1, OUN_HK124_003_D1, OUN_HK126_001_D1, OUN_HK126_002_D1, OUN_HK126_003_D1, OUN_HK131_001_D1, OUN_HK131_002_D1, OUN_HK131_003_D1, OUN_HK132_001_D1, OUN_HK132_002_D1, OUN_HK132_003_D1
 # INFO:__main__:Found 67275 SVs
+# INFO:__main__:
+# Formatting for ES export
+# 100%|██████████| 67275/67275 [00:02<00:00, 28032.79 sv records/s]
+# INFO:__main__:DONE
 
-#stat_sv_type()
-# Outputs:
-# 145568 rows [13:32, 179.23 rows/s]
-# defaultdict(<class 'int'>, {'DUP': 39546, 'BND': 12837, 'DEL': 71236, 'CNV': 526, 'INS': 20540, 'CPX': 768, 'INV': 111, 'CTX': 4})
-
-
-#subset_rows_to_file('R0332_cmg_estonia_wgs')
-# Outputs:
-# guid R0332_cmg_estonia_wgs
-# Project samples 167
-# Samples missed from the VCF data 61
-# 145568 rows [15:14, 159.12 rows/s]
-# 67889
-
-#get_all_sample_rows('R0332_cmg_estonia_wgs')
-# Outputs:
-# guid R0332_cmg_estonia_wgs
-# Project samples 167
-# Samples missed from the VCF data 61
-# 145568 rows [14:54, 162.82 rows/s]
-# 67889
-
-
-#subset_rows_to_file('R0485_cmg_beggs_wgs')
-# Outputs:
-# guid R0485_cmg_beggs_wgs
-# Project samples 47
-# Samples missed from the VCF data 19
-# 145568 rows [12:36, 192.50 rows/s]
-# 35729
-
-#get_all_sample_rows('R0485_cmg_beggs_wgs')
-# Outputs:
-# guid R0485_cmg_beggs_wgs
-# Project samples 47
-# Samples missed from the VCF data 19
-# 145568 rows [13:32, 179.12 rows/s]
-# 35729
-
-
-#subset_rows_to_file('R0487_cmg_myoseq_wgs')
-# Outputs:
-# guid R0487_cmg_myoseq_wgs
-# Project samples 11
-# Samples missed from the VCF data 2
-# 145568 rows [12:36, 192.44 rows/s]
-# 59432
-
-#get_all_sample_rows('R0487_cmg_myoseq_wgs')
-# Outputs:
-# guid R0487_cmg_myoseq_wgs
-# Project samples 11
-# Samples missed from the VCF data 2
-# 145568 rows [13:09, 184.32 rows/s]
-# 59432
-
+# Example formatting output:
+# {'contig': '1', 'sc': 32, 'sf': 0.022409, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_CPX_chr1_2', 'svType': 'CPX',
+#      'cpx_type': 'dupINV', 'cpx_intervals': ['DUP_chr1:1499897-1499974', 'INV_chr1:1499897-1500533'], 'start': 1499897,
+#      'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
+#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675, 'chr2': '1', 'end2': None,
+#      'sortedTranscriptConsequences': [{'gene_symbol': 'ATAD3A', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
+#      'geneIds': ['ATAD3A'], 'genotypes': [{'gq': 446, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-001_1'},
+#                                           {'gq': 396, 'cn': None, 'num_alt': 1, 'sample_id': 'HK095-002_1'},
+#                                           {'gq': 1, 'cn': None, 'num_alt': 1, 'sample_id': 'HK012_0031_2'},
+#                                           {'gq': 1, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-002_1'},
+#                                           {'gq': 283, 'cn': None, 'num_alt': 1, 'sample_id': 'HK029-0076_3'},
+#                                           {'gq': 57, 'cn': None, 'num_alt': 1, 'sample_id': 'HK029_0076'}],
+#      'svDetail': {'detailType': 'dupINV', 'intervals': [{'type': 'DUP', 'chrom': '1', 'start': 1499897, 'end': 1499974},
+#                                                         {'type': 'INV', 'chrom': '1', 'start': 1499897,
+#                                                          'end': 1500533}]}, 'transcriptConsequenceTerms': ['CPX'],
+#      'pos': 1499897, 'xpos': 1001499897, 'xstart': 1001499897, 'xstop': 1001500533,
+#      'samples': ['HK075-001_1', 'HK095-002_1', 'HK012_0031_2', 'HK075-002_1', 'HK029-0076_3', 'HK029_0076'],
+#      'sample_num_alt_1': ['HK075-001_1', 'HK095-002_1', 'HK012_0031_2', 'HK075-002_1', 'HK029-0076_3', 'HK029_0076']}
