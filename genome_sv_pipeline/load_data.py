@@ -344,6 +344,27 @@ if __name__ == '__main__':
 # INFO:__main__:DONE
 
 # Example formatting output:
+# {'contig': '1', 'sc': 70, 'sf': 0.04902, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_DUP_chr1_2', 'svType': 'DUP',
+#      'cpx_type': None, 'cpx_intervals': None, 'start': 10000, 'end': 53500, 'filters': ['LOW_CALL_RATE'],
+#      'sv_callset_Hemi': 60, 'sv_callset_Hom': 5, 'gnomad_svs_ID': None, 'gnomad_svs_AF': None, 'chr2': '1',
+#      'end2': None,
+#      'sortedTranscriptConsequences': [{'gene_symbol': 'OR4F5', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
+#      'geneIds': ['OR4F5'], 'genotypes': [{'gq': 999, 'cn': 4, 'num_alt': 2, 'sample_id': 'HK015_0037'},
+#                                          {'gq': 104, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK031_0080'},
+#                                          {'gq': 36, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK104-003_1'},
+#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK088-003_1'},
+#                                          {'gq': 141, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK102-001_1'},
+#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'OUN_HK120_2_1'},
+#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK025-0068_3'},
+#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK029_0076'}],
+#      'transcriptConsequenceTerms': ['DUP'], 'pos': 10000, 'xpos': 1000010000, 'xstart': 1000010000, 'xstop': 1000053500,
+#      'samples': ['HK015_0037', 'HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1',
+#                  'HK025-0068_3', 'HK029_0076'], 'samples_cn_gte_4': ['HK015_0037'], 'sample_num_alt_2': ['HK015_0037'],
+#      'samples_cn_3': ['HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1', 'HK025-0068_3',
+#                       'HK029_0076'],
+#      'sample_num_alt_1': ['HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1', 'HK025-0068_3',
+#                           'HK029_0076']}
+
 # {'contig': '1', 'sc': 32, 'sf': 0.022409, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_CPX_chr1_2', 'svType': 'CPX',
 #      'cpx_type': 'dupINV', 'cpx_intervals': ['DUP_chr1:1499897-1499974', 'INV_chr1:1499897-1500533'], 'start': 1499897,
 #      'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
