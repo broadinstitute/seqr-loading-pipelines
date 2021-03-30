@@ -272,6 +272,8 @@ def format_sv(sv):
         sv[CALL_FIELD] = 'INS'
     elif sv[CALL_FIELD] == 'CPX':
         sv[SV_DETAIL_FIELD] = {'detailType': sv[CPX_TYPE_FIELD], 'intervals': parse_cpx_intervals(sv[CPX_INTERVALS_FIELD])}
+    sv.pop(CPX_TYPE_FIELD)
+    sv.pop(CPX_INTERVALS_FIELD)
 
     sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
     sv['pos'] = sv[START_COL]
@@ -279,6 +281,8 @@ def format_sv(sv):
     sv['xstart'] = sv['xpos']
     sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHR2_FIELD]] + sv[END2_FIELD] if sv[END2_FIELD] else\
         CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
+    sv.pop(END2_FIELD)
+    sv.pop(CHR2_FIELD)
 
     sv['samples'] = []
     for genotype in sv[GENOTYPES_FIELD]:
@@ -345,9 +349,8 @@ if __name__ == '__main__':
 
 # Example formatting output:
 # {'contig': '1', 'sc': 70, 'sf': 0.04902, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_DUP_chr1_2', 'svType': 'DUP',
-#      'cpx_type': None, 'cpx_intervals': None, 'start': 10000, 'end': 53500, 'filters': ['LOW_CALL_RATE'],
-#      'sv_callset_Hemi': 60, 'sv_callset_Hom': 5, 'gnomad_svs_ID': None, 'gnomad_svs_AF': None, 'chr2': '1',
-#      'end2': None,
+#      'start': 10000, 'end': 53500, 'filters': ['LOW_CALL_RATE'], 'sv_callset_Hemi': 60, 'sv_callset_Hom': 5,
+#      'gnomad_svs_ID': None, 'gnomad_svs_AF': None,
 #      'sortedTranscriptConsequences': [{'gene_symbol': 'OR4F5', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
 #      'geneIds': ['OR4F5'], 'genotypes': [{'gq': 999, 'cn': 4, 'num_alt': 2, 'sample_id': 'HK015_0037'},
 #                                          {'gq': 104, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK031_0080'},
@@ -366,9 +369,8 @@ if __name__ == '__main__':
 #                           'HK029_0076']}
 
 # {'contig': '1', 'sc': 32, 'sf': 0.022409, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_CPX_chr1_2', 'svType': 'CPX',
-#      'cpx_type': 'dupINV', 'cpx_intervals': ['DUP_chr1:1499897-1499974', 'INV_chr1:1499897-1500533'], 'start': 1499897,
-#      'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
-#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675, 'chr2': '1', 'end2': None,
+#      'start': 1499897, 'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
+#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675,
 #      'sortedTranscriptConsequences': [{'gene_symbol': 'ATAD3A', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
 #      'geneIds': ['ATAD3A'], 'genotypes': [{'gq': 446, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-001_1'},
 #                                           {'gq': 396, 'cn': None, 'num_alt': 1, 'sample_id': 'HK095-002_1'},
