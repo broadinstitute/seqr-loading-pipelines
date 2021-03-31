@@ -3,7 +3,7 @@
 import os
 import logging
 import vcf
-from collections import defaultdict
+from genome_sv_pipeline.mapping_gene_ids import load_gencode
 
 from tqdm import tqdm
 
@@ -77,6 +77,8 @@ CORE_COLUMNS = [CHR_ATTR, AC_ATTR, AF_ATTR, AN_ATTR, VAR_NAME_ATTR, CALL_ATTR, C
                 FILTER_ATTR, N_HET_ATTR, N_HOMALT_ATTR, GNOMAND_SVS_ID_ATTR, GNOMAND_SVS_AF_ATTR, CHR2_ATTR, END2_ATTR]
 SAMPLE_COLUMNS = [GQ_ATTR, RD_CN_ATTR, GT_ATTR]
 
+gene_id_mapping = load_gencode(37, gencode_gtf_path='vcf/gencode.v37.annotation.gtf.gz', genome_version='38')
+
 
 def get_field_val(row, col, format_kwargs=None):
     """
@@ -114,17 +116,12 @@ def get_parsed_column_values(row, columns):
     return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col) for col in columns}
 
 
-def _get_gene_id(gene_symbol):
-    # to be implemented
-    return ''
-
-
 def parse_sorted_transcript_consequences(info):
     trans = []
     for col in info.keys():
         if col.startswith('PROTEIN_CODING_') and isinstance(info[col], list):
             trans += [{'gene_symbol': gene,
-                       'gene_id': _get_gene_id(gene),
+                       'gene_id': gene_id_mapping.get(gene, 'Not Found'),
                        'predicted_consequence': col.split('__')[-1]
                        } for gene in info[col]]
     return trans
@@ -321,8 +318,11 @@ def test_data_parsing(guid, input_dataset, sample_type='WGS'):
     parsed_svs = parsed_svs_by_name.values()
 
     logger.info('\nFormatting for ES export')
-    for sv in tqdm(parsed_svs, unit=' sv records'):
+    for sv in parsed_svs:
         format_sv(sv)
+
+    gene_id_not_found = [v for v in parsed_svs if v['sortedTranscriptConsequences'] and [gene for gene in v['sortedTranscriptConsequences'] if gene['gene_id']=='Not Found']]
+    logger.info('\nThere are {} variants with gene Ids not being mapped.'.format(len(gene_id_not_found)))
 
     logger.info('DONE')
 
@@ -336,22 +336,26 @@ if __name__ == '__main__':
 
 # test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
 # Outputs:
+# INFO:genome_sv_pipeline.mapping_gene_ids:Loading vcf/gencode.v37.annotation.gtf.gz (genome version: 38)
+# 3078640 gencode records [00:11, 272871.12 gencode records/s]
+# INFO:genome_sv_pipeline.mapping_gene_ids:Get 59409 gene id mapping records
 # INFO:__main__:Subsetting to 167 samples
-# 145568 rows [14:50, 163.52 rows/s]
+# 145568 rows [13:44, 176.53 rows/s]
 # INFO:__main__:Found 106 sample ids
 # INFO:__main__:Missing the following 61 samples:
 # E00859946, HK015_0036, HK015_0038_D2, HK017-0044, HK017-0045, HK017-0046, HK032_0081, HK032_0081_2_D2, HK035_0089, HK060-0154_1, HK060-0155_1, HK060-0156_1, HK061-0157_D1, HK061-0158_D1, HK061-0159_D1, HK079-001_D2, HK079-002_D2, HK079-003_D2, HK080-001_D2, HK080-002_D2, HK080-003_D2, HK081-001_D2, HK081-002_D2, HK081-003_D2, HK085-001_D2, HK085-002_D2, HK085-004_D2, HK085-006_D2, HK100-001_D1, HK100-002_D1, HK100-003_D1, HK100-004_D1, HK104-001_D2, HK104-002_D2, HK108-001_1, HK108-002_1, HK108-003_1, HK112-001_1, HK112-002_1, HK112-003_1, HK115-001_1, HK115-002_1, HK115-003_1, HK117-001_1, HK117-002_1, HK117-003_1, HK119-001_1, HK119-002_1, HK119-003_1, OUN_HK124_001_D1, OUN_HK124_002_D1, OUN_HK124_003_D1, OUN_HK126_001_D1, OUN_HK126_002_D1, OUN_HK126_003_D1, OUN_HK131_001_D1, OUN_HK131_002_D1, OUN_HK131_003_D1, OUN_HK132_001_D1, OUN_HK132_002_D1, OUN_HK132_003_D1
 # INFO:__main__:Found 67275 SVs
 # INFO:__main__:
 # Formatting for ES export
-# 100%|██████████| 67275/67275 [00:02<00:00, 28032.79 sv records/s]
+# INFO:__main__:
+# There are 1328 variants with gene Ids not being mapped.
 # INFO:__main__:DONE
 
 # Example formatting output:
 # {'contig': '1', 'sc': 70, 'sf': 0.04902, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_DUP_chr1_2', 'svType': 'DUP',
 #      'start': 10000, 'end': 53500, 'filters': ['LOW_CALL_RATE'], 'sv_callset_Hemi': 60, 'sv_callset_Hom': 5,
-#      'gnomad_svs_ID': None, 'gnomad_svs_AF': None,
-#      'sortedTranscriptConsequences': [{'gene_symbol': 'OR4F5', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
+#      'gnomad_svs_ID': None, 'gnomad_svs_AF': None, 'sortedTranscriptConsequences': [
+#         {'gene_symbol': 'OR4F5', 'gene_id': 'ENSG00000186092.6', 'predicted_consequence': 'NEAREST_TSS'}],
 #      'geneIds': ['OR4F5'], 'genotypes': [{'gq': 999, 'cn': 4, 'num_alt': 2, 'sample_id': 'HK015_0037'},
 #                                          {'gq': 104, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK031_0080'},
 #                                          {'gq': 36, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK104-003_1'},
@@ -370,8 +374,8 @@ if __name__ == '__main__':
 
 # {'contig': '1', 'sc': 32, 'sf': 0.022409, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_CPX_chr1_2', 'svType': 'CPX',
 #      'start': 1499897, 'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
-#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675,
-#      'sortedTranscriptConsequences': [{'gene_symbol': 'ATAD3A', 'gene_id': '', 'predicted_consequence': 'NEAREST_TSS'}],
+#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675, 'sortedTranscriptConsequences': [
+#         {'gene_symbol': 'ATAD3A', 'gene_id': 'ENSG00000197785.14', 'predicted_consequence': 'NEAREST_TSS'}],
 #      'geneIds': ['ATAD3A'], 'genotypes': [{'gq': 446, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-001_1'},
 #                                           {'gq': 396, 'cn': None, 'num_alt': 1, 'sample_id': 'HK095-002_1'},
 #                                           {'gq': 1, 'cn': None, 'num_alt': 1, 'sample_id': 'HK012_0031_2'},
