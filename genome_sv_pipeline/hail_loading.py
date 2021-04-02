@@ -36,7 +36,7 @@ def annotate_fields(rows):
         'sf': rows.info.AF[0],
         'sn': rows.info.AN,
         'svType': hl.if_else(rows.alleles[1].replace('[<>]', ' ').strip().startswith('INS:'), 'INS', rows.alleles[1].replace('[<>]', ' ').strip()),
-        'svDetail_ins': hl.if_else(rows.alleles[1].replace('[<>]', ' ').strip().startswith('INS:'), rows.alleles[1].replace('[<>]', ' ').strip()[4:], hl.null('str')),
+        '_svDetail_ins': hl.if_else(rows.alleles[1].replace('[<>]', ' ').strip().startswith('INS:'), rows.alleles[1].replace('[<>]', ' ').strip()[4:], hl.null('str')),
         'start': rows.locus.position,
         'end': rows.info.END,
         'sv_callset_Hemi': rows.info.N_HET,
@@ -48,7 +48,7 @@ def annotate_fields(rows):
         'xstart': chrom_offset.get(rows.locus.contig.split('chr')[1]) + rows.locus.position,
         'xstop': hl.if_else(hl.is_defined(rows.info.END2), chrom_offset.get(rows.info.CHR2.split('chr')[1]) + rows.info.END2,
                             chrom_offset.get(rows.locus.contig.split('chr')[1]) + rows.locus.position),
-        'sortedTranscriptConsequences':
+        '_sortedTranscriptConsequences':
             hl.filter(lambda x: hl.is_defined(x.genes),
                       [hl.struct(genes=rows.info.get(col), predicted_consequence=col.split('__')[-1])
                        for col in gene_cols if rows.info.get(col).dtype == hl.dtype('array<str>')]),
@@ -68,10 +68,17 @@ def annotate_fields(rows):
     interval_type = hl.dtype('array<struct{alt: str, chrom: str, start: int32, end: int32}>')
     other_fields = {
         'geneIds': hl.flatmap(lambda x: x.genes, hl.filter(lambda x: x.predicted_consequence != 'NEAREST_TSS',
-                                                      rows.sortedTranscriptConsequences)),
+                                                      rows._sortedTranscriptConsequences)),
+        'sortedTranscriptConsequences':
+            hl.flatmap(lambda x:
+                       hl.map(lambda y:
+                              hl.struct(gene_symbol=y,
+                                        gene_id=gene_id_mapping[y],
+                                        predicted_consequence=x.predicted_consequence), x.genes),
+                       rows._sortedTranscriptConsequences),
         'transcriptConsequenceTerms': [rows.svType],
-        'detailType': hl.if_else(rows.svType=='CPX', rows.info.CPX_TYPE,
-                                 hl.if_else(hl.is_defined(rows.svDetail_ins), rows.svDetail_ins, hl.null('str'))),
+        'svTypeDetail': hl.if_else(rows.svType=='CPX', rows.info.CPX_TYPE,
+                                 hl.if_else(hl.is_defined(rows._svDetail_ins), rows._svDetail_ins, hl.null('str'))),
         'cpxIntervals': hl.if_else(rows.svType=='CPX',
                 hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS), hl.map(lambda x: hl.struct(
                     alt=x.split('_chr')[0], chrom=x.split('_chr')[1].split(':')[0],
@@ -89,21 +96,23 @@ def annotate_fields(rows):
 
     fields = list(mapping.values()) + ['filters'] + list(kwargs.keys()) + list(other_fields.keys()) + ['genotypes']
     rows = rows.key_by('locus').select(*fields)
-    return rows.drop('svDetail_ins')
+    return rows.drop('_svDetail_ins', '_sortedTranscriptConsequences')
 
 
 def main():
+    hl.init()
+
     start_time = time.time()
 
     global gene_id_mapping
-    gene_id_mapping = load_gencode(29, genome_version='38')
+    gene_id_mapping = hl.literal(load_gencode(29, genome_version='38'))
 
     mapping_time = time.time()
     print('Time for loading gene ID mapping table: {:.2f} seconds.'.format(mapping_time - start_time))
 
-    hl.init()
     input_dataset = 'vcf/sv.vcf.gz'
     guid = 'R0332_cmg_estonia_wgs'
+    # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
     # hl.import_vcf(input_dataset, force=True, reference_genome='GRCh38').write('vcf/svs.mt', overwrite=True)
     mt = hl.read_matrix_table('vcf/svs.mt')
     rows = sub_setting_mt(guid, mt)
@@ -147,6 +156,7 @@ def main():
     )
     export_es_time = time.time()
     print('Time for exporting to Elasticsearch: {:.2f} seconds.'.format(export_es_time - annotation_time))
+    print('Total time: {:.2f} minutes.'.format((export_es_time - start_time)/60))
 
 if __name__ == '__main__':
     main()
@@ -155,29 +165,16 @@ if __name__ == '__main__':
 # INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/GRCh37_mapping/gencode.v29lift37.annotation.gtf.gz
 # INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gtf.gz
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz (genome version: 37)
-# 2753539 gencode records [00:11, 236703.74 gencode records/s]
+# 2753539 gencode records [00:10, 253093.19 gencode records/s]
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz (genome version: 38)
-# 2742022 gencode records [00:11, 234215.04 gencode records/s]
+# 2742022 gencode records [00:09, 296529.83 gencode records/s]
 # INFO:genome_sv_pipeline.mapping_gene_ids:Get 59227 gene id mapping records
-# Time for loading gene ID mapping table: 23.75 seconds.
-# 2021-04-02 15:53:38 WARN  NativeCodeLoader:62 - Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-# Setting default log level to "WARN".
-# To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
-# 2021-04-02 15:53:39 WARN  Hail:37 - This Hail JAR was compiled for Spark 2.4.5, running with Spark 2.4.1.
-#   Compatibility is not guaranteed.
-# Running on Apache Spark version 2.4.1
-# SparkUI available at http://wm598-921.fios-router.home:4040
-# Welcome to
-#      __  __     <>__
-#     / /_/ /__  __/ /
-#    / __  / _ `/ / /
-#   /_/ /_/\_,_/_/_/   version 0.2.61-3c86d3ba497a
-# LOGGING: writing to /Users/shifa/dev/hail_elasticsearch_pipelines/genome_sv_pipeline/hail-20210402-1553-0.2.61-3c86d3ba497a.log
+# Time for loading gene ID mapping table: 20.87 seconds.
 # INFO:__main__:Total 167 samples in project R0332_cmg_estonia_wgs
-# INFO:__main__:61 missing samples: {'HK079-002_D2', 'HK104-002_D2', 'HK032_0081', 'HK085-004_D2', 'HK085-006_D2', 'OUN_HK132_003_D1', 'OUN_HK126_003_D1', 'HK085-001_D2', 'HK017-0044', 'HK060-0154_1', 'HK108-002_1', 'HK115-001_1', 'HK115-003_1', 'HK100-004_D1', 'HK080-002_D2', 'OUN_HK132_002_D1', 'HK108-003_1', 'HK085-002_D2', 'OUN_HK132_001_D1', 'HK119-001_1', 'OUN_HK126_002_D1', 'HK080-003_D2', 'HK100-002_D1', 'HK100-001_D1', 'HK108-001_1', 'HK017-0045', 'OUN_HK124_001_D1', 'HK015_0036', 'HK061-0159_D1', 'OUN_HK124_003_D1', 'HK060-0156_1', 'HK060-0155_1', 'HK117-003_1', 'HK080-001_D2', 'OUN_HK126_001_D1', 'HK035_0089', 'HK032_0081_2_D2', 'HK017-0046', 'HK079-003_D2', 'HK061-0157_D1', 'HK015_0038_D2', 'HK112-002_1', 'HK081-001_D2', 'HK115-002_1', 'HK079-001_D2', 'OUN_HK131_003_D1', 'HK061-0158_D1', 'HK119-003_1', 'OUN_HK124_002_D1', 'HK112-003_1', 'E00859946', 'HK081-002_D2', 'HK100-003_D1', 'HK119-002_1', 'HK104-001_D2', 'OUN_HK131_001_D1', 'HK081-003_D2', 'HK112-001_1', 'HK117-001_1', 'HK117-002_1', 'OUN_HK131_002_D1'}
+# INFO:__main__:61 missing samples: {'OUN_HK126_003_D1', 'HK117-001_1', 'HK015_0038_D2', 'OUN_HK132_001_D1', 'HK112-003_1', 'OUN_HK126_001_D1', 'HK119-002_1', 'HK112-002_1', 'HK079-003_D2', 'HK035_0089', 'HK119-001_1', 'HK017-0044', 'HK081-003_D2', 'HK080-001_D2', 'OUN_HK132_003_D1', 'HK100-001_D1', 'HK060-0154_1', 'OUN_HK126_002_D1', 'HK085-001_D2', 'HK085-004_D2', 'HK115-001_1', 'HK032_0081_2_D2', 'HK100-002_D1', 'HK080-003_D2', 'OUN_HK124_002_D1', 'HK017-0045', 'HK032_0081', 'E00859946', 'HK085-002_D2', 'HK108-002_1', 'HK061-0158_D1', 'OUN_HK132_002_D1', 'HK104-001_D2', 'HK100-004_D1', 'HK117-002_1', 'OUN_HK124_001_D1', 'HK119-003_1', 'HK015_0036', 'HK061-0157_D1', 'HK115-002_1', 'HK080-002_D2', 'OUN_HK131_001_D1', 'HK117-003_1', 'HK060-0156_1', 'OUN_HK131_002_D1', 'HK104-002_D2', 'HK108-003_1', 'HK079-002_D2', 'HK115-003_1', 'HK100-003_D1', 'OUN_HK131_003_D1', 'HK079-001_D2', 'HK017-0046', 'HK060-0155_1', 'HK108-001_1', 'OUN_HK124_003_D1', 'HK081-002_D2', 'HK085-006_D2', 'HK061-0159_D1', 'HK081-001_D2', 'HK112-001_1'}
 # [Stage 0:>                                                          (0 + 1) / 1]INFO:__main__:Variant counts: 67275
-# Time for annotating fields: 17.93 seconds.
-# INFO:elasticsearch:GET http://192.168.1.244:9200/ [status:200 request:0.021s]
+# Time for annotating fields: 11.20 seconds.
+# INFO:elasticsearch:GET http://192.168.1.244:9200/ [status:200 request:0.005s]
 # INFO:root:{'cluster_name': 'elasticsearch',
 #  'cluster_uuid': 'f2eIQ6bCRM2axogPkrM7bA',
 #  'name': 'c35606e34bf6',
@@ -191,9 +188,9 @@ if __name__ == '__main__':
 #              'minimum_index_compatibility_version': '6.0.0-beta1',
 #              'minimum_wire_compatibility_version': '6.8.0',
 #              'number': '7.8.1'}}
-# INFO:elasticsearch:HEAD http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.010s]
+# INFO:elasticsearch:HEAD http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.003s]
 # INFO:__main__:Deleting existing index
-# INFO:elasticsearch:DELETE http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.850s]
+# INFO:elasticsearch:DELETE http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.230s]
 # INFO:root: struct {
 #      variantId: str,
 #      filters: set<str>,
@@ -212,10 +209,6 @@ if __name__ == '__main__':
 #      xpos: int64,
 #      xstart: int64,
 #      xstop: int64,
-#      sortedTranscriptConsequences: array<struct {
-#          genes: array<str>,
-#          predicted_consequence: str
-#      }>,
 #      samples: array<str>,
 #      samples_num_alt_0: array<str>,
 #      samples_num_alt_1: array<str>,
@@ -226,8 +219,13 @@ if __name__ == '__main__':
 #      samples_cn_3: array<str>,
 #      samples_cn_gte_4: array<str>,
 #      geneIds: array<str>,
+#      sortedTranscriptConsequences: array<struct {
+#          gene_symbol: str,
+#          gene_id: str,
+#          predicted_consequence: str
+#      }>,
 #      transcriptConsequenceTerms: array<str>,
-#      detailType: str,
+#      svTypeDetail: str,
 #      cpxIntervals: array<struct {
 #          alt: str,
 #          chrom: str,
@@ -248,7 +246,6 @@ if __name__ == '__main__':
 #                                  'end': {'type': 'integer'},
 #                                  'start': {'type': 'integer'}},
 #                   'type': 'nested'},
-#  'detailType': {'type': 'keyword'},
 #  'end': {'type': 'integer'},
 #  'filters': {'type': 'keyword'},
 #  'geneIds': {'type': 'keyword'},
@@ -275,11 +272,13 @@ if __name__ == '__main__':
 #  'sc': {'type': 'integer'},
 #  'sf': {'type': 'double'},
 #  'sn': {'type': 'integer'},
-#  'sortedTranscriptConsequences': {'properties': {'genes': {'type': 'keyword'},
+#  'sortedTranscriptConsequences': {'properties': {'gene_id': {'type': 'keyword'},
+#                                                  'gene_symbol': {'type': 'keyword'},
 #                                                  'predicted_consequence': {'type': 'keyword'}},
 #                                   'type': 'nested'},
 #  'start': {'type': 'integer'},
 #  'svType': {'type': 'keyword'},
+#  'svTypeDetail': {'type': 'keyword'},
 #  'sv_callset_Hemi': {'type': 'integer'},
 #  'sv_callset_Hom': {'type': 'integer'},
 #  'transcriptConsequenceTerms': {'type': 'keyword'},
@@ -288,8 +287,9 @@ if __name__ == '__main__':
 #  'xstart': {'type': 'long'},
 #  'xstop': {'type': 'long'}}
 # INFO:root:==> creating elasticsearch index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402
-# INFO:elasticsearch:PUT http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.973s]
+# INFO:elasticsearch:PUT http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.539s]
 # INFO:root:==> exporting data to elasticsearch. Write mode: index, blocksize: 2000
 # Config Map(es.batch.size.entries -> 2000, es.index.auto.create -> true, es.write.operation -> index, es.port -> 9200, es.nodes -> 192.168.1.244)
-# [Stage 1:>                                                          (0 + 1) / 1]INFO:elasticsearch:POST http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_forcemerge [status:200 request:0.086s]
-# Time for exporting to Elasticsearch: 81.46 seconds.
+# [Stage 1:>                                                          (0 + 1) / 1]INFO:elasticsearch:POST http://192.168.1.244:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_forcemerge [status:200 request:0.082s]
+# Time for exporting to Elasticsearch: 62.48 seconds.
+# Total time: 1.58 minutes.
