@@ -3,13 +3,17 @@
 import os
 import logging
 import vcf
-from genome_sv_pipeline.mapping_gene_ids import load_gencode
-
+import time
+from elasticsearch import helpers as es_helpers
 from tqdm import tqdm
 
-from sv_pipeline.load_data import get_sample_subset, get_sample_remap,\
+from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
+from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
+
+from genome_sv_pipeline.mapping_gene_ids import load_gencode
+from sv_pipeline.load_data import get_sample_subset, get_sample_remap, get_es_index_name, get_es_schema,\
     CHROM_FIELD, SC_FIELD, SF_FIELD, GENES_FIELD, VARIANT_ID_FIELD, CALL_FIELD, START_COL, \
-    END_COL, QS_FIELD, CN_FIELD, SAMPLE_ID_FIELD, GENOTYPES_FIELD, TRANSCRIPTS_FIELD, CHROM_TO_XPOS_OFFSET
+    END_COL, CN_FIELD, SAMPLE_ID_FIELD, GENOTYPES_FIELD, TRANSCRIPTS_FIELD, CHROM_TO_XPOS_OFFSET
 
 CHR_ATTR = 'CHROM'
 AC_ATTR = 'AC'
@@ -77,7 +81,7 @@ CORE_COLUMNS = [CHR_ATTR, AC_ATTR, AF_ATTR, AN_ATTR, VAR_NAME_ATTR, CALL_ATTR, C
                 FILTER_ATTR, N_HET_ATTR, N_HOMALT_ATTR, GNOMAND_SVS_ID_ATTR, GNOMAND_SVS_AF_ATTR, CHR2_ATTR, END2_ATTR]
 SAMPLE_COLUMNS = [GQ_ATTR, RD_CN_ATTR, GT_ATTR]
 
-gene_id_mapping = load_gencode(29, genome_version='38')
+gene_id_mapping = {}
 
 
 def get_field_val(row, col, format_kwargs=None):
@@ -121,7 +125,7 @@ def parse_sorted_transcript_consequences(info):
     for col in info.keys():
         if col.startswith('PROTEIN_CODING_') and isinstance(info[col], list):
             trans += [{'gene_symbol': gene,
-                       'gene_id': gene_id_mapping.get(gene, 'Not Found'),
+                       'gene_id': gene_id_mapping[gene],
                        'predicted_consequence': col.split('__')[-1]
                        } for gene in info[col]]
     return trans
@@ -254,7 +258,7 @@ def parse_cpx_intervals(cpx_intervals):
         types = interval.split('_chr')
         chrs = types[1].split(':')
         pos = chrs[1].split('-')
-        intervals.append({'type': types[0], 'chrom':chrs[0], 'start': int(pos[0]), 'end': int(pos[1])})
+        intervals.append({'alt': types[0], 'chrom':chrs[0], 'start': int(pos[0]), 'end': int(pos[1])})
     return intervals
 
 
@@ -266,10 +270,11 @@ def format_sv(sv):
     :return: none
     """
     if sv[CALL_FIELD].startswith('INS:'):
-        sv[SV_DETAIL_FIELD] = {'detailType': sv[CALL_FIELD].split(':', 1)[1]}
+        sv['svTypeDetail'] = sv[CALL_FIELD].split(':', 1)[1]
         sv[CALL_FIELD] = 'INS'
     elif sv[CALL_FIELD] == 'CPX':
-        sv[SV_DETAIL_FIELD] = {'detailType': sv[CPX_TYPE_FIELD], 'intervals': parse_cpx_intervals(sv[CPX_INTERVALS_FIELD])}
+        sv['svTypeDetail'] = sv[CPX_TYPE_FIELD]
+        sv['cpxIntervals'] = parse_cpx_intervals(sv[CPX_INTERVALS_FIELD])
     sv.pop(CPX_TYPE_FIELD)
     sv.pop(CPX_INTERVALS_FIELD)
 
@@ -293,19 +298,82 @@ def format_sv(sv):
                 sv[cn_key] = []
             sv[cn_key].append(sample_id)
 
-        num_alt_key = 'sample_num_alt_{}'.format(genotype[NUM_ALT_FIELD])
+        num_alt_key = 'samples_num_alt_{}'.format(genotype[NUM_ALT_FIELD])
         if num_alt_key not in sv:
             sv[num_alt_key] = []
         sv[num_alt_key].append(sample_id)
 
 
-def test_data_parsing(guid, input_dataset, sample_type='WGS'):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6):
+    """
+    Export SV data to elasticsearch
+
+    :param es_host: elasticsearch server host
+    :param es_port: elasticsearch server port
+    :param rows: parsed SV rows to export
+    :param index_name: elasticsearch index name
+    :param meta: index metadata
+    :param num_shards: number of shards for the index
+    :return: none
+    """
+    es_client = ElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
+
+    all_fields = {}
+    nested_fields = {GENOTYPES_FIELD: {}, TRANSCRIPTS_FIELD: {}, 'cpxIntervals': {}}
+
+    for row in rows:
+        all_fields.update({k: v for k, v in row.items() if v})
+        for col, val in nested_fields.items():
+            if row.get(col):
+                val.update(row[col][0])
+    elasticsearch_schema = get_es_schema(all_fields, nested_fields)
+
+    if es_client.es.indices.exists(index=index_name):
+        logger.info('Deleting existing index')
+        es_client.es.indices.delete(index=index_name)
+
+    logger.info('Setting up index')
+    es_client.create_index(index_name, elasticsearch_schema, num_shards=num_shards, _meta=meta)
+
+    es_client.route_index_to_temp_es_cluster(index_name)
+
+    es_actions = [{
+        '_index': index_name,
+        '_op_type': ELASTICSEARCH_INDEX,
+        '_id': row[VARIANT_ID_FIELD],
+        '_source': row,
+    } for row in rows]
+
+    logger.info('Starting bulk export')
+    success_count, _ = es_helpers.bulk(es_client.es, es_actions, chunk_size=2000)
+    logger.info('Successfully created {} records'.format(success_count))
+
+    es_client.es.indices.forcemerge(index=index_name)
+
+    es_client.route_index_off_temp_es_cluster(index_name)
+
+
+def main():
+    guid = 'R0332_cmg_estonia_wgs'
+    input_dataset = 'vcf/sv.vcf.gz'
+    sample_type = 'WGS'
+
+    start_time = time.time()
+    global gene_id_mapping
+    gene_id_mapping = load_gencode(29, genome_version='38')
+
+    mapping_time = time.time()
+    print('Time for loading gene ID mapping table: {:.2f} seconds.'.format(mapping_time - start_time))
+
     sample_subset = get_sample_subset(guid, sample_type)
     sample_remap = get_sample_remap(guid, sample_type)
     message = 'Subsetting to {} samples'.format(len(sample_subset))
     if sample_remap:
         message += ' (remapping {} samples)'.format(len(sample_remap))
     logger.info(message)
+
+    subset_samples_time = time.time()
+    print('Time for subsetting samples: {:.2f} seconds.'.format(subset_samples_time - mapping_time))
 
     parsed_svs_by_name = subset_and_group_svs(
         input_dataset,
@@ -315,6 +383,9 @@ def test_data_parsing(guid, input_dataset, sample_type='WGS'):
         ignore_missing_samples=True
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
+
+    parse_svs_time = time.time()
+    print('Time for parsing SVs: {:.2f} seconds.'.format(parse_svs_time - subset_samples_time))
 
     parsed_svs = parsed_svs_by_name.values()
 
@@ -328,11 +399,28 @@ def test_data_parsing(guid, input_dataset, sample_type='WGS'):
     gene_id_not_found = {g['gene_symbol'] for sub in a for g in sub if g['gene_id']=='Not Found'}
     logger.info('\nThere are {} genes which Ids not being mapped: {}'.format(len(gene_id_not_found), gene_id_not_found))
 
+    format_svs_time = time.time()
+    print('Time for formatting SVs: {:.2f} seconds.'.format(format_svs_time - parse_svs_time))
+
+    meta = {
+      'genomeVersion': '38',
+      'sampleType': sample_type,
+      'datasetType': 'SV',
+      'sourceFilePath': input_dataset,
+    }
+    index_name = get_es_index_name(guid, meta)
+    logger.info('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
+    es_host = 'localhost'
+    es_port = '9200'
+    es_password = None
+    num_shards = None
+    export_to_elasticsearch(es_host, es_port, parsed_svs, index_name, meta, es_password, num_shards)
+
+    export_es_time = time.time()
+    print('Time for exporting to Elasticsearch: {:.2f} seconds.'.format(export_es_time - format_svs_time))
+    print('Total time: {:.2f} minutes.'.format((export_es_time - start_time)/60))
+
     logger.info('DONE')
-
-
-def main():
-    test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
 
 
 if __name__ == '__main__':
@@ -341,59 +429,133 @@ if __name__ == '__main__':
 # test_data_parsing('R0332_cmg_estonia_wgs', 'vcf/sv.vcf.gz')
 # Outputs:
 # INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/GRCh37_mapping/gencode.v29lift37.annotation.gtf.gz
-# INFO:genome_sv_pipeline.mapping_gene_ids:Downloading http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gtf.gz to /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz
-# 307719 data [00:53, 5750.17 data/s]
+# INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gtf.gz
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz (genome version: 37)
-# 2753539 gencode records [00:12, 228432.70 gencode records/s]
+# 2753539 gencode records [00:11, 243009.31 gencode records/s]
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz (genome version: 38)
-# 2742022 gencode records [00:10, 265384.28 gencode records/s]
+# 2742022 gencode records [00:09, 293228.13 gencode records/s]
+# Time for loading gene ID mapping table: 21.09 seconds.
 # INFO:genome_sv_pipeline.mapping_gene_ids:Get 59227 gene id mapping records
+# Time for subsetting samples: 3.24 seconds.
 # INFO:__main__:Subsetting to 167 samples
-# 145568 rows [13:38, 177.76 rows/s]
+# 145568 rows [14:29, 167.37 rows/s]
 # INFO:__main__:Found 106 sample ids
 # INFO:__main__:Missing the following 61 samples:
 # E00859946, HK015_0036, HK015_0038_D2, HK017-0044, HK017-0045, HK017-0046, HK032_0081, HK032_0081_2_D2, HK035_0089, HK060-0154_1, HK060-0155_1, HK060-0156_1, HK061-0157_D1, HK061-0158_D1, HK061-0159_D1, HK079-001_D2, HK079-002_D2, HK079-003_D2, HK080-001_D2, HK080-002_D2, HK080-003_D2, HK081-001_D2, HK081-002_D2, HK081-003_D2, HK085-001_D2, HK085-002_D2, HK085-004_D2, HK085-006_D2, HK100-001_D1, HK100-002_D1, HK100-003_D1, HK100-004_D1, HK104-001_D2, HK104-002_D2, HK108-001_1, HK108-002_1, HK108-003_1, HK112-001_1, HK112-002_1, HK112-003_1, HK115-001_1, HK115-002_1, HK115-003_1, HK117-001_1, HK117-002_1, HK117-003_1, HK119-001_1, HK119-002_1, HK119-003_1, OUN_HK124_001_D1, OUN_HK124_002_D1, OUN_HK124_003_D1, OUN_HK126_001_D1, OUN_HK126_002_D1, OUN_HK126_003_D1, OUN_HK131_001_D1, OUN_HK131_002_D1, OUN_HK131_003_D1, OUN_HK132_001_D1, OUN_HK132_002_D1, OUN_HK132_003_D1
 # INFO:__main__:Found 67275 SVs
 # INFO:__main__:
 # Formatting for ES export
+# Time for parsing SVs: 869.73 seconds.
+# Time for formatting SVs: 2.28 seconds.
 # INFO:__main__:
 # There are 0 genes which Ids not being mapped: set()
+# INFO:__main__:Exporting 67275 docs to ES index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402
+# INFO:elasticsearch:GET http://localhost:9200/ [status:200 request:0.010s]
+# INFO:root:{'cluster_name': 'elasticsearch',
+#  'cluster_uuid': 'f2eIQ6bCRM2axogPkrM7bA',
+#  'name': 'c35606e34bf6',
+#  'tagline': 'You Know, for Search',
+#  'version': {'build_date': '2020-07-21T16:40:44.668009Z',
+#              'build_flavor': 'default',
+#              'build_hash': 'b5ca9c58fb664ca8bf9e4057fc229b3396bf3a89',
+#              'build_snapshot': False,
+#              'build_type': 'docker',
+#              'lucene_version': '8.5.1',
+#              'minimum_index_compatibility_version': '6.0.0-beta1',
+#              'minimum_wire_compatibility_version': '6.8.0',
+#              'number': '7.8.1'}}
+# INFO:elasticsearch:HEAD http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.007s]
+# INFO:__main__:Deleting existing index
+# INFO:elasticsearch:DELETE http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.183s]
+# INFO:__main__:Setting up index
+# INFO:root:==> index _meta: {'datasetType': 'SV',
+#  'genomeVersion': '38',
+#  'sampleType': 'WGS',
+#  'sourceFilePath': 'vcf/sv.vcf.gz'}
+# INFO:root:create_mapping - elasticsearch schema:
+# {'contig': {'type': 'keyword'},
+#  'cpxIntervals': {'properties': {'alt': {'type': 'keyword'},
+#                                  'chrom': {'type': 'keyword'},
+#                                  'end': {'type': 'integer'},
+#                                  'start': {'type': 'integer'}},
+#                   'type': 'nested'},
+#  'detailType': {'type': 'keyword'},
+#  'end': {'type': 'integer'},
+#  'filters': {'type': 'keyword'},
+#  'geneIds': {'type': 'keyword'},
+#  'genotypes': {'properties': {'cn': {'type': 'integer'},
+#                               'gq': {'type': 'integer'},
+#                               'num_alt': {'type': 'integer'},
+#                               'sample_id': {'type': 'keyword'}},
+#                'type': 'nested'},
+#  'gnomad_svs_AF': {'type': 'double'},
+#  'gnomad_svs_ID': {'type': 'keyword'},
+#  'pos': {'type': 'integer'},
+#  'samples': {'type': 'keyword'},
+#  'samples_cn_1': {'type': 'keyword'},
+#  'samples_cn_2': {'type': 'keyword'},
+#  'samples_cn_3': {'type': 'keyword'},
+#  'samples_cn_gte_4': {'type': 'keyword'},
+#  'samples_num_alt_1': {'type': 'keyword'},
+#  'samples_num_alt_2': {'type': 'keyword'},
+#  'sc': {'type': 'integer'},
+#  'sf': {'type': 'double'},
+#  'sn': {'type': 'integer'},
+#  'sortedTranscriptConsequences': {'properties': {'gene_id': {'type': 'keyword'},
+#                                                  'gene_symbol': {'type': 'keyword'},
+#                                                  'predicted_consequence': {'type': 'keyword'}},
+#                                   'type': 'nested'},
+#  'start': {'type': 'integer'},
+#  'svType': {'type': 'keyword'},
+#  'sv_callset_Hemi': {'type': 'integer'},
+#  'sv_callset_Hom': {'type': 'integer'},
+#  'transcriptConsequenceTerms': {'type': 'keyword'},
+#  'variantId': {'type': 'keyword'},
+#  'xpos': {'type': 'long'},
+#  'xstart': {'type': 'long'},
+#  'xstop': {'type': 'long'}}
+# INFO:root:==> creating elasticsearch index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.574s]
+# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 settings = {'index.routing.allocation.require._name': 'elasticsearch-es-data-loading*', 'index.routing.allocation.exclude._name': ''}
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_settings [status:200 request:0.147s]
+# INFO:__main__:Starting bulk export
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.874s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.981s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.974s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.915s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.939s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.928s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.920s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.996s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.982s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.164s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.956s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.892s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.032s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.009s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.017s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.973s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.973s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.048s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.995s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.068s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.985s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.895s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.937s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.951s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.046s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.830s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.936s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.867s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.833s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.978s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.897s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.970s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.940s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.564s]
+# INFO:__main__:Successfully created 67275 records
+# INFO:elasticsearch:POST http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_forcemerge [status:200 request:8.685s]
+# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 settings = {'index.routing.allocation.require._name': '', 'index.routing.allocation.exclude._name': 'elasticsearch-es-data-loading*'}
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_settings [status:200 request:0.179s]
 # INFO:__main__:DONE
-
-# Example formatting output:
-# {'contig': '1', 'sc': 70, 'sf': 0.04902, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_DUP_chr1_2', 'svType': 'DUP',
-#      'start': 10000, 'end': 53500, 'filters': ['LOW_CALL_RATE'], 'sv_callset_Hemi': 60, 'sv_callset_Hom': 5,
-#      'gnomad_svs_ID': None, 'gnomad_svs_AF': None, 'sortedTranscriptConsequences': [
-#         {'gene_symbol': 'OR4F5', 'gene_id': 'ENSG00000186092.6', 'predicted_consequence': 'NEAREST_TSS'}],
-#      'geneIds': ['OR4F5'], 'genotypes': [{'gq': 999, 'cn': 4, 'num_alt': 2, 'sample_id': 'HK015_0037'},
-#                                          {'gq': 104, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK031_0080'},
-#                                          {'gq': 36, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK104-003_1'},
-#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK088-003_1'},
-#                                          {'gq': 141, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK102-001_1'},
-#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'OUN_HK120_2_1'},
-#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK025-0068_3'},
-#                                          {'gq': 999, 'cn': 3, 'num_alt': 1, 'sample_id': 'HK029_0076'}],
-#      'transcriptConsequenceTerms': ['DUP'], 'pos': 10000, 'xpos': 1000010000, 'xstart': 1000010000, 'xstop': 1000053500,
-#      'samples': ['HK015_0037', 'HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1',
-#                  'HK025-0068_3', 'HK029_0076'], 'samples_cn_gte_4': ['HK015_0037'], 'sample_num_alt_2': ['HK015_0037'],
-#      'samples_cn_3': ['HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1', 'HK025-0068_3',
-#                       'HK029_0076'],
-#      'sample_num_alt_1': ['HK031_0080', 'HK104-003_1', 'HK088-003_1', 'HK102-001_1', 'OUN_HK120_2_1', 'HK025-0068_3',
-#                           'HK029_0076']}
-
-# {'contig': '1', 'sc': 32, 'sf': 0.022409, 'sn': 1428, 'variantId': 'CMG.phase1_CMG_CPX_chr1_2', 'svType': 'CPX',
-#      'start': 1499897, 'end': 1500533, 'filters': [], 'sv_callset_Hemi': 32, 'sv_callset_Hom': 0,
-#      'gnomad_svs_ID': 'gnomAD-SV_v2.1_CPX_1_3', 'gnomad_svs_AF': 0.00673400005325675, 'sortedTranscriptConsequences': [
-#         {'gene_symbol': 'ATAD3A', 'gene_id': 'ENSG00000197785.14', 'predicted_consequence': 'NEAREST_TSS'}],
-#      'geneIds': ['ATAD3A'], 'genotypes': [{'gq': 446, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-001_1'},
-#                                           {'gq': 396, 'cn': None, 'num_alt': 1, 'sample_id': 'HK095-002_1'},
-#                                           {'gq': 1, 'cn': None, 'num_alt': 1, 'sample_id': 'HK012_0031_2'},
-#                                           {'gq': 1, 'cn': None, 'num_alt': 1, 'sample_id': 'HK075-002_1'},
-#                                           {'gq': 283, 'cn': None, 'num_alt': 1, 'sample_id': 'HK029-0076_3'},
-#                                           {'gq': 57, 'cn': None, 'num_alt': 1, 'sample_id': 'HK029_0076'}],
-#      'svDetail': {'detailType': 'dupINV', 'intervals': [{'type': 'DUP', 'chrom': '1', 'start': 1499897, 'end': 1499974},
-#                                                         {'type': 'INV', 'chrom': '1', 'start': 1499897,
-#                                                          'end': 1500533}]}, 'transcriptConsequenceTerms': ['CPX'],
-#      'pos': 1499897, 'xpos': 1001499897, 'xstart': 1001499897, 'xstop': 1001500533,
-#      'samples': ['HK075-001_1', 'HK095-002_1', 'HK012_0031_2', 'HK075-002_1', 'HK029-0076_3', 'HK029_0076'],
-#      'sample_num_alt_1': ['HK075-001_1', 'HK095-002_1', 'HK012_0031_2', 'HK075-002_1', 'HK029-0076_3', 'HK029_0076']}
+# Time for exporting to Elasticsearch: 46.13 seconds.
