@@ -353,28 +353,29 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_passwor
     es_client.route_index_off_temp_es_cluster(index_name)
 
 
+def measure_time(pre_time, message):
+    current_time = time.time()
+    print('Time for {}: {:.2f} seconds.'.format(message, current_time - pre_time))
+    return current_time
+
+
 def main():
     guid = 'R0332_cmg_estonia_wgs'
     input_dataset = 'vcf/sv.vcf.gz'
     sample_type = 'WGS'
 
     start_time = time.time()
+    pre_time = start_time
     global gene_id_mapping
     gene_id_mapping = load_gencode(29, genome_version='38')
 
-    mapping_time = time.time()
-    print('Time for loading gene ID mapping table: {:.2f} seconds.'.format(mapping_time - start_time))
+    pre_time = measure_time(pre_time, 'loading gene ID mapping table')
 
     sample_subset = get_sample_subset(guid, sample_type)
-    sample_remap = get_sample_remap(guid, sample_type)
-    message = 'Subsetting to {} samples'.format(len(sample_subset))
-    if sample_remap:
-        message += ' (remapping {} samples)'.format(len(sample_remap))
-    logger.info(message)
 
-    subset_samples_time = time.time()
-    print('Time for subsetting samples: {:.2f} seconds.'.format(subset_samples_time - mapping_time))
+    pre_time = measure_time(pre_time, 'getting the sample subset')
 
+    sample_remap = None
     parsed_svs_by_name = subset_and_group_svs(
         input_dataset,
         sample_subset,
@@ -384,8 +385,7 @@ def main():
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
-    parse_svs_time = time.time()
-    print('Time for parsing SVs: {:.2f} seconds.'.format(parse_svs_time - subset_samples_time))
+    pre_time = measure_time(pre_time, 'parsing SVs')
 
     parsed_svs = parsed_svs_by_name.values()
 
@@ -399,8 +399,7 @@ def main():
     gene_id_not_found = {g['gene_symbol'] for sub in a for g in sub if g['gene_id']=='Not Found'}
     logger.info('\nThere are {} genes which Ids not being mapped: {}'.format(len(gene_id_not_found), gene_id_not_found))
 
-    format_svs_time = time.time()
-    print('Time for formatting SVs: {:.2f} seconds.'.format(format_svs_time - parse_svs_time))
+    pre_time = measure_time(pre_time, 'formatting SVs')
 
     meta = {
       'genomeVersion': '38',
@@ -416,9 +415,8 @@ def main():
     num_shards = None
     export_to_elasticsearch(es_host, es_port, parsed_svs, index_name, meta, es_password, num_shards)
 
-    export_es_time = time.time()
-    print('Time for exporting to Elasticsearch: {:.2f} seconds.'.format(export_es_time - format_svs_time))
-    print('Total time: {:.2f} minutes.'.format((export_es_time - start_time)/60))
+    pre_time = measure_time(pre_time, 'exporting to Elasticsearch')
+    print('Total time: {:.2f} minutes.'.format((pre_time - start_time)/60))
 
     logger.info('DONE')
 
@@ -431,26 +429,24 @@ if __name__ == '__main__':
 # INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/GRCh37_mapping/gencode.v29lift37.annotation.gtf.gz
 # INFO:genome_sv_pipeline.mapping_gene_ids:Re-using /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz previously downloaded from http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gtf.gz
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29lift37.annotation.gtf.gz (genome version: 37)
-# 2753539 gencode records [00:11, 243009.31 gencode records/s]
+# 2753539 gencode records [00:10, 251932.01 gencode records/s]
 # INFO:genome_sv_pipeline.mapping_gene_ids:Loading /var/folders/p8/c2yjwplx5n5c8z8s5c91ddqc0000gq/T/gencode.v29.annotation.gtf.gz (genome version: 38)
-# 2742022 gencode records [00:09, 293228.13 gencode records/s]
-# Time for loading gene ID mapping table: 21.09 seconds.
+# 2742022 gencode records [00:09, 277546.91 gencode records/s]
 # INFO:genome_sv_pipeline.mapping_gene_ids:Get 59227 gene id mapping records
-# Time for subsetting samples: 3.24 seconds.
-# INFO:__main__:Subsetting to 167 samples
-# 145568 rows [14:29, 167.37 rows/s]
+# Time for loading gene ID mapping table: 21.19 seconds.
+# Time for getting the sample subset: 1.67 seconds.
+# 145568 rows [13:48, 175.68 rows/s]
 # INFO:__main__:Found 106 sample ids
 # INFO:__main__:Missing the following 61 samples:
 # E00859946, HK015_0036, HK015_0038_D2, HK017-0044, HK017-0045, HK017-0046, HK032_0081, HK032_0081_2_D2, HK035_0089, HK060-0154_1, HK060-0155_1, HK060-0156_1, HK061-0157_D1, HK061-0158_D1, HK061-0159_D1, HK079-001_D2, HK079-002_D2, HK079-003_D2, HK080-001_D2, HK080-002_D2, HK080-003_D2, HK081-001_D2, HK081-002_D2, HK081-003_D2, HK085-001_D2, HK085-002_D2, HK085-004_D2, HK085-006_D2, HK100-001_D1, HK100-002_D1, HK100-003_D1, HK100-004_D1, HK104-001_D2, HK104-002_D2, HK108-001_1, HK108-002_1, HK108-003_1, HK112-001_1, HK112-002_1, HK112-003_1, HK115-001_1, HK115-002_1, HK115-003_1, HK117-001_1, HK117-002_1, HK117-003_1, HK119-001_1, HK119-002_1, HK119-003_1, OUN_HK124_001_D1, OUN_HK124_002_D1, OUN_HK124_003_D1, OUN_HK126_001_D1, OUN_HK126_002_D1, OUN_HK126_003_D1, OUN_HK131_001_D1, OUN_HK131_002_D1, OUN_HK131_003_D1, OUN_HK132_001_D1, OUN_HK132_002_D1, OUN_HK132_003_D1
 # INFO:__main__:Found 67275 SVs
 # INFO:__main__:
 # Formatting for ES export
-# Time for parsing SVs: 869.73 seconds.
-# Time for formatting SVs: 2.28 seconds.
+# Time for parsing SVs: 828.60 seconds.
 # INFO:__main__:
 # There are 0 genes which Ids not being mapped: set()
-# INFO:__main__:Exporting 67275 docs to ES index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402
-# INFO:elasticsearch:GET http://localhost:9200/ [status:200 request:0.010s]
+# INFO:__main__:Exporting 67275 docs to ES index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405
+# INFO:elasticsearch:GET http://localhost:9200/ [status:200 request:0.007s]
 # INFO:root:{'cluster_name': 'elasticsearch',
 #  'cluster_uuid': 'f2eIQ6bCRM2axogPkrM7bA',
 #  'name': 'c35606e34bf6',
@@ -464,9 +460,10 @@ if __name__ == '__main__':
 #              'minimum_index_compatibility_version': '6.0.0-beta1',
 #              'minimum_wire_compatibility_version': '6.8.0',
 #              'number': '7.8.1'}}
-# INFO:elasticsearch:HEAD http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.007s]
+# Time for formatting SVs: 1.93 seconds.
+# INFO:elasticsearch:HEAD http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405 [status:200 request:0.005s]
 # INFO:__main__:Deleting existing index
-# INFO:elasticsearch:DELETE http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.183s]
+# INFO:elasticsearch:DELETE http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405 [status:200 request:0.174s]
 # INFO:__main__:Setting up index
 # INFO:root:==> index _meta: {'datasetType': 'SV',
 #  'genomeVersion': '38',
@@ -479,7 +476,6 @@ if __name__ == '__main__':
 #                                  'end': {'type': 'integer'},
 #                                  'start': {'type': 'integer'}},
 #                   'type': 'nested'},
-#  'detailType': {'type': 'keyword'},
 #  'end': {'type': 'integer'},
 #  'filters': {'type': 'keyword'},
 #  'geneIds': {'type': 'keyword'},
@@ -507,6 +503,7 @@ if __name__ == '__main__':
 #                                   'type': 'nested'},
 #  'start': {'type': 'integer'},
 #  'svType': {'type': 'keyword'},
+#  'svTypeDetail': {'type': 'keyword'},
 #  'sv_callset_Hemi': {'type': 'integer'},
 #  'sv_callset_Hom': {'type': 'integer'},
 #  'transcriptConsequenceTerms': {'type': 'keyword'},
@@ -514,48 +511,49 @@ if __name__ == '__main__':
 #  'xpos': {'type': 'long'},
 #  'xstart': {'type': 'long'},
 #  'xstop': {'type': 'long'}}
-# INFO:root:==> creating elasticsearch index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402
-# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 [status:200 request:0.574s]
-# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 settings = {'index.routing.allocation.require._name': 'elasticsearch-es-data-loading*', 'index.routing.allocation.exclude._name': ''}
-# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_settings [status:200 request:0.147s]
+# INFO:root:==> creating elasticsearch index r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405 [status:200 request:0.499s]
+# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405 settings = {'index.routing.allocation.require._name': 'elasticsearch-es-data-loading*', 'index.routing.allocation.exclude._name': ''}
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405/_settings [status:200 request:0.171s]
 # INFO:__main__:Starting bulk export
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.874s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.981s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.974s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.915s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.939s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.928s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.920s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.996s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.982s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.164s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.956s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.892s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.032s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.846s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.865s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.906s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.885s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.991s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.966s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.955s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.941s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.050s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.203s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.008s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.977s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.044s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.081s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.019s]
 # INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.009s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.017s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.973s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.973s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.048s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.995s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.068s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.985s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.895s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.937s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.951s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.046s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.830s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.936s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.867s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.833s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.978s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.897s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.970s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.940s]
-# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.564s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.044s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.274s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.053s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.930s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.999s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.916s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.008s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.992s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.092s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.904s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.872s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.854s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.852s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.015s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.947s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.996s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:1.018s]
+# INFO:elasticsearch:POST http://localhost:9200/_bulk [status:200 request:0.684s]
 # INFO:__main__:Successfully created 67275 records
-# INFO:elasticsearch:POST http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_forcemerge [status:200 request:8.685s]
-# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402 settings = {'index.routing.allocation.require._name': '', 'index.routing.allocation.exclude._name': 'elasticsearch-es-data-loading*'}
-# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210402/_settings [status:200 request:0.179s]
+# INFO:elasticsearch:POST http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405/_forcemerge [status:200 request:8.688s]
+# INFO:root:==> Setting r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405 settings = {'index.routing.allocation.require._name': '', 'index.routing.allocation.exclude._name': 'elasticsearch-es-data-loading*'}
+# INFO:elasticsearch:PUT http://localhost:9200/r0332_cmg_estonia_wgs__structural_variants__wgs__grch38__20210405/_settings [status:200 request:0.137s]
+# Time for exporting to Elasticsearch: 46.96 seconds.
+# Total time: 15.01 minutes.
 # INFO:__main__:DONE
-# Time for exporting to Elasticsearch: 46.13 seconds.
