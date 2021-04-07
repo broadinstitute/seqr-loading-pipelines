@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import logging
 import vcf
@@ -10,8 +11,8 @@ from tqdm import tqdm
 from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import ELASTICSEARCH_INDEX
 
-from genome_sv_pipeline.mapping_gene_ids import load_gencode
-from sv_pipeline.load_data import get_sample_subset, get_sample_remap, get_es_index_name, get_es_schema,\
+from genome_sv_pipeline.utils.mapping_gene_ids import load_gencode
+from sv_pipeline.load_data import get_sample_subset, get_es_index_name, get_es_schema,\
     CHROM_FIELD, SC_FIELD, SF_FIELD, GENES_FIELD, VARIANT_ID_FIELD, CALL_FIELD, START_COL, \
     END_COL, CN_FIELD, SAMPLE_ID_FIELD, GENOTYPES_FIELD, TRANSCRIPTS_FIELD, CHROM_TO_XPOS_OFFSET
 
@@ -304,7 +305,7 @@ def format_sv(sv):
         sv[num_alt_key].append(sample_id)
 
 
-def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6, chunk_size=2000):
     """
     Export SV data to elasticsearch
 
@@ -345,7 +346,7 @@ def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_passwor
     } for row in rows]
 
     logger.info('Starting bulk export')
-    success_count, _ = es_helpers.bulk(es_client.es, es_actions, chunk_size=2000)
+    success_count, _ = es_helpers.bulk(es_client.es, es_actions, chunk_size=chunk_size)
     logger.info('Successfully created {} records'.format(success_count))
 
     es_client.es.indices.forcemerge(index=index_name)
@@ -360,27 +361,37 @@ def measure_time(pre_time, message):
 
 
 def main():
-    guid = 'R0332_cmg_estonia_wgs'
-    input_dataset = 'vcf/sv.vcf.gz'
-    sample_type = 'WGS'
+    p = argparse.ArgumentParser()
+    p.add_argument('input_dataset', help='input VCF file')
+    p.add_argument('--skip-sample-subset', action='store_true')
+    p.add_argument('--ignore-missing-samples', action='store_true')
+    p.add_argument('--project-guid')
+    p.add_argument('--gencode-release', default=29)
+    p.add_argument('--sample-type', default='WGS')
+    p.add_argument('--es-host', default='localhost')
+    p.add_argument('--es-port', default='9200')
+    p.add_argument('--num-shards', default=6)
+    p.add_argument('--chunk-size', default=2000)
+
+    args = p.parse_args()
 
     start_time = time.time()
-    pre_time = start_time
+
     global gene_id_mapping
     gene_id_mapping = load_gencode(29, genome_version='38')
 
-    pre_time = measure_time(pre_time, 'loading gene ID mapping table')
+    pre_time = measure_time(start_time, 'loading gene ID mapping table')
 
-    sample_subset = get_sample_subset(guid, sample_type)
+    sample_subset = get_sample_subset(args.project_guid, args.sample_type)
 
     pre_time = measure_time(pre_time, 'getting the sample subset')
 
     sample_remap = None
     parsed_svs_by_name = subset_and_group_svs(
-        input_dataset,
+        args.input_dataset,
         sample_subset,
         sample_remap,
-        sample_type,
+        args.sample_type,
         ignore_missing_samples=True
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
@@ -403,17 +414,16 @@ def main():
 
     meta = {
       'genomeVersion': '38',
-      'sampleType': sample_type,
+      'sampleType': args.sample_type,
       'datasetType': 'SV',
-      'sourceFilePath': input_dataset,
+      'sourceFilePath': args.input_dataset,
     }
-    index_name = get_es_index_name(guid, meta)
+    index_name = get_es_index_name(args.project_guid, meta)
     logger.info('Exporting {} docs to ES index {}'.format(len(parsed_svs), index_name))
-    es_host = 'localhost'
-    es_port = '9200'
-    es_password = None
-    num_shards = None
-    export_to_elasticsearch(es_host, es_port, parsed_svs, index_name, meta, es_password, num_shards)
+
+    es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
+    export_to_elasticsearch(args.es_host, args.es_port, parsed_svs, index_name, meta, es_password,
+                            num_shards=args.num_shards, chunk_size=args.chunk_size)
 
     pre_time = measure_time(pre_time, 'exporting to Elasticsearch')
     print('Total time: {:.2f} minutes.'.format((pre_time - start_time)/60))

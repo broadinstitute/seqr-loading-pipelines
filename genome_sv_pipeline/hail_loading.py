@@ -1,10 +1,12 @@
+import argparse
+import os
 import hail as hl
 import logging
 import time
 
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 from sv_pipeline.load_data import get_sample_subset, get_es_index_name, CHROM_TO_XPOS_OFFSET
-from genome_sv_pipeline.mapping_gene_ids import load_gencode
+from genome_sv_pipeline.utils.mapping_gene_ids import load_gencode
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -28,9 +30,8 @@ def sub_setting_mt(guid, mt):
     return mt3.rows()
 
 
-def annotate_fields(rows):
+def _annotate_basic_fields(rows):
     chrom_offset = hl.literal(CHROM_TO_XPOS_OFFSET)
-    gene_cols = [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')]
     sv_type = rows.alleles[1].replace('[<>]', ' ').strip()
     contig = rows.locus.contig.split('chr')[1]
     kwargs = {
@@ -49,10 +50,12 @@ def annotate_fields(rows):
         'xpos': chrom_offset.get(contig) + rows.locus.position,
         'samples': hl.map(lambda x: x.sample_id, rows.genotypes),
     }
+    return list(kwargs.keys()), rows.annotate(**kwargs)
 
-    rows = rows.annotate(**kwargs)
 
+def _annotate_temp_fields(rows):
     sv_type = rows.alleles[1].replace('[<>]', ' ').strip()
+    gene_cols = [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')]
     rows = rows.annotate(
         _svDetail_ins=hl.if_else(sv_type.startswith('INS:'), sv_type[4:], hl.null('str')),
         _sortedTranscriptConsequences=hl.filter(
@@ -65,7 +68,8 @@ def annotate_fields(rows):
         '_geneIds': hl.flatmap(lambda x: x.genes,
                                hl.filter(lambda x: x.predicted_consequence != 'NEAREST_TSS',
                                          rows._sortedTranscriptConsequences)),
-                   }
+        '_filters': hl.array(hl.filter(lambda x: x != 'PASS', rows.filters)),
+    }
     temp_fields.update({
         '_samples_cn_{}'.format(cnt): hl.map(lambda x: x.sample_id, hl.filter(lambda x: x.cn == cnt, rows.genotypes))
         for cnt in range(4)})
@@ -73,8 +77,16 @@ def annotate_fields(rows):
         '_samples_num_alt_{}'.format(cnt): hl.map(lambda x: x.sample_id, hl.filter(lambda x: x.num_alt == cnt, rows.genotypes))
         for cnt in range(3)})
     rows = rows.annotate(**temp_fields)
+    return temp_fields.keys(), rows.drop('filters')
 
-    interval_type = hl.dtype('array<struct{alt: str, chrom: str, start: int32, end: int32}>')
+
+def annotate_fields(rows):
+    basic_fields, rows = _annotate_basic_fields(rows)
+
+    temp_fields, rows = _annotate_temp_fields(rows)
+
+    chrom_offset = hl.literal(CHROM_TO_XPOS_OFFSET)
+    interval_type = hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>')
     other_fields = {
         'xstart': rows.xpos,
         'xstop': hl.if_else(hl.is_defined(rows.info.END2),
@@ -84,24 +96,22 @@ def annotate_fields(rows):
                 predicted_consequence=x.predicted_consequence), x.genes), rows._sortedTranscriptConsequences),
         'transcriptConsequenceTerms': [rows.svType],
         'svTypeDetail': hl.if_else(rows.svType=='CPX', rows.info.CPX_TYPE, rows._svDetail_ins),
-        'cpxIntervals': hl.if_else(rows.svType=='CPX',
-            hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
-                hl.map(lambda x: hl.struct(alt=x.split('_chr')[0], chrom=x.split('_chr')[1].split(':')[0],
-                    start=hl.int32(x.split(':')[1].split('-')[0]),
-                    end=hl.int32(x.split('-')[1])), rows.info.CPX_INTERVALS),
-                hl.null(interval_type)),
-            hl.null(interval_type)),
+        'cpxIntervals': hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
+                                   hl.map(lambda x: hl.struct(type=x.split('_chr')[0],
+                                                              chrom=x.split('_chr')[1].split(':')[0],
+                                                              start=hl.int32(x.split(':')[1].split('-')[0]),
+                                                              end=hl.int32(x.split('-')[1])),
+                                          rows.info.CPX_INTERVALS), hl.null(interval_type)),
     }
+
+    # remove empty temp fields
     other_fields.update({field[1:]: hl.if_else(hl.len(rows[field])>0, rows[field],
-                                           hl.null(hl.dtype('array<str>'))) for field in temp_fields.keys()})
+                                           hl.null(hl.dtype('array<str>'))) for field in temp_fields})
     rows = rows.annotate(**other_fields)
 
-    mapping = {
-        'rsid': 'variantId',
-    }
-    rows = rows.rename(mapping)
+    rows = rows.rename({'rsid': 'variantId'})
 
-    fields = list(kwargs.keys()) + ['filters'] + list(other_fields.keys()) + ['genotypes']
+    fields = basic_fields + list(other_fields.keys()) + ['genotypes']
     return rows.key_by('variantId').select(*fields)
 
 
@@ -112,69 +122,73 @@ def measure_time(pre_time, message):
 
 
 def main():
-    hl.init()
+    p = argparse.ArgumentParser()
+    p.add_argument('input_dataset', help='input VCF file')
+    p.add_argument('--matrixtable-path', default='', help='path for Hail MatrixTable data')
+    p.add_argument('--skip-sample-subset', action='store_true')
+    p.add_argument('--ignore-missing-samples', action='store_true')
+    p.add_argument('--project-guid')
+    p.add_argument('--gencode-release', default=29)
+    p.add_argument('--sample-type', default='WGS')
+    p.add_argument('--es-host', default='localhost')
+    p.add_argument('--es-port', default='9200')
+    p.add_argument('--num-shards', default=6)
+    p.add_argument('--block-size', default=2000)
+
+    args = p.parse_args()
+
+    if args.matrixtable_path == '':
+        args.matrixtable_path = '{}.mt'.format(args.input_dataset.split('.vcf')[0])
 
     start_time = time.time()
-    pre_time = start_time
+
+    hl.init()
 
     global gene_id_mapping
-    gene_id_mapping = hl.literal(load_gencode(29, genome_version='38'))
+    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=args.sample_type))
+    pre_time = measure_time(start_time, 'loading gene ID mapping table')
 
-    pre_time = measure_time(pre_time, 'loading gene ID mapping table')
-
-    input_dataset = 'vcf/sv.vcf.bgz'
-    guid = 'R0332_cmg_estonia_wgs'
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    # hl.import_vcf(input_dataset, reference_genome='GRCh38').write('vcf/svs.mt', overwrite=True)
-
+    if os.path.isdir(args.matrixtable_path):
+        logger.info('Use the existing MatrixTable {}.'.format(args.matrixtable_path))
+    else:
+        hl.import_vcf(args.input_dataset, reference_genome='GRCh38').write(args.matrixtable_path)
     pre_time = measure_time(pre_time, 'converting VCF to MatrixTable')
 
-    mt = hl.read_matrix_table('vcf/svs.mt')
-
+    mt = hl.read_matrix_table(args.matrixtable_path)
     pre_time = measure_time(pre_time, 'loading MatrixTable')
 
-    rows = sub_setting_mt(guid, mt)
+    rows = sub_setting_mt(args.project_guid, mt)
     logger.info('Variant counts: {}'.format(rows.count()))
-
     pre_time = measure_time(pre_time, 'sub_setting sample data')
 
     rows = annotate_fields(rows)
-
     pre_time = measure_time(pre_time, 'annotating fields')
 
-    sample_type = 'WGS'
     meta = {
       'genomeVersion': '38',
-      'sampleType': sample_type,
+      'sampleType': args.sample_type,
       'datasetType': 'SV',
-      'sourceFilePath': input_dataset,
+      'sourceFilePath': args.input_dataset,
     }
-    index_name = get_es_index_name(guid, meta)
+    index_name = get_es_index_name(args.project_guid, meta)
 
-    es_host = '192.168.1.244'
-    es_port = '9200'
-    es_password = None
-    index_type = '_doc'
-    block_size = 2000
-    num_shards = 1
-    es_client = ElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
-
-    if es_client.es.indices.exists(index=index_name):
-        logger.info('Deleting existing index')
-        es_client.es.indices.delete(index=index_name)
+    es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
+    es_client = ElasticsearchClient(host=args.es_host, port=args.es_port, es_password=es_password)
 
     es_client.export_table_to_elasticsearch(
         rows,
         index_name=index_name,
-        index_type_name=index_type,
-        block_size=block_size,
-        num_shards=num_shards,
+        index_type_name='_doc',
+        block_size=args.block_size,
+        num_shards=args.num_shards,
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
     )
     pre_time = measure_time(pre_time, 'exporting to Elasticsearch')
     print('Total time: {:.2f} minutes.'.format((pre_time - start_time)/60))
+
 
 if __name__ == '__main__':
     main()

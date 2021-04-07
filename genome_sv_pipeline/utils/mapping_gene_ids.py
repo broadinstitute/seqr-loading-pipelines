@@ -1,9 +1,9 @@
 import gzip
 import logging
-import tempfile
 import os
 from tqdm import tqdm
-import requests
+
+from genome_sv_pipeline.utils.download_utils import download_file
 
 GENOME_VERSION_GRCh37 = "37"
 GENOME_VERSION_GRCh38 = "38"
@@ -17,45 +17,6 @@ GENCODE_LIFT37_GTF_URL = "http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_hum
 GENCODE_FILE_HEADER = [
     'chrom', 'source', 'feature_type', 'start', 'end', 'score', 'strand', 'phase', 'info'
 ]
-
-
-def download_file(url, to_dir=tempfile.gettempdir(), verbose=True):
-    """Download the given file and returns its local path.
-     Args:
-        url (string): HTTP or FTP url
-     Returns:
-        string: local file path
-    """
-
-    if not (url and url.startswith(("http://", "https://"))):
-        raise ValueError("Invalid url: {}".format(url))
-    local_file_path = os.path.join(to_dir, os.path.basename(url))
-    remote_file_size = _get_remote_file_size(url)
-    if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) == remote_file_size:
-        logger.info("Re-using {} previously downloaded from {}".format(local_file_path, url))
-        return local_file_path
-
-    is_gz = url.endswith(".gz")
-    response = requests.get(url, stream=is_gz)
-    input_iter = response if is_gz else response.iter_content()
-    if verbose:
-        logger.info("Downloading {} to {}".format(url, local_file_path))
-        input_iter = tqdm(input_iter, unit=" data" if is_gz else " lines")
-
-    with open(local_file_path, 'wb') as f:
-        f.writelines(input_iter)
-
-    input_iter.close()
-
-    return local_file_path
-
-
-def _get_remote_file_size(url):
-    if url.startswith("http"):
-        response = requests.head(url)
-        return int(response.headers.get('Content-Length', '0'))
-    else:
-        return 0  # file size not yet implemented for FTP and other protocols
 
 
 def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None):
@@ -99,7 +60,7 @@ def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None):
         logger.info("Loading {} (genome version: {})".format(gencode_gtf_path, genome_version))
         with gzip.open(gencode_gtf_path, 'rt') as gencode_file:
 
-            for line in tqdm(gencode_file, unit=' gencode records'):
+            for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
                 line = line.rstrip('\r\n')
                 if not line or line.startswith('#'):
                     continue
