@@ -22,18 +22,17 @@ def sub_setting_mt(guid, mt):
     missing_samples = sample_subset - {col.s for col in mt1.key_cols_by().cols().collect()}
     logger.info('{} missing samples: {}'.format(len(missing_samples), missing_samples))
 
-    genotypes = hl.agg.filter(mt1.GT.is_non_ref(), hl.agg.collect(hl.struct(sample_id=mt1.s, gq=mt1.GQ, num_alt=mt1.GT[0]+mt1.GT[1], cn=mt1.RD_CN)))
+    genotypes = hl.agg.filter(mt1.GT.is_non_ref(), hl.agg.collect(hl.struct(sample_id=mt1.s, gq=mt1.GQ, num_alt=mt1.GT.n_alt_alleles(), cn=mt1.RD_CN)))
 
     mt2 = mt1.annotate_rows(genotypes=hl.if_else(hl.len(genotypes)>0, genotypes,
                                                  hl.null(hl.dtype('array<struct{sample_id: str, gq: int32, num_alt: int32, cn: int32}>'))))
-    mt3 = mt2.filter_rows(hl.is_defined(mt2.genotypes))
-    return mt3.rows()
+    return mt2.filter_rows(hl.is_defined(mt2.genotypes)).rows()
 
 
 def _annotate_basic_fields(rows):
     chrom_offset = hl.literal(CHROM_TO_XPOS_OFFSET)
-    sv_type = rows.alleles[1].replace('[<>]', ' ').strip()
-    contig = rows.locus.contig.split('chr')[1]
+    sv_type = rows.alleles[1].replace('[<>]', '')
+    contig = rows.locus.contig.replace('^chr', '')
     kwargs = {
         'contig': contig,
         'sc': rows.info.AC[0],
@@ -48,7 +47,7 @@ def _annotate_basic_fields(rows):
         'gnomad_svs_AF': rows.info.gnomAD_V2_AF,
         'pos': rows.locus.position,
         'xpos': chrom_offset.get(contig) + rows.locus.position,
-        'samples': hl.map(lambda x: x.sample_id, rows.genotypes),
+        'samples': rows.genotypes.map(lambda x: x.sample_id),
     }
     return list(kwargs.keys()), rows.annotate(**kwargs)
 
@@ -64,20 +63,16 @@ def _annotate_temp_fields(rows):
              for col in gene_cols if rows.info.get(col).dtype == hl.dtype('array<str>')]))
 
     temp_fields = {
-        '_samples_cn_gte_4': hl.map(lambda x: x.sample_id, hl.filter(lambda x: x.cn >= 4, rows.genotypes)),
-        '_geneIds': hl.flatmap(lambda x: x.genes,
-                               hl.filter(lambda x: x.predicted_consequence != 'NEAREST_TSS',
-                                         rows._sortedTranscriptConsequences)),
-        '_filters': hl.array(hl.filter(lambda x: x != 'PASS', rows.filters)),
+        '_samples_cn_gte_4': rows.genotypes.filter(lambda x: x.cn >= 4).map(lambda x: x.sample_id),
+        '_geneIds': rows._sortedTranscriptConsequences.filter(lambda x: x.predicted_consequence != 'NEAREST_TSS').flatmap(lambda x: x.genes),
+        '_filters': hl.array(rows.filters.filter(lambda x: x != 'PASS')),
     }
-    temp_fields.update({
-        '_samples_cn_{}'.format(cnt): hl.map(lambda x: x.sample_id, hl.filter(lambda x: x.cn == cnt, rows.genotypes))
-        for cnt in range(4)})
-    temp_fields.update({
-        '_samples_num_alt_{}'.format(cnt): hl.map(lambda x: x.sample_id, hl.filter(lambda x: x.num_alt == cnt, rows.genotypes))
-        for cnt in range(3)})
-    rows = rows.annotate(**temp_fields)
-    return temp_fields.keys(), rows.drop('filters')
+    field_counts = [('cn', 4), ('num_alt', 3)]
+    for field, count in field_counts:
+        temp_fields.update({
+            '_samples_{}_{}'.format(field, cnt): rows.genotypes.filter(lambda x: x[field] == cnt).map(lambda x: x.sample_id)
+            for cnt in range(count)})
+    return temp_fields.keys(), rows.annotate(**temp_fields)
 
 
 def annotate_fields(rows):
@@ -90,23 +85,23 @@ def annotate_fields(rows):
     other_fields = {
         'xstart': rows.xpos,
         'xstop': hl.if_else(hl.is_defined(rows.info.END2),
-                            chrom_offset.get(rows.info.CHR2.split('chr')[1]) + rows.info.END2, rows.xpos),
-        'sortedTranscriptConsequences':
-            hl.flatmap(lambda x: hl.map(lambda y: hl.struct(gene_symbol=y, gene_id=gene_id_mapping[y],
-                predicted_consequence=x.predicted_consequence), x.genes), rows._sortedTranscriptConsequences),
+                            chrom_offset.get(rows.info.CHR2.replace('^chr', '')) + rows.info.END2, rows.xpos),
+        'sortedTranscriptConsequences': rows._sortedTranscriptConsequences.flatmap(
+            lambda x: x.genes.map(lambda y: hl.struct(gene_symbol=y, gene_id=gene_id_mapping[y],
+                                                      predicted_consequence=x.predicted_consequence))),
         'transcriptConsequenceTerms': [rows.svType],
-        'svTypeDetail': hl.if_else(rows.svType=='CPX', rows.info.CPX_TYPE, rows._svDetail_ins),
+        'svTypeDetail': hl.if_else(rows.svType == 'CPX', rows.info.CPX_TYPE, rows._svDetail_ins),
         'cpxIntervals': hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
-                                   hl.map(lambda x: hl.struct(type=x.split('_chr')[0],
+                                   rows.info.CPX_INTERVALS.map(lambda x: hl.struct(type=x.split('_chr')[0],
                                                               chrom=x.split('_chr')[1].split(':')[0],
                                                               start=hl.int32(x.split(':')[1].split('-')[0]),
-                                                              end=hl.int32(x.split('-')[1])),
-                                          rows.info.CPX_INTERVALS), hl.null(interval_type)),
+                                                              end=hl.int32(x.split('-')[1]))),
+                                   hl.null(interval_type)),
     }
 
     # remove empty temp fields
-    other_fields.update({field[1:]: hl.if_else(hl.len(rows[field])>0, rows[field],
-                                           hl.null(hl.dtype('array<str>'))) for field in temp_fields})
+    other_fields.update({field[1:]: hl.if_else(hl.len(rows[field]) > 0, rows[field],
+                                               hl.null(hl.dtype('array<str>'))) for field in temp_fields})
     rows = rows.annotate(**other_fields)
 
     rows = rows.rename({'rsid': 'variantId'})
