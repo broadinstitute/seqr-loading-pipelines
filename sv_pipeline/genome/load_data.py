@@ -17,16 +17,18 @@ gene_id_mapping = {}
 def sub_setting_mt(guid, mt):
     sample_subset = get_sample_subset(guid, 'WGS')
     logger.info('Total {} samples in project {}'.format(len(sample_subset), guid))
-    mt1 = mt.filter_cols(hl.literal(sample_subset).contains(mt['s']))
+    mt = mt.filter_cols(hl.literal(sample_subset).contains(mt['s']))
 
-    missing_samples = sample_subset - {col.s for col in mt1.key_cols_by().cols().collect()}
-    logger.info('{} missing samples: {}'.format(len(missing_samples), missing_samples))
+    missing_samples = sample_subset - {col.s for col in mt.key_cols_by().cols().collect()}
+    message = '{} missing samples: {}'.format(len(missing_samples), missing_samples) if len(missing_samples)\
+        else 'No missing samples.'
+    logger.info(message)
 
-    genotypes = hl.agg.filter(mt1.GT.is_non_ref(), hl.agg.collect(hl.struct(sample_id=mt1.s, gq=mt1.GQ, num_alt=mt1.GT.n_alt_alleles(), cn=mt1.RD_CN)))
+    genotypes = hl.agg.filter(mt.GT.is_non_ref(), hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, num_alt=mt.GT.n_alt_alleles(), cn=mt.RD_CN)))
 
-    mt2 = mt1.annotate_rows(genotypes=hl.if_else(hl.len(genotypes) > 0, genotypes,
+    mt = mt.annotate_rows(genotypes=hl.if_else(hl.len(genotypes) > 0, genotypes,
                                                  hl.null(hl.dtype('array<struct{sample_id: str, gq: int32, num_alt: int32, cn: int32}>'))))
-    return mt2.filter_rows(hl.is_defined(mt2.genotypes)).rows()
+    return mt.filter_rows(hl.is_defined(mt.genotypes)).rows()
 
 
 def _annotate_basic_fields(rows):

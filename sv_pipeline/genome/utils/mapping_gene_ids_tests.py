@@ -1,7 +1,7 @@
 import unittest
 import mock
 
-from genome_sv_pipeline.utils.mapping_gene_ids import load_gencode, GENOME_VERSION_GRCh37, GENOME_VERSION_GRCh38
+from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, GENOME_VERSION_GRCh37, GENOME_VERSION_GRCh38
 
 GTF_FILE = 'test/path/test.gtf.gz'
 GTF_FILE_LIFT = 'test/path/test.lift.gtf.gz'
@@ -16,9 +16,9 @@ GENE_ID_MAPPING = {"DDX11L1": "ENSG00000223972.5_2", "OR4F16": "ENSG00000284662.
 
 class LoadGencodeTestCase(unittest.TestCase):
 
-    @mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.logger')
-    @mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.os.path.isfile')
-    @mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.download_file')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.os.path.isfile')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
     def test_load_gencode(self, mock_download, mock_isfile, mock_logger):
 
         with self.assertRaises(Exception) as ee:
@@ -38,7 +38,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         self.assertEqual(str(ee.exception), "The genome version must also be specified after the gencode GTF file path")
 
         mock_isfile.return_value = True
-        with mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
+        with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
             gene_id_mapping = load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh38)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_isfile.assert_called_with(GTF_FILE)
@@ -50,7 +50,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_logger.info.assert_has_calls(calls)
 
         with self.assertRaises(ValueError) as ve:
-            with mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data='bad data')) as mock_open:
+            with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data='bad data')) as mock_open:
                 load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh38)
         mock_open.assert_called_with(GTF_FILE, 'rt')
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
@@ -59,14 +59,14 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_logger.reset_mock()
         mock_isfile.return_value = False
         mock_download.return_value = GTF_FILE
-        with mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
+        with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
             load_gencode(19)
         mock_download.assert_called_with('http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz')
         mock_open.assert_called_with(GTF_FILE, 'rt')
         mock_logger.info.assert_has_calls([mock.call("Loading {} (genome version: {})".format(GTF_FILE, GENOME_VERSION_GRCh37))])
 
         mock_logger.reset_mock()
-        with mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
+        with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
             load_gencode(22)
         mock_download.assert_called_with('http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_22/gencode.v22.annotation.gtf.gz')
         mock_open.assert_called_with(GTF_FILE, 'rt')
@@ -75,7 +75,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_logger.reset_mock()
         mock_download.reset_mock()
         mock_download.side_effect = [GTF_FILE_LIFT, GTF_FILE]
-        with mock.patch('genome_sv_pipeline.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
+        with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_open:
             load_gencode(29)
         calls = [
             mock.call('http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/GRCh37_mapping/gencode.v29lift37.annotation.gtf.gz'),

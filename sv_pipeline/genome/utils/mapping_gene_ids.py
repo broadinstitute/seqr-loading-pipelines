@@ -3,7 +3,7 @@ import logging
 import os
 from tqdm import tqdm
 
-from genome_sv_pipeline.utils.download_utils import download_file
+from sv_pipeline.genome.utils.download_utils import download_file
 
 GENOME_VERSION_GRCh37 = "37"
 GENOME_VERSION_GRCh38 = "38"

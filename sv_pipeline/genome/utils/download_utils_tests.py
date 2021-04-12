@@ -2,7 +2,7 @@ import unittest
 import mock
 import responses
 
-from genome_sv_pipeline.utils.download_utils import download_file
+from sv_pipeline.genome.utils.download_utils import download_file
 
 TEST_DIR = 'test/dir'
 TEST_TXT_FILE = 'test_file.txt'
@@ -14,9 +14,9 @@ GZ_DATA_URL = 'https://mock_url/test_file.gz'
 class DownloadUtilsTest(unittest.TestCase):
 
     @responses.activate
-    @mock.patch('genome_sv_pipeline.utils.download_utils.logger')
-    @mock.patch('genome_sv_pipeline.utils.download_utils.os')
-    @mock.patch('genome_sv_pipeline.utils.download_utils.open')
+    @mock.patch('sv_pipeline.genome.utils.download_utils.logger')
+    @mock.patch('sv_pipeline.genome.utils.download_utils.os')
+    @mock.patch('sv_pipeline.genome.utils.download_utils.open')
     def test_download_file(self, mock_open, mock_os, mock_logger):
         responses.add(responses.HEAD, GZ_DATA_URL,
                       headers={"Content-Length": "1024"}, status=200)
