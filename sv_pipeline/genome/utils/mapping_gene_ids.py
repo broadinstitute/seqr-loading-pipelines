@@ -19,13 +19,14 @@ GENCODE_FILE_HEADER = [
 ]
 
 
-def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None):
+def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None, download_path=None):
     """Update GeneInfo and TranscriptInfo tables.
 
     Args:
         gencode_release (int): the gencode release to load (eg. 25)
         gencode_gtf_path (str): optional local file path of gencode GTF file. If not provided, it will be downloaded.
         genome_version (str): '37' or '38'. Required only if gencode_gtf_path is specified.
+        download_path (str): The path for downloaded data
     """
     if gencode_gtf_path and genome_version and os.path.isfile(gencode_gtf_path):
         if gencode_release == 19 and genome_version != GENOME_VERSION_GRCh37:
@@ -50,7 +51,7 @@ def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None):
             ]
         gencode_gtf_paths = {}
         for genome_version, url in urls:
-            local_filename = download_file(url)
+            local_filename = download_file(url, to_dir=download_path)
             gencode_gtf_paths.update({genome_version: local_filename})
 
     gene_id_mapping = {}

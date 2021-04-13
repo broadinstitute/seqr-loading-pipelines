@@ -88,9 +88,13 @@ def annotate_fields(rows):
         'xstart': rows.xpos,
         'xstop': hl.if_else(hl.is_defined(rows.info.END2),
                             chrom_offset.get(rows.info.CHR2.replace('^chr', '')) + rows.info.END2, rows.xpos),
-        'sortedTranscriptConsequences': rows._sortedTranscriptConsequences.flatmap(
-            lambda x: x.genes.map(lambda y: hl.struct(gene_symbol=y, gene_id=gene_id_mapping[y],
-                                                      predicted_consequence=x.predicted_consequence))),
+        'sortedTranscriptConsequences':
+            rows._sortedTranscriptConsequences.flatmap(
+                lambda x: x.genes.map(
+                    lambda y: hl.struct(
+                        gene_symbol=y,
+                        gene_id=gene_id_mapping[y],
+                        predicted_consequence=x.predicted_consequence))),
         'transcriptConsequenceTerms': [rows.svType],
         'svTypeDetail': hl.if_else(rows.svType == 'CPX', rows.info.CPX_TYPE, rows._svDetail_ins),
         'cpxIntervals': hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
@@ -120,6 +124,7 @@ def main():
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid')
     p.add_argument('--gencode-release', default=29)
+    p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
     p.add_argument('--sample-type', default='WGS')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -134,7 +139,7 @@ def main():
     hl.init()
 
     global gene_id_mapping
-    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=args.sample_type))
+    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=args.sample_type, download_path=args.gencode_path))
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
     if os.path.isdir(args.matrixtable_path):
