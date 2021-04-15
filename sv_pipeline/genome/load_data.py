@@ -7,12 +7,10 @@ import logging
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
+from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, get_gene_id
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-gene_id_mapping = {}
 
 WGS_SAMPLE_TYPE = 'WGS'
 BASIC_FIELDS = {
@@ -50,7 +48,7 @@ COMPUTED_FIELDS = {
                                                                     end=hl.int32(x.split('-')[1]))),
                                             hl.null(hl.dtype(INTERVAL_TYPE))),
     'sortedTranscriptConsequences': lambda rows: rows.gene_affected.flatmap(
-        lambda x: x[0].map(lambda y: hl.struct(gene_symbol=y, gene_id=gene_id_mapping[y], predicted_consequence=x[1]))),
+        lambda x: x[0].map(lambda y: hl.struct(gene_symbol=y, gene_id=get_gene_id(y), predicted_consequence=x[1]))),
     'geneIds': lambda rows: rows.gene_affected.filter(lambda x: x[1] != 'NEAREST_TSS').flatmap(lambda x: x[0]),
     'samples_num_alt_0': lambda rows: get_sample_num_alt_x(rows, 0),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
@@ -137,10 +135,9 @@ def main():
         args.matrixtable_path = '{}.mt'.format(args.input_dataset.split('.vcf')[0])
 
     hl.init()
-    start_time = time.time()
-    global gene_id_mapping
-    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=WGS_SAMPLE_TYPE, download_path=args.gencode_path))
-    print('Load gencode mapping time: ', time.time() - start_time)
+
+    load_gencode(args.gencode_release, genome_version=WGS_SAMPLE_TYPE, download_path=args.gencode_path)
+
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
     if os.path.isdir(args.matrixtable_path):
         logger.info('Use the existing MatrixTable {}.'.format(args.matrixtable_path))

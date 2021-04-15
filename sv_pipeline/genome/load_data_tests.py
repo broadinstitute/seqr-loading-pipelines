@@ -167,7 +167,7 @@ class LoadDataTest(unittest.TestCase):
 
     @mock.patch('sv_pipeline.genome.load_data.get_sample_subset')
     @mock.patch('sv_pipeline.genome.load_data.logger')
-    @mock.patch('sv_pipeline.genome.load_data.gene_id_mapping', hl.literal(GENE_ID_MAPPING))
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gene_id_mapping', hl.literal(GENE_ID_MAPPING))
     def test_sub_and_annotation(self, mock_logger, mock_get_sample):
         # Test subsetting dataset
         mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5'}
@@ -184,5 +184,4 @@ class LoadDataTest(unittest.TestCase):
         rows = annotate_fields(rows)
         row_list = rows.take(5)
 
-        self.maxDiff = None
         self.assertListEqual([row_list[0], row_list[2], row_list[4]], hl.eval([VARIANT0, VARIANT2, VARIANT4]))
