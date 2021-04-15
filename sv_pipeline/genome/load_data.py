@@ -1,11 +1,12 @@
 import argparse
 import os
+import time
 import hail as hl
 import logging
 
 from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
 
-from sv_pipeline.utils.common import get_sample_subset, get_es_index_name, CHROM_TO_XPOS_OFFSET
+from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 logging.basicConfig(level=logging.INFO)
@@ -13,106 +14,106 @@ logger = logging.getLogger(__name__)
 
 gene_id_mapping = {}
 
+WGS_SAMPLE_TYPE = 'WGS'
+BASIC_FIELDS = {
+        'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
+        'sc': lambda rows: rows.info.AC[0],
+        'sf': lambda rows: rows.info.AF[0],
+        'sn': lambda rows: rows.info.AN,
+        'svType': lambda rows: hl.if_else(rows.alleles[1].startswith('<INS:'), 'INS', rows.alleles[1].replace('[<>]', '')),
+        'start': lambda rows: rows.locus.position,
+        'end': lambda rows: rows.info.END,
+        'sv_callset_Hemi': lambda rows: rows.info.N_HET,
+        'sv_callset_Hom': lambda rows: rows.info.N_HOMALT,
+        'gnomad_svs_ID': lambda rows: rows.info.gnomAD_V2_SVID,
+        'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
+        'pos': lambda rows: rows.locus.position,
+        'filters': lambda rows: hl.array(rows.filters.filter(lambda x: x != 'PASS')),
+        'xpos': lambda rows: hl.literal(CHROM_TO_XPOS_OFFSET).get(rows.locus.contig.replace('^chr', '')) + rows.locus.position,
+    }
 
-def sub_setting_mt(guid, mt):
-    sample_subset = get_sample_subset(guid, 'WGS')
-    logger.info('Total {} samples in project {}'.format(len(sample_subset), guid))
+INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
+COMPUTED_FIELDS = {
+    'xstart': lambda rows: rows.xpos,
+    'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
+                                     hl.literal(CHROM_TO_XPOS_OFFSET).get(rows.info.CHR2.replace('^chr', '')) + rows.info.END2,
+                                     rows.xpos),
+    'transcriptConsequenceTerms': lambda rows: [rows.svType],
+    'svTypeDetail': lambda rows: hl.if_else(rows.svType == 'CPX', rows.info.CPX_TYPE,
+                                            hl.if_else(rows.alleles[1].startswith('<INS:'), rows.alleles[1][5:-1],
+                                                       hl.null('str'))),
+    'cpxIntervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
+                                            rows.info.CPX_INTERVALS.map(
+                                                lambda x: hl.struct(type=x.split('_chr')[0],
+                                                                    chrom=x.split('_chr')[1].split(':')[0],
+                                                                    start=hl.int32(x.split(':')[1].split('-')[0]),
+                                                                    end=hl.int32(x.split('-')[1]))),
+                                            hl.null(hl.dtype(INTERVAL_TYPE))),
+    'sortedTranscriptConsequences': lambda rows: rows.gene_affected.flatmap(
+        lambda x: x[0].map(lambda y: hl.struct(gene_symbol=y, gene_id=gene_id_mapping[y], predicted_consequence=x[1]))),
+    'geneIds': lambda rows: rows.gene_affected.filter(lambda x: x[1] != 'NEAREST_TSS').flatmap(lambda x: x[0]),
+    'samples_num_alt_0': lambda rows: get_sample_num_alt_x(rows, 0),
+    'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
+    'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
+}
+
+STR_ARRAY_FIELDS = {'filters', 'geneIds', 'samples_num_alt_0', 'samples_num_alt_1', 'samples_num_alt_2'}
+
+
+def get_sample_num_alt_x(rows, n):
+    return rows.genotypes.filter(lambda x: x.num_alt == n).map(lambda x: x.sample_id)
+
+
+def sub_setting_mt(project_guid, mt, sample_type, skip_sample_subset, ignore_missing_samples):
+    found_samples = {col.s for col in mt.key_cols_by().cols().collect()}
+    if skip_sample_subset:
+        sample_subset = found_samples
+    else:
+        sample_subset = get_sample_subset(project_guid, sample_type)
+        if len(found_samples) != len(sample_subset):
+            missed_samples = sample_subset - found_samples
+            missing_sample_error = 'Missing the following {} samples:\n{}'.format(
+                len(missed_samples), ', '.join(sorted(missed_samples))
+            )
+            if ignore_missing_samples:
+                logger.info(missing_sample_error)
+            else:
+                skipped_samples = found_samples - sample_subset
+                logger.info('Samples in callset but skipped:\n{}'.format(', '.join(sorted(skipped_samples))))
+                raise Exception(missing_sample_error)
+        sample_remap = get_sample_remap(project_guid, sample_type)
+        message = 'Subsetting to {} samples'.format(len(sample_subset))
+        if sample_remap:
+            message += ' (remapping {} samples)'.format(len(sample_remap))
+            sample_subset = sample_subset - set(sample_remap.keys()) + set(sample_remap.values())
+            mt = mt.annotate_cols(**sample_remap)
+        logger.info(message)
+
     mt = mt.filter_cols(hl.literal(sample_subset).contains(mt['s']))
 
-    missing_samples = sample_subset - {col.s for col in mt.key_cols_by().cols().collect()}
-    message = '{} missing samples: {}'.format(len(missing_samples), missing_samples) if len(missing_samples)\
-        else 'No missing samples.'
-    logger.info(message)
-
-    genotypes = hl.agg.filter(mt.GT.is_non_ref(), hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, num_alt=mt.GT.n_alt_alleles(), cn=mt.RD_CN)))
-
-    mt = mt.annotate_rows(genotypes=hl.if_else(hl.len(genotypes) > 0, genotypes,
-                                                 hl.null(hl.dtype('array<struct{sample_id: str, gq: int32, num_alt: int32, cn: int32}>'))))
-    return mt.filter_rows(hl.is_defined(mt.genotypes)).rows()
-
-
-def _annotate_basic_fields(rows):
-    chrom_offset = hl.literal(CHROM_TO_XPOS_OFFSET)
-    sv_type = rows.alleles[1].replace('[<>]', '')
-    contig = rows.locus.contig.replace('^chr', '')
-    kwargs = {
-        'contig': contig,
-        'sc': rows.info.AC[0],
-        'sf': rows.info.AF[0],
-        'sn': rows.info.AN,
-        'svType': hl.if_else(sv_type.startswith('INS:'), 'INS', sv_type),
-        'start': rows.locus.position,
-        'end': rows.info.END,
-        'sv_callset_Hemi': rows.info.N_HET,
-        'sv_callset_Hom': rows.info.N_HOMALT,
-        'gnomad_svs_ID': rows.info.gnomAD_V2_SVID,
-        'gnomad_svs_AF': rows.info.gnomAD_V2_AF,
-        'pos': rows.locus.position,
-        'xpos': chrom_offset.get(contig) + rows.locus.position,
-        'samples': rows.genotypes.map(lambda x: x.sample_id),
-    }
-    return list(kwargs.keys()), rows.annotate(**kwargs)
-
-
-def _annotate_temp_fields(rows):
-    sv_type = rows.alleles[1].replace('[<>]', ' ').strip()
-    gene_cols = [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')]
-    rows = rows.annotate(
-        _svDetail_ins=hl.if_else(sv_type.startswith('INS:'), sv_type[4:], hl.null('str')),
-        _sortedTranscriptConsequences=hl.filter(
-            lambda x: hl.is_defined(x.genes),
-            [hl.struct(genes=rows.info.get(col), predicted_consequence=col.split('__')[-1])
-             for col in gene_cols if rows.info.get(col).dtype == hl.dtype('array<str>')]))
-
-    temp_fields = {
-        '_samples_cn_gte_4': rows.genotypes.filter(lambda x: x.cn >= 4).map(lambda x: x.sample_id),
-        '_geneIds': rows._sortedTranscriptConsequences.filter(lambda x: x.predicted_consequence != 'NEAREST_TSS').flatmap(lambda x: x.genes),
-        '_filters': hl.array(rows.filters.filter(lambda x: x != 'PASS')),
-    }
-    field_counts = [('cn', 4), ('num_alt', 3)]
-    for field, count in field_counts:
-        temp_fields.update({
-            '_samples_{}_{}'.format(field, cnt): rows.genotypes.filter(lambda x: x[field] == cnt).map(lambda x: x.sample_id)
-            for cnt in range(count)})
-    return temp_fields.keys(), rows.annotate(**temp_fields)
+    genotypes = hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, num_alt=mt.GT.n_alt_alleles(), cn=mt.RD_CN))
+    mt = mt.annotate_rows(genotypes=genotypes)
+    return mt.filter_rows(mt.genotypes.any(lambda x: x.num_alt > 0)).rows()
 
 
 def annotate_fields(rows):
-    basic_fields, rows = _annotate_basic_fields(rows)
+    rows = rows.annotate(**{k: v(rows) for k, v in BASIC_FIELDS.items()})
 
-    temp_fields, rows = _annotate_temp_fields(rows)
+    rows = rows.annotate(gene_affected = hl.filter(lambda x: hl.is_defined(x[0]),
+                              [(rows.info[col], col.split('__')[-1]) for col in
+                               [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
+                                and rows.info[gene_col].dtype == hl.dtype('array<str>')]]))
 
-    chrom_offset = hl.literal(CHROM_TO_XPOS_OFFSET)
-    interval_type = hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>')
-    other_fields = {
-        'xstart': rows.xpos,
-        'xstop': hl.if_else(hl.is_defined(rows.info.END2),
-                            chrom_offset.get(rows.info.CHR2.replace('^chr', '')) + rows.info.END2, rows.xpos),
-        'sortedTranscriptConsequences':
-            rows._sortedTranscriptConsequences.flatmap(
-                lambda x: x.genes.map(
-                    lambda y: hl.struct(
-                        gene_symbol=y,
-                        gene_id=gene_id_mapping[y],
-                        predicted_consequence=x.predicted_consequence))),
-        'transcriptConsequenceTerms': [rows.svType],
-        'svTypeDetail': hl.if_else(rows.svType == 'CPX', rows.info.CPX_TYPE, rows._svDetail_ins),
-        'cpxIntervals': hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
-                                   rows.info.CPX_INTERVALS.map(lambda x: hl.struct(type=x.split('_chr')[0],
-                                                              chrom=x.split('_chr')[1].split(':')[0],
-                                                              start=hl.int32(x.split(':')[1].split('-')[0]),
-                                                              end=hl.int32(x.split('-')[1]))),
-                                   hl.null(interval_type)),
-    }
+    rows = rows.annotate(**{k: v(rows) for k, v in COMPUTED_FIELDS.items()})
 
-    # remove empty temp fields
-    other_fields.update({field[1:]: hl.if_else(hl.len(rows[field]) > 0, rows[field],
-                                               hl.null(hl.dtype('array<str>'))) for field in temp_fields})
-    rows = rows.annotate(**other_fields)
+    # replace empty string array fields with nulls
+    array_fields = {field: hl.if_else(hl.len(rows[field]) > 0, rows[field], hl.null(hl.dtype('array<str>')))
+                    for field in STR_ARRAY_FIELDS}
+    rows = rows.annotate(**array_fields)
 
     rows = rows.rename({'rsid': 'variantId'})
 
-    fields = basic_fields + list(other_fields.keys()) + ['genotypes']
+    fields = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['genotypes']
     return rows.key_by('variantId').select(*fields)
 
 
@@ -125,7 +126,6 @@ def main():
     p.add_argument('--project-guid')
     p.add_argument('--gencode-release', default=29)
     p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
-    p.add_argument('--sample-type', default='WGS')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', default=6)
@@ -137,10 +137,10 @@ def main():
         args.matrixtable_path = '{}.mt'.format(args.input_dataset.split('.vcf')[0])
 
     hl.init()
-
+    start_time = time.time()
     global gene_id_mapping
-    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=args.sample_type, download_path=args.gencode_path))
-
+    gene_id_mapping = hl.literal(load_gencode(args.gencode_release, genome_version=WGS_SAMPLE_TYPE, download_path=args.gencode_path))
+    print('Load gencode mapping time: ', time.time() - start_time)
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
     if os.path.isdir(args.matrixtable_path):
         logger.info('Use the existing MatrixTable {}.'.format(args.matrixtable_path))
@@ -149,14 +149,15 @@ def main():
 
     mt = hl.read_matrix_table(args.matrixtable_path)
 
-    rows = sub_setting_mt(args.project_guid, mt)
+    start_time = time.time()
+    rows = sub_setting_mt(args.project_guid, mt, WGS_SAMPLE_TYPE, args.skip_sample_subset, args.ignore_missing_samples)
     logger.info('Variant counts: {}'.format(rows.count()))
 
     rows = annotate_fields(rows)
 
     meta = {
       'genomeVersion': '38',
-      'sampleType': args.sample_type,
+      'sampleType': WGS_SAMPLE_TYPE,
       'datasetType': 'SV',
       'sourceFilePath': args.input_dataset,
     }
@@ -175,6 +176,7 @@ def main():
         export_globals_to_index_meta=True,
         verbose=True,
     )
+    print(time.time() - start_time)
 
 
 if __name__ == '__main__':

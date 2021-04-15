@@ -110,43 +110,48 @@ NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: in
 VARIANT0 = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, svType='CPX', start=1495464,
                      end=1495554, sv_callset_Hemi=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'),
                      gnomad_svs_AF=hl.null('float'),
-                     pos=1495464, xpos=1001495464, samples=['SAMPLE-5'], xstart=1001495464, xstop=1001495464,
+                     pos=1495464, xpos=1001495464,
+                     xstart=1001495464, xstop=1001495464,
                      sortedTranscriptConsequences=[hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663',
                                                              predicted_consequence='DUP_PARTIAL')],
                      transcriptConsequenceTerms=['CPX'], svTypeDetail='dDUP',
                      cpxIntervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)],
-                     samples_cn_gte_4=NULL_STR_ARRAY,
-                     geneIds=['ATAD3A'], filters=NULL_STR_ARRAY, samples_cn_0=NULL_STR_ARRAY,
-                     samples_cn_1=NULL_STR_ARRAY, samples_cn_2=NULL_STR_ARRAY,
-                     samples_cn_3=NULL_STR_ARRAY, samples_num_alt_0=NULL_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
+                     geneIds=['ATAD3A'], filters=NULL_STR_ARRAY,
+                     samples_num_alt_0=['SAMPLE-1', 'SAMPLE-3'],
+                     samples_num_alt_1=['SAMPLE-5'],
                      samples_num_alt_2=NULL_STR_ARRAY,
-                     genotypes=[hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))])
+                     genotypes=[
+                         hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
+                         hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
+                         hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int')),
+                                ])
 VARIANT2 = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, svType='DUP', start=10000,
                      end=17000, sv_callset_Hemi=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'),
                      gnomad_svs_AF=hl.null('float'),
-                     pos=10000, xpos=1000010000, samples=['SAMPLE-1', 'SAMPLE-3'], xstart=1000010000, xstop=1000010000,
+                     pos=10000, xpos=1000010000,
+                     xstart=1000010000, xstop=1000010000,
                      sortedTranscriptConsequences=[hl.struct(gene_symbol='OR4F5', gene_id='ENSG00000284662.1_2',
                                                              predicted_consequence='NEAREST_TSS')],
                      transcriptConsequenceTerms=['DUP'], svTypeDetail=hl.null('str'), cpxIntervals=NULL_INTERVALS,
-                     samples_cn_gte_4=NULL_STR_ARRAY,
-                     geneIds=NULL_STR_ARRAY, filters=['LOW_CALL_RATE'], samples_cn_0=NULL_STR_ARRAY,
-                     samples_cn_1=NULL_STR_ARRAY, samples_cn_2=NULL_STR_ARRAY,
-                     samples_cn_3=['SAMPLE-1', 'SAMPLE-3'], samples_num_alt_0=NULL_STR_ARRAY,
+                     geneIds=NULL_STR_ARRAY, filters=['LOW_CALL_RATE'],
+                     samples_num_alt_0=['SAMPLE-5'],
                      samples_num_alt_1=['SAMPLE-1', 'SAMPLE-3'], samples_num_alt_2=NULL_STR_ARRAY,
                      genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=1, cn=3),
-                                hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3)])
+                                hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
+                                hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)])
 VARIANT4 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, svType='INS', start=1643228,
                      end=1643309, sv_callset_Hemi=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
-                     gnomad_svs_AF=0.00130899995565414, pos=1643228, xpos=1001643228, samples=['SAMPLE-5'],
+                     gnomad_svs_AF=0.00130899995565414, pos=1643228, xpos=1001643228,
                      xstart=1001643228, xstop=1001643228, sortedTranscriptConsequences=[
         hl.struct(gene_symbol='CDK11B', gene_id='ENSG00000284664', predicted_consequence='INTRONIC')],
                      transcriptConsequenceTerms=['INS'], svTypeDetail='ME:SVA', cpxIntervals=NULL_INTERVALS,
-                     samples_cn_gte_4=NULL_STR_ARRAY, geneIds=['CDK11B'], filters=NULL_STR_ARRAY,
-                     samples_cn_0=NULL_STR_ARRAY, samples_cn_1=NULL_STR_ARRAY,
-                     samples_cn_2=NULL_STR_ARRAY, samples_cn_3=NULL_STR_ARRAY, samples_num_alt_0=NULL_STR_ARRAY,
+                     geneIds=['CDK11B'], filters=NULL_STR_ARRAY,
+                     samples_num_alt_0=['SAMPLE-1', 'SAMPLE-3'],
                      samples_num_alt_1=['SAMPLE-5'],
                      samples_num_alt_2=NULL_STR_ARRAY,
-                     genotypes=[hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))])
+                     genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
+                                hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
+                                hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int')),])
 
 
 class LoadDataTest(unittest.TestCase):
@@ -166,8 +171,12 @@ class LoadDataTest(unittest.TestCase):
     def test_sub_and_annotation(self, mock_logger, mock_get_sample):
         # Test subsetting dataset
         mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5'}
-        rows = sub_setting_mt('test_guid', self.mt)
-        mock_logger.info.assert_called_with('No missing samples.')
+        rows = sub_setting_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=True)
+        calls = [
+            mock.call('Missing the following 0 samples:\n'),
+            mock.call('Subsetting to 3 samples'),
+        ]
+        mock_logger.info.assert_has_calls(calls)
         mock_get_sample.assert_called_with('test_guid', 'WGS')
         self.assertEqual(rows.count(), 5)
 
