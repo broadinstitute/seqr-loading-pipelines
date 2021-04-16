@@ -27,7 +27,7 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
     root, ext = os.path.splitext(gencode_gtf_path)
     pickle_file = root + '.pickle'
     if os.path.isfile(pickle_file):
-        logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run'.format(pickle_file))
+        logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading'.format(pickle_file))
         handle = open(pickle_file, 'rb')
         p = pickle.load(handle)
         handle.close()

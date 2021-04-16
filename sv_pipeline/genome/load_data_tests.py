@@ -236,7 +236,8 @@ class LoadDataTest(unittest.TestCase):
             verbose=True,
         )
         calls = [
-            mock.call('Use the existing MatrixTable {}.'.format(mt_path)),
+            mock.call('Use the existing MatrixTable at {}. If the input VCF file has been changed,'
+                      ' or you just want to import VCF again, please delete the MatrixTable.'.format(mt_path)),
             mock.call('Variant counts: 11'),
             mock.call('Total time for subsetting, annotating, and exporting: 3')
         ]

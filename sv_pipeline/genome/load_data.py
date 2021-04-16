@@ -54,7 +54,7 @@ COMPUTED_FIELDS = {
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
-
+FIELDS = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['genotypes']
 STR_ARRAY_FIELDS = {'filters', 'geneIds', 'samples_num_alt_0', 'samples_num_alt_1', 'samples_num_alt_2'}
 
 
@@ -111,8 +111,7 @@ def annotate_fields(rows):
 
     rows = rows.rename({'rsid': 'variantId'})
 
-    fields = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['genotypes']
-    return rows.key_by('variantId').select(*fields)
+    return rows.key_by('variantId').select(*FIELDS)
 
 
 def main():
@@ -140,9 +139,11 @@ def main():
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
     if os.path.isdir(args.matrixtable_path):
-        logger.info('Use the existing MatrixTable {}.'.format(args.matrixtable_path))
+        reminder = 'If the input VCF file has been changed, or you just want to import VCF again, please delete the MatrixTable.'
+        logger.info('Use the existing MatrixTable at {}. {}'.format(args.matrixtable_path, reminder))
     else:
         hl.import_vcf(args.input_dataset, reference_genome='GRCh38').write(args.matrixtable_path)
+        logger.info('The VCF file has been imported to the MatrixTable at {}.'.format(args.matrixtable_path))
 
     mt = hl.read_matrix_table(args.matrixtable_path)
 
