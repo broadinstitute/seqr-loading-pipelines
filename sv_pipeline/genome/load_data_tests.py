@@ -1,11 +1,13 @@
 import unittest
 import mock
 import os
+import sys
 import tempfile
+import time
 
 import hail as hl
 
-from sv_pipeline.genome.load_data import sub_setting_mt, annotate_fields
+from sv_pipeline.genome.load_data import sub_setting_mt, annotate_fields, main, WGS_SAMPLE_TYPE
 
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000284662.1_2',
@@ -152,6 +154,7 @@ VARIANT4 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn
                      genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
                                 hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                 hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int')),])
+TEST_PASSWORD = 'ExamplePasswd'
 
 
 class LoadDataTest(unittest.TestCase):
@@ -163,6 +166,7 @@ class LoadDataTest(unittest.TestCase):
         self.mt = hl.import_vcf(self.vcf_file, reference_genome='GRCh38')
 
     def tearDown(self):
+        hl.stop()
         os.remove(self.vcf_file)
 
     @mock.patch('sv_pipeline.genome.load_data.get_sample_subset')
@@ -170,6 +174,12 @@ class LoadDataTest(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gene_id_mapping', hl.literal(GENE_ID_MAPPING))
     def test_sub_and_annotation(self, mock_logger, mock_get_sample):
         # Test subsetting dataset
+        mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5', 'SAMPLE-6'}
+        with self.assertRaises(Exception) as e:
+            _ = sub_setting_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False,
+                                  ignore_missing_samples=False)
+        self.assertEqual(str(e.exception), 'Missing the following 1 samples:\nSAMPLE-6')
+
         mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5'}
         rows = sub_setting_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=True)
         calls = [
@@ -185,3 +195,49 @@ class LoadDataTest(unittest.TestCase):
         row_list = rows.take(5)
 
         self.assertListEqual([row_list[0], row_list[2], row_list[4]], hl.eval([VARIANT0, VARIANT2, VARIANT4]))
+
+    @mock.patch('sv_pipeline.genome.load_data.logger')
+    @mock.patch('sv_pipeline.genome.load_data.hl')
+    @mock.patch('sv_pipeline.genome.load_data.load_gencode')
+    @mock.patch('sv_pipeline.genome.load_data.os')
+    @mock.patch('sv_pipeline.genome.load_data.time.time')
+    @mock.patch('sv_pipeline.genome.load_data.sub_setting_mt')
+    @mock.patch('sv_pipeline.genome.load_data.annotate_fields')
+    @mock.patch('sv_pipeline.genome.load_data.ElasticsearchClient')
+    def test_main(self, mock_es, mock_annot, mock_subset, mock_time, mock_os, mock_gencode, mock_hl, mock_logger):
+        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid']
+        mock_os.path.splitext.side_effect = lambda x: os.path.splitext(x)
+        mock_os.path.isdir.return_value = True
+        mock_hl.read_matrix_table.return_value = self.mt
+        mock_time.side_effect = [0, 1, 3, 6]
+        subset_rows = self.mt.rows()
+        mock_subset.return_value = subset_rows
+        rows = self.mt.rows().head(5)
+        mock_annot.return_value = rows
+        mock_os.environ.get.return_value = TEST_PASSWORD
+        mock_es_client = mock_es.return_value
+        main()
+        mock_gencode.assert_called_with(29, genome_version=WGS_SAMPLE_TYPE, download_path='')
+        mt_path = '{}.mt'.format(os.path.splitext(self.vcf_file)[0])
+        mock_os.path.isdir.assert_called_with(mt_path)
+        mock_hl.read_matrix_table.assert_called_with(mt_path)
+        mock_subset.assert_called_with('test_guid', self.mt, WGS_SAMPLE_TYPE, False, False)
+        mock_annot.assert_called_with(subset_rows)
+        mock_os.environ.get.assert_called_with('PIPELINE_ES_PASSWORD', '')
+        mock_es.assert_called_with(host='localhost', port='9200', es_password=TEST_PASSWORD)
+        mock_es_client.export_table_to_elasticsearch.assert_called_with(
+            rows,
+            index_name='test_guid__structural_variants__wgs__grch38__19691231',
+            index_type_name='_doc',
+            block_size=2000,
+            num_shards=6,
+            delete_index_before_exporting=True,
+            export_globals_to_index_meta=True,
+            verbose=True,
+        )
+        calls = [
+            mock.call('Use the existing MatrixTable {}.'.format(mt_path)),
+            mock.call('Variant counts: 11'),
+            mock.call('Total time for subsetting, annotating, and exporting: 3')
+        ]
+        mock_logger.info.assert_has_calls(calls)

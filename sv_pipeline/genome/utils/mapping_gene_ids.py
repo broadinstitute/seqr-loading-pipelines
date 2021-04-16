@@ -28,8 +28,9 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
     pickle_file = root + '.pickle'
     if os.path.isfile(pickle_file):
         logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run'.format(pickle_file))
-        with open(pickle_file, 'rb') as handle:
-            p = pickle.load(handle)
+        handle = open(pickle_file, 'rb')
+        p = pickle.load(handle)
+        handle.close()
         gene_id_mapping.update(p)
         return
 
@@ -54,8 +55,9 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
 
             gene_id_mapping[info_fields['gene_name']] = info_fields["gene_id"]
 
-    with open(pickle_file, 'wb') as handle:
-        pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    handle = open(pickle_file, 'wb')
+    pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    handle.close()
 
 
 # for performance comparison. It seems that hail search with filtering is slow. And converting hail table to Python JSON is also slow.
@@ -74,24 +76,24 @@ def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None, do
     Args:
         gencode_release (int): the gencode release to load (eg. 25)
         gencode_gtf_path (str): optional local file path of gencode GTF file. If not provided, it will be downloaded.
-        genome_version (str): '37' or '38'. Required only if gencode_gtf_path is specified.
+        genome_version (str): '38'. Required only if gencode_gtf_path is specified.
         download_path (str): The path for downloaded data
     """
     global gene_id_mapping
-    if gene_id_mapping:
-        raise Exception("Gencode data can only be loaded for one time.")
+    gene_id_mapping = {}
 
     if gencode_gtf_path and genome_version and os.path.isfile(gencode_gtf_path):
         if gencode_release <= 22:
             raise Exception("Invalid genome_version: {}. Only gencode v23 and up is supported".format(genome_version))
         elif genome_version != GENOME_VERSION_GRCh38:
-            raise Exception("Invalid genome_version for file: {}. genome_version arg must be GRCh38".format(gencode_gtf_path))
+            raise Exception("Invalid genome_version for file: {}. Genome_version arg must be GRCh38".format(gencode_gtf_path))
     elif gencode_gtf_path and not genome_version:
         raise Exception("The genome version must also be specified after the gencode GTF file path")
     else:
         url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
         local_filename = download_file(url, to_dir=download_path)
         gencode_gtf_path = local_filename
+        genome_version = GENOME_VERSION_GRCh38
 
     logger.info("Loading {} (genome version: {})".format(gencode_gtf_path, genome_version))
     load_gtf_data(gene_id_mapping, gencode_gtf_path)

@@ -121,7 +121,7 @@ def main():
     p.add_argument('--matrixtable-path', default='', help='path for Hail MatrixTable data')
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
-    p.add_argument('--project-guid')
+    p.add_argument('--project-guid', required=True, help='the guid of the target seqr project')
     p.add_argument('--gencode-release', default=29)
     p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
@@ -132,7 +132,7 @@ def main():
     args = p.parse_args()
 
     if args.matrixtable_path == '':
-        args.matrixtable_path = '{}.mt'.format(args.input_dataset.split('.vcf')[0])
+        args.matrixtable_path = '{}.mt'.format(os.path.splitext(args.input_dataset)[0])
 
     hl.init()
 
@@ -173,7 +173,7 @@ def main():
         export_globals_to_index_meta=True,
         verbose=True,
     )
-    print(time.time() - start_time)
+    logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
 
 if __name__ == '__main__':
