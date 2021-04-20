@@ -154,7 +154,15 @@ VARIANT4 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn
                      genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
                                 hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                 hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int')),])
+
 TEST_PASSWORD = 'ExamplePasswd'
+TEST_MT_PATH = 'test_mt/mts'
+TEST_GENCODE_PATH = 'test_gtf/gtf'
+TEST_HOST = 'TEST_HOST'
+TEST_PORT = '9500'
+TEST_GENCODE_RELEASE = 31
+TEST_BLOCK_SIZE = 3000
+TEST_NUM_SHARDS = 10
 
 
 class LoadDataTest(unittest.TestCase):
@@ -205,6 +213,7 @@ class LoadDataTest(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.load_data.annotate_fields')
     @mock.patch('sv_pipeline.genome.load_data.ElasticsearchClient')
     def test_main(self, mock_es, mock_annot, mock_subset, mock_time, mock_os, mock_gencode, mock_hl, mock_logger):
+        # test a normal case
         sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid']
         mock_os.path.splitext.side_effect = lambda x: os.path.splitext(x)
         mock_os.path.isdir.return_value = True
@@ -221,6 +230,7 @@ class LoadDataTest(unittest.TestCase):
         mt_path = '{}.mt'.format(os.path.splitext(self.vcf_file)[0])
         mock_os.path.isdir.assert_called_with(mt_path)
         mock_hl.read_matrix_table.assert_called_with(mt_path)
+        mock_hl.import_vcf.assert_not_called()
         mock_subset.assert_called_with('test_guid', self.mt, WGS_SAMPLE_TYPE, False, False)
         mock_annot.assert_called_with(subset_rows)
         mock_os.environ.get.assert_called_with('PIPELINE_ES_PASSWORD', '')
@@ -241,4 +251,45 @@ class LoadDataTest(unittest.TestCase):
             mock.call('Variant counts: 11'),
             mock.call('Total time for subsetting, annotating, and exporting: 3')
         ]
+        mock_logger.info.assert_has_calls(calls)
+
+        # test import vcf
+        mock_os.path.isdir.return_value = False
+        mock_logger.reset_mock()
+        mock_time.side_effect = [0, 1, 3, 6]
+        main()
+        mock_hl.import_vcf.assert_called_with(self.vcf_file, reference_genome='GRCh38')
+        mock_mt = mock_hl.import_vcf.return_value
+        mock_mt.write.assert_called_with(mt_path)
+        calls[0] = mock.call('The VCF file has been imported to the MatrixTable at {}.'.format(mt_path))
+        mock_logger.info.assert_has_calls(calls)
+
+        # test arguments with non-default values
+        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid', '--matrixtable-path', TEST_MT_PATH,
+                        '--skip-sample-subset', '--ignore-missing-samples',
+                        '--gencode-release', str(TEST_GENCODE_RELEASE), '--gencode-path', TEST_GENCODE_PATH,
+                        '--es-host', TEST_HOST,
+                        '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
+        mock_logger.reset_mock()
+        mock_time.side_effect = [0, 1, 3, 6]
+        main()
+        mock_gencode.assert_called_with(TEST_GENCODE_RELEASE, genome_version=WGS_SAMPLE_TYPE, download_path=TEST_GENCODE_PATH)
+        mock_os.path.isdir.assert_called_with(TEST_MT_PATH)
+        mock_hl.read_matrix_table.assert_called_with(TEST_MT_PATH)
+        mock_hl.import_vcf.assert_called_with(self.vcf_file, reference_genome='GRCh38')
+        mock_mt = mock_hl.import_vcf.return_value
+        mock_mt.write.assert_called_with(TEST_MT_PATH)
+        mock_subset.assert_called_with('test_guid', self.mt, WGS_SAMPLE_TYPE, True, True)
+        mock_es.assert_called_with(host=TEST_HOST, port=TEST_PORT, es_password=TEST_PASSWORD)
+        mock_es_client.export_table_to_elasticsearch.assert_called_with(
+            rows,
+            index_name='test_guid__structural_variants__wgs__grch38__19691231',
+            index_type_name='_doc',
+            block_size=TEST_BLOCK_SIZE,
+            num_shards=TEST_NUM_SHARDS,
+            delete_index_before_exporting=True,
+            export_globals_to_index_meta=True,
+            verbose=True,
+        )
+        calls[0] = mock.call('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_MT_PATH))
         mock_logger.info.assert_has_calls(calls)

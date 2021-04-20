@@ -60,16 +60,6 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
     handle.close()
 
 
-# for performance comparison. It seems that hail search with filtering is slow. And converting hail table to Python JSON is also slow.
-def hail_load_gtf_data(gene_id_mapping, gencode_gtf_path):
-    gtf_table = hl.import_table(gencode_gtf_path, force=True, comment=['#'], no_header=True)
-    gtf_table = gtf_table.filter(gtf_table.f2 == 'gene')
-    info_fields = gtf_table.f8.split('; ').filter(lambda x: x.startswith('gene_id ') | x.startswith('gene_name ')).map(lambda x: x.split(' '))
-    gtf_table = gtf_table.annotate(gene_id_mapping=(info_fields[1][1].replace('"', ''),
-                                                    info_fields[0][1].replace('"', '')))
-    gene_id_mapping.update(hl.eval(hl.dict(gtf_table.gene_id_mapping.collect())))
-
-
 def load_gencode(gencode_release, gencode_gtf_path=None, genome_version=None, download_path=None):
     """Update GeneInfo and TranscriptInfo tables.
 

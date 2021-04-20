@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 WGS_SAMPLE_TYPE = 'WGS'
+
 BASIC_FIELDS = {
         'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
         'sc': lambda rows: rows.info.AC[0],
@@ -31,6 +32,7 @@ BASIC_FIELDS = {
     }
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
+
 COMPUTED_FIELDS = {
     'xstart': lambda rows: rows.xpos,
     'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
@@ -54,7 +56,9 @@ COMPUTED_FIELDS = {
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
+
 FIELDS = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['genotypes']
+
 STR_ARRAY_FIELDS = {'filters', 'geneIds', 'samples_num_alt_0', 'samples_num_alt_1', 'samples_num_alt_2'}
 
 
@@ -63,7 +67,7 @@ def get_sample_num_alt_x(rows, n):
 
 
 def sub_setting_mt(project_guid, mt, sample_type, skip_sample_subset, ignore_missing_samples):
-    found_samples = {col.s for col in mt.key_cols_by().cols().collect()}
+    found_samples = {col.s for col in mt.cols().collect()}
     if skip_sample_subset:
         sample_subset = found_samples
     else:
@@ -97,7 +101,7 @@ def sub_setting_mt(project_guid, mt, sample_type, skip_sample_subset, ignore_mis
 def annotate_fields(rows):
     rows = rows.annotate(**{k: v(rows) for k, v in BASIC_FIELDS.items()})
 
-    rows = rows.annotate(gene_affected = hl.filter(lambda x: hl.is_defined(x[0]),
+    rows = rows.annotate(gene_affected=hl.filter(lambda x: hl.is_defined(x[0]),
                               [(rows.info[col], col.split('__')[-1]) for col in
                                [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
                                 and rows.info[gene_col].dtype == hl.dtype('array<str>')]]))
@@ -121,12 +125,12 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid', required=True, help='the guid of the target seqr project')
-    p.add_argument('--gencode-release', default=29)
+    p.add_argument('--gencode-release', type=int, default=29)
     p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
-    p.add_argument('--num-shards', default=6)
-    p.add_argument('--block-size', default=2000)
+    p.add_argument('--num-shards', type=int, default=6)
+    p.add_argument('--block-size', type=int, default=2000)
 
     args = p.parse_args()
 
