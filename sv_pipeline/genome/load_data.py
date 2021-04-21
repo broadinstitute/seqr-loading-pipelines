@@ -66,7 +66,7 @@ def get_sample_num_alt_x(rows, n):
     return rows.genotypes.filter(lambda x: x.num_alt == n).map(lambda x: x.sample_id)
 
 
-def sub_setting_mt(project_guid, mt, sample_type, skip_sample_subset, ignore_missing_samples):
+def subset_mt(project_guid, mt, sample_type, skip_sample_subset, ignore_missing_samples):
     found_samples = {col.s for col in mt.cols().collect()}
     if skip_sample_subset:
         sample_subset = found_samples
