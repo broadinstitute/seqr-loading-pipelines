@@ -2,7 +2,7 @@ import unittest
 import mock
 import hail as hl
 
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, get_gene_id, GENOME_VERSION_GRCh37, GENOME_VERSION_GRCh38
+from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 GTF_FILE = 'test/path/test.gtf.gz'
 PICKLE_FILE = 'test/path/test.gtf.pickle'
@@ -23,25 +23,10 @@ class LoadGencodeTestCase(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.open')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.hl')
-    def test_load_gencode(self, mock_hl, mock_open, mock_pickle, mock_download, mock_isfile, mock_logger):
-        mock_hl.literal.side_effect = lambda x: x
-        with self.assertRaises(Exception) as ee:
-            load_gencode(22, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh37)
-        self.assertEqual(str(ee.exception), 'Invalid genome_version: {}. Only gencode v23 and up is supported'.format(GENOME_VERSION_GRCh37))
-
-        with self.assertRaises(Exception) as ee:
-            load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh37)
-        self.assertEqual(str(ee.exception), "Invalid genome_version for file: {}. Genome_version arg must be GRCh38".format(GTF_FILE))
-
-        with self.assertRaises(Exception) as ee:
-            load_gencode(23, gencode_gtf_path=GTF_FILE)
-        self.assertEqual(str(ee.exception), "The genome version must also be specified after the gencode GTF file path")
-
+    def test_load_gencode(self, mock_open, mock_pickle, mock_download, mock_isfile, mock_logger):
         mock_isfile.return_value = True
         mock_pickle.load.return_value = GENE_ID_MAPPING
-        load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh38)
-        self.assertEqual(get_gene_id('DDX11L1'), GENE_ID_MAPPING['DDX11L1'])
+        load_gencode(23, gencode_gtf_path=GTF_FILE)
         mock_isfile.assert_called_with(PICKLE_FILE)
         mock_open.assert_called_with(PICKLE_FILE, 'rb')
         mock_pickle.load.assert_called_with(mock_open.return_value)
@@ -49,13 +34,12 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_isfile.reset_mock()
         mock_isfile.side_effect = [True, False]
         with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_gopen:
-            load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh38)
-        self.assertEqual(get_gene_id('OR4F16'), GENE_ID_MAPPING['OR4F16'])
+            load_gencode(23, gencode_gtf_path=GTF_FILE)
         mock_isfile.assert_called_with(PICKLE_FILE)
         mock_open.assert_called_with(PICKLE_FILE, 'wb')
         mock_gopen.assert_called_with(GTF_FILE, 'rt')
         calls = [
-            mock.call("Loading {} (genome version: {})".format(GTF_FILE, GENOME_VERSION_GRCh38)),
+            mock.call("Loading {}".format(GTF_FILE)),
             mock.call('Get 3 gene id mapping records'),
         ]
         mock_logger.info.assert_has_calls(calls)
@@ -64,7 +48,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_isfile.side_effect = [True, False]
         with self.assertRaises(ValueError) as ve:
             with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data='bad data')) as mock_gopen:
-                load_gencode(23, gencode_gtf_path=GTF_FILE, genome_version=GENOME_VERSION_GRCh38)
+                load_gencode(23, gencode_gtf_path=GTF_FILE)
         mock_gopen.assert_called_with(GTF_FILE, 'rt')
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
 

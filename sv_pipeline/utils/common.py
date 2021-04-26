@@ -10,14 +10,14 @@ CHROM_TO_XPOS_OFFSET = {chrom: (1 + i)*int(1e9) for i, chrom in enumerate(CHROMO
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
 
-def _get_gs_samples(project_guid, file_ext, expected_header, sample_type):
+def _get_gs_samples(project_guid, file_ext, sample_type, expected_header):
     """
     Get sample metadata from files in google cloud
 
     :param project_guid: seqr project identifier
     :param file_ext: extension for the desired sample file
-    :param expected_header: expected header to validate file
     :param sample_type: sample type (WES/WGS)
+    :param expected_header: expected header to validate file
     :return: parsed data from the sample file as a list of lists
     """
     file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext)
