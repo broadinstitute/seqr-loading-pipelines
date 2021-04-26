@@ -1,16 +1,15 @@
-import unittest
 import mock
 import os
 import sys
 import tempfile
-import time
+import unittest
 
 import hail as hl
 
-from sv_pipeline.genome.load_data import sub_setting_mt, annotate_fields, main, WGS_SAMPLE_TYPE
+from sv_pipeline.genome.load_data import load_mt, subset_mt, annotate_fields, export_to_es, main, WGS_SAMPLE_TYPE
 
 GENE_ID_MAPPING = {
-    'OR4F5': 'ENSG00000284662.1_2',
+    'OR4F5': 'ENSG00000284662',
     'ATAD3A': 'ENSG00000284663',
     'CDK11B': 'ENSG00000284664',
 }
@@ -108,55 +107,50 @@ VCF_DATA = [
 ]
 
 NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
+EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
 NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
-VARIANT0 = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, svType='CPX', start=1495464,
-                     end=1495554, sv_callset_Hemi=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'),
-                     gnomad_svs_AF=hl.null('float'),
-                     pos=1495464, xpos=1001495464,
-                     xstart=1001495464, xstop=1001495464,
+VARIANT0 = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
+                     sv_callset_Het=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=1495464,
+                     filters=NULL_STR_ARRAY, xpos=1001495464,
+                     cpx_intervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)], xstart=1001495464,
+                     xstop=1001495554, svType='CPX', transcriptConsequenceTerms=['CPX'], sv_type_detail='dDUP',
                      sortedTranscriptConsequences=[hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663',
                                                              predicted_consequence='DUP_PARTIAL')],
-                     transcriptConsequenceTerms=['CPX'], svTypeDetail='dDUP',
-                     cpxIntervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)],
-                     geneIds=['ATAD3A'], filters=NULL_STR_ARRAY,
-                     samples_num_alt_0=['SAMPLE-1', 'SAMPLE-3'],
-                     samples_num_alt_1=['SAMPLE-5'],
-                     samples_num_alt_2=NULL_STR_ARRAY,
-                     genotypes=[
-                         hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
-                         hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
-                         hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int')),
-                                ])
-VARIANT2 = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, svType='DUP', start=10000,
-                     end=17000, sv_callset_Hemi=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'),
-                     gnomad_svs_AF=hl.null('float'),
-                     pos=10000, xpos=1000010000,
-                     xstart=1000010000, xstop=1000010000,
-                     sortedTranscriptConsequences=[hl.struct(gene_symbol='OR4F5', gene_id='ENSG00000284662.1_2',
-                                                             predicted_consequence='NEAREST_TSS')],
-                     transcriptConsequenceTerms=['DUP'], svTypeDetail=hl.null('str'), cpxIntervals=NULL_INTERVALS,
-                     geneIds=NULL_STR_ARRAY, filters=['LOW_CALL_RATE'],
-                     samples_num_alt_0=['SAMPLE-5'],
-                     samples_num_alt_1=['SAMPLE-1', 'SAMPLE-3'], samples_num_alt_2=NULL_STR_ARRAY,
+                     geneIds=['ENSG00000284663'], samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
+                     samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))])
+VARIANT2 = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
+                     sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
+                     filters=['LOW_CALL_RATE'], xpos=1000010000, cpx_intervals=NULL_INTERVALS, xstart=1000010000,
+                     xstop=1000017000, svType='DUP', transcriptConsequenceTerms=['DUP'], sv_type_detail=hl.null('str'),
+                     sortedTranscriptConsequences=[hl.struct(gene_symbol='OR4F5', gene_id='ENSG00000284662',
+                                                             predicted_consequence='NEAREST_TSS')], geneIds=EMPTY_STR_ARRAY,
+                     samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=EMPTY_STR_ARRAY,
                      genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=1, cn=3),
+                                hl.struct(sample_id='SAMPLE-2', gq=52, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
+                                hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
                                 hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)])
-VARIANT4 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, svType='INS', start=1643228,
-                     end=1643309, sv_callset_Hemi=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
-                     gnomad_svs_AF=0.00130899995565414, pos=1643228, xpos=1001643228,
-                     xstart=1001643228, xstop=1001643228, sortedTranscriptConsequences=[
+VARIANT4 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
+                     sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
+                     gnomad_svs_AF=0.00130899995565414, pos=1643228, filters=NULL_STR_ARRAY, xpos=1001643228, cpx_intervals=NULL_INTERVALS,
+                     xstart=1001643228, xstop=1001643309, svType='INS', transcriptConsequenceTerms=['INS'],
+                     sv_type_detail='ME:SVA', sortedTranscriptConsequences=[
         hl.struct(gene_symbol='CDK11B', gene_id='ENSG00000284664', predicted_consequence='INTRONIC')],
-                     transcriptConsequenceTerms=['INS'], svTypeDetail='ME:SVA', cpxIntervals=NULL_INTERVALS,
-                     geneIds=['CDK11B'], filters=NULL_STR_ARRAY,
-                     samples_num_alt_0=['SAMPLE-1', 'SAMPLE-3'],
-                     samples_num_alt_1=['SAMPLE-5'],
-                     samples_num_alt_2=NULL_STR_ARRAY,
-                     genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
-                                hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
-                                hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int')),])
+                     geneIds=['ENSG00000284664'], samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
+                     samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
+                                                      hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))])
 
+TEST_GUID = 'test_guid'
 TEST_PASSWORD = 'ExamplePasswd'
-TEST_MT_PATH = 'test_mt/mts'
+TEST_INPUT_DATASET = 'test_dataset/input_vcf.gz'
+TEST_MT_PATH = 'test_mt/data.mt'
 TEST_GENCODE_PATH = 'test_gtf/gtf'
 TEST_HOST = 'TEST_HOST'
 TEST_PORT = '9500'
@@ -177,113 +171,65 @@ class LoadDataTest(unittest.TestCase):
         hl.stop()
         os.remove(self.vcf_file)
 
-    @mock.patch('sv_pipeline.genome.load_data.get_sample_subset')
+    @mock.patch('sv_pipeline.genome.load_data.os')
+    @mock.patch('sv_pipeline.genome.load_data.hl')
     @mock.patch('sv_pipeline.genome.load_data.logger')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gene_id_mapping', hl.literal(GENE_ID_MAPPING))
-    def test_sub_and_annotation(self, mock_logger, mock_get_sample):
-        # Test subsetting dataset
+    def test_load_mt(self, mock_logger, mock_hl, mock_os):
+        mock_os.path.splitext.return_value = ['test_dataset/input_vcf', 'gz']
+        mock_os.path.isdir.return_value = True
+        _ = load_mt(TEST_INPUT_DATASET, '', False)
+        mock_hl.read_matrix_table.assert_called_with('test_dataset/input_vcf.mt')
+        mock_logger.info.assert_called_with('Use the existing MatrixTable file test_dataset/input_vcf.mt. '
+                                       'If the input VCF file has been changed, or you just want to re-import VCF,'
+                                       ' please add "--overwrite-matrixtable" command line option.')
+
+
+    @mock.patch('sv_pipeline.genome.load_data.get_sample_subset')
+    @mock.patch('sv_pipeline.genome.load_data.get_sample_remap')
+    @mock.patch('sv_pipeline.genome.load_data.logger')
+    def test_subset_mt(self, mock_logger, mock_get_remap, mock_get_sample):
         mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5', 'SAMPLE-6'}
         with self.assertRaises(Exception) as e:
-            _ = sub_setting_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False,
-                                  ignore_missing_samples=False)
+            _ = subset_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=False)
         self.assertEqual(str(e.exception), 'Missing the following 1 samples:\nSAMPLE-6')
 
-        mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5'}
-        rows = sub_setting_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=True)
+        mock_get_remap.return_value = {'SAMPLE-1': 'SAMPLE-1-REMAP'}
+        rows = subset_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=True)
         calls = [
-            mock.call('Missing the following 0 samples:\n'),
-            mock.call('Subsetting to 3 samples'),
+            mock.call('Missing the following 1 samples:\nSAMPLE-6'),
+            mock.call('Subsetting to 4 samples (remapping 1 samples)'),
         ]
         mock_logger.info.assert_has_calls(calls)
         mock_get_sample.assert_called_with('test_guid', 'WGS')
+        mock_get_remap.assert_called_with('test_guid', 'WGS')
         self.assertEqual(rows.count(), 5)
+        self.assertEqual(set(rows.genotypes.map(lambda x: x.sample_id).take(1)[0]), {'SAMPLE-1-REMAP', 'SAMPLE-3', 'SAMPLE-5'})
 
-        # Test annotate required fields
-        rows = annotate_fields(rows)
+        mock_logger.reset_mock()
+        rows = subset_mt('test_guid', self.mt, skip_sample_subset=True)
+        self.assertEqual(rows.count(), 5)
+        self.assertEqual(set(rows.genotypes.map(lambda x: x.sample_id).take(1)[0]), {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'})
+
+    def test_annotation(self):
+        rows = subset_mt('test_guid', self.mt, skip_sample_subset=True)
+        rows = annotate_fields(rows, hl.literal(GENE_ID_MAPPING))
         row_list = rows.take(5)
 
+        self.maxDiff = None
         self.assertListEqual([row_list[0], row_list[2], row_list[4]], hl.eval([VARIANT0, VARIANT2, VARIANT4]))
 
-    @mock.patch('sv_pipeline.genome.load_data.logger')
-    @mock.patch('sv_pipeline.genome.load_data.hl')
-    @mock.patch('sv_pipeline.genome.load_data.load_gencode')
     @mock.patch('sv_pipeline.genome.load_data.os')
-    @mock.patch('sv_pipeline.genome.load_data.time.time')
-    @mock.patch('sv_pipeline.genome.load_data.sub_setting_mt')
-    @mock.patch('sv_pipeline.genome.load_data.annotate_fields')
     @mock.patch('sv_pipeline.genome.load_data.ElasticsearchClient')
-    def test_main(self, mock_es, mock_annot, mock_subset, mock_time, mock_os, mock_gencode, mock_hl, mock_logger):
-        # test a normal case
-        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid']
-        mock_os.path.splitext.side_effect = lambda x: os.path.splitext(x)
-        mock_os.path.isdir.return_value = True
-        mock_hl.read_matrix_table.return_value = self.mt
-        mock_time.side_effect = [0, 1, 3, 6]
-        subset_rows = self.mt.rows()
-        mock_subset.return_value = subset_rows
-        rows = self.mt.rows().head(5)
-        mock_annot.return_value = rows
+    def test_export_to_es(self, mock_es_client, mock_os):
         mock_os.environ.get.return_value = TEST_PASSWORD
-        mock_es_client = mock_es.return_value
-        main()
-        mock_gencode.assert_called_with(29, genome_version=WGS_SAMPLE_TYPE, download_path='')
-        mt_path = '{}.mt'.format(os.path.splitext(self.vcf_file)[0])
-        mock_os.path.isdir.assert_called_with(mt_path)
-        mock_hl.read_matrix_table.assert_called_with(mt_path)
-        mock_hl.import_vcf.assert_not_called()
-        mock_subset.assert_called_with('test_guid', self.mt, WGS_SAMPLE_TYPE, False, False)
-        mock_annot.assert_called_with(subset_rows)
+        mock_es = mock_es_client.return_value
+        rows = self.mt.rows().head(5)
+        export_to_es(rows, TEST_INPUT_DATASET, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)
         mock_os.environ.get.assert_called_with('PIPELINE_ES_PASSWORD', '')
-        mock_es.assert_called_with(host='localhost', port='9200', es_password=TEST_PASSWORD)
-        mock_es_client.export_table_to_elasticsearch.assert_called_with(
+        mock_es_client.assert_called_with(host=TEST_HOST, port=TEST_PORT, es_password=TEST_PASSWORD)
+        mock_es.export_table_to_elasticsearch.assert_called_with(
             rows,
-            index_name='test_guid__structural_variants__wgs__grch38__19691231',
-            index_type_name='_doc',
-            block_size=2000,
-            num_shards=6,
-            delete_index_before_exporting=True,
-            export_globals_to_index_meta=True,
-            verbose=True,
-        )
-        calls = [
-            mock.call('Use the existing MatrixTable at {}. If the input VCF file has been changed,'
-                      ' or you just want to import VCF again, please delete the MatrixTable.'.format(mt_path)),
-            mock.call('Variant counts: 11'),
-            mock.call('Total time for subsetting, annotating, and exporting: 3')
-        ]
-        mock_logger.info.assert_has_calls(calls)
-
-        # test import vcf
-        mock_os.path.isdir.return_value = False
-        mock_logger.reset_mock()
-        mock_time.side_effect = [0, 1, 3, 6]
-        main()
-        mock_hl.import_vcf.assert_called_with(self.vcf_file, reference_genome='GRCh38')
-        mock_mt = mock_hl.import_vcf.return_value
-        mock_mt.write.assert_called_with(mt_path)
-        calls[0] = mock.call('The VCF file has been imported to the MatrixTable at {}.'.format(mt_path))
-        mock_logger.info.assert_has_calls(calls)
-
-        # test arguments with non-default values
-        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid', '--matrixtable-path', TEST_MT_PATH,
-                        '--skip-sample-subset', '--ignore-missing-samples',
-                        '--gencode-release', str(TEST_GENCODE_RELEASE), '--gencode-path', TEST_GENCODE_PATH,
-                        '--es-host', TEST_HOST,
-                        '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
-        mock_logger.reset_mock()
-        mock_time.side_effect = [0, 1, 3, 6]
-        main()
-        mock_gencode.assert_called_with(TEST_GENCODE_RELEASE, genome_version=WGS_SAMPLE_TYPE, download_path=TEST_GENCODE_PATH)
-        mock_os.path.isdir.assert_called_with(TEST_MT_PATH)
-        mock_hl.read_matrix_table.assert_called_with(TEST_MT_PATH)
-        mock_hl.import_vcf.assert_called_with(self.vcf_file, reference_genome='GRCh38')
-        mock_mt = mock_hl.import_vcf.return_value
-        mock_mt.write.assert_called_with(TEST_MT_PATH)
-        mock_subset.assert_called_with('test_guid', self.mt, WGS_SAMPLE_TYPE, True, True)
-        mock_es.assert_called_with(host=TEST_HOST, port=TEST_PORT, es_password=TEST_PASSWORD)
-        mock_es_client.export_table_to_elasticsearch.assert_called_with(
-            rows,
-            index_name='test_guid__structural_variants__wgs__grch38__19691231',
+            index_name='test_guid__structural_variants__wgs__grch38__20210426',
             index_type_name='_doc',
             block_size=TEST_BLOCK_SIZE,
             num_shards=TEST_NUM_SHARDS,
@@ -291,5 +237,39 @@ class LoadDataTest(unittest.TestCase):
             export_globals_to_index_meta=True,
             verbose=True,
         )
-        calls[0] = mock.call('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_MT_PATH))
-        mock_logger.info.assert_has_calls(calls)
+
+    @mock.patch('sv_pipeline.genome.load_data.hl')
+    @mock.patch('sv_pipeline.genome.load_data.load_mt')
+    @mock.patch('sv_pipeline.genome.load_data.subset_mt')
+    @mock.patch('sv_pipeline.genome.load_data.load_gencode')
+    @mock.patch('sv_pipeline.genome.load_data.annotate_fields')
+    @mock.patch('sv_pipeline.genome.load_data.export_to_es')
+    def test_main(self, mock_export, mock_annot, mock_load_gencode, mock_subset, mock_load_mt, mock_hl):
+        # test a normal case
+        sys.argv[1:] = [self.vcf_file, '--project-guid', TEST_GUID]
+        mock_load_mt.return_value = self.mt
+        rows = self.mt.rows()
+        mock_subset.return_value = rows
+        mock_load_gencode.return_value = GENE_ID_MAPPING
+        annotated_rows = rows.head(5)
+        mock_annot.return_value = annotated_rows
+        main()
+        mock_load_mt.assert_called_with(self.vcf_file, None, False)
+        mock_subset.assert_called_with(TEST_GUID, self.mt, sample_type=WGS_SAMPLE_TYPE, skip_sample_subset=False,
+                                       ignore_missing_samples=False)
+        mock_load_gencode.assert_called_with(29, download_path=None)
+        mock_annot.assert_called_with(rows, mock_hl.literal.return_value)
+        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 6)
+
+        # test arguments with non-default values
+        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid', '--matrixtable-file', TEST_MT_PATH,
+                        '--skip-sample-subset', '--ignore-missing-samples',
+                        '--gencode-release', str(TEST_GENCODE_RELEASE), '--gencode-path', TEST_GENCODE_PATH,
+                        '--es-host', TEST_HOST,
+                        '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
+        main()
+        mock_load_mt.assert_called_with(self.vcf_file, TEST_MT_PATH, False)
+        mock_subset.assert_called_with(TEST_GUID, self.mt, sample_type=WGS_SAMPLE_TYPE, skip_sample_subset=True,
+                                       ignore_missing_samples=True)
+        mock_load_gencode.assert_called_with(TEST_GENCODE_RELEASE, download_path=TEST_GENCODE_PATH)
+        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)

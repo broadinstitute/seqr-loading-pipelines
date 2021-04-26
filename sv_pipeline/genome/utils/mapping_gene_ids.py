@@ -24,9 +24,8 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
     pickle_file = root + '.pickle'
     if os.path.isfile(pickle_file):
         logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading'.format(pickle_file))
-        handle = open(pickle_file, 'rb')
-        p = pickle.load(handle)
-        handle.close()
+        with open(pickle_file, 'rb') as handle:
+            p = pickle.load(handle)
         gene_id_mapping.update(p)
         return
 
@@ -51,9 +50,8 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
 
             gene_id_mapping[info_fields['gene_name']] = info_fields['gene_id'].split('.')[0]
 
-    handle = open(pickle_file, 'wb')
-    pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    handle.close()
+    with open(pickle_file, 'wb') as handle:
+        pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load_gencode(gencode_release, gencode_gtf_path=None, download_path=None):

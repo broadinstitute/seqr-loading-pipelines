@@ -71,7 +71,7 @@ def get_cpx_interval(x):
 
 
 def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
-    if matrixtable_file == '':
+    if not matrixtable_file:
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
@@ -168,13 +168,13 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('input_dataset', help='input VCF file')
-    p.add_argument('--matrixtable-file', default='', help='file name (includes path) of the MatrixTable for data imported from VCF input')
+    p.add_argument('--matrixtable-file', help='file name (includes path) of the MatrixTable for data imported from VCF input')
     p.add_argument('--overwrite-matrixtable', action='store_true', help='always import vcf data ignoring any existing matrixtable file')
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid', required=True, help='the guid of the target seqr project')
     p.add_argument('--gencode-release', type=int, default=29)
-    p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
+    p.add_argument('--gencode-path', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', type=int, default=6)
