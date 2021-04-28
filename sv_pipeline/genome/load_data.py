@@ -90,9 +90,9 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
     return hl.read_matrix_table(matrixtable_file)
 
 
-def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples=False, sample_type=WGS_SAMPLE_TYPE):
+def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples=False):
     if not skip_sample_subset:
-        sample_subset = get_sample_subset(project_guid, sample_type)
+        sample_subset = get_sample_subset(project_guid, WGS_SAMPLE_TYPE)
         found_samples = sample_subset.intersection({col.s for col in mt.cols().collect()})
         if len(found_samples) != len(sample_subset):
             missed_samples = sample_subset - found_samples
@@ -105,7 +105,7 @@ def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples
                 logger.error(missing_sample_message)
                 raise Exception(missing_sample_message)
 
-        sample_remap = get_sample_remap(project_guid, sample_type)
+        sample_remap = get_sample_remap(project_guid, WGS_SAMPLE_TYPE)
         message = 'Subsetting to {} samples'.format(len(sample_subset))
         if sample_remap:
             message += ' (remapping {} samples)'.format(len(sample_remap))
@@ -196,8 +196,7 @@ def main():
 
     mt = load_mt(args.input_dataset, args.matrixtable_file, args.overwrite_matrixtable)
 
-    rows = subset_mt(args.project_guid, mt, sample_type=WGS_SAMPLE_TYPE, skip_sample_subset=args.skip_sample_subset,
-                     ignore_missing_samples=args.ignore_missing_samples)
+    rows = subset_mt(args.project_guid, mt, skip_sample_subset=args.skip_sample_subset, ignore_missing_samples=args.ignore_missing_samples)
 
     rows = annotate_fields(rows, args.gencode_release, args.gencode_path)
 

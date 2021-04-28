@@ -191,11 +191,11 @@ class LoadDataTest(unittest.TestCase):
     def test_subset_mt(self, mock_logger, mock_get_remap, mock_get_sample):
         mock_get_sample.return_value = {'SAMPLE-1', 'SAMPLE-3', 'SAMPLE-5', 'SAMPLE-6'}
         with self.assertRaises(Exception) as e:
-            _ = subset_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=False)
+            _ = subset_mt('test_guid', self.mt, skip_sample_subset=False, ignore_missing_samples=False)
         self.assertEqual(str(e.exception), 'Missing the following 1 samples:\nSAMPLE-6')
 
         mock_get_remap.return_value = {'SAMPLE-1': 'SAMPLE-1-REMAP'}
-        rows = subset_mt('test_guid', self.mt, sample_type='WGS', skip_sample_subset=False, ignore_missing_samples=True)
+        rows = subset_mt('test_guid', self.mt, skip_sample_subset=False, ignore_missing_samples=True)
         calls = [
             mock.call('Missing the following 1 samples:\nSAMPLE-6'),
             mock.call('Subsetting to 4 samples (remapping 1 samples)'),
@@ -261,7 +261,7 @@ class LoadDataTest(unittest.TestCase):
         mock_annot.return_value = annotated_rows
         main()
         mock_load_mt.assert_called_with(self.vcf_file, None, False)
-        mock_subset.assert_called_with(TEST_GUID, self.mt, sample_type=WGS_SAMPLE_TYPE, skip_sample_subset=False,
+        mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=False,
                                        ignore_missing_samples=False)
         mock_annot.assert_called_with(rows, 29, None)
         mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 6)
@@ -274,7 +274,6 @@ class LoadDataTest(unittest.TestCase):
                         '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
         main()
         mock_load_mt.assert_called_with(self.vcf_file, TEST_MT_PATH, False)
-        mock_subset.assert_called_with(TEST_GUID, self.mt, sample_type=WGS_SAMPLE_TYPE, skip_sample_subset=True,
-                                       ignore_missing_samples=True)
+        mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=True, ignore_missing_samples=True)
         mock_annot.assert_called_with(rows, TEST_GENCODE_RELEASE,TEST_GENCODE_PATH)
         mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)

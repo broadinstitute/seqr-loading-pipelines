@@ -24,7 +24,9 @@ def _get_pickle_file(path):
     return root + '.pickle'
 
 
-def load_gtf_data(gene_id_mapping, gencode_release, gencode_gtf_path, download_path):
+def load_gtf_data(gene_id_mapping, gencode_release, download_path):
+    url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
+    gencode_gtf_path = os.path.join(download_path, os.path.basename(url))
     pickle_file = _get_pickle_file(gencode_gtf_path)
     if os.path.isfile(pickle_file):
         logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(pickle_file))
@@ -33,8 +35,7 @@ def load_gtf_data(gene_id_mapping, gencode_release, gencode_gtf_path, download_p
         gene_id_mapping.update(p)
         return None
 
-    if not gencode_gtf_path or not os.path.isfile(gencode_gtf_path):
-        url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
+    if not os.path.isfile(gencode_gtf_path):
         gencode_gtf_path = download_file(url, to_dir=download_path)
         logger.info('Downloaded to {}'.format(gencode_gtf_path))
     else:
@@ -71,17 +72,16 @@ def parse_gtf_data(gene_id_mapping, gencode_gtf_path):
         pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def load_gencode(gencode_release, gencode_gtf_path=None, download_path=None):
+def load_gencode(gencode_release, download_path=None):
     """Load Gencode to create a gene symbols to gene ids mapping table.
 
     Args:
         gencode_release (int): the gencode release to load (eg. 25)
-        gencode_gtf_path (str): optional local file path of gencode GTF file. If not provided, it will be downloaded.
         download_path (str): The path for downloaded data
     """
     gene_id_mapping = {}
 
-    gencode_gtf_path = load_gtf_data(gene_id_mapping, gencode_release, gencode_gtf_path, download_path)
+    gencode_gtf_path = load_gtf_data(gene_id_mapping, gencode_release, download_path)
 
     if gencode_gtf_path:
         parse_gtf_data(gene_id_mapping, gencode_gtf_path)
