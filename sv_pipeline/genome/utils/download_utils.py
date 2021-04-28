@@ -39,9 +39,4 @@ def download_file(url, to_dir=tempfile.gettempdir(), verbose=True):
 
 
 def _get_remote_file_size(url):
-    if url.startswith("http"):
-        response = requests.head(url)
-        return int(response.headers.get('Content-Length', '0'))
-    else:
-        return 0  # file size not yet implemented for FTP and other protocols
-
+    return int(requests.head(url).headers.get('Content-Length', '0'))

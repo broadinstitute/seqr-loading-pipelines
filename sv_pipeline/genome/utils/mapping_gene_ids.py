@@ -19,16 +19,32 @@ GENCODE_FILE_HEADER = [
 ]
 
 
-def load_gtf_data(gene_id_mapping, gencode_gtf_path):
-    root, ext = os.path.splitext(gencode_gtf_path)
-    pickle_file = root + '.pickle'
+def _get_pickle_file(path):
+    root, ext = os.path.splitext(path)
+    return root + '.pickle'
+
+
+def load_gtf_data(gene_id_mapping, gencode_release, gencode_gtf_path, download_path):
+    pickle_file = _get_pickle_file(gencode_gtf_path)
     if os.path.isfile(pickle_file):
-        logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading'.format(pickle_file))
+        logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(pickle_file))
         with open(pickle_file, 'rb') as handle:
             p = pickle.load(handle)
         gene_id_mapping.update(p)
-        return
+        return None
 
+    if not gencode_gtf_path or not os.path.isfile(gencode_gtf_path):
+        url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
+        gencode_gtf_path = download_file(url, to_dir=download_path)
+        logger.info('Downloaded to {}'.format(gencode_gtf_path))
+    else:
+        logger.info('Use the existing downloaded file {}. If you want to re-download it, please delete the file and re-run the pipeline.'.format(gencode_gtf_path))
+
+    return gencode_gtf_path
+
+
+def parse_gtf_data(gene_id_mapping, gencode_gtf_path):
+    logger.info("Loading {}".format(gencode_gtf_path))
     with gzip.open(gencode_gtf_path, 'rt') as gencode_file:
         for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
             line = line.rstrip('\r\n')
@@ -50,6 +66,7 @@ def load_gtf_data(gene_id_mapping, gencode_gtf_path):
 
             gene_id_mapping[info_fields['gene_name']] = info_fields['gene_id'].split('.')[0]
 
+    pickle_file = _get_pickle_file(gencode_gtf_path)
     with open(pickle_file, 'wb') as handle:
         pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -64,12 +81,10 @@ def load_gencode(gencode_release, gencode_gtf_path=None, download_path=None):
     """
     gene_id_mapping = {}
 
-    if not gencode_gtf_path or not os.path.isfile(gencode_gtf_path):
-        url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
-        gencode_gtf_path = download_file(url, to_dir=download_path)
+    gencode_gtf_path = load_gtf_data(gene_id_mapping, gencode_release, gencode_gtf_path, download_path)
 
-    logger.info("Loading {}".format(gencode_gtf_path))
-    load_gtf_data(gene_id_mapping, gencode_gtf_path)
+    if gencode_gtf_path:
+        parse_gtf_data(gene_id_mapping, gencode_gtf_path)
 
-    logger.info('Get {} gene id mapping records'.format(len(gene_id_mapping)))
+    logger.info('Got {} gene id mapping records'.format(len(gene_id_mapping)))
     return gene_id_mapping

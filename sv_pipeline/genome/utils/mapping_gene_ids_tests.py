@@ -1,7 +1,7 @@
 import unittest
 import mock
 
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, load_gtf_data
+from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, load_gtf_data, parse_gtf_data
 
 GTF_FILE = 'test/path/test.gtf.gz'
 DOWNLOAD_PATH = 'test/path'
@@ -22,25 +22,51 @@ class LoadGencodeTestCase(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.os.path.isfile')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.open')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open')
-    def test_load_gtf_data(self, mock_gopen, mock_open, mock_isfile, mock_pickle, mock_logger):
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
+    def test_load_gtf_data(self, mock_download, mock_open, mock_isfile, mock_pickle, mock_logger):
         # load from saved pickle
         mock_isfile.return_value = True
         mock_pickle.load.return_value = GENE_ID_MAPPING
         gene_id_mapping = {}
-        load_gtf_data(gene_id_mapping, GTF_FILE)
+        download_file = load_gtf_data(gene_id_mapping, 29, GTF_FILE, None)
+        self.assertIsNone(download_file)
         mock_isfile.assert_called_with(PICKLE_FILE)
         mock_pickle.load.assert_called_with(mock_open.return_value.__enter__.return_value)
         mock_open.assert_called_with(PICKLE_FILE, 'rb')
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
+        mock_logger.info.assert_called_with('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(PICKLE_FILE))
 
-        # load from gtf file and save to a pickle
+        # test downloading gtf file
         mock_isfile.return_value = False
-        mock_open.reset_mock()
+        mock_download.return_value = GTF_FILE
+        mock_logger.reset_mock()
+        gene_id_mapping = {}
+        download_file = load_gtf_data(gene_id_mapping, 23, GTF_FILE, DOWNLOAD_PATH)
+        mock_isfile.assert_has_calls([mock.call(PICKLE_FILE), mock.call(GTF_FILE)])
+        mock_download.assert_called_with("http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz", to_dir=DOWNLOAD_PATH)
+        self.assertEqual(gene_id_mapping, {})
+        mock_logger.info.assert_called_with('Downloaded to {}'.format(GTF_FILE))
+        self.assertEqual(download_file, GTF_FILE)
+
+        # test using downloaded file
+        mock_isfile.reset_mock()
+        mock_isfile.side_effect = [False, True]
+        mock_download.reset_mock()
+        download_file = load_gtf_data(gene_id_mapping, 29, GTF_FILE, DOWNLOAD_PATH)
+        mock_isfile.assert_has_calls([mock.call(PICKLE_FILE), mock.call(GTF_FILE)])
+        mock_logger.info.assert_called_with('Use the existing downloaded file {}. If you want to re-download it, please delete the file and re-run the pipeline.'.format(
+            GTF_FILE))
+        self.assertEqual(download_file, GTF_FILE)
+
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.open')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open')
+    def test_parse_gtf_data(self, mock_gopen, mock_open, mock_pickle, mock_logger):
+        # load and parse the gtf file and save to a pickle
         mock_gopen.return_value.__enter__.return_value = GTF_DATA
         gene_id_mapping = {}
-        load_gtf_data(gene_id_mapping, GTF_FILE)
-        mock_isfile.assert_called_with(PICKLE_FILE)
+        parse_gtf_data(gene_id_mapping, GTF_FILE)
         mock_gopen.assert_called_with(GTF_FILE, 'rt')
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_open.assert_called_with(PICKLE_FILE, 'wb')
@@ -50,39 +76,28 @@ class LoadGencodeTestCase(unittest.TestCase):
         # bad gtf data test
         mock_gopen.return_value.__enter__.return_value = ['bad data']
         with self.assertRaises(ValueError) as ve:
-            load_gtf_data(gene_id_mapping, GTF_FILE)
+            parse_gtf_data(gene_id_mapping, GTF_FILE)
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
 
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.os.path.isfile')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.load_gtf_data')
-    def test_load_gencode(self, mock_load_gtf, mock_download, mock_isfile, mock_logger):
-        # test using downloaded file
-        mock_isfile.return_value = True
-        mock_load_gtf.side_effect = lambda gene_id_mapping, gencode_gtf_path: gene_id_mapping.update(GENE_ID_MAPPING)
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.parse_gtf_data')
+    def test_load_gencode(self, mock_parse_gtf, mock_load_gtf, mock_logger):
+        # test using saved file
+        mock_load_gtf.side_effect = lambda gene_id_mapping, genome, gencode_gtf_path, path: gene_id_mapping.update(GENE_ID_MAPPING)
+        mock_load_gtf.return_value = ''
         gene_id_mapping = load_gencode(23, gencode_gtf_path=GTF_FILE)
-        mock_isfile.assert_called_with(GTF_FILE)
-        mock_load_gtf.assert_called_with(gene_id_mapping, GTF_FILE)
-        calls = [
-            mock.call("Loading {}".format(GTF_FILE)),
-            mock.call('Get 3 gene id mapping records'),
-        ]
-        mock_logger.info.assert_has_calls(calls)
+        mock_load_gtf.assert_called_with(gene_id_mapping, 23, GTF_FILE, None)
+        mock_logger.info.assert_called_with('Got 3 gene id mapping records')
+        mock_parse_gtf.assert_not_called()
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
 
-        # test downloading gtf file
-        mock_download.return_value = GTF_FILE
-        mock_isfile.reset_mock()
-        mock_logger.reset_mock()
-        gene_id_mapping = load_gencode(23, download_path=DOWNLOAD_PATH)
-        mock_download.assert_called_with("http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_23/gencode.v23.annotation.gtf.gz", to_dir=DOWNLOAD_PATH)
-        mock_isfile.assert_not_called()
-        mock_load_gtf.assert_called_with(gene_id_mapping, GTF_FILE)
-        mock_logger.info.assert_has_calls(calls)
+        # test parsing gtf data
+        mock_load_gtf.reset_mock()
+        mock_load_gtf.return_value = GTF_FILE
+        mock_parse_gtf.side_effect = lambda gene_id_mapping, gencode_gtf_path: gene_id_mapping.update(GENE_ID_MAPPING)
+        gene_id_mapping = load_gencode(23, gencode_gtf_path=GTF_FILE, download_path=DOWNLOAD_PATH)
+        mock_load_gtf.assert_called_with(gene_id_mapping, 23, GTF_FILE, DOWNLOAD_PATH)
+        mock_parse_gtf.assert_called_with(gene_id_mapping, GTF_FILE)
+        mock_logger.info.assert_called_with('Get 3 gene id mapping records')
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
-
-        # tests for downloading .gtf files with a download path
-        with mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open', mock.mock_open(read_data=''.join(GTF_DATA))) as mock_gopen:
-            load_gencode(29)
-        mock_download.assert_called_with('http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_29/gencode.v29.annotation.gtf.gz', to_dir=None)
