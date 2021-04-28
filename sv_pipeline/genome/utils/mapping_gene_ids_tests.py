@@ -82,22 +82,21 @@ class LoadGencodeTestCase(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.load_gtf_data')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.parse_gtf_data')
-    def test_load_gencode(self, mock_parse_gtf, mock_load_gtf, mock_logger):
+    def test_load_gencode(self, mock_parse_gtf, mock_load, mock_logger):
         # test using saved file
-        mock_load_gtf.side_effect = lambda gene_id_mapping, genome, gencode_gtf_path, path: gene_id_mapping.update(GENE_ID_MAPPING)
-        mock_load_gtf.return_value = ''
+        mock_load.side_effect = lambda gene_id_mapping, genome, gencode_gtf_path, path: gene_id_mapping.update(GENE_ID_MAPPING)
         gene_id_mapping = load_gencode(23, gencode_gtf_path=GTF_FILE)
-        mock_load_gtf.assert_called_with(gene_id_mapping, 23, GTF_FILE, None)
+        mock_load.assert_called_with(gene_id_mapping, 23, GTF_FILE, None)
         mock_logger.info.assert_called_with('Got 3 gene id mapping records')
         mock_parse_gtf.assert_not_called()
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
 
         # test parsing gtf data
-        mock_load_gtf.reset_mock()
-        mock_load_gtf.return_value = GTF_FILE
+        mock_load.reset_mock(side_effect=True)
+        mock_load.return_value = GTF_FILE
         mock_parse_gtf.side_effect = lambda gene_id_mapping, gencode_gtf_path: gene_id_mapping.update(GENE_ID_MAPPING)
         gene_id_mapping = load_gencode(23, gencode_gtf_path=GTF_FILE, download_path=DOWNLOAD_PATH)
-        mock_load_gtf.assert_called_with(gene_id_mapping, 23, GTF_FILE, DOWNLOAD_PATH)
+        mock_load.assert_called_with(gene_id_mapping, 23, GTF_FILE, DOWNLOAD_PATH)
         mock_parse_gtf.assert_called_with(gene_id_mapping, GTF_FILE)
-        mock_logger.info.assert_called_with('Get 3 gene id mapping records')
+        mock_logger.info.assert_called_with('Got 3 gene id mapping records')
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
