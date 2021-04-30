@@ -294,19 +294,24 @@ class LoadDataTest(unittest.TestCase):
         annotated_rows = mt.rows().head(5)
         mock_annot.return_value = annotated_rows
         main()
+        mock_hl.init.assert_called_with()
+        mock_hl.stop.assert_called_with()
         mock_load_mt.assert_called_with(self.vcf_file, None, False)
         mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=False, ignore_missing_samples=False)
         mock_annot.assert_called_with(mt, 29, None)
         mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 6)
 
         # test arguments with non-default values
+        mock_hl.reset_mock()
         sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid', '--matrixtable-file', TEST_MT_PATH,
                         '--skip-sample-subset', '--ignore-missing-samples',
                         '--gencode-release', str(TEST_GENCODE_RELEASE), '--gencode-path', TEST_GENCODE_PATH,
                         '--es-host', TEST_HOST,
                         '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
         main()
+        mock_hl.init.assert_called_with()
+        mock_hl.stop.assert_called_with()
         mock_load_mt.assert_called_with(self.vcf_file, TEST_MT_PATH, False)
         mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=True, ignore_missing_samples=True)
-        mock_annot.assert_called_with(mt, TEST_GENCODE_RELEASE,TEST_GENCODE_PATH)
+        mock_annot.assert_called_with(mt, TEST_GENCODE_RELEASE, TEST_GENCODE_PATH)
         mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)

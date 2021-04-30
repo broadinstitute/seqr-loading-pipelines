@@ -45,8 +45,8 @@ COMPUTED_FIELDS = {
     'svType': lambda rows: rows.sv_type[0],
     'transcriptConsequenceTerms': lambda rows: [rows.sv_type[0]],
     'sv_type_detail': lambda rows: hl.if_else(rows.sv_type[0] == 'CPX', rows.info.CPX_TYPE,
-                                              hl.if_else(rows.sv_type[0] == 'INS',
-                                                         rows.sv_type[-1], hl.null('str'))),
+                                              hl.if_else((rows.sv_type[0] == 'INS') & (hl.len(rows.sv_type) > 1),
+                                                         rows.sv_type[1], hl.null('str'))),
     'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
         lambda x: x.predicted_consequence != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
