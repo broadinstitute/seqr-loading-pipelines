@@ -47,15 +47,14 @@ COMPUTED_FIELDS = {
     'sv_type_detail': lambda rows: hl.if_else(rows.sv_type[0] == 'CPX', rows.info.CPX_TYPE,
                                               hl.if_else(rows.sv_type[0] == 'INS',
                                                          rows.sv_type[-1], hl.null('str'))),
-    'sortedTranscriptConsequences': lambda rows: rows.gene_affected,
-    'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.gene_affected.filter(
+    'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
         lambda x: x.predicted_consequence != 'NEAREST_TSS'))),
-    'samples_no_call': lambda rows: rows.genotypes.filter(lambda x: ~hl.is_defined(x.num_alt)).map(lambda x: x.sample_id),
+    'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-FIELDS = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['genotypes']
+FIELDS = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['sortedTranscriptConsequences', 'genotypes']
 
 
 def get_xpos(contig, pos):
@@ -118,18 +117,20 @@ def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples
 
         mt = mt.filter_cols(hl.literal(sample_subset).contains(mt.s))
 
-    genotypes = hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, num_alt=mt.GT.n_alt_alleles(), cn=mt.RD_CN))
-    mt = mt.annotate_rows(genotypes=genotypes)
-    return mt.filter_rows(mt.genotypes.any(lambda x: x.num_alt > 0)).rows()
+    return mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
 
 
-def annotate_fields(rows, gencode_release, gencode_path):
+def annotate_fields(mt, gencode_release, gencode_path):
+    genotypes = hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, cn=mt.RD_CN,
+                                         num_alt=hl.if_else(hl.is_defined(mt.GT), mt.GT.n_alt_alleles(), -1)))
+    rows = mt.annotate_rows(genotypes=genotypes).rows()
+
     rows = rows.annotate(**{k: v(rows) for k, v in BASIC_FIELDS.items()})
 
     gene_id_mapping = hl.literal(load_gencode(gencode_release, download_path=gencode_path))
 
     rows = rows.annotate(
-        gene_affected=hl.flatmap(lambda x: x, hl.filter(
+        sortedTranscriptConsequences=hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
             [rows.info[col].map(lambda gene: hl.struct(gene_symbol=gene, gene_id=gene_id_mapping[gene],
                                                        predicted_consequence=col.split('__')[-1]))
@@ -196,9 +197,9 @@ def main():
 
     mt = load_mt(args.input_dataset, args.matrixtable_file, args.overwrite_matrixtable)
 
-    rows = subset_mt(args.project_guid, mt, skip_sample_subset=args.skip_sample_subset, ignore_missing_samples=args.ignore_missing_samples)
+    mt = subset_mt(args.project_guid, mt, skip_sample_subset=args.skip_sample_subset, ignore_missing_samples=args.ignore_missing_samples)
 
-    rows = annotate_fields(rows, args.gencode_release, args.gencode_path)
+    rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 
     export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size, args.num_shards)
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
