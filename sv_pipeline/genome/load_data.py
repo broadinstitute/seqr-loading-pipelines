@@ -18,7 +18,7 @@ WGS_SAMPLE_TYPE = 'WGS'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
-BASIC_FIELDS = {
+CORE_FIELDS = {
     'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
     'sc': lambda rows: rows.info.AC[0],
     'sf': lambda rows: rows.info.AF[0],
@@ -34,10 +34,10 @@ BASIC_FIELDS = {
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
-                                             hl.null(hl.dtype(INTERVAL_TYPE))),
+                                             hl.missing(hl.dtype(INTERVAL_TYPE))),
 }
 
-COMPUTED_FIELDS = {
+DERIVED_FIELDS = {
     'xstart': lambda rows: rows.xpos,
     'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
                                      get_xpos(rows.info.CHR2, rows.info.END2),
@@ -46,7 +46,7 @@ COMPUTED_FIELDS = {
     'transcriptConsequenceTerms': lambda rows: [rows.sv_type[0]],
     'sv_type_detail': lambda rows: hl.if_else(rows.sv_type[0] == 'CPX', rows.info.CPX_TYPE,
                                               hl.if_else((rows.sv_type[0] == 'INS') & (hl.len(rows.sv_type) > 1),
-                                                         rows.sv_type[1], hl.null('str'))),
+                                                         rows.sv_type[1], hl.missing('str'))),
     'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
         lambda x: x.predicted_consequence != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
@@ -54,7 +54,7 @@ COMPUTED_FIELDS = {
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-FIELDS = list(BASIC_FIELDS.keys()) + list(COMPUTED_FIELDS.keys()) + ['sortedTranscriptConsequences', 'genotypes']
+FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', 'sortedTranscriptConsequences', 'genotypes']
 
 
 def get_xpos(contig, pos):
@@ -83,7 +83,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
     else:
-        hl.import_vcf(input_dataset, reference_genome='GRCh38').write(matrixtable_file)
+        hl.import_vcf(input_dataset, reference_genome='GRCh38').write(matrixtable_file, overwrite=True)
         logger.info('The VCF file has been imported to the MatrixTable at {}.'.format(matrixtable_file))
 
     return hl.read_matrix_table(matrixtable_file)
@@ -92,7 +92,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
 def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples=False):
     if not skip_sample_subset:
         sample_subset = get_sample_subset(project_guid, WGS_SAMPLE_TYPE)
-        found_samples = sample_subset.intersection({col.s for col in mt.cols().collect()})
+        found_samples = sample_subset.intersection(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)))
         if len(found_samples) != len(sample_subset):
             missed_samples = sample_subset - found_samples
             missing_sample_message = 'Missing the following {} samples:\n{}'.format(
@@ -125,7 +125,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
                                          num_alt=hl.if_else(hl.is_defined(mt.GT), mt.GT.n_alt_alleles(), -1)))
     rows = mt.annotate_rows(genotypes=genotypes).rows()
 
-    rows = rows.annotate(**{k: v(rows) for k, v in BASIC_FIELDS.items()})
+    rows = rows.annotate(**{k: v(rows) for k, v in CORE_FIELDS.items()})
 
     gene_id_mapping = hl.literal(load_gencode(gencode_release, download_path=gencode_path))
 
@@ -139,13 +139,13 @@ def annotate_fields(mt, gencode_release, gencode_path):
         sv_type=rows.alleles[1].replace('[<>]', '').split(':', 2),
     )
 
-    COMPUTED_FIELDS.update({'filters': lambda rows: hl.if_else(hl.len(rows.filters) > 0, rows.filters,
-                                                               hl.null(hl.dtype('array<str>')))})
-    rows = rows.annotate(**{k: v(rows) for k, v in COMPUTED_FIELDS.items()})
+    DERIVED_FIELDS.update({'filters': lambda rows: hl.if_else(hl.len(rows.filters) > 0, rows.filters,
+                                                                 hl.missing(hl.dtype('array<str>')))})
+    rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
 
     rows = rows.rename({'rsid': 'variantId'})
 
-    return rows.key_by('variantId').select(*FIELDS)
+    return rows.key_by().select(*FIELDS)
 
 
 def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards):

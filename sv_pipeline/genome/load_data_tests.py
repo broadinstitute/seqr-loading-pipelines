@@ -109,7 +109,7 @@ VCF_DATA = [
 NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
 EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
 NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
-VARIANT3 = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
+VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
                      sv_callset_Het=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=1495464,
                      filters=NULL_STR_ARRAY, xpos=1001495464,
                      cpx_intervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)], xstart=1001495464,
@@ -122,7 +122,7 @@ VARIANT3 = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))])
-VARIANT5 = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
+VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
                      sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
                      filters=['LOW_CALL_RATE'], xpos=1000010000, cpx_intervals=NULL_INTERVALS, xstart=1000010000,
                      xstop=1000017000, svType='DUP', transcriptConsequenceTerms=['DUP'], sv_type_detail=hl.null('str'),
@@ -134,7 +134,7 @@ VARIANT5 = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn
                                 hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
                                 hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)])
-VARIANT10 = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
+VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
                      sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
                      gnomad_svs_AF=0.00130899995565414, pos=1643228, filters=NULL_STR_ARRAY, xpos=1001643228, cpx_intervals=NULL_INTERVALS,
                      xstart=1001643228, xstop=1001643309, svType='INS', transcriptConsequenceTerms=['INS'],
@@ -167,7 +167,7 @@ class LoadDataTest(unittest.TestCase):
         with open(self.vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
         hl.init(quiet=True)
-        self.mt = hl.import_vcf(self.vcf_file, reference_genome='GRCh38')
+        self.mt = hl.import_vcf(self.vcf_file, reference_genome='GRCh38', force=True)
 
     def tearDown(self):
         hl.stop()
@@ -191,7 +191,7 @@ class LoadDataTest(unittest.TestCase):
         mock_logger.reset_mock()
         _ = load_mt(TEST_INPUT_DATASET, TEST_MT_PATH, True)
         mock_hl.import_vcf.assert_called_with(TEST_INPUT_DATASET, reference_genome='GRCh38')
-        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_MT_PATH)
+        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_MT_PATH, overwrite=True)
         mock_hl.read_matrix_table.assert_called_with(TEST_MT_PATH)
         mock_logger.info.assert_called_with('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_MT_PATH))
 
@@ -200,7 +200,7 @@ class LoadDataTest(unittest.TestCase):
         mock_os.path.isdir.return_value = False
         _ = load_mt(TEST_INPUT_DATASET, None, False)
         mock_hl.import_vcf.assert_called_with(TEST_INPUT_DATASET, reference_genome='GRCh38')
-        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_GENERATED_MT_PATH)
+        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_GENERATED_MT_PATH, overwrite=True)
         mock_hl.read_matrix_table.assert_called_with(TEST_GENERATED_MT_PATH)
         mock_logger.info.assert_called_with('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_GENERATED_MT_PATH))
 
@@ -250,9 +250,9 @@ class LoadDataTest(unittest.TestCase):
         mock_load_gencode.return_value = GENE_ID_MAPPING
         rows = annotate_fields(self.mt, TEST_GENCODE_RELEASE, TEST_GENCODE_PATH)
         mock_load_gencode.assert_called_with(TEST_GENCODE_RELEASE, download_path=TEST_GENCODE_PATH)
-        row_list = rows.take(11)
-        self.maxDiff = None
-        self.assertListEqual([row_list[3], row_list[5], row_list[10]], hl.eval([VARIANT3, VARIANT5, VARIANT10]))
+        row_dict = {row['variantId']: row for row in rows.take(11)}
+        self.assertListEqual([row_dict[row] for row in ['CPX_chr1_1', 'DUP_chr1_1', 'INS_chr1_10']],
+                             hl.eval([VARIANT_CPX, VARIANT_DUP, VARIANT_INS]))
 
     @mock.patch('sv_pipeline.genome.load_data.os')
     @mock.patch('sv_pipeline.genome.load_data.ElasticsearchClient')
