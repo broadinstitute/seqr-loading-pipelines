@@ -83,7 +83,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
     else:
-        hl.import_vcf(input_dataset, reference_genome='GRCh38').write(matrixtable_file)
+        hl.import_vcf(input_dataset, reference_genome='GRCh38').write(matrixtable_file, overwrite=True)
         logger.info('The VCF file has been imported to the MatrixTable at {}.'.format(matrixtable_file))
 
     return hl.read_matrix_table(matrixtable_file)
