@@ -42,6 +42,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         export_globals_to_index_meta=True,
         verbose=True,
         write_null_values=False,
+        elasticsearch_config={},
     ):
         """Create a new elasticsearch index to store the records in this table, and then export all records to it.
 
@@ -88,12 +89,11 @@ class ElasticsearchClient(BaseElasticsearchClient):
             func_to_run_after_index_exists (function): optional function to run after creating the index, but before exporting any data.
             export_globals_to_index_meta (bool): whether to add table.globals object to the index _meta field:
                 (see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-meta-field.html)
-            child_table (Table): if not None, records in this Table will be exported as children of records in the main Table.
             verbose (bool): whether to print schema and stats
             write_null_values (bool): whether to write fields that are null to the index
+            elasticsearch_config: The initial elasticsearch config from the caller
         """
 
-        elasticsearch_config = {}
         if (
             elasticsearch_write_operation is not None
             and elasticsearch_write_operation not in ELASTICSEARCH_WRITE_OPERATIONS
