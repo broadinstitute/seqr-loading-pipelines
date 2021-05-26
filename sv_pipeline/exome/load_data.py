@@ -405,7 +405,7 @@ def main():
     p.add_argument('--sample-type', default='WES')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
-    p.add_argument('--num-shards', default=6)
+    p.add_argument('--num-shards', default=1)
 
     args = p.parse_args()
 
