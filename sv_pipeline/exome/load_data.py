@@ -346,7 +346,7 @@ def get_es_schema(all_fields, nested_fields):
     return schema
 
 
-def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=1):
     """
     Export SV data to elasticsearch
 
