@@ -346,7 +346,7 @@ def get_es_schema(all_fields, nested_fields):
     return schema
 
 
-def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=6):
+def export_to_elasticsearch(es_host, es_port, rows, index_name, meta, es_password, num_shards=1):
     """
     Export SV data to elasticsearch
 
@@ -405,7 +405,7 @@ def main():
     p.add_argument('--sample-type', default='WES')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
-    p.add_argument('--num-shards', default=6)
+    p.add_argument('--num-shards', default=1)
 
     args = p.parse_args()
 

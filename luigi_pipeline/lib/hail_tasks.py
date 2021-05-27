@@ -203,7 +203,7 @@ class HailElasticSearchTask(luigi.Task):
     es_index = luigi.Parameter(description='ElasticSearch index.', default='data')
     es_username = luigi.Parameter(description='ElasticSearch username.', default='pipeline')
     es_password = luigi.Parameter(description='ElasticSearch password.', visibility=ParameterVisibility.PRIVATE, default=None)
-    es_index_min_num_shards = luigi.IntParameter(default=6,
+    es_index_min_num_shards = luigi.IntParameter(default=1,
                                                  description='Number of shards for the index will be the greater of '
                                                              'this value and a calculated value based on the matrix.')
 
