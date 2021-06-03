@@ -299,7 +299,7 @@ class LoadDataTest(unittest.TestCase):
         mock_load_mt.assert_called_with(self.vcf_file, None, False)
         mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=False, ignore_missing_samples=False)
         mock_annot.assert_called_with(mt, 29, None)
-        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 6)
+        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 1)
 
         # test arguments with non-default values
         mock_hl.reset_mock()

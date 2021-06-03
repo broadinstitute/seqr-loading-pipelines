@@ -187,7 +187,7 @@ def main():
     p.add_argument('--gencode-path', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
-    p.add_argument('--num-shards', type=int, default=6)
+    p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', default='false')
 
