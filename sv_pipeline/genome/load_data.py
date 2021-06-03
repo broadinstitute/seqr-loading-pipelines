@@ -48,7 +48,7 @@ DERIVED_FIELDS = {
                                               hl.if_else((rows.sv_type[0] == 'INS') & (hl.len(rows.sv_type) > 1),
                                                          rows.sv_type[1], hl.missing('str'))),
     'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
-        lambda x: x.predicted_consequence != 'NEAREST_TSS'))),
+        lambda x: x.major_consequence != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
@@ -133,7 +133,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
         sortedTranscriptConsequences=hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
             [rows.info[col].map(lambda gene: hl.struct(gene_symbol=gene, gene_id=gene_id_mapping[gene],
-                                                       predicted_consequence=col.split('__')[-1]))
+                                                       major_consequence=col.split('__')[-1]))
              for col in [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
                          and rows.info[gene_col].dtype == hl.dtype('array<str>')]])),
         sv_type=rows.alleles[1].replace('[<>]', '').split(':', 2),
