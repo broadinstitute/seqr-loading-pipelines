@@ -8,10 +8,30 @@ from hail_scripts.v02.utils.computed_fields import vep
 class SeqrSchema(BaseMTSchema):
 
     def __init__(self, *args, ref_data, clinvar_data, hgmd_data=None, **kwargs):
-        super().__init__(*args, **kwargs)
         self._ref_data = ref_data
         self._clinvar_data = clinvar_data
         self._hgmd_data = hgmd_data
+
+        # reuse:
+        #   self._ref_data[self.mt.row_key]
+        # for all annotations. We'll use the @property _selected_ref_data
+        # to access this value, and lazily cache it (so as not to compute
+        # it if it doesn't get get accessed after an update to self.mt
+        self._selected_ref_data_cache = None
+
+        super().__init__(*args, **kwargs)
+
+    def set_mt(self, mt):
+        super().set_mt(mt)
+        # set this to None, and the @property _selected_ref_data
+        # can populate it if it gets used after each MT update.
+        self._selected_ref_data_cache = None
+
+    @property
+    def _selected_ref_data(self):
+        if not self._selected_ref_data_cache:
+            self._selected_ref_data_cache = self._ref_data[self.mt.row_key]
+        return self._selected_ref_data_cache
 
     @row_annotation()
     def vep(self):
@@ -121,59 +141,59 @@ class SeqrSchema(BaseMTSchema):
 
     @row_annotation()
     def cadd(self):
-        return self._ref_data[self.mt.row_key].cadd
+        return self._selected_ref_data.cadd
 
     @row_annotation()
     def dbnsfp(self):
-        return self._ref_data[self.mt.row_key].dbnsfp
+        return self._selected_ref_data.dbnsfp
 
     @row_annotation()
     def geno2mp(self):
-        return self._ref_data[self.mt.row_key].geno2mp
+        return self._selected_ref_data.geno2mp
 
     @row_annotation()
     def gnomad_exomes(self):
-        return self._ref_data[self.mt.row_key].gnomad_exomes
+        return self._selected_ref_data.gnomad_exomes
 
     @row_annotation()
     def gnomad_exome_coverage(self):
-        return self._ref_data[self.mt.row_key].gnomad_exome_coverage
+        return self._selected_ref_data.gnomad_exome_coverage
 
     @row_annotation()
     def gnomad_genomes(self):
-        return self._ref_data[self.mt.row_key].gnomad_genomes
+        return self._selected_ref_data.gnomad_genomes
 
     @row_annotation()
     def gnomad_genome_coverage(self):
-        return self._ref_data[self.mt.row_key].gnomad_genome_coverage
+        return self._selected_ref_data.gnomad_genome_coverage
 
     @row_annotation()
     def eigen(self):
-        return self._ref_data[self.mt.row_key].eigen
+        return self._selected_ref_data.eigen
 
     @row_annotation()
     def exac(self):
-        return self._ref_data[self.mt.row_key].exac
+        return self._selected_ref_data.exac
 
     @row_annotation()
     def g1k(self):
-        return self._ref_data[self.mt.row_key].g1k
+        return self._selected_ref_data.g1k
 
     @row_annotation()
     def mpc(self):
-        return self._ref_data[self.mt.row_key].mpc
+        return self._selected_ref_data.mpc
 
     @row_annotation()
     def primate_ai(self):
-        return self._ref_data[self.mt.row_key].primate_ai
+        return self._selected_ref_data.primate_ai
 
     @row_annotation()
     def splice_ai(self):
-        return self._ref_data[self.mt.row_key].splice_ai
+        return self._selected_ref_data.splice_ai
 
     @row_annotation()
     def topmed(self):
-        return self._ref_data[self.mt.row_key].topmed
+        return self._selected_ref_data.topmed
 
     @row_annotation()
     def hgmd(self):
