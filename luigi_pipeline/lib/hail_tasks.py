@@ -183,6 +183,7 @@ class HailMatrixTableTask(luigi.Task):
     def add_37_coordinates(mt, liftover_ref_path):
         """Annotates the GRCh38 MT with 37 coordinates using hail's built-in liftover
         :param mt: MatrixTable from VCF
+        :param liftover_ref_path: Path to GRCh38 to GRCh37 coordinates file
         :return: MatrixTable annotated with GRCh37 coordinates
         """
         rg37 = hl.get_reference('GRCh37')
