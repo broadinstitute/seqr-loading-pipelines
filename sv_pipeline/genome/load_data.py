@@ -189,7 +189,7 @@ def main():
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
-    p.add_argument('--es-nodes-wan-only', default='false')
+    p.add_argument('--es-nodes-wan-only', action='store_true')
 
     args = p.parse_args()
 
@@ -204,7 +204,7 @@ def main():
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 
     export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
-                 args.num_shards, args.es_nodes_wan_only)
+                 args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
     hl.stop()
