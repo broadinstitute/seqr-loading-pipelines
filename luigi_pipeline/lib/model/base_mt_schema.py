@@ -1,6 +1,6 @@
 import logging
 
-from typing import List
+from typing import List, Set
 from inspect import getmembers
 from collections import defaultdict
 
@@ -19,13 +19,67 @@ class RowAnnotation:
     def __init__(self, fn, name=None, requirements: List[str]=None):
         self.fn = fn
         self.name = name or fn.__name__
+        self.function_name = fn.__name__
         self.requirements = requirements
 
+    def __call__(self, *args, **kwargs):
+        return self.fn(*args, **kwargs)
+
     def __repr__(self):
-        requires = None
+        requires = ''
         if self.requirements:
             requires = f' (requires: {", ".join(self.requirements)})'
-        return f"{self.name}{requires}"
+        name = self.name
+        if self.function_name != self.name:
+            name = f'{self.function_name} [annotated as "{self.name}"]'
+        return f"{name}{requires}"
+
+    @staticmethod
+    def determine_annotation_batch_order(annotations: List['RowAnnotation']) -> List[List['RowAnnotation']]:
+        """
+        From a list of row annotations, generate a list of batches that can be iteratively applied
+        to ensure all the requirements (dependencies) in future batches are satisfied.
+        Args:
+            annotations: List[RowAnnotation], list of row annotations from BaseMtSchema.all_annotation_fns()
+
+        Returns: List[List[RowAnnotation]]
+        """
+        rounds: List[List[RowAnnotation]] = []
+
+        applied_annotations: Set[str] = set()
+        annotations_to_determine = list(annotations)
+        while len(annotations_to_determine) > 0:
+
+            annotations_to_check = annotations_to_determine
+            annotations_to_check_next_round = []
+            next_round = []
+
+            for annotation in annotations_to_check:
+                if annotation.requirements and any(r not in applied_annotations for r in annotation.requirements):
+                    # this annotation has unfulfilled annotations, let's do it in the next round
+                    annotations_to_check_next_round.append(annotation)
+                    continue
+                else:
+                    # all requirements are satisfied
+                    next_round.append(annotation)
+
+            for annotation in next_round:
+                applied_annotations.add(annotation.name)
+
+            # if we haven't added any annotations to the next round
+            if len(next_round) == 0:
+                failed_annotations = ', '.join(an.name for an in annotations_to_check)
+                flattened_reqs = [inner for an in annotations_to_check for inner in (an.requirements or [])]
+                requirements = ', '.join(set(flattened_reqs))
+                raise RowAnnotationFailed(
+                    f"Couldn't apply annotations {failed_annotations}, "
+                    f"their dependencies could not be fulfilled (potential circular dependency, "
+                    f"or mispelled requirement): {requirements}"
+                )
+            rounds.append(next_round)
+            annotations_to_determine = annotations_to_check_next_round
+
+        return rounds
 
 
 def row_annotation(name=None, fn_require=None):
@@ -54,10 +108,15 @@ def row_annotation(name=None, fn_require=None):
         requirements = None
         if fn_require is not None:
             fn_requirements = fn_require if isinstance(fn_require, list) else [fn_require]
+            requirements = []
             for fn in fn_requirements:
-                if not isinstance(fn, RowAnnotation):
+                if isinstance(fn, RowAnnotation):
+                    requirements.append(fn.name)
+                elif isinstance(fn, str):
+                    # just presume the dep is valid
+                    requirements.append(fn)
+                else:
                     raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
-            requirements = [fn.name for fn in fn_requirements]
 
         return RowAnnotation(func, name=name, requirements=requirements)
 
@@ -126,42 +185,33 @@ class BaseMTSchema:
         :return: instance object
         """
         called_annotations = set()
-        rounds: List[List[RowAnnotation]] = [self.all_annotation_fns()]
-        print(f'Will attempt to apply {len(rounds[0])} row annotations')
+        all_annotations = self.all_annotation_fns()
+        batches: List[List[RowAnnotation]] = RowAnnotation.determine_annotation_batch_order(all_annotations)
+        logger.info(f'Will attempt to apply {len(all_annotations)} row annotations in {len(batches)} batches')
 
-        while len(rounds) > 0:
-            rnd = rounds.pop(0)
-            print(f'Starting round with {len(rnd)} annotations')
-            # add callers that you can't run yet to this list
-            next_round = []
+        for batch in batches:
             annotations_to_apply = {}
-            for annotation in rnd:
+            for annotation in batch:
                 # apply each atn_fn here
                 instance_metadata = self.mt_instance_meta['row_annotations'][annotation.name]
                 if instance_metadata['annotated'] > 0:
                     # already called
                     continue
 
-                # MT already has annotation, so only continue if overwrite requested.
-                if annotation.name in self.mt.rows()._fields or annotation.name in annotations_to_apply:
+                # MT already has the annotation, only continue if overwrite is requested.
+                if annotation.name in self.mt.rows()._fields:
                     logger.warning(
                         'MT using schema class %s already has "%s" annotation.' % (self.__class__.__name__, annotation.name))
                     if not overwrite:
                         continue
                     logger.info('Overwriting matrix table annotation %s' % annotation.name)
 
-                if annotation.requirements and any(r not in called_annotations for r in annotation.requirements):
-                    # this annotation has unfulfilled annotations,
-                    # so let's do it in the next round
-                    next_round.append(annotation)
-                    continue
-
                 try:
                     # evaluate the function
                     func_ret = annotation.fn(self)
                 except RowAnnotationOmit:
                     # Do not annotate when RowAnnotationOmit raised.
-                    print(f'Received RowAnnotationOmit for "{annotation.name}"')
+                    logger.debug(f'Received RowAnnotationOmit for "{annotation.name}"')
                     continue
 
                 annotations_to_apply[annotation.name] = func_ret
@@ -170,25 +220,12 @@ class BaseMTSchema:
                 instance_metadata['result'] = func_ret
 
             # update the mt
-            print('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
+            logger.info('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
             self.set_mt(self.mt.annotate_rows(**annotations_to_apply))
 
             called_annotations = called_annotations.union(set(annotations_to_apply.keys()))
 
-            if len(next_round) > 0:
-                if len(next_round) == len(rnd):
-                    # something has got stuck and it's requirements can't be fulfilled
-                    failed_annotations = ', '.join(an.name for an in next_round)
-                    flattened_reqs = [inner for an in next_round for inner in (an.requirements or [])]
-                    requirements = ', '.join(set(flattened_reqs))
-                    raise RowAnnotationFailed(
-                        f"Couldn't apply annotations {failed_annotations}, "
-                        f"their dependencies could not be fulfilled: {requirements}"
-                    )
-                rounds.append(next_round)
-
         return self
-
 
     def select_annotated_mt(self):
         """
