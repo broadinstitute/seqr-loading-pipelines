@@ -12,11 +12,7 @@ class SeqrSchema(BaseMTSchema):
         self._clinvar_data = clinvar_data
         self._hgmd_data = hgmd_data
 
-        # reuse:
-        #   self._ref_data[self.mt.row_key]
-        # for all annotations. We'll use the @property _selected_ref_data
-        # to access this value, and lazily cache it (so as not to compute
-        # it if it doesn't get get accessed after an update to self.mt
+        # See _selected_ref_data
         self._selected_ref_data_cache = None
 
         super().__init__(*args, **kwargs)
@@ -29,6 +25,14 @@ class SeqrSchema(BaseMTSchema):
 
     @property
     def _selected_ref_data(self):
+        """
+        Reuse `self._ref_data[self.mt.row_key]` for all annotations.
+        We'll use the @property _selected_ref_data to access this
+        value, and lazily cache it (so as not to compute it if it
+        doesn't get get accessed after an update to self.mt).
+
+        Returns: self._ref_data[self.mt.row_key]
+        """
         if not self._selected_ref_data_cache:
             self._selected_ref_data_cache = self._ref_data[self.mt.row_key]
         return self._selected_ref_data_cache

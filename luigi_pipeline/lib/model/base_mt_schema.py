@@ -127,11 +127,11 @@ class BaseMTSchema:
         """
         called_annotations = set()
         rounds: List[List[RowAnnotation]] = [self.all_annotation_fns()]
-        print(f'Will attempt to apply {len(rounds[0])} row annotations')
+        logger.debug(f'Will attempt to apply {len(rounds[0])} row annotations')
 
         while len(rounds) > 0:
             rnd = rounds.pop(0)
-            print(f'Starting round with {len(rnd)} annotations')
+            logger.debug(f'Starting round with {len(rnd)} annotations')
             # add callers that you can't run yet to this list
             next_round = []
             annotations_to_apply = {}
@@ -161,7 +161,7 @@ class BaseMTSchema:
                     func_ret = annotation.fn(self)
                 except RowAnnotationOmit:
                     # Do not annotate when RowAnnotationOmit raised.
-                    print(f'Received RowAnnotationOmit for "{annotation.name}"')
+                    logger.debug(f'Received RowAnnotationOmit for "{annotation.name}"')
                     continue
 
                 annotations_to_apply[annotation.name] = func_ret
@@ -170,7 +170,7 @@ class BaseMTSchema:
                 instance_metadata['result'] = func_ret
 
             # update the mt
-            print('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
+            logger.debug('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
             self.set_mt(self.mt.annotate_rows(**annotations_to_apply))
 
             called_annotations = called_annotations.union(set(annotations_to_apply.keys()))
