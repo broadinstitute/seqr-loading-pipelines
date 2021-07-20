@@ -18,9 +18,8 @@ TRANS_CONSEQ_TERMS = 'transcriptConsequenceTerms'
 SORTED_TRANS_CONSEQ = 'sortedTranscriptConsequences'
 SV_TYPE = 'sv_type'
 MAJOR_CONSEQ = 'major_consequence'
-
+QS_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
-BIN_SIZE = 10
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -60,7 +59,7 @@ DERIVED_FIELDS = {
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-SAMPLE_QS_FIELDS = {i: 'sample_qs_{}_to_{}'.format(i, i+BIN_SIZE) for i in range(0, 1000, BIN_SIZE)}
+SAMPLE_QS_FIELDS = {i: 'sample_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE) for i in range(0, 1000, QS_BIN_SIZE)}
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', 'sortedTranscriptConsequences', 'genotypes'] +\
     list(SAMPLE_QS_FIELDS.values())
@@ -157,7 +156,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
 
-    rows = rows.annotate(**{v: get_sample_in_gq_range(rows, i, i+BIN_SIZE) for i, v in SAMPLE_QS_FIELDS.items()})
+    rows = rows.annotate(**{v: get_sample_in_gq_range(rows, i, i+QS_BIN_SIZE) for i, v in SAMPLE_QS_FIELDS.items()})
 
     rows = rows.annotate(**{TRANS_CONSEQ_TERMS: rows[TRANS_CONSEQ_TERMS]
                          .extend(rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]))})
