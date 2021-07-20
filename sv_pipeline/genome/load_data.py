@@ -14,7 +14,13 @@ logger = logging.getLogger(__name__)
 
 EXP_CHROM_TO_XPOS_OFFSET = hl.literal(CHROM_TO_XPOS_OFFSET)
 
+TRANS_CONSEQ_TERMS = 'transcriptConsequenceTerms'
+SORTED_TRANS_CONSEQ = 'sortedTranscriptConsequences'
+SV_TYPE = 'sv_type'
+MAJOR_CONSEQ = 'major_consequence'
+
 WGS_SAMPLE_TYPE = 'WGS'
+BIN_SIZE = 10
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -42,19 +48,22 @@ DERIVED_FIELDS = {
     'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
                                      get_xpos(rows.info.CHR2, rows.info.END2),
                                      get_xpos(rows.locus.contig, rows.info.END)),
-    'svType': lambda rows: rows.sv_type[0],
-    'transcriptConsequenceTerms': lambda rows: [rows.sv_type[0]],
-    'sv_type_detail': lambda rows: hl.if_else(rows.sv_type[0] == 'CPX', rows.info.CPX_TYPE,
-                                              hl.if_else((rows.sv_type[0] == 'INS') & (hl.len(rows.sv_type) > 1),
-                                                         rows.sv_type[1], hl.missing('str'))),
+    'svType': lambda rows: rows[SV_TYPE][0],
+    TRANS_CONSEQ_TERMS: lambda rows: [rows[SV_TYPE][0]],
+    'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
+                                              hl.if_else((rows[SV_TYPE][0] == 'INS') & (hl.len(rows[SV_TYPE]) > 1),
+                                                         rows[SV_TYPE][1], hl.missing('str'))),
     'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
-        lambda x: x.major_consequence != 'NEAREST_TSS'))),
+        lambda x: x[MAJOR_CONSEQ] != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', 'sortedTranscriptConsequences', 'genotypes']
+SAMPLE_QS_FIELDS = {i: 'sample_qs_{}_to_{}'.format(i, i+BIN_SIZE) for i in range(0, 1000, BIN_SIZE)}
+
+FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', 'sortedTranscriptConsequences', 'genotypes'] +\
+    list(SAMPLE_QS_FIELDS.values())
 
 
 def get_xpos(contig, pos):
@@ -63,6 +72,11 @@ def get_xpos(contig, pos):
 
 def get_sample_num_alt_x(rows, n):
     return rows.genotypes.filter(lambda x: x.num_alt == n).map(lambda x: x.sample_id)
+
+
+def get_sample_in_gq_range(rows, start, end):
+    samples = rows.genotypes.filter(lambda x: (x.gq >= start) & (x.gq < end)).map(lambda x: x.sample_id)
+    return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('array<str>')))
 
 
 def get_cpx_interval(x):
@@ -129,26 +143,31 @@ def annotate_fields(mt, gencode_release, gencode_path):
 
     gene_id_mapping = hl.literal(load_gencode(gencode_release, download_path=gencode_path))
 
-    rows = rows.annotate(
-        sortedTranscriptConsequences=hl.flatmap(lambda x: x, hl.filter(
+    rows = rows.annotate(**{
+        SORTED_TRANS_CONSEQ: hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
-            [rows.info[col].map(lambda gene: hl.struct(gene_symbol=gene, gene_id=gene_id_mapping[gene],
-                                                       major_consequence=col.split('__')[-1]))
+            [rows.info[col].map(lambda gene: hl.struct(**{'gene_symbol': gene, 'gene_id': gene_id_mapping[gene],
+                                                       MAJOR_CONSEQ: col.split('__')[-1]}))
              for col in [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
                          and rows.info[gene_col].dtype == hl.dtype('array<str>')]])),
-        sv_type=rows.alleles[1].replace('[<>]', '').split(':', 2),
+        SV_TYPE: rows.alleles[1].replace('[<>]', '').split(':', 2)}
     )
 
     DERIVED_FIELDS.update({'filters': lambda rows: hl.if_else(hl.len(rows.filters) > 0, rows.filters,
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
 
+    rows = rows.annotate(**{v: get_sample_in_gq_range(rows, i, i+BIN_SIZE) for i, v in SAMPLE_QS_FIELDS.items()})
+
+    rows = rows.annotate(**{TRANS_CONSEQ_TERMS: rows[TRANS_CONSEQ_TERMS]
+                         .extend(rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]))})
+
     rows = rows.rename({'rsid': 'variantId'})
 
     return rows.key_by().select(*FIELDS)
 
 
-def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards):
+def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards, es_nodes_wan_only):
     meta = {
       'genomeVersion': '38',
       'sampleType': WGS_SAMPLE_TYPE,
@@ -171,6 +190,7 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
+        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only}
     )
 
 
@@ -188,6 +208,7 @@ def main():
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
+    p.add_argument('--es-nodes-wan-only', action='store_true')
 
     args = p.parse_args()
 
@@ -201,7 +222,8 @@ def main():
 
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 
-    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size, args.num_shards)
+    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
+                 args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
     hl.stop()
