@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 
 EXP_CHROM_TO_XPOS_OFFSET = hl.literal(CHROM_TO_XPOS_OFFSET)
 
+TRANS_CONSEQ_TERMS = 'transcriptConsequenceTerms'
+SORTED_TRANS_CONSEQ = 'sortedTranscriptConsequences'
+SV_TYPE = 'sv_type'
+MAJOR_CONSEQ = 'major_consequence'
+QS_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
@@ -42,19 +47,22 @@ DERIVED_FIELDS = {
     'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
                                      get_xpos(rows.info.CHR2, rows.info.END2),
                                      get_xpos(rows.locus.contig, rows.info.END)),
-    'svType': lambda rows: rows.sv_type[0],
-    'transcriptConsequenceTerms': lambda rows: [rows.sv_type[0]],
-    'sv_type_detail': lambda rows: hl.if_else(rows.sv_type[0] == 'CPX', rows.info.CPX_TYPE,
-                                              hl.if_else((rows.sv_type[0] == 'INS') & (hl.len(rows.sv_type) > 1),
-                                                         rows.sv_type[1], hl.missing('str'))),
+    'svType': lambda rows: rows[SV_TYPE][0],
+    TRANS_CONSEQ_TERMS: lambda rows: rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]).extend([rows[SV_TYPE][0]]),
+    'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
+                                              hl.if_else((rows[SV_TYPE][0] == 'INS') & (hl.len(rows[SV_TYPE]) > 1),
+                                                         rows[SV_TYPE][1], hl.missing('str'))),
     'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
-        lambda x: x.major_consequence != 'NEAREST_TSS'))),
+        lambda x: x[MAJOR_CONSEQ] != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', 'sortedTranscriptConsequences', 'genotypes']
+SAMPLE_QS_FIELDS = {'sample_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
+
+FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', SORTED_TRANS_CONSEQ, 'genotypes'] +\
+    list(SAMPLE_QS_FIELDS.keys())
 
 
 def get_xpos(contig, pos):
@@ -63,6 +71,11 @@ def get_xpos(contig, pos):
 
 def get_sample_num_alt_x(rows, n):
     return rows.genotypes.filter(lambda x: x.num_alt == n).map(lambda x: x.sample_id)
+
+
+def get_sample_in_gq_range(rows, start, end):
+    samples = rows.genotypes.filter(lambda x: (x.gq >= start) & (x.gq < end)).map(lambda x: x.sample_id)
+    return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('array<str>')))
 
 
 def get_cpx_interval(x):
@@ -129,19 +142,21 @@ def annotate_fields(mt, gencode_release, gencode_path):
 
     gene_id_mapping = hl.literal(load_gencode(gencode_release, download_path=gencode_path))
 
-    rows = rows.annotate(
-        sortedTranscriptConsequences=hl.flatmap(lambda x: x, hl.filter(
+    rows = rows.annotate(**{
+        SORTED_TRANS_CONSEQ: hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
-            [rows.info[col].map(lambda gene: hl.struct(gene_symbol=gene, gene_id=gene_id_mapping[gene],
-                                                       major_consequence=col.split('__')[-1]))
+            [rows.info[col].map(lambda gene: hl.struct(**{'gene_symbol': gene, 'gene_id': gene_id_mapping[gene],
+                                                       MAJOR_CONSEQ: col.split('__')[-1]}))
              for col in [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
                          and rows.info[gene_col].dtype == hl.dtype('array<str>')]])),
-        sv_type=rows.alleles[1].replace('[<>]', '').split(':', 2),
+        SV_TYPE: rows.alleles[1].replace('[<>]', '').split(':', 2)}
     )
 
     DERIVED_FIELDS.update({'filters': lambda rows: hl.if_else(hl.len(rows.filters) > 0, rows.filters,
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
+
+    rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+QS_BIN_SIZE) for k, i in SAMPLE_QS_FIELDS.items()})
 
     rows = rows.rename({'rsid': 'variantId'})
 
