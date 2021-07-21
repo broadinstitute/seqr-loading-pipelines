@@ -42,7 +42,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
         export_globals_to_index_meta=True,
         verbose=True,
         write_null_values=False,
-        elasticsearch_config={},
+        elasticsearch_config=None,
     ):
         """Create a new elasticsearch index to store the records in this table, and then export all records to it.
 
@@ -94,6 +94,7 @@ class ElasticsearchClient(BaseElasticsearchClient):
             elasticsearch_config: The initial elasticsearch config from the caller
         """
 
+        elasticsearch_config = elasticsearch_config or {}
         if (
             elasticsearch_write_operation is not None
             and elasticsearch_write_operation not in ELASTICSEARCH_WRITE_OPERATIONS
