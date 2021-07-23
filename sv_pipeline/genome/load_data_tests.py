@@ -109,43 +109,59 @@ VCF_DATA = [
 NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
 EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
 NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
+SAMPLE_QS_FIELDS = {'sample_qs_{}_to_{}'.format(i, i+10): NULL_STR_ARRAY for i in range(0, 1000, 10)}
+SAMPLE_QS_FIELDS_CPX = SAMPLE_QS_FIELDS.copy()
+SAMPLE_QS_FIELDS_CPX.update({'sample_qs_780_to_790': hl.literal(['SAMPLE-5']),
+                             'sample_qs_990_to_1000': hl.literal(['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4'])})
+SAMPLE_QS_FIELDS_DUP = SAMPLE_QS_FIELDS.copy()
+SAMPLE_QS_FIELDS_DUP.update({'sample_qs_0_to_10': ['SAMPLE-4'],
+                             'sample_qs_10_to_20': ['SAMPLE-3'],
+                             'sample_qs_30_to_40': ['SAMPLE-5'],
+                             'sample_qs_50_to_60': ['SAMPLE-2'],
+                             'sample_qs_990_to_1000': ['SAMPLE-1']})
+SAMPLE_QS_FIELDS_INS = SAMPLE_QS_FIELDS.copy()
+SAMPLE_QS_FIELDS_INS.update({'sample_qs_0_to_10': ['SAMPLE-5'],
+                             'sample_qs_990_to_1000': ['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4']})
 VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
                      sv_callset_Het=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=1495464,
                      filters=NULL_STR_ARRAY, xpos=1001495464,
                      cpx_intervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)], xstart=1001495464,
-                     xstop=1001495554, svType='CPX', transcriptConsequenceTerms=['CPX'], sv_type_detail='dDUP',
-                     sortedTranscriptConsequences=[hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', predicted_consequence='DUP_PARTIAL'),
-                                                   hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', predicted_consequence='INTRONIC')],
+                     xstop=1001495554, svType='CPX', transcriptConsequenceTerms=['DUP_PARTIAL', 'INTRONIC', 'CPX'], sv_type_detail='dDUP',
+                     sortedTranscriptConsequences=[hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', major_consequence='DUP_PARTIAL'),
+                                                   hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', major_consequence='INTRONIC')],
                      geneIds={'ENSG00000284663'}, samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
                      samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))])
+                                                      hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))],
+                     **SAMPLE_QS_FIELDS_CPX)
 VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
                      sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
                      filters=['LOW_CALL_RATE'], xpos=1000010000, cpx_intervals=NULL_INTERVALS, xstart=1000010000,
-                     xstop=1000017000, svType='DUP', transcriptConsequenceTerms=['DUP'], sv_type_detail=hl.null('str'),
+                     xstop=1000017000, svType='DUP', transcriptConsequenceTerms=['NEAREST_TSS', 'DUP'], sv_type_detail=hl.null('str'),
                      sortedTranscriptConsequences=[hl.struct(gene_symbol='OR4F5', gene_id='ENSG00000284662',
-                                                             predicted_consequence='NEAREST_TSS')], geneIds=hl.empty_set(hl.dtype('str')),
+                                                             major_consequence='NEAREST_TSS')], geneIds=hl.empty_set(hl.dtype('str')),
                      samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=EMPTY_STR_ARRAY,
                      genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-2', gq=52, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
-                                hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)])
+                                hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)],
+                     **SAMPLE_QS_FIELDS_DUP)
 VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
                      sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
                      gnomad_svs_AF=0.00130899995565414, pos=1643228, filters=NULL_STR_ARRAY, xpos=1001643228, cpx_intervals=NULL_INTERVALS,
-                     xstart=1001643228, xstop=1001643309, svType='INS', transcriptConsequenceTerms=['INS'],
+                     xstart=1001643228, xstop=1001643309, svType='INS', transcriptConsequenceTerms=['INTRONIC', 'INS'],
                      sv_type_detail='ME:SVA', sortedTranscriptConsequences=[
-        hl.struct(gene_symbol='CDK11B', gene_id='ENSG00000284664', predicted_consequence='INTRONIC')],
+        hl.struct(gene_symbol='CDK11B', gene_id='ENSG00000284664', major_consequence='INTRONIC')],
                      geneIds={'ENSG00000284664'}, samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
                      samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))])
+                                                      hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))],
+                     **SAMPLE_QS_FIELDS_INS)
 
 TEST_GUID = 'test_guid'
 TEST_PASSWORD = 'ExamplePasswd'
