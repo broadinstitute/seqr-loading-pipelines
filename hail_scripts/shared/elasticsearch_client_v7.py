@@ -130,3 +130,18 @@ class ElasticsearchClient:
     def get_index_meta(self, index_name):
         mappings = self.es.indices.get_mapping(index=index_name)
         return mappings.get(index_name, {}).get('mappings', {}).get('_meta', {})
+
+    def wait_for_loading_shards_transfer(self, index_name, num_attempts=1000):
+        # RGP is too large and needs to remain on data nodes until old index is deleted
+        if "r0384_rare_genomes_project_gen" not in index_name:
+            for i in range(num_attempts):
+                shards = self.es.cat.shards(index=index_name)
+                if "es-data-loading" not in shards:
+                    return
+                logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
+                    len(shards.strip().split("\n")), shards))
+                time.sleep(5)
+
+            raise Exception('Shards did not transfer off loading nodes')
+        else:
+            logger.info("Will not wait for RGP shards to transfer off the es-data-loading nodes")
