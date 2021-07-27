@@ -132,7 +132,10 @@ class ElasticsearchClient:
         return mappings.get(index_name, {}).get('mappings', {}).get('_meta', {})
 
     def wait_for_loading_shards_transfer(self, index_name, num_attempts=1000):
-        # RGP is too large and needs to remain on data nodes until old index is deleted
+        """
+        Wait for shards to move off of the loading nodes before connecting to seqr 
+        """
+        # RGP is too large and will not transfer until old index is deleted
         if "r0384_rare_genomes_project_gen" not in index_name:
             for i in range(num_attempts):
                 shards = self.es.cat.shards(index=index_name)
