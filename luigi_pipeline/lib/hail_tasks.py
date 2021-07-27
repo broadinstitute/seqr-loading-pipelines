@@ -237,7 +237,7 @@ class HailElasticSearchTask(luigi.Task):
 
     def cleanup(self):
         self._es.route_index_off_temp_es_cluster(self.es_index)
-        self._es.wait_for_loading_shards_transfer(self.es_index)
+        self._es.wait_for_shard_transfer(self.es_index)
 
 
     def _mt_num_shards(self, mt):

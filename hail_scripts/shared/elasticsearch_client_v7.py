@@ -131,7 +131,7 @@ class ElasticsearchClient:
         mappings = self.es.indices.get_mapping(index=index_name)
         return mappings.get(index_name, {}).get('mappings', {}).get('_meta', {})
 
-    def wait_for_loading_shards_transfer(self, index_name, num_attempts=1000):
+    def wait_for_shard_transfer(self, index_name, num_attempts=1000):
         """
         Wait for shards to move off of the loading nodes before connecting to seqr 
         """
