@@ -140,8 +140,9 @@ class ElasticsearchClient:
             for i in range(num_attempts):
                 shards = self.es.cat.shards(index=index_name)
                 if "es-data-loading" not in shards:
+                    logger.warning("Shards are on {}".format(shards))
                     return
-                logger.info("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
+                logger.warning("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
                     len(shards.strip().split("\n")), shards))
                 time.sleep(5)
 
