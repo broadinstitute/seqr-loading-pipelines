@@ -57,12 +57,13 @@ DERIVED_FIELDS = {
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
+    'samples': lambda rows: rows.genotypes.map(lambda x: x.sample_id),
 }
 
-SAMPLE_QS_FIELDS = {'sample_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
+SAMPLES_QS_FIELDS = {'samples_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', SORTED_TRANS_CONSEQ, 'genotypes'] +\
-    list(SAMPLE_QS_FIELDS.keys())
+    list(SAMPLES_QS_FIELDS.keys())
 
 
 def get_xpos(contig, pos):
@@ -156,7 +157,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
 
-    rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+QS_BIN_SIZE) for k, i in SAMPLE_QS_FIELDS.items()})
+    rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+QS_BIN_SIZE) for k, i in SAMPLES_QS_FIELDS.items()})
 
     rows = rows.rename({'rsid': 'variantId'})
 

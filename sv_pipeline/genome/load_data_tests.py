@@ -109,19 +109,19 @@ VCF_DATA = [
 NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
 EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
 NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
-SAMPLE_QS_FIELDS = {'sample_qs_{}_to_{}'.format(i, i+10): NULL_STR_ARRAY for i in range(0, 1000, 10)}
-SAMPLE_QS_FIELDS_CPX = SAMPLE_QS_FIELDS.copy()
-SAMPLE_QS_FIELDS_CPX.update({'sample_qs_780_to_790': hl.literal(['SAMPLE-5']),
-                             'sample_qs_990_to_1000': hl.literal(['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4'])})
-SAMPLE_QS_FIELDS_DUP = SAMPLE_QS_FIELDS.copy()
-SAMPLE_QS_FIELDS_DUP.update({'sample_qs_0_to_10': ['SAMPLE-4'],
-                             'sample_qs_10_to_20': ['SAMPLE-3'],
-                             'sample_qs_30_to_40': ['SAMPLE-5'],
-                             'sample_qs_50_to_60': ['SAMPLE-2'],
-                             'sample_qs_990_to_1000': ['SAMPLE-1']})
-SAMPLE_QS_FIELDS_INS = SAMPLE_QS_FIELDS.copy()
-SAMPLE_QS_FIELDS_INS.update({'sample_qs_0_to_10': ['SAMPLE-5'],
-                             'sample_qs_990_to_1000': ['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4']})
+SAMPLES_QS_FIELDS = {'samples_qs_{}_to_{}'.format(i, i+10): NULL_STR_ARRAY for i in range(0, 1000, 10)}
+SAMPLES_QS_FIELDS_CPX = SAMPLES_QS_FIELDS.copy()
+SAMPLES_QS_FIELDS_CPX.update({'samples_qs_780_to_790': hl.literal(['SAMPLE-5']),
+                             'samples_qs_990_to_1000': hl.literal(['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4'])})
+SAMPLES_QS_FIELDS_DUP = SAMPLES_QS_FIELDS.copy()
+SAMPLES_QS_FIELDS_DUP.update({'samples_qs_0_to_10': ['SAMPLE-4'],
+                             'samples_qs_10_to_20': ['SAMPLE-3'],
+                             'samples_qs_30_to_40': ['SAMPLE-5'],
+                             'samples_qs_50_to_60': ['SAMPLE-2'],
+                             'samples_qs_990_to_1000': ['SAMPLE-1']})
+SAMPLES_QS_FIELDS_INS = SAMPLES_QS_FIELDS.copy()
+SAMPLES_QS_FIELDS_INS.update({'samples_qs_0_to_10': ['SAMPLE-5'],
+                             'samples_qs_990_to_1000': ['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4']})
 VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
                      sv_callset_Het=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=1495464,
                      filters=NULL_STR_ARRAY, xpos=1001495464,
@@ -135,7 +135,8 @@ VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, s
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))],
-                     **SAMPLE_QS_FIELDS_CPX)
+                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+                     **SAMPLES_QS_FIELDS_CPX)
 VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
                      sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
                      filters=['LOW_CALL_RATE'], xpos=1000010000, cpx_intervals=NULL_INTERVALS, xstart=1000010000,
@@ -148,7 +149,8 @@ VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104,
                                 hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
                                 hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)],
-                     **SAMPLE_QS_FIELDS_DUP)
+                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+                     **SAMPLES_QS_FIELDS_DUP)
 VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
                      sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
                      gnomad_svs_AF=0.00130899995565414, pos=1643228, filters=NULL_STR_ARRAY, xpos=1001643228, cpx_intervals=NULL_INTERVALS,
@@ -161,7 +163,8 @@ VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703,
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))],
-                     **SAMPLE_QS_FIELDS_INS)
+                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+                     **SAMPLES_QS_FIELDS_INS)
 
 TEST_GUID = 'test_guid'
 TEST_PASSWORD = 'ExamplePasswd'
@@ -278,7 +281,7 @@ class LoadDataTest(unittest.TestCase):
         mock_os.environ.get.return_value = TEST_PASSWORD
         mock_es = mock_es_client.return_value
         rows = self.mt.rows().head(5)
-        export_to_es(rows, TEST_INPUT_DATASET, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)
+        export_to_es(rows, TEST_INPUT_DATASET, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS, es_nodes_wan_only='false')
         mock_get_index.assert_called_with(TEST_GUID, {'genomeVersion': '38', 'sampleType': WGS_SAMPLE_TYPE,
                                                       'datasetType': 'SV', 'sourceFilePath': TEST_INPUT_DATASET})
         mock_os.environ.get.assert_called_with('PIPELINE_ES_PASSWORD', '')
@@ -291,6 +294,7 @@ class LoadDataTest(unittest.TestCase):
             delete_index_before_exporting=True,
             export_globals_to_index_meta=True,
             verbose=True,
+            elasticsearch_config={'es.nodes.wan.only': 'false'}
         )
         self.assertEqual(hl.eval(mock_es.export_table_to_elasticsearch.call_args.args[0].globals),
                          hl.eval(hl.struct(genomeVersion='38', sampleType=WGS_SAMPLE_TYPE,
@@ -315,7 +319,7 @@ class LoadDataTest(unittest.TestCase):
         mock_load_mt.assert_called_with(self.vcf_file, None, False)
         mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=False, ignore_missing_samples=False)
         mock_annot.assert_called_with(mt, 29, None)
-        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 1)
+        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 1, 'false')
 
         # test arguments with non-default values
         mock_hl.reset_mock()
@@ -330,4 +334,4 @@ class LoadDataTest(unittest.TestCase):
         mock_load_mt.assert_called_with(self.vcf_file, TEST_MT_PATH, False)
         mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=True, ignore_missing_samples=True)
         mock_annot.assert_called_with(mt, TEST_GENCODE_RELEASE, TEST_GENCODE_PATH)
-        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS)
+        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS, 'false')
