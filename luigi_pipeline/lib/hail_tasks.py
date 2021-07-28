@@ -235,9 +235,11 @@ class HailElasticSearchTask(luigi.Task):
                                                num_shards=num_shards,
                                                write_null_values=True)
 
-    def cleanup(self):
+    def cleanup(self, es_shards):
         self._es.route_index_off_temp_es_cluster(self.es_index)
-        self._es.wait_for_shard_transfer(self.es_index)
+        # Current disk configuration requires the previous index to be deleted prior to large indices, ~1TB, transferring off loading nodes
+        if es_shards < 25:
+            self._es.wait_for_shard_transfer(self.es_index)
 
 
     def _mt_num_shards(self, mt):

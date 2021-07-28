@@ -135,17 +135,13 @@ class ElasticsearchClient:
         """
         Wait for shards to move off of the loading nodes before connecting to seqr 
         """
-        # RGP is too large and will not transfer until old index is deleted
-        if "r0384_rare_genomes_project_gen" not in index_name:
-            for i in range(num_attempts):
-                shards = self.es.cat.shards(index=index_name)
-                if LOADING_NODES_NAME not in shards:
-                    logger.warning("Shards are on {}".format(shards))
-                    return
-                logger.warning("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
-                    len(shards.strip().split("\n")), shards))
-                time.sleep(5)
+        for i in range(num_attempts):
+            shards = self.es.cat.shards(index=index_name)
+            if LOADING_NODES_NAME not in shards:
+                logger.warning("Shards are on {}".format(shards))
+                return
+            logger.warning("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
+                len(shards.strip().split("\n")), shards))
+            time.sleep(5)
 
-            raise Exception('Shards did not transfer off loading nodes')
-        else:
-            logger.info("Will not wait for RGP shards to transfer off the es-data-loading nodes")
+        raise Exception('Shards did not transfer off loading nodes')
