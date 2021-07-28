@@ -135,7 +135,6 @@ VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, s
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))],
-                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
                      **SAMPLES_QS_FIELDS_CPX)
 VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
                      sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
@@ -149,7 +148,6 @@ VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104,
                                 hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
                                 hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
                                 hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)],
-                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
                      **SAMPLES_QS_FIELDS_DUP)
 VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
                      sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
@@ -163,7 +161,6 @@ VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703,
                                                       hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
                                                       hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))],
-                     samples=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
                      **SAMPLES_QS_FIELDS_INS)
 
 TEST_GUID = 'test_guid'

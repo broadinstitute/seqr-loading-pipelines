@@ -57,7 +57,6 @@ DERIVED_FIELDS = {
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
-    'samples': lambda rows: rows.genotypes.map(lambda x: x.sample_id),
 }
 
 SAMPLES_QS_FIELDS = {'samples_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
