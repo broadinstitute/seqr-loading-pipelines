@@ -139,7 +139,7 @@ class ElasticsearchClient:
         if "r0384_rare_genomes_project_gen" not in index_name:
             for i in range(num_attempts):
                 shards = self.es.cat.shards(index=index_name)
-                if "es-data-loading" not in shards:
+                if LOADING_NODES_NAME not in shards:
                     logger.warning("Shards are on {}".format(shards))
                     return
                 logger.warning("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
