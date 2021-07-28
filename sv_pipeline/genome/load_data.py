@@ -163,7 +163,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
     return rows.key_by().select(*FIELDS)
 
 
-def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards):
+def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards, es_nodes_wan_only):
     meta = {
       'genomeVersion': '38',
       'sampleType': WGS_SAMPLE_TYPE,
@@ -186,6 +186,7 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
+        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only}
     )
 
 
@@ -203,6 +204,7 @@ def main():
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
+    p.add_argument('--es-nodes-wan-only', action='store_true')
 
     args = p.parse_args()
 
@@ -216,7 +218,8 @@ def main():
 
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 
-    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size, args.num_shards)
+    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
+                 args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
     hl.stop()
