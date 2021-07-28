@@ -198,12 +198,13 @@ class SeqrMTToESTask(HailElasticSearchTask):
     def run(self):
         mt = self.import_mt()
         row_table = SeqrVariantsAndGenotypesSchema.elasticsearch_row(mt)
-        self.export_table_to_elasticsearch(row_table, self._mt_num_shards(mt))
+        es_shards = self._mt_num_shards(mt)
+        self.export_table_to_elasticsearch(row_table, es_shards)
 
         with hl.hadoop_open(self.completed_marker_path, "w") as f:
             f.write(".")
 
-        self.cleanup()
+        self.cleanup(es_shards)
 
 
 if __name__ == '__main__':

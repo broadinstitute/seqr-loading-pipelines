@@ -130,3 +130,18 @@ class ElasticsearchClient:
     def get_index_meta(self, index_name):
         mappings = self.es.indices.get_mapping(index=index_name)
         return mappings.get(index_name, {}).get('mappings', {}).get('_meta', {})
+
+    def wait_for_shard_transfer(self, index_name, num_attempts=1000):
+        """
+        Wait for shards to move off of the loading nodes before connecting to seqr 
+        """
+        for i in range(num_attempts):
+            shards = self.es.cat.shards(index=index_name)
+            if LOADING_NODES_NAME not in shards:
+                logger.warning("Shards are on {}".format(shards))
+                return
+            logger.warning("Waiting for {} shards to transfer off the es-data-loading nodes: \n{}".format(
+                len(shards.strip().split("\n")), shards))
+            time.sleep(5)
+
+        raise Exception('Shards did not transfer off loading nodes')
