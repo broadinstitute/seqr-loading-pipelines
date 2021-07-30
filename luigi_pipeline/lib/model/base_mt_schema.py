@@ -1,13 +1,31 @@
-from inspect import getmembers, ismethod
-from functools import wraps
-from collections import defaultdict
 import logging
+
+from typing import List
+from inspect import getmembers
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
 
 class RowAnnotationOmit(Exception):
     pass
+
+
+class RowAnnotationFailed(Exception):
+    pass
+
+
+class RowAnnotation:
+    def __init__(self, fn, name=None, requirements: List[str]=None):
+        self.fn = fn
+        self.name = name or fn.__name__
+        self.requirements = requirements
+
+    def __repr__(self):
+        requires = None
+        if self.requirements:
+            requires = f' (requires: {", ".join(self.requirements)})'
+        return f"{self.name}{requires}"
 
 
 def row_annotation(name=None, fn_require=None):
@@ -24,60 +42,25 @@ def row_annotation(name=None, fn_require=None):
             return 'b_val'
 
     Will generate a mt with rows of {a: 'a_val', 'b': 'b_val'} if the function is called.
-    TODO: Consider changing fn_require to be a list of requirements.
 
     When calling the function with annotation already set in the MT, the default behavior is to
     skip unless an overwrite=True is passed into the call.
 
     :param name: name in the final MT. If not provided, uses the function name.
-    :param fn_require: method name strings in class that are dependencies.
+    :param fn_require: method names in class that are dependencies.
     :return:
     """
     def mt_prop_wrapper(func):
-        annotation_name = name or func.__name__
+        requirements = None
+        if fn_require is not None:
+            fn_requirements = fn_require if isinstance(fn_require, list) else [fn_require]
+            for fn in fn_requirements:
+                if not isinstance(fn, RowAnnotation):
+                    raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
+            requirements = [fn.name for fn in fn_requirements]
 
-        # fn_require checking, done when declared, not called.
-        if fn_require:
-            if not callable(fn_require):
-                raise ValueError('Schema: dependency %s is not of type function.' % fn_require)
-            if not hasattr(fn_require, 'mt_cls_meta'):
-                raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
+        return RowAnnotation(func, name=name, requirements=requirements)
 
-        @wraps(func)
-        def wrapper(self, *args, overwrite=False, **kwargs):
-            # Called already.
-            instance_metadata = self.mt_instance_meta['row_annotations'][wrapper.__name__]
-            if instance_metadata['annotated'] > 0:
-                return self
-
-            # MT already has annotation, so only continue if overwrite requested.
-            if annotation_name in self.mt.rows()._fields:
-                logger.warning('MT using schema class %s already has %s annotation.' % (self.__class__, annotation_name))
-                if not overwrite:
-                    return self
-                logger.info('Overwriting matrix table annotation %s' % annotation_name)
-
-            if fn_require:
-                getattr(self, fn_require.__name__)()
-
-            try:
-                func_ret = func(self, *args, **kwargs)
-            # Do not annotate when RowAnnotationOmit raised.
-            except RowAnnotationOmit:
-                return self
-
-            annotation = {annotation_name: func_ret}
-            self.mt = self.mt.annotate_rows(**annotation)
-
-            instance_metadata['annotated'] += 1
-            instance_metadata['result'] = func_ret
-
-            return self
-
-        wrapper.mt_cls_meta = {
-            'annotated_name': annotation_name
-        }
-        return wrapper
     return mt_prop_wrapper
 
 
@@ -109,7 +92,8 @@ class BaseMTSchema:
 
     """
     def __init__(self, mt):
-        self.mt = mt
+        self._mt = None
+        self.set_mt(mt)
         self.mt_instance_meta = {
             'row_annotations': defaultdict(lambda: {
                 'annotated': 0,
@@ -117,21 +101,94 @@ class BaseMTSchema:
             })
         }
 
+    @property
+    def mt(self):
+        """
+        Don't allow direct sets to self.mt to ensure some references are updated
+        """
+        return self._mt
+
+    # Don't use @mt.setter as it makes inheritance harder
+    def set_mt(self, mt):
+        """Set mt here"""
+        self._mt = mt
+
     def all_annotation_fns(self):
         """
         Get all row_annotation decorated methods using introspection.
         :return: list of all annotation functions
         """
-        return getmembers(self, lambda x: ismethod(x) and hasattr(x, 'mt_cls_meta'))
+        return [a[1] for a in getmembers(self, lambda x: isinstance(x, RowAnnotation))]
 
     def annotate_all(self, overwrite=False):
         """
         Iterate over all annotation functions and call them on the instance.
         :return: instance object
         """
-        for atn_fn in self.all_annotation_fns():
-            getattr(self, atn_fn[0])(overwrite=overwrite)
+        called_annotations = set()
+        rounds: List[List[RowAnnotation]] = [self.all_annotation_fns()]
+        logger.debug(f'Will attempt to apply {len(rounds[0])} row annotations')
+
+        while len(rounds) > 0:
+            rnd = rounds.pop(0)
+            logger.debug(f'Starting round with {len(rnd)} annotations')
+            # add callers that you can't run yet to this list
+            next_round = []
+            annotations_to_apply = {}
+            for annotation in rnd:
+                # apply each atn_fn here
+                instance_metadata = self.mt_instance_meta['row_annotations'][annotation.name]
+                if instance_metadata['annotated'] > 0:
+                    # already called
+                    continue
+
+                # MT already has annotation, so only continue if overwrite requested.
+                if annotation.name in self.mt.rows()._fields or annotation.name in annotations_to_apply:
+                    logger.warning(
+                        'MT using schema class %s already has "%s" annotation.' % (self.__class__.__name__, annotation.name))
+                    if not overwrite:
+                        continue
+                    logger.info('Overwriting matrix table annotation %s' % annotation.name)
+
+                if annotation.requirements and any(r not in called_annotations for r in annotation.requirements):
+                    # this annotation has unfulfilled annotations,
+                    # so let's do it in the next round
+                    next_round.append(annotation)
+                    continue
+
+                try:
+                    # evaluate the function
+                    func_ret = annotation.fn(self)
+                except RowAnnotationOmit:
+                    # Do not annotate when RowAnnotationOmit raised.
+                    logger.debug(f'Received RowAnnotationOmit for "{annotation.name}"')
+                    continue
+
+                annotations_to_apply[annotation.name] = func_ret
+
+                instance_metadata['annotated'] += 1
+                instance_metadata['result'] = func_ret
+
+            # update the mt
+            logger.debug('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
+            self.set_mt(self.mt.annotate_rows(**annotations_to_apply))
+
+            called_annotations = called_annotations.union(set(annotations_to_apply.keys()))
+
+            if len(next_round) > 0:
+                if len(next_round) == len(rnd):
+                    # something has got stuck and it's requirements can't be fulfilled
+                    failed_annotations = ', '.join(an.name for an in next_round)
+                    flattened_reqs = [inner for an in next_round for inner in (an.requirements or [])]
+                    requirements = ', '.join(set(flattened_reqs))
+                    raise RowAnnotationFailed(
+                        f"Couldn't apply annotations {failed_annotations}, "
+                        f"their dependencies could not be fulfilled: {requirements}"
+                    )
+                rounds.append(next_round)
+
         return self
+
 
     def select_annotated_mt(self):
         """
@@ -141,16 +198,15 @@ class BaseMTSchema:
         """
         # Selection field is the annotation name of any function that has been called.
         select_fields = []
-        for fn in self.all_annotation_fns():
-            cls_metadata = fn[1].mt_cls_meta
-            if fn[0] in self.mt_instance_meta['row_annotations']:
-                inst_fn_metadata = self.mt_instance_meta['row_annotations'][fn[0]]
-            else:
+        row_annotations = self.mt_instance_meta['row_annotations']
+        for annotation in self.all_annotation_fns():
+            if annotation.name not in row_annotations:
                 continue
 
+            inst_fn_metadata = row_annotations[annotation.name]
             # Not called.
             if inst_fn_metadata['annotated'] <= 0:
                 continue
 
-            select_fields.append(fn[1].mt_cls_meta['annotated_name'])
+            select_fields.append(annotation.name)
         return self.mt.select_rows(*select_fields)
