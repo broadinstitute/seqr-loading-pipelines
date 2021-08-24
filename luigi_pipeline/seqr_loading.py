@@ -40,6 +40,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                           description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None,
                                         description="Path of hail vep config .json file")
+    grch38_to_grch37_ref_chain = luigi.OptionalParameter(default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
+                                        description="Path to GRCh38 to GRCh37 coordinates file")
 
     def run(self):
         # first validate paths
@@ -51,6 +53,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
         if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
         if self.vep_config_json_path: check_if_path_exists(self.vep_config_json_path, "vep_config_json_path")
+        if self.grch38_to_grch37_ref_chain: check_if_path_exists(self.grch38_to_grch37_ref_chain, "grch38_to_grch37_ref_chain")
 
         self.read_vcf_write_mt()
 
@@ -67,7 +70,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.subset_path:
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
-            mt = self.add_37_coordinates(mt)
+            mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner, vep_config_json_path=self.vep_config_json_path)
 
         ref_data = hl.read_table(self.reference_ht_path)
@@ -160,6 +163,8 @@ class SeqrMTToESTask(HailElasticSearchTask):
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")
+    grch38_to_grch37_ref_chain = luigi.OptionalParameter(default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
+                                        description="Path to GRCh38 to GRCh37 coordinates file")
 
     def __init__(self, *args, **kwargs):
         # TODO: instead of hardcoded index, generate from project_guid, etc.
@@ -183,6 +188,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
             remap_path=self.remap_path,
             subset_path=self.subset_path,
             vep_config_json_path=self.vep_config_json_path,
+            grch38_to_grch37_ref_chain=self.grch38_to_grch37_ref_chain,
         )]
 
     def output(self):

@@ -180,14 +180,15 @@ class HailMatrixTableTask(luigi.Task):
         return mt
 
     @staticmethod
-    def add_37_coordinates(mt):
+    def add_37_coordinates(mt, liftover_ref_path):
         """Annotates the GRCh38 MT with 37 coordinates using hail's built-in liftover
         :param mt: MatrixTable from VCF
+        :param liftover_ref_path: Path to GRCh38 to GRCh37 coordinates file
         :return: MatrixTable annotated with GRCh37 coordinates
         """
         rg37 = hl.get_reference('GRCh37')
         rg38 = hl.get_reference('GRCh38')
-        rg38.add_liftover('gs://hail-common/references/grch38_to_grch37.over.chain.gz', rg37)
+        rg38.add_liftover(liftover_ref_path, rg37)
         mt = mt.annotate_rows(rg37_locus=hl.liftover(mt.locus, 'GRCh37'))
         return mt
 
