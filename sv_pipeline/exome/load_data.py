@@ -9,8 +9,8 @@ from elasticsearch import helpers as es_helpers
 from getpass import getpass
 from tqdm import tqdm
 
-from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
-from hail_scripts.v02.utils.elasticsearch_utils import ELASTICSEARCH_INDEX
+from hail_scripts.elasticsearch.elasticsearch_client_v7 import ElasticsearchClient
+from hail_scripts.elasticsearch.elasticsearch_utils import ELASTICSEARCH_INDEX
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
 

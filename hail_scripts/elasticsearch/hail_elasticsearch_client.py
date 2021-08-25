@@ -4,8 +4,8 @@ from pprint import pformat
 
 import hail as hl
 
-from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
-from hail_scripts.v02.utils.elasticsearch_utils import (
+from hail_scripts.elasticsearch.elasticsearch_client_v7 import ElasticsearchClient
+from hail_scripts.elasticsearch.elasticsearch_utils import (
     ELASTICSEARCH_INDEX,
     ELASTICSEARCH_UPDATE,
     ELASTICSEARCH_UPSERT,

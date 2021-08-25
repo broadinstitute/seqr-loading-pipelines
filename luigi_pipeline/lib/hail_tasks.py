@@ -11,7 +11,7 @@ import luigi
 from luigi.contrib import gcs
 from luigi.parameter import ParameterVisibility
 
-from hail_scripts.v02.utils.hail_elasticsearch_client import HailElasticsearchClient
+from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 from lib.global_config import GlobalConfig
 import lib.hail_vep_runners as vep_runners
 

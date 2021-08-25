@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 
 
 import hail as hl
-from hail_scripts.v02.utils.hail_utils import write_ht, import_table
+from hail_scripts.utils.hail_utils import write_ht, import_table
 
 hl.init()
 
