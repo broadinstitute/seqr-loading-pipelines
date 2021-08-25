@@ -4,7 +4,7 @@ from pprint import pformat
 
 import hail as hl
 
-from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient as BaseElasticsearchClient
+from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
 from hail_scripts.shared.elasticsearch_utils import (
     ELASTICSEARCH_INDEX,
     ELASTICSEARCH_UPDATE,
@@ -22,7 +22,7 @@ def struct_to_dict(struct):
     return {k: dict(struct_to_dict(v)) if isinstance(v, hl.utils.Struct) else v for k, v in struct.items()}
 
 
-class ElasticsearchClient(BaseElasticsearchClient):
+class HailElasticsearchClient(ElasticsearchClient):
     def export_table_to_elasticsearch(
         self,
         table: hl.Table,
