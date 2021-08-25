@@ -5,14 +5,14 @@ from pprint import pformat
 import hail as hl
 
 from hail_scripts.shared.elasticsearch_client_v7 import ElasticsearchClient
-from hail_scripts.shared.elasticsearch_utils import (
+from hail_scripts.v02.utils.elasticsearch_utils import (
     ELASTICSEARCH_INDEX,
     ELASTICSEARCH_UPDATE,
     ELASTICSEARCH_UPSERT,
     ELASTICSEARCH_WRITE_OPERATIONS,
-    _encode_field_name,
+    encode_field_name,
+    elasticsearch_schema_for_table,
 )
-from hail_scripts.v02.utils.elasticsearch_utils import elasticsearch_schema_for_table
 
 
 logger = logging.getLogger()
@@ -136,7 +136,7 @@ class HailElasticsearchClient(ElasticsearchClient):
                 encoded_name = encoded_name.replace(".", field_names_replace_dot_with)
 
             # replace all other special chars with an encoding that's uglier, but reversible
-            encoded_name = _encode_field_name(encoded_name)
+            encoded_name = encode_field_name(encoded_name)
 
             if encoded_name != field_name:
                 rename_dict[field_name] = encoded_name
