@@ -11,36 +11,43 @@ from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLoca
 from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 logger = logging.getLogger(__name__)
-STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19','2','20','21','22','3','4','5','6','7','8','9','X','Y'}
-
+GRCh37_STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19','2','20','21','22','3','4','5','6','7','8','9','X','Y', 'MT'}
+GRCh38_STANDARD_CONTIGS = {'chr1','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr2','chr20','chr21','chr22','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chrX','chrY', 'chrM'}
+VARIANT_THRESHOLD = 100
+VARIANT_THRESHOLD_Y = 1
 
 def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
         raise ValueError(f"{label} path not found: {path}")
 
-def contig_check(mt, threshold):
+def contig_check(mt, standard_contigs, threshold):
     row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
     contigs_set = set(row_dict.keys())
-    missing_contigs = STANDARD_CONTIGS - contigs_set
-    invalid_contigs = {contig: None for contig in missing_contigs}
+    # chromosomes that are not in the VCF
+    missing_contigs = standard_contigs - contigs_set
+    result_dict = {contig: None for contig in missing_contigs}
     result = True
     
     for k,v in row_dict.items():
-        if k not in STANDARD_CONTIGS:
-            invalid_contigs[k] = ''
-        if v < threshold:
-            invalid_contigs[k] = v
+        if k not in standard_contigs:
+            result_dict[k] = 'Unexpected string'
+        if 'Y' in k and v < VARIANT_THRESHOLD_Y:
+            result_dict[k] = v
+        elif v < threshold:
+            result_dict[k] = v
 
-    if bool(invalid_contigs):
-        result = False
-        for k in invalid_contigs:
-            if not invalid_contigs[k]: 
-                print(f'Chromosome {k} is not in the VCF.')
-            elif invalid_contigs[k] == '':
-                print(f'Chromosome {k} is invalid.')
+    if bool(result_dict):
+        for k in result_dict:
+            result = False
+            if k == 'MT' or k == 'chrM':
+                result = True
+            elif not result_dict[k]: 
+                logger.warning('Chromosome %s is not in the VCF.', k)
+            elif result_dict[k] == 'Unexpected string':
+                logger.warning('Chromosome %s is unexpected.', k)
             else:
-                v = invalid_contigs[k]
-                print(f'Chromosome {k} has {v} rows, which is lower than threshold {threshold}.')
+                v = result_dict[k]
+                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
     return result
 
 class SeqrValidationError(Exception):
@@ -134,8 +141,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         :param sample_type: WGS or WES
         :return: True or Exception
         """
-
-        contig_check_result = contig_check(mt, 100)
+        if genome_version == '37':
+            contig_check_result = contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+        elif genome_version == '38':
+            contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
 
         if not contig_check_result:
             raise SeqrValidationError('The VCF failed contig check')
