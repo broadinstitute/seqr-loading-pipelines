@@ -13,8 +13,8 @@ from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, Seq
 logger = logging.getLogger(__name__)
 GRCh37_STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19','2','20','21','22','3','4','5','6','7','8','9','X','Y', 'MT'}
 GRCh38_STANDARD_CONTIGS = {'chr1','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr2','chr20','chr21','chr22','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chrX','chrY', 'chrM'}
+OPTIONAL_CHROMOSOMES = ['MT', 'chrM', 'Y', 'chrY']
 VARIANT_THRESHOLD = 100
-VARIANT_THRESHOLD_Y = 1
 
 def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
@@ -31,15 +31,13 @@ def contig_check(mt, standard_contigs, threshold):
     for k,v in row_dict.items():
         if k not in standard_contigs:
             result_dict[k] = 'Unexpected string'
-        if 'Y' in k and v < VARIANT_THRESHOLD_Y:
-            result_dict[k] = v
-        elif v < threshold:
+        if v < threshold and 'Y' not in k:
             result_dict[k] = v
 
     if bool(result_dict):
         for k in result_dict:
             result = False
-            if k == 'MT' or k == 'chrM':
+            if k in OPTIONAL_CHROMOSOMES:
                 result = True
             elif not result_dict[k]: 
                 logger.warning('Chromosome %s is not in the VCF.', k)
