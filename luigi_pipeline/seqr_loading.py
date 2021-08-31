@@ -21,32 +21,28 @@ def check_if_path_exists(path, label=""):
         raise ValueError(f"{label} path not found: {path}")
 
 def contig_check(mt, standard_contigs, threshold):
+    check_result_dict = {}
+    
+    # check chromosomes that are not in the VCF  
     row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
     contigs_set = set(row_dict.keys())
-    # chromosomes that are not in the VCF
-    missing_contigs = standard_contigs - contigs_set
-    result_dict = {contig: None for contig in missing_contigs}
-    result = True
     
+    all_missing_contigs = standard_contigs - contigs_set
+    missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
+
+    if missing_contigs_without_optional:
+        check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
+        logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
+                       
     for k,v in row_dict.items():
         if k not in standard_contigs:
-            result_dict[k] = 'Unexpected string'
-        if v < threshold and 'Y' not in k:
-            result_dict[k] = v
-
-    if bool(result_dict):
-        for k in result_dict:
-            result = False
-            if k in OPTIONAL_CHROMOSOMES:
-                result = True
-            elif not result_dict[k]: 
-                logger.warning('Chromosome %s is not in the VCF.', k)
-            elif result_dict[k] == 'Unexpected string':
-                logger.warning('Chromosome %s is unexpected.', k)
-            else:
-                v = result_dict[k]
-                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
-    return result
+            check_result_dict.setdefault('Unexpected string(s)',[]).append(k)
+            logger.warning('Chromosome %s is unexpected.', k)
+        if (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
+            check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
+            logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
+                            
+    return check_result_dict
 
 class SeqrValidationError(Exception):
     pass
@@ -144,8 +140,11 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         elif genome_version == '38':
             contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
 
-        if not contig_check_result:
-            raise SeqrValidationError('The VCF failed contig check')
+        if bool(contig_check_result):
+            err_msg = ''
+            for k,v in contig_check_result.items():
+                err_msg += '{k}: {v}. '.format(k=k, v=', '.join(v))
+            raise SeqrValidationError(err_msg)
 
         sample_type_stats = HailMatrixTableTask.sample_type_stats(mt, genome_version)
 
