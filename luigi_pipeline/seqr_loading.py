@@ -15,6 +15,8 @@ GRCh37_STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19'
 GRCh38_STANDARD_CONTIGS = {'chr1','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr2','chr20','chr21','chr22','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chrX','chrY', 'chrM'}
 OPTIONAL_CHROMOSOMES = ['MT', 'chrM', 'Y', 'chrY']
 VARIANT_THRESHOLD = 100
+CONST_GRCh37 = '37'
+CONST_GRCh38 = '38'
 
 def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
@@ -36,9 +38,9 @@ def contig_check(mt, standard_contigs, threshold):
                        
     for k,v in row_dict.items():
         if k not in standard_contigs:
-            check_result_dict.setdefault('Unexpected string(s)',[]).append(k)
+            check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
             logger.warning('Chromosome %s is unexpected.', k)
-        if (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
+        elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
             check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
             logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
                             
@@ -135,9 +137,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         :param sample_type: WGS or WES
         :return: True or Exception
         """
-        if genome_version == '37':
+        if genome_version == CONST_GRCh37:
             contig_check_result = contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
-        elif genome_version == '38':
+        elif genome_version == CONST_GRCh38:
             contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
 
         if bool(contig_check_result):
