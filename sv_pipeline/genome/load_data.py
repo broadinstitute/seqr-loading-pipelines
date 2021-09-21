@@ -102,9 +102,9 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
     return hl.read_matrix_table(matrixtable_file)
 
 
-def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples=False):
+def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples=False, id_file=None):
     if not skip_sample_subset:
-        sample_subset = get_sample_subset(project_guid, WGS_SAMPLE_TYPE)
+        sample_subset = get_sample_subset(project_guid, WGS_SAMPLE_TYPE, filename=id_file)
         found_samples = sample_subset.intersection(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)))
         if len(found_samples) != len(sample_subset):
             missed_samples = sample_subset - found_samples
@@ -205,6 +205,7 @@ def main():
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
+    p.add_argument('--id-file', help='The full path (can start with gs://) of the id file.')
 
     args = p.parse_args()
 
@@ -214,7 +215,9 @@ def main():
 
     mt = load_mt(args.input_dataset, args.matrixtable_file, args.overwrite_matrixtable)
 
-    mt = subset_mt(args.project_guid, mt, skip_sample_subset=args.skip_sample_subset, ignore_missing_samples=args.ignore_missing_samples)
+    mt = subset_mt(args.project_guid, mt, skip_sample_subset=args.skip_sample_subset,
+                   ignore_missing_samples=args.ignore_missing_samples,
+                   id_file=args.id_file)
 
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 

@@ -10,7 +10,7 @@ CHROM_TO_XPOS_OFFSET = {chrom: (1 + i)*int(1e9) for i, chrom in enumerate(CHROMO
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
 
-def _get_gs_samples(project_guid, file_ext, sample_type, expected_header):
+def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filename=None):
     """
     Get sample metadata from files in google cloud
 
@@ -20,7 +20,7 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header):
     :param expected_header: expected header to validate file
     :return: parsed data from the sample file as a list of lists
     """
-    file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext)
+    file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext) if not filename else filename
     process = subprocess.Popen(
         'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if process.wait() != 0:
@@ -32,7 +32,7 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header):
     return [line.decode('utf-8').strip().split('\t') for line in process.stdout]
 
 
-def get_sample_subset(project_guid, sample_type):
+def get_sample_subset(project_guid, sample_type, filename=None):
     """
     Get sample id subset for a given project
 
@@ -40,7 +40,7 @@ def get_sample_subset(project_guid, sample_type):
     :param sample_type: sample type (WES/WGS)
     :return: set of sample ids
     """
-    subset = _get_gs_samples(project_guid, file_ext='ids.txt', sample_type=sample_type, expected_header='s')
+    subset = _get_gs_samples(project_guid, file_ext='ids.txt', sample_type=sample_type, expected_header='s', filename=filename)
     if not subset:
         raise Exception('No sample subset file found')
     return {row[0] for row in subset}
