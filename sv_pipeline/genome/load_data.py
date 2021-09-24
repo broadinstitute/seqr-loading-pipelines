@@ -205,7 +205,7 @@ def main():
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
-    p.add_argument('--id-file', help='The full path (can start with gs://) of the id file.')
+    p.add_argument('--id-file', help='The full path (can start with gs://) of the id file. Should only be used for testing purposes, not intended for use in production')
 
     args = p.parse_args()
 
