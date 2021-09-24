@@ -59,7 +59,7 @@ DERIVED_FIELDS = {
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-SAMPLES_QS_FIELDS = {'samples_qs_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
+SAMPLES_QS_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', SORTED_TRANS_CONSEQ, 'genotypes'] +\
     list(SAMPLES_QS_FIELDS.keys())
