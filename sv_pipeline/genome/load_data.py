@@ -18,7 +18,7 @@ TRANS_CONSEQ_TERMS = 'transcriptConsequenceTerms'
 SORTED_TRANS_CONSEQ = 'sortedTranscriptConsequences'
 SV_TYPE = 'sv_type'
 MAJOR_CONSEQ = 'major_consequence'
-QS_BIN_SIZE = 10
+GQ_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
@@ -59,10 +59,10 @@ DERIVED_FIELDS = {
     'samples_num_alt_2': lambda rows: get_sample_num_alt_x(rows, 2),
 }
 
-SAMPLES_QS_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+QS_BIN_SIZE): i for i in range(0, 1000, QS_BIN_SIZE)}
+SAMPLES_GQ_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+GQ_BIN_SIZE): i for i in range(0, 1000, GQ_BIN_SIZE)}
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', SORTED_TRANS_CONSEQ, 'genotypes'] +\
-    list(SAMPLES_QS_FIELDS.keys())
+    list(SAMPLES_GQ_FIELDS.keys())
 
 
 def get_xpos(contig, pos):
@@ -156,7 +156,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
 
-    rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+QS_BIN_SIZE) for k, i in SAMPLES_QS_FIELDS.items()})
+    rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+GQ_BIN_SIZE) for k, i in SAMPLES_GQ_FIELDS.items()})
 
     rows = rows.rename({'rsid': 'variantId'})
 
@@ -205,7 +205,7 @@ def main():
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
-    p.add_argument('--id-file', help='The full path (can start with gs://) of the id file.')
+    p.add_argument('--id-file', help='The full path (can start with gs://) of the id file. Should only be used for testing purposes, not intended for use in production')
 
     args = p.parse_args()
 
