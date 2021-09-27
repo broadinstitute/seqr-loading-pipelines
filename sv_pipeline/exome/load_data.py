@@ -89,12 +89,12 @@ COL_CONFIGS = {
     },
     GENES_COL: {
         'field_name': GENES_FIELD,
-        'format': lambda genes: [] if genes == 'None' else [gene.split('.')[0] for gene in genes.split(',')],
+        'format': lambda genes: set() if genes == 'None' else {gene.split('.')[0] for gene in genes.split(',')},
     },
 }
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, GENES_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, DEFRAGGED_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL]
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
@@ -176,6 +176,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
+        sv[GENES_FIELD] = set()
 
     sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
     sample_info[SAMPLE_ID_FIELD] = sample_id
@@ -186,6 +187,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
     sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
     sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
     sv[NUM_EXON_FIELD] = max(sv.get(NUM_EXON_FIELD, 0), sample_info[NUM_EXON_FIELD])
+    sv[GENES_FIELD].update(sample_info[GENES_FIELD])
 
 
 def load_file(file_path, parse_row, out_file_path=None, columns=None):
@@ -327,6 +329,13 @@ def format_sv(sv):
 
         if sv[NUM_EXON_FIELD] == genotype[NUM_EXON_FIELD]:
             genotype.pop(NUM_EXON_FIELD)
+
+        if sv[GENES_FIELD] == genotype[GENES_FIELD]:
+            genotype.pop(GENES_FIELD)
+        else:
+            genotype[GENES_FIELD] = list(genotype[GENES_FIELD])
+
+    sv[GENES_FIELD] = list(sv[GENES_FIELD])
 
 
 def get_es_schema(all_fields, nested_fields):
