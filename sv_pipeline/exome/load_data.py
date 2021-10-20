@@ -297,7 +297,7 @@ def format_sv(sv):
     :return: none
     """
     sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
-    sv['transcriptConsequenceTerms'] = [sv[CALL_FIELD]]
+    sv['transcriptConsequenceTerms'] = ['gCNV_'.format(sv[CALL_FIELD])]
     if sv[SF_FIELD]:
         sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
