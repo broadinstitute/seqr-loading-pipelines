@@ -36,6 +36,7 @@ CORE_FIELDS = {
     'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
     'pos': lambda rows: rows.locus.position,
     'filters': lambda rows: hl.array(rows.filters.filter(lambda x: x != 'PASS')),
+    'algorithms': lambda rows: rows.info.ALGORITHMS,
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
