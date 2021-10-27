@@ -6,6 +6,8 @@ import re
 import luigi
 import hail as hl
 
+from collections import defaultdict
+
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
 from lib.model.seqr_mt_schema import SeqrSchema, SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 import seqr_loading
@@ -62,7 +64,8 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
 
         row_ht = SeqrVariantsAndGenotypesSchema.elasticsearch_row(row_ht)
         es_shards = self._mt_num_shards(genotypes_mt)
-        self.export_table_to_elasticsearch(row_ht, es_shards)
+        disabled_fields = SeqrVariantsAndGenotypesSchema(None, ref_data=defaultdict(dict), clinvar_data=None).get_disable_index_field()
+        self.export_table_to_elasticsearch(row_ht, disabled_fields, es_shards)
         
         self.cleanup(es_shards)
 
