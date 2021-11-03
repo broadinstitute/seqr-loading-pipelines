@@ -2,7 +2,7 @@ import logging
 
 import hail as hl
 
-from hail_scripts.v02.utils.hail_utils import import_vcf
+from hail_scripts.utils.hail_utils import import_vcf
 
 logger = logging.getLogger('v02.hail_scripts.create_1kg_ht')
 

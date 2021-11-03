@@ -4,7 +4,7 @@ import logging
 import os
 import time
 
-from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
+from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
@@ -177,7 +177,7 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
     rows = rows.annotate_globals(**meta)
 
     es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
-    es_client = ElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
+    es_client = HailElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     es_client.export_table_to_elasticsearch(
         rows,
