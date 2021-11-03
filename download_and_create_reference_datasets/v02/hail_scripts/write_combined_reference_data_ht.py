@@ -53,9 +53,9 @@ CONFIG = {
                        'GERP_RS', 'phastCons100way_vertebrate'],
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                       'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate' , 'VEST4_score', 'fathmm-MKL_coding_pred', 'MutPred_score'],
         },
     },
     'eigen': {
