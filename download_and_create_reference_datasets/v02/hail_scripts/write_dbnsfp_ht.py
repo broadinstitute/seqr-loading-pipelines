@@ -7,10 +7,10 @@ DBNSFP_INFO = {
         'source_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr*.gz',
         'output_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
     },
-    '3.5': {
+    '4.2': {
         'reference_genome': '38',
-        'source_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.chr*.gz',
-        'output_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
+        'source_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.chr*.gz',
+        'output_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
     },
 }
 
@@ -63,65 +63,22 @@ DBNSFP_SCHEMA = {
         'ARIC5606_EA_AC': tint,
         'ARIC5606_EA_AF': tfloat,
     },
-    '3.5': {
+    '4.2': {
         '#chr': tstr,
         'pos(1-based)': tint,
         'ref': tstr,
         'alt': tstr,
         'SIFT_pred': tstr,
-        'Polyphen2_HDIV_pred': tstr,
         'Polyphen2_HVAR_pred': tstr,
-        'LRT_pred': tstr,
         'MutationTaster_pred': tstr,
         'FATHMM_pred': tstr,
-        'PROVEAN_pred': tstr,
-        'VEST3_score': tstr,
-        'VEST3_rankscore': tstr,
+        'VEST4_score': tstr,
         'MetaSVM_pred': tstr,
-        'MetaLR_pred': tstr,
-        'M-CAP_pred': tstr,
         'REVEL_score': tstr,
-        'REVEL_rankscore': tstr,
-        'MutPred_Top5features': tstr,
-        'DANN_score': tstr,
-        'DANN_rankscore': tstr,
-        'GenoCanyon_score': tstr,
-        'GenoCanyon_score_rankscore': tstr,
-        'integrated_fitCons_score': tstr,
-        'integrated_fitCons_score_rankscore': tstr,
-        'integrated_confidence_value': tstr,
-        'GM12878_fitCons_score': tstr,
-        'GM12878_fitCons_score_rankscore': tstr,
-        'GM12878_confidence_value': tstr,
-        'H1-hESC_fitCons_score': tstr,
-        'H1-hESC_fitCons_score_rankscore': tstr,
-        'H1-hESC_confidence_value': tstr,
-        'HUVEC_fitCons_score': tstr,
-        'HUVEC_fitCons_score_rankscore': tstr,
-        'HUVEC_confidence_value': tstr,
         'GERP++_RS': tstr,
-        'GERP++_RS_rankscore': tstr,
-        'phyloP100way_vertebrate': tstr,
-        'phyloP100way_vertebrate_rankscore': tstr,
-        'phyloP20way_mammalian': tstr,
-        'phyloP20way_mammalian_rankscore': tstr,
         'phastCons100way_vertebrate': tstr,
-        'phastCons100way_vertebrate_rankscore': tstr,
-        'phastCons20way_mammalian': tstr,
-        'phastCons20way_mammalian_rankscore': tstr,
-        'SiPhy_29way_pi': tstr,
-        'SiPhy_29way_logOdds_rankscore': tstr,
-        'TWINSUK_AC': tstr,
-        'TWINSUK_AF': tstr,
-        'ALSPAC_AC': tstr,
-        'ALSPAC_AF': tstr,
-        'ESP6500_AA_AC': tstr,
-        'ESP6500_AA_AF': tstr,
-        'ESP6500_EA_AC': tstr,
-        'ESP6500_EA_AF': tstr,
-        'Interpro_domain': tstr,
-        'GTEx_V6p_gene': tstr,
-        'GTEx_V6p_tissue': tstr
+        'fathmm-MKL_coding_pred': tstr,
+        'MutPred_score': tstr,
     }
 }
 
@@ -157,7 +114,7 @@ def dbnsfp_to_ht(source_path, output_path, reference_genome='37', dbnsfp_version
     ht = hl.import_table(source_path,
                          types=DBNSFP_SCHEMA[dbnsfp_version],
                          missing='.',
-                         force_bgz=True,
+                         force=True,
                          min_partitions=10000)
     # get a attribute map to run a select and remap fields.
     replacement_fields = generate_replacement_fields(ht, DBNSFP_SCHEMA[dbnsfp_version])
@@ -176,7 +133,7 @@ def dbnsfp_to_ht(source_path, output_path, reference_genome='37', dbnsfp_version
         version=dbnsfp_version,
     )
 
-    ht.write(output_path)
+    ht.repartition(10000).write(output_path, overwrite=True)
     return ht
 
 def run():
