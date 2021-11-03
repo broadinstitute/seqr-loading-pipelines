@@ -124,7 +124,7 @@ CONFIG = {
             'select': {'x10': '10'}
         },
         '38': {
-            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/genomes/gnomad.genomes.r2.1.coverage.liftover_grch38.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/3.0/coverage/genomes/gnomad.genomes.r3.0.coverage.ht/',
             'select': {'x10': 'over_10'}
         }
     },
@@ -144,7 +144,7 @@ CONFIG = {
             'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
-            'path': 'gs://gnomad-public/release/3.0/ht/genomes/gnomad.genomes.r3.0.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
             'custom_select': 'custom_gnomad_select_v3'
         }
     },
@@ -223,8 +223,8 @@ def custom_gnomad_select_v3(ht):
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF)
     selects['FAF_AF'] = ht.faf[ht.globals.faf_index_dict['adj']].faf95
-    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
-                              0, ht.freq[ht.globals.freq_index_dict['adj_male']].AC)
+    selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
+                              0, ht.freq[ht.globals.freq_index_dict['XY-adj']].AC)
     return selects
 
 
