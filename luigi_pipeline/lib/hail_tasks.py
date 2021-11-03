@@ -11,7 +11,7 @@ import luigi
 from luigi.contrib import gcs
 from luigi.parameter import ParameterVisibility
 
-from hail_scripts.v02.utils.elasticsearch_client import ElasticsearchClient
+from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 from lib.global_config import GlobalConfig
 import lib.hail_vep_runners as vep_runners
 
@@ -213,7 +213,7 @@ class HailElasticSearchTask(luigi.Task):
         if self.es_index != self.es_index.lower():
             raise Exception(f"Invalid es_index name [{self.es_index}], must be lowercase")
 
-        self._es = ElasticsearchClient(
+        self._es = HailElasticsearchClient(
             host=self.es_host, port=self.es_port, es_username=self.es_username, es_password=self.es_password)
 
     def requires(self):
