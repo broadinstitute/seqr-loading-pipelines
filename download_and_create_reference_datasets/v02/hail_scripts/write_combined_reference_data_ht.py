@@ -104,8 +104,8 @@ CONFIG = {
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.ht',
-            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
+            'path': 'gs://seqr-reference-data/GRCh38/TopMed/freeze8/TOPMed.all.ht',
+            'select': {'AC': 'info.AC', 'AF': 'info.AF', 'AN': 'info.AN', 'Hom': 'info.Hom', 'Het': 'info.Het'},
         },
     },
     'gnomad_exome_coverage': {
