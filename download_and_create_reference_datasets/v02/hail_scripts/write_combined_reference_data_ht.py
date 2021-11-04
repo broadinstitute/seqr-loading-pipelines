@@ -6,7 +6,7 @@ import os
 
 import hail as hl
 
-VERSION = '2.0.1'
+VERSION = '2.0.4'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
@@ -37,12 +37,12 @@ CONFIG = {
         },
     },
     'cadd': {
-        '38': {
+        '37': {
             'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
     },
@@ -55,7 +55,7 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                       'GERP_RS', 'phastCons100way_vertebrate' , 'VEST4_score', 'fathmm-MKL_coding_pred', 'MutPred_score'],
+                       'GERP_RS', 'phastCons100way_vertebrate' , 'VEST4_score', 'fathmm_MKL_coding_pred', 'MutPred_score'],
         },
     },
     'eigen': {
@@ -130,17 +130,17 @@ CONFIG = {
     },
     'gnomad_exomes': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
             'custom_select': 'custom_gnomad_select_v2'
         }
     },
     'gnomad_genomes': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
@@ -257,10 +257,11 @@ def get_select_fields(selects, base_ht):
     return select_fields
 
 
-def get_ht(dataset, reference_genome):
+def get_ht(dataset, reference_genome, partition_intervals):
     ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
-    base_ht = hl.read_table(config['path'])
+    print(f"Reading in {dataset}")
+    base_ht = hl.read_table(config['path'], _intervals=partition_intervals)
 
     # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
@@ -278,9 +279,9 @@ def get_ht(dataset, reference_genome):
     return base_ht.select(**select_query).distinct()
 
 
-def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, coverage_datasets=[], partition_intervals=10000, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    hts = [get_ht(dataset, reference_genome, partition_intervals=partition_intervals) for dataset in datasets]
     joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
 
     # Annotate coverages.
@@ -301,17 +302,33 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     joined_ht.write(os.path.join(output_path))
 
 
+def calculate_partition_intervals(dataset='cadd', reference_genome='37'):
+    """
+    Calcualte interval partitions to thread to read_table to allow faster joins
+
+    :param dataset: Dataset to use for interval calculation
+    """
+    config = CONFIG[dataset][reference_genome]
+    ht = hl.read_table(config['path'])
+    partition_intervals = ht._calculate_new_partitions(int(ht.n_partitions()*1.1))
+    return partition_intervals
+
+
 def run(args):
-    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+    partition_intervals = calculate_partition_intervals(args.start_dataset, args.build)
+    join_hts(['cadd','1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             args.build)
+             partition_intervals,
+             args.build,)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
+    parser.add_argument('--start-dataset', help='Dataset to build partition intervals from', choices=['cadd','1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'])
     args = parser.parse_args()
 
     run(args)
