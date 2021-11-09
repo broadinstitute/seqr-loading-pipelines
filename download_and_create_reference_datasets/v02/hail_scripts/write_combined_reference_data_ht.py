@@ -110,7 +110,7 @@ CONFIG = {
     },
     'gnomad_exome_coverage': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
             'select': {'x10': '10'}
         },
         '38': {
@@ -120,7 +120,7 @@ CONFIG = {
     },
     'gnomad_genome_coverage': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
             'select': {'x10': '10'}
         },
         '38': {
@@ -173,7 +173,7 @@ CONFIG = {
 }
 
 
-def annotate_coverages(ht, coverage_dataset, reference_genome):
+def annotate_coverages(ht, coverage_dataset, reference_genome, partition_intervals):
     """
     Annotates the hail table with the coverage dataset.
         '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
@@ -182,7 +182,7 @@ def annotate_coverages(ht, coverage_dataset, reference_genome):
     :param reference_genome: '37' or '38'
     :return: hail table with proper annotation
     """
-    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
+    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'], _intervals=partition_intervals)
     return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
 
 
@@ -202,7 +202,7 @@ def custom_gnomad_select_v2(ht):
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF, ht.freq[global_idx].AF)
     selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
-    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
+    selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
 
@@ -261,7 +261,8 @@ def get_ht(dataset, reference_genome, partition_intervals):
     ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
     print(f"Reading in {dataset}")
-    base_ht = hl.read_table(config['path'], _intervals=partition_intervals)
+    
+    base_ht = hl.read_table(config['path'], _intervals=partition_intervals) if dataset!='gnomad_exomes' else hl.read_table(config['path']) #Still breaks
 
     # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
@@ -286,7 +287,7 @@ def join_hts(datasets, coverage_datasets=[], partition_intervals=10000, referenc
 
     # Annotate coverages.
     for coverage_dataset in coverage_datasets:
-        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
+        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome, partition_intervals)
 
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
@@ -310,11 +311,12 @@ def calculate_partition_intervals(dataset='cadd', reference_genome='37'):
     """
     config = CONFIG[dataset][reference_genome]
     ht = hl.read_table(config['path'])
-    partition_intervals = ht._calculate_new_partitions(int(ht.n_partitions()*1.1))
+    partition_intervals = ht._calculate_new_partitions(int(ht.n_partitions()*1.2))
     return partition_intervals
 
 
 def run(args):
+    hl._set_flags(no_whole_stage_codegen='1')
     partition_intervals = calculate_partition_intervals(args.start_dataset, args.build)
     join_hts(['cadd','1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
