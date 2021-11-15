@@ -1,12 +1,11 @@
 import argparse
 from datetime import datetime
 from functools import reduce
-import logging
 import os
 
 import hail as hl
 
-VERSION = '2.0.4'
+VERSION = '2.0.4' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
@@ -24,7 +23,7 @@ Format:
     },
 '''
 CONFIG = {
-    '1kg': {
+    '1kg': { #tgp 
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
@@ -55,7 +54,7 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                       'GERP_RS', 'phastCons100way_vertebrate' , 'VEST4_score', 'fathmm_MKL_coding_pred', 'MutPred_score'],
+                       'GERP_RS', 'phastCons100way_vertebrate', 'VEST4_score', 'fathmm_MKL_coding_pred', 'MutPred_score'],
         },
     },
     'eigen': {
@@ -173,7 +172,7 @@ CONFIG = {
 }
 
 
-def annotate_coverages(ht, coverage_dataset, reference_genome, partition_intervals):
+def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
     Annotates the hail table with the coverage dataset.
         '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
@@ -182,7 +181,7 @@ def annotate_coverages(ht, coverage_dataset, reference_genome, partition_interva
     :param reference_genome: '37' or '38'
     :return: hail table with proper annotation
     """
-    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'], _intervals=partition_intervals)
+    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
     return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
 
 
@@ -201,7 +200,7 @@ def custom_gnomad_select_v2(ht):
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF, ht.freq[global_idx].AF)
-    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
+    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95 
     selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
@@ -257,12 +256,11 @@ def get_select_fields(selects, base_ht):
     return select_fields
 
 
-def get_ht(dataset, reference_genome, partition_intervals):
+def get_ht(dataset, reference_genome):
     ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
     print(f"Reading in {dataset}")
-    
-    base_ht = hl.read_table(config['path'], _intervals=partition_intervals) if dataset!='gnomad_exomes' else hl.read_table(config['path']) #Still breaks
+    base_ht = hl.read_table(config['path'])
 
     # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
@@ -280,14 +278,14 @@ def get_ht(dataset, reference_genome, partition_intervals):
     return base_ht.select(**select_query).distinct()
 
 
-def join_hts(datasets, coverage_datasets=[], partition_intervals=10000, reference_genome='37'):
+def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome, partition_intervals=partition_intervals) for dataset in datasets]
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
 
     # Annotate coverages.
     for coverage_dataset in coverage_datasets:
-        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome, partition_intervals)
+        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
@@ -303,25 +301,11 @@ def join_hts(datasets, coverage_datasets=[], partition_intervals=10000, referenc
     joined_ht.write(os.path.join(output_path))
 
 
-def calculate_partition_intervals(dataset='cadd', reference_genome='37'):
-    """
-    Calcualte interval partitions to thread to read_table to allow faster joins
-
-    :param dataset: Dataset to use for interval calculation
-    """
-    config = CONFIG[dataset][reference_genome]
-    ht = hl.read_table(config['path'])
-    partition_intervals = ht._calculate_new_partitions(int(ht.n_partitions()*1.2))
-    return partition_intervals
-
-
 def run(args):
-    hl._set_flags(no_whole_stage_codegen='1')
-    partition_intervals = calculate_partition_intervals(args.start_dataset, args.build)
-    join_hts(['cadd','1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+    hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it 
+    join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             partition_intervals,
              args.build,)
 
 
@@ -329,8 +313,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
-    parser.add_argument('--start-dataset', help='Dataset to build partition intervals from', choices=['cadd','1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
-              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'])
     args = parser.parse_args()
 
     run(args)
