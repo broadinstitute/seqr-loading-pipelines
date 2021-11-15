@@ -37,7 +37,7 @@ CONFIG = {
     },
     'cadd': {
         '37': {
-            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+            'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
         '38': {
