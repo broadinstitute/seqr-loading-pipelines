@@ -119,7 +119,7 @@ def dbnsfp_to_ht(source_path, output_path, reference_genome='37', dbnsfp_version
     # get a attribute map to run a select and remap fields.
     replacement_fields = generate_replacement_fields(ht, DBNSFP_SCHEMA[dbnsfp_version])
     ht = ht.select(**replacement_fields)
-    ht = ht.filter(ht.alt == ht.ref, keep=False)
+    ht = ht.filter(ht.alt == ht.ref, keep=False) #Ask DBSNFP why ref = alt exists if cant find in docs
 
     # key_by locus and allele needed for matrix table conversion to denote variant data.
     chr = ht.chr if reference_genome == '37' else hl.str('chr' + ht.chr)
@@ -133,7 +133,7 @@ def dbnsfp_to_ht(source_path, output_path, reference_genome='37', dbnsfp_version
         version=dbnsfp_version,
     )
 
-    ht.repartition(10000).write(output_path, overwrite=True)
+    ht.write(output_path, overwrite=True)
     return ht
 
 def run():
