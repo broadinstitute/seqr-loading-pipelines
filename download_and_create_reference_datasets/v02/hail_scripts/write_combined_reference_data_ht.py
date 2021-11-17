@@ -1,12 +1,11 @@
 import argparse
 from datetime import datetime
 from functools import reduce
-import logging
 import os
 
 import hail as hl
 
-VERSION = '2.0.1'
+VERSION = '2.0.4' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
@@ -24,7 +23,7 @@ Format:
     },
 '''
 CONFIG = {
-    '1kg': {
+    '1kg': { #tgp 
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
@@ -37,12 +36,12 @@ CONFIG = {
         },
     },
     'cadd': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.4.ht',
+        '37': {
+            'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.4.ht',
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
     },
@@ -53,9 +52,9 @@ CONFIG = {
                        'GERP_RS', 'phastCons100way_vertebrate'],
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v3.5/dbNSFP3.5a_variant.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
-                       'GERP_RS', 'phastCons100way_vertebrate'],
+                       'GERP_RS', 'phastCons100way_vertebrate', 'VEST4_score', 'fathmm_MKL_coding_pred', 'MutPred_score'],
         },
     },
     'eigen': {
@@ -104,13 +103,13 @@ CONFIG = {
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.ht',
-            'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'Hom': 'info.Hom#', 'Het': 'info.Het#'},
+            'path': 'gs://seqr-reference-data/GRCh38/TopMed/freeze8/TOPMed.all.ht',
+            'select': {'AC': 'info.AC', 'AF': 'info.AF', 'AN': 'info.AN', 'Hom': 'info.Hom', 'Het': 'info.Het'},
         },
     },
     'gnomad_exome_coverage': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
             'select': {'x10': '10'}
         },
         '38': {
@@ -120,31 +119,31 @@ CONFIG = {
     },
     'gnomad_genome_coverage': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
             'select': {'x10': '10'}
         },
         '38': {
-            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/genomes/gnomad.genomes.r2.1.coverage.liftover_grch38.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/3.0/coverage/genomes/gnomad.genomes.r3.0.coverage.ht/',
             'select': {'x10': 'over_10'}
         }
     },
     'gnomad_exomes': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/gnomad/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
             'custom_select': 'custom_gnomad_select_v2'
         }
     },
     'gnomad_genomes': {
         '37': {
-            'path': 'gs://gnomad-public/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_select': 'custom_gnomad_select_v2'
         },
         '38': {
-            'path': 'gs://gnomad-public/release/3.0/ht/genomes/gnomad.genomes.r3.0.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
             'custom_select': 'custom_gnomad_select_v3'
         }
     },
@@ -201,8 +200,8 @@ def custom_gnomad_select_v2(ht):
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF, ht.freq[global_idx].AF)
-    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
-    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
+    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95 
+    selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects
 
@@ -223,8 +222,8 @@ def custom_gnomad_select_v3(ht):
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF)
     selects['FAF_AF'] = ht.faf[ht.globals.faf_index_dict['adj']].faf95
-    selects['Hemi'] = hl.cond(ht.locus.in_autosome_or_par(),
-                              0, ht.freq[ht.globals.freq_index_dict['adj_male']].AC)
+    selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
+                              0, ht.freq[ht.globals.freq_index_dict['XY-adj']].AC)
     return selects
 
 
@@ -260,6 +259,7 @@ def get_select_fields(selects, base_ht):
 def get_ht(dataset, reference_genome):
     ' Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
+    print(f"Reading in {dataset}")
     base_ht = hl.read_table(config['path'])
 
     # 'select' and 'custom_select's to generate dict.
@@ -302,10 +302,11 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
 
 
 def run(args):
-    join_hts(['1kg', 'mpc', 'cadd', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+    hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it 
+    join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             args.build)
+             args.build,)
 
 
 if __name__ == "__main__":
