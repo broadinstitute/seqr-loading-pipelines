@@ -1,7 +1,7 @@
 import hail as hl
 import logging
 
-from hail_scripts.v02.utils.computed_fields.variant_id import get_expr_for_variant_ids
+from hail_scripts.computed_fields.variant_id import get_expr_for_variant_ids
 
 logger = logging.getLogger()
 

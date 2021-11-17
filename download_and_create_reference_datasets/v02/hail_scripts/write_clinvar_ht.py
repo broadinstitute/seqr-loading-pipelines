@@ -1,6 +1,6 @@
 import hail as hl
-from hail_scripts.v02.utils.clinvar import download_and_import_latest_clinvar_vcf, CLINVAR_HT_PATH, CLINVAR_GOLD_STARS_LOOKUP
-from hail_scripts.v02.utils.hail_utils import write_ht
+from hail_scripts.utils.clinvar import download_and_import_latest_clinvar_vcf, CLINVAR_HT_PATH, CLINVAR_GOLD_STARS_LOOKUP
+from hail_scripts.utils.hail_utils import write_ht
 
 
 for genome_version in ["37", "38"]:

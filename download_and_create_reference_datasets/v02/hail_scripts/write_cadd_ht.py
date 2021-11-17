@@ -9,7 +9,7 @@ logger.setLevel(logging.INFO)
 
 
 import hail as hl
-from hail_scripts.v02.utils.hail_utils import write_ht, import_table
+from hail_scripts.utils.hail_utils import write_ht, import_table
 
 hl.init()
 
@@ -21,9 +21,8 @@ def import_cadd_table(path: str, genome_version: str) -> hl.Table:
     column_names = {'f0': 'chrom', 'f1': 'pos', 'f2': 'ref', 'f3': 'alt', 'f4': 'RawScore', 'f5': 'PHRED'}
     types = {'f0': hl.tstr, 'f1': hl.tint, 'f4': hl.tfloat32, 'f5': hl.tfloat32}
 
-    cadd_ht = import_table(path, force_bgz=True, comment="#", no_header=True, types=types, min_partitions=2000)
+    cadd_ht = hl.import_table(path, force_bgz=True, comment="#", no_header=True, types=types, min_partitions=10000)
     cadd_ht = cadd_ht.rename(column_names)
-
     chrom = hl.format("chr%s", cadd_ht.chrom) if genome_version == "38" else cadd_ht.chrom
     locus = hl.locus(chrom, cadd_ht.pos, reference_genome=hl.get_reference(f"GRCh{genome_version}"))
     alleles = hl.array([cadd_ht.ref, cadd_ht.alt])
@@ -42,9 +41,9 @@ def import_cadd_table(path: str, genome_version: str) -> hl.Table:
     return cadd_union_ht
 
 for genome_version in ["37", "38"]:
-    snvs_ht = import_cadd_table(f"gs://seqr-reference-data/GRCh{genome_version}/CADD/whole_genome_SNVs.v1.4.tsv.bgz", genome_version)
-    indel_ht = import_cadd_table(f"gs://seqr-reference-data/GRCh{genome_version}/CADD/InDels.v1.4.tsv.bgz", genome_version)
+    snvs_ht = import_cadd_table(f"gs://seqr-reference-data/GRCh{genome_version}/CADD/CADD_snvs.v1.6.tsv.gz", genome_version)
+    indel_ht = import_cadd_table(f"gs://seqr-reference-data/GRCh{genome_version}/CADD/InDels_v1.6.tsv.gz", genome_version)
 
     ht = snvs_ht.union(indel_ht)
 
-    write_ht(ht, f"gs://seqr-reference-data/GRCh{genome_version}/CADD/CADD_snvs_and_indels_test.v1.4.ht")
+    ht.naive_coalesce(10000).write(f"gs://seqr-reference-data/GRCh{genome_version}/CADD/CADD_snvs_and_indels.v1.6.ht", overwrite=True)
