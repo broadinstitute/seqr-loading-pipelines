@@ -47,6 +47,7 @@ class HailMatrixTableTask(luigi.Task):
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
                                                                                             'to annotate vep.')
+    force_gz = luigi.BoolParameter(description = 'Force .gz files that are not block zipped to be loaded on one node.', default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
