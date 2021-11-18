@@ -82,11 +82,18 @@ class HailMatrixTableTask(luigi.Task):
         elif self.genome_version == "37":
             recode = {f"chr{i}": f"{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
 
-        return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
-                             reference_genome='GRCh' + self.genome_version,
-                             skip_invalid_loci=True,
-                             contig_recoding=recode,
-                             force_bgz=True, min_partitions=500)
+        if self.force_gz:
+            return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
+                                reference_genome='GRCh' + self.genome_version,
+                                skip_invalid_loci=True,
+                                contig_recoding=recode,
+                                force_gz=True, min_partitions=500)
+        else:
+            return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
+                                reference_genome='GRCh' + self.genome_version,
+                                skip_invalid_loci=True,
+                                contig_recoding=recode,
+                                force_bgz=True, min_partitions=500)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
