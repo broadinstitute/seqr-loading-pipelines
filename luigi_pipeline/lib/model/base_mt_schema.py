@@ -16,10 +16,9 @@ class RowAnnotationFailed(Exception):
 
 
 class RowAnnotation:
-    def __init__(self, fn, name=None, disable_index=False, requirements: List[str]=None):
+    def __init__(self, fn, name=None, requirements: List[str]=None):
         self.fn = fn
         self.name = name or fn.__name__
-        self.disable_index=disable_index
         self.requirements = requirements
 
     def __repr__(self):
@@ -29,7 +28,7 @@ class RowAnnotation:
         return f"{self.name}{requires}"
 
 
-def row_annotation(name=None, disable_index=False, fn_require=None):
+def row_annotation(name=None, fn_require=None):
     """
     Function decorator for methods in a subclass of BaseMTSchema.
     Allows the function to be treated like an row_annotation with annotation name and value.
@@ -60,7 +59,7 @@ def row_annotation(name=None, disable_index=False, fn_require=None):
                     raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
             requirements = [fn.name for fn in fn_requirements]
 
-        return RowAnnotation(func, name=name, disable_index=disable_index, requirements=requirements)
+        return RowAnnotation(func, name=name, requirements=requirements)
 
     return mt_prop_wrapper
 
@@ -211,16 +210,3 @@ class BaseMTSchema:
 
             select_fields.append(annotation.name)
         return self.mt.select_rows(*select_fields)
-
-    def get_disable_index_field(self):
-        '''
-        Retrieve the field indices that should be disabled
-        return: list of strings
-        '''
-        all_fields: List[RowAnnotation] = self.all_annotation_fns()
-        disabled_indices = []
-        for field in all_fields:
-            if field.disable_index == True:
-                disabled_indices += [field.name]
-  
-        return disabled_indices
