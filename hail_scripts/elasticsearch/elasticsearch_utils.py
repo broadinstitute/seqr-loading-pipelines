@@ -100,7 +100,7 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
         logger.info("==> will disable index fields for %s", ", ".join(disable_index_for_fields))
         for es_field_name in disable_index_for_fields:
             if es_field_name not in properties:
-                flattened_fields = [key for key in properties if f"{es_field_name}_" in key]
+                flattened_fields = [key for key in properties if key.startswith(f'{es_field_name}_')]
                 if flattened_fields:
                     for flattened_es_field_name in flattened_fields:
                         properties[flattened_es_field_name]["index"] = False
