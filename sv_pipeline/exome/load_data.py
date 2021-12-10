@@ -205,7 +205,6 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
 
     with open(file_path, 'r') as f:
         header = f.readline()
-        import pdb; pdb.set_trace()
         header_indices = {col.lower(): i for i, col in enumerate(header.split())}
         missing_cols = [col for col in columns or COLUMNS if col not in header_indices]
         if missing_cols:
@@ -247,8 +246,7 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
         try:
             sample_id = get_field_val(row, SAMPLE_COL, header_indices)
         except ValueError as e:
-            if str(e) != '164A4_v1_WGS_RP-1913':
-                invalid_samples.add(str(e))
+            invalid_samples.add(str(e))
             return False
 
         if sample_remap and sample_id in sample_remap:
