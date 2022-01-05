@@ -39,12 +39,15 @@ CN_FIELD = 'cn'
 QS_FIELD = 'qs'
 GENES_FIELD = 'geneIds'
 TRANSCRIPTS_FIELD = 'sortedTranscriptConsequences'
+TRANSCRIPTS_CONSEQUENCE_FIELD = 'transcriptConsequenceTerms'
 SF_FIELD = 'sf'
 SC_FIELD = 'sc'
 VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
+
+GENE_CONSEQUENCE_COLS = {'genes_lof': 'LOF', 'genes_cg': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
@@ -64,6 +67,9 @@ def _get_seqr_sample_id(raw_sample_id):
     except AttributeError:
         raise ValueError(raw_sample_id)
 
+
+def _parse_genes(genes):
+    return set() if genes in {'None', 'null', 'NA'} else {gene.split('.')[0] for gene in genes.split(',')}
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
@@ -88,12 +94,13 @@ COL_CONFIGS = {
     },
     GENES_COL: {
         'field_name': GENES_FIELD,
-        'format': lambda genes: set() if genes == 'None' else {gene.split('.')[0] for gene in genes.split(',')},
+        'format': _parse_genes,
     },
 }
+COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL]
+SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
@@ -302,8 +309,7 @@ def format_sv(sv):
     :param sv: parsed SV
     :return: none
     """
-    sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
-    sv['transcriptConsequenceTerms'] = ['gCNV_{}'.format(sv[CALL_FIELD])]
+    sv[TRANSCRIPTS_CONSEQUENCE_FIELD] = {'gCNV_{}'.format(sv[CALL_FIELD])}
     if sv[SF_FIELD]:
         sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
@@ -311,6 +317,8 @@ def format_sv(sv):
     sv['xstart'] = sv['xpos']
     sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
     sv['samples'] = []
+
+    gene_consequences = {}
     for genotype in sv[GENOTYPES_FIELD]:
         sample_id = genotype['sample_id']
         sv['samples'].append(sample_id)
@@ -340,8 +348,23 @@ def format_sv(sv):
             genotype.pop(GENES_FIELD)
         else:
             genotype[GENES_FIELD] = list(genotype[GENES_FIELD])
+            
+        for col, consequence in GENE_CONSEQUENCE_COLS.items():
+            genes = genotype.pop(col)
+            if genes:
+                sv[TRANSCRIPTS_CONSEQUENCE_FIELD].add(consequence)
+                gene_consequences.update({gene: consequence for gene in genes})
 
+    sv[TRANSCRIPTS_FIELD] = []
+    for gene in sv[GENES_FIELD]:
+        transcript = {'gene_id': gene}
+        #  TODO currently not working as the gene consequences use gene symbols instead of ensembl IDs
+        if gene in gene_consequences:
+            transcript['major_consequence'] = gene_consequences[gene]
+        sv[TRANSCRIPTS_FIELD].append(transcript)
+    
     sv[GENES_FIELD] = list(sv[GENES_FIELD])
+    sv[TRANSCRIPTS_CONSEQUENCE_FIELD] = list(sv[TRANSCRIPTS_CONSEQUENCE_FIELD])
 
 
 def get_es_schema(all_fields, nested_fields):
