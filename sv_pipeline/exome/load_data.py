@@ -55,7 +55,7 @@ GENE_CONSEQUENCE_COLS = {'genes_lof': 'LOF', 'genes_cg': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
-# keep track of loading round to prevent sample ID clashes with previously saved variants
+# keep track of loading round to prevent variant ID clashes with previously saved variants
 # (i.e. prefix_1234 can mean different things in different callsets)
 ROUND = '2'
 
