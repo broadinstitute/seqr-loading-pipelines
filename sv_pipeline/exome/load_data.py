@@ -49,7 +49,7 @@ VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
-NEW_CALL_FIELD = 'newCall'
+NEW_CALL_FIELD = 'new_call'
 
 GENE_CONSEQUENCE_COLS = {'genes_lof': 'LOF', 'genes_cg': 'COPY_GAIN'}
 
@@ -107,8 +107,8 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
-    PREV_IDENTICAL_COL: {'field_name': 'prevCall', 'format': _parse_prev_call},
-    PREV_OVERLAP_COL: {'field_name': 'prevOverlap', 'format': _parse_prev_call},
+    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': _parse_prev_call},
+    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': _parse_prev_call},
     PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': _parse_prev_call},
 }
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
@@ -239,7 +239,7 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
             out_file.write(header)
 
         for line in tqdm(f, unit=' rows'):
-            row = line.split()
+            row = line.split('\t')
             parsed = parse_row(row, header_indices)
             if parsed and out_file:
                 out_file.write(line)
@@ -367,7 +367,7 @@ def format_sv(sv):
             genotype.pop(GENES_FIELD)
         else:
             genotype[GENES_FIELD] = list(genotype[GENES_FIELD])
-            
+
         for col, consequence in GENE_CONSEQUENCE_COLS.items():
             genes = genotype.pop(col)
             if genes:
@@ -381,7 +381,7 @@ def format_sv(sv):
         if gene in gene_consequences:
             transcript['major_consequence'] = gene_consequences[gene]
         sv[TRANSCRIPTS_FIELD].append(transcript)
-    
+
     sv[GENES_FIELD] = list(sv[GENES_FIELD])
     sv[TRANSCRIPTS_CONSEQUENCE_FIELD] = list(sv[TRANSCRIPTS_CONSEQUENCE_FIELD])
 
