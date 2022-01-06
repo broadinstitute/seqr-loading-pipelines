@@ -28,8 +28,11 @@ NUM_EXON_COL = 'genes_any_overlap_totalexons'
 DEFRAGGED_COL = 'defragmented'
 SC_COL = 'vac'
 SF_COL = 'vaf'
-VAR_NAME_COL = 'name'
+VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
+PREV_IDENTICAL_COL = 'identical_round1'
+PREV_OVERLAP_COL = 'any_round1'
+PREV_MISSING_COL = 'no_ovl_in_round1'
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -46,10 +49,15 @@ VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
+NEW_CALL_FIELD = 'newCall'
 
 GENE_CONSEQUENCE_COLS = {'genes_lof': 'LOF', 'genes_cg': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
+
+# keep track of loading round to prevent sample ID clashes with previously saved variants
+# (i.e. prefix_1234 can mean different things in different callsets)
+ROUND = '2'
 
 SAMPLE_TYPE='WES'
 
@@ -71,11 +79,14 @@ def _get_seqr_sample_id(raw_sample_id):
 def _parse_genes(genes):
     return set() if genes in {'None', 'null', 'NA'} else {gene.split('.')[0] for gene in genes.split(',')}
 
+def _parse_prev_call(call):
+    return call not in {'NA', 'FALSE'}
+
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
     SF_COL: {'field_name': SF_FIELD, 'format': float},
-    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}'.format(val, call)},
+    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}_{}'.format(val, call, ROUND)},
     CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
     END_COL: {'format': int},
@@ -96,11 +107,17 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
+    PREV_IDENTICAL_COL: {'field_name': 'prevCall', 'format': _parse_prev_call},
+    PREV_OVERLAP_COL: {'field_name': 'prevOverlap', 'format': _parse_prev_call},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': _parse_prev_call},
 }
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL] + list(GENE_CONSEQUENCE_COLS.keys())
+SAMPLE_COLUMNS = [
+    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
+    PREV_MISSING_COL,
+] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
@@ -183,12 +200,14 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
         parsed_svs_by_id[variant_id][GENES_FIELD] = set()
+        parsed_svs_by_id[variant_id][NEW_CALL_FIELD] = False
 
     sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
     sample_info[SAMPLE_ID_FIELD] = sample_id
 
     sv = parsed_svs_by_id[variant_id]
     sv[GENOTYPES_FIELD].append(sample_info)
+    sv[NEW_CALL_FIELD] |= sample_info[NEW_CALL_FIELD]
     # Use the largest coordinates for the merged SV
     sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
     sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
@@ -229,7 +248,7 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
         out_file.close()
 
 
-def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=False):
+def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=None):
     """
     Parses raw SV calls from the input file into the desired SV output format for samples in the given subset
 
@@ -237,7 +256,7 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
     :param sample_subset: optional list of samples to subset to
     :param sample_remap: optional mapping of raw sample ids to seqr sample ids
     :param ignore_missing_samples: whether or not to fail if samples in the subset have no raw data
-    :param write_subsetted_bed: whether or not to write a bed file with only the subsetted samples
+    :param write_subsetted_bed: whether to write a bed file with only the subsetted samples and the file prefix to use
     :return: dictionary of parsed SVs keyed by ID
     """
     parsed_svs_by_name = {}
@@ -246,7 +265,7 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
     invalid_samples = set()
     out_file_path = None
     if write_subsetted_bed:
-        file_name = 'subset_{}'.format(os.path.basename(input_dataset))
+        file_name = 'subset_{}_{}'.format(write_subsetted_bed, os.path.basename(input_dataset))
         out_file_path = os.path.join(os.path.dirname(input_dataset), file_name)
 
     def _parse_row(row, header_indices):
@@ -466,7 +485,7 @@ def main():
         sample_subset,
         sample_remap,
         ignore_missing_samples=args.ignore_missing_samples,
-        write_subsetted_bed=args.write_subsetted_bed
+        write_subsetted_bed=args.project_guid if args.write_subsetted_bed else None,
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
