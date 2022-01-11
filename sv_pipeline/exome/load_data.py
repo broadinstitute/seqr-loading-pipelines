@@ -200,14 +200,12 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
         parsed_svs_by_id[variant_id][GENES_FIELD] = set()
-        parsed_svs_by_id[variant_id][NEW_CALL_FIELD] = False
 
     sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
     sample_info[SAMPLE_ID_FIELD] = sample_id
 
     sv = parsed_svs_by_id[variant_id]
     sv[GENOTYPES_FIELD].append(sample_info)
-    sv[NEW_CALL_FIELD] |= sample_info[NEW_CALL_FIELD]
     # Use the largest coordinates for the merged SV
     sv[START_COL] = min(sv.get(START_COL, float('inf')), sample_info[START_COL])
     sv[END_COL] = max(sv.get(END_COL, 0), sample_info[END_COL])
@@ -336,11 +334,15 @@ def format_sv(sv):
     sv['xstart'] = sv['xpos']
     sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
     sv['samples'] = []
+    sv['samples_new_call'] = []
 
     gene_consequences = {}
     for genotype in sv[GENOTYPES_FIELD]:
         sample_id = genotype['sample_id']
         sv['samples'].append(sample_id)
+
+        if genotype[NEW_CALL_FIELD]:
+            sv['samples_new_call'].append(sample_id)
 
         cn_key = 'samples_cn_{}'.format(genotype['cn']) if genotype['cn'] < 4 else 'samples_cn_gte_4'
         if cn_key not in sv:
@@ -490,7 +492,7 @@ def main():
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
     logger.info('Adding in silico predictors')
-    add_in_silico(parsed_svs_by_name, args.in_silico)
+    # add_in_silico(parsed_svs_by_name, args.in_silico)
 
     parsed_svs = parsed_svs_by_name.values()
 
