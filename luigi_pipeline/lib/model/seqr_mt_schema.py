@@ -1,8 +1,8 @@
 import hail as hl
 
 from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
-from hail_scripts.v02.utils.computed_fields import variant_id
-from hail_scripts.v02.utils.computed_fields import vep
+from hail_scripts.computed_fields import variant_id
+from hail_scripts.computed_fields import vep
 
 
 class SeqrSchema(BaseMTSchema):
@@ -272,7 +272,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
         is_called = hl.is_defined(self.mt.GT)
         return {
             'num_alt': hl.cond(is_called, self.mt.GT.n_alt_alleles(), -1),
-            'gq': hl.cond(is_called, self.mt.GQ, hl.null(hl.tint)),
+            'gq': hl.cond(is_called, self.mt.GQ, 0),
             'ab': hl.bind(
                 lambda total: hl.cond((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
                                       hl.float(self.mt.AD[1] / total),

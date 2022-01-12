@@ -4,7 +4,7 @@ import subprocess
 
 import hail as hl
 
-from hail_scripts.v02.utils.hail_utils import import_vcf
+from hail_scripts.utils.hail_utils import import_vcf
 
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"

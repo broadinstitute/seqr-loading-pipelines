@@ -4,7 +4,7 @@ import logging
 import os
 import time
 
-from hail_scripts.v02.utils.elasticsearch_client import HailElasticsearchClient
+from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode

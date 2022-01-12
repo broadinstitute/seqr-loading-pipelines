@@ -2,7 +2,7 @@ import argparse as ap
 import logging
 
 import hail as hl
-from hail_scripts.v02.utils.computed_fields.vep import get_expr_for_vep_sorted_transcript_consequences_array, \
+from hail_scripts.computed_fields.vep import get_expr_for_vep_sorted_transcript_consequences_array, \
     get_expr_for_worst_transcript_consequence_annotations_struct, CONSEQUENCE_TERM_RANK_LOOKUP
 
 VALIDATION_KEYTABLE_PATHS = {

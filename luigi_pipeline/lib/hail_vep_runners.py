@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 import hail as hl
 
-from hail_scripts.v02.utils import hail_utils
+from hail_scripts.utils import hail_utils
 
 
 class HailVEPRunnerBase(ABC):
