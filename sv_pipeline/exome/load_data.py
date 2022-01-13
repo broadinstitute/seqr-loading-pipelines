@@ -77,7 +77,7 @@ def _get_seqr_sample_id(raw_sample_id):
 
 
 def _parse_genes(genes):
-    return set() if genes in {'None', 'null', 'NA'} else {gene.split('.')[0] for gene in genes.split(',')}
+    return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
 
 def _parse_prev_call(call):
     return call not in {'NA', 'FALSE'}
@@ -491,7 +491,7 @@ def main():
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
     logger.info('Adding in silico predictors')
-    # add_in_silico(parsed_svs_by_name, args.in_silico)
+    add_in_silico(parsed_svs_by_name, args.in_silico)
 
     parsed_svs = parsed_svs_by_name.values()
 
