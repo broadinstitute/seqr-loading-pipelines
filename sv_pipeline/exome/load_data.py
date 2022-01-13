@@ -51,7 +51,7 @@ DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
 NEW_CALL_FIELD = 'new_call'
 
-GENE_CONSEQUENCE_COLS = {'genes_lof': 'LOF', 'genes_cg': 'COPY_GAIN'}
+GENE_CONSEQUENCE_COLS = {'genes_lof_ensemble_id': 'LOF', 'genes_cg_ensemble_id': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
 
@@ -379,7 +379,6 @@ def format_sv(sv):
     sv[TRANSCRIPTS_FIELD] = []
     for gene in sv[GENES_FIELD]:
         transcript = {'gene_id': gene}
-        #  TODO currently not working as the gene consequences use gene symbols instead of ensembl IDs
         if gene in gene_consequences:
             transcript['major_consequence'] = gene_consequences[gene]
         sv[TRANSCRIPTS_FIELD].append(transcript)
