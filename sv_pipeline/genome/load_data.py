@@ -37,7 +37,7 @@ CORE_FIELDS = {
     'pos': lambda rows: rows.locus.position,
     'filters': lambda rows: hl.array(rows.filters.filter(lambda x: x != 'PASS')),
     'algorithms': lambda rows: rows.info.ALGORITHMS,
-    'StrVCTVRE_score': lambda rows: rows.info.StrVCTVRE,
+    'StrVCTVRE_score': lambda rows: hl.parse_float(rows.info.StrVCTVRE),
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
