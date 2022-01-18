@@ -17,19 +17,26 @@ from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# keep track of loading round to prevent variant ID clashes with previously saved variants
+# (i.e. prefix_1234 can mean different things in different callsets)
+ROUND = 2
+
 CHR_COL = 'chr'
 START_COL = 'start'
 END_COL = 'end'
 QS_COL = 'qs'
 CN_COL = 'cn'
 CALL_COL = 'svtype'
-SAMPLE_COL = 'sample'
+SAMPLE_COL = 'sample_fix'
 NUM_EXON_COL = 'genes_any_overlap_totalexons'
 DEFRAGGED_COL = 'defragmented'
 SC_COL = 'vac'
 SF_COL = 'vaf'
-VAR_NAME_COL = 'name'
+VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
+PREV_IDENTICAL_COL = 'identical_round{}'.format(ROUND-1)
+PREV_OVERLAP_COL = 'any_round{}'.format(ROUND-1)
+PREV_MISSING_COL = 'no_ovl_in_round{}'.format(ROUND-1)
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -39,38 +46,48 @@ CN_FIELD = 'cn'
 QS_FIELD = 'qs'
 GENES_FIELD = 'geneIds'
 TRANSCRIPTS_FIELD = 'sortedTranscriptConsequences'
+TRANSCRIPTS_CONSEQUENCE_FIELD = 'transcriptConsequenceTerms'
 SF_FIELD = 'sf'
 SC_FIELD = 'sc'
 VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
+NEW_CALL_FIELD = 'new_call'
+SAMPLES_NEW_CALL_FIELD = 'samples_new_call'
+
+GENE_CONSEQUENCE_COLS = {'genes_lof_ensemble_id': 'LOF', 'genes_cg_ensemble_id': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
-SAMPLE_TYPE_MAP = {
-    'WES': 'Exome',
-    'WGS': 'Genome',
-}
 
-def _get_seqr_sample_id(raw_sample_id, sample_type='WES'):
+SAMPLE_TYPE='WES'
+
+SAMPLE_ID_REGEX = '(?P<sample_id>.+)_v\d+_Exome_(C|RP-)\d+$'
+
+def _get_seqr_sample_id(raw_sample_id):
     """
     Extract the seqr sample ID from the raw dataset sample id
 
     :param raw_sample_id: dataset sample id
-    :param sample_type: sample type (WES/WGS)
     :return: seqr sample id
     """
-    if sample_type not in SAMPLE_TYPE_MAP:
-        raise Exception('Unsupported sample type {}'.format(sample_type))
-    sample_id_regex = '(\d+)_(?P<sample_id>.+)_v\d_{sample_type}_GCP'.format(sample_type=SAMPLE_TYPE_MAP[sample_type])
-    return re.search(sample_id_regex, raw_sample_id).group('sample_id')
+    try:
+        return re.search(SAMPLE_ID_REGEX, raw_sample_id).group('sample_id')
+    except AttributeError:
+        raise ValueError(raw_sample_id)
 
+
+def _parse_genes(genes):
+    return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
+
+def _parse_prev_call(call):
+    return call not in {'NA', 'FALSE'}
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
     SF_COL: {'field_name': SF_FIELD, 'format': float},
-    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}'.format(val, call)},
+    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}_{}'.format(val, call, ROUND)},
     CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
     END_COL: {'format': int},
@@ -89,12 +106,19 @@ COL_CONFIGS = {
     },
     GENES_COL: {
         'field_name': GENES_FIELD,
-        'format': lambda genes: set() if genes == 'None' else {gene.split('.')[0] for gene in genes.split(',')},
+        'format': _parse_genes,
     },
+    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': _parse_prev_call},
+    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': _parse_prev_call},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': _parse_prev_call},
 }
+COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
-SAMPLE_COLUMNS = [START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL]
+SAMPLE_COLUMNS = [
+    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
+    PREV_MISSING_COL,
+] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
@@ -176,7 +200,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
         parsed_svs_by_id[variant_id] = get_parsed_column_values(row, header_indices, CORE_COLUMNS)
         parsed_svs_by_id[variant_id][COL_CONFIGS[VAR_NAME_COL]['field_name']] = variant_id
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
-        sv[GENES_FIELD] = set()
+        parsed_svs_by_id[variant_id][GENES_FIELD] = set()
 
     sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
     sample_info[SAMPLE_ID_FIELD] = sample_id
@@ -214,7 +238,7 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
             out_file.write(header)
 
         for line in tqdm(f, unit=' rows'):
-            row = line.split()
+            row = line.split('\t')
             parsed = parse_row(row, header_indices)
             if parsed and out_file:
                 out_file.write(line)
@@ -223,28 +247,33 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
         out_file.close()
 
 
-def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type, ignore_missing_samples, write_subsetted_bed=False):
+def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=None):
     """
     Parses raw SV calls from the input file into the desired SV output format for samples in the given subset
 
     :param input_dataset: file path for the raw SV calls
     :param sample_subset: optional list of samples to subset to
     :param sample_remap: optional mapping of raw sample ids to seqr sample ids
-    :param sample_type: sample type (WES/WGS)
     :param ignore_missing_samples: whether or not to fail if samples in the subset have no raw data
-    :param write_subsetted_bed: whether or not to write a bed file with only the subsetted samples
+    :param write_subsetted_bed: whether to write a bed file with only the subsetted samples and the file prefix to use
     :return: dictionary of parsed SVs keyed by ID
     """
     parsed_svs_by_name = {}
     found_samples = set()
     skipped_samples = set()
+    invalid_samples = set()
     out_file_path = None
     if write_subsetted_bed:
-        file_name = 'subset_{}'.format(os.path.basename(input_dataset))
+        file_name = 'subset_{}_{}'.format(write_subsetted_bed, os.path.basename(input_dataset))
         out_file_path = os.path.join(os.path.dirname(input_dataset), file_name)
 
     def _parse_row(row, header_indices):
-        sample_id = get_field_val(row, SAMPLE_COL, header_indices, format_kwargs={'sample_type': sample_type})
+        try:
+            sample_id = get_field_val(row, SAMPLE_COL, header_indices)
+        except ValueError as e:
+            invalid_samples.add(str(e))
+            return False
+
         if sample_remap and sample_id in sample_remap:
             sample_id = sample_remap[sample_id]
         if sample_subset is None or sample_id in sample_subset:
@@ -259,6 +288,8 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, sample_type
 
     logger.info('Found {} sample ids'.format(len(found_samples)))
     if sample_subset:
+        if invalid_samples:
+            raise Exception('Invalid sample IDs: {}'.format(', '.join(sorted(invalid_samples))))
         if len(found_samples) != len(sample_subset):
             missed_samples = sample_subset - found_samples
             missing_sample_error = 'Missing the following {} samples:\n{}'.format(
@@ -296,8 +327,7 @@ def format_sv(sv):
     :param sv: parsed SV
     :return: none
     """
-    sv[TRANSCRIPTS_FIELD] = [{'gene_id': gene} for gene in sv[GENES_FIELD]]
-    sv['transcriptConsequenceTerms'] = ['gCNV_{}'.format(sv[CALL_FIELD])]
+    sv[TRANSCRIPTS_CONSEQUENCE_FIELD] = {'gCNV_{}'.format(sv[CALL_FIELD])}
     if sv[SF_FIELD]:
         sv['sn'] = int(sv[SC_FIELD] / sv[SF_FIELD])
     sv['pos'] = sv[START_COL]
@@ -305,9 +335,15 @@ def format_sv(sv):
     sv['xstart'] = sv['xpos']
     sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
     sv['samples'] = []
+    sv[SAMPLES_NEW_CALL_FIELD] = []
+
+    gene_consequences = {}
     for genotype in sv[GENOTYPES_FIELD]:
         sample_id = genotype['sample_id']
         sv['samples'].append(sample_id)
+
+        if genotype[NEW_CALL_FIELD]:
+            sv[SAMPLES_NEW_CALL_FIELD].append(sample_id)
 
         cn_key = 'samples_cn_{}'.format(genotype['cn']) if genotype['cn'] < 4 else 'samples_cn_gte_4'
         if cn_key not in sv:
@@ -335,7 +371,21 @@ def format_sv(sv):
         else:
             genotype[GENES_FIELD] = list(genotype[GENES_FIELD])
 
+        for col, consequence in GENE_CONSEQUENCE_COLS.items():
+            genes = genotype.pop(col)
+            if genes:
+                sv[TRANSCRIPTS_CONSEQUENCE_FIELD].add(consequence)
+                gene_consequences.update({gene: consequence for gene in genes})
+
+    sv[TRANSCRIPTS_FIELD] = []
+    for gene in sv[GENES_FIELD]:
+        transcript = {'gene_id': gene}
+        if gene in gene_consequences:
+            transcript['major_consequence'] = gene_consequences[gene]
+        sv[TRANSCRIPTS_FIELD].append(transcript)
+
     sv[GENES_FIELD] = list(sv[GENES_FIELD])
+    sv[TRANSCRIPTS_CONSEQUENCE_FIELD] = list(sv[TRANSCRIPTS_CONSEQUENCE_FIELD])
 
 
 def get_es_schema(all_fields, nested_fields):
@@ -411,7 +461,6 @@ def main():
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--in-silico')
     p.add_argument('--project-guid')
-    p.add_argument('--sample-type', default='WES')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
     p.add_argument('--num-shards', default=1)
@@ -425,8 +474,8 @@ def main():
     sample_subset = None
     sample_remap = None
     if not args.skip_sample_subset:
-        sample_subset = get_sample_subset(args.project_guid, args.sample_type)
-        sample_remap = get_sample_remap(args.project_guid, args.sample_type)
+        sample_subset = get_sample_subset(args.project_guid, SAMPLE_TYPE)
+        sample_remap = get_sample_remap(args.project_guid, SAMPLE_TYPE)
         message = 'Subsetting to {} samples'.format(len(sample_subset))
         if sample_remap:
             message += ' (remapping {} samples)'.format(len(sample_remap))
@@ -437,9 +486,8 @@ def main():
         args.input_dataset,
         sample_subset,
         sample_remap,
-        args.sample_type,
         ignore_missing_samples=args.ignore_missing_samples,
-        write_subsetted_bed=args.write_subsetted_bed
+        write_subsetted_bed=args.project_guid if args.write_subsetted_bed else None,
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
@@ -454,7 +502,7 @@ def main():
 
     meta = {
       'genomeVersion': '38',
-      'sampleType': args.sample_type,
+      'sampleType': SAMPLE_TYPE,
       'datasetType': 'SV',
       'sourceFilePath': args.input_dataset,
     }
