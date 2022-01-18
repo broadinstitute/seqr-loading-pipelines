@@ -17,6 +17,10 @@ from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# keep track of loading round to prevent variant ID clashes with previously saved variants
+# (i.e. prefix_1234 can mean different things in different callsets)
+ROUND = 2
+
 CHR_COL = 'chr'
 START_COL = 'start'
 END_COL = 'end'
@@ -30,9 +34,9 @@ SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
-PREV_IDENTICAL_COL = 'identical_round1'
-PREV_OVERLAP_COL = 'any_round1'
-PREV_MISSING_COL = 'no_ovl_in_round1'
+PREV_IDENTICAL_COL = 'identical_round{}'.format(ROUND-1)
+PREV_OVERLAP_COL = 'any_round{}'.format(ROUND-1)
+PREV_MISSING_COL = 'no_ovl_in_round{}'.format(ROUND-1)
 IN_SILICO_COL = 'path'
 
 CHROM_FIELD = 'contig'
@@ -50,14 +54,11 @@ CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
 NEW_CALL_FIELD = 'new_call'
+SAMPLES_NEW_CALL_FIELD = 'samples_new_call'
 
 GENE_CONSEQUENCE_COLS = {'genes_lof_ensemble_id': 'LOF', 'genes_cg_ensemble_id': 'COPY_GAIN'}
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
-
-# keep track of loading round to prevent variant ID clashes with previously saved variants
-# (i.e. prefix_1234 can mean different things in different callsets)
-ROUND = '2'
 
 SAMPLE_TYPE='WES'
 
@@ -334,7 +335,7 @@ def format_sv(sv):
     sv['xstart'] = sv['xpos']
     sv['xstop'] = CHROM_TO_XPOS_OFFSET[sv[CHROM_FIELD]] + sv[END_COL]
     sv['samples'] = []
-    sv['samples_new_call'] = []
+    sv[SAMPLES_NEW_CALL_FIELD] = []
 
     gene_consequences = {}
     for genotype in sv[GENOTYPES_FIELD]:
@@ -342,7 +343,7 @@ def format_sv(sv):
         sv['samples'].append(sample_id)
 
         if genotype[NEW_CALL_FIELD]:
-            sv['samples_new_call'].append(sample_id)
+            sv[SAMPLES_NEW_CALL_FIELD].append(sample_id)
 
         cn_key = 'samples_cn_{}'.format(genotype['cn']) if genotype['cn'] < 4 else 'samples_cn_gte_4'
         if cn_key not in sv:
