@@ -66,10 +66,6 @@ SAMPLES_GQ_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+GQ_BIN_SIZE): i for i 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, SORTED_TRANS_CONSEQ, 'genotypes'] +\
     list(SAMPLES_GQ_FIELDS.keys())
 
-STRVCTVRE_FIELDS = {
-    'StrVCTVRE_score': lambda key, rows: hl.parse_float(rows[key].info.StrVCTVRE),
-}
-
 
 def get_xpos(contig, pos):
     return EXP_CHROM_TO_XPOS_OFFSET.get(contig.replace('^chr', '')) + pos
@@ -196,11 +192,11 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
     )
 
 
-def annotate_from_file(rows, filename, fields):
+def add_strvctvre(rows, filename):
     src_rows = load_mt(filename, None, False).rows()
     src_rows = src_rows.key_by('rsid')
 
-    return rows.annotate(**{k: v(rows[VARIANT_ID], src_rows) for k, v in fields.items()})
+    return rows.annotate(StrVCTVRE_score=hl.parse_float(src_rows[rows[VARIANT_ID]].info.StrVCTVRE))
 
 
 def main():
@@ -236,7 +232,7 @@ def main():
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
 
     if args.strvctvre:
-        rows = annotate_from_file(rows, args.strvctvre, STRVCTVRE_FIELDS)
+        rows = add_strvctvre(rows, args.strvctvre)
 
     export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
