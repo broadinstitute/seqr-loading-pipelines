@@ -20,6 +20,7 @@ SV_TYPE = 'sv_type'
 MAJOR_CONSEQ = 'major_consequence'
 GQ_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
+VARIANT_ID = 'variantId'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -37,7 +38,6 @@ CORE_FIELDS = {
     'pos': lambda rows: rows.locus.position,
     'filters': lambda rows: hl.array(rows.filters.filter(lambda x: x != 'PASS')),
     'algorithms': lambda rows: rows.info.ALGORITHMS,
-    'StrVCTVRE_score': lambda rows: hl.parse_float(rows.info.StrVCTVRE),
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
@@ -63,8 +63,12 @@ DERIVED_FIELDS = {
 
 SAMPLES_GQ_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+GQ_BIN_SIZE): i for i in range(0, 1000, GQ_BIN_SIZE)}
 
-FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + ['variantId', SORTED_TRANS_CONSEQ, 'genotypes'] +\
+FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, SORTED_TRANS_CONSEQ, 'genotypes'] +\
     list(SAMPLES_GQ_FIELDS.keys())
+
+STRVCTVRE_FIELDS = {
+    'StrVCTVRE_score': lambda key, rows: hl.parse_float(rows[key].info.StrVCTVRE),
+}
 
 
 def get_xpos(contig, pos):
@@ -160,7 +164,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
 
     rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+GQ_BIN_SIZE) for k, i in SAMPLES_GQ_FIELDS.items()})
 
-    rows = rows.rename({'rsid': 'variantId'})
+    rows = rows.rename({'rsid': VARIANT_ID})
 
     return rows.key_by().select(*FIELDS)
 
@@ -192,6 +196,13 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
     )
 
 
+def annotate_from_file(rows, filename, fields):
+    src_rows = load_mt(filename, None, False).rows()
+    src_rows = src_rows.key_by('rsid')
+
+    return rows.annotate(**{k: v(rows[VARIANT_ID], src_rows) for k, v in fields.items()})
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('input_dataset', help='input VCF file')
@@ -208,6 +219,7 @@ def main():
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
     p.add_argument('--id-file', help='The full path (can start with gs://) of the id file. Should only be used for testing purposes, not intended for use in production')
+    p.add_argument('--strvctvre', help='input VCF file for StrVCTVRE data')
 
     args = p.parse_args()
 
@@ -222,6 +234,9 @@ def main():
                    id_file=args.id_file)
 
     rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
+
+    if args.strvctvre:
+        rows = annotate_from_file(rows, args.strvctvre, STRVCTVRE_FIELDS)
 
     export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
