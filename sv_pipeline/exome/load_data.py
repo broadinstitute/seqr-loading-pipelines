@@ -37,7 +37,7 @@ GENES_COL = 'genes_any_overlap_ensemble_id'
 PREV_IDENTICAL_COL = 'identical_round{}'.format(ROUND-1)
 PREV_OVERLAP_COL = 'any_round{}'.format(ROUND-1)
 PREV_MISSING_COL = 'no_ovl_in_round{}'.format(ROUND-1)
-IN_SILICO_COL = 'path'
+IN_SILICO_COL = 'strvctvre_score'
 
 CHROM_FIELD = 'contig'
 SAMPLE_ID_FIELD = 'sample_id'
@@ -97,7 +97,7 @@ COL_CONFIGS = {
     DEFRAGGED_COL: {'field_name': DEFRAGGED_FIELD, 'format': lambda val: BOOL_MAP[val]},
     IN_SILICO_COL: {
         'field_name': 'StrVCTVRE_score',
-        'format': lambda val: None if val == 'not_exonic' else float(val),
+        'format': lambda val: None if val.strip() == 'not_exonic' else float(val),
         'allow_missing': True,
     },
     SAMPLE_COL: {
