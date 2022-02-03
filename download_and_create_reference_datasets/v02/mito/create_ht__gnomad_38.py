@@ -4,13 +4,10 @@
 # and save it to a file.
 
 import logging
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
-logger = logging.getLogger()
-
-
 import hail as hl
 
-hl.init()
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s')
+logger = logging.getLogger()
 
 CONFIG = {
     'vcf_path': 'gs://gcp-public-data--gnomad/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz',
@@ -42,6 +39,8 @@ def annotate_ht(mt):
 
 
 def run():
+    hl.init()
+
     mt = vcf_to_mt(CONFIG['vcf_path'])
     ht = annotate_ht(mt)
     logger.info(f'Writing to Hail table {CONFIG["output_path"]}')
