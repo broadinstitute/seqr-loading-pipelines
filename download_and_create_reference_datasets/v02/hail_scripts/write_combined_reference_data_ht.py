@@ -1,4 +1,5 @@
 import argparse
+import logging
 from datetime import datetime
 from functools import reduce
 import os
@@ -8,6 +9,9 @@ import hail as hl
 VERSION = '2.0.4' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
+
+logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')
+logger = logging.getLogger(__name__)
 
 '''
 Configurations of dataset to combine. 
@@ -168,6 +172,49 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
             'select': {'HPO_Count': 'info.HPO_CT'}
         }
+    },
+    'gnomad_mito': {
+        '38': {
+            'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+            'select': ['AN', 'AC_hom', 'AC_het', 'AF_hom', 'AF_het', 'max_hl']
+        }
+    },
+    'mitomap': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/Mitomap Confirmed Mutations Feb. 04 2022.ht',
+            'select': ['pathogenic']
+        }
+    },
+    'mitimpact': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+            'select': ['APOGEE_score']
+        }
+    },
+    'hmtvar': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
+            'select': ['disease_score']
+        }
+    },
+    'helix_mito': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
+            'select': ['counts_hom', 'AF_hom', 'counts_het', 'AF_het', 'max_ARF']
+        }
+    },
+    'clinvar_mito': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/clinvar/clinvar.GRCh38.chrM.ht',
+            'select': ['ALLELEID', 'CLNSIG', 'CLNREVSTAT']
+        }
+    },
+    'dbnsfp_mito': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/dbnsfp/dbnsfp_GRCh38_chrM-2.0.4.ht',
+            'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred',
+                       'REVEL_score', 'GERP_RS', 'phastCons100way_vertebrate']
+        }
     }
 }
 
@@ -294,25 +341,42 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
                                          datasets=hl.dict(included_dataset),
                                          version=VERSION)
     joined_ht.describe()
-
-    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome, version=VERSION))
-    print('Writing to %s' % output_path)
-
-    joined_ht.write(os.path.join(output_path))
+    return joined_ht
 
 
 def run(args):
-    hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it 
-    join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+    # hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it
+
+    # If there are out-of-memory error, set the environment variable with the following command
+    # $ export PYSPARK_SUBMIT_ARGS="--driver-memory 4G pyspark-shell"
+    # "4G" in the environment variable can be bigger if your computer has a larger memory.
+    hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
+
+    if args.mitochondrial:
+        logger.info('Joining mitochondrail reference datasets.')
+        joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'clinvar_mito', 'dbnsfp_mito'],
+                 reference_genome='38')
+        output_path = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
+        logger.info(f'Writing to {output_path}')
+        joined_ht.write(os.path.join(output_path), overwrite=args.force_write)
+        return
+
+    joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
+
+    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
+    logger.info(f'Writing to {output_path}')
+    joined_ht.write(os.path.join(output_path))
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
+    parser.add_argument('-m', '--mitochondrial', help='Create combined mitochondrial reference dataset hail table', action='store_true')
+    parser.add_argument('-f', '--force-write', help='Force write to an existing output file', action='store_true')
     args = parser.parse_args()
 
     run(args)
