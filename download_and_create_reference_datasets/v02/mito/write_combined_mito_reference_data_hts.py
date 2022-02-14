@@ -13,6 +13,10 @@ import urllib
 
 import hail as hl
 
+from download_and_create_reference_datasets.v02.hail_scripts.write_combined_reference_data_ht import join_hts
+
+OUTPUT_PATH = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
+
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
@@ -45,16 +49,16 @@ CONFIG = {
     },
     'hmtvar': {
         # The data source has certificate expiration issue. Manually downloaded from https://www.hmtvar.uniba.it/api/main/
-        'input_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
+        'input_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar Jan. 10 2022.json',
         'input_type': 'json',
-        'output_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
+        'output_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar Jan. 10 2022.ht',
         'annotate': {
             'locus': lambda ht: hl.locus('chrM', hl.parse_int32(ht.nt_start)),
             'alleles': lambda ht: [ht.ref_rCRS, ht.alt],
             'disease_score': lambda ht: hl.parse_float(ht.disease_score),
         },
     },
-    'helix': {
+    'helix_mito': {
         'input_path': 'https://helix-research-public.s3.amazonaws.com/mito/HelixMTdb_20200327.tsv',
         'input_type': 'tsv',
         'output_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
@@ -64,7 +68,7 @@ CONFIG = {
             'locus': lambda ht: hl.locus('chrM', hl.parse_int32(ht.locus.split(':')[1])),
         },
     },
-    'clinvar': {
+    'clinvar_mito': {
         'input_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
         'input_type': 'vcf',
         'output_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/clinvar/clinvar.GRCh38.chrM.ht',
@@ -74,21 +78,6 @@ CONFIG = {
             'CLNREVSTAT': lambda ht: ht.info.CLNREVSTAT,
         },
     },
-    'dbnsfp': {
-        'input_path': 'gs://seqr-reference-data/GRCh38/all_reference_data/v2/combined_reference_data_grch38-2.0.4.ht',
-        'input_type': 'ht',
-        'annotate': {
-            'SIFT_pred': lambda ht: ht.dbnsfp.SIFT_pred,
-            'Polyphen2_HVAR_pred': lambda ht: ht.dbnsfp.Polyphen2_HVAR_pred,
-            'MutationTaster_pred': lambda ht: ht.dbnsfp.MutationTaster_pred,
-            'FATHMM_pred': lambda ht: ht.dbnsfp.FATHMM_pred,
-            'MetaSVM_pred': lambda ht: ht.dbnsfp.MetaSVM_pred,
-            'REVEL_score': lambda ht: ht.dbnsfp.REVEL_score,
-            'GERP_RS': lambda ht: ht.dbnsfp.GERP_RS,
-            'phastCons100way_vertebrate': lambda ht: ht.dbnsfp.phastCons100way_vertebrate,
-        },
-        'output_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/dbnsfp/dbnsfp_GRCh38_chrM-2.0.4.ht',
-    }
 }
 
 
@@ -111,7 +100,7 @@ def convert_json2tsv(json_fname):
 
 def download_file(path):
     if path.startswith('gs://') and not path.endswith('.ht'):
-        path = path.replace('gs://', 'https://storage.googleapis.com/', 1)
+        path = f'https://storage.googleapis.com/{urllib.parse.quote(path[5:])}'
     if path.startswith('http') or path.startswith('ftp'):
         filename = get_tempfile(suffix=path.split('/')[-1])
         urllib.request.urlretrieve(path, filename)
@@ -129,6 +118,9 @@ def download_file(path):
 
 def load_hts(datasets, args):
     for dataset in datasets:
+        if not CONFIG[dataset].get('input_path'):
+            continue
+
         tsv_fname = None
 
         logger.info(f'Downloading dataset {dataset}.')
@@ -168,7 +160,7 @@ def run(args):
     # "4G" in the environment variable can be bigger if your computer has a larger memory.
     hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
 
-    datasets = args.dataset.split(',')
+    datasets = args.dataset.split(',') if args.dataset else []
     not_supported_dataset = [d for d in datasets if d not in CONFIG.keys()]
     if len(not_supported_dataset) > 0:
         logger.error(f'{len(not_supported_dataset)} datasets are not supported: {not_supported_dataset}')
@@ -177,6 +169,12 @@ def run(args):
     logger.info(f'Loading and combining {datasets}')
     load_hts(datasets, args)
 
+    logger.info('Joining the mitochondrial reference datasets')
+    joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'clinvar_mito', 'dbnsfp_mito'],
+                         reference_genome='38')
+
+    logger.info(f'Writing to {OUTPUT_PATH}')
+    joined_ht.write(OUTPUT_PATH, overwrite=args.force_write)
     logger.info('Done')
 
 
@@ -184,7 +182,7 @@ if __name__ == "__main__":
 
     datasets = ','.join(CONFIG.keys())
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--dataset', help=f'Reference dataset list, separated with commas, e.g. {datasets}', required=True)
+    parser.add_argument('-d', '--dataset', help=f'Reference dataset list, separated with commas, e.g. {datasets}')
     parser.add_argument('-f', '--force-write', help='Force write to an existing output file', action='store_true')
     args = parser.parse_args()
 

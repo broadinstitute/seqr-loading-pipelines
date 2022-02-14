@@ -211,9 +211,17 @@ CONFIG = {
     },
     'dbnsfp_mito': {
         '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/dbnsfp/dbnsfp_GRCh38_chrM-2.0.4.ht',
-            'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred',
-                       'REVEL_score', 'GERP_RS', 'phastCons100way_vertebrate']
+            'path': 'gs://seqr-reference-data/GRCh38/all_reference_data/v2/combined_reference_data_grch38-2.0.4.ht',
+            'filter': lambda ht: ht.locus.contig == 'chrM',
+            'select': {
+                'SIFT_pred': 'dbnsfp.SIFT_pred',
+                'Polyphen2_HVAR_pred': 'dbnsfp.Polyphen2_HVAR_pred',
+                'MutationTaster_pred': 'dbnsfp.MutationTaster_pred',
+                'FATHMM_pred': 'dbnsfp.FATHMM_pred',
+                'MetaSVM_pred': 'dbnsfp.MetaSVM_pred',
+                'REVEL_score': 'dbnsfp.REVEL_score',
+                'GERP_RS': 'dbnsfp.GERP_RS',
+                'phastCons100way_vertebrate': 'dbnsfp.phastCons100way_vertebrate'}
         }
     }
 }
@@ -309,6 +317,9 @@ def get_ht(dataset, reference_genome):
     print(f"Reading in {dataset}")
     base_ht = hl.read_table(config['path'])
 
+    if config.get('filter'):
+        base_ht = base_ht.filter(config['filter'](base_ht))
+
     # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
@@ -346,21 +357,6 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
 
 def run(args):
     # hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it
-
-    # If there are out-of-memory error, set the environment variable with the following command
-    # $ export PYSPARK_SUBMIT_ARGS="--driver-memory 4G pyspark-shell"
-    # "4G" in the environment variable can be bigger if your computer has a larger memory.
-    hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
-
-    if args.mitochondrial:
-        logger.info('Joining mitochondrail reference datasets.')
-        joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'clinvar_mito', 'dbnsfp_mito'],
-                 reference_genome='38')
-        output_path = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
-        logger.info(f'Writing to {output_path}')
-        joined_ht.write(os.path.join(output_path), overwrite=args.force_write)
-        return
-
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
@@ -375,8 +371,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--build', help='Reference build, 37 or 38', choices=["37", "38"], required=True)
-    parser.add_argument('-m', '--mitochondrial', help='Create combined mitochondrial reference dataset hail table', action='store_true')
-    parser.add_argument('-f', '--force-write', help='Force write to an existing output file', action='store_true')
     args = parser.parse_args()
 
     run(args)
