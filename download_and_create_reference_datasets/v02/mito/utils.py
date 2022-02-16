@@ -1,10 +1,11 @@
 import argparse
 import logging
 import json
+import tqdm
 import tempfile
 import os
 import zipfile
-import urllib
+import requests
 
 import hail as hl
 
@@ -17,55 +18,63 @@ contig_recoding={'1': 'chr1', '10': 'chr10', '11': 'chr11', '12': 'chr12', '13':
  'MT': 'chrM', 'NW_009646201.1': 'chr1'}
 
 
-def get_tempfile(**kwargs):
-    _, filename = tempfile.mkstemp(**kwargs)
-    return filename
+def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
+    if url.startswith('gs://'):
+        url = f'https://storage.googleapis.com/{requests.utils.quote(url[5:])}'
+
+    if not (url and url.startswith(("http://", "https://"))):
+        raise ValueError("Invalid url: {}".format(url))
+
+    local_file_path = os.path.join(to_dir, os.path.basename(url.rstrip('/')))
+
+    is_gz = url.endswith(".gz") or url.endswith(".zip")
+    response = requests.get(url, stream=is_gz, verify=True if verify==None else verify)
+    input_iter = response if is_gz else response.iter_content()
+
+    logger.info("Downloading {} to {}".format(url, local_file_path))
+    input_iter = tqdm.tqdm(input_iter, unit=" data" if is_gz else " lines")
+
+    with open(local_file_path, 'wb') as f:
+        f.writelines(input_iter)
+
+    input_iter.close()
+
+    return local_file_path
 
 
-def convert_json2tsv(json_fname):
-    with open(json_fname, 'r') as f:
+def convert_json2tsv(json_path):
+    with open(json_path, 'r') as f:
         data = json.load(f)
-    tsv_fname = get_tempfile(suffix='.tsv', text=True)
-    with open(tsv_fname, 'w') as f:
+    tsv_path = f'{json_path[:-5]}.tsv' if json_path.endswith('.json') else f'{json_path}.tsv'
+    with open(tsv_path, 'w') as f:
         header = '\t'.join(data[0].keys())
         f.write(header + '\n')
         for row in data:
             f.write('\t'.join([str(v) for v in row.values()]) + '\n')
-    return tsv_fname
+    return tsv_path
 
 
-def download_file(path):
-    if path.startswith('gs://'):
-        path = f'https://storage.googleapis.com/{urllib.parse.quote(path[5:])}'
-    filename = get_tempfile(suffix=path.split('/')[-1])
-    urllib.request.urlretrieve(path, filename)
+def unzip_file(path):
     if path.endswith('.zip'):
         unzip_file = path.split('/')[-1][:-4]
-        unzip_path = os.path.dirname(filename)
-        with zipfile.ZipFile(filename, 'r') as zip_ref:
-            zip_ref.extract(unzip_file, path=unzip_path)
-        os.remove(filename)
-        filename = os.path.join(unzip_path, unzip_file)
-    return filename
+        with zipfile.ZipFile(path, 'r') as zip_ref:
+            zip_ref.extract(unzip_file, path=os.path.dirname(path))
+    return path[:-4]
 
 
 def load_ht(config, force_write=True):
-    tsv_fname = None
-
     logger.info(f'Downloading dataset from {config["input_path"]}.')
-    dn_fname = download_file(config['input_path'])
+    dn_path = download_file(config['input_path'], verify=config.get('verify_ssl'))
 
-    logger.info(f'Loading hail table from {dn_fname}.')
+    logger.info(f'Loading hail table from {dn_path}.')
     types = config['field_types'] if config.get('field_types') else {}
-    if config['input_type'] == 'tsv':
-        ht = hl.import_table(dn_fname, types=types)
-    elif config['input_type'] == 'vcf':
-        ht = hl.import_vcf(dn_fname, force_bgz=True, contig_recoding=contig_recoding).rows()
+    if config['input_type'] == 'vcf':
+        ht = hl.import_vcf(dn_path, force_bgz=True, contig_recoding=contig_recoding).rows()
     elif config['input_type'] == 'json':
-        tsv_fname = convert_json2tsv(dn_fname)
-        ht = hl.import_table(tsv_fname, types=types)
-    else:  # assume unspecified as an ht (hail table) type.
-        ht = hl.read_table(dn_fname)
+        tsv_path = convert_json2tsv(dn_path)
+        ht = hl.import_table(tsv_path, types=types)
+    else:
+        ht = hl.import_table(dn_path, types=types)
 
     if config.get('annotate'):
         ht = ht.annotate(**{field: func(ht) for field, func in config['annotate'].items()})
@@ -76,12 +85,6 @@ def load_ht(config, force_write=True):
 
     logger.info(f'Writing hail table to {config["output_path"]}.')
     ht.write(config['output_path'], overwrite=force_write)
-
-    if tsv_fname:
-        os.remove(tsv_fname)
-    if dn_fname != config['input_path']:
-        os.remove(dn_fname)
-
     logger.info('Done')
 
 
