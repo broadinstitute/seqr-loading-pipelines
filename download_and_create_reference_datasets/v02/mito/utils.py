@@ -22,13 +22,20 @@ def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
     if url.startswith('gs://'):
         url = f'https://storage.googleapis.com/{requests.utils.quote(url[5:])}'
 
-    if not (url and url.startswith(("http://", "https://"))):
+    if not (url and url.startswith(("http://", "https://", "ftp://"))):
         raise ValueError("Invalid url: {}".format(url))
 
     local_file_path = os.path.join(to_dir, os.path.basename(url.rstrip('/')))
 
+    if verify != False:
+        response = requests.head(url)
+        size = int(response.headers.get('Content-Length', '0'))
+        if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) == size:
+            logger.info("Re-using {} previously downloaded from {}".format(local_file_path, url))
+            return local_file_path
+
     is_gz = url.endswith(".gz") or url.endswith(".zip")
-    response = requests.get(url, stream=is_gz, verify=True if verify==None else verify)
+    response = requests.get(url, stream=is_gz, verify=True if verify is None else verify)
     input_iter = response if is_gz else response.iter_content()
 
     logger.info("Downloading {} to {}".format(url, local_file_path))
@@ -54,17 +61,14 @@ def convert_json2tsv(json_path):
     return tsv_path
 
 
-def unzip_file(path):
-    if path.endswith('.zip'):
-        unzip_file = path.split('/')[-1][:-4]
-        with zipfile.ZipFile(path, 'r') as zip_ref:
-            zip_ref.extract(unzip_file, path=os.path.dirname(path))
-    return path[:-4]
-
-
 def load_ht(config, force_write=True):
     logger.info(f'Downloading dataset from {config["input_path"]}.')
     dn_path = download_file(config['input_path'], verify=config.get('verify_ssl'))
+
+    if dn_path.endswith('.zip'):
+        with zipfile.ZipFile(dn_path, 'r') as zip:
+            zip.extractall(path=os.path.dirname(dn_path))
+        dn_path = dn_path[:-4]
 
     logger.info(f'Loading hail table from {dn_path}.')
     types = config['field_types'] if config.get('field_types') else {}
