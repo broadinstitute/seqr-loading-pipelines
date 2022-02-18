@@ -19,10 +19,7 @@ contig_recoding={'1': 'chr1', '10': 'chr10', '11': 'chr11', '12': 'chr12', '13':
 
 
 def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
-    if url.startswith('gs://'):
-        url = f'https://storage.googleapis.com/{requests.utils.quote(url[5:])}'
-
-    if not (url and url.startswith(("http://", "https://", "ftp://"))):
+    if not (url and url.startswith(("http://", "https://"))):
         raise ValueError("Invalid url: {}".format(url))
 
     local_file_path = os.path.join(to_dir, os.path.basename(url.rstrip('/')))
