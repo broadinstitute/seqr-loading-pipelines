@@ -47,10 +47,6 @@ class SeqrMitoSchema(BaseMTSchema):
     def filters(self):
         return self.mt.filters
 
-    @row_annotation()
-    def common_low_heteroplasmy(self):
-        return self.mt.common_low_heteroplasmy
-
     # @row_annotation()
     # def originalAltAlleles(self):
         # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
@@ -139,11 +135,11 @@ class SeqrMitoSchema(BaseMTSchema):
     def mitomap(self):
         return self._selected_ref_data.mitomap
 
-    @row_annotation(name='APOGEE_score')
+    @row_annotation(name='APOGEE')
     def mitimpact(self):
         return self._selected_ref_data.mitimpact
 
-    @row_annotation()
+    @row_annotation(name='HmtVar')
     def hmtvar(self):
         return self._selected_ref_data.hmtvar
 
@@ -174,6 +170,26 @@ class SeqrMitoVariantSchema(SeqrMitoSchema):
     def an(self):
         return self.mt.AN
 
+    @row_annotation(name='AC_het')
+    def ac_het(self):
+        return self.mt.AC_het
+
+    @row_annotation(name='AF_het')
+    def af_het(self):
+        return self.mt.AF_het
+
+    @row_annotation()
+    def common_low_heteroplasmy(self):
+        return self.mt.common_low_heteroplasmy
+
+    @row_annotation()
+    def hap_defining_variant(self):
+        return self.mt.hap_defining_variant
+
+    @row_annotation()
+    def mitotip_trna_prediction(self):
+        return self.mt.mitotip_trna_prediction
+
 
 class SeqrMitoGenotypesSchema(BaseMTSchema):
 
@@ -201,7 +217,7 @@ class SeqrMitoGenotypesSchema(BaseMTSchema):
         })
 
     @row_annotation(fn_require=genotypes)
-    def samples_hl(self, start=0, end=45, step=5):
+    def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for ab.
         return hl.struct(**{
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(

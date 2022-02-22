@@ -6,13 +6,13 @@ import pprint
 import luigi
 import hail as hl
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
+from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
 from lib.model.mito_mt_schema import SeqrMitoSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema, SeqrMitoVariantsAndGenotypesSchema
 import seqr_loading
 
 logger = logging.getLogger(__name__)
 
-# --reference-ht-path gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht
+
 class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
     Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
@@ -82,7 +82,24 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
 
     def run(self):
         variants_mt = hl.read_matrix_table(self.input()[0].path)
+        variants_mt = variants_mt.drop('dbsnp_version',
+            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
+            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
+            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
+            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
+            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
+            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
+
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
+        genotypes_mt = genotypes_mt.drop('dbsnp_version',
+            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
+            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
+            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
+            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
+            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
+            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
+        genotypes_mt = genotypes_mt.drop('genomeVersion', 'vep_version', 'hail_version', 'sourceFilePath',
+            'sampleType')
         row_ht = genotypes_mt.rows().join(variants_mt.rows())
 
         row_ht = SeqrMitoVariantsAndGenotypesSchema.elasticsearch_row(row_ht)
