@@ -22,14 +22,16 @@ def run(args):
     joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'clinvar_mito', 'dbnsfp_mito'],
                          reference_genome='38')
 
-    logger.info(f'Writing to {OUTPUT_PATH}')
-    joined_ht.write(OUTPUT_PATH, overwrite=args.force_write)
+    output_path = args.output_path if args.output_path else OUTPUT_PATH
+    logger.info(f'Writing to {output_path}')
+    joined_ht.write(output_path, overwrite=args.force_write)
     logger.info('Done')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--force-write', help='Force write to an existing output file', action='store_true')
+    parser.add_argument('-o', '--output-path', help=f'Output path for the combined reference dataset. Default is {OUTPUT_PATH}')
     args = parser.parse_args()
 
     run(args)

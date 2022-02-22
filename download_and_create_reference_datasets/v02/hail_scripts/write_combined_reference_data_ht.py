@@ -188,25 +188,35 @@ CONFIG = {
     'mitimpact': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
-            'select': ['APOGEE_score']
+            'select': {'score': 'APOGEE_score'}
         }
     },
     'hmtvar': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
-            'select': ['disease_score']
+            'select': {'score': 'disease_score'}
         }
     },
     'helix_mito': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
-            'select': ['counts_hom', 'AF_hom', 'counts_het', 'AF_het', 'max_ARF']
+            'select': {
+                'AC_hom': 'counts_hom',
+                'AF_hom': 'AF_hom',
+                'AC_het': 'counts_het',
+                'AF_het': 'AF_het',
+                'max_hl': 'max_ARF',
+            }
         }
     },
     'clinvar_mito': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/clinvar/clinvar.GRCh38.chrM.ht',
-            'select': ['ALLELEID', 'CLNSIG', 'CLNREVSTAT']
+            'select': {
+                'allele_id': 'ALLELEID',
+                'clinical_significance': 'CLNSIG',
+                'gold_stars': 'CLNREVSTAT'
+            }
         }
     },
     'dbnsfp_mito': {
