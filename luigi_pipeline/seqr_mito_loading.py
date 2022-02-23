@@ -24,6 +24,13 @@ class SeqrMitoVariantMTTask(seqr_loading.SeqrVCFToMTTask):
         pprint.pprint(self.__dict__)
 
         mt = hl.read_matrix_table(self.source_paths[0])
+        mt = mt.drop('dbsnp_version',
+            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
+            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
+            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
+            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
+            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
+            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         if self.remap_path:
@@ -85,22 +92,7 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
 
     def run(self):
         variants_mt = hl.read_matrix_table(self.input()[0].path)
-        variants_mt = variants_mt.drop('dbsnp_version',
-            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
-            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
-            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
-            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
-            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
-            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
-
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
-        genotypes_mt = genotypes_mt.drop('dbsnp_version',
-            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
-            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
-            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
-            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
-            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
-            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
         genotypes_mt = genotypes_mt.drop('genomeVersion', 'vep_version', 'hail_version', 'sourceFilePath',
             'sampleType')
         row_ht = genotypes_mt.rows().join(variants_mt.rows())
