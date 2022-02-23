@@ -7,7 +7,7 @@ import luigi
 import hail as hl
 
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
-from lib.model.mito_mt_schema import SeqrMitoSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema, SeqrMitoVariantsAndGenotypesSchema
+from lib.model.mito_mt_schema import SeqrMitoVariantSchema, SeqrMitoGenotypesSchema, SeqrMitoVariantsAndGenotypesSchema
 import seqr_loading
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class SeqrMitoVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
-    Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
+    Loads all annotations for the variants of a VCF (MT) into a Hail Table (parent class of MT is a misnomer).
     """
     high_constraint_interval_path = luigi.Parameter(description='Path to the tsv file storing the high constraint intervals.')
 
