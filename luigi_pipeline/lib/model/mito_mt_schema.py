@@ -7,8 +7,9 @@ from hail_scripts.computed_fields import vep
 
 class SeqrMitoSchema(BaseMTSchema):
 
-    def __init__(self, *args, ref_data, **kwargs):
+    def __init__(self, *args, ref_data, high_constraint_region, **kwargs):
         self._ref_data = ref_data
+        self._high_constraint_region = high_constraint_region
 
         # See _selected_ref_data
         self._selected_ref_data_cache = None
@@ -46,12 +47,6 @@ class SeqrMitoSchema(BaseMTSchema):
     @row_annotation()
     def filters(self):
         return self.mt.filters
-
-    # @row_annotation()
-    # def originalAltAlleles(self):
-        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
-        # If we can get it to not drop it, we should revert this to `old_locus`
-    #     return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=vep)
     def sorted_transcript_consequences(self):
@@ -189,6 +184,10 @@ class SeqrMitoVariantSchema(SeqrMitoSchema):
     @row_annotation()
     def mitotip_trna_prediction(self):
         return self.mt.mitotip_trna_prediction
+
+    @row_annotation()
+    def high_constraint_region(self):
+        return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
 
 class SeqrMitoGenotypesSchema(BaseMTSchema):

@@ -13,10 +13,11 @@ import seqr_loading
 logger = logging.getLogger(__name__)
 
 
-class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
+class SeqrMitoVariantMTTask(seqr_loading.SeqrVCFToMTTask):
     """
     Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
     """
+    high_constraint_interval_path = luigi.Parameter(description='Path to the tsv file storing the high constraint intervals.')
 
     def read_mt_write_mt(self, schema_cls=SeqrMitoVariantsAndGenotypesSchema):
         logger.info("Args:")
@@ -32,7 +33,9 @@ class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
 
         ref_data = hl.read_table(self.reference_ht_path)
 
-        mt = schema_cls(mt, ref_data=ref_data).annotate_all(
+        high_constraint_region = hl.import_locus_intervals(self.high_constraint_interval_path, reference_genome='GRCh38')
+
+        mt = schema_cls(mt, ref_data=ref_data, high_constraint_region=high_constraint_region).annotate_all(
             overwrite=True).select_annotated_mt()
 
         mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
@@ -48,14 +51,14 @@ class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
         self.read_mt_write_mt(schema_cls=SeqrMitoVariantSchema)
 
 
-class SeqrVCFToGenotypesMTTask(HailMatrixTableTask):
+class SeqrMitoGenotypesMTTask(HailMatrixTableTask):
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
                                           description="Path to a tsv file with one column of sample IDs: s.")
 
     def requires(self):
-        return [SeqrVCFToVariantMTTask()]
+        return [SeqrMitoVariantMTTask()]
 
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
@@ -78,7 +81,7 @@ class SeqrMTToESOptimizedTask(HailElasticSearchTask):
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [SeqrVCFToVariantMTTask(), SeqrVCFToGenotypesMTTask()]
+        return [SeqrMitoVariantMTTask(), SeqrMitoGenotypesMTTask()]
 
     def run(self):
         variants_mt = hl.read_matrix_table(self.input()[0].path)
