@@ -1,7 +1,7 @@
 import argparse
-import logging
 from datetime import datetime
 from functools import reduce
+from copy import deepcopy
 import os
 
 import hail as hl
@@ -9,9 +9,6 @@ import hail as hl
 VERSION = '2.0.4' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
-
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')
-logger = logging.getLogger(__name__)
 
 '''
 Configurations of dataset to combine. 
@@ -218,23 +215,11 @@ CONFIG = {
                 'gold_stars': 'CLNREVSTAT'
             }
         }
-    },
-    'dbnsfp_mito': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/all_reference_data/v2/combined_reference_data_grch38-2.0.4.ht',
-            'filter': lambda ht: ht.locus.contig == 'chrM',
-            'select': {
-                'SIFT_pred': 'dbnsfp.SIFT_pred',
-                'Polyphen2_HVAR_pred': 'dbnsfp.Polyphen2_HVAR_pred',
-                'MutationTaster_pred': 'dbnsfp.MutationTaster_pred',
-                'FATHMM_pred': 'dbnsfp.FATHMM_pred',
-                'MetaSVM_pred': 'dbnsfp.MetaSVM_pred',
-                'REVEL_score': 'dbnsfp.REVEL_score',
-                'GERP_RS': 'dbnsfp.GERP_RS',
-                'phastCons100way_vertebrate': 'dbnsfp.phastCons100way_vertebrate'}
-        }
     }
 }
+
+CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
+CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
@@ -366,14 +351,13 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
 
 
 def run(args):
-    # hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
 
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
-    logger.info(f'Writing to {output_path}')
+    print('Writing to %s' % output_path)
     joined_ht.write(os.path.join(output_path))
 
 

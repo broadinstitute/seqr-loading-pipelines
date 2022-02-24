@@ -18,13 +18,13 @@ contig_recoding={'1': 'chr1', '10': 'chr10', '11': 'chr11', '12': 'chr12', '13':
  'MT': 'chrM', 'NW_009646201.1': 'chr1'}
 
 
-def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
+def _download_file(url, to_dir=tempfile.gettempdir(), skip_verify=False):
     if not (url and url.startswith(("http://", "https://"))):
         raise ValueError("Invalid url: {}".format(url))
 
     local_file_path = os.path.join(to_dir, os.path.basename(url.rstrip('/')))
 
-    if verify != False:
+    if not skip_verify:
         response = requests.head(url)
         size = int(response.headers.get('Content-Length', '0'))
         if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) == size:
@@ -32,7 +32,7 @@ def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
             return local_file_path
 
     is_gz = url.endswith(".gz") or url.endswith(".zip")
-    response = requests.get(url, stream=is_gz, verify=True if verify is None else verify)
+    response = requests.get(url, stream=is_gz, verify=not skip_verify)
     input_iter = response if is_gz else response.iter_content()
 
     logger.info("Downloading {} to {}".format(url, local_file_path))
@@ -46,7 +46,7 @@ def download_file(url, to_dir=tempfile.gettempdir(), verify=True):
     return local_file_path
 
 
-def convert_json2tsv(json_path):
+def _convert_json_to_tsv(json_path):
     with open(json_path, 'r') as f:
         data = json.load(f)
     tsv_path = f'{json_path[:-5]}.tsv' if json_path.endswith('.json') else f'{json_path}.tsv'
@@ -58,9 +58,9 @@ def convert_json2tsv(json_path):
     return tsv_path
 
 
-def load_ht(config, force_write=True):
+def _load_mito_ht(config, force_write=True):
     logger.info(f'Downloading dataset from {config["input_path"]}.')
-    dn_path = download_file(config['input_path'], verify=config.get('verify_ssl'))
+    dn_path = _download_file(config['input_path'], skip_verify=config.get('skip_verify_ssl'))
 
     if dn_path.endswith('.zip'):
         with zipfile.ZipFile(dn_path, 'r') as zip:
@@ -72,7 +72,7 @@ def load_ht(config, force_write=True):
     if config['input_type'] == 'vcf':
         ht = hl.import_vcf(dn_path, force_bgz=True, contig_recoding=contig_recoding).rows()
     elif config['input_type'] == 'json':
-        tsv_path = convert_json2tsv(dn_path)
+        tsv_path = _convert_json_to_tsv(dn_path)
         ht = hl.import_table(tsv_path, types=types)
     else:
         ht = hl.import_table(dn_path, types=types)
@@ -94,9 +94,11 @@ def load(config):
     parser.add_argument('-f', '--force-write', help='Force write to an existing output file', action='store_true')
     args = parser.parse_args()
 
-    # If there are out-of-memory error, set the environment variable with the following command
+    # If there are out-of-memory errors, such as "java.lang.OutOfMemoryError: GC overhead limit exceeded"
+    # then you may need to set the environment variable with the following command
     # $ export PYSPARK_SUBMIT_ARGS="--driver-memory 4G pyspark-shell"
     # "4G" in the environment variable can be bigger if your computer has a larger memory.
-    hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
+    # See more information in https://discuss.hail.is/t/java-heap-space-out-of-memory/1575/6
+    hl.init(default_reference='GRCh38')
 
-    load_ht(config, args.force_write)
+    _load_mito_ht(config, args.force_write)
