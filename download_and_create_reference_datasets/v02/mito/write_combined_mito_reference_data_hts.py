@@ -13,9 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 def run(args):
-    # If there are out-of-memory error, set the environment variable with the following command
+    # If there are out-of-memory errors, such as "java.lang.OutOfMemoryError: GC overhead limit exceeded"
+    # then you may need to set the environment variable with the following command
     # $ export PYSPARK_SUBMIT_ARGS="--driver-memory 4G pyspark-shell"
     # "4G" in the environment variable can be bigger if your computer has a larger memory.
+    # See more information in https://discuss.hail.is/t/java-heap-space-out-of-memory/1575/6
     hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
 
     logger.info('Joining the mitochondrial reference datasets')
