@@ -209,11 +209,7 @@ CONFIG = {
     'clinvar_mito': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/clinvar/clinvar.GRCh38.chrM.ht',
-            'select': {
-                'allele_id': 'ALLELEID',
-                'clinical_significance': 'CLNSIG',
-                'gold_stars': 'CLNREVSTAT'
-            }
+            'select': ['allele_id', 'clinical_significance', 'gold_stars']
         }
     }
 }
