@@ -1,126 +1,21 @@
 import hail as hl
 
 from lib.model.base_mt_schema import BaseMTSchema, row_annotation
-from hail_scripts.computed_fields import variant_id
-from hail_scripts.computed_fields import vep
+from lib.model.seqr_mt_schema import SeqrSchema
 
 
-class SeqrMitoSchema(BaseMTSchema):
+def makeup_dummy_ref_data(ref_data):
+    return ref_data.annotate(cadd='', dbnsfp='', geno2mp='', gnomad_exomes='', gnomad_exome_coverage='',
+                      gnomad_genomes='', gnomad_genome_coverage='', eigen='', exac='', g1k='', mpc='', primate_ai='',
+                      splice_ai='', topmed='', info=hl.struct(ALLELEID='', CLNSIG='', gold_stars=''))
+
+
+class SeqrMitoSchema(SeqrSchema):
 
     def __init__(self, *args, ref_data, high_constraint_region, **kwargs):
-        self._ref_data = ref_data
+        ref_data = makeup_dummy_ref_data(ref_data)
+        super().__init__(*args, ref_data=ref_data, clinvar_data=ref_data, **kwargs)
         self._high_constraint_region = high_constraint_region
-
-        # See _selected_ref_data
-        self._selected_ref_data_cache = None
-
-        super().__init__(*args, **kwargs)
-
-    def set_mt(self, mt):
-        super().set_mt(mt)
-        # set this to None, and the @property _selected_ref_data
-        # can populate it if it gets used after each MT update.
-        self._selected_ref_data_cache = None
-
-    @property
-    def _selected_ref_data(self):
-        """
-        Reuse `self._ref_data[self.mt.row_key]` for all annotations.
-        We'll use the @property _selected_ref_data to access this
-        value, and lazily cache it (so as not to compute it if it
-        doesn't get get accessed after an update to self.mt).
-
-        Returns: self._ref_data[self.mt.row_key]
-        """
-        if not self._selected_ref_data_cache:
-            self._selected_ref_data_cache = self._ref_data[self.mt.row_key]
-        return self._selected_ref_data_cache
-
-    @row_annotation()
-    def vep(self):
-        return self.mt.vep
-
-    @row_annotation()
-    def rsid(self):
-        return self.mt.rsid
-
-    @row_annotation()
-    def filters(self):
-        return self.mt.filters
-
-    @row_annotation(name='sortedTranscriptConsequences', fn_require=vep)
-    def sorted_transcript_consequences(self):
-        return vep.get_expr_for_vep_sorted_transcript_consequences_array(self.mt.vep)
-
-    @row_annotation(name='docId')
-    def doc_id(self, length=512):
-        return variant_id.get_expr_for_variant_id(self.mt, length)
-
-    @row_annotation(name='variantId')
-    def variant_id(self):
-        return variant_id.get_expr_for_variant_id(self.mt)
-
-    @row_annotation()
-    def contig(self):
-        return variant_id.get_expr_for_contig(self.mt.locus)
-
-    @row_annotation()
-    def pos(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation()
-    def start(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation()
-    def end(self):
-        return variant_id.get_expr_for_end_pos(self.mt)
-
-    @row_annotation()
-    def ref(self):
-        return variant_id.get_expr_for_ref_allele(self.mt)
-
-    @row_annotation()
-    def alt(self):
-        return variant_id.get_expr_for_alt_allele(self.mt)
-
-    @row_annotation()
-    def xpos(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation()
-    def xstart(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation()
-    def xstop(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
-
-    @row_annotation(fn_require=sorted_transcript_consequences)
-    def domains(self):
-        return vep.get_expr_for_vep_protein_domains_set_from_sorted(
-            self.mt.sortedTranscriptConsequences)
-
-    @row_annotation(name='transcriptConsequenceTerms', fn_require=sorted_transcript_consequences)
-    def transcript_consequence_terms(self):
-        return vep.get_expr_for_vep_consequence_terms_set(self.mt.sortedTranscriptConsequences)
-
-    @row_annotation(name='transcriptIds', fn_require=sorted_transcript_consequences)
-    def transcript_ids(self):
-        return vep.get_expr_for_vep_transcript_ids_set(self.mt.sortedTranscriptConsequences)
-
-    @row_annotation(name='mainTranscript', fn_require=sorted_transcript_consequences)
-    def main_transcript(self):
-        return vep.get_expr_for_worst_transcript_consequence_annotations_struct(
-            self.mt.sortedTranscriptConsequences)
-
-    @row_annotation(name='geneIds', fn_require=sorted_transcript_consequences)
-    def gene_ids(self):
-        return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences)
-
-    @row_annotation(name='codingGeneIds', fn_require=sorted_transcript_consequences)
-    def coding_gene_ids(self):
-        return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences, only_coding_genes=True)
 
     @row_annotation()
     def gnomad(self):
@@ -149,6 +44,58 @@ class SeqrMitoSchema(BaseMTSchema):
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp_mito
+
+    # Remove the inherited unwanted annotation function
+    def aIndex(self):
+        pass
+
+    def wasSplit(self):
+        pass
+
+    def originalAltAlleles(self):
+        pass
+
+    def rg37_locus(self):
+        pass
+
+    def cadd(self):
+        pass
+
+    def geno2mp(self):
+        pass
+
+    def gnomad_exomes(self):
+        pass
+
+    def gnomad_exome_coverage(self):
+        pass
+
+    def gnomad_genomes(self):
+        pass
+
+    def gnomad_genome_coverage(self):
+        pass
+
+    def exac(self):
+        pass
+
+    def g1k(self):
+        pass
+
+    def mpc(self):
+        pass
+
+    def primate_ai(self):
+        pass
+
+    def splice_ai(self):
+        pass
+
+    def topmed(self):
+        pass
+
+    def hgmd(self):
+        pass
 
 
 class SeqrMitoVariantSchema(SeqrMitoSchema):
