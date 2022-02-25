@@ -1,13 +1,22 @@
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
-from lib.model.seqr_mt_schema import SeqrSchema
+from lib.model.base_mt_schema import row_annotation
+from lib.model.seqr_mt_schema import SeqrSchema, SeqrGenotypesSchema
 
 
 def makeup_dummy_ref_data(ref_data):
+    """
+    Annotate some dummy fields to satisfy the base class
+    Args:
+        ref_data: The reference data Hail table
+
+    Returns: Annotated reference data Hail table
+
+    """
     return ref_data.annotate(cadd='', dbnsfp='', geno2mp='', gnomad_exomes='', gnomad_exome_coverage='',
-                      gnomad_genomes='', gnomad_genome_coverage='', eigen='', exac='', g1k='', mpc='', primate_ai='',
-                      splice_ai='', topmed='', info=hl.struct(ALLELEID='', CLNSIG='', gold_stars=''))
+                             gnomad_genomes='', gnomad_genome_coverage='', eigen='', exac='', g1k='', mpc='',
+                             primate_ai='', splice_ai='', topmed='',
+                             info=hl.struct(ALLELEID='', CLNSIG='', gold_stars=''))
 
 
 class SeqrMitoSchema(SeqrSchema):
@@ -137,32 +146,9 @@ class SeqrMitoVariantSchema(SeqrMitoSchema):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
 
-class SeqrMitoGenotypesSchema(BaseMTSchema):
+class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
 
-    @row_annotation()
-    def genotypes(self):
-        return hl.agg.collect(hl.struct(**self._genotype_fields()))
-
-    @row_annotation(fn_require=genotypes)
-    def samples_no_call(self):
-        return self._genotype_filter_samples(lambda g: g.num_alt == -1)
-
-    @row_annotation(fn_require=genotypes)
-    def samples_num_alt(self, start=1, end=3, step=1):
-        return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
-            for i in range(start, end, step)
-        })
-
-    @row_annotation(fn_require=genotypes)
-    def samples_gq(self, start=0, end=95, step=5):
-        # struct of x_to_y to a set of samples in range of x and y for gq.
-        return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
-            for i in range(start, end, step)
-        })
-
-    @row_annotation(fn_require=genotypes)
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for ab.
         return hl.struct(**{
@@ -171,10 +157,6 @@ class SeqrMitoGenotypesSchema(BaseMTSchema):
             )
             for i in range(start, end, step)
         })
-
-    def _genotype_filter_samples(self, filter):
-        # Filter on the genotypes.
-        return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
 
     def _genotype_fields(self):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
