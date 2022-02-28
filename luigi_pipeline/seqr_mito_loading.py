@@ -67,7 +67,7 @@ class SeqrMitoMTToESTask(HailElasticSearchTask):
 
         row_ht = SeqrMitoVariantsAndGenotypesSchema.elasticsearch_row(mt.rows())
         if self.project_guid:
-            self.es_index = get_es_index_name(f'{self.project_guid}__mito__', mt.globals_table().take(1)[0])
+            self.es_index = get_es_index_name(f'{self.project_guid}__mito', mt.globals_table().take(1)[0])
         es_shards = self._mt_num_shards(mt)
         self.export_table_to_elasticsearch(row_ht, es_shards)
 
