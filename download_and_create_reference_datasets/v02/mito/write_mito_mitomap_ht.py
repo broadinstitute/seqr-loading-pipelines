@@ -11,7 +11,7 @@ CONFIG = {
     'annotate': {
         'locus': lambda ht: hl.locus('chrM', hl.parse_int32(ht.Allele.first_match_in('m.([0-9]+)')[0])),
         'alleles': lambda ht: ht.Allele.first_match_in('m.[0-9]+([ATGC]+)>([ATGC]+)'),
-        'pathogenic': lambda ht: hl.is_defined(ht['Associated Diseases'])
+        'pathogenic': lambda ht: True
     },
 }
 
