@@ -1,31 +1,16 @@
 import hail as hl
 
 from lib.model.base_mt_schema import row_annotation
-from lib.model.seqr_mt_schema import SeqrSchema, SeqrGenotypesSchema
+from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema
 
 
-def makeup_dummy_ref_data(ref_data):
-    """
-    Annotate some dummy fields to satisfy the base class
-    Args:
-        ref_data: The reference data Hail table
-
-    Returns: Annotated reference data Hail table
-
-    """
-    return ref_data.annotate(cadd='', dbnsfp='', geno2mp='', gnomad_exomes='', gnomad_exome_coverage='',
-                             gnomad_genomes='', gnomad_genome_coverage='', eigen='', exac='', g1k='', mpc='',
-                             primate_ai='', splice_ai='', topmed='',
-                             info=hl.struct(ALLELEID='', CLNSIG='', gold_stars=''))
-
-
-class SeqrMitoSchema(SeqrSchema):
+class SeqrMitoVariantSchema(SeqrVariantSchema):
 
     def __init__(self, *args, ref_data, high_constraint_region, **kwargs):
-        ref_data = makeup_dummy_ref_data(ref_data)
-        super().__init__(*args, ref_data=ref_data, clinvar_data=ref_data, **kwargs)
+        super().__init__(*args, ref_data=ref_data, clinvar_data=None, **kwargs)
         self._high_constraint_region = high_constraint_region
 
+    # Mitochondrial only fields
     @row_annotation()
     def gnomad(self):
         return self._selected_ref_data.gnomad_mito
@@ -53,6 +38,43 @@ class SeqrMitoSchema(SeqrSchema):
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp_mito
+
+    @row_annotation()
+    def common_low_heteroplasmy(self):
+        return self.mt.common_low_heteroplasmy
+
+    @row_annotation()
+    def hap_defining_variant(self):
+        return self.mt.hap_defining_variant
+
+    @row_annotation()
+    def mitotip_trna_prediction(self):
+        return self.mt.mitotip_trna_prediction
+
+    @row_annotation()
+    def high_constraint_region(self):
+        return hl.is_defined(self._high_constraint_region[self.mt.locus])
+
+    # Fields with the same name but annotated differently
+    @row_annotation(name='AC')
+    def ac(self):
+        return self.mt.AC_hom
+
+    @row_annotation(name='AF')
+    def af(self):
+        return self.mt.AF_hom
+
+    @row_annotation(name='AN')
+    def an(self):
+        return self.mt.AN
+
+    @row_annotation(name='AC_het')
+    def ac_het(self):
+        return self.mt.AC_het
+
+    @row_annotation(name='AF_het')
+    def af_het(self):
+        return self.mt.AF_het
 
     # Remove the inherited unwanted annotation function
     def aIndex(self):
@@ -85,6 +107,9 @@ class SeqrMitoSchema(SeqrSchema):
     def gnomad_genome_coverage(self):
         pass
 
+    def eigen(self):
+        pass
+
     def exac(self):
         pass
 
@@ -105,45 +130,6 @@ class SeqrMitoSchema(SeqrSchema):
 
     def hgmd(self):
         pass
-
-
-class SeqrMitoVariantSchema(SeqrMitoSchema):
-
-    @row_annotation(name='AC')
-    def ac(self):
-        return self.mt.AC_hom
-
-    @row_annotation(name='AF')
-    def af(self):
-        return self.mt.AF_hom
-
-    @row_annotation(name='AN')
-    def an(self):
-        return self.mt.AN
-
-    @row_annotation(name='AC_het')
-    def ac_het(self):
-        return self.mt.AC_het
-
-    @row_annotation(name='AF_het')
-    def af_het(self):
-        return self.mt.AF_het
-
-    @row_annotation()
-    def common_low_heteroplasmy(self):
-        return self.mt.common_low_heteroplasmy
-
-    @row_annotation()
-    def hap_defining_variant(self):
-        return self.mt.hap_defining_variant
-
-    @row_annotation()
-    def mitotip_trna_prediction(self):
-        return self.mt.mitotip_trna_prediction
-
-    @row_annotation()
-    def high_constraint_region(self):
-        return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
 
 class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
