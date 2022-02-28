@@ -47,7 +47,7 @@ class SeqrMitoVariantSchema(SeqrVariantSchema):
     def high_constraint_region(self):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
-    # Fields with the same name but annotated differently
+    # Fields with the same names but annotated differently
     @row_annotation()
     def clinvar(self):
         return self._selected_ref_data.clinvar_mito
