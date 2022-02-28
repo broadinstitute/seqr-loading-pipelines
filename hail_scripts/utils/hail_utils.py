@@ -60,6 +60,10 @@ def import_vcf(
     contig_recoding = {
         **{ref_contig.replace("chr", ""): ref_contig for ref_contig in ref.contigs if "chr" in ref_contig},
         **{f"chr{ref_contig}": ref_contig for ref_contig in ref.contigs if "chr" not in ref_contig}}
+    if genome_version == 38:
+        contig_recoding['MT'] = 'chrM'
+    else:
+        contig_recoding['chrM'] = 'MT'
 
     mt = hl.import_vcf(
         vcf_path,
