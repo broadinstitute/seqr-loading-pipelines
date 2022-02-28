@@ -32,14 +32,6 @@ class SeqrMitoVariantSchema(SeqrVariantSchema):
         return self._selected_ref_data.helix_mito
 
     @row_annotation()
-    def clinvar(self):
-        return self._selected_ref_data.clinvar_mito
-
-    @row_annotation()
-    def dbnsfp(self):
-        return self._selected_ref_data.dbnsfp_mito
-
-    @row_annotation()
     def common_low_heteroplasmy(self):
         return self.mt.common_low_heteroplasmy
 
@@ -56,6 +48,14 @@ class SeqrMitoVariantSchema(SeqrVariantSchema):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
     # Fields with the same name but annotated differently
+    @row_annotation()
+    def clinvar(self):
+        return self._selected_ref_data.clinvar_mito
+
+    @row_annotation()
+    def dbnsfp(self):
+        return self._selected_ref_data.dbnsfp_mito
+
     @row_annotation(name='AC')
     def ac(self):
         return self.mt.AC_hom
