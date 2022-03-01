@@ -5,7 +5,7 @@ from hail_scripts.computed_fields import variant_id
 from hail_scripts.computed_fields import vep
 
 
-class SeqrSchema(BaseMTSchema):
+class BaseSeqrSchema(BaseMTSchema):
 
     def __init__(self, *args, ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
@@ -48,20 +48,6 @@ class SeqrSchema(BaseMTSchema):
     @row_annotation()
     def filters(self):
         return self.mt.filters
-
-    @row_annotation()
-    def aIndex(self):
-        return self.mt.a_index
-    
-    @row_annotation()
-    def wasSplit(self):
-        return self.mt.was_split
-
-    @row_annotation()
-    def originalAltAlleles(self):
-        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
-        # If we can get it to not drop it, we should revert this to `old_locus`
-        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=vep)
     def sorted_transcript_consequences(self):
@@ -111,12 +97,6 @@ class SeqrSchema(BaseMTSchema):
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
-    @row_annotation()
-    def rg37_locus(self):
-        if self.mt.locus.dtype.reference_genome.name != "GRCh38":
-            raise RowAnnotationOmit
-        return self.mt.rg37_locus
-
     @row_annotation(fn_require=sorted_transcript_consequences)
     def domains(self):
         return vep.get_expr_for_vep_protein_domains_set_from_sorted(
@@ -142,6 +122,28 @@ class SeqrSchema(BaseMTSchema):
     @row_annotation(name='codingGeneIds', fn_require=sorted_transcript_consequences)
     def coding_gene_ids(self):
         return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences, only_coding_genes=True)
+
+
+class SeqrSchema(BaseSeqrSchema):
+    @row_annotation()
+    def aIndex(self):
+        return self.mt.a_index
+
+    @row_annotation()
+    def wasSplit(self):
+        return self.mt.was_split
+
+    @row_annotation()
+    def originalAltAlleles(self):
+        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
+        # If we can get it to not drop it, we should revert this to `old_locus`
+        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
+
+    @row_annotation()
+    def rg37_locus(self):
+        if self.mt.locus.dtype.reference_genome.name != "GRCh38":
+            raise RowAnnotationOmit
+        return self.mt.rg37_locus
 
     @row_annotation()
     def cadd(self):

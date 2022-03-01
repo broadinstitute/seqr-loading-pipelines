@@ -1,10 +1,10 @@
 import hail as hl
 
 from lib.model.base_mt_schema import row_annotation
-from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema
+from lib.model.seqr_mt_schema import BaseSeqrSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 
-class SeqrMitoVariantSchema(SeqrVariantSchema):
+class SeqrMitoVariantSchema(BaseSeqrSchema):
 
     def __init__(self, *args, ref_data, high_constraint_region, **kwargs):
         super().__init__(*args, ref_data=ref_data, clinvar_data=None, **kwargs)
@@ -76,67 +76,12 @@ class SeqrMitoVariantSchema(SeqrVariantSchema):
     def af_het(self):
         return self.mt.AF_het
 
-    # Remove the inherited unwanted annotation function
-    def aIndex(self):
-        pass
-
-    def wasSplit(self):
-        pass
-
-    def originalAltAlleles(self):
-        pass
-
-    def rg37_locus(self):
-        pass
-
-    def cadd(self):
-        pass
-
-    def geno2mp(self):
-        pass
-
-    def gnomad_exomes(self):
-        pass
-
-    def gnomad_exome_coverage(self):
-        pass
-
-    def gnomad_genomes(self):
-        pass
-
-    def gnomad_genome_coverage(self):
-        pass
-
-    def eigen(self):
-        pass
-
-    def exac(self):
-        pass
-
-    def g1k(self):
-        pass
-
-    def mpc(self):
-        pass
-
-    def primate_ai(self):
-        pass
-
-    def splice_ai(self):
-        pass
-
-    def topmed(self):
-        pass
-
-    def hgmd(self):
-        pass
-
 
 class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_ab(self, start=0, end=45, step=5):
-        # struct of x_to_y to a set of samples in range of x and y for ab.
+        # struct of x_to_y to a set of samples in range of x and y for hl.
         return hl.struct(**{
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.hl*100) >= i) & ((g.hl*100) < i+step))
@@ -145,7 +90,7 @@ class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
         })
 
     def _genotype_fields(self):
-        # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
+        # Convert the mt genotype entries into num_alt, gq, hl, mito_cn, contamination, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
             'num_alt': hl.cond(is_called, hl.cond(self.mt.HL>=0.95, 2, hl.cond(self.mt.HL>=0.01, 1, 0)), -1),
@@ -165,19 +110,4 @@ class SeqrMitoVariantsAndGenotypesSchema(SeqrMitoVariantSchema, SeqrMitoGenotype
 
     @staticmethod
     def elasticsearch_row(ds):
-        """
-        Prepares the mt to export using ElasticsearchClient V02.
-        - Flattens nested structs
-        - drops locus and alleles key
-        :return:
-        """
-        # Converts a mt to the row equivalent.
-        if isinstance(ds, hl.MatrixTable):
-            ds = ds.rows()
-        # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = ds.drop('vep').flatten()
-        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
-        # be normal fields.
-        table = table.drop(table.locus, table.alleles)
-
-        return table
+        return SeqrVariantsAndGenotypesSchema.elasticsearch_row(ds)

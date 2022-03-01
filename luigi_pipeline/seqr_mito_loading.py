@@ -8,12 +8,12 @@ import hail as hl
 
 from lib.model.mito_mt_schema import SeqrMitoVariantsAndGenotypesSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
-import seqr_loading
+from seqr_loading import SeqrVCFToMTTask
 
 logger = logging.getLogger(__name__)
 
 
-class SeqrMitoVariantMTTask(seqr_loading.SeqrVCFToMTTask):
+class SeqrMitoVariantMTTask(SeqrVCFToMTTask):
     """
     Loads all annotations for the variants of a VCF (MT) into a Hail Table (parent class of MT is a misnomer).
     """
