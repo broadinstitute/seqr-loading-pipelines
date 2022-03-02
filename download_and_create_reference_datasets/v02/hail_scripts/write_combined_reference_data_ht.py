@@ -1,7 +1,6 @@
 import argparse
 from datetime import datetime
 from functools import reduce
-from copy import deepcopy
 import os
 
 import hail as hl
@@ -169,47 +168,8 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
             'select': {'HPO_Count': 'info.HPO_CT'}
         }
-    },
-    'gnomad_mito': {
-        '38': {
-            'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
-            'select': ['AN', 'AC_hom', 'AC_het', 'AF_hom', 'AF_het', 'max_hl']
-        }
-    },
-    'mitomap': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/Mitomap Confirmed Mutations Feb. 04 2022.ht',
-            'select': ['pathogenic']
-        }
-    },
-    'mitimpact': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
-            'select': {'score': 'APOGEE_score'}
-        }
-    },
-    'hmtvar': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
-            'select': {'score': 'disease_score'}
-        }
-    },
-    'helix_mito': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
-            'select': {
-                'AC_hom': 'counts_hom',
-                'AF_hom': 'AF_hom',
-                'AC_het': 'counts_het',
-                'AF_het': 'AF_het',
-                'max_hl': 'max_ARF',
-            }
-        }
-    },
+    }
 }
-
-CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
-CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
@@ -302,9 +262,6 @@ def get_ht(dataset, reference_genome):
     print(f"Reading in {dataset}")
     base_ht = hl.read_table(config['path'])
 
-    if config.get('filter'):
-        base_ht = base_ht.filter(config['filter'](base_ht))
-
     # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
@@ -337,18 +294,19 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
                                          datasets=hl.dict(included_dataset),
                                          version=VERSION)
     joined_ht.describe()
-    return joined_ht
+
+    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=reference_genome, version=VERSION))
+    print('Writing to %s' % output_path)
+
+    joined_ht.write(os.path.join(output_path))
 
 
 def run(args):
-    joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+    hl._set_flags(no_whole_stage_codegen='1') # hail 0.2.78 hits an error on the join, this flag gets around it 
+    join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
-
-    output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
-    print('Writing to %s' % output_path)
-    joined_ht.write(os.path.join(output_path))
 
 
 if __name__ == "__main__":
