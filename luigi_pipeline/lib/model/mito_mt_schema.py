@@ -48,10 +48,6 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
     # Fields with the same names but annotated differently
-    @row_annotation()
-    def dbnsfp(self):
-        return self._selected_ref_data.dbnsfp_mito
-
     @row_annotation(name='AC')
     def ac(self):
         return self.mt.AC_hom

@@ -85,11 +85,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         self.read_vcf_write_mt()
 
-    def read_vcf_write_mt(self, schema_cls=SeqrVariantsAndGenotypesSchema):
-        logger.info("Args:")
-        pprint.pprint(self.__dict__)
-
-        mt = self.import_vcf()
+    def subset_annotate_mt(self, mt, schema_cls, **kwargs):
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
@@ -106,13 +102,23 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
 
-        mt = schema_cls(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+        mt = schema_cls(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd, **kwargs).annotate_all(
             overwrite=True).select_annotated_mt()
 
         mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)
+
+        return mt
+
+    def read_vcf_write_mt(self, schema_cls=SeqrVariantsAndGenotypesSchema):
+        logger.info("Args:")
+        pprint.pprint(self.__dict__)
+
+        mt = self.import_vcf()
+
+        mt = self.subset_annotate_mt(mt, schema_cls)
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)

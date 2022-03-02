@@ -129,6 +129,10 @@ class BaseSeqrSchema(BaseMTSchema):
                             'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
                             'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
+    @row_annotation()
+    def dbnsfp(self):
+        return self._selected_ref_data.dbnsfp
+
 
 class SeqrSchema(BaseSeqrSchema):
     @row_annotation()
@@ -154,10 +158,6 @@ class SeqrSchema(BaseSeqrSchema):
     @row_annotation()
     def cadd(self):
         return self._selected_ref_data.cadd
-
-    @row_annotation()
-    def dbnsfp(self):
-        return self._selected_ref_data.dbnsfp
 
     @row_annotation()
     def geno2mp(self):
