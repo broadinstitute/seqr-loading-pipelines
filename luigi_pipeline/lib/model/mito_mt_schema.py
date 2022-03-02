@@ -6,8 +6,8 @@ from lib.model.seqr_mt_schema import BaseSeqrSchema, SeqrGenotypesSchema, SeqrVa
 
 class SeqrMitoVariantSchema(BaseSeqrSchema):
 
-    def __init__(self, *args, ref_data, high_constraint_region, **kwargs):
-        super().__init__(*args, ref_data=ref_data, clinvar_data=None, **kwargs)
+    def __init__(self, *args, ref_data, clinvar_data, high_constraint_region, **kwargs):
+        super().__init__(*args, ref_data=ref_data, clinvar_data=clinvar_data, **kwargs)
         self._high_constraint_region = high_constraint_region
 
     # Mitochondrial only fields
@@ -48,10 +48,6 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
     # Fields with the same names but annotated differently
-    @row_annotation()
-    def clinvar(self):
-        return self._selected_ref_data.clinvar_mito
-
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp_mito

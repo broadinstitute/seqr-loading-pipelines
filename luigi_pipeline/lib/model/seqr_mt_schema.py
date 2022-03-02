@@ -123,6 +123,12 @@ class BaseSeqrSchema(BaseMTSchema):
     def coding_gene_ids(self):
         return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences, only_coding_genes=True)
 
+    @row_annotation()
+    def clinvar(self):
+        return hl.struct(**{'allele_id': self._clinvar_data[self.mt.row_key].info.ALLELEID,
+                            'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
+                            'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
+
 
 class SeqrSchema(BaseSeqrSchema):
     @row_annotation()
@@ -207,12 +213,6 @@ class SeqrSchema(BaseSeqrSchema):
             raise RowAnnotationOmit
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
-
-    @row_annotation()
-    def clinvar(self):
-        return hl.struct(**{'allele_id': self._clinvar_data[self.mt.row_key].info.ALLELEID,
-                            'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
-                            'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
 
 class SeqrVariantSchema(SeqrSchema):
