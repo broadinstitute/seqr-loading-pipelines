@@ -6,19 +6,16 @@ import hail as hl
 
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
 from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
-import seqr_loading
+from seqr_loading import SeqrVCFToMTTask
 
 logger = logging.getLogger(__name__)
 
 
-class SeqrVCFToVariantMTTask(seqr_loading.SeqrVCFToMTTask):
+class SeqrVCFToVariantMTTask(SeqrVCFToMTTask):
     """
     Loads all annotations for the variants of a VCF into a Hail Table (parent class of MT is a misnomer).
     """
-
-    def run(self):
-        # We only want to use the Variant Schema.
-        self.read_vcf_write_mt(schema_cls=SeqrVariantSchema)
+    SCHEMA_CLASS = SeqrVariantSchema
 
 
 class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
