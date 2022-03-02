@@ -206,12 +206,6 @@ CONFIG = {
             }
         }
     },
-    'clinvar_mito': {
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/clinvar/clinvar.GRCh38.chrM.ht',
-            'select': ['allele_id', 'clinical_significance', 'gold_stars']
-        }
-    }
 }
 
 CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
