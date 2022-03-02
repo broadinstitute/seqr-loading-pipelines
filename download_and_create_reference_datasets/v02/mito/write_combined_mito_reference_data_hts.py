@@ -21,9 +21,10 @@ def run(args):
     hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
 
     logger.info('Joining the mitochondrial reference datasets')
-    joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'clinvar_mito', 'dbnsfp_mito'],
+    joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'dbnsfp_mito'],
                          reference_genome='38')
 
+    joined_ht = joined_ht.rename({'dbnsfp_mito': 'dbnsfp'})
     output_path = args.output_path if args.output_path else OUTPUT_PATH
     logger.info(f'Writing to {output_path}')
     joined_ht.write(output_path, overwrite=args.force_write)
