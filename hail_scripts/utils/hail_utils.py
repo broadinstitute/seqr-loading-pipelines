@@ -35,6 +35,7 @@ def import_table(
 def import_vcf(
         vcf_path: str,
         genome_version: str,
+        more_contig_recoding: dict = None,
         min_partitions: int = None,
         force_bgz: bool = True,
         drop_samples: bool = False,
@@ -44,6 +45,7 @@ def import_vcf(
 
     :param str vcf_path: MT to annotate with VEP
     :param str genome_version: "37" or "38"
+    :param dict more_contig_recoding: add more contig recoding for importing VCF
     :param int min_partitions: min partitions
     :param bool force_bgz: read .gz as a bgzipped file
     :param bool drop_samples: if True, discard genotype info
@@ -60,10 +62,8 @@ def import_vcf(
     contig_recoding = {
         **{ref_contig.replace("chr", ""): ref_contig for ref_contig in ref.contigs if "chr" in ref_contig},
         **{f"chr{ref_contig}": ref_contig for ref_contig in ref.contigs if "chr" not in ref_contig}}
-    if genome_version == '38':
-        contig_recoding['MT'] = 'chrM'
-    else:
-        contig_recoding['chrM'] = 'MT'
+    if more_contig_recoding:
+        contig_recoding.update(more_contig_recoding)
 
     mt = hl.import_vcf(
         vcf_path,
