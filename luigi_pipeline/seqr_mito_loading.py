@@ -27,6 +27,12 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     def import_dataset(self):
         return hl.read_matrix_table(self.source_paths[0])
 
+    def annotate_globals(self, mt):
+        # Remove all existing global fields in the mt
+        mt = mt.select_globals()
+
+        return super().annotate_globals(mt)
+
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrMitoVariantMTTask
