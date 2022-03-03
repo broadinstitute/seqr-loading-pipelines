@@ -118,7 +118,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
 
-        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+        mt = mt.select_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)

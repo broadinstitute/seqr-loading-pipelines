@@ -25,8 +25,7 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
         return kwargs
 
     def import_dataset(self):
-        mt = hl.read_matrix_table(self.source_paths[0])
-        return mt.select_globals('vep_version')
+        return hl.read_matrix_table(self.source_paths[0])
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
