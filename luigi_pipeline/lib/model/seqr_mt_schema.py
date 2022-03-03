@@ -63,7 +63,7 @@ class SeqrSchema(BaseMTSchema):
         # If we can get it to not drop it, we should revert this to `old_locus`
         return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
 
-    @row_annotation(name='sortedTranscriptConsequences', disable_index=True, fn_require=vep)
+    @row_annotation(name='sortedTranscriptConsequences', fn_require=vep)
     def sorted_transcript_consequences(self):
         return vep.get_expr_for_vep_sorted_transcript_consequences_array(self.mt.vep)
 
@@ -111,7 +111,7 @@ class SeqrSchema(BaseMTSchema):
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def rg37_locus(self):
         if self.mt.locus.dtype.reference_genome.name != "GRCh38":
             raise RowAnnotationOmit
@@ -230,7 +230,7 @@ class SeqrVariantSchema(SeqrSchema):
 
 class SeqrGenotypesSchema(BaseMTSchema):
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def genotypes(self):
         return hl.agg.collect(hl.struct(**self._genotype_fields()))
 
