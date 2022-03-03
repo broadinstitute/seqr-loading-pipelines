@@ -19,7 +19,7 @@ class SeqrVCFToVariantMTTask(SeqrVCFToMTTask):
 
     def run(self):
         # We only want to use the Variant Schema.
-        self.read_vcf_write_mt()
+        self.read_input_write_mt()
 
 
 class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
