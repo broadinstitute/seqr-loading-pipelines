@@ -5,13 +5,12 @@ import luigi
 import hail as hl
 
 from lib.model.mito_mt_schema import SeqrMitoVariantsAndGenotypesSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema
-from luigi_pipeline.seqr_loading_optimized import BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
-from seqr_loading import SeqrVCFToMTTask
+from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 
 logger = logging.getLogger(__name__)
 
 
-class SeqrMitoVariantMTTask(SeqrVCFToMTTask):
+class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     """
     Loads all annotations for the variants of a Matrix Table into a Hail Table.
     """
@@ -27,13 +26,7 @@ class SeqrMitoVariantMTTask(SeqrVCFToMTTask):
 
     def import_dataset(self):
         mt = hl.read_matrix_table(self.source_paths[0])
-        return mt.drop('dbsnp_version',
-            'dp_hist_all_variants_n_larger', 'mq_hist_all_variants_bin_edges', 'dp_hist_all_variants_n_larger',
-            'age_hist_all_samples_n_smaller', 'age_hist_all_samples_bin_freq', 'age_hist_all_samples_n_larger',
-            'tlod_hist_all_variants_bin_freq', 'dp_hist_all_variants_bin_freq', 'mq_hist_all_variants_bin_freq',
-            'col_annotation_descriptions', 'dp_hist_all_variants_bin_edges', 'mq_hist_all_variants_n_larger',
-            'age_hist_all_samples_bin_edges', 'tlod_hist_all_variants_bin_edges', 'pop_order', 'hap_order',
-            'global_annotation_descriptions', 'row_annotation_descriptions', 'tlod_hist_all_variants_n_larger')
+        return mt.select_globals('vep_version')
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):

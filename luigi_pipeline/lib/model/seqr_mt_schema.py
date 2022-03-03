@@ -97,6 +97,12 @@ class BaseSeqrSchema(BaseMTSchema):
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
+    @row_annotation()
+    def rg37_locus(self):
+        if self.mt.locus.dtype.reference_genome.name != "GRCh38":
+            raise RowAnnotationOmit
+        return self.mt.rg37_locus
+
     @row_annotation(fn_require=sorted_transcript_consequences)
     def domains(self):
         return vep.get_expr_for_vep_protein_domains_set_from_sorted(
@@ -148,12 +154,6 @@ class SeqrSchema(BaseSeqrSchema):
         # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
         # If we can get it to not drop it, we should revert this to `old_locus`
         return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
-
-    @row_annotation()
-    def rg37_locus(self):
-        if self.mt.locus.dtype.reference_genome.name != "GRCh38":
-            raise RowAnnotationOmit
-        return self.mt.rg37_locus
 
     @row_annotation()
     def cadd(self):

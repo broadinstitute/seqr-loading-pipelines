@@ -74,6 +74,7 @@ class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for hl.
+        # heteroplasmy level and ab use the same filter in seqr search so they are indexed to the same search field
         return hl.struct(**{
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.hl*100) >= i) & ((g.hl*100) < i+step))
