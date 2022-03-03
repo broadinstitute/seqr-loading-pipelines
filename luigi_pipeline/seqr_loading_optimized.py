@@ -17,6 +17,10 @@ class SeqrVCFToVariantMTTask(SeqrVCFToMTTask):
     """
     SCHEMA_CLASS = SeqrVariantSchema
 
+    def run(self):
+        # We only want to use the Variant Schema.
+        self.read_vcf_write_mt()
+
 
 class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
     remap_path = luigi.OptionalParameter(default=None,
