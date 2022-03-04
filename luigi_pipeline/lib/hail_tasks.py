@@ -1,6 +1,7 @@
 """
 Tasks for Hail.
 """
+from collections import Counter
 import json
 import logging
 import math
@@ -161,6 +162,12 @@ class HailMatrixTableTask(luigi.Task):
         :return: MatrixTable remapped and keyed to use seqr_id
         """
         remap_ht = hl.import_table(remap_path, key='s')
+        s_dups = [k for k,v in Counter(remap_ht.s.collect()).items() if v>1]
+        seqr_dups = [k for k,v in Counter(remap_ht.seqr_id.collect()).items() if v>1]
+        
+        if len(s_dups)>0 or len(seqr_dups)>0:
+            raise ValueError(f"Duplicate s or seqr_id entries in remap file were found. Duplicate s:{s_dups}. Duplicate seqr_id:{seqr_dups}.")
+
         missing_samples = remap_ht.anti_join(mt.cols()).collect()
         remap_count = remap_ht.count()
 
