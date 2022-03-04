@@ -233,11 +233,12 @@ class HailElasticSearchTask(luigi.Task):
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
 
-    def export_table_to_elasticsearch(self, table, num_shards):
+    def export_table_to_elasticsearch(self, table, num_shards, disabled_fields=None):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
             lambda: self._es.route_index_to_temp_es_cluster(self.es_index)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
+                                               disable_index_for_fields=disabled_fields,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
                                                elasticsearch_mapping_id="docId",
                                                num_shards=num_shards,
