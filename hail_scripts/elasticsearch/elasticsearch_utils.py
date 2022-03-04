@@ -110,7 +110,7 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
                         % (es_field_name, properties)
                     )
             else:
-                if properties[es_field_name]["type"] == "neseted":
+                if "properties" in properties[es_field_name]["type"]:
                     nested_properties = properties[es_field_name]["properties"].copy()
                     for sub_field in nested_properties:
                         nested_properties[sub_field]["enabled"] = False
