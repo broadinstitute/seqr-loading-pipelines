@@ -98,7 +98,7 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
 
     if disable_index_for_fields:
         logger.info("==> will disable index fields for %s", ", ".join(disable_index_for_fields))
-        for es_field_name in disable_index_for_fields:
+        for es_field_name in disable_index_for_fields:               
             if es_field_name not in properties:
                 flattened_fields = [key for key in properties if key.startswith(f'{es_field_name}_')]
                 if flattened_fields:
@@ -110,9 +110,15 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
                         % (es_field_name, properties)
                     )
             else:
-                properties[es_field_name]["index"] = False
+                if properties[es_field_name]["type"] == "neseted":
+                    nested_properties = properties[es_field_name]["properties"].copy()
+                    for sub_field in nested_properties:
+                        nested_properties[sub_field]["enabled"] = False
+                    properties[es_field_name]["properties"] = nested_properties
+                else:
+                    properties[es_field_name]["index"] = False
 
-    return properties
+    return properties    
 
 def encode_field_name(s):
     """Encodes arbitrary string into an elasticsearch field name
