@@ -12,7 +12,7 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
 
     # Mitochondrial only fields
     @row_annotation()
-    def gnomad(self):
+    def gnomad_mito(self):
         return self._selected_ref_data.gnomad_mito
 
     @row_annotation()
@@ -48,6 +48,10 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
     # Fields with the same names but annotated differently
+    @row_annotation()
+    def rsid(self):
+        return self.mt.rsid.find(lambda x: hl.is_defined(x))
+
     @row_annotation(name='AC')
     def ac(self):
         return self.mt.AC_hom
@@ -72,15 +76,18 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
 class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
-    def samples_ab(self, start=0, end=45, step=5):
-        # struct of x_to_y to a set of samples in range of x and y for hl.
-        # heteroplasmy level and ab use the same filter in seqr search so they are indexed to the same search field
+    def samples_hl(self, start=0, end=45, step=5):
+        # struct of x_to_y to a set of samples in range of x and y for heteroplasmy level.
         return hl.struct(**{
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.hl*100) >= i) & ((g.hl*100) < i+step))
             )
             for i in range(start, end, step)
         })
+
+    # Override the samples_ab annotation
+    def samples_ab(self, start=0, end=45, step=5):
+        pass
 
     def _genotype_fields(self):
         # Convert the mt genotype entries into num_alt, gq, hl, mito_cn, contamination, dp, and sample_id.
