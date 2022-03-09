@@ -9,7 +9,7 @@ try:
     import elasticsearch
 except ImportError:
     import os
-    os.system("pip install elasticsearch")
+    os.system("pip install elasticsearch==7.9.1")
     import elasticsearch
 
 
