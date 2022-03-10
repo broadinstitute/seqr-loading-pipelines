@@ -47,6 +47,14 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def high_constraint_region(self):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
+    @row_annotation(name='AC_het')
+    def ac_het(self):
+        return self.mt.AC_het
+
+    @row_annotation(name='AF_het')
+    def af_het(self):
+        return self.mt.AF_het
+
     # Fields with the same names but annotated differently
     @row_annotation()
     def rsid(self):
@@ -64,14 +72,6 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def an(self):
         return self.mt.AN
 
-    @row_annotation(name='AC_het')
-    def ac_het(self):
-        return self.mt.AC_het
-
-    @row_annotation(name='AF_het')
-    def af_het(self):
-        return self.mt.AF_het
-
 
 class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
 
@@ -86,7 +86,7 @@ class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
         })
 
     # Override the samples_ab annotation
-    def samples_ab(self, start=0, end=45, step=5):
+    def samples_ab(self):
         pass
 
     def _genotype_fields(self):
