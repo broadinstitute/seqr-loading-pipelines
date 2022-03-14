@@ -1,3 +1,11 @@
+# A simple usage guide:
+# $ cd <path-to>/hail_elasticsearch_pipelines/sv_pipeline/genome
+# $ export JAVA_HOME=<path-to>/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home
+# $ PYTHONPATH=.:../../ python load_data.py <input_data.vcf.bgz> --strvctvre <strvctvre_data.vcf.bgz> --project-guid <project_guid> --es-nodes-wan-only --gencode-path <folder-for-mt> <other options>
+# Example:
+# $ PYTHONPATH=.:../../ python load_data.py vcf/phase2.annotated.svid.fixChrX.sampleIDs.vcf.gz --strvctvre vcf/phase2.annotated.fixChrX.sampleIDs.STRVCTRE.fixed.vcf.bgz --project-guid R0485_cmg_beggs_wgs --es-nodes-wan-only --gencode-path ./vcf
+#
+
 import argparse
 import hail as hl
 import logging
@@ -21,6 +29,7 @@ MAJOR_CONSEQ = 'major_consequence'
 GQ_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
 VARIANT_ID = 'variantId'
+BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -38,8 +47,8 @@ CORE_FIELDS = {
                                              hl.missing(hl.tstr)),
     'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
     'pos': lambda rows: rows.locus.position,
-    'filters': lambda rows: hl.array(rows.filters.filter(lambda x: (x != 'PASS') & (x != 'BOTHSIDES_SUPPORT'))),
-    'bothsides_support_filter': lambda rows: rows.filters.any(lambda x: x == 'BOTHSIDES_SUPPORT'),
+    'filters': lambda rows: hl.array(rows.filters.filter(lambda x: (x != 'PASS') & (x != BOTHSIDES_SUPPORT))),
+    'bothsides_support': lambda rows: rows.filters.any(lambda x: x == BOTHSIDES_SUPPORT),
     'algorithms': lambda rows: rows.info.ALGORITHMS,
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
