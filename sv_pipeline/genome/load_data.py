@@ -32,7 +32,6 @@ VARIANT_ID = 'variantId'
 BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
-TRANSLOCATION_TYPE = 'BND'
 
 CORE_FIELDS = {
     'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
@@ -54,12 +53,7 @@ CORE_FIELDS = {
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
-                                             hl.if_else(rows.info.SVTYPE == TRANSLOCATION_TYPE,
-                                                        [hl.struct(type=TRANSLOCATION_TYPE,
-                                                                   chrom=rows.info.CHR2,
-                                                                   start=rows.info.END2,
-                                                                   end=rows.info.END2)],
-                                                        hl.missing(hl.dtype(INTERVAL_TYPE)))),
+                                             hl.missing(hl.dtype(INTERVAL_TYPE))),
 }
 
 DERIVED_FIELDS = {
