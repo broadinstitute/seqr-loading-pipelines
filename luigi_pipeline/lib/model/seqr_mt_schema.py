@@ -267,7 +267,8 @@ class SeqrGenotypesSchema(BaseMTSchema):
 
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
-        return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+        samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('set<str>')))
 
     def _genotype_fields(self):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.

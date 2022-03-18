@@ -234,7 +234,7 @@ class HailElasticSearchTask(luigi.Task):
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
                                                elasticsearch_mapping_id="docId",
                                                num_shards=num_shards,
-                                               write_null_values=True)
+                                               )
 
     def cleanup(self, es_shards):
         self._es.route_index_off_temp_es_cluster(self.es_index)
