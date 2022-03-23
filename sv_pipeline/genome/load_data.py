@@ -61,6 +61,11 @@ DERIVED_FIELDS = {
     'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
                                      get_xpos(rows.info.CHR2, rows.info.END2),
                                      get_xpos(rows.locus.contig, rows.info.END)),
+    'rg37_locus': lambda rows: hl.liftover(rows.locus, 'GRCh37'),
+    'rg37_locus_end': lambda rows: hl.liftover(
+        hl.if_else((rows[SV_TYPE][0] == 'BND') & hl.is_defined(rows.info.END2),
+                   hl.locus(rows.info.CHR2, rows.info.END2, reference_genome='GRCh38'),
+                   hl.locus(rows.locus.contig, rows.info.END, reference_genome='GRCh38')), 'GRCh37'),
     'svType': lambda rows: rows[SV_TYPE][0],
     TRANS_CONSEQ_TERMS: lambda rows: rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]).extend([rows[SV_TYPE][0]]),
     'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
@@ -228,12 +233,17 @@ def main():
     p.add_argument('--es-nodes-wan-only', action='store_true')
     p.add_argument('--id-file', help='The full path (can start with gs://) of the id file. Should only be used for testing purposes, not intended for use in production')
     p.add_argument('--strvctvre', help='input VCF file for StrVCTVRE data')
+    p.add_argument('--grch38-to-grch37-ref-chain', help='Path to GRCh38 to GRCh37 coordinates file',
+                   default='gs://hail-common/references/grch38_to_grch37.over.chain.gz')
 
     args = p.parse_args()
 
     start_time = time.time()
 
     hl.init()
+    rg37 = hl.get_reference('GRCh37')
+    rg38 = hl.get_reference('GRCh38')
+    rg38.add_liftover(args.grch38_to_grch37_ref_chain, rg37)
 
     mt = load_mt(args.input_dataset, args.matrixtable_file, args.overwrite_matrixtable)
 
