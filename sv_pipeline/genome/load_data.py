@@ -62,10 +62,9 @@ DERIVED_FIELDS = {
                                      get_xpos(rows.info.CHR2, rows.info.END2),
                                      get_xpos(rows.locus.contig, rows.info.END)),
     'rg37_locus': lambda rows: hl.liftover(rows.locus, 'GRCh37'),
-    'rg37_locus_end': lambda rows: hl.liftover(
-        hl.if_else((rows[SV_TYPE][0] == 'BND') & hl.is_defined(rows.info.END2),
-                   hl.locus(rows.info.CHR2, rows.info.END2, reference_genome='GRCh38'),
-                   hl.locus(rows.locus.contig, rows.info.END, reference_genome='GRCh38')), 'GRCh37'),
+    'rg37_locus_end': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
+                   hl.struct(contig=rows.info.CHR2, position=rows.info.END2),
+                   hl.struct(contig=rows.locus.contig, position=rows.info.END)),
     'svType': lambda rows: rows[SV_TYPE][0],
     TRANS_CONSEQ_TERMS: lambda rows: rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]).extend([rows[SV_TYPE][0]]),
     'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
@@ -103,6 +102,10 @@ def get_cpx_interval(x):
     chr_pos = type_chr[1].split(':')
     pos = chr_pos[1].split('-')
     return hl.struct(type=type_chr[0], chrom=chr_pos[0], start=hl.int32(pos[0]), end=hl.int32(pos[1]))
+
+
+def get_end_pos(locus, exp_contig_lengths):
+    return hl.if_else(locus.position < exp_contig_lengths[locus.contig], locus.position, exp_contig_lengths[locus.contig])
 
 
 def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
@@ -152,7 +155,7 @@ def subset_mt(project_guid, mt, skip_sample_subset=False, ignore_missing_samples
     return mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
 
 
-def annotate_fields(mt, gencode_release, gencode_path):
+def annotate_fields(mt, gencode_release, gencode_path, exp_contig_lengths):
     genotypes = hl.agg.collect(hl.struct(sample_id=mt.s, gq=mt.GQ, cn=mt.RD_CN,
                                          num_alt=hl.if_else(hl.is_defined(mt.GT), mt.GT.n_alt_alleles(), -1)))
     rows = mt.annotate_rows(genotypes=genotypes).rows()
@@ -174,6 +177,10 @@ def annotate_fields(mt, gencode_release, gencode_path):
     DERIVED_FIELDS.update({'filters': lambda rows: hl.if_else(hl.len(rows.filters) > 0, rows.filters,
                                                                  hl.missing(hl.dtype('array<str>')))})
     rows = rows.annotate(**{k: v(rows) for k, v in DERIVED_FIELDS.items()})
+
+    rows = rows.annotate(rg37_locus_end=hl.liftover(
+        hl.locus(rows.rg37_locus_end.contig, get_end_pos(rows.rg37_locus_end, exp_contig_lengths),
+                 reference_genome='GRCh38'), 'GRCh37'))
 
     rows = rows.annotate(**{k: get_sample_in_gq_range(rows, i, i+GQ_BIN_SIZE) for k, i in SAMPLES_GQ_FIELDS.items()})
 
@@ -251,7 +258,8 @@ def main():
                    ignore_missing_samples=args.ignore_missing_samples,
                    id_file=args.id_file)
 
-    rows = annotate_fields(mt, args.gencode_release, args.gencode_path)
+    exp_contig_lengths = hl.literal(rg38.lengths)
+    rows = annotate_fields(mt, args.gencode_release, args.gencode_path, exp_contig_lengths)
 
     if args.strvctvre:
         rows = add_strvctvre(rows, args.strvctvre)
