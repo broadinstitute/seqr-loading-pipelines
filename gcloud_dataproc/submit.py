@@ -7,6 +7,7 @@ import subprocess
 
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
+p.add_argument("--spark-env")
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
@@ -29,6 +30,8 @@ properties_arg = ",".join([
     "spark.driver.extraClassPath=./$(basename %(hail_jar)s)",
     "spark.executor.extraClassPath=./$(basename %(hail_jar)s)",
 ]) % locals()
+if args.spark_env:
+    properties_arg += f',spark.executorEnv.{args.spark_env}'
 
 command = """gcloud dataproc jobs submit pyspark \
   --cluster=%(cluster)s \

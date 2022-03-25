@@ -112,8 +112,12 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
     if not matrixtable_file:
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
+    is_gs_path = input_dataset.startswith("gs://")
+    matrixtable_file_exists = (is_gs_path and hl.hadoop_exists(matrixtable_file)) or \
+                              (not is_gs_path and os.path.isdir(matrixtable_file))
+
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    if not overwrite_matrixtable and os.path.isdir(matrixtable_file):
+    if not overwrite_matrixtable and matrixtable_file_exists:
         reminder = 'If the input VCF file has been changed, or you just want to re-import VCF,' \
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
