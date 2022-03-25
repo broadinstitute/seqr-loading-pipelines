@@ -28,7 +28,7 @@ def main():
 
     for project in projects:
         command = f'sv_pipeline/genome/load_data.py {args.input} --use-dataproc --project-guid={project} {script_args}'
-        run(f'time ./gcloud_dataproc/submit.py --cluster={cluster} --spark-env=PIPELINE_ES_PASSWORD={es_password} {command}')
+        run(f'./gcloud_dataproc/submit.py --cluster={cluster} --spark-env="PIPELINE_ES_PASSWORD={es_password}" --use-existing-scripts-zip {command}')
 
 if __name__ == '__main__':
     main()

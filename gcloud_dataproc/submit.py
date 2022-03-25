@@ -8,6 +8,7 @@ import subprocess
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--spark-env")
+p.add_argument("--use-existing-scripts-zip", action="store_true")
 p.add_argument("script")
 
 args, unparsed_args = p.parse_known_args()
@@ -19,11 +20,15 @@ script = args.script
 script_args = " ".join(['"%s"' % arg for arg in unparsed_args])
 
 cluster = args.cluster
+use_existing_script_zip = args.use_existing_scripts_zip
 
 hail_scripts_zip = "/tmp/hail_scripts.zip"
 
 os.chdir(os.path.join(os.path.dirname(__file__), ".."))
-os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes sv_pipeline download_and_create_reference_datasets/v02/hail_scripts" % locals())
+if use_existing_script_zip and os.path.exists(hail_scripts_zip):
+    print('Using existing scripts zip file')
+else:
+    os.system("zip -r %(hail_scripts_zip)s hail_scripts kubernetes sv_pipeline download_and_create_reference_datasets/v02/hail_scripts" % locals())
 
 properties_arg = ",".join([
     "spark.files=./$(basename %(hail_jar)s)",
