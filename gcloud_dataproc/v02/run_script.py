@@ -31,6 +31,5 @@ if "-h" in sys.argv or "--help" in sys.argv:
 
 run((
     "time ./gcloud_dataproc/submit.py "
-    "--hail-version 0.2 "
     "--cluster %(cluster_name)s "
     "%(script)s %(script_args)s") % locals())
