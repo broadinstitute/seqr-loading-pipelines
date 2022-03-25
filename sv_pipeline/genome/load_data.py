@@ -208,8 +208,12 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
-        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only}
+        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only},
+        func_to_run_after_index_exists=lambda: es_client.route_index_to_temp_es_cluster(index_name),
     )
+
+    es_client.route_index_off_temp_es_cluster(index_name)
+    es_client.wait_for_shard_transfer(index_name)
 
 
 def add_strvctvre(rows, filename):
