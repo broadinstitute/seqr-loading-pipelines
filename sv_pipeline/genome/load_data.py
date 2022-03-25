@@ -54,18 +54,19 @@ CORE_FIELDS = {
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
                                              hl.missing(hl.dtype(INTERVAL_TYPE))),
+    'end_locus': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
+                                         hl.struct(contig=rows.info.CHR2, pos=rows.info.END2),
+                                         hl.struct(contig=rows.locus.contig, pos=rows.info.END)),
 }
 
 DERIVED_FIELDS = {
     'xstart': lambda rows: rows.xpos,
-    'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
-                                     get_xpos(rows.info.CHR2, rows.info.END2),
-                                     get_xpos(rows.locus.contig, rows.info.END)),
+    'xstop': lambda rows: get_xpos(**rows.end_locus),
     'rg37_locus': lambda rows: hl.liftover(rows.locus, 'GRCh37'),
-    'rg37_locus_end': lambda rows: hl.liftover(
-        hl.if_else((rows[SV_TYPE][0] == 'BND') & hl.is_defined(rows.info.END2),
-                   hl.locus(rows.info.CHR2, rows.info.END2, reference_genome='GRCh38'),
-                   hl.locus(rows.locus.contig, rows.info.END, reference_genome='GRCh38')), 'GRCh37'),
+    'rg37_locus_end': lambda rows: hl.if_else(
+        rows.end_locus.pos <= hl.literal(hl.get_reference('GRCh38').lengths)[rows.end_locus.contig],
+        hl.liftover(hl.locus(rows.end_locus.contig, rows.end_locus.pos, reference_genome='GRCh38'), 'GRCh37'),
+        hl.missing('locus<GRCh37>')),
     'svType': lambda rows: rows[SV_TYPE][0],
     TRANS_CONSEQ_TERMS: lambda rows: rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]).extend([rows[SV_TYPE][0]]),
     'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
@@ -82,6 +83,8 @@ SAMPLES_GQ_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+GQ_BIN_SIZE): i for i 
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, SORTED_TRANS_CONSEQ, 'genotypes'] +\
     list(SAMPLES_GQ_FIELDS.keys())
+
+FIELDS.remove('end_locus')
 
 
 def get_xpos(contig, pos):
