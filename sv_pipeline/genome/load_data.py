@@ -242,12 +242,15 @@ def main():
     p.add_argument('--strvctvre', help='input VCF file for StrVCTVRE data')
     p.add_argument('--grch38-to-grch37-ref-chain', help='Path to GRCh38 to GRCh37 coordinates file',
                    default='gs://hail-common/references/grch38_to_grch37.over.chain.gz')
+    p.add_argument('--use-dataproc', action='store_true')
 
     args = p.parse_args()
 
     start_time = time.time()
 
-    hl.init()
+    if not args.use_dataproc:
+        hl.init()
+
     rg37 = hl.get_reference('GRCh37')
     rg38 = hl.get_reference('GRCh38')
     rg38.add_liftover(args.grch38_to_grch37_ref_chain, rg37)
@@ -267,7 +270,8 @@ def main():
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
-    hl.stop()
+    if not args.use_dataproc:
+        hl.stop()
 
 
 if __name__ == '__main__':
