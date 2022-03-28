@@ -5,6 +5,8 @@ import os
 
 from kubernetes.shell_utils import simple_run as run
 
+REGION = 'us-central1'
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('-c', '--cluster', default='sv-wgs-loading')
@@ -24,11 +26,11 @@ def main():
 
     os.chdir(os.path.join(os.path.dirname(__file__), '../..'))
 
-    run(f'./gcloud_dataproc/v02/create_cluster_without_VEP.py {cluster} 2 {len(projects)}')
+    run(f'./gcloud_dataproc/v02/create_cluster_without_VEP.py {cluster} 2 {len(projects)} --region={REGION}')
 
     for project in projects:
         command = f'sv_pipeline/genome/load_data.py {args.input} --use-dataproc --project-guid={project} {script_args}'
-        run(f'./gcloud_dataproc/submit.py --cluster={cluster} --spark-env="PIPELINE_ES_PASSWORD={es_password}" --use-existing-scripts-zip {command}')
+        run(f'./gcloud_dataproc/submit.py --cluster={cluster} --spark-env="PIPELINE_ES_PASSWORD={es_password}" --use-existing-scripts-zip --region={REGION} {command}')
 
 if __name__ == '__main__':
     main()

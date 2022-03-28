@@ -8,6 +8,7 @@ import subprocess
 p = argparse.ArgumentParser()
 p.add_argument("-c", "--cluster", default="no-vep")
 p.add_argument("--spark-env")
+p.add_argument("--region")
 p.add_argument("--use-existing-scripts-zip", action="store_true")
 p.add_argument("script")
 
@@ -38,11 +39,14 @@ properties_arg = ",".join([
 if args.spark_env:
     properties_arg += f',spark.executorEnv.{args.spark_env}'
 
+region_arg = f'--region={args.region}' if args.region else ''
+print(region_arg)
 command = """gcloud dataproc jobs submit pyspark \
   --cluster=%(cluster)s \
   --files=%(hail_jar)s \
   --py-files=%(hail_zip)s,%(hail_scripts_zip)s \
   --properties="%(properties_arg)s" \
+  %(region_arg)s \
   "%(script)s" -- %(script_args)s
 """ % locals()
 
