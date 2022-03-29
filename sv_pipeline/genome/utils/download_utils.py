@@ -17,24 +17,24 @@ def file_writer(file_path, get_existing_size=False):
     size = None
     if is_gs_path(file_path):
         local_file_path = os.path.join(tempfile.gettempdir(), os.path.basename(file_path))
-        bucket, file_name = parse_gs_path_to_bucket(gs_path)
+        bucket, file_name = parse_gs_path_to_bucket(file_path)
         if get_existing_size:
             blob = bucket.get_blob(file_name)
             size = blob and blob.size
     else:
         local_file_path = file_path
         if get_existing_size:
-            size =os.path.isfile(local_file_path) and os.path.getsize(local_file_path)
+            size = os.path.isfile(local_file_path) and os.path.getsize(local_file_path)
 
     local_file = open(local_file_path, 'wb')
 
     yield local_file, size
 
+    local_file.close()
+
     if bucket:
         blob = bucket.blob(file_name)
-        blob.upload_from_file(local_file)
-
-    local_file.close()
+        blob.upload_from_filename(local_file_path)
 
 
 def is_gs_path(path):
@@ -59,7 +59,8 @@ def download_file(url, to_dir=tempfile.gettempdir(), verbose=True):
     remote_file_size = _get_remote_file_size(url)
 
     file_path = os.path.join(to_dir, filename)
-    with file_writer(file_path, get_existing_size=True) as f, file_size:
+    with file_writer(file_path, get_existing_size=True) as fw:
+        f, file_size = fw
         if file_size and file_size == remote_file_size:
             logger.info("Re-using {} previously downloaded from {}".format(local_file_path, url))
             return file_path

@@ -4,7 +4,7 @@ import os
 import pickle
 from tqdm import tqdm
 
-from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path
+from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path, file_writer
 from sv_pipeline.utils.common import stream_gs_file
 
 GENOME_VERSION_GRCh37 = "37"
@@ -50,8 +50,9 @@ def _load_parsed_data_or_download(gencode_release, download_path):
 def _parse_gtf_data(gencode_gtf_path):
     gene_id_mapping = {}
     logger.info("Loading {}".format(gencode_gtf_path))
+    is_gs = is_gs_path(gencode_gtf_path)
     gencode_file = gzip.decompress(stream_gs_file(gencode_gtf_path, raw_download=True)).decode().split('\n') \
-        if is_gs_path(gencode_gtf_path) else gzip.open(gencode_gtf_path, 'rt')
+        if is_gs else gzip.open(gencode_gtf_path, 'rt')
     for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
         line = line.rstrip('\r\n')
         if not line or line.startswith('#'):
@@ -72,11 +73,13 @@ def _parse_gtf_data(gencode_gtf_path):
 
         gene_id_mapping[info_fields['gene_name']] = info_fields['gene_id'].split('.')[0]
 
-    gencode_file.close()
+    if not is_gs:
+        gencode_file.close()
 
     pickle_file = _get_pickle_file(gencode_gtf_path)
     logger.info(f'Saving to pickle {pickle_file}')
-    with file_writer(pickle_file) as f, _:
+    with file_writer(pickle_file) as fw:
+        f, _ = fw
         pickle.dump(gene_id_mapping, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     return gene_id_mapping
