@@ -1,6 +1,7 @@
 import logging
 import subprocess
 from datetime import datetime
+from google.cloud import storage
 
 logger = logging.getLogger(__name__)
 
@@ -12,13 +13,25 @@ CHROM_TO_XPOS_OFFSET = {chrom: (1 + i)*int(1e9) for i, chrom in enumerate(CHROMO
 
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
-def cat_gs_file(gs_path):
-    command = 'gsutil cat {}'.format(gs_path)
-    logger.info(f'==> {command}')
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    if process.wait() != 0:
-        return None
-    return process.stdout
+
+def parse_gs_path_to_bucket(gs_path):
+    bucket_name = gs_path.replace('gs://', '').split('/')[0]
+    file_name = gs_path.split(bucket_name)[-1].lstrip('/')
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+
+    return bucket, file_name
+
+
+def stream_gs_file(gs_path, raw_download=False):
+    logger.info(f'Stream from GCS: {gs_path}')
+    bucket, file_name = parse_gs_path_to_bucket(gs_path)
+
+    blob = bucket.get_blob(file_name)
+
+    return blob and blob.download_as_string(raw_download=raw_download)
+
 
 def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filename=None):
     """
@@ -31,12 +44,14 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filena
     :return: parsed data from the sample file as a list of lists
     """
     file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext) if not filename else filename
-    file_content = cat_gs_file(file)
-    header = next(file_content).decode('utf-8')
+    file_content = stream_gs_file(file).split(b'\n')
+    if not file_content:
+        return None
+    header = file_content[0].decode('utf-8')
     if header.strip() != expected_header:
         raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
             expected_header, header))
-    return [line.decode('utf-8').strip().split('\t') for line in file_content]
+    return [line.decode('utf-8').strip().split('\t') for line in file_content[1:]]
 
 
 def get_sample_subset(project_guid, sample_type, filename=None):

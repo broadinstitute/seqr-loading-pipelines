@@ -3,25 +3,39 @@ import os
 import requests
 import tempfile
 from contextlib import contextmanager
+from google.cloud import storage
 import hail as hl
 from tqdm import tqdm
+
+from sv_pipeline.utils.common import parse_gs_path_to_bucket
 
 logger = logging.getLogger(__name__)
 
 @contextmanager
-def file_writer(file_path):
-    is_gs = is_gs_path(file_path)
-    if is_gs:
+def file_writer(file_path, get_existing_size=False):
+    bucket = None
+    size = None
+    if is_gs_path(file_path):
         local_file_path = os.path.join(tempfile.gettempdir(), os.path.basename(file_path))
+        bucket, file_name = parse_gs_path_to_bucket(gs_path)
+        if get_existing_size:
+            blob = bucket.get_blob(file_name)
+            size = blob and blob.size
     else:
         local_file_path = file_path
+        if get_existing_size:
+            size =os.path.isfile(local_file_path) and os.path.getsize(local_file_path)
+
     local_file = open(local_file_path, 'wb')
 
-    yield local_file_path, local_file
+    yield local_file, size
+
+    if bucket:
+        blob = bucket.blob(file_name)
+        blob.upload_from_file(local_file)
 
     local_file.close()
-    if is_gs:
-        os.system(f'gsutil mv {local_file_path} {file_path}')
+
 
 def is_gs_path(path):
     return path.startswith('gs://')
@@ -45,10 +59,10 @@ def download_file(url, to_dir=tempfile.gettempdir(), verbose=True):
     remote_file_size = _get_remote_file_size(url)
 
     file_path = os.path.join(to_dir, filename)
-    with file_writer(file_path) as local_file_path, f:
-        if os.path.isfile(local_file_path) and os.path.getsize(local_file_path) == remote_file_size:
+    with file_writer(file_path, get_existing_size=True) as f, file_size:
+        if file_size and file_size == remote_file_size:
             logger.info("Re-using {} previously downloaded from {}".format(local_file_path, url))
-            return local_file_path
+            return file_path
 
         is_gz = url.endswith(".gz")
         response = requests.get(url, stream=is_gz)

@@ -11,9 +11,10 @@ REGION = 'us-central1'
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument('projects', nargs='+')
     p.add_argument('-c', '--cluster', default='sv-wgs-loading')
     p.add_argument('-i', '--input', required=True)
-    p.add_argument('projects', nargs='+')
+    p.add_argument('--gencode-path', default='gs://seqr-reference-data/gencode')
 
     args, unparsed_args = p.parse_known_args()
 
@@ -29,10 +30,11 @@ def main():
 
     create_cluster(cluster=cluster, region=REGION, num_workers=2, num_preemptible_workers=len(projects))
 
+    script_args = [args.input, '--use-dataproc', f'--gencode-path={args.gencode_path}'] + unparsed_args
     for project in projects:
-        script_args = [args.input, '--use-dataproc', f'--project-guid={project}'] + unparsed_args
+        project_script_args = script_args + [f'--project-guid={project}']
         job_id = f'sv_wgs_{project}_{datetime.now():%Y%m%d-%H%M}'
-        submit('sv_pipeline/genome/load_data.py', script_args, cluster=cluster, job_id=job_id, region=REGION,
+        submit('sv_pipeline/genome/load_data.py', project_script_args, cluster=cluster, job_id=job_id, region=REGION,
                wait_for_job=False, use_existing_scripts_zip=True, spark_env=f'PIPELINE_ES_PASSWORD={es_password}')
 
 if __name__ == '__main__':
