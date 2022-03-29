@@ -53,6 +53,7 @@ def _parse_gtf_data(gencode_gtf_path):
     gencode_file = gzip.GzipFile(fileobj=cat_gs_file(gencode_gtf_path)) if is_gs_path(gencode_gtf_path) \
         else gzip.open(gencode_gtf_path, 'rt')
     for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
+        logger.info(f'=> line {i}')
         line = line.rstrip('\r\n')
         if not line or line.startswith('#'):
             continue
@@ -75,6 +76,7 @@ def _parse_gtf_data(gencode_gtf_path):
     gencode_file.close()
 
     pickle_file = _get_pickle_file(gencode_gtf_path)
+    logger.info(f'Saving to pickle {pickle_file}')
     with file_writer(pickle_file) as _, f:
         pickle.dump(gene_id_mapping, f, protocol=pickle.HIGHEST_PROTOCOL)
 

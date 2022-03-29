@@ -1,5 +1,8 @@
+import logging
 import subprocess
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 CHROMOSOMES = [
     '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21',
@@ -10,8 +13,9 @@ CHROM_TO_XPOS_OFFSET = {chrom: (1 + i)*int(1e9) for i, chrom in enumerate(CHROMO
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
 def cat_gs_file(gs_path):
-    process = subprocess.Popen(
-        'gsutil cat {}'.format(gs_path), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    command = 'gsutil cat {}'.format(gs_path)
+    logger.info(f'==> {command}')
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     if process.wait() != 0:
         return None
     return process.stdout
