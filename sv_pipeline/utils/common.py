@@ -44,14 +44,15 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filena
     :return: parsed data from the sample file as a list of lists
     """
     file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext) if not filename else filename
-    file_content = stream_gs_file(file).split(b'\n')
+    file_content = stream_gs_file(file)
     if not file_content:
         return None
-    header = file_content[0].decode('utf-8')
+    rows = file_content.split(b'\n')
+    header = rows[0].decode('utf-8')
     if header.strip() != expected_header:
         raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
             expected_header, header))
-    return [line.decode('utf-8').strip().split('\t') for line in file_content[1:]]
+    return [line.decode('utf-8').strip().split('\t') for line in rows[1:]]
 
 
 def get_sample_subset(project_guid, sample_type, filename=None):
