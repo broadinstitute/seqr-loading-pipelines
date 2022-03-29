@@ -186,7 +186,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
     return rows.key_by().select(*FIELDS)
 
 
-def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards, es_nodes_wan_only):
+def export_to_es(rows, input_dataset, project_guid, es_host, es_port, es_password, block_size, num_shards, es_nodes_wan_only):
     meta = {
       'genomeVersion': '38',
       'sampleType': WGS_SAMPLE_TYPE,
@@ -198,7 +198,6 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
 
     rows = rows.annotate_globals(**meta)
 
-    es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
     es_client = HailElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     es_client.export_table_to_elasticsearch(
@@ -236,6 +235,7 @@ def main():
     p.add_argument('--gencode-path', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
+    p.add_argument('--es-password', default=os.environ.get('PIPELINE_ES_PASSWORD', ''))
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
@@ -267,7 +267,7 @@ def main():
     if args.strvctvre:
         rows = add_strvctvre(rows, args.strvctvre)
 
-    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
+    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.es_password, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 

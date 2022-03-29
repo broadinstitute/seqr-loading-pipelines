@@ -30,7 +30,9 @@ def main():
 
     create_cluster(cluster=cluster, region=REGION, num_workers=2, num_preemptible_workers=len(projects))
 
-    script_args = [args.input, '--use-dataproc', f'--gencode-path={args.gencode_path}'] + unparsed_args
+    script_args = [
+        args.input, '--use-dataproc', f'--gencode-path={args.gencode_path}', f'--es-password={es_password}',
+    ] + unparsed_args
     for project in projects:
         project_script_args = script_args + [f'--project-guid={project}']
         job_id = f'sv_wgs_{project}_{datetime.now():%Y%m%d-%H%M}'
