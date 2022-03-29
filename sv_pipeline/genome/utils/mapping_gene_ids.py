@@ -4,7 +4,8 @@ import os
 import pickle
 from tqdm import tqdm
 
-from sv_pipeline.genome.utils.download_utils import download_file
+from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path
+from sv_pipeline.utils.common import cat_gs_file
 
 GENOME_VERSION_GRCh37 = "37"
 GENOME_VERSION_GRCh38 = "38"
@@ -29,12 +30,15 @@ def _load_parsed_data_or_download(gencode_release, download_path):
     url = GENCODE_GTF_URL.format(gencode_release=gencode_release)
     gencode_gtf_path = os.path.join(download_path, os.path.basename(url))
     pickle_file = _get_pickle_file(gencode_gtf_path)
-    if os.path.isfile(pickle_file):
+    if path_exists(pickle_file):
         logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(pickle_file))
-        with open(pickle_file, 'rb') as handle:
-            p = pickle.load(handle)
+        is_gs = is_gs_path(pickle_file)
+        handle = cat_gs_file(pickle_file) if is_gs else open(pickle_file, 'rb')
+        p = pickle.load(handle)
+        if not is_gs:
+            handle.close()
         gene_id_mapping.update(p)
-    elif not os.path.isfile(gencode_gtf_path):
+    elif not path_exists(gencode_gtf_path):
         gencode_gtf_path = download_file(url, to_dir=download_path)
         logger.info('Downloaded to {}'.format(gencode_gtf_path))
     else:
@@ -46,30 +50,33 @@ def _load_parsed_data_or_download(gencode_release, download_path):
 def _parse_gtf_data(gencode_gtf_path):
     gene_id_mapping = {}
     logger.info("Loading {}".format(gencode_gtf_path))
-    with gzip.open(gencode_gtf_path, 'rt') as gencode_file:
-        for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
-            line = line.rstrip('\r\n')
-            if not line or line.startswith('#'):
-                continue
-            fields = line.split('\t')
+    gencode_file = gzip.GzipFile(fileobj=cat_gs_file(gencode_gtf_path)) if is_gs_path(gencode_gtf_path) \
+        else gzip.open(gencode_gtf_path, 'rt')
+    for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
+        line = line.rstrip('\r\n')
+        if not line or line.startswith('#'):
+            continue
+        fields = line.split('\t')
 
-            if len(fields) != len(GENCODE_FILE_HEADER):
-                raise ValueError("Unexpected number of fields on line #%s: %s" % (i, fields))
+        if len(fields) != len(GENCODE_FILE_HEADER):
+            raise ValueError("Unexpected number of fields on line #%s: %s" % (i, fields))
 
-            record = dict(zip(GENCODE_FILE_HEADER, fields))
+        record = dict(zip(GENCODE_FILE_HEADER, fields))
 
-            if record['feature_type'] != 'gene':
-                continue
+        if record['feature_type'] != 'gene':
+            continue
 
-            # parse info field
-            info_fields = [x.strip().split() for x in record['info'].split(';') if x != '']
-            info_fields = {k: v.strip('"') for k, v in info_fields}
+        # parse info field
+        info_fields = [x.strip().split() for x in record['info'].split(';') if x != '']
+        info_fields = {k: v.strip('"') for k, v in info_fields}
 
-            gene_id_mapping[info_fields['gene_name']] = info_fields['gene_id'].split('.')[0]
+        gene_id_mapping[info_fields['gene_name']] = info_fields['gene_id'].split('.')[0]
+
+    gencode_file.close()
 
     pickle_file = _get_pickle_file(gencode_gtf_path)
-    with open(pickle_file, 'wb') as handle:
-        pickle.dump(gene_id_mapping, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with file_writer(pickle_file) as _, f:
+        pickle.dump(gene_id_mapping, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     return gene_id_mapping
 

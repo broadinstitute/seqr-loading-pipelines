@@ -9,6 +9,12 @@ CHROM_TO_XPOS_OFFSET = {chrom: (1 + i)*int(1e9) for i, chrom in enumerate(CHROMO
 
 GS_SAMPLE_PATH = 'gs://seqr-datasets/v02/GRCh38/RDG_{sample_type}_Broad_Internal/base/projects/{project_guid}/{project_guid}_{file_ext}'
 
+def cat_gs_file(gs_path):
+    process = subprocess.Popen(
+        'gsutil cat {}'.format(gs_path), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    if process.wait() != 0:
+        return None
+    return process.stdout
 
 def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filename=None):
     """
@@ -21,15 +27,12 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filena
     :return: parsed data from the sample file as a list of lists
     """
     file = GS_SAMPLE_PATH.format(project_guid=project_guid, sample_type=sample_type, file_ext=file_ext) if not filename else filename
-    process = subprocess.Popen(
-        'gsutil cat {}'.format(file), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    if process.wait() != 0:
-        return None
-    header = next(process.stdout).decode('utf-8')
+    file_content = cat_gs_file(file)
+    header = next(file_content).decode('utf-8')
     if header.strip() != expected_header:
         raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
             expected_header, header))
-    return [line.decode('utf-8').strip().split('\t') for line in process.stdout]
+    return [line.decode('utf-8').strip().split('\t') for line in file_content]
 
 
 def get_sample_subset(project_guid, sample_type, filename=None):

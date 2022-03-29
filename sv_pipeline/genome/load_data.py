@@ -15,6 +15,7 @@ import time
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
+from sv_pipeline.genome.utils.download_utils import path_exists
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 logging.basicConfig(level=logging.INFO)
@@ -112,12 +113,8 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
     if not matrixtable_file:
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
-    is_gs_path = input_dataset.startswith("gs://")
-    matrixtable_file_exists = (is_gs_path and hl.hadoop_exists(matrixtable_file)) or \
-                              (not is_gs_path and os.path.isdir(matrixtable_file))
-
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    if not overwrite_matrixtable and matrixtable_file_exists:
+    if not overwrite_matrixtable and  path_exists(matrixtable_file):
         reminder = 'If the input VCF file has been changed, or you just want to re-import VCF,' \
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))

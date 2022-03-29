@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+from datetime import datetime
 import os
 
-from kubernetes.shell_utils import simple_run as run
+from gcloud_dataproc.v02.create_cluster_without_VEP import create_cluster
+from gcloud_dataproc.submit import submit
 
 REGION = 'us-central1'
 
@@ -16,7 +18,6 @@ def main():
     args, unparsed_args = p.parse_known_args()
 
     cluster = args.cluster
-    script_args = ' '.join(unparsed_args)
 
     es_password = os.environ.get('PIPELINE_ES_PASSWORD')
     if not es_password:
@@ -26,11 +27,13 @@ def main():
 
     os.chdir(os.path.join(os.path.dirname(__file__), '../..'))
 
-    run(f'./gcloud_dataproc/v02/create_cluster_without_VEP.py {cluster} 2 {len(projects)} --region={REGION}')
+    create_cluster(cluster=cluster, region=REGION, num_workers=2, num_preemptible_workers=len(projects))
 
     for project in projects:
-        command = f'sv_pipeline/genome/load_data.py {args.input} --use-dataproc --project-guid={project} {script_args}'
-        run(f'./gcloud_dataproc/submit.py --cluster={cluster} --spark-env="PIPELINE_ES_PASSWORD={es_password}" --use-existing-scripts-zip --region={REGION} {command}')
+        script_args = [args.input, '--use-dataproc', f'--project-guid={project}'] + unparsed_args
+        job_id = f'sv_wgs_{project}_{datetime.now():%Y%m%d-%H%M}'
+        submit('sv_pipeline/genome/load_data.py', script_args, cluster=cluster, job_id=job_id, region=REGION,
+               wait_for_job=False, use_existing_scripts_zip=True, spark_env=f'PIPELINE_ES_PASSWORD={es_password}')
 
 if __name__ == '__main__':
     main()
