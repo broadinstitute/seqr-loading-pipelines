@@ -32,11 +32,11 @@ def _load_parsed_data_or_download(gencode_release, download_path):
     pickle_file = _get_pickle_file(gencode_gtf_path)
     if path_exists(pickle_file):
         logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(pickle_file))
-        is_gs = is_gs_path(pickle_file)
-        handle = stream_gs_file(pickle_file) if is_gs else open(pickle_file, 'rb')
-        p = pickle.load(handle)
-        if not is_gs:
-            handle.close()
+        if is_gs_path(pickle_file):
+            p = pickle.loads(stream_gs_file(pickle_file))
+        else:
+            with open(pickle_file, 'rb') as handle:
+                p = pickle.load(handle)
         gene_id_mapping.update(p)
     elif not path_exists(gencode_gtf_path):
         gencode_gtf_path = download_file(url, to_dir=download_path)
