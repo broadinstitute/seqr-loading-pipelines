@@ -208,6 +208,7 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, es_passwor
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
+        elasticsearch_mapping_id=VARIANT_ID,
         elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only},
         func_to_run_after_index_exists=lambda: es_client.route_index_to_temp_es_cluster(index_name),
     )
