@@ -3,12 +3,13 @@
 import argparse
 import os
 import subprocess
+import tempfile
 
 
 def submit(script, script_args_list, cluster='no-vep', wait_for_job=True, use_existing_scripts_zip=False, region=None, spark_env=None, job_id=None):
     script_args = " ".join(['"%s"' % arg for arg in script_args_list])
 
-    hail_scripts_zip = "/tmp/hail_scripts.zip"
+    hail_scripts_zip =  os.path.join(tempfile.gettempdir(), 'hail_scripts.zip')
 
     os.chdir(os.path.join(os.path.dirname(__file__), ".."))
     if use_existing_scripts_zip and os.path.exists(hail_scripts_zip):

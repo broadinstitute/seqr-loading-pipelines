@@ -114,7 +114,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    if not overwrite_matrixtable and  path_exists(matrixtable_file):
+    if not overwrite_matrixtable and path_exists(matrixtable_file):
         reminder = 'If the input VCF file has been changed, or you just want to re-import VCF,' \
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
