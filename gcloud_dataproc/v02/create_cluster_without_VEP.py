@@ -13,7 +13,7 @@ def create_cluster(cluster='without-vep', machine_type='n1-highmem-8', max_idle=
     # create cluster
     command = f"""gcloud beta dataproc clusters create {cluster} \
         {f'--region={region}' if region else ''} \
-        --max-idle={max_idle}s \
+        --max-idle={max_idle} \
         --master-machine-type={machine_type}  \
         --master-boot-disk-size=100GB \
         --num-workers={num_workers} \
