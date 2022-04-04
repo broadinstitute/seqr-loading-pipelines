@@ -15,6 +15,7 @@ import time
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
+from sv_pipeline.genome.utils.download_utils import path_exists
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 logging.basicConfig(level=logging.INFO)
@@ -113,7 +114,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    if not overwrite_matrixtable and os.path.isdir(matrixtable_file):
+    if not overwrite_matrixtable and path_exists(matrixtable_file):
         reminder = 'If the input VCF file has been changed, or you just want to re-import VCF,' \
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
@@ -185,7 +186,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
     return rows.key_by().select(*FIELDS)
 
 
-def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards, es_nodes_wan_only):
+def export_to_es(rows, input_dataset, project_guid, es_host, es_port, es_password, block_size, num_shards, es_nodes_wan_only):
     meta = {
       'genomeVersion': '38',
       'sampleType': WGS_SAMPLE_TYPE,
@@ -197,7 +198,6 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
 
     rows = rows.annotate_globals(**meta)
 
-    es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
     es_client = HailElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     es_client.export_table_to_elasticsearch(
@@ -208,8 +208,13 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
-        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only}
+        elasticsearch_mapping_id=VARIANT_ID,
+        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only},
+        func_to_run_after_index_exists=lambda: es_client.route_index_to_temp_es_cluster(index_name),
     )
+
+    es_client.route_index_off_temp_es_cluster(index_name)
+    es_client.wait_for_shard_transfer(index_name)
 
 
 def add_strvctvre(rows, filename):
@@ -231,6 +236,7 @@ def main():
     p.add_argument('--gencode-path', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
+    p.add_argument('--es-password', default=os.environ.get('PIPELINE_ES_PASSWORD', ''))
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
@@ -238,12 +244,15 @@ def main():
     p.add_argument('--strvctvre', help='input VCF file for StrVCTVRE data')
     p.add_argument('--grch38-to-grch37-ref-chain', help='Path to GRCh38 to GRCh37 coordinates file',
                    default='gs://hail-common/references/grch38_to_grch37.over.chain.gz')
+    p.add_argument('--use-dataproc', action='store_true')
 
     args = p.parse_args()
 
     start_time = time.time()
 
-    hl.init()
+    if not args.use_dataproc:
+        hl.init()
+
     rg37 = hl.get_reference('GRCh37')
     rg38 = hl.get_reference('GRCh38')
     rg38.add_liftover(args.grch38_to_grch37_ref_chain, rg37)
@@ -259,11 +268,12 @@ def main():
     if args.strvctvre:
         rows = add_strvctvre(rows, args.strvctvre)
 
-    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
+    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.es_password, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
-    hl.stop()
+    if not args.use_dataproc:
+        hl.stop()
 
 
 if __name__ == '__main__':
