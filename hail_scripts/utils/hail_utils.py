@@ -127,7 +127,7 @@ def run_vep(
             raise ValueError(f"Invalid genome version: {genome_version}")
         config = "file:///vep_data/vep-gcloud.json"
 
-    mt = hl.vep(mt, config=config, name=name, block_size=block_size)
+    mt = hl.vep(mt, config=config, name=name, block_size=block_size, tolerate_parse_error=True)
 
     logger.info("==> Done with VEP")
     return mt
