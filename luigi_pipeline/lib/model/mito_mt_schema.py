@@ -96,7 +96,7 @@ class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
             'num_alt': hl.cond(is_called, hl.cond(self.mt.HL>=0.95, 2, hl.cond(self.mt.HL>=0.01, 1, 0)), -1),
             'gq': hl.cond(is_called, self.mt.MQ, 0),
             'hl': hl.cond(is_called, self.mt.HL, 0),
-            'mito_cn': self.mt.mito_cn,
+            'mito_cn': hl.int(self.mt.mito_cn),
             'contamination': self.mt.contamination,
             'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
             'sample_id': self.mt.s
