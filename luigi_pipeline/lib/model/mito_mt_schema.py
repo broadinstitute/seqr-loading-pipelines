@@ -19,13 +19,13 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def mitomap(self):
         return self._selected_ref_data.mitomap
 
-    @row_annotation(name='APOGEE')
+    @row_annotation(name='mitimpact_apogee')
     def mitimpact(self):
-        return self._selected_ref_data.mitimpact
+        return self._selected_ref_data.mitimpact.score
 
-    @row_annotation(name='HmtVar')
+    @row_annotation(name='hmtvar_hmtVar')
     def hmtvar(self):
-        return self._selected_ref_data.hmtvar
+        return self._selected_ref_data.hmtvar.score
 
     @row_annotation()
     def helix(self):
@@ -40,7 +40,7 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
         return self.mt.hap_defining_variant
 
     @row_annotation()
-    def mitotip_trna_prediction(self):
+    def mitotip_mitoTIP(self):
         return self.mt.mitotip_trna_prediction
 
     @row_annotation()

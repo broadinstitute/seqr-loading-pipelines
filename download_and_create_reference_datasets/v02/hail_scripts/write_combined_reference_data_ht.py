@@ -173,7 +173,14 @@ CONFIG = {
     'gnomad_mito': {
         '38': {
             'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
-            'select': ['AN', 'AC_hom', 'AC_het', 'AF_hom', 'AF_het', 'max_hl']
+            'select': {
+                'AN': 'AN',
+                'AC': 'AC_hom',
+                'AF': 'AF_hom',
+                'AC_het': 'AC_het',
+                'AF_het': 'AF_het',
+                'max_hl': 'max_hl',
+            }
         }
     },
     'mitomap': {
@@ -198,8 +205,8 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
             'select': {
-                'AC_hom': 'counts_hom',
-                'AF_hom': 'AF_hom',
+                'AC': 'counts_hom',
+                'AF': 'AF_hom',
                 'AC_het': 'counts_het',
                 'AF_het': 'AF_het',
                 'max_hl': 'max_ARF',
