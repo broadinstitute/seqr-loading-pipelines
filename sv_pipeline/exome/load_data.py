@@ -5,6 +5,7 @@ import logging
 import os
 import re
 
+from datetime import date
 from elasticsearch import helpers as es_helpers
 from getpass import getpass
 from tqdm import tqdm
@@ -16,10 +17,6 @@ from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# keep track of loading round to prevent variant ID clashes with previously saved variants
-# (i.e. prefix_1234 can mean different things in different callsets)
-ROUND = 2
 
 CHR_COL = 'chr'
 START_COL = 'start'
@@ -34,9 +31,9 @@ SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
-PREV_IDENTICAL_COL = 'identical_ovl' # TODO
-PREV_OVERLAP_COL = 'any_ovl' # TODO
-PREV_MISSING_COL = 'no_ovl' # TODO
+PREV_IDENTICAL_COL = 'identical_ovl'
+PREV_OVERLAP_COL = 'any_ovl'
+PREV_MISSING_COL = 'no_ovl'
 IN_SILICO_COL = 'strvctvre_score'
 
 CHROM_FIELD = 'contig'
@@ -76,6 +73,10 @@ def _get_seqr_sample_id(raw_sample_id):
     except AttributeError:
         raise ValueError(raw_sample_id)
 
+# keep track of loading date to prevent variant ID clashes with previously saved variants
+# (i.e. prefix_1234 can mean different things in different callsets)
+def _get_variant_name(val, call='any'):
+    return f'{val}_{call}_{date.today():%m%d%Y}'
 
 def _parse_genes(genes):
     return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
@@ -84,7 +85,7 @@ COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
     SF_COL: {'field_name': SF_FIELD, 'format': float},
-    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}_{}'.format(val, call, ROUND)},
+    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': _get_variant_name},
     CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
     END_COL: {'format': int},
