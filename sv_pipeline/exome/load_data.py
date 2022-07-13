@@ -114,14 +114,12 @@ COL_CONFIGS = {
 }
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [
     START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
     PREV_MISSING_COL,
 ] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
-
-IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
 
 QS_BIN_SIZE = 10
 
@@ -304,22 +302,6 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
     return parsed_svs_by_name
 
 
-def add_in_silico(svs_by_variant_id, file_path):
-    """
-    Add in silico predictors to the parsed SVs
-
-    :param svs_by_variant_id: dictionary of parsed SVs keyed by ID
-    :param file_path: path to the file with in silico predictors
-    :return: none
-    """
-    def _parse_row(row, header_indices):
-        variant_id = get_variant_id(row, header_indices)
-        if variant_id in svs_by_variant_id:
-            svs_by_variant_id[variant_id].update(get_parsed_column_values(row, header_indices, [IN_SILICO_COL]))
-
-    load_file(file_path, _parse_row, columns=IN_SILICO_COLS)
-
-
 def format_sv(sv):
     """
     Post-processing to format SVs for export
@@ -459,7 +441,6 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
-    p.add_argument('--in-silico')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -491,11 +472,7 @@ def main():
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
-    logger.info('Adding in silico predictors')
-    add_in_silico(parsed_svs_by_name, args.in_silico)
-
     parsed_svs = parsed_svs_by_name.values()
-
     logger.info('\nFormatting for ES export')
     for sv in tqdm(parsed_svs, unit=' sv records'):
         format_sv(sv)
