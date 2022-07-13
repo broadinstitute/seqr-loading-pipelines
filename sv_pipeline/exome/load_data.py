@@ -34,9 +34,9 @@ SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
-PREV_IDENTICAL_COL = 'identical_round{}'.format(ROUND-1)
-PREV_OVERLAP_COL = 'any_round{}'.format(ROUND-1)
-PREV_MISSING_COL = 'no_ovl_in_round{}'.format(ROUND-1)
+PREV_IDENTICAL_COL = 'identical_ovl' # TODO
+PREV_OVERLAP_COL = 'any_ovl' # TODO
+PREV_MISSING_COL = 'no_ovl' # TODO
 IN_SILICO_COL = 'strvctvre_score'
 
 CHROM_FIELD = 'contig'
@@ -80,9 +80,6 @@ def _get_seqr_sample_id(raw_sample_id):
 def _parse_genes(genes):
     return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
 
-def _parse_prev_call(call):
-    return call not in {'NA', 'FALSE'}
-
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
@@ -108,9 +105,9 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
-    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': _parse_prev_call},
-    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': _parse_prev_call},
-    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': _parse_prev_call},
+    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': bool},
+    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': bool},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
 }
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
