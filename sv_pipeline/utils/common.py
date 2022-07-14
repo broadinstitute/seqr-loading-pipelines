@@ -52,7 +52,7 @@ def _get_gs_samples(project_guid, file_ext, sample_type, expected_header, filena
     if header.strip() != expected_header:
         raise Exception('Missing header for sample file, expected "{}" but found {}'.format(
             expected_header, header))
-    return [line.decode('utf-8').strip().split('\t') for line in rows[1:]]
+    return [line.decode('utf-8').strip().split('\t') for line in rows[1:] if line]
 
 
 def get_sample_subset(project_guid, sample_type, filename=None):
