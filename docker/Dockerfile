@@ -100,11 +100,11 @@ WORKDIR /ensembl-vep-release-${VEP_VERSION}
 RUN perl INSTALL.pl -a ap -n -l -g all
 RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 
-# clone and hail-elasticsearch-pipelines repo
+# clone and seqr-loading-pipelines repo
 WORKDIR /
-RUN git clone https://github.com/broadinstitute/hail-elasticsearch-pipelines.git
-WORKDIR /hail-elasticsearch-pipelines
-RUN python3 -m pip install -r /hail-elasticsearch-pipelines/luigi_pipeline/requirements.txt
+RUN git clone https://github.com/broadinstitute/seqr-loading-pipelines.git
+WORKDIR /seqr-loading-pipelines
+RUN python3 -m pip install -r /seqr-loading-pipelines/luigi_pipeline/requirements.txt
 RUN python3 -m pip install git+https://github.com/bw2/hail-utils.git
 
 COPY vep_configs/* /vep_configs/
@@ -114,7 +114,7 @@ COPY gitconfig /root/.gitconfig
 COPY bin/*.sh /usr/local/bin/
 
 ENV PATH=/usr/local/lib/python3.7/site-packages/pyspark/bin:/google-cloud-sdk/bin:$PATH
-ENV PYTHONPATH=".:/hail-elasticsearch-pipelines:/hail-elasticsearch-pipelines/luigi_pipeline"
+ENV PYTHONPATH=".:/seqr-loading-pipelines:/seqr-loading-pipelines/luigi_pipeline"
 
 COPY entrypoint.sh /
 
