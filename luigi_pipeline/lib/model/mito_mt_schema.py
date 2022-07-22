@@ -15,43 +15,43 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def gnomad_mito(self):
         return self._selected_ref_data.gnomad_mito
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def mitomap(self):
         return self._selected_ref_data.mitomap
 
-    @row_annotation(name='mitimpact_apogee', disable_index=True)
+    @row_annotation(name='mitimpact_apogee')
     def mitimpact(self):
         return self._selected_ref_data.mitimpact.score
 
-    @row_annotation(name='hmtvar_hmtVar', disable_index=True)
+    @row_annotation(name='hmtvar_hmtVar')
     def hmtvar(self):
         return self._selected_ref_data.hmtvar.score
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def helix(self):
         return self._selected_ref_data.helix_mito
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def common_low_heteroplasmy(self):
         return self.mt.common_low_heteroplasmy
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def hap_defining_variant(self):
         return self.mt.hap_defining_variant
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def mitotip_mitoTIP(self):
         return self.mt.mitotip_trna_prediction
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def high_constraint_region(self):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
-    @row_annotation(name='AC_het', disable_index=True)
+    @row_annotation(name='AC_het')
     def ac_het(self):
         return self.mt.AC_het
 
-    @row_annotation(name='AF_het', disable_index=True)
+    @row_annotation(name='AF_het')
     def af_het(self):
         return self.mt.AF_het
 
