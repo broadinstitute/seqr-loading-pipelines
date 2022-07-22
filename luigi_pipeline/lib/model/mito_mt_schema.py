@@ -6,7 +6,7 @@ from lib.model.seqr_mt_schema import BaseSeqrSchema, SeqrGenotypesSchema, SeqrVa
 
 class SeqrMitoVariantSchema(BaseSeqrSchema):
 
-    def __init__(self, *args, high_constraint_region, **kwargs):
+    def __init__(self, *args, high_constraint_region=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._high_constraint_region = high_constraint_region
 
@@ -60,11 +60,11 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def rsid(self):
         return self.mt.rsid.find(lambda x: hl.is_defined(x))
 
-    @row_annotation(name='AC', disable_index=True)
+    @row_annotation(name='AC')
     def ac(self):
         return self.mt.AC_hom
 
-    @row_annotation(name='AF', disable_index=True)
+    @row_annotation(name='AF')
     def af(self):
         return self.mt.AF_hom
 
