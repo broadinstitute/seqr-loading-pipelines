@@ -5,6 +5,7 @@ import logging
 import os
 import re
 
+from datetime import date
 from elasticsearch import helpers as es_helpers
 from getpass import getpass
 from tqdm import tqdm
@@ -16,10 +17,6 @@ from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# keep track of loading round to prevent variant ID clashes with previously saved variants
-# (i.e. prefix_1234 can mean different things in different callsets)
-ROUND = 2
 
 CHR_COL = 'chr'
 START_COL = 'start'
@@ -34,9 +31,9 @@ SC_COL = 'vac'
 SF_COL = 'vaf'
 VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
-PREV_IDENTICAL_COL = 'identical_round{}'.format(ROUND-1)
-PREV_OVERLAP_COL = 'any_round{}'.format(ROUND-1)
-PREV_MISSING_COL = 'no_ovl_in_round{}'.format(ROUND-1)
+PREV_IDENTICAL_COL = 'identical_ovl'
+PREV_OVERLAP_COL = 'any_ovl'
+PREV_MISSING_COL = 'no_ovl'
 IN_SILICO_COL = 'strvctvre_score'
 
 CHROM_FIELD = 'contig'
@@ -76,18 +73,19 @@ def _get_seqr_sample_id(raw_sample_id):
     except AttributeError:
         raise ValueError(raw_sample_id)
 
+# keep track of loading date to prevent variant ID clashes with previously saved variants
+# (i.e. prefix_1234 can mean different things in different callsets)
+def _get_variant_name(val, call='any'):
+    return f'{val}_{call}_{date.today():%m%d%Y}'
 
 def _parse_genes(genes):
     return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
-
-def _parse_prev_call(call):
-    return call not in {'NA', 'FALSE'}
 
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
     SF_COL: {'field_name': SF_FIELD, 'format': float},
-    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': lambda val, call='any': '{}_{}_{}'.format(val, call, ROUND)},
+    VAR_NAME_COL: {'field_name': VARIANT_ID_FIELD, 'format': _get_variant_name},
     CALL_COL: {'field_name': CALL_FIELD},
     START_COL: {'format': int},
     END_COL: {'format': int},
@@ -108,20 +106,18 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
-    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': _parse_prev_call},
-    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': _parse_prev_call},
-    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': _parse_prev_call},
+    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': bool},
+    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': bool},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
 }
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
-CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL]
+CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [
     START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
     PREV_MISSING_COL,
 ] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
-
-IN_SILICO_COLS = [VAR_NAME_COL, CALL_COL, IN_SILICO_COL]
 
 QS_BIN_SIZE = 10
 
@@ -304,22 +300,6 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
     return parsed_svs_by_name
 
 
-def add_in_silico(svs_by_variant_id, file_path):
-    """
-    Add in silico predictors to the parsed SVs
-
-    :param svs_by_variant_id: dictionary of parsed SVs keyed by ID
-    :param file_path: path to the file with in silico predictors
-    :return: none
-    """
-    def _parse_row(row, header_indices):
-        variant_id = get_variant_id(row, header_indices)
-        if variant_id in svs_by_variant_id:
-            svs_by_variant_id[variant_id].update(get_parsed_column_values(row, header_indices, [IN_SILICO_COL]))
-
-    load_file(file_path, _parse_row, columns=IN_SILICO_COLS)
-
-
 def format_sv(sv):
     """
     Post-processing to format SVs for export
@@ -459,7 +439,6 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
-    p.add_argument('--in-silico')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -491,11 +470,7 @@ def main():
     )
     logger.info('Found {} SVs'.format(len(parsed_svs_by_name)))
 
-    logger.info('Adding in silico predictors')
-    add_in_silico(parsed_svs_by_name, args.in_silico)
-
     parsed_svs = parsed_svs_by_name.values()
-
     logger.info('\nFormatting for ES export')
     for sv in tqdm(parsed_svs, unit=' sv records'):
         format_sv(sv)

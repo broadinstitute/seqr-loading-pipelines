@@ -4,6 +4,8 @@ import sys
 import luigi
 import hail as hl
 
+from collections import defaultdict
+
 from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
 from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 from seqr_loading import SeqrVCFToMTTask
@@ -67,7 +69,11 @@ class BaseMTToESOptimizedTask(HailElasticSearchTask):
 
         row_ht = self.VariantsAndGenotypesSchema.elasticsearch_row(row_ht)
         es_shards = self._mt_num_shards(genotypes_mt)
-        self.export_table_to_elasticsearch(row_ht, es_shards)
+
+        # Initialize an empty SeqrVariantsAndGenotypesSchema to access class properties
+        disabled_fields = SeqrVariantsAndGenotypesSchema(None, ref_data=defaultdict(dict), clinvar_data=None).get_disable_index_field()
+        
+        self.export_table_to_elasticsearch(table=row_ht, num_shards=es_shards, disabled_fields=disabled_fields)
         
         self.cleanup(es_shards)
 

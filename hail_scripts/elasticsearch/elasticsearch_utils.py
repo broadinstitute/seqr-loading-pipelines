@@ -98,13 +98,25 @@ def elasticsearch_schema_for_table(table, disable_doc_values_for_fields=(), disa
 
     if disable_index_for_fields:
         logger.info("==> will disable index fields for %s", ", ".join(disable_index_for_fields))
-        for es_field_name in disable_index_for_fields:
+        for es_field_name in disable_index_for_fields:           
             if es_field_name not in properties:
-                raise ValueError(
-                    "'%s' in disable_index_for_fields arg is not in the elasticsearch schema: %s"
-                    % (es_field_name, properties)
-                )
-            properties[es_field_name]["index"] = False
+                flattened_fields = [key for key in properties if key.startswith(f'{es_field_name}_')]
+                if flattened_fields:
+                    for flattened_es_field_name in flattened_fields:
+                        properties[flattened_es_field_name]["index"] = False
+                else:
+                    raise ValueError(
+                        "'%s' in disable_index_for_fields arg is not in the elasticsearch schema: %s"
+                        % (es_field_name, properties)
+                    )
+            else:
+                if "properties" in properties[es_field_name]:
+                    nested_properties = properties[es_field_name]["properties"]
+                    for sub_field in nested_properties:
+                        nested_properties[sub_field]["index"] = False
+                    properties[es_field_name]["properties"] = nested_properties
+                else:
+                    properties[es_field_name]["index"] = False
 
     return properties
 

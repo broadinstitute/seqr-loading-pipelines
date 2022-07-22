@@ -12,11 +12,6 @@ import hail as hl
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')
 logger = logging.getLogger(__name__)
 
-contig_recoding={'1': 'chr1', '10': 'chr10', '11': 'chr11', '12': 'chr12', '13': 'chr13', '14': 'chr14', '15': 'chr15',
- '16': 'chr16', '17': 'chr17', '18': 'chr18', '19': 'chr19', '2': 'chr2', '20': 'chr20', '21': 'chr21', '22': 'chr22',
- '3': 'chr3', '4': 'chr4', '5': 'chr5', '6': 'chr6', '7': 'chr7', '8': 'chr8', '9': 'chr9', 'X': 'chrX', 'Y': 'chrY',
- 'MT': 'chrM', 'NW_009646201.1': 'chr1'}
-
 
 def _download_file(url, to_dir=tempfile.gettempdir(), skip_verify=False):
     if not (url and url.startswith(("http://", "https://"))):
@@ -69,9 +64,7 @@ def _load_mito_ht(config, force_write=True):
 
     logger.info(f'Loading hail table from {dn_path}.')
     types = config['field_types'] if config.get('field_types') else {}
-    if config['input_type'] == 'vcf':
-        ht = hl.import_vcf(dn_path, force_bgz=True, contig_recoding=contig_recoding).rows()
-    elif config['input_type'] == 'json':
+    if config['input_type'] == 'json':
         tsv_path = _convert_json_to_tsv(dn_path)
         ht = hl.import_table(tsv_path, types=types)
     else:

@@ -1,6 +1,7 @@
 """
 Tasks for Hail.
 """
+from collections import Counter
 import json
 import logging
 import math
@@ -161,6 +162,12 @@ class HailMatrixTableTask(luigi.Task):
         :return: MatrixTable remapped and keyed to use seqr_id
         """
         remap_ht = hl.import_table(remap_path, key='s')
+        s_dups = [k for k,v in Counter(remap_ht.s.collect()).items() if v>1]
+        seqr_dups = [k for k,v in Counter(remap_ht.seqr_id.collect()).items() if v>1]
+        
+        if len(s_dups)>0 or len(seqr_dups)>0:
+            raise ValueError(f"Duplicate s or seqr_id entries in remap file were found. Duplicate s:{s_dups}. Duplicate seqr_id:{seqr_dups}.")
+
         missing_samples = remap_ht.anti_join(mt.cols()).collect()
         remap_count = remap_ht.count()
 
@@ -226,11 +233,12 @@ class HailElasticSearchTask(luigi.Task):
     def import_mt(self):
         return hl.read_matrix_table(self.input()[0].path)
 
-    def export_table_to_elasticsearch(self, table, num_shards):
+    def export_table_to_elasticsearch(self, table, num_shards, disabled_fields=None):
         func_to_run_after_index_exists = None if not self.use_temp_loading_nodes else \
             lambda: self._es.route_index_to_temp_es_cluster(self.es_index)
         self._es.export_table_to_elasticsearch(table,
                                                index_name=self.es_index,
+                                               disable_index_for_fields=disabled_fields,
                                                func_to_run_after_index_exists=func_to_run_after_index_exists,
                                                elasticsearch_mapping_id="docId",
                                                num_shards=num_shards,

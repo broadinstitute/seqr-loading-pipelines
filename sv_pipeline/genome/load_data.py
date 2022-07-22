@@ -1,3 +1,11 @@
+# A simple usage guide:
+# $ cd <path-to>/hail_elasticsearch_pipelines/sv_pipeline/genome
+# $ export JAVA_HOME=<path-to>/Java/JavaVirtualMachines/jdk1.8.0_261.jdk/Contents/Home
+# $ PYTHONPATH=.:../../ python load_data.py <input_data.vcf.bgz> --strvctvre <strvctvre_data.vcf.bgz> --project-guid <project_guid> --es-nodes-wan-only --gencode-path <folder-for-mt> <other options>
+# Example:
+# $ PYTHONPATH=.:../../ python load_data.py vcf/phase2.annotated.svid.fixChrX.sampleIDs.vcf.gz --strvctvre vcf/phase2.annotated.fixChrX.sampleIDs.STRVCTRE.fixed.vcf.bgz --project-guid R0485_cmg_beggs_wgs --es-nodes-wan-only --gencode-path ./vcf
+#
+
 import argparse
 import hail as hl
 import logging
@@ -7,6 +15,7 @@ import time
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
 from sv_pipeline.utils.common import get_sample_subset, get_sample_remap, get_es_index_name, CHROM_TO_XPOS_OFFSET
+from sv_pipeline.genome.utils.download_utils import path_exists
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 logging.basicConfig(level=logging.INFO)
@@ -21,6 +30,7 @@ MAJOR_CONSEQ = 'major_consequence'
 GQ_BIN_SIZE = 10
 WGS_SAMPLE_TYPE = 'WGS'
 VARIANT_ID = 'variantId'
+BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -30,7 +40,7 @@ CORE_FIELDS = {
     'sf': lambda rows: rows.info.AF[0],
     'sn': lambda rows: rows.info.AN,
     'start': lambda rows: rows.locus.position,
-    'end': lambda rows: hl.if_else(hl.is_defined(rows.info.END2), rows.info.END2, rows.info.END),
+    'end': lambda rows: rows.info.END,
     'sv_callset_Het': lambda rows: rows.info.N_HET,
     'sv_callset_Hom': lambda rows: rows.info.N_HOMALT,
     'gnomad_svs_ID': lambda rows: hl.if_else(hl.is_defined(rows.info.gnomAD_V2_SVID),
@@ -38,19 +48,26 @@ CORE_FIELDS = {
                                              hl.missing(hl.tstr)),
     'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
     'pos': lambda rows: rows.locus.position,
-    'filters': lambda rows: hl.array(rows.filters.filter(lambda x: x != 'PASS')),
+    'filters': lambda rows: hl.array(rows.filters.filter(lambda x: (x != 'PASS') & (x != BOTHSIDES_SUPPORT))),
+    'bothsides_support': lambda rows: rows.filters.any(lambda x: x == BOTHSIDES_SUPPORT),
     'algorithms': lambda rows: rows.info.ALGORITHMS,
     'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
     'cpx_intervals': lambda rows: hl.if_else(hl.is_defined(rows.info.CPX_INTERVALS),
                                              rows.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
                                              hl.missing(hl.dtype(INTERVAL_TYPE))),
+    'end_locus': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
+                                         hl.struct(contig=rows.info.CHR2, pos=rows.info.END2),
+                                         hl.struct(contig=rows.locus.contig, pos=rows.info.END)),
 }
 
 DERIVED_FIELDS = {
     'xstart': lambda rows: rows.xpos,
-    'xstop': lambda rows: hl.if_else(hl.is_defined(rows.info.END2),
-                                     get_xpos(rows.info.CHR2, rows.info.END2),
-                                     get_xpos(rows.locus.contig, rows.info.END)),
+    'xstop': lambda rows: get_xpos(**rows.end_locus),
+    'rg37_locus': lambda rows: hl.liftover(rows.locus, 'GRCh37'),
+    'rg37_locus_end': lambda rows: hl.if_else(
+        rows.end_locus.pos <= hl.literal(hl.get_reference('GRCh38').lengths)[rows.end_locus.contig],
+        hl.liftover(hl.locus(rows.end_locus.contig, rows.end_locus.pos, reference_genome='GRCh38'), 'GRCh37'),
+        hl.missing('locus<GRCh37>')),
     'svType': lambda rows: rows[SV_TYPE][0],
     TRANS_CONSEQ_TERMS: lambda rows: rows[SORTED_TRANS_CONSEQ].map(lambda conseq: conseq[MAJOR_CONSEQ]).extend([rows[SV_TYPE][0]]),
     'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
@@ -67,6 +84,8 @@ SAMPLES_GQ_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+GQ_BIN_SIZE): i for i 
 
 FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, SORTED_TRANS_CONSEQ, 'genotypes'] +\
     list(SAMPLES_GQ_FIELDS.keys())
+
+FIELDS.remove('end_locus')
 
 
 def get_xpos(contig, pos):
@@ -95,7 +114,7 @@ def load_mt(input_dataset, matrixtable_file, overwrite_matrixtable):
         matrixtable_file = '{}.mt'.format(os.path.splitext(input_dataset)[0])
 
     # For the CMG dataset, we need to do hl.import_vcf() for once for all projects.
-    if not overwrite_matrixtable and os.path.isdir(matrixtable_file):
+    if not overwrite_matrixtable and path_exists(matrixtable_file):
         reminder = 'If the input VCF file has been changed, or you just want to re-import VCF,' \
                    ' please add "--overwrite-matrixtable" command line option.'
         logger.info('Use the existing MatrixTable file {}. {}'.format(matrixtable_file, reminder))
@@ -167,7 +186,7 @@ def annotate_fields(mt, gencode_release, gencode_path):
     return rows.key_by().select(*FIELDS)
 
 
-def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size, num_shards, es_nodes_wan_only):
+def export_to_es(rows, input_dataset, project_guid, es_host, es_port, es_password, block_size, num_shards, es_nodes_wan_only):
     meta = {
       'genomeVersion': '38',
       'sampleType': WGS_SAMPLE_TYPE,
@@ -179,7 +198,6 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
 
     rows = rows.annotate_globals(**meta)
 
-    es_password = os.environ.get('PIPELINE_ES_PASSWORD', '')
     es_client = HailElasticsearchClient(host=es_host, port=es_port, es_password=es_password)
 
     es_client.export_table_to_elasticsearch(
@@ -190,8 +208,13 @@ def export_to_es(rows, input_dataset, project_guid, es_host, es_port, block_size
         delete_index_before_exporting=True,
         export_globals_to_index_meta=True,
         verbose=True,
-        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only}
+        elasticsearch_mapping_id=VARIANT_ID,
+        elasticsearch_config={'es.nodes.wan.only': es_nodes_wan_only},
+        func_to_run_after_index_exists=lambda: es_client.route_index_to_temp_es_cluster(index_name),
     )
+
+    es_client.route_index_off_temp_es_cluster(index_name)
+    es_client.wait_for_shard_transfer(index_name)
 
 
 def add_strvctvre(rows, filename):
@@ -213,17 +236,26 @@ def main():
     p.add_argument('--gencode-path', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
+    p.add_argument('--es-password', default=os.environ.get('PIPELINE_ES_PASSWORD', ''))
     p.add_argument('--num-shards', type=int, default=1)
     p.add_argument('--block-size', type=int, default=2000)
     p.add_argument('--es-nodes-wan-only', action='store_true')
     p.add_argument('--id-file', help='The full path (can start with gs://) of the id file. Should only be used for testing purposes, not intended for use in production')
     p.add_argument('--strvctvre', help='input VCF file for StrVCTVRE data')
+    p.add_argument('--grch38-to-grch37-ref-chain', help='Path to GRCh38 to GRCh37 coordinates file',
+                   default='gs://hail-common/references/grch38_to_grch37.over.chain.gz')
+    p.add_argument('--use-dataproc', action='store_true')
 
     args = p.parse_args()
 
     start_time = time.time()
 
-    hl.init()
+    if not args.use_dataproc:
+        hl.init()
+
+    rg37 = hl.get_reference('GRCh37')
+    rg38 = hl.get_reference('GRCh38')
+    rg38.add_liftover(args.grch38_to_grch37_ref_chain, rg37)
 
     mt = load_mt(args.input_dataset, args.matrixtable_file, args.overwrite_matrixtable)
 
@@ -236,11 +268,12 @@ def main():
     if args.strvctvre:
         rows = add_strvctvre(rows, args.strvctvre)
 
-    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.block_size,
+    export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.es_password, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
 
-    hl.stop()
+    if not args.use_dataproc:
+        hl.stop()
 
 
 if __name__ == '__main__':

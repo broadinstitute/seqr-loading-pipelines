@@ -15,43 +15,43 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def gnomad_mito(self):
         return self._selected_ref_data.gnomad_mito
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def mitomap(self):
         return self._selected_ref_data.mitomap
 
-    @row_annotation(name='mitimpact_apogee')
+    @row_annotation(name='mitimpact_apogee', disable_index=True)
     def mitimpact(self):
         return self._selected_ref_data.mitimpact.score
 
-    @row_annotation(name='hmtvar_hmtVar')
+    @row_annotation(name='hmtvar_hmtVar', disable_index=True)
     def hmtvar(self):
         return self._selected_ref_data.hmtvar.score
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def helix(self):
         return self._selected_ref_data.helix_mito
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def common_low_heteroplasmy(self):
         return self.mt.common_low_heteroplasmy
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def hap_defining_variant(self):
         return self.mt.hap_defining_variant
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def mitotip_mitoTIP(self):
         return self.mt.mitotip_trna_prediction
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def high_constraint_region(self):
         return hl.is_defined(self._high_constraint_region[self.mt.locus])
 
-    @row_annotation(name='AC_het')
+    @row_annotation(name='AC_het', disable_index=True)
     def ac_het(self):
         return self.mt.AC_het
 
-    @row_annotation(name='AF_het')
+    @row_annotation(name='AF_het', disable_index=True)
     def af_het(self):
         return self.mt.AF_het
 
@@ -60,15 +60,15 @@ class SeqrMitoVariantSchema(BaseSeqrSchema):
     def rsid(self):
         return self.mt.rsid.find(lambda x: hl.is_defined(x))
 
-    @row_annotation(name='AC')
+    @row_annotation(name='AC', disable_index=True)
     def ac(self):
         return self.mt.AC_hom
 
-    @row_annotation(name='AF')
+    @row_annotation(name='AF', disable_index=True)
     def af(self):
         return self.mt.AF_hom
 
-    @row_annotation(name='AN')
+    @row_annotation(name='AN', disable_index=True)
     def an(self):
         return self.mt.AN
 
