@@ -107,7 +107,7 @@ class SeqrSchema(BaseMTSchema):
     def xstart(self):
         return variant_id.get_expr_for_xpos(self.mt.locus)
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
