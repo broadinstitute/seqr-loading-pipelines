@@ -205,7 +205,9 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
             'select': {
+                'AC': 'counts_hom',
                 'AF': 'AF_hom',
+                'AC_het': 'counts_het',
                 'AF_het': 'AF_het',
                 'max_hl': 'max_ARF',
             }
