@@ -160,6 +160,12 @@ CONFIG = {
                        'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
     },
+    'gnomad_non_coding_constraint': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+            'select': {'target': 'z_score'}
+        },
+    },
     'geno2mp': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
@@ -366,7 +372,7 @@ def run(args):
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             [],
+             [''],
              args.build,)
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
     print('Writing to %s' % output_path)
