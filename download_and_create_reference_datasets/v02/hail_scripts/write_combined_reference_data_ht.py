@@ -373,7 +373,7 @@ def join_hts(datasets, coverage_datasets=[], region_datasets=[], reference_genom
         joined_ht = annotate_ref_regions(joined_ht, region_dataset, reference_genome)
 
     # Track the dataset we've added as well as the source path.
-    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
+    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets + region_datasets}
     # Add metadata, but also removes previous globals.
     joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
                                          datasets=hl.dict(included_dataset),
