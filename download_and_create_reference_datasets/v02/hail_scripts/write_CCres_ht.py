@@ -2,8 +2,6 @@ import logging
 
 import hail as hl
 
-from hail_scripts.utils.hail_utils import import_table
-
 logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s")
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -28,14 +26,15 @@ def make_interval_bed_table(ht, reference_genome):
         ),
         target=ht["f5"],
     )
-    return ht
+    ht = ht.transmute(target=ht.target.split(","))
+    return ht.key_by("interval")
 
 
 def run():
     for genome_version, path in CONFIG.items():
         logger.info("Reading from input path: %s", path)
 
-        ht = import_table(
+        ht = hl.import_table(
             path,
             no_header=True,
             min_partitions=100,
@@ -45,7 +44,7 @@ def run():
                 "f2": hl.tint32,
                 "f3": hl.tstr,
                 "f4": hl.tstr,
-                "f5": hl.tstr,
+                "f5": hl.tstr,  # Hail throws a JSON parse error when using tarray(hl.tstr) so split string later in function
             },
         )
         ht = make_interval_bed_table(ht, genome_version)
