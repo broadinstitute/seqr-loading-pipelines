@@ -235,7 +235,7 @@ def annotate_ref_regions(ht, region_dataset, reference_genome):
     :param ht: Combined reference hail Table.
     :param region_dataset: Imported region/bed file with 3 or 4 columns
     :param reference_genome: Reference genome, e.g. GRCh38
-    :return: Annotated hail Table.
+    :return: hail Table annotated with references target annotation.
     """
     region_ht = hl.read_table(CONFIG[region_dataset][reference_genome]["path"])
     region_select = {
