@@ -166,6 +166,12 @@ CONFIG = {
             'select': {'target': 'z_score'}
         },
     },
+    'screen': {
+        '38': {
+            'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            'select': {'target': 'region_type'}
+        }
+    },
     'geno2mp': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
