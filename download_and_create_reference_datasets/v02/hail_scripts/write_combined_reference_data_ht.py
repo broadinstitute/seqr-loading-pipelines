@@ -229,17 +229,26 @@ CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 
-def annotate_ref_regions(ref_data, region_dataset, reference_genome):
+def annotate_ref_regions(ht, region_dataset, reference_genome):
     """
     Annotate combined reference data with region based reference data.
-    :param ref_data: Combined reference hail Table.
+    :param ht: Combined reference hail Table.
     :param region_dataset: Imported region/bed file with 3 or 4 columns
     :param reference_genome: Reference genome, e.g. GRCh38
     :return: Annotated hail Table.
     """
-    region_ht = hl.read_table(CONFIG[region_dataset][reference_genome]['path'])
-    region_select = {region_dataset: hl.struct(**{CONFIG[region_dataset]['38']['select']['target']: region_ht[comb_ref.locus].target})}
-    return ref_data.annotate(**region_select)
+    region_ht = hl.read_table(CONFIG[region_dataset][reference_genome]["path"])
+    region_select = {
+        region_dataset: hl.struct(
+            **{
+                CONFIG[region_dataset][reference_genome]["select"]["target"]: region_ht[
+                    ht.locus
+                ].target
+            }
+        )
+    }
+    return ht.annotate(**region_select)
+
 
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
@@ -378,7 +387,7 @@ def run(args):
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
-             [''],
+             ['gnomad_non_coding_constraint', 'screen'],
              args.build,)
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
     print('Writing to %s' % output_path)

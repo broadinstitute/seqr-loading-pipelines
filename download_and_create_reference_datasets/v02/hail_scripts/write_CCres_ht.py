@@ -13,14 +13,18 @@ CONFIG = {"38": "gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.bed"}
 
 def make_interval_bed_table(ht, reference_genome):
     """
-    Remove the extra fields from the input CCRes file and mimic a bed import.
+    Remove the extra fields from the input ccREs file and mimic a bed import.
 
-    :param ht: CCRes bed file.
+    :param ht: ccREs bed file.
     :return: Hail table that mimics basic bed file table.
     """
     ht = ht.select(
         interval=hl.locus_interval(
-            ht["f0"], ht["f1"], ht["f2"], reference_genome, invalid_missing=True
+            ht["f0"],
+            ht["f1"],
+            ht["f2"],
+            reference_genome=f"GRCh{reference_genome}",
+            invalid_missing=True,
         ),
         target=ht["f5"],
     )
@@ -34,6 +38,7 @@ def run():
         ht = import_table(
             path,
             no_header=True,
+            min_partitions=100,
             types={
                 "f0": hl.tstr,
                 "f1": hl.tint32,
