@@ -6,7 +6,7 @@ import os
 
 import hail as hl
 
-VERSION = '2.0.4' # passed arg
+VERSION = '2.0.5' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
