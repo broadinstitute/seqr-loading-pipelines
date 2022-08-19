@@ -216,6 +216,7 @@ CONFIG = {
 CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
+
 def annotate_ref_regions(ref_data, region_dataset, reference_genome):
     """
     Annotate combined reference data with region based reference data.
@@ -338,7 +339,7 @@ def get_ht(dataset, reference_genome):
     return base_ht.select(**select_query).distinct()
 
 
-def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, coverage_datasets=[], region_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
@@ -346,6 +347,9 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     # Annotate coverages.
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
+
+    for region_dataset in region_datasets:
+        joined_ht = annotate_ref_regions(joined_ht, region_dataset, reference_genome)
 
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
@@ -362,8 +366,8 @@ def run(args):
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
+             [],
              args.build,)
-    joined_ht = annotate_ref_regions(joined_ht)
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
     print('Writing to %s' % output_path)
     joined_ht.write(os.path.join(output_path))
