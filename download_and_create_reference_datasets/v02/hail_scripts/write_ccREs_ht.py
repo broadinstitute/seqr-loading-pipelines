@@ -19,8 +19,8 @@ def make_interval_bed_table(ht, reference_genome):
     ht = ht.select(
         interval=hl.locus_interval(
             ht["f0"],
-            ht["f1"],
-            ht["f2"],
+            ht["f1"]+1,
+            ht["f2"]+1,
             reference_genome=f"GRCh{reference_genome}",
             invalid_missing=True,
         ),
