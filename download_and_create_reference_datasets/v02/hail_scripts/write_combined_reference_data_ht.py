@@ -209,6 +209,7 @@ CONFIG = {
                 'AF': 'AF_hom',
                 'AC_het': 'counts_het',
                 'AF_het': 'AF_het',
+                'AN': 'AN',
                 'max_hl': 'max_ARF',
             }
         }
