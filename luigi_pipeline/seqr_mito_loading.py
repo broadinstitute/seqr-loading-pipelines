@@ -40,32 +40,8 @@ class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrMitoVariantMTTask
     GenotypesSchema = SeqrMitoGenotypesSchema
 
-    def subset_samples_and_variants(self, mt, subset_path):
-        """
-        Override the base class method to allow missing samples for mitochondria datasets
-        """
-        subset_ht = hl.import_table(subset_path, key='s')
-        subset_count = subset_ht.count()
-        anti_join_ht = subset_ht.anti_join(mt.cols())
-        anti_join_ht_count = anti_join_ht.count()
-
-        if anti_join_ht_count != 0:
-            missing_samples = anti_join_ht.s.collect()
-            message = f'Only {subset_count - anti_join_ht_count} out of {subset_count} ' \
-                      f'subsetting-table IDs matched IDs in the variant callset.\n' \
-                      f'IDs that aren\'t in the callset: {missing_samples}\n' \
-                      f'All callset sample IDs:{mt.s.collect()}'
-            if (subset_count > anti_join_ht_count) and self.ignore_missing_samples:
-                logger.warning(message)
-            else:
-                raise MatrixTableSampleSetError(message, missing_samples)
-
-        mt = mt.semi_join_cols(subset_ht)
-        mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
-
-        logger.info(f'Finished subsetting samples. Kept {subset_count} '
-                    f'out of {mt.count()} samples in vds')
-        return mt
+    def subset_samples_and_variants(self, *args):
+        return super().subset_samples_and_variants(*args, ignore_missing_samples=self.ignore_missing_samples)
 
 
 class SeqrMitoMTToESTask(BaseMTToESOptimizedTask):
