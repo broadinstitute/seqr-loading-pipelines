@@ -53,7 +53,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     """
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
-    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing the reference variants.')
+    reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
+    interval_ref_ht_path = luigi.Parameter(description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
@@ -76,6 +77,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         for source_path in self.source_paths:
             check_if_path_exists(source_path, "source_path")
         check_if_path_exists(self.reference_ht_path, "reference_ht_path")
+        if self.interval_ref_ht_path: check_if_path_exists(self.interval_ref_ht_path, "interval_ref_ht_path")
         if self.clinvar_ht_path: check_if_path_exists(self.clinvar_ht_path, "clinvar_ht_path")
         if self.hgmd_ht_path: check_if_path_exists(self.hgmd_ht_path, "hgmd_ht_path")
         if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
@@ -102,11 +104,12 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner, vep_config_json_path=self.vep_config_json_path)
 
         ref_data = hl.read_table(self.reference_ht_path)
+        interval_ref_data = hl.read_table(self.interval_ref_ht_path)
         clinvar = hl.read_table(self.clinvar_ht_path)
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
 
-        mt = schema_cls(mt, ref_data=ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
+        mt = schema_cls(mt, ref_data=ref_data, interval_ref_data=interval_ref_data, clinvar_data=clinvar, hgmd_data=hgmd).annotate_all(
             overwrite=True).select_annotated_mt()
 
         mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
@@ -193,6 +196,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner to annotate vep.')
 
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
+    interval_ref_ht_path = luigi.Parameter(description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
@@ -219,6 +223,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
             genome_version=self.genome_version,
             vep_runner=self.vep_runner,
             reference_ht_path=self.reference_ht_path,
+            interval_ref_ht_path=self.interval_ref_ht_path,
             clinvar_ht_path=self.clinvar_ht_path,
             hgmd_ht_path=self.hgmd_ht_path,
             sample_type=self.sample_type,
