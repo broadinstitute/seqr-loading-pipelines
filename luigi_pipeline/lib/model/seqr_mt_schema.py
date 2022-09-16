@@ -7,8 +7,9 @@ from hail_scripts.computed_fields import vep
 
 class SeqrSchema(BaseMTSchema):
 
-    def __init__(self, *args, ref_data, clinvar_data, hgmd_data=None, **kwargs):
+    def __init__(self, *args, ref_data, interval_ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
+        self._interval_ref_data = interval_ref_data
         self._clinvar_data = clinvar_data
         self._hgmd_data = hgmd_data
 
@@ -213,6 +214,31 @@ class SeqrSchema(BaseMTSchema):
                             'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
 
+
+    @row_annotation(disable_index=True)
+    def gnomad_non_coding_constraint(self):
+        return hl.struct(
+            **{
+                "z_score": self._interval_ref_data.index(
+                    self.mt.locus, all_matches=True
+                )
+                .filter(
+                    lambda x: hl.is_defined(x.gnomad_non_coding_constraint["z_score"])
+                )
+                .gnomad_non_coding_constraint.z_score
+            }
+        )
+
+    @row_annotation(disable_index=True)
+    def screen(self):
+        return hl.struct(
+            **{
+                "region_type": self._interval_ref_data.index(
+                    self.mt.locus, all_matches=True
+                ).flatmap(lambda x: x.screen["region_type"])
+            }
+        )
+        
 class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')
