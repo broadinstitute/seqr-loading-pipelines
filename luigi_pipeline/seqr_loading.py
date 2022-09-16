@@ -95,7 +95,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         clinvar = hl.read_table(self.clinvar_ht_path)
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
-        return {'ref_data': ref, 'internal_ref_data': internal_ref_data, 'clinvar_data': clinvar, 'hgmd_data': hgmd}
+        return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar, 'hgmd_data': hgmd}
 
     def annotate_globals(self, mt):
         return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
@@ -120,7 +120,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
-
         if self.RUN_VEP:
             mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner,
                                              vep_config_json_path=self.vep_config_json_path)
