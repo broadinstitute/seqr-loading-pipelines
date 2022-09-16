@@ -163,13 +163,13 @@ CONFIG = {
     'gnomad_non_coding_constraint': {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
-            'select': {'target': 'z_score'}
+            'select': {'z_score': 'target'}
         },
     },
     'screen': {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'select': {'target': 'region_type'}
+            'select': {'region_type': 'target'}
         }
     },
     'geno2mp': {
