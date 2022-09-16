@@ -5,7 +5,7 @@ from hail_scripts.computed_fields import variant_id
 from hail_scripts.computed_fields import vep
 
 
-class SeqrSchema(BaseMTSchema):
+class BaseSeqrSchema(BaseMTSchema):
 
     def __init__(self, *args, ref_data, interval_ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
@@ -49,20 +49,6 @@ class SeqrSchema(BaseMTSchema):
     @row_annotation()
     def filters(self):
         return self.mt.filters
-
-    @row_annotation(disable_index=True)
-    def aIndex(self):
-        return self.mt.a_index
-    
-    @row_annotation(disable_index=True)
-    def wasSplit(self):
-        return self.mt.was_split
-
-    @row_annotation(disable_index=True)
-    def originalAltAlleles(self):
-        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
-        # If we can get it to not drop it, we should revert this to `old_locus`
-        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
 
     @row_annotation(name='sortedTranscriptConsequences', disable_index=True, fn_require=vep)
     def sorted_transcript_consequences(self):
@@ -145,12 +131,34 @@ class SeqrSchema(BaseMTSchema):
         return vep.get_expr_for_vep_gene_ids_set(self.mt.sortedTranscriptConsequences, only_coding_genes=True)
 
     @row_annotation()
-    def cadd(self):
-        return self._selected_ref_data.cadd
+    def clinvar(self):
+        return hl.struct(**{'allele_id': self._clinvar_data[self.mt.row_key].info.ALLELEID,
+                            'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
+                            'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp
+
+
+class SeqrSchema(BaseSeqrSchema):
+    @row_annotation(disable_index=True)
+    def aIndex(self):
+        return self.mt.a_index
+
+    @row_annotation(disable_index=True)
+    def wasSplit(self):
+        return self.mt.was_split
+
+    @row_annotation(disable_index=True)
+    def originalAltAlleles(self):
+        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
+        # If we can get it to not drop it, we should revert this to `old_locus`
+        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
+
+    @row_annotation()
+    def cadd(self):
+        return self._selected_ref_data.cadd
 
     @row_annotation(disable_index=True)
     def geno2mp(self):
@@ -206,12 +214,6 @@ class SeqrSchema(BaseMTSchema):
             raise RowAnnotationOmit
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
-
-    @row_annotation()
-    def clinvar(self):
-        return hl.struct(**{'allele_id': self._clinvar_data[self.mt.row_key].info.ALLELEID,
-                            'clinical_significance': hl.delimit(self._clinvar_data[self.mt.row_key].info.CLNSIG),
-                            'gold_stars': self._clinvar_data[self.mt.row_key].gold_stars})
 
 
 

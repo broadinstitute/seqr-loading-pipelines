@@ -10,6 +10,7 @@ CONFIG = {
                     'AF_het': hl.tfloat64, 'max_ARF': hl.tfloat64, 'alleles': hl.tarray(hl.tstr)},
     'annotate': {
         'locus': lambda ht: hl.locus('chrM', hl.parse_int32(ht.locus.split(':')[1])),
+        'AN': lambda ht: hl.if_else(ht.AF_hom > 0, hl.int32(ht.counts_hom/ht.AF_hom), hl.int32(ht.counts_het/ht.AF_het))
     },
 }
 
