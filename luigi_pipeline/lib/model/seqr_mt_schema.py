@@ -231,7 +231,7 @@ class SeqrSchema(BaseSeqrSchema):
             }
         )
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def screen(self):
         return hl.struct(
             **{
@@ -240,7 +240,7 @@ class SeqrSchema(BaseSeqrSchema):
                 ).flatmap(lambda x: x.screen["region_type"])
             }
         )
-        
+
 class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')

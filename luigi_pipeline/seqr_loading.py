@@ -208,7 +208,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner to annotate vep.')
 
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
-    interval_ref_ht_path = luigi.Parameter(description='Path to the Hail Table storing interval-keyed reference data.')
+    interval_ref_ht_path = luigi.Parameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
