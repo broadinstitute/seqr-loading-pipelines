@@ -217,7 +217,7 @@ class SeqrSchema(BaseSeqrSchema):
 
 
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def gnomad_non_coding_constraint(self):
         return hl.struct(
             **{
