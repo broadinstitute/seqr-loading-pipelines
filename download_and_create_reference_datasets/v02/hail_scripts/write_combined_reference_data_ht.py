@@ -6,7 +6,7 @@ import os
 
 import hail as hl
 
-VERSION = '2.0.4' # passed arg
+VERSION = '2.0.5' # passed arg
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
@@ -159,6 +159,18 @@ CONFIG = {
             'select': {'AF_POPMAX': 'info.AF_POPMAX', 'AF': 'info.AF#', 'AC_Adj': 'info.AC_Adj#', 'AC_Het': 'info.AC_Het#',
                        'AC_Hom': 'info.AC_Hom#', 'AC_Hemi': 'info.AC_Hemi#', 'AN_Adj': 'info.AN_Adj'},
         },
+    },
+    'gnomad_non_coding_constraint': {
+        '38': {
+            'path': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+            'select': {'z_score': 'target'}
+        },
+    },
+    'screen': {
+        '38': {
+            'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            'select': {'region_type': 'target'}
+        }
     },
     'geno2mp': {
         '37': {
@@ -354,7 +366,6 @@ def run(args):
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
-
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
     print('Writing to %s' % output_path)
     joined_ht.write(os.path.join(output_path))
