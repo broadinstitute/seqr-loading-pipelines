@@ -114,7 +114,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     def read_input_write_mt(self):
         if self.hail_temp_dir:
             hl.init(temp_dir=self.hail_temp_dir) # Need to use the GCP bucket as temp storage for very large callset joins
-
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
