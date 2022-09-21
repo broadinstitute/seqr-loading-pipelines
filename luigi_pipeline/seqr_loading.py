@@ -71,6 +71,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                         description="Path of hail vep config .json file")
     grch38_to_grch37_ref_chain = luigi.OptionalParameter(default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
                                         description="Path to GRCh38 to GRCh37 coordinates file")
+    hail_temp_dir = luigi.OptionalParameter(default=None, description="Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.")
     RUN_VEP = True
     SCHEMA_CLASS = SeqrVariantsAndGenotypesSchema
 
@@ -86,6 +87,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
         if self.vep_config_json_path: check_if_path_exists(self.vep_config_json_path, "vep_config_json_path")
         if self.grch38_to_grch37_ref_chain: check_if_path_exists(self.grch38_to_grch37_ref_chain, "grch38_to_grch37_ref_chain")
+        if self.hail_temp_dir: check_if_path_exists(self.hail_temp_dir, "hail_temp_dir")
 
         self.read_input_write_mt()
 
@@ -110,6 +112,11 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return self.import_vcf()
 
     def read_input_write_mt(self):
+        if self.hail_temp_dir:
+            hl.init(temp_dir=self.hail_temp_dir) # Need to use the GCP bucket as temp storage for very large callset joins
+
+        hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
+
         mt = self.import_dataset()
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
