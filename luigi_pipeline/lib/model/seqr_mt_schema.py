@@ -227,7 +227,7 @@ class SeqrSchema(BaseSeqrSchema):
                 .filter(
                     lambda x: hl.is_defined(x.gnomad_non_coding_constraint["z_score"])
                 )
-                .gnomad_non_coding_constraint.z_score
+                .gnomad_non_coding_constraint.z_score.first()
             }
         )
 
