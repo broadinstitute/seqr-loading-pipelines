@@ -307,7 +307,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
                                       hl.null(hl.tfloat)),
                 hl.sum(self.mt.AD)
             ),
-            'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
+            'dp': hl.if_else(is_called & hl.is_defined(self.mt.AD), hl.int(hl.min(hl.sum(self.mt.AD), 32000)), hl.missing(hl.tint)),
             'sample_id': self.mt.s
         }
 
