@@ -98,7 +98,7 @@ class BaseSeqrSchema(BaseMTSchema):
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
 
-    @row_annotation(disable_index=True)
+    @row_annotation()
     def rg37_locus(self):
         if self.mt.locus.dtype.reference_genome.name != "GRCh38":
             raise RowAnnotationOmit
@@ -219,6 +219,8 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation()
     def gnomad_non_coding_constraint(self):
+        if self._interval_ref_data is None:
+            raise RowAnnotationOmit
         return hl.struct(
             **{
                 "z_score": self._interval_ref_data.index(
@@ -233,6 +235,8 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation()
     def screen(self):
+        if self._interval_ref_data is None:
+            raise RowAnnotationOmit
         return hl.struct(
             **{
                 "region_type": self._interval_ref_data.index(

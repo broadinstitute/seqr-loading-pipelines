@@ -54,7 +54,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
-    interval_ref_ht_path = luigi.Parameter(description='Path to the Hail Table storing interval-keyed reference data.')
+    interval_ref_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
     hgmd_ht_path = luigi.Parameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
@@ -93,7 +93,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
     def get_schema_class_kwargs(self):
         ref = hl.read_table(self.reference_ht_path)
-        interval_ref_data = hl.read_table(self.interval_ref_ht_path)
+        interval_ref_data = hl.read_table(self.interval_ref_ht_path) if self.interval_ref_ht_path else None
         clinvar = hl.read_table(self.clinvar_ht_path)
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
