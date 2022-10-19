@@ -303,15 +303,15 @@ class SeqrGenotypesSchema(BaseMTSchema):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
-            'num_alt': hl.cond(is_called, self.mt.GT.n_alt_alleles(), -1),
-            'gq': hl.cond(is_called, self.mt.GQ, 0),
+            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1),
+            'gq': hl.if_else(is_called, self.mt.GQ, 0),
             'ab': hl.bind(
-                lambda total: hl.cond((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
+                lambda total: hl.if_else((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
                                       hl.float(self.mt.AD[1] / total),
-                                      hl.null(hl.tfloat)),
+                                      hl.missing(hl.tfloat)),
                 hl.sum(self.mt.AD)
             ),
-            'dp': hl.cond(is_called, hl.int(hl.min(self.mt.DP, 32000)), hl.null(hl.tfloat)),
+            'dp': hl.if_else(is_called & hl.is_defined(self.mt.AD), hl.int(hl.min(hl.sum(self.mt.AD), 32000)), hl.missing(hl.tint)),
             'sample_id': self.mt.s
         }
 
