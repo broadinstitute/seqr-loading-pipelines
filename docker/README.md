@@ -10,7 +10,7 @@ file, and full instructions for how to run the pipeline in the image can be foun
 To build the image, run the following:
 ```bash
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-docker build docker/ -t gcr.io/seqr-project/pipeline-runner:gcloud-prod -t gcr.io/seqr-project/pipeline-runner:${TIMESTAMP}
+docker build . -f docker/Dockerfile -t gcr.io/seqr-project/pipeline-runner:gcloud-prod -t gcr.io/seqr-project/pipeline-runner:${TIMESTAMP}
 docker push gcr.io/seqr-project/pipeline-runner:gcloud-prod
 docker push gcr.io/seqr-project/pipeline-runner:${TIMESTAMP}
 ```

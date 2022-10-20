@@ -62,7 +62,7 @@ RUN python3 -m pip install --upgrade gsutil
 # install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
 # assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
 RUN python3 -m pip install hail
-COPY spark-defaults.conf /usr/local/lib/python3.7/site-packages/pyspark/conf/spark-defaults.conf
+COPY docker/spark-defaults.conf /usr/local/lib/python3.7/site-packages/pyspark/conf/spark-defaults.conf
 RUN wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop2-1.9.17/gcs-connector-hadoop2-1.9.17-shaded.jar -O /usr/local/lib/python3.7/site-packages/pyspark/jars/gcs-connector-hadoop2-1.9.17-shaded.jar
 
 # install htslib
@@ -100,23 +100,27 @@ WORKDIR /ensembl-vep-release-${VEP_VERSION}
 RUN perl INSTALL.pl -a ap -n -l -g all
 RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 
-# clone and seqr-loading-pipelines repo
-WORKDIR /
-RUN git clone https://github.com/broadinstitute/seqr-loading-pipelines.git
-WORKDIR /seqr-loading-pipelines
-RUN python3 -m pip install -r /seqr-loading-pipelines/luigi_pipeline/requirements.txt
+# install hail utils
 RUN python3 -m pip install git+https://github.com/bw2/hail-utils.git
 
-COPY vep_configs/* /vep_configs/
+# copy files from seqr-loading-pipelines repo
+WORKDIR /seqr-loading-pipelines
+COPY hail_builds/ ./hail_builds
+COPY hail_scripts/ ./hail_scripts
+COPY luigi_pipeline/ ./luigi_pipeline
 
-COPY bashrc /root/.bashrc
-COPY gitconfig /root/.gitconfig
-COPY bin/*.sh /usr/local/bin/
+RUN python3 -m pip install -r ./luigi_pipeline/requirements.txt
+
+COPY docker/vep_configs/* /vep_configs/
+
+COPY docker/bashrc /root/.bashrc
+COPY docker/gitconfig /root/.gitconfig
+COPY docker/bin/*.sh /usr/local/bin/
 
 ENV PATH=/usr/local/lib/python3.7/site-packages/pyspark/bin:/google-cloud-sdk/bin:$PATH
 ENV PYTHONPATH=".:/seqr-loading-pipelines:/seqr-loading-pipelines/luigi_pipeline"
 
-COPY entrypoint.sh /
+COPY docker/entrypoint.sh /
 
 WORKDIR /
 
