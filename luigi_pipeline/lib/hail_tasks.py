@@ -87,7 +87,7 @@ class HailMatrixTableTask(luigi.Task):
                              reference_genome='GRCh' + self.genome_version,
                              skip_invalid_loci=True,
                              contig_recoding=recode,
-                             force_bgz=True, min_partitions=500, array_elements_required=False)
+                             force_bgz=True, min_partitions=500)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
@@ -212,7 +212,7 @@ class HailMatrixTableTask(luigi.Task):
         """
         return mt.annotate_rows(gt_stats=hl.agg.call_stats(mt.GT, mt.alleles))
         
-        
+
 class HailElasticSearchTask(luigi.Task):
     """
     Loads a MT to ES (TODO).
