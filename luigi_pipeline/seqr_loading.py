@@ -126,6 +126,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
+        mt = self.generate_callstats(mt)
         if self.RUN_VEP:
             mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner,
                                              vep_config_json_path=self.vep_config_json_path)
@@ -146,6 +147,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         """
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
         return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
+
 
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):

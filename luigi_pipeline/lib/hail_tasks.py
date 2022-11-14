@@ -203,6 +203,16 @@ class HailMatrixTableTask(luigi.Task):
         return mt
 
 
+    def generate_callstats(self, mt):
+        """
+        Generate call statistics for all variants in the dataset.
+
+        :param mt: MatrixTable to generate call statistics on.
+        :return: Matrixtable with gt_stats annotation.
+        """
+        return mt.annotate_rows(gt_stats=hl.agg.call_stats(mt.GT, mt.alleles))
+        
+
 class HailElasticSearchTask(luigi.Task):
     """
     Loads a MT to ES (TODO).

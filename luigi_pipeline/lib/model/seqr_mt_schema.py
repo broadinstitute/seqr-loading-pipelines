@@ -249,15 +249,19 @@ class SeqrVariantSchema(SeqrSchema):
 
     @row_annotation(name='AC')
     def ac(self):
-        return self.mt.info.AC[self.mt.a_index-1]
+        return self.mt.gt_stats.AC[1]
 
     @row_annotation(name='AF')
     def af(self):
-        return self.mt.info.AF[self.mt.a_index-1]
+        return self.mt.gt_stats.AF[1]
 
     @row_annotation(name='AN', disable_index=True)
     def an(self):
-        return self.mt.info.AN
+        return self.mt.gt_stats.AN
+
+    @row_annotation(name='homozygote_count')
+    def hom_alt(self):
+        return self.mt.gt_stats.homozygote_count[1]
 
 
 class SeqrGenotypesSchema(BaseMTSchema):
