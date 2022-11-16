@@ -24,7 +24,7 @@ SOURCE_FILE=${GS_BUCKET}${INPUT_FILE_PATH}
 DEST_FILE="${SOURCE_FILE/.*/}".mt
 REFERENCE_DATA_BUCKET=${GS_BUCKET}/reference_data/${FULL_BUILD_VERSION}
 
-cd /hail-elasticsearch-pipelines/luigi_pipeline
+cd /seqr-loading-pipelines/luigi_pipeline
 
 # create dataproc cluster
 hailctl dataproc start \
