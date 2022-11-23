@@ -32,6 +32,7 @@ SF_COL = 'vaf'
 VAR_NAME_COL = 'variant_name'
 GENES_COL = 'genes_any_overlap_ensemble_id'
 PREV_IDENTICAL_COL = 'identical_ovl'
+IS_LATEST = 'is_latest'
 PREV_OVERLAP_COL = 'any_ovl'
 PREV_MISSING_COL = 'no_ovl'
 IN_SILICO_COL = 'strvctvre_score'
@@ -95,7 +96,7 @@ COL_CONFIGS = {
     DEFRAGGED_COL: {'field_name': DEFRAGGED_FIELD, 'format': lambda val: BOOL_MAP[val]},
     IN_SILICO_COL: {
         'field_name': 'StrVCTVRE_score',
-        'format': lambda val: None if val.strip() == 'not_exonic' else float(val),
+        'format': lambda val: None if val.strip() == 'not_exonic' or val.strip() == 'less_than_50bp' else float(val),
         'allow_missing': True,
     },
     SAMPLE_COL: {
@@ -106,16 +107,25 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
+}
+
+NEW_JOINT_CALL_SAMPLE_COLS = {
     PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': bool},
     PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': bool},
     PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
 }
+
+MERGING_CALL_SAMPLE_COLS = {
+    IS_LATEST: {'field_name': 'prev_call', 'format': lambda val: not BOOL_MAP[val.strip()]},
+    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': lambda val: False},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda val: False},
+}
+
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [
-    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
-    PREV_MISSING_COL,
+    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL,
 ] + list(GENE_CONSEQUENCE_COLS.keys())
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
@@ -439,6 +449,7 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
+    p.add_argument('--is-merging-sample-call', action='store_true')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -449,6 +460,12 @@ def main():
     es_password = os.environ.get('PIPELINE_ES_PASSWORD')
     if not es_password:
         es_password = getpass(prompt='Enter ES password: ')
+
+    sample_col_configs = MERGING_CALL_SAMPLE_COLS if args.is_merging_sample_call else NEW_JOINT_CALL_SAMPLE_COLS
+    COL_CONFIGS.update(sample_col_configs)
+    for config in sample_col_configs.keys():
+        SAMPLE_COLUMNS.append(config)
+        COLUMNS.append(config)
 
     sample_subset = None
     sample_remap = None
