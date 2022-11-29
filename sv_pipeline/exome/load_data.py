@@ -82,6 +82,14 @@ def _get_variant_name(val, call='any'):
 def _parse_genes(genes):
     return {gene.split('.')[0] for gene in genes.split(',') if gene not in {'None', 'null', 'NA', ''}}
 
+
+def _parse_float(number_string):
+    try:
+        return float(number_string)
+    except ValueError:
+        return None
+
+
 COL_CONFIGS = {
     CHR_COL: {'field_name': CHROM_FIELD, 'format': lambda val: val.lstrip('chr')},
     SC_COL: {'field_name': SC_FIELD, 'format': int},
@@ -96,7 +104,7 @@ COL_CONFIGS = {
     DEFRAGGED_COL: {'field_name': DEFRAGGED_FIELD, 'format': lambda val: BOOL_MAP[val]},
     IN_SILICO_COL: {
         'field_name': 'StrVCTVRE_score',
-        'format': lambda val: None if val.strip() == 'not_exonic' or val.strip() == 'less_than_50bp' else float(val),
+        'format': _parse_float,
         'allow_missing': True,
     },
     SAMPLE_COL: {
@@ -449,7 +457,7 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--write-subsetted-bed', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
-    p.add_argument('--is-merging-sample-call', action='store_true')
+    p.add_argument('--is-new-joint-call', action='store_true')
     p.add_argument('--project-guid')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
@@ -461,7 +469,7 @@ def main():
     if not es_password:
         es_password = getpass(prompt='Enter ES password: ')
 
-    sample_col_configs = MERGING_CALL_SAMPLE_COLS if args.is_merging_sample_call else NEW_JOINT_CALL_SAMPLE_COLS
+    sample_col_configs = NEW_JOINT_CALL_SAMPLE_COLS if args.is_new_joint_call else MERGING_CALL_SAMPLE_COLS
     COL_CONFIGS.update(sample_col_configs)
     for config in sample_col_configs.keys():
         SAMPLE_COLUMNS.append(config)
