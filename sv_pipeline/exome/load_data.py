@@ -4,6 +4,7 @@ import argparse
 import logging
 import os
 import re
+import copy
 
 from datetime import date
 from elasticsearch import helpers as es_helpers
@@ -51,6 +52,8 @@ VARIANT_ID_FIELD = 'variantId'
 CALL_FIELD = 'svType'
 DEFRAGGED_FIELD = 'defragged'
 NUM_EXON_FIELD = 'num_exon'
+PREV_CALL_FIELD = 'prev_call'
+PREV_OVERLAP_FIELD = 'prev_overlap'
 NEW_CALL_FIELD = 'new_call'
 SAMPLES_NEW_CALL_FIELD = 'samples_new_call'
 
@@ -115,27 +118,31 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
-}
-
-NEW_JOINT_CALL_SAMPLE_COLS = {
-    PREV_IDENTICAL_COL: {'field_name': 'prev_call', 'format': bool},
-    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': bool},
+    PREV_IDENTICAL_COL: {'field_name': PREV_CALL_FIELD, 'format': bool},
+    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': bool},
     PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
-}
-
-MERGING_CALL_SAMPLE_COLS = {
-    IS_LATEST: {'field_name': 'prev_call', 'format': lambda val: not BOOL_MAP[val.strip()]},
-    PREV_OVERLAP_COL: {'field_name': 'prev_overlap', 'format': lambda val: False},
-    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda val: False},
 }
 
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
+MERGED_CALL_COL_CONFIGS = copy.deepcopy(COL_CONFIGS)
+MERGED_CALL_COL_CONFIGS.update({
+    IS_LATEST: {'field_name': PREV_CALL_FIELD, 'format': lambda val: not BOOL_MAP[val.strip()]},
+    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': lambda val: False},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda val: False},
+})
+
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [
-    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL,
+    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
+    PREV_MISSING_COL,
 ] + list(GENE_CONSEQUENCE_COLS.keys())
+
+MERGED_CALL_SAMPLE_COLUMNS = SAMPLE_COLUMNS + [IS_LATEST]
+MERGED_CALL_SAMPLE_COLUMNS.remove(PREV_IDENTICAL_COL)
+
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
+MERGED_CALL_COLUMNS = CORE_COLUMNS + MERGED_CALL_SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 QS_BIN_SIZE = 10
 
@@ -152,7 +159,7 @@ ES_FIELD_TYPE_MAP = {
 }
 
 
-def get_field_val(row, col, header_indices, format_kwargs=None):
+def get_field_val(row, col, header_indices, format_kwargs=None, col_configs=COL_CONFIGS):
     """
     Get the parsed output value of a field in the raw data
 
@@ -160,15 +167,16 @@ def get_field_val(row, col, header_indices, format_kwargs=None):
     :param col: string identifier for the column
     :param header_indices: mapping of column identifiers to row indices
     :param format_kwargs: optional arguments to pass to the value formatter
+    :param col_configs: data column configuration
     :return: parsed value
     """
     index = header_indices[col]
     if index > len(row):
-        if COL_CONFIGS[col].get('allow_missing'):
+        if col_configs[col].get('allow_missing'):
             return None
         raise IndexError('Column "{}" is missing from row {}'.format(col, row))
     val = row[header_indices[col]]
-    format_func = COL_CONFIGS[col].get('format')
+    format_func = col_configs[col].get('format')
     if format_func:
         val = format_func(val, **format_kwargs) if format_kwargs else format_func(val)
     return val
@@ -187,19 +195,21 @@ def get_variant_id(row, header_indices):
     )
 
 
-def get_parsed_column_values(row, header_indices, columns):
+def get_parsed_column_values(row, header_indices, columns, col_configs=COL_CONFIGS):
     """
     Get the parsed values from a given row for a given set of columns
 
     :param row: list representing the raw input row
     :param header_indices: mapping of column identifiers to row indices
     :param columns: list of string identifiers for the desired columns
+    :param col_configs: optional column configuration parameter
     :return: dictionary representation of a parsed row
     """
-    return {COL_CONFIGS[col].get('field_name', col): get_field_val(row, col, header_indices) for col in columns}
+    return {col_configs[col].get('field_name', col): get_field_val(row, col, header_indices, col_configs=col_configs)
+            for col in columns}
 
 
-def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
+def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id, is_new_joint_call):
     """
     Parse the given row into the desired SV output format and add it to the dictionary of parsed SVs
 
@@ -207,6 +217,7 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
     :param parsed_svs_by_id: dictionary of parsed SVs keyed by ID
     :param header_indices: mapping of column identifiers to row indices
     :param sample_id: the sample id for the row
+    :param is_new_joint_call: whether or not the input data is a new full joint call
     :return: none
     """
     variant_id = get_variant_id(row, header_indices)
@@ -216,7 +227,9 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id):
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
         parsed_svs_by_id[variant_id][GENES_FIELD] = set()
 
-    sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS)
+    sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS) if is_new_joint_call else \
+        get_parsed_column_values(row, header_indices, MERGED_CALL_SAMPLE_COLUMNS, col_configs=MERGED_CALL_COL_CONFIGS)
+
     sample_info[SAMPLE_ID_FIELD] = sample_id
 
     sv = parsed_svs_by_id[variant_id]
@@ -261,13 +274,15 @@ def load_file(file_path, parse_row, out_file_path=None, columns=None):
         out_file.close()
 
 
-def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_missing_samples, write_subsetted_bed=None):
+def subset_and_group_svs(input_dataset, sample_subset, sample_remap, is_new_joint_call, ignore_missing_samples,
+                         write_subsetted_bed=None):
     """
     Parses raw SV calls from the input file into the desired SV output format for samples in the given subset
 
     :param input_dataset: file path for the raw SV calls
     :param sample_subset: optional list of samples to subset to
     :param sample_remap: optional mapping of raw sample ids to seqr sample ids
+    :param is_new_joint_call: whether or not the input data is a new full joint call
     :param ignore_missing_samples: whether or not to fail if samples in the subset have no raw data
     :param write_subsetted_bed: whether to write a bed file with only the subsetted samples and the file prefix to use
     :return: dictionary of parsed SVs keyed by ID
@@ -291,14 +306,14 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, ignore_miss
         if sample_remap and sample_id in sample_remap:
             sample_id = sample_remap[sample_id]
         if sample_subset is None or sample_id in sample_subset:
-            parse_sv_row(row, parsed_svs_by_name, header_indices, sample_id)
+            parse_sv_row(row, parsed_svs_by_name, header_indices, sample_id, is_new_joint_call)
             found_samples.add(sample_id)
             return True
         else:
             skipped_samples.add(sample_id)
             return False
 
-    load_file(input_dataset, _parse_row, out_file_path=out_file_path)
+    load_file(input_dataset, _parse_row, out_file_path=out_file_path, columns=None if is_new_joint_call else MERGED_CALL_COLUMNS)
 
     logger.info('Found {} sample ids'.format(len(found_samples)))
     if sample_subset:
@@ -469,12 +484,6 @@ def main():
     if not es_password:
         es_password = getpass(prompt='Enter ES password: ')
 
-    sample_col_configs = NEW_JOINT_CALL_SAMPLE_COLS if args.is_new_joint_call else MERGING_CALL_SAMPLE_COLS
-    COL_CONFIGS.update(sample_col_configs)
-    for config in sample_col_configs.keys():
-        SAMPLE_COLUMNS.append(config)
-        COLUMNS.append(config)
-
     sample_subset = None
     sample_remap = None
     if not args.skip_sample_subset:
@@ -490,6 +499,7 @@ def main():
         args.input_dataset,
         sample_subset,
         sample_remap,
+        args.is_new_joint_call,
         ignore_missing_samples=args.ignore_missing_samples,
         write_subsetted_bed=args.project_guid if args.write_subsetted_bed else None,
     )
