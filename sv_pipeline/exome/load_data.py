@@ -118,31 +118,31 @@ COL_CONFIGS = {
         'field_name': GENES_FIELD,
         'format': _parse_genes,
     },
-    PREV_IDENTICAL_COL: {'field_name': PREV_CALL_FIELD, 'format': bool},
-    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': bool},
-    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
+    IS_LATEST: {'field_name': PREV_CALL_FIELD, 'format': lambda val: not BOOL_MAP[val.strip()]},
+    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': lambda val: False},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda val: False},
 }
 
 COL_CONFIGS.update({col: {'format': _parse_genes} for col in GENE_CONSEQUENCE_COLS.keys()})
 
-MERGED_CALL_COL_CONFIGS = copy.deepcopy(COL_CONFIGS)
-MERGED_CALL_COL_CONFIGS.update({
-    IS_LATEST: {'field_name': PREV_CALL_FIELD, 'format': lambda val: not BOOL_MAP[val.strip()]},
-    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': lambda val: False},
-    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda val: False},
+NEW_JOINT_CALL_COL_CONFIGS = copy.deepcopy(COL_CONFIGS)
+NEW_JOINT_CALL_COL_CONFIGS.update({
+    PREV_IDENTICAL_COL: {'field_name': PREV_CALL_FIELD, 'format': bool},
+    PREV_OVERLAP_COL: {'field_name': PREV_OVERLAP_FIELD, 'format': bool},
+    PREV_MISSING_COL: {'field_name': NEW_CALL_FIELD, 'format': lambda call: call not in {'NA', 'FALSE'}},
 })
 
 CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL]
 SAMPLE_COLUMNS = [
-    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, PREV_IDENTICAL_COL, PREV_OVERLAP_COL,
+    START_COL, END_COL, QS_COL, CN_COL, NUM_EXON_COL, GENES_COL, DEFRAGGED_COL, IS_LATEST, PREV_OVERLAP_COL,
     PREV_MISSING_COL,
 ] + list(GENE_CONSEQUENCE_COLS.keys())
 
-MERGED_CALL_SAMPLE_COLUMNS = SAMPLE_COLUMNS + [IS_LATEST]
-MERGED_CALL_SAMPLE_COLUMNS.remove(PREV_IDENTICAL_COL)
+NEW_JOINT_CALL_SAMPLE_COLUMNS = SAMPLE_COLUMNS + [PREV_IDENTICAL_COL]
+NEW_JOINT_CALL_SAMPLE_COLUMNS.remove(IS_LATEST)
 
 COLUMNS = CORE_COLUMNS + SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
-MERGED_CALL_COLUMNS = CORE_COLUMNS + MERGED_CALL_SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
+NEW_JOINT_CALL_COLUMNS = CORE_COLUMNS + NEW_JOINT_CALL_SAMPLE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
 
 QS_BIN_SIZE = 10
 
@@ -227,8 +227,9 @@ def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id, is_new_joint_
         parsed_svs_by_id[variant_id][GENOTYPES_FIELD] = []
         parsed_svs_by_id[variant_id][GENES_FIELD] = set()
 
-    sample_info = get_parsed_column_values(row, header_indices, SAMPLE_COLUMNS) if is_new_joint_call else \
-        get_parsed_column_values(row, header_indices, MERGED_CALL_SAMPLE_COLUMNS, col_configs=MERGED_CALL_COL_CONFIGS)
+    kwargs = {'columns': NEW_JOINT_CALL_SAMPLE_COLUMNS, 'col_configs': NEW_JOINT_CALL_COL_CONFIGS} if is_new_joint_call \
+        else {'columns': SAMPLE_COLUMNS}
+    sample_info = get_parsed_column_values(row, header_indices, **kwargs)
 
     sample_info[SAMPLE_ID_FIELD] = sample_id
 
@@ -313,7 +314,8 @@ def subset_and_group_svs(input_dataset, sample_subset, sample_remap, is_new_join
             skipped_samples.add(sample_id)
             return False
 
-    load_file(input_dataset, _parse_row, out_file_path=out_file_path, columns=None if is_new_joint_call else MERGED_CALL_COLUMNS)
+    kwargs = {'columns': NEW_JOINT_CALL_COLUMNS} if is_new_joint_call else {}
+    load_file(input_dataset, _parse_row, out_file_path=out_file_path, **kwargs)
 
     logger.info('Found {} sample ids'.format(len(found_samples)))
     if sample_subset:
