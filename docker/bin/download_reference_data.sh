@@ -13,7 +13,8 @@ tar xzf "${CACHE_FILE}"
 rm "${CACHE_FILE}"
 
 cd /vep_data/homo_sapiens
-curl -O http://ftp.ensembl.org/pub/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh${BUILD_VERSION}.dna.primary_assembly.fa.gz
+FTP_PATH=$([[ "${BUILD_VERSION}" == "37" ]] && echo '/grch37' || echo '')
+curl -O http://ftp.ensembl.org/pub${FTP_PATH}/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh${BUILD_VERSION}.dna.primary_assembly.fa.gz
 gzip -d Homo_sapiens.GRCh${BUILD_VERSION}.dna.primary_assembly.fa.gz
 bgzip Homo_sapiens.GRCh${BUILD_VERSION}.dna.primary_assembly.fa
 
