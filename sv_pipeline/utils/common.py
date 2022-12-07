@@ -1,5 +1,4 @@
 import logging
-import subprocess
 from datetime import datetime
 from google.cloud import storage
 
