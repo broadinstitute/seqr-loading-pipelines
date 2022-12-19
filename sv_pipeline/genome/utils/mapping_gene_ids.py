@@ -85,7 +85,7 @@ def _parse_gtf_data(gencode_gtf_path):
     return gene_id_mapping
 
 
-def load_gencode(gencode_release, download_path=None):
+def load_gencode(gencode_release, download_path=''):
     """Load Gencode to create a gene symbols to gene ids mapping table.
 
     Args:

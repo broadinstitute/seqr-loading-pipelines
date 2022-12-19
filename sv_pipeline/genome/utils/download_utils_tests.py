@@ -15,9 +15,11 @@ class DownloadUtilsTest(unittest.TestCase):
 
     @responses.activate
     @mock.patch('sv_pipeline.genome.utils.download_utils.logger')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.os')
+    @mock.patch('sv_pipeline.genome.utils.download_utils.os.path.isfile')
+    @mock.patch('sv_pipeline.genome.utils.download_utils.os.path.getsize')
     @mock.patch('sv_pipeline.genome.utils.download_utils.open')
-    def test_download_file(self, mock_open, mock_os, mock_logger):
+    @mock.patch('sv_pipeline.genome.utils.download_utils.tempfile')
+    def test_download_file(self, mock_tempfile, mock_open, mock_getsize, mock_isfile, mock_logger):
         responses.add(responses.HEAD, GZ_DATA_URL,
                       headers={"Content-Length": "1024"}, status=200)
         responses.add(responses.HEAD, TXT_DATA_URL,
@@ -30,25 +32,30 @@ class DownloadUtilsTest(unittest.TestCase):
         self.assertEqual(str(ve.exception), "Invalid url: bad_url")
 
         # Test already downloaded
-        mock_os.path.isfile.return_value = True
-        mock_os.path.getsize.return_value = 1024
-        test_file_name = '{}/{}'.format(TEST_DIR, TEST_GZ_FILE)
-        mock_os.path.join.return_value = test_file_name
+        mock_tempfile.reset_mock()
+        mock_isfile.return_value = True
+        mock_getsize.return_value = 1024
+        mock_tempfile.gettempdir.return_value = TEST_DIR
         result = download_file(GZ_DATA_URL)
-        self.assertEqual(result, test_file_name)
-        mock_logger.info.assert_called_with('Re-using {} previously downloaded from {}'.format(test_file_name, GZ_DATA_URL))
+        self.assertEqual(result, 'test/dir/test_file.gz')
+        mock_open.assert_called_with('test/dir/test_file.gz', 'wb')
+        mock_isfile.assert_called_with('test/dir/test_file.gz')
+        mock_getsize.assert_called_with('test/dir/test_file.gz')
+        mock_tempfile.gettempdir.assert_called_once()
+        mock_logger.info.assert_called_with(f'Re-using test/dir/test_file.gz previously downloaded from {GZ_DATA_URL}')
 
-        mock_os.path.isfile.return_value = False
-        mock_os.path.getsize.return_value = 0
-        test_file_name = "{}/{}".format(TEST_DIR, TEST_TXT_FILE)
-        mock_os.path.join.return_value = test_file_name
-        mock_os.path.basename.return_value = TEST_TXT_FILE
+        # Test download
+        mock_isfile.reset_mock()
+        mock_getsize.reset_mock()
+        mock_tempfile.reset_mock()
         mock_logger.reset_mock()
+        mock_isfile.return_value = False
+        mock_getsize.return_value = 0
         result = download_file(TXT_DATA_URL, TEST_DIR)
-        mock_logger.info.assert_called_with("Downloading {} to {}".format(TXT_DATA_URL, test_file_name))
-        self.assertEqual(result, test_file_name)
-        mock_os.path.basename.assert_called_with(TXT_DATA_URL)
-        mock_os.path.join.assert_called_with(TEST_DIR, TEST_TXT_FILE)
-        mock_open.assert_called_with(test_file_name, 'wb')
-        handle = mock_open().__enter__()
-        handle.writelines.assert_called_once()
+        self.assertEqual(result, 'test/dir/test_file.txt')
+        mock_open.assert_called_with('test/dir/test_file.txt', 'wb')
+        mock_open.return_value.writelines.assert_called_once()
+        mock_isfile.assert_called_with('test/dir/test_file.txt')
+        mock_getsize.assert_not_called()
+        mock_tempfile.gettempdir.assert_not_called()
+        mock_logger.info.assert_called_with(f'Downloading {TXT_DATA_URL} to test/dir/test_file.txt')
