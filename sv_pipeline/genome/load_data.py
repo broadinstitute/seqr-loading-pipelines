@@ -90,6 +90,8 @@ FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, S
 
 FIELDS.remove('end_locus')
 
+NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
+
 
 def get_xpos(contig, pos):
     return EXP_CHROM_TO_XPOS_OFFSET.get(contig.replace('^chr', '')) + pos
@@ -171,10 +173,10 @@ def annotate_fields(mt, gencode_release, gencode_path):
     rows = rows.annotate(**{
         SORTED_TRANS_CONSEQ: hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
-            [rows.info[col].map(lambda gene: hl.struct(**{'gene_symbol': gene, 'gene_id': gene_id_mapping.get(gene),
+            [rows.info[col].map(lambda gene: hl.struct(**{'gene_symbol': gene, 'gene_id': gene_id_mapping[gene],
                                                        MAJOR_CONSEQ: col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)}))
              for col in [gene_col for gene_col in rows.info if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
-                         and rows.info[gene_col].dtype == hl.dtype('array<str>')]])),
+                         and gene_col not in NON_GENE_PREDICTIONS]])),
         SV_TYPE: rows.alleles[1].replace('[<>]', '').split(':', 2)}
     )
 
@@ -235,7 +237,7 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid', required=True, help='the guid of the target seqr project')
-    p.add_argument('--gencode-release', type=int, default=29)
+    p.add_argument('--gencode-release', type=int, default=42)
     p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')

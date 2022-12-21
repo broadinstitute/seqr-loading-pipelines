@@ -147,9 +147,6 @@ STRVCTVRE_VCF_DATA = VCF_DATA[:-13] + [
 'chr1	180540234	chr1.final_cleanup_CPX_chr1_251	N	<CPX>	999	UNRESOLVED	StrVCTVRE=0.79;ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DEL_chr1:180540234-181074767,INV_chr1:181074767-181074938;CPX_TYPE=delINV;END=181074952;EVIDENCE=PE,SR;PREDICTED_LOF=KIAA1614,MR1,STX6,XPR1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase,Enhancer;SVLEN=534718;SVTYPE=CPX;UNRESOLVED_TYPE=POSTHOC_RD_GT_REJECTION;AN=8;AC=3;AF=0.251804;N_BI_GENOS=2911;N_HOMREF=1559;N_HET=1238;N_HOMALT=114;FREQ_HOMREF=0.535555;FREQ_HET=0.425283;FREQ_HOMALT=0.0391618;MALE_AN=2894;MALE_AC=724;MALE_AF=0.250173;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=784;MALE_N_HET=602;MALE_N_HOMALT=61;MALE_FREQ_HOMREF=0.541811;MALE_FREQ_HET=0.416033;MALE_FREQ_HOMALT=0.0421562;FEMALE_AN=2906;FEMALE_AC=736;FEMALE_AF=0.253269;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=770;FEMALE_N_HET=630;FEMALE_N_HOMALT=53;FEMALE_FREQ_HOMREF=0.529938;FEMALE_FREQ_HET=0.433586;FEMALE_FREQ_HOMALT=0.0364763	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/1:PE,SR:41:26:1:41:1	1/1:PE,SR:89:33:1:89:2	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0',
 ]
 
-NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
-EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
-NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
 SAMPLES_GQ_SV_FIELDS = {'samples_gq_sv_{}_to_{}'.format(i, i+10): None for i in range(0, 1000, 10)}
 
 DATA_FIELDS = [
@@ -191,12 +188,12 @@ EXPECTED_DATA = [
         xpos=1000180928, cpx_intervals=None, xstart=1000180928, xstop=5000020404,
         rg37_locus=hl.Locus(contig=1, position=10367, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=5, position=20404, reference_genome='GRCh37'), svType='BND',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'NONCODING_BREAKPOINT', 'BND'],
-        sv_type_detail=None, geneIds=frozenset({None}), samples_no_call=[], samples_num_alt_1=['SAMPLE-2'],
-        samples_num_alt_2=[], variantId='chr1.final_cleanup_BND_chr1_6', sortedTranscriptConsequences=[
+        transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'],
+        sv_type_detail=None, geneIds=frozenset(), samples_no_call=[], samples_num_alt_1=['SAMPLE-2'],
+        samples_num_alt_2=[], variantId='chr1.final_cleanup_BND_chr1_6',
+        sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='OR4F5', gene_id='ENSG00000186092', major_consequence='NEAREST_TSS'),
-            hl.Struct(gene_symbol='PLEKHG4B', gene_id='ENSG00000153404', major_consequence='NEAREST_TSS'),
-            hl.Struct(gene_symbol='DNase', gene_id=None, major_consequence='NONCODING_BREAKPOINT')],
+            hl.Struct(gene_symbol='PLEKHG4B', gene_id='ENSG00000153404', major_consequence='NEAREST_TSS')],
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-2', gq=31, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
@@ -213,13 +210,11 @@ EXPECTED_DATA = [
                        hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
         xstop=1006559723, rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
-        transcriptConsequenceTerms=['INTRONIC', 'NONCODING_BREAKPOINT', 'NONCODING_SPAN', 'CPX'],
-        sv_type_detail='INVdup', geneIds=frozenset({None, 'ENSG00000173662'}), samples_no_call=[],
+        transcriptConsequenceTerms=['INTRONIC', 'CPX'],
+        sv_type_detail='INVdup', geneIds=frozenset({'ENSG00000173662'}), samples_no_call=[],
         samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=[], variantId='chr1.final_cleanup_CPX_chr1_22',
         sortedTranscriptConsequences=[
-            hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC'),
-            hl.Struct(gene_symbol='Tommerup_TADanno', gene_id=None, major_consequence='NONCODING_BREAKPOINT'),
-            hl.Struct(gene_symbol='DNase', gene_id=None, major_consequence='NONCODING_SPAN')],
+            hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-2', gq=57, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-3', gq=0, cn=None, num_alt=1),

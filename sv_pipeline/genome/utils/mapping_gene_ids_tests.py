@@ -1,9 +1,10 @@
 import unittest
 import mock
 
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode, _load_parsed_data_or_download, _parse_gtf_data
+from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 DOWNLOAD_PATH = 'test/path'
+GS_DOWNLOAD_PATH ='gs://test-bucket/test/path'
 DOWNLOAD_FILE = 'test/path/gencode.v29.annotation.gtf.gz'
 PICKLE_FILE = 'test/path/gencode.v29.annotation.gtf.pickle'
 PICKLE_FILE_HANDLE = 'handle'
@@ -23,13 +24,16 @@ class LoadGencodeTestCase(unittest.TestCase):
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.open')
     @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.open')
-    def test_load_gencode(self, mock_download_open, mock_gopen, mock_open, mock_pickle, mock_path_exists, mock_logger):
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.file_writer')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
+    def test_load_gencode_local(self, mock_download_file, mock_file_writer, mock_gopen, mock_open, mock_pickle,
+                                mock_path_exists, mock_logger):
         # test using saved file
         mock_path_exists.side_effect = [True]
         mock_pickle.load.return_value = GENE_ID_MAPPING
         gene_id_mapping = load_gencode(23, download_path=DOWNLOAD_PATH)
-        mock_download_open.assert_not_called()
+        mock_file_writer.assert_not_called()
+        mock_download_file.assert_not_called()
         mock_gopen.assert_not_called()
         mock_open.assert_called_with('test/path/gencode.v23.annotation.gtf.pickle', 'rb')
         mock_pickle.load.assert_called_with(mock_open.return_value.__enter__.return_value)
@@ -40,26 +44,28 @@ class LoadGencodeTestCase(unittest.TestCase):
         ])
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
 
-        # test parsing gtf data
+        # test downloading and parsing gtf data
         mock_path_exists.reset_mock()
         mock_logger.reset_mock()
         mock_pickle.reset_mock()
         mock_open.reset_mock()
         mock_path_exists.side_effect = [False, False]
+        mock_download_file.return_value = 'test/path/gencode.v24.annotation.gtf.gz'
         mock_gopen.return_value.__iter__.return_value = GTF_DATA
+        mock_f = mock.MagicMock()
+        mock_file_writer.return_value.__enter__.return_value = mock_f, None
         gene_id_mapping = load_gencode(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_path_exists.assert_has_calls([
             mock.call('test/path/gencode.v24.annotation.gtf.pickle'),
             mock.call('test/path/gencode.v24.annotation.gtf.gz'),
         ])
-        mock_download_open.assert_has_calls([
-            mock.call('test/path/gencode.v24.annotation.gtf.gz', 'wb'),
-            mock.call().writelines(mock.ANY),
-            mock.call().close(),
-            mock.call('test/path/gencode.v24.annotation.gtf.pickle', 'wb'),
-            mock.call().close(),
-        ])
+        mock_download_file.assert_called_with(
+            'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_24/gencode.v24.annotation.gtf.gz',
+            to_dir='test/path',
+        )
+        mock_file_writer.assert_called_with('test/path/gencode.v24.annotation.gtf.pickle')
+        mock_pickle.dump.assert_called_with(GENE_ID_MAPPING, mock_f, protocol=mock.ANY)
         mock_gopen.assert_called_with('test/path/gencode.v24.annotation.gtf.gz', 'rt')
         mock_open.assert_not_called()
         mock_logger.info.assert_has_calls([
@@ -73,7 +79,8 @@ class LoadGencodeTestCase(unittest.TestCase):
         # test using downloaded file
         mock_path_exists.reset_mock()
         mock_logger.reset_mock()
-        mock_download_open.reset_mock()
+        mock_download_file.reset_mock()
+        mock_pickle.reset_mock()
         mock_path_exists.side_effect = [False, True]
         mock_gopen.return_value.__iter__.return_value = GTF_DATA
         gene_id_mapping = load_gencode(24, download_path=DOWNLOAD_PATH)
@@ -83,10 +90,9 @@ class LoadGencodeTestCase(unittest.TestCase):
             mock.call('test/path/gencode.v24.annotation.gtf.gz'),
         ])
         mock_gopen.assert_called_with('test/path/gencode.v24.annotation.gtf.gz', 'rt')
-        mock_download_open.assert_has_calls([
-            mock.call('test/path/gencode.v24.annotation.gtf.pickle', 'wb'),
-            mock.call().close(),
-        ])
+        mock_download_file.assert_not_called()
+        mock_file_writer.assert_called_with('test/path/gencode.v24.annotation.gtf.pickle')
+        mock_pickle.dump.assert_called_with(GENE_ID_MAPPING, mock_f, protocol=mock.ANY)
         mock_open.assert_not_called()
         mock_logger.info.assert_has_calls([
             mock.call('Use the existing downloaded file test/path/gencode.v24.annotation.gtf.gz.\nIf you want to re-download it, please delete the file and re-run the pipeline.'),
@@ -102,3 +108,43 @@ class LoadGencodeTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as ve:
             _ = load_gencode(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
+
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.path_exists')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.stream_gs_file')
+    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.file_writer')
+    def test_load_gencode_using_gs(self, mock_file_writer, mock_stream_gs_file, mock_pickle, mock_path_exists,
+                                   mock_logger, mock_gzip):
+
+        # test using saved file.
+        mock_path_exists.side_effect = [True]
+        mock_pickle.loads.return_value = GENE_ID_MAPPING
+        gene_id_mapping = load_gencode(25, download_path=GS_DOWNLOAD_PATH)
+        self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
+        mock_path_exists.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle')
+        mock_logger.info.assert_has_calls([
+            mock.call('Use the existing pickle file gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle.\n'
+                      'If you want to reload the data, please delete it and re-run the data loading.'),
+            mock.call('Got 3 gene id mapping records')
+        ])
+        mock_stream_gs_file.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle')
+        mock_pickle.dump.assert_not_called()
+        mock_file_writer.assert_not_called()
+
+        # test using downloaded file.
+        mock_path_exists.side_effect = [False, True]
+        mock_gzip.decompress.return_value = ''.join(GTF_DATA).encode()
+        mock_f = mock.MagicMock()
+        mock_file_writer.return_value.__enter__.return_value = mock_f, None
+        gene_id_mapping = load_gencode(25, download_path=GS_DOWNLOAD_PATH)
+        self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
+        mock_path_exists.assert_has_calls([
+            mock.call('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle'),
+            mock.call('gs://test-bucket/test/path/gencode.v25.annotation.gtf.gz'),
+        ])
+        mock_stream_gs_file.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.gz', raw_download=True)
+        mock_gzip.decompress.assert_called_with(mock_stream_gs_file.return_value)
+        mock_file_writer.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle')
+        mock_pickle.dump.assert_called_with(GENE_ID_MAPPING, mock_f, protocol=mock.ANY)

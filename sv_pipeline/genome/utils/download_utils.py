@@ -45,6 +45,9 @@ def path_exists(path):
     return (is_gs and hl.hadoop_exists(path)) or (not is_gs and os.path.exists(path))
 
 
+DEFAULT_TO_DIR = tempfile.gettempdir()
+
+
 def download_file(url, to_dir=None, verbose=True):
     """Download the given file and returns its local path.
      Args:
@@ -55,7 +58,7 @@ def download_file(url, to_dir=None, verbose=True):
         string: local file path
     """
     if to_dir is None:
-        to_dir = tempfile.gettempdir()
+        to_dir = DEFAULT_TO_DIR
 
     if not (url and url.startswith(("http://", "https://"))):
         raise ValueError("Invalid url: {}".format(url))
