@@ -109,6 +109,7 @@ VCF_DATA = [
 'chr1	17465707	chr1.final_cleanup_INS_chr1_268	N	<INS:ME:SVA>	263	HIGH_SR_BACKGROUND	ALGORITHMS=melt;CHR2=chr1;END=17465723;EVIDENCE=SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=RCC2;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=955;SVTYPE=INS;AN=8;AC=1;AF=0.004466;N_BI_GENOS=2911;N_HOMREF=2885;N_HET=26;N_HOMALT=0;FREQ_HOMREF=0.991068;FREQ_HET=0.00893164;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=14;MALE_AF=0.004838;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1433;MALE_N_HET=14;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.990325;MALE_FREQ_HET=0.00967519;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=11;FEMALE_AF=0.003785;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1442;FEMALE_N_HET=11;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.992429;FEMALE_FREQ_HET=0.00757054;FEMALE_FREQ_HOMALT=0	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/1:SR:0:99:0:0:1	0/0:PE,SR:99:99:0:2:0	0/0:PE,SR:99:99:0:2:0',
 'chr1	21427498	chr1.final_cleanup_CPX_chr1_54	N	<CPX>	733	PASS	ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:21427498-21427959,INV_chr1:21427498-21480073,DEL_chr1:21480073-21480419;CPX_TYPE=dupINVdel;END=21480419;EVIDENCE=PE;PREDICTED_LOF=NBPF3;PREDICTED_NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=52921;SVTYPE=CPX;AN=8;AC=4;AF=0.499656;N_BI_GENOS=2911;N_HOMREF=51;N_HET=2811;N_HOMALT=49;FREQ_HOMREF=0.0175198;FREQ_HET=0.965648;FREQ_HOMALT=0.0168327;MALE_AN=2894;MALE_AC=1453;MALE_AF=0.502073;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=19;MALE_N_HET=1403;MALE_N_HOMALT=25;MALE_FREQ_HOMREF=0.0131306;MALE_FREQ_HET=0.969592;MALE_FREQ_HOMALT=0.0172771;FEMALE_AN=2906;FEMALE_AC=1445;FEMALE_AF=0.497247;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=32;FEMALE_N_HET=1397;FEMALE_N_HOMALT=24;FEMALE_FREQ_HOMREF=0.0220234;FEMALE_FREQ_HET=0.961459;FEMALE_FREQ_HOMALT=0.0165175	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/1:PE:93:93:1:99:0	0/1:PE:79:79:1:99:0	0/1:PE:33:33:1:6:0	0/1:PE,SR:39:39:1:99:0	0/1:PE,SR:39:39:1:99:0',
 'chr1	48963084	chr1.final_cleanup_INS_chr1_688	N	<INS:ME:LINE1>	526	HIGH_SR_BACKGROUND	ALGORITHMS=melt;CHR2=chr1;END=48963135;EVIDENCE=SR;PREDICTED_INTRONIC=AGBL4;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=5520;SVTYPE=INS;AN=8;AC=1;AF=0.06338;N_BI_GENOS=2911;N_HOMREF=2544;N_HET=365;N_HOMALT=2;FREQ_HOMREF=0.873926;FREQ_HET=0.125386;FREQ_HOMALT=0.000687049;MALE_AN=2894;MALE_AC=177;MALE_AF=0.061161;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1271;MALE_N_HET=175;MALE_N_HOMALT=1;MALE_FREQ_HOMREF=0.878369;MALE_FREQ_HET=0.12094;MALE_FREQ_HOMALT=0.000691085;FEMALE_AN=2906;FEMALE_AC=192;FEMALE_AF=0.06607;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1262;FEMALE_N_HET=190;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.868548;FEMALE_FREQ_HET=0.130764;FEMALE_FREQ_HOMALT=0.000688231	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/1:SR:0:99:0:0:1	0/1:SR:0:99:0:0:1',
+'chr1	180540234	chr1.final_cleanup_CPX_chr1_251	N	<CPX>	999	UNRESOLVED	ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DEL_chr1:180540234-181074767,INV_chr1:181074767-181074938;CPX_TYPE=delINV;END=181074952;EVIDENCE=PE,SR;PREDICTED_LOF=KIAA1614,MR1,STX6,XPR1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase,Enhancer;SVLEN=534718;SVTYPE=CPX;UNRESOLVED_TYPE=POSTHOC_RD_GT_REJECTION;AN=8;AC=3;AF=0.251804;N_BI_GENOS=2911;N_HOMREF=1559;N_HET=1238;N_HOMALT=114;FREQ_HOMREF=0.535555;FREQ_HET=0.425283;FREQ_HOMALT=0.0391618;MALE_AN=2894;MALE_AC=724;MALE_AF=0.250173;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=784;MALE_N_HET=602;MALE_N_HOMALT=61;MALE_FREQ_HOMREF=0.541811;MALE_FREQ_HET=0.416033;MALE_FREQ_HOMALT=0.0421562;FEMALE_AN=2906;FEMALE_AC=736;FEMALE_AF=0.253269;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=770;FEMALE_N_HET=630;FEMALE_N_HOMALT=53;FEMALE_FREQ_HOMREF=0.529938;FEMALE_FREQ_HET=0.433586;FEMALE_FREQ_HOMALT=0.0364763	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/1:PE,SR:41:26:1:41:1	1/1:PE,SR:89:33:1:89:2	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0',
 ]
 
 STRVCTVRE_VCF_DATA = VCF_DATA[:-13] + [
@@ -124,6 +125,7 @@ STRVCTVRE_VCF_DATA = VCF_DATA[:-13] + [
 'chr1	17465707	chr1.final_cleanup_INS_chr1_268	N	<INS:ME:SVA>	263	HIGH_SR_BACKGROUND	StrVCTVRE=0.76;ALGORITHMS=melt;CHR2=chr1;END=17465723;EVIDENCE=SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=RCC2;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=955;SVTYPE=INS;AN=8;AC=1;AF=0.004466;N_BI_GENOS=2911;N_HOMREF=2885;N_HET=26;N_HOMALT=0;FREQ_HOMREF=0.991068;FREQ_HET=0.00893164;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=14;MALE_AF=0.004838;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1433;MALE_N_HET=14;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.990325;MALE_FREQ_HET=0.00967519;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=11;FEMALE_AF=0.003785;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1442;FEMALE_N_HET=11;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.992429;FEMALE_FREQ_HET=0.00757054;FEMALE_FREQ_HOMALT=0	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/1:SR:0:99:0:0:1	0/0:PE,SR:99:99:0:2:0	0/0:PE,SR:99:99:0:2:0',
 'chr1	21427498	chr1.final_cleanup_CPX_chr1_54	N	<CPX>	733	PASS	StrVCTVRE=0.77;ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:21427498-21427959,INV_chr1:21427498-21480073,DEL_chr1:21480073-21480419;CPX_TYPE=dupINVdel;END=21480419;EVIDENCE=PE;PREDICTED_LOF=NBPF3;PREDICTED_NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=52921;SVTYPE=CPX;AN=8;AC=4;AF=0.499656;N_BI_GENOS=2911;N_HOMREF=51;N_HET=2811;N_HOMALT=49;FREQ_HOMREF=0.0175198;FREQ_HET=0.965648;FREQ_HOMALT=0.0168327;MALE_AN=2894;MALE_AC=1453;MALE_AF=0.502073;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=19;MALE_N_HET=1403;MALE_N_HOMALT=25;MALE_FREQ_HOMREF=0.0131306;MALE_FREQ_HET=0.969592;MALE_FREQ_HOMALT=0.0172771;FEMALE_AN=2906;FEMALE_AC=1445;FEMALE_AF=0.497247;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=32;FEMALE_N_HET=1397;FEMALE_N_HOMALT=24;FEMALE_FREQ_HOMREF=0.0220234;FEMALE_FREQ_HET=0.961459;FEMALE_FREQ_HOMALT=0.0165175	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/1:PE:93:93:1:99:0	0/1:PE:79:79:1:99:0	0/1:PE:33:33:1:6:0	0/1:PE,SR:39:39:1:99:0	0/1:PE,SR:39:39:1:99:0',
 'chr1	48963084	chr1.final_cleanup_INS_chr1_688	N	<INS:ME:LINE1>	526	HIGH_SR_BACKGROUND	StrVCTVRE=0.78;ALGORITHMS=melt;CHR2=chr1;END=48963135;EVIDENCE=SR;PREDICTED_INTRONIC=AGBL4;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=5520;SVTYPE=INS;AN=8;AC=1;AF=0.06338;N_BI_GENOS=2911;N_HOMREF=2544;N_HET=365;N_HOMALT=2;FREQ_HOMREF=0.873926;FREQ_HET=0.125386;FREQ_HOMALT=0.000687049;MALE_AN=2894;MALE_AC=177;MALE_AF=0.061161;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1271;MALE_N_HET=175;MALE_N_HOMALT=1;MALE_FREQ_HOMREF=0.878369;MALE_FREQ_HET=0.12094;MALE_FREQ_HOMALT=0.000691085;FEMALE_AN=2906;FEMALE_AC=192;FEMALE_AF=0.06607;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1262;FEMALE_N_HET=190;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.868548;FEMALE_FREQ_HET=0.130764;FEMALE_FREQ_HOMALT=0.000688231	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0	0/1:SR:0:99:0:0:1	0/1:SR:0:99:0:0:1',
+'chr1	180540234	chr1.final_cleanup_CPX_chr1_251	N	<CPX>	999	UNRESOLVED	StrVCTVRE=0.79;ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DEL_chr1:180540234-181074767,INV_chr1:181074767-181074938;CPX_TYPE=delINV;END=181074952;EVIDENCE=PE,SR;PREDICTED_LOF=KIAA1614,MR1,STX6,XPR1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase,Enhancer;SVLEN=534718;SVTYPE=CPX;UNRESOLVED_TYPE=POSTHOC_RD_GT_REJECTION;AN=8;AC=3;AF=0.251804;N_BI_GENOS=2911;N_HOMREF=1559;N_HET=1238;N_HOMALT=114;FREQ_HOMREF=0.535555;FREQ_HET=0.425283;FREQ_HOMALT=0.0391618;MALE_AN=2894;MALE_AC=724;MALE_AF=0.250173;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=784;MALE_N_HET=602;MALE_N_HOMALT=61;MALE_FREQ_HOMREF=0.541811;MALE_FREQ_HET=0.416033;MALE_FREQ_HOMALT=0.0421562;FEMALE_AN=2906;FEMALE_AC=736;FEMALE_AF=0.253269;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=770;FEMALE_N_HET=630;FEMALE_N_HOMALT=53;FEMALE_FREQ_HOMREF=0.529938;FEMALE_FREQ_HET=0.433586;FEMALE_FREQ_HOMALT=0.0364763	GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT	0/0:PE,SR:99:99:0:99:0	0/1:PE,SR:41:26:1:41:1	1/1:PE,SR:89:33:1:89:2	0/0:PE,SR:99:99:0:99:0	0/0:PE,SR:99:99:0:99:0',
 ]
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv_{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
@@ -139,62 +141,82 @@ DATA_FIELDS += SAMPLES_GQ_SV_FIELDS
 DATA_FIELDS.append('StrVCTVRE_score')
 
 EXPECTED_SAMPLE_GQ = [
+    {
+        'samples_gq_sv_10_to_20': ['SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv_20_to_30': ['SAMPLE-2'],
+        'samples_gq_sv_30_to_40': ['SAMPLE-3'],
+        'samples_gq_sv_50_to_60': ['SAMPLE-1'],
+    },
+    {
+        'samples_gq_sv_60_to_70': ['SAMPLE-1'],
+        'samples_gq_sv_90_to_100': ['SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+    },
+    {
+        'samples_gq_sv_0_to_10': ['SAMPLE-3'],
+        'samples_gq_sv_50_to_60': ['SAMPLE-2'],
+        'samples_gq_sv_90_to_100': ['SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'],
+    }
 ]
 
 EXPECTED_DATA = [
     hl.Struct(
-        contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000, sv_callset_Het=228,
-        sv_callset_Hom=71, gnomad_svs_ID=None, gnomad_svs_AF=None, pos=10000, filters=['LOW_CALL_RATE'],
-        bothsides_support=False, algorithms=['depth'], xpos=1000010000, cpx_intervals=None,
-        xstart=1000010000, xstop=1000017000, rg37_locus=None,
-        rg37_locus_end=hl.Locus(contig=1, position=17000, reference_genome='GRCh37'), svType='DUP',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'DUP'], sv_type_detail=None, geneIds=frozenset(),
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=[],
-        variantId='DUP_chr1_1', sortedTranscriptConsequences=[
-            hl.Struct(gene_symbol='OR4F5', gene_id='ENSG00000284662', major_consequence='NEAREST_TSS')],
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=999, cn=3, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=52, cn=3, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=19, cn=3, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=1, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=31, cn=2, num_alt=0)],
-        StrVCTVRE_score=0.7,
+        contig='1', sc=7, sf=0.910684, sn=8, start=789481, end=789481, sv_callset_Het=520, sv_callset_Hom=2391,
+        gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=789481,
+        filters=['PESR_GT_OVERDISPERSION', 'UNRESOLVED'], bothsides_support=False, algorithms=['manta'],
+        xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
+        rg37_locus=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
+        transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
+        geneIds=frozenset(), samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
+        samples_num_alt_2=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], variantId='chr1.final_cleanup_BND_chr1_9',
+        sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
+            hl.Struct(gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        StrVCTVRE_score=0.71,
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
-        contig='1', sc=70, sf=0.04902, sn=1428, start=10000, end=53500, sv_callset_Het=60, sv_callset_Hom=5,
-        gnomad_svs_ID=None, gnomad_svs_AF=None, pos=10000, filters=['LOW_CALL_RATE', 'UNRESOLVED'],
-        bothsides_support=False, algorithms=['depth'], xpos=1000010000, cpx_intervals=None,
-        xstart=1000010000, xstop=1000053500, rg37_locus=None,
-        rg37_locus_end=hl.Locus(contig=1, position=53500, reference_genome='GRCh37'), svType='DUP',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'DUP'], sv_type_detail=None, geneIds=frozenset(),
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=[],
-        variantId='DUP_chr1_2', sortedTranscriptConsequences=[
-            hl.Struct(gene_symbol='OR4F5', gene_id='ENSG00000284662', major_consequence='NEAREST_TSS')],
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=1, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-2', gq=119, cn=3, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=119, cn=3, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=999, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=133, cn=2, num_alt=0)],
-        StrVCTVRE_score=0.8,
+        contig='1', sc=1, sf=0.10237, sn=8, start=4228405, end=4228448, sv_callset_Het=590, sv_callset_Hom=3,
+        gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=4228405,
+        filters=['HIGH_SR_BACKGROUND'], bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
+        cpx_intervals=None, xstart=1004228405, xstop=1004228448,
+        rg37_locus=hl.Locus(contig=1, position=4288465, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
+        transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=frozenset(),
+        samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
+        variantId='chr1.final_cleanup_INS_chr1_65', sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        StrVCTVRE_score=0.73,
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
-        contig='1', sc=28, sf=0.019608, sn=1428, start=41950, end=52000, sv_callset_Het=26, sv_callset_Hom=1,
-        gnomad_svs_ID='g', gnomad_svs_AF=0.068962998688221, pos=41950, filters=['LOW_CALL_RATE'],
-        bothsides_support=False, algorithms=['depth'], xpos=1000041950, cpx_intervals=None,
-        xstart=1000041950, xstop=1000052000,
-        rg37_locus=hl.Locus(contig=1, position=41950, reference_genome='GRCh37'),
-        rg37_locus_end=hl.Locus(contig=1, position=52000, reference_genome='GRCh37'), svType='DUP',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'DUP'], sv_type_detail=None, geneIds=frozenset(),
-        samples_no_call=[], samples_num_alt_1=[], samples_num_alt_2=[], variantId='DUP_chr1_3',
-        sortedTranscriptConsequences=[
-            hl.Struct(gene_symbol='OR4F5', gene_id='ENSG00000284662', major_consequence='NEAREST_TSS')],
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=31, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-2', gq=58, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-3', gq=1, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-4', gq=112, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=999, cn=2, num_alt=0)],
-        StrVCTVRE_score=0.71,
+        contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3,
+        gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=6558902,
+        filters=['HIGH_SR_BACKGROUND'], bothsides_support=True, algorithms=['manta'], xpos=1006558902,
+        cpx_intervals=[hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
+                       hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
+        xstop=1006559723, rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
+        transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
+        geneIds=frozenset({'ENSG00000173662'}), samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
+        samples_num_alt_2=[], variantId='chr1.final_cleanup_CPX_chr1_22', sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        StrVCTVRE_score=0.74,
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
 ]
@@ -285,13 +307,13 @@ class LoadDataTest(unittest.TestCase):
         ])
         mock_get_sample.assert_called_with('test_guid', 'WGS', filename=None)
         mock_get_remap.assert_called_with('test_guid', 'WGS')
-        self.assertEqual(mt.count(), (5, 3))
+        self.assertEqual(mt.count(), (10, 3))
         self.assertEqual(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)), {'SAMPLE-1-REMAP', 'SAMPLE-3', 'SAMPLE-5'})
 
         # test skipping sample subsetting
         mock_logger.reset_mock()
         mt = subset_mt('test_guid', self.mt, skip_sample_subset=True)
-        self.assertEqual(mt.count(), (5, 5))
+        self.assertEqual(mt.count(), (11, 5))
         self.assertEqual(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)), {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'})
 
         # test no subsetting sample found
@@ -362,8 +384,7 @@ class LoadDataTest(unittest.TestCase):
         mock_export.assert_called_with(mock.ANY, 'data.vcf.bgz', TEST_GUID, TEST_HOST, TEST_PORT, TEST_PASSWORD,
                                        TEST_BLOCK_SIZE, TEST_NUM_SHARDS, 'true')
         annoted_data = mock_export.call_args.args[0]
-        self.maxDiff = None
         self.assertListEqual([key for key in annoted_data.__dict__.keys() if not key.startswith('_')], DATA_FIELDS)
         self.assertEqual(annoted_data.count(), 11)
-        data = annoted_data.tail(7).take(3)
+        data = annoted_data.order_by(annoted_data.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA)
