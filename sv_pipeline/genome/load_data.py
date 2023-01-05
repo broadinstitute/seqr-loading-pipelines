@@ -45,7 +45,7 @@ CORE_FIELDS = {
     'sv_callset_Het': lambda rows: rows.info.N_HET,
     'sv_callset_Hom': lambda rows: rows.info.N_HOMALT,
     'gnomad_svs_ID': lambda rows: hl.if_else(hl.is_defined(rows.info.gnomAD_V2_SVID),
-                                             rows.info.gnomAD_V2_SVID[0],
+                                             rows.info.gnomAD_V2_SVID,
                                              hl.missing(hl.tstr)),
     'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
     'gnomad_svs_AC': lambda rows: rows.info.gnomAD_V2_AC_AF,
