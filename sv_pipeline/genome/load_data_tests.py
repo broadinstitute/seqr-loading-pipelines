@@ -380,7 +380,6 @@ class LoadDataTest(unittest.TestCase):
         mock_export.assert_called_with(mock.ANY, 'data.vcf.bgz', TEST_GUID, TEST_HOST, TEST_PORT, TEST_PASSWORD,
                                        TEST_BLOCK_SIZE, TEST_NUM_SHARDS, 'true')
         annoted_data = mock_export.call_args.args[0]
-        self.maxDiff = None
         self.assertListEqual([key for key in annoted_data.__dict__.keys() if not key.startswith('_')], DATA_FIELDS)
         self.assertEqual(annoted_data.count(), 11)
         data = annoted_data.order_by(annoted_data.start).tail(8).take(3)
