@@ -25,6 +25,7 @@ EXP_CHROM_TO_XPOS_OFFSET = hl.literal(CHROM_TO_XPOS_OFFSET)
 
 TRANS_CONSEQ_TERMS = 'transcriptConsequenceTerms'
 SORTED_TRANS_CONSEQ = 'sortedTranscriptConsequences'
+CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
 SV_TYPE = 'sv_type'
 MAJOR_CONSEQ = 'major_consequence'
 GQ_BIN_SIZE = 10
@@ -43,10 +44,10 @@ CORE_FIELDS = {
     'end': lambda rows: rows.info.END,
     'sv_callset_Het': lambda rows: rows.info.N_HET,
     'sv_callset_Hom': lambda rows: rows.info.N_HOMALT,
-    'gnomad_svs_ID': lambda rows: hl.if_else(hl.is_defined(rows.info.gnomAD_V2_SVID),
-                                             rows.info.gnomAD_V2_SVID[0],
-                                             hl.missing(hl.tstr)),
+    'gnomad_svs_ID': lambda rows: rows.info.gnomAD_V2_SVID,
     'gnomad_svs_AF': lambda rows: rows.info.gnomAD_V2_AF,
+    'gnomad_svs_AC': lambda rows: rows.info.gnomAD_V2_AC_AF,
+    'gnomad_svs_AN': lambda rows: rows.info.gnomAD_V2_AN_AF,
     'pos': lambda rows: rows.locus.position,
     'filters': lambda rows: hl.array(rows.filters.filter(lambda x: (x != 'PASS') & (x != BOTHSIDES_SUPPORT))),
     'bothsides_support': lambda rows: rows.filters.any(lambda x: x == BOTHSIDES_SUPPORT),
@@ -73,7 +74,7 @@ DERIVED_FIELDS = {
     'sv_type_detail': lambda rows: hl.if_else(rows[SV_TYPE][0] == 'CPX', rows.info.CPX_TYPE,
                                               hl.if_else((rows[SV_TYPE][0] == 'INS') & (hl.len(rows[SV_TYPE]) > 1),
                                                          rows[SV_TYPE][1], hl.missing('str'))),
-    'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows.sortedTranscriptConsequences.filter(
+    'geneIds': lambda rows: hl.set(hl.map(lambda x: x.gene_id, rows[SORTED_TRANS_CONSEQ].filter(
         lambda x: x[MAJOR_CONSEQ] != 'NEAREST_TSS'))),
     'samples_no_call': lambda rows: get_sample_num_alt_x(rows, -1),
     'samples_num_alt_1': lambda rows: get_sample_num_alt_x(rows, 1),
@@ -86,6 +87,8 @@ FIELDS = list(CORE_FIELDS.keys()) + list(DERIVED_FIELDS.keys()) + [VARIANT_ID, S
     list(SAMPLES_GQ_FIELDS.keys())
 
 FIELDS.remove('end_locus')
+
+NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
 
 
 def get_xpos(contig, pos):
@@ -169,9 +172,9 @@ def annotate_fields(mt, gencode_release, gencode_path):
         SORTED_TRANS_CONSEQ: hl.flatmap(lambda x: x, hl.filter(
             lambda x: hl.is_defined(x),
             [rows.info[col].map(lambda gene: hl.struct(**{'gene_symbol': gene, 'gene_id': gene_id_mapping[gene],
-                                                       MAJOR_CONSEQ: col.split('__')[-1]}))
-             for col in [gene_col for gene_col in rows.info if gene_col.startswith('PROTEIN_CODING__')
-                         and rows.info[gene_col].dtype == hl.dtype('array<str>')]])),
+                                                       MAJOR_CONSEQ: col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)}))
+             for col in [gene_col for gene_col in rows.info if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
+                         and gene_col not in NON_GENE_PREDICTIONS]])),
         SV_TYPE: rows.alleles[1].replace('[<>]', '').split(':', 2)}
     )
 
@@ -232,8 +235,8 @@ def main():
     p.add_argument('--skip-sample-subset', action='store_true')
     p.add_argument('--ignore-missing-samples', action='store_true')
     p.add_argument('--project-guid', required=True, help='the guid of the target seqr project')
-    p.add_argument('--gencode-release', type=int, default=29)
-    p.add_argument('--gencode-path', help='path for downloaded Gencode data')
+    p.add_argument('--gencode-release', type=int, default=42)
+    p.add_argument('--gencode-path', default='', help='path for downloaded Gencode data')
     p.add_argument('--es-host', default='localhost')
     p.add_argument('--es-port', default='9200')
     p.add_argument('--es-password', default=os.environ.get('PIPELINE_ES_PASSWORD', ''))
