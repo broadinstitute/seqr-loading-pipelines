@@ -250,9 +250,6 @@ def main():
 
     start_time = time.time()
 
-    if not args.use_dataproc:
-        hl.init()
-
     rg37 = hl.get_reference('GRCh37')
     rg38 = hl.get_reference('GRCh38')
     rg38.add_liftover(args.grch38_to_grch37_ref_chain, rg37)
@@ -271,9 +268,6 @@ def main():
     export_to_es(rows, args.input_dataset, args.project_guid, args.es_host, args.es_port, args.es_password, args.block_size,
                  args.num_shards, 'true' if args.es_nodes_wan_only else 'false')
     logger.info('Total time for subsetting, annotating, and exporting: {}'.format(time.time() - start_time))
-
-    if not args.use_dataproc:
-        hl.stop()
 
 
 if __name__ == '__main__':

@@ -3,18 +3,21 @@ import os
 import sys
 import tempfile
 import unittest
+import copy
 
 import hail as hl
 
-from sv_pipeline.genome.load_data import load_mt, subset_mt, annotate_fields, export_to_es, main, WGS_SAMPLE_TYPE
+from sv_pipeline.genome.load_data import load_mt, subset_mt, export_to_es, main, WGS_SAMPLE_TYPE
 
 GENE_ID_MAPPING = {
-    'OR4F5': 'ENSG00000284662',
-    'ATAD3A': 'ENSG00000284663',
-    'CDK11B': 'ENSG00000284664',
+    'OR4F5': 'ENSG00000186092', 'PLEKHG4B': 'ENSG00000153404', 'OR4F16': 'ENSG00000186192',
+    'OR4F29': 'ENSG00000284733', 'FBXO28': 'ENSG00000143756', 'SAMD11': 'ENSG00000187634',
+    'C1orf174': 'ENSG00000198912', 'TAS1R1': 'ENSG00000173662', 'FAM131C': 'ENSG00000185519', 'RCC2': 'ENSG00000179051',
+    'NBPF3': 'ENSG00000142794', 'AGBL4': 'ENSG00000186094', 'KIAA1614': 'ENSG00000135835', 'MR1': 'ENSG00000153029',
+    'STX6': 'ENSG00000135823', 'XPR1': 'ENSG00000143324'
 }
 
-VCF_DATA = [
+VCF_HEADER_META = [
 '##fileformat=VCFv4.2',
 '##FORMAT=<ID=CN,Number=1,Type=Integer,Description="Predicted copy state">',
 '##FORMAT=<ID=CNQ,Number=1,Type=Integer,Description="Read-depth genotype quality">',
@@ -90,84 +93,135 @@ VCF_DATA = [
 '##INFO=<ID=FEMALE_FREQ_HOMREF,Number=1,Type=Float,Description="FEMALE homozygous reference genotype frequency (biallelic sites only).">',
 '##INFO=<ID=FEMALE_FREQ_HET,Number=1,Type=Float,Description="FEMALE heterozygous genotype frequency (biallelic sites only).">',
 '##INFO=<ID=FEMALE_FREQ_HOMALT,Number=1,Type=Float,Description="FEMALE homozygous alternate genotype frequency (biallelic sites only).">',
-'##INFO=<ID=gnomAD_V2_SVID,Number=1,Type=String,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
+'##INFO=<ID=gnomAD_V2_SVID,Number=.,Type=String,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
 '##INFO=<ID=gnomAD_V2_AF,Number=1,Type=Float,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
-'#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE-1	SAMPLE-2	SAMPLE-3	SAMPLE-4	SAMPLE-5',
-'chr1	10000	DUP_chr1_1	N	<DUP>	999	LOW_CALL_RATE	END=17000;SVTYPE=DUP;CHR2=chr1;SVLEN=7000;ALGORITHMS=depth;EVIDENCE=RD;PROTEIN_CODING__NEAREST_TSS=OR4F5;PROTEIN_CODING__INTERGENIC;NONCODING_SPAN=DNase;NONCODING_BREAKPOINT=DNase;AN=1428;AC=370;AF=0.259104;N_BI_GENOS=714;N_HOMREF=415;N_HET=228;N_HOMALT=71;FREQ_HOMREF=0.581232;FREQ_HET=0.319328;FREQ_HOMALT=0.0994398;MALE_AN=772;MALE_AC=214;MALE_AF=0.277202;MALE_N_BI_GENOS=386;MALE_N_HOMREF=216;MALE_N_HET=126;MALE_N_HOMALT=44;MALE_FREQ_HOMREF=0.559586;MALE_FREQ_HET=0.326425;MALE_FREQ_HOMALT=0.11399;FEMALE_AN=656;FEMALE_AC=156;FEMALE_AF=0.237805;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=199;FEMALE_N_HET=102;FEMALE_N_HOMALT=27;FEMALE_FREQ_HOMREF=0.606707;FEMALE_FREQ_HET=0.310976;FEMALE_FREQ_HOMALT=0.0823171	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/1:999:3:999:.:.:.:.:RD	0/1:52:3:52:.:.:.:.:RD	0/1:19:3:19:.:.:.:.:RD	0/0:1:2:1:.:.:.:.:RD	0/0:31:2:31:.:.:.:.:RD',
-'chr1	10000	DUP_chr1_2	N	<DUP>	999	LOW_CALL_RATE;UNRESOLVED	END=53500;SVTYPE=DUP;CHR2=chr1;SVLEN=43500;ALGORITHMS=depth;EVIDENCE=BAF,RD;PROTEIN_CODING__NEAREST_TSS=OR4F5;PROTEIN_CODING__INTERGENIC;LINCRNA__COPY_GAIN=FAM138A,MIR1302-2HG;NONCODING_SPAN=DNase;NONCODING_BREAKPOINT=DNase;AN=1428;AC=70;AF=0.04902;N_BI_GENOS=714;N_HOMREF=649;N_HET=60;N_HOMALT=5;FREQ_HOMREF=0.908964;FREQ_HET=0.0840336;FREQ_HOMALT=0.0070028;MALE_AN=772;MALE_AC=46;MALE_AF=0.059585;MALE_N_BI_GENOS=386;MALE_N_HOMREF=344;MALE_N_HET=38;MALE_N_HOMALT=4;MALE_FREQ_HOMREF=0.891192;MALE_FREQ_HET=0.0984456;MALE_FREQ_HOMALT=0.0103627;FEMALE_AN=656;FEMALE_AC=24;FEMALE_AF=0.036585;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=305;FEMALE_N_HET=22;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.929878;FEMALE_FREQ_HET=0.0670732;FEMALE_FREQ_HOMALT=0.00304878	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:1:2:1:.:.:.:.:RD	0/1:119:3:119:.:.:.:.:RD	0/1:119:3:119:.:.:.:.:RD	0/0:999:2:999:.:.:.:.:RD	0/0:133:2:133:.:.:.:.:RD',
-'chr1	10602	BND_chr1_1	N	<BND>	461	UNRESOLVED;UNSTABLE_AF_PCRMINUS	END=10602;SVTYPE=BND;CHR2=chr12;STRANDS=+-;SVLEN=-1;ALGORITHMS=manta;EVIDENCE=SR;UNRESOLVED_TYPE=SINGLE_ENDER_+-;END2=10546;AN=1428;AC=88;AF=0.061625;N_BI_GENOS=714;N_HOMREF=626;N_HET=88;N_HOMALT=0;FREQ_HOMREF=0.876751;FREQ_HET=0.123249;FREQ_HOMALT=0;MALE_AN=772;MALE_AC=51;MALE_AF=0.066062;MALE_N_BI_GENOS=386;MALE_N_HOMREF=335;MALE_N_HET=51;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.867876;MALE_FREQ_HET=0.132124;MALE_FREQ_HOMALT=0;FEMALE_AN=656;FEMALE_AC=37;FEMALE_AF=0.056402;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=291;FEMALE_N_HET=37;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.887195;FEMALE_FREQ_HET=0.112805;FEMALE_FREQ_HOMALT=0;gnomAD_V2_SVID=gnomAD-SV_v2.1_BND_1_1;gnomAD_V2_AF=0.00678599998354912	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	.:999:.:.:0:23:0:999:PE,SR	0/0:999:.:.:0:23:0:999:PE,SR	.:999:.:.:0:1:0:999:PE,SR	0/0:999:.:.:0:3:0:999:PE,SR	.:999:.:.:0:23:0:999:PE,SR',
-'chr1	41950	DUP_chr1_3	N	<DUP>	999	LOW_CALL_RATE	END=52000;SVTYPE=DUP;CHR2=chr1;SVLEN=10050;ALGORITHMS=depth;EVIDENCE=BAF,RD;PROTEIN_CODING__NEAREST_TSS=OR4F5;PROTEIN_CODING__INTERGENIC;AN=1428;AC=28;AF=0.019608;N_BI_GENOS=714;N_HOMREF=687;N_HET=26;N_HOMALT=1;FREQ_HOMREF=0.962185;FREQ_HET=0.0364146;FREQ_HOMALT=0.00140056;MALE_AN=772;MALE_AC=15;MALE_AF=0.01943;MALE_N_BI_GENOS=386;MALE_N_HOMREF=371;MALE_N_HET=15;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.96114;MALE_FREQ_HET=0.0388601;MALE_FREQ_HOMALT=0;FEMALE_AN=656;FEMALE_AC=13;FEMALE_AF=0.019817;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=316;FEMALE_N_HET=11;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.963415;FEMALE_FREQ_HET=0.0335366;FEMALE_FREQ_HOMALT=0.00304878;gnomAD_V2_SVID=gnomAD-SV_v2.1_DUP_1_1;gnomAD_V2_AF=0.068962998688221	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:31:2:31:.:.:.:.:RD	0/0:58:2:58:.:.:.:.:RD	0/0:1:2:1:.:.:.:.:RD	0/0:112:2:112:.:.:.:.:RD	0/0:999:2:999:.:.:.:.:RD',
-'chr1	44000	DUP_chr1_4	N	<DUP>	999	UNSTABLE_AF_PCRMINUS;LOW_CALL_RATE	END=66000;SVTYPE=DUP;CHR2=chr1;SVLEN=22000;ALGORITHMS=depth;EVIDENCE=RD;PROTEIN_CODING__DUP_PARTIAL=OR4F5;NONCODING_SPAN=DNase;AN=1428;AC=96;AF=0.067227;N_BI_GENOS=714;N_HOMREF=641;N_HET=50;N_HOMALT=23;FREQ_HOMREF=0.897759;FREQ_HET=0.070028;FREQ_HOMALT=0.0322129;MALE_AN=772;MALE_AC=54;MALE_AF=0.069948;MALE_N_BI_GENOS=386;MALE_N_HOMREF=345;MALE_N_HET=28;MALE_N_HOMALT=13;MALE_FREQ_HOMREF=0.893782;MALE_FREQ_HET=0.0725389;MALE_FREQ_HOMALT=0.0336788;FEMALE_AN=656;FEMALE_AC=42;FEMALE_AF=0.064024;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=296;FEMALE_N_HET=22;FEMALE_N_HOMALT=10;FEMALE_FREQ_HOMREF=0.902439;FEMALE_FREQ_HET=0.0670732;FEMALE_FREQ_HOMALT=0.0304878	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:125:1:125:.:.:.:.:RD	0/0:72:2:72:.:.:.:.:RD	0/0:130:2:130:.:.:.:.:RD	0/0:1:2:1:.:.:.:.:RD	0/0:1:2:1:.:.:.:.:RD',
-'chr1	44250	DUP_chr1_5	N	<DUP>	999	LOW_CALL_RATE	END=116000;SVTYPE=DUP;CHR2=chr1;SVLEN=71750;ALGORITHMS=depth;EVIDENCE=BAF,RD;PROTEIN_CODING__COPY_GAIN=OR4F5;LINCRNA__COPY_GAIN=AL627309.3;LINCRNA__DUP_PARTIAL=AL627309.1;NONCODING_SPAN=DNase;AN=1428;AC=82;AF=0.057423;N_BI_GENOS=714;N_HOMREF=646;N_HET=54;N_HOMALT=14;FREQ_HOMREF=0.904762;FREQ_HET=0.0756303;FREQ_HOMALT=0.0196078;MALE_AN=772;MALE_AC=43;MALE_AF=0.055699;MALE_N_BI_GENOS=386;MALE_N_HOMREF=351;MALE_N_HET=27;MALE_N_HOMALT=8;MALE_FREQ_HOMREF=0.909326;MALE_FREQ_HET=0.0699482;MALE_FREQ_HOMALT=0.0207254;FEMALE_AN=656;FEMALE_AC=39;FEMALE_AF=0.059451;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=295;FEMALE_N_HET=27;FEMALE_N_HOMALT=6;FEMALE_FREQ_HOMREF=0.89939;FEMALE_FREQ_HET=0.0823171;FEMALE_FREQ_HOMALT=0.0182927	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:1:1:1:.:.:.:.:RD	0/0:36:2:36:.:.:.:.:RD	0/0:94:2:94:.:.:.:.:RD	0/0:130:1:130:.:.:.:.:RD	0/0:999:1:999:.:.:.:.:RD',
-'chr1	51400	DEL_chr1_1	N	<DEL>	999	UNSTABLE_AF_PCRMINUS	END=64000;SVTYPE=DEL;CHR2=chr1;SVLEN=12600;ALGORITHMS=depth;EVIDENCE=RD;PROTEIN_CODING__NEAREST_TSS=OR4F5;PROTEIN_CODING__INTERGENIC;NONCODING_SPAN=DNase;AN=1428;AC=306;AF=0.214286;N_BI_GENOS=714;N_HOMREF=443;N_HET=236;N_HOMALT=35;FREQ_HOMREF=0.620448;FREQ_HET=0.330532;FREQ_HOMALT=0.0490196;MALE_AN=772;MALE_AC=156;MALE_AF=0.202073;MALE_N_BI_GENOS=386;MALE_N_HOMREF=246;MALE_N_HET=124;MALE_N_HOMALT=16;MALE_FREQ_HOMREF=0.637306;MALE_FREQ_HET=0.321244;MALE_FREQ_HOMALT=0.0414508;FEMALE_AN=656;FEMALE_AC=150;FEMALE_AF=0.228659;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=197;FEMALE_N_HET=112;FEMALE_N_HOMALT=19;FEMALE_FREQ_HOMREF=0.60061;FEMALE_FREQ_HET=0.341463;FEMALE_FREQ_HOMALT=0.0579268	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/1:125:1:125:.:.:.:.:RD	0/0:72:2:72:.:.:.:.:RD	0/0:112:2:112:.:.:.:.:RD	0/0:1:2:1:.:.:.:.:RD	0/0:8:2:8:.:.:.:.:RD',
-'chr1	52600	CNV_chr1_1	N	<CNV>	999	FAIL_minGQ	END=58000;SVTYPE=CNV;CHR2=chr1;SVLEN=5400;ALGORITHMS=depth;EVIDENCE=RD;PROTEIN_CODING__NEAREST_TSS=OR4F5;PROTEIN_CODING__INTERGENIC;NONCODING_SPAN=DNase;AN=0;AC=0;AF=0;MALE_AN=0;MALE_AC=0;MALE_AF=0;FEMALE_AN=0;FEMALE_AC=0;FEMALE_AF=0	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV:CN:CNQ	.:.:1:125:.:.:.:.:RD:1:125	.:.:2:130:.:.:.:.:RD:2:130	.:.:2:23:.:.:.:.:RD:2:23	.:.:2:1:.:.:.:.:RD:2:1	.:.:2:1:.:.:.:.:RD:2:1',
-'chr1	66234	BND_chr1_2	N	<BND>	807	UNRESOLVED	END=66234;SVTYPE=BND;CHR2=chr19;STRANDS=-+;SVLEN=-1;ALGORITHMS=manta;EVIDENCE=PE;UNRESOLVED_TYPE=SINGLE_ENDER_-+;END2=108051;AN=1428;AC=236;AF=0.165266;N_BI_GENOS=714;N_HOMREF=514;N_HET=164;N_HOMALT=36;FREQ_HOMREF=0.719888;FREQ_HET=0.229692;FREQ_HOMALT=0.0504202;MALE_AN=772;MALE_AC=131;MALE_AF=0.169689;MALE_N_BI_GENOS=386;MALE_N_HOMREF=275;MALE_N_HET=91;MALE_N_HOMALT=20;MALE_FREQ_HOMREF=0.712435;MALE_FREQ_HET=0.235751;MALE_FREQ_HOMALT=0.0518135;FEMALE_AN=656;FEMALE_AC=105;FEMALE_AF=0.160061;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=239;FEMALE_N_HET=73;FEMALE_N_HOMALT=16;FEMALE_FREQ_HOMREF=0.728659;FEMALE_FREQ_HET=0.222561;FEMALE_FREQ_HOMALT=0.0487805	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:999:.:.:0:23:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR',
-'chr1	1495464	CPX_chr1_1	N	<CPX>	999	PASS	END=1495554;SVTYPE=CPX;CHR2=chr1;SVLEN=184;ALGORITHMS=manta;EVIDENCE=PE;CPX_TYPE=dDUP;SOURCE=DUP_chr1:1533874-1534058;CPX_INTERVALS=DUP_chr1:1533874-1534058;PROTEIN_CODING__DUP_PARTIAL=ATAD3A;PROTEIN_CODING__INTRONIC=ATAD3A;AN=1428;AC=7;AF=0.004902;N_BI_GENOS=714;N_HOMREF=707;N_HET=7;N_HOMALT=0;FREQ_HOMREF=0.990196;FREQ_HET=0.00980392;FREQ_HOMALT=0;MALE_AN=772;MALE_AC=4;MALE_AF=0.005181;MALE_N_BI_GENOS=386;MALE_N_HOMREF=382;MALE_N_HET=4;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.989637;MALE_FREQ_HET=0.0103627;MALE_FREQ_HOMALT=0;FEMALE_AN=656;FEMALE_AC=3;FEMALE_AF=0.004573;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=325;FEMALE_N_HET=3;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.990854;FEMALE_FREQ_HET=0.00914634;FEMALE_FREQ_HOMALT=0	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/1:782:.:.:1:782:1:1:PE,SR',
-'chr1	1643228	INS_chr1_10	N	<INS:ME:SVA>	250	PASS	END=1643309;SVTYPE=INS;CHR2=chr1;SVLEN=169;ALGORITHMS=melt;EVIDENCE=SR;PROTEIN_CODING__INTRONIC=CDK11B;AN=1428;AC=11;AF=0.007703;N_BI_GENOS=714;N_HOMREF=703;N_HET=11;N_HOMALT=0;FREQ_HOMREF=0.984594;FREQ_HET=0.0154062;FREQ_HOMALT=0;MALE_AN=772;MALE_AC=5;MALE_AF=0.006477;MALE_N_BI_GENOS=386;MALE_N_HOMREF=381;MALE_N_HET=5;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.987047;MALE_FREQ_HET=0.0129534;MALE_FREQ_HOMALT=0;FEMALE_AN=656;FEMALE_AC=6;FEMALE_AF=0.009146;FEMALE_N_BI_GENOS=328;FEMALE_N_HOMREF=322;FEMALE_N_HET=6;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.981707;FEMALE_FREQ_HET=0.0182927;FEMALE_FREQ_HOMALT=0;gnomAD_V2_SVID=gnomAD-SV_v2.1_INS_1_47;gnomAD_V2_AF=0.00130899995565414	GT:GQ:RD_CN:RD_GQ:PE_GT:PE_GQ:SR_GT:SR_GQ:EV	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/0:999:.:.:0:999:0:24:PE,SR	0/0:999:.:.:0:999:0:999:PE,SR	0/1:1:.:.:0:999:1:1:SR',
 ]
 
-NULL_STR_ARRAY = hl.null(hl.dtype('array<str>'))
-EMPTY_STR_ARRAY = hl.empty_array(hl.dtype('str'))
-NULL_INTERVALS = hl.null(hl.dtype('array<struct{type: str, chrom: str, start: int32, end: int32}>'))
-SAMPLES_QS_FIELDS = {'samples_qs_{}_to_{}'.format(i, i+10): NULL_STR_ARRAY for i in range(0, 1000, 10)}
-SAMPLES_QS_FIELDS_CPX = SAMPLES_QS_FIELDS.copy()
-SAMPLES_QS_FIELDS_CPX.update({'samples_qs_780_to_790': hl.literal(['SAMPLE-5']),
-                             'samples_qs_990_to_1000': hl.literal(['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4'])})
-SAMPLES_QS_FIELDS_DUP = SAMPLES_QS_FIELDS.copy()
-SAMPLES_QS_FIELDS_DUP.update({'samples_qs_0_to_10': ['SAMPLE-4'],
-                             'samples_qs_10_to_20': ['SAMPLE-3'],
-                             'samples_qs_30_to_40': ['SAMPLE-5'],
-                             'samples_qs_50_to_60': ['SAMPLE-2'],
-                             'samples_qs_990_to_1000': ['SAMPLE-1']})
-SAMPLES_QS_FIELDS_INS = SAMPLES_QS_FIELDS.copy()
-SAMPLES_QS_FIELDS_INS.update({'samples_qs_0_to_10': ['SAMPLE-5'],
-                             'samples_qs_990_to_1000': ['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4']})
-VARIANT_CPX = hl.struct(variantId='CPX_chr1_1', contig='1', sc=7, sf=0.004902, sn=1428, start=1495464, end=1495554,
-                     sv_callset_Het=7, sv_callset_Hom=0, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=1495464,
-                     filters=NULL_STR_ARRAY, xpos=1001495464,
-                     cpx_intervals=[hl.struct(type='DUP', chrom='1', start=1533874, end=1534058)], xstart=1001495464,
-                     xstop=1001495554, svType='CPX', transcriptConsequenceTerms=['DUP_PARTIAL', 'INTRONIC', 'CPX'], sv_type_detail='dDUP',
-                     sortedTranscriptConsequences=[hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', major_consequence='DUP_PARTIAL'),
-                                                   hl.struct(gene_symbol='ATAD3A', gene_id='ENSG00000284663', major_consequence='INTRONIC')],
-                     geneIds={'ENSG00000284663'}, samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
-                     samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-5', gq=782, num_alt=1, cn=hl.null('int'))],
-                     **SAMPLES_QS_FIELDS_CPX)
-VARIANT_DUP = hl.struct(variantId='DUP_chr1_1', contig='1', sc=370, sf=0.259104, sn=1428, start=10000, end=17000,
-                     sv_callset_Het=228, sv_callset_Hom=71, gnomad_svs_ID=hl.null('str'), gnomad_svs_AF=hl.null('float'), pos=10000,
-                     filters=['LOW_CALL_RATE'], xpos=1000010000, cpx_intervals=NULL_INTERVALS, xstart=1000010000,
-                     xstop=1000017000, svType='DUP', transcriptConsequenceTerms=['NEAREST_TSS', 'DUP'], sv_type_detail=hl.null('str'),
-                     sortedTranscriptConsequences=[hl.struct(gene_symbol='OR4F5', gene_id='ENSG00000284662',
-                                                             major_consequence='NEAREST_TSS')], geneIds=hl.empty_set(hl.dtype('str')),
-                     samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], samples_num_alt_2=EMPTY_STR_ARRAY,
-                     genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=1, cn=3),
-                                hl.struct(sample_id='SAMPLE-2', gq=52, num_alt=1, cn=3),
-                                hl.struct(sample_id='SAMPLE-3', gq=19, num_alt=1, cn=3),
-                                hl.struct(sample_id='SAMPLE-4', gq=1, num_alt=0, cn=2),
-                                hl.struct(sample_id='SAMPLE-5', gq=31, num_alt=0, cn=2)],
-                     **SAMPLES_QS_FIELDS_DUP)
-VARIANT_INS = hl.struct(variantId='INS_chr1_10', contig='1', sc=11, sf=0.007703, sn=1428, start=1643228, end=1643309,
-                     sv_callset_Het=11, sv_callset_Hom=0, gnomad_svs_ID='gnomAD-SV_v2.1_INS_1_47',
-                     gnomad_svs_AF=0.00130899995565414, pos=1643228, filters=NULL_STR_ARRAY, xpos=1001643228, cpx_intervals=NULL_INTERVALS,
-                     xstart=1001643228, xstop=1001643309, svType='INS', transcriptConsequenceTerms=['INTRONIC', 'INS'],
-                     sv_type_detail='ME:SVA', sortedTranscriptConsequences=[
-        hl.struct(gene_symbol='CDK11B', gene_id='ENSG00000284664', major_consequence='INTRONIC')],
-                     geneIds={'ENSG00000284664'}, samples_no_call=EMPTY_STR_ARRAY, samples_num_alt_1=['SAMPLE-5'],
-                     samples_num_alt_2=EMPTY_STR_ARRAY, genotypes=[hl.struct(sample_id='SAMPLE-1', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-2', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-3', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-4', gq=999, num_alt=0, cn=hl.null('int')),
-                                                      hl.struct(sample_id='SAMPLE-5', gq=1, num_alt=1, cn=hl.null('int'))],
-                     **SAMPLES_QS_FIELDS_INS)
+VCF_DATA_ROW = [
+['chr1', '180928', 'BND_chr1_6', 'N', '<BND>', '657', 'HIGH_SR_BACKGROUND;UNRESOLVED', 'ALGORITHMS=manta;CHR2=chr5;END=180928;END2=20404;EVIDENCE=PE,SR;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=OR4F5,PLEKHG4B;NONCODING_BREAKPOINT=DNase;STRANDS=+-;SVLEN=-1;SVTYPE=BND;UNRESOLVED_TYPE=SINGLE_ENDER_+-;AN=8;AC=1;AF=0.04775;N_BI_GENOS=2911;N_HOMREF=2633;N_HET=278;N_HOMALT=0;FREQ_HOMREF=0.9045;FREQ_HET=0.0954998;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=137;MALE_AF=0.047339;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1310;MALE_N_HET=137;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.905321;MALE_FREQ_HET=0.0946786;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=139;FEMALE_AF=0.047832;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1314;FEMALE_N_HET=139;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.904336;FEMALE_FREQ_HET=0.0956641;FEMALE_FREQ_HOMALT=0', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:2:0', '0/1:SR:31:99:0:31:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:2:0', '0/0:PE,SR:99:99:0:2:0'],
+['chr1', '257666', 'DUP_chr1_5', 'N', '<DUP>', '999', 'PASS', 'ALGORITHMS=depth;CHR2=chr1;END=263666;EVIDENCE=BAF,RD;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=OR4F29;SVLEN=6000;SVTYPE=DUP;AN=8;AC=1;AF=0.115596;N_BI_GENOS=2911;N_HOMREF=2348;N_HET=453;N_HOMALT=110;FREQ_HOMREF=0.806596;FREQ_HET=0.155617;FREQ_HOMALT=0.0377877;MALE_AN=2894;MALE_AC=339;MALE_AF=0.117139;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1163;MALE_N_HET=229;MALE_N_HOMALT=55;MALE_FREQ_HOMREF=0.803732;MALE_FREQ_HET=0.158258;MALE_FREQ_HOMALT=0.0380097;FEMALE_AN=2906;FEMALE_AC=330;FEMALE_AF=0.113558;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1178;FEMALE_N_HET=220;FEMALE_N_HOMALT=55;FEMALE_FREQ_HOMREF=0.810736;FEMALE_FREQ_HET=0.151411;FEMALE_FREQ_HOMALT=0.0378527', 'GT:EV:GQ:RD_CN:RD_GQ', '0/0:RD:99:2:99', '0/0:RD:99:2:99', '0/1:RD:8:3:8', '0/0:RD:13:1:13', '0/0:RD:13:1:13'],
+['chr1', '413968', 'DEL_chr1_12', 'N', '<DEL>', '999', 'PASS', 'ALGORITHMS=depth;CHR2=chr1;END=428500;EVIDENCE=RD;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=OR4F29;SVLEN=14532;SVTYPE=DEL;AN=8;AC=1;AF=0.064926;N_BI_GENOS=2911;N_HOMREF=2538;N_HET=368;N_HOMALT=5;FREQ_HOMREF=0.871865;FREQ_HET=0.126417;FREQ_HOMALT=0.00171762;MALE_AN=2894;MALE_AC=172;MALE_AF=0.059433;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1278;MALE_N_HET=166;MALE_N_HOMALT=3;MALE_FREQ_HOMREF=0.883207;MALE_FREQ_HET=0.11472;MALE_FREQ_HOMALT=0.00207325;FEMALE_AN=2906;FEMALE_AC=205;FEMALE_AF=0.070544;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1250;FEMALE_N_HET=201;FEMALE_N_HOMALT=2;FEMALE_FREQ_HOMREF=0.860289;FEMALE_FREQ_HET=0.138334;FEMALE_FREQ_HOMALT=0.00137646', 'GT:EV:GQ:RD_CN:RD_GQ', '0/0:RD:12:2:12', '0/0:RD:0:2:0', '0/1:RD:99:1:99', '0/0:RD:2:2:2', '0/0:RD:2:2:2'],
+['chr1', '789481', 'BND_chr1_9', 'N', '<BND>', '999', 'PESR_GT_OVERDISPERSION;UNRESOLVED', 'ALGORITHMS=manta;CHR2=chr1;END=789481;EVIDENCE=PE;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=FBXO28,OR4F16;NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;STRANDS=-+;SVLEN=223225007;SVTYPE=BND;UNRESOLVED_TYPE=SINGLE_ENDER_-+;AN=8;AC=7;AF=0.910684;N_BI_GENOS=2911;N_HOMREF=0;N_HET=520;N_HOMALT=2391;FREQ_HOMREF=0;FREQ_HET=0.178633;FREQ_HOMALT=0.821367;MALE_AN=2894;MALE_AC=2639;MALE_AF=0.911887;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=0;MALE_N_HET=255;MALE_N_HOMALT=1192;MALE_FREQ_HOMREF=0;MALE_FREQ_HET=0.176227;MALE_FREQ_HOMALT=0.823773;FEMALE_AN=2906;FEMALE_AC=2643;FEMALE_AF=0.909498;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=0;FEMALE_N_HET=263;FEMALE_N_HOMALT=1190;FEMALE_FREQ_HOMREF=0;FEMALE_FREQ_HET=0.181005;FEMALE_FREQ_HOMALT=0.818995', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '1/1:PE:59:59:2:99:0', '1/1:PE:26:26:2:99:0', '1/1:PE:39:39:2:99:0', '0/1:PE:19:19:1:99:0', '0/1:PE:19:19:1:99:0'],
+['chr1', '4228405', 'INS_chr1_65', 'N', '<INS:ME:ALU>', '605', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=manta,melt;CHR2=chr1;END=4228448;EVIDENCE=SR;gnomAD_V2_SVID=gnomAD-SV_v2.1_INS_chr1_65;gnomAD_V2_AF=0.068962998688221;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=C1orf174;SVLEN=298;SVTYPE=INS;AN=8;AC=1;AF=0.10237;N_BI_GENOS=2911;N_HOMREF=2318;N_HET=590;N_HOMALT=3;FREQ_HOMREF=0.79629;FREQ_HET=0.202679;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=293;MALE_AF=0.101244;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1156;MALE_N_HET=289;MALE_N_HOMALT=2;MALE_FREQ_HOMREF=0.798894;MALE_FREQ_HET=0.199724;MALE_FREQ_HOMALT=0.00138217;FEMALE_AN=2906;FEMALE_AC=302;FEMALE_AF=0.103923;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1152;FEMALE_N_HET=300;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.792842;FEMALE_FREQ_HET=0.206469;FEMALE_FREQ_HOMALT=0.000688231', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:SR:62:99:0:62:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0'],
+['chr1', '6558902', 'CPX_chr1_22', 'N', '<CPX>', '644', 'BOTHSIDES_SUPPORT;HIGH_SR_BACKGROUND', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=INV_chr1:6558902-6559723,DUP_chr1:6559655-6559723;CPX_TYPE=INVdup;END=6559723;EVIDENCE=PE,SR;PROTEIN_CODING__INTRONIC=TAS1R1;NONCODING_BREAKPOINT=Tommerup_TADanno;NONCODING_SPAN=DNase;SVLEN=821;SVTYPE=CPX;AN=8;AC=2;AF=0.169873;N_BI_GENOS=2911;N_HOMREF=1925;N_HET=983;N_HOMALT=3;FREQ_HOMREF=0.661285;FREQ_HET=0.337685;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=497;MALE_AF=0.171735;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=950;MALE_N_HET=497;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.656531;MALE_FREQ_HET=0.343469;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=488;FEMALE_AF=0.167928;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=968;FEMALE_N_HET=482;FEMALE_N_HOMALT=3;FEMALE_FREQ_HOMREF=0.666208;FEMALE_FREQ_HET=0.331727;FEMALE_FREQ_HOMALT=0.00206469', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT:RD_CN', '0/0:PE,SR:99:99:0:99:0:2', '0/1:PE,SR:57:0:0:57:1:2', '0/1:PE,SR:0:0:1:99:0:2', '0/0:PE,SR:99:99:0:0:0:3', '0/0:PE,SR:99:99:0:0:0:1'],
+['chr1', '16088760', 'CPX_chr1_41', 'N', '<CPX>', '684', 'PASS', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:16088760-16088835,INV_chr1:16088760-16089601;CPX_TYPE=dupINV;END=16089601;EVIDENCE=PE,SR;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=FAM131C;NONCODING_BREAKPOINT=Tommerup_TADanno;NONCODING_SPAN=DNase;SVLEN=841;SVTYPE=CPX;AN=8;AC=2;AF=0.218138;N_BI_GENOS=2911;N_HOMREF=1659;N_HET=1234;N_HOMALT=18;FREQ_HOMREF=0.569907;FREQ_HET=0.423909;FREQ_HOMALT=0.00618344;MALE_AN=2894;MALE_AC=635;MALE_AF=0.219419;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=818;MALE_N_HET=623;MALE_N_HOMALT=6;MALE_FREQ_HOMREF=0.565308;MALE_FREQ_HET=0.430546;MALE_FREQ_HOMALT=0.00414651;FEMALE_AN=2906;FEMALE_AC=629;FEMALE_AF=0.216449;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=836;FEMALE_N_HET=605;FEMALE_N_HOMALT=12;FEMALE_FREQ_HOMREF=0.575361;FEMALE_FREQ_HET=0.41638;FEMALE_FREQ_HOMALT=0.00825877', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:SR:52:0:0:52:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:62:0:0:62:1', '0/1:SR:62:0:0:62:1'],
+['chr1', '17465707', 'INS_chr1_268', 'N', '<INS:ME:SVA>', '263', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=melt;CHR2=chr1;END=17465723;EVIDENCE=SR;PROTEIN_CODING__INTERGENIC;PROTEIN_CODING__NEAREST_TSS=RCC2;NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=955;SVTYPE=INS;AN=8;AC=1;AF=0.004466;N_BI_GENOS=2911;N_HOMREF=2885;N_HET=26;N_HOMALT=0;FREQ_HOMREF=0.991068;FREQ_HET=0.00893164;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=14;MALE_AF=0.004838;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1433;MALE_N_HET=14;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.990325;MALE_FREQ_HET=0.00967519;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=11;FEMALE_AF=0.003785;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1442;FEMALE_N_HET=11;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.992429;FEMALE_FREQ_HET=0.00757054;FEMALE_FREQ_HOMALT=0', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:0:99:0:0:1', '0/0:PE,SR:99:99:0:2:0', '0/0:PE,SR:99:99:0:2:0'],
+['chr1', '21427498', 'CPX_chr1_54', 'N', '<CPX>', '733', 'PASS', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:21427498-21427959,INV_chr1:21427498-21480073,DEL_chr1:21480073-21480419;CPX_TYPE=dupINVdel;END=21480419;EVIDENCE=PE;PROTEIN_CODING__LOF=NBPF3;NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;NONCODING_SPAN=DNase;SVLEN=52921;SVTYPE=CPX;AN=8;AC=4;AF=0.499656;N_BI_GENOS=2911;N_HOMREF=51;N_HET=2811;N_HOMALT=49;FREQ_HOMREF=0.0175198;FREQ_HET=0.965648;FREQ_HOMALT=0.0168327;MALE_AN=2894;MALE_AC=1453;MALE_AF=0.502073;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=19;MALE_N_HET=1403;MALE_N_HOMALT=25;MALE_FREQ_HOMREF=0.0131306;MALE_FREQ_HET=0.969592;MALE_FREQ_HOMALT=0.0172771;FEMALE_AN=2906;FEMALE_AC=1445;FEMALE_AF=0.497247;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=32;FEMALE_N_HET=1397;FEMALE_N_HOMALT=24;FEMALE_FREQ_HOMREF=0.0220234;FEMALE_FREQ_HET=0.961459;FEMALE_FREQ_HOMALT=0.0165175', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:PE:93:93:1:99:0', '0/1:PE:79:79:1:99:0', '0/1:PE:33:33:1:6:0', '0/1:PE,SR:39:39:1:99:0', '0/1:PE,SR:39:39:1:99:0'],
+['chr1', '48963084', 'INS_chr1_688', 'N', '<INS:ME:LINE1>', '526', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=melt;CHR2=chr1;END=48963135;EVIDENCE=SR;PROTEIN_CODING__INTRONIC=AGBL4;NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=5520;SVTYPE=INS;AN=8;AC=1;AF=0.06338;N_BI_GENOS=2911;N_HOMREF=2544;N_HET=365;N_HOMALT=2;FREQ_HOMREF=0.873926;FREQ_HET=0.125386;FREQ_HOMALT=0.000687049;MALE_AN=2894;MALE_AC=177;MALE_AF=0.061161;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1271;MALE_N_HET=175;MALE_N_HOMALT=1;MALE_FREQ_HOMREF=0.878369;MALE_FREQ_HET=0.12094;MALE_FREQ_HOMALT=0.000691085;FEMALE_AN=2906;FEMALE_AC=192;FEMALE_AF=0.06607;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1262;FEMALE_N_HET=190;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.868548;FEMALE_FREQ_HET=0.130764;FEMALE_FREQ_HOMALT=0.000688231', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:0:99:0:0:1', '0/1:SR:0:99:0:0:1'],
+['chr1', '180540234', 'CPX_chr1_251', 'N', '<CPX>', '999', 'UNRESOLVED', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DEL_chr1:180540234-181074767,INV_chr1:181074767-181074938;CPX_TYPE=delINV;END=181074952;EVIDENCE=PE,SR;PROTEIN_CODING__LOF=KIAA1614,MR1,STX6,XPR1;NONCODING_BREAKPOINT=Tommerup_TADanno;NONCODING_SPAN=DNase,Enhancer;SVLEN=534718;SVTYPE=CPX;UNRESOLVED_TYPE=POSTHOC_RD_GT_REJECTION;AN=8;AC=3;AF=0.251804;N_BI_GENOS=2911;N_HOMREF=1559;N_HET=1238;N_HOMALT=114;FREQ_HOMREF=0.535555;FREQ_HET=0.425283;FREQ_HOMALT=0.0391618;MALE_AN=2894;MALE_AC=724;MALE_AF=0.250173;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=784;MALE_N_HET=602;MALE_N_HOMALT=61;MALE_FREQ_HOMREF=0.541811;MALE_FREQ_HET=0.416033;MALE_FREQ_HOMALT=0.0421562;FEMALE_AN=2906;FEMALE_AC=736;FEMALE_AF=0.253269;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=770;FEMALE_N_HET=630;FEMALE_N_HOMALT=53;FEMALE_FREQ_HOMREF=0.529938;FEMALE_FREQ_HET=0.433586;FEMALE_FREQ_HOMALT=0.0364763', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:99:0', '0/1:PE,SR:41:26:1:41:1', '1/1:PE,SR:89:33:1:89:2', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0'],
+]
+
+VCF_DATA = VCF_HEADER_META + [
+'#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE-1	SAMPLE-2	SAMPLE-3	SAMPLE-4	SAMPLE-5'
+] + ['\t'.join(row) for row in VCF_DATA_ROW]
+
+STRVCTVRE_DATA = ['0.7', '0.8', '0.9', '0.71', '0.73', '0.74', '0.75', '0.76', '0.77', '0.78', '0.79']
+STRVCTVRE_VCF_DATA_ROW = copy.deepcopy(VCF_DATA_ROW)
+for i, row in enumerate(STRVCTVRE_VCF_DATA_ROW):
+    row[7] = f'StrVCTVRE={STRVCTVRE_DATA[i]};{row[7]}'
+STRVCTVRE_VCF_DATA = VCF_HEADER_META + [
+'##INFO=<ID=StrVCTVRE,Number=1,Type=String,Description="StrVCTVRE score.">',
+'#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE-1	SAMPLE-2	SAMPLE-3	SAMPLE-4	SAMPLE-5',
+] + ['\t'.join(row) for row in STRVCTVRE_VCF_DATA_ROW]
+
+SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv_{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
+
+DATA_FIELDS = [
+    'contig', 'sc', 'sf', 'sn', 'start', 'end', 'sv_callset_Het', 'sv_callset_Hom', 'gnomad_svs_ID', 'gnomad_svs_AF',
+    'pos', 'filters', 'bothsides_support', 'algorithms', 'xpos', 'cpx_intervals',
+    'xstart', 'xstop', 'rg37_locus', 'rg37_locus_end', 'svType', 'transcriptConsequenceTerms', 'sv_type_detail',
+    'geneIds', 'samples_no_call', 'samples_num_alt_1', 'samples_num_alt_2', 'variantId', 'sortedTranscriptConsequences',
+    'genotypes']
+
+DATA_FIELDS += SAMPLES_GQ_SV_FIELDS
+DATA_FIELDS.append('StrVCTVRE_score')
+
+EXPECTED_SAMPLE_GQ = [
+    {
+        'samples_gq_sv_10_to_20': ['SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv_20_to_30': ['SAMPLE-2'],
+        'samples_gq_sv_30_to_40': ['SAMPLE-3'],
+        'samples_gq_sv_50_to_60': ['SAMPLE-1'],
+    },
+    {
+        'samples_gq_sv_60_to_70': ['SAMPLE-1'],
+        'samples_gq_sv_90_to_100': ['SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+    },
+    {
+        'samples_gq_sv_0_to_10': ['SAMPLE-3'],
+        'samples_gq_sv_50_to_60': ['SAMPLE-2'],
+        'samples_gq_sv_90_to_100': ['SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'],
+    }
+]
+
+EXPECTED_DATA = [
+    hl.Struct(
+        contig='1', sc=7, sf=0.910684, sn=8, start=789481, end=789481, sv_callset_Het=520, sv_callset_Hom=2391,
+        gnomad_svs_ID=None, gnomad_svs_AF=None, pos=789481,
+        filters=['PESR_GT_OVERDISPERSION', 'UNRESOLVED'], bothsides_support=False, algorithms=['manta'],
+        xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
+        rg37_locus=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
+        transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
+        geneIds=frozenset(), samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
+        samples_num_alt_2=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], variantId='BND_chr1_9',
+        sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
+            hl.Struct(gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        StrVCTVRE_score=0.71,
+        **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    ),
+    hl.Struct(
+        contig='1', sc=1, sf=0.10237, sn=8, start=4228405, end=4228448, sv_callset_Het=590, sv_callset_Hom=3,
+        gnomad_svs_ID='gnomAD-SV_v2.1_INS_chr1_65', gnomad_svs_AF=0.068962998688221, pos=4228405,
+        filters=['HIGH_SR_BACKGROUND'], bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
+        cpx_intervals=None, xstart=1004228405, xstop=1004228448,
+        rg37_locus=hl.Locus(contig=1, position=4288465, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
+        transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=frozenset(),
+        samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
+        variantId='INS_chr1_65', sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        StrVCTVRE_score=0.73,
+        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    ),
+    hl.Struct(
+        contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3,
+        gnomad_svs_ID=None, gnomad_svs_AF=None, pos=6558902,
+        filters=['HIGH_SR_BACKGROUND'], bothsides_support=True, algorithms=['manta'], xpos=1006558902,
+        cpx_intervals=[hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
+                       hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
+        xstop=1006559723, rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
+        rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
+        transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
+        geneIds=frozenset({'ENSG00000173662'}), samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
+        samples_num_alt_2=[], variantId='CPX_chr1_22', sortedTranscriptConsequences=[
+            hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
+        StrVCTVRE_score=0.74,
+        **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    ),
+]
 
 TEST_GUID = 'test_guid'
 TEST_PASSWORD = 'ExamplePasswd'
 TEST_INPUT_DATASET = 'test_dataset/input_vcf.gz'
-TEST_GENERATED_MT_PATH = 'test_dataset/input_vcf.mt'
-TEST_MT_PATH = 'test_mt/data.mt'
+TEST_INPUT_VCF_NO_EXT = 'test_dataset/input_vcf'
+TEST_INPUT_MT_PATH = 'test_dataset/input_vcf.mt'
 TEST_GENCODE_PATH = 'test_gtf/gtf'
 TEST_HOST = 'TEST_HOST'
 TEST_PORT = '9500'
@@ -182,43 +236,53 @@ class LoadDataTest(unittest.TestCase):
         self.vcf_file = tempfile.mkstemp(suffix='.vcf')[1]
         with open(self.vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
-        hl.init(quiet=True)
+        self.strvctvre_vcf_file = tempfile.mkstemp(suffix='.vcf')[1]
+        with open(self.strvctvre_vcf_file, 'w') as f:
+            f.writelines('\n'.join(STRVCTVRE_VCF_DATA))
         self.mt = hl.import_vcf(self.vcf_file, reference_genome='GRCh38', force=True)
+        self.strvctvre_mt = hl.import_vcf(self.strvctvre_vcf_file, reference_genome='GRCh38', force=True)
 
     def tearDown(self):
-        hl.stop()
         os.remove(self.vcf_file)
+        os.remove(self.strvctvre_vcf_file)
 
+    @mock.patch('sv_pipeline.genome.load_data.path_exists')
     @mock.patch('sv_pipeline.genome.load_data.os')
     @mock.patch('sv_pipeline.genome.load_data.hl')
     @mock.patch('sv_pipeline.genome.load_data.logger')
-    def test_load_mt(self, mock_logger, mock_hl, mock_os):
+    def test_load_mt(self, mock_logger, mock_hl, mock_os, mock_path_exists):
         # test loading from a saved MatrixTable file
-        mock_os.path.splitext.return_value = os.path.splitext(TEST_INPUT_DATASET)
-        mock_os.path.isdir.return_value = True
+        mock_os.path.splitext.return_value = [TEST_INPUT_VCF_NO_EXT, 'gz']
+        mock_path_exists.return_value = True
         _ = load_mt(TEST_INPUT_DATASET, None, False)
         mock_hl.import_vcf.assert_not_called()
-        mock_hl.read_matrix_table.assert_called_with(TEST_GENERATED_MT_PATH)
+        mock_os.path.splitext.assert_called_with(TEST_INPUT_DATASET)
+        mock_path_exists.assert_called_with(TEST_INPUT_MT_PATH)
+        mock_hl.read_matrix_table.assert_called_with(TEST_INPUT_MT_PATH)
         mock_logger.info.assert_called_with('Use the existing MatrixTable file test_dataset/input_vcf.mt. '
                                        'If the input VCF file has been changed, or you just want to re-import VCF,'
                                        ' please add "--overwrite-matrixtable" command line option.')
 
         # test overwriting existing MatrixTable file even if it exists
         mock_logger.reset_mock()
-        _ = load_mt(TEST_INPUT_DATASET, TEST_MT_PATH, True)
+        mock_hl.reset_mock()
+        _ = load_mt(TEST_INPUT_DATASET, TEST_INPUT_MT_PATH, True)
         mock_hl.import_vcf.assert_called_with(TEST_INPUT_DATASET, reference_genome='GRCh38')
-        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_MT_PATH, overwrite=True)
-        mock_hl.read_matrix_table.assert_called_with(TEST_MT_PATH)
-        mock_logger.info.assert_called_with('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_MT_PATH))
+        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_INPUT_MT_PATH, overwrite=True)
+        mock_hl.read_matrix_table.assert_called_with(TEST_INPUT_MT_PATH)
+        mock_logger.info.assert_called_with(
+            f'The VCF file has been imported to the MatrixTable at {TEST_INPUT_MT_PATH}.')
 
         # test the MatrixTable doesn't exist
         mock_logger.reset_mock()
-        mock_os.path.isdir.return_value = False
+        mock_hl.reset_mock()
+        mock_path_exists.return_value = False
         _ = load_mt(TEST_INPUT_DATASET, None, False)
         mock_hl.import_vcf.assert_called_with(TEST_INPUT_DATASET, reference_genome='GRCh38')
-        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_GENERATED_MT_PATH, overwrite=True)
-        mock_hl.read_matrix_table.assert_called_with(TEST_GENERATED_MT_PATH)
-        mock_logger.info.assert_called_with('The VCF file has been imported to the MatrixTable at {}.'.format(TEST_GENERATED_MT_PATH))
+        mock_hl.import_vcf.return_value.write.assert_called_with(TEST_INPUT_MT_PATH, overwrite=True)
+        mock_hl.read_matrix_table.assert_called_with(TEST_INPUT_MT_PATH)
+        mock_logger.info.assert_called_with(
+            f'The VCF file has been imported to the MatrixTable at {TEST_INPUT_MT_PATH}.')
 
     @mock.patch('sv_pipeline.genome.load_data.get_sample_subset')
     @mock.patch('sv_pipeline.genome.load_data.get_sample_remap')
@@ -233,20 +297,19 @@ class LoadDataTest(unittest.TestCase):
         # test remapping sample ID
         mock_get_remap.return_value = {'SAMPLE-1': 'SAMPLE-1-REMAP'}
         mt = subset_mt('test_guid', self.mt, skip_sample_subset=False, ignore_missing_samples=True)
-        calls = [
+        mock_logger.info.assert_has_calls([
             mock.call('Missing the following 1 samples:\nSAMPLE-6'),
             mock.call('Subsetting to 4 samples (remapping 1 samples)'),
-        ]
-        mock_logger.info.assert_has_calls(calls)
-        mock_get_sample.assert_called_with('test_guid', 'WGS')
+        ])
+        mock_get_sample.assert_called_with('test_guid', 'WGS', filename=None)
         mock_get_remap.assert_called_with('test_guid', 'WGS')
-        self.assertEqual(mt.count(), (5, 3))
+        self.assertEqual(mt.count(), (10, 3))
         self.assertEqual(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)), {'SAMPLE-1-REMAP', 'SAMPLE-3', 'SAMPLE-5'})
 
         # test skipping sample subsetting
         mock_logger.reset_mock()
         mt = subset_mt('test_guid', self.mt, skip_sample_subset=True)
-        self.assertEqual(mt.count(), (5, 5))
+        self.assertEqual(mt.count(), (11, 5))
         self.assertEqual(mt.aggregate_cols(hl.agg.collect_as_set(mt.s)), {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'})
 
         # test no subsetting sample found
@@ -261,27 +324,17 @@ class LoadDataTest(unittest.TestCase):
         ]
         mock_logger.info.assert_has_calls(calls)
 
-    @mock.patch('sv_pipeline.genome.load_data.load_gencode')
-    def test_annotation(self, mock_load_gencode):
-        mock_load_gencode.return_value = GENE_ID_MAPPING
-        rows = annotate_fields(self.mt, TEST_GENCODE_RELEASE, TEST_GENCODE_PATH)
-        mock_load_gencode.assert_called_with(TEST_GENCODE_RELEASE, download_path=TEST_GENCODE_PATH)
-        row_dict = {row['variantId']: row for row in rows.take(11)}
-        self.assertListEqual([row_dict[row] for row in ['CPX_chr1_1', 'DUP_chr1_1', 'INS_chr1_10']],
-                             hl.eval([VARIANT_CPX, VARIANT_DUP, VARIANT_INS]))
-
     @mock.patch('sv_pipeline.genome.load_data.os')
-    @mock.patch('sv_pipeline.genome.load_data.ElasticsearchClient')
+    @mock.patch('sv_pipeline.genome.load_data.HailElasticsearchClient')
     @mock.patch('sv_pipeline.genome.load_data.get_es_index_name')
     def test_export_to_es(self, mock_get_index, mock_es_client, mock_os):
         mock_get_index.return_value = TEST_INDEX_NAME
         mock_os.environ.get.return_value = TEST_PASSWORD
         mock_es = mock_es_client.return_value
         rows = self.mt.rows().head(5)
-        export_to_es(rows, TEST_INPUT_DATASET, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS, es_nodes_wan_only='false')
+        export_to_es(rows, TEST_INPUT_DATASET, TEST_GUID, TEST_HOST, TEST_PORT, TEST_PASSWORD, TEST_BLOCK_SIZE, TEST_NUM_SHARDS, es_nodes_wan_only='false')
         mock_get_index.assert_called_with(TEST_GUID, {'genomeVersion': '38', 'sampleType': WGS_SAMPLE_TYPE,
                                                       'datasetType': 'SV', 'sourceFilePath': TEST_INPUT_DATASET})
-        mock_os.environ.get.assert_called_with('PIPELINE_ES_PASSWORD', '')
         mock_es_client.assert_called_with(host=TEST_HOST, port=TEST_PORT, es_password=TEST_PASSWORD)
         mock_es.export_table_to_elasticsearch.assert_called_with(
             mock.ANY,
@@ -291,44 +344,43 @@ class LoadDataTest(unittest.TestCase):
             delete_index_before_exporting=True,
             export_globals_to_index_meta=True,
             verbose=True,
-            elasticsearch_config={'es.nodes.wan.only': 'false'}
+            elasticsearch_mapping_id='variantId',
+            elasticsearch_config={'es.nodes.wan.only': 'false'},
+            func_to_run_after_index_exists=mock.ANY,
         )
         self.assertEqual(hl.eval(mock_es.export_table_to_elasticsearch.call_args.args[0].globals),
                          hl.eval(hl.struct(genomeVersion='38', sampleType=WGS_SAMPLE_TYPE,
                                            datasetType='SV', sourceFilePath=TEST_INPUT_DATASET)))
 
-    @mock.patch('sv_pipeline.genome.load_data.hl')
     @mock.patch('sv_pipeline.genome.load_data.load_mt')
-    @mock.patch('sv_pipeline.genome.load_data.subset_mt')
-    @mock.patch('sv_pipeline.genome.load_data.annotate_fields')
     @mock.patch('sv_pipeline.genome.load_data.export_to_es')
-    def test_main(self, mock_export, mock_annot, mock_subset, mock_load_mt, mock_hl):
-        # test a normal case
-        sys.argv[1:] = [self.vcf_file, '--project-guid', TEST_GUID]
-        mock_load_mt.return_value = self.mt
-        mt = self.mt.filter_rows(self.mt.locus.position < 100000)
-        mock_subset.return_value = mt
-        annotated_rows = mt.rows().head(5)
-        mock_annot.return_value = annotated_rows
-        main()
-        mock_hl.init.assert_called_with()
-        mock_hl.stop.assert_called_with()
-        mock_load_mt.assert_called_with(self.vcf_file, None, False)
-        mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=False, ignore_missing_samples=False)
-        mock_annot.assert_called_with(mt, 29, None)
-        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, 'localhost', '9200', 2000, 1, 'false')
+    @mock.patch('sv_pipeline.genome.load_data.subset_mt')
+    @mock.patch('sv_pipeline.genome.load_data.load_gencode')
+    def test_main(self, mock_load_gencode, mock_subset, mock_export, mock_load_mt):
+        mock_load_gencode.return_value = GENE_ID_MAPPING
 
-        # test arguments with non-default values
-        mock_hl.reset_mock()
-        sys.argv[1:] = [self.vcf_file, '--project-guid', 'test_guid', '--matrixtable-file', TEST_MT_PATH,
-                        '--skip-sample-subset', '--ignore-missing-samples',
+        # test a normal case
+        sys.argv[1:] = ['data.vcf.bgz', '--skip-sample-subset', '--ignore-missing-samples', '--project-guid', TEST_GUID,
+                        '--matrixtable-file', TEST_INPUT_MT_PATH,
+                        '--strvctvre', 'annotated.STRVCTVRE.fixed.vcf.gz', '--es-password', TEST_PASSWORD,
                         '--gencode-release', str(TEST_GENCODE_RELEASE), '--gencode-path', TEST_GENCODE_PATH,
-                        '--es-host', TEST_HOST,
-                        '--es-port', TEST_PORT, '--block-size', str(TEST_BLOCK_SIZE), '--num-shards', str(TEST_NUM_SHARDS)]
+                        '--es-host', TEST_HOST, '--es-port', str(TEST_PORT), '--block-size', str(TEST_BLOCK_SIZE),
+                        '--num-shards', str(TEST_NUM_SHARDS), '--es-nodes-wan-only'
+                        ]
+        mock_load_mt.side_effect = [self.mt, self.strvctvre_mt]
+        mock_subset.return_value = self.mt
         main()
-        mock_hl.init.assert_called_with()
-        mock_hl.stop.assert_called_with()
-        mock_load_mt.assert_called_with(self.vcf_file, TEST_MT_PATH, False)
-        mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=True, ignore_missing_samples=True)
-        mock_annot.assert_called_with(mt, TEST_GENCODE_RELEASE, TEST_GENCODE_PATH)
-        mock_export.assert_called_with(annotated_rows, self.vcf_file, TEST_GUID, TEST_HOST, TEST_PORT, TEST_BLOCK_SIZE, TEST_NUM_SHARDS, 'false')
+        mock_load_mt.assert_has_calls([
+            mock.call('data.vcf.bgz', TEST_INPUT_MT_PATH, False),
+            mock.call('annotated.STRVCTVRE.fixed.vcf.gz', None, False)
+        ])
+        mock_load_gencode.assert_called_with(TEST_GENCODE_RELEASE, download_path=TEST_GENCODE_PATH)
+        mock_subset.assert_called_with(TEST_GUID, self.mt, skip_sample_subset=True, ignore_missing_samples=True,
+                                       id_file=None)
+        mock_export.assert_called_with(mock.ANY, 'data.vcf.bgz', TEST_GUID, TEST_HOST, TEST_PORT, TEST_PASSWORD,
+                                       TEST_BLOCK_SIZE, TEST_NUM_SHARDS, 'true')
+        annoted_data = mock_export.call_args.args[0]
+        self.assertListEqual([key for key in annoted_data.__dict__.keys() if not key.startswith('_')], DATA_FIELDS)
+        self.assertEqual(annoted_data.count(), 11)
+        data = annoted_data.order_by(annoted_data.start).tail(8).take(3)
+        self.assertListEqual(data, EXPECTED_DATA)
