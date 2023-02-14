@@ -94,16 +94,17 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     def get_schema_class_kwargs(self):
         ref = hl.read_table(self.reference_ht_path)
         interval_ref_data = hl.read_table(self.interval_ref_ht_path) if self.interval_ref_ht_path else None
-        clinvar = hl.read_table(self.clinvar_ht_path)
+        clinvar_data = hl.read_table(self.clinvar_ht_path)
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
-        return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar, 'hgmd_data': hgmd}
+        return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar_data, 'hgmd_data': hgmd}
 
-    def annotate_globals(self, mt):
+    def annotate_globals(self, mt, clinvar_data):
         return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
-                                 hail_version=pkg_resources.get_distribution('hail').version)
+                                 hail_version=pkg_resources.get_distribution('hail').version,
+                                 clinvar_version=clinvar_data.version)
 
     def import_dataset(self):
         logger.info("Args:")
@@ -134,7 +135,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
 
-        mt = self.annotate_globals(mt)
+        mt = self.annotate_globals(mt, kwargs["clinvar_data"])
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
