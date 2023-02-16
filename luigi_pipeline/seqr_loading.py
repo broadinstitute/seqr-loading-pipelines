@@ -22,30 +22,6 @@ def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
         raise ValueError(f"{label} path not found: {path}")
 
-def contig_check(mt, standard_contigs, threshold):
-    check_result_dict = {}
-    
-    # check chromosomes that are not in the VCF  
-    row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
-    contigs_set = set(row_dict.keys())
-    
-    all_missing_contigs = standard_contigs - contigs_set
-    missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
-
-    if missing_contigs_without_optional:
-        check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
-        logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
-                       
-    for k,v in row_dict.items():
-        if k not in standard_contigs:
-            check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
-            logger.warning('Chromosome %s is unexpected.', k)
-        elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
-            check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
-            logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
-                            
-    return check_result_dict
-
 class SeqrValidationError(Exception):
     pass
 
@@ -148,6 +124,30 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
         return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
 
+    @staticmethod
+    def contig_check(mt, standard_contigs, threshold):
+        check_result_dict = {}
+
+        # check chromosomes that are not in the VCF  
+        row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
+        contigs_set = set(row_dict.keys())
+
+        all_missing_contigs = standard_contigs - contigs_set
+        missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
+
+        if missing_contigs_without_optional:
+            check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
+            logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
+
+        for k,v in row_dict.items():
+            if k not in standard_contigs:
+                check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
+                logger.warning('Chromosome %s is unexpected.', k)
+            elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
+                check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
+                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
+
+        return check_result_dict
 
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):
@@ -160,11 +160,15 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         :param sample_type: WGS or WES
         :return: True or Exception
         """
-        if genome_version == CONST_GRCh37:
-            contig_check_result = contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
-        elif genome_version == CONST_GRCh38:
-            contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+        if mt is None or not isinstance(mt, hl.MatrixTable):
+            raise SeqrValidationError("mt should probably be a MatrixTable")
 
+        if genome_version == CONST_GRCh37:
+            contig_check_result = SeqrVCFToMTTask.contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+        elif genome_version == CONST_GRCh38:
+            contig_check_result = SeqrVCFToMTTask.contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+
+        print("BEN HERE", contig_check_result)
         if bool(contig_check_result):
             err_msg = ''
             for k,v in contig_check_result.items():
