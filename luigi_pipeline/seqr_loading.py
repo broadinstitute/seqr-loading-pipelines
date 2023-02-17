@@ -196,15 +196,19 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             # Only coding should be WES.
             if sample_type != 'WES':
                 raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as {} but appears to be '
-                    'WGS because it contains many common coding variants'.format(sample_type)
+                    '{} because it contains many common non-coding variants'.format(
+                        "WGS",
+                        "WES",
+                    )
                 )
         elif has_noncoding and has_coding:
             # Both should be WGS.
             if sample_type != 'WGS':
                 raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as {} but appears to be '
-                    'WES because it contains many common non-coding variants'.format(sample_type)
+                    '{} because it contains many common non-coding variants'.format(
+                        "WES",
+                        "WGS",
+                    )
                 )
         return True
 
