@@ -7,8 +7,8 @@ import sys
 import luigi
 import hail as hl
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
-from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget
+from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrVariantsAndGenotypesSchema
 
 logger = logging.getLogger(__name__)
 GRCh37_STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19','2','20','21','22','3','4','5','6','7','8','9','X','Y', 'MT'}
@@ -73,7 +73,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                         description="Path to GRCh38 to GRCh37 coordinates file")
     hail_temp_dir = luigi.OptionalParameter(default=None, description="Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.")
     RUN_VEP = True
-    SCHEMA_CLASS = SeqrVariantsAndGenotypesSchema
+    SCHEMA_CLASS = SeqrVariantSchema
 
     def run(self):
         # first validate paths
