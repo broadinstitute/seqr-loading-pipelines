@@ -28,6 +28,18 @@ class RowAnnotation:
             requires = f' (requires: {", ".join(self.requirements)})'
         return f"{self.name}{requires}"
 
+    def __call__(self: "RowAnnotation", schema: "BaseMTSchema", overwrite: bool = False):
+        """
+        Call the annotation and track metadata in the calling instance's
+        stats dict.
+        NB: No dependency resolution here!
+        """
+        if self.name in schema.mt.rows()._fields and overwrite is False:
+            return schema
+        schema.mt_instance_meta["row_annotations"][self.name]["result"] = self.fn(schema)
+        schema.mt_instance_meta["row_annotations"][self.name]["annotated"] += 1
+        return schema
+
 
 def row_annotation(name=None, disable_index=False, fn_require=None):
     """
@@ -57,7 +69,10 @@ def row_annotation(name=None, disable_index=False, fn_require=None):
             fn_requirements = fn_require if isinstance(fn_require, list) else [fn_require]
             for fn in fn_requirements:
                 if not isinstance(fn, RowAnnotation):
-                    raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
+                    raise ValueError(
+                        'Schema: dependency %s is not a row annotation method.' 
+                        % (fn_require.__name__ if hasattr(fn_require, "__name__") else str(fn_require))
+                    )
             requirements = [fn.name for fn in fn_requirements]
 
         return RowAnnotation(func, name=name, disable_index=disable_index, requirements=requirements)
@@ -159,16 +174,12 @@ class BaseMTSchema:
 
                 try:
                     # evaluate the function
-                    func_ret = annotation.fn(self)
+                    annotation(self, overwrite=overwrite)
+                    annotations_to_apply[annotation.name] = instance_metadata['result']
                 except RowAnnotationOmit:
                     # Do not annotate when RowAnnotationOmit raised.
                     logger.debug(f'Received RowAnnotationOmit for "{annotation.name}"')
-                    continue
 
-                annotations_to_apply[annotation.name] = func_ret
-
-                instance_metadata['annotated'] += 1
-                instance_metadata['result'] = func_ret
 
             # update the mt
             logger.debug('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))
