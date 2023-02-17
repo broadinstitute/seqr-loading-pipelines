@@ -37,8 +37,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
-                                         description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS',
+                                         description='VARIANTS or SV or MITO.')
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
@@ -79,6 +79,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
+                                 datasetType=self.dataset_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)
 
     def import_dataset(self):
@@ -93,6 +94,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
+        # NB: OPEN QUESTION IS THIS OK TO RUN ON MITO AND SV PIPELINES?
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
@@ -102,7 +104,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
+
+        # NB SHOULD WE SKIP THIS FOR MITO AND SV?
         mt = self.generate_callstats(mt)
+
         if self.RUN_VEP:
             mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner,
                                              vep_config_json_path=self.vep_config_json_path)
@@ -225,7 +230,7 @@ class SeqrMTToESTask(HailElasticSearchTask):
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")

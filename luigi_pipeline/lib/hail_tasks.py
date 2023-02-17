@@ -124,36 +124,36 @@ class HailMatrixTableTask(luigi.Task):
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
     @staticmethod
-    def subset_samples_and_variants(mt, subset_path, ignore_missing_samples=False):
+    def subset_samples_and_variants(mt, subset_path, ignore_missing_samples=False, skip_sample_subset=False):
         """
         Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF
         :param subset_path: Path to a file with a single column 's'
         :param ignore_missing_samples: ignore missing samples if true unless all samples are missing
+        :param skip_sample_subset: only subset on variants
         :return: MatrixTable subsetted to list of samples
         """
-        subset_ht = hl.import_table(subset_path, key='s')
-        subset_count = subset_ht.count()
-        anti_join_ht = subset_ht.anti_join(mt.cols())
-        anti_join_ht_count = anti_join_ht.count()
+        if not skip_sample_subset:
+            subset_ht = hl.import_table(subset_path, key='s')
+            subset_count = subset_ht.count()
+            anti_join_ht = subset_ht.anti_join(mt.cols())
+            anti_join_ht_count = anti_join_ht.count()
 
-        if anti_join_ht_count != 0:
-            missing_samples = anti_join_ht.s.collect()
-            message = f'Only {subset_count - anti_join_ht_count} out of {subset_count} ' \
-                      f'subsetting-table IDs matched IDs in the variant callset.\n' \
-                      f'IDs that aren\'t in the callset: {missing_samples}\n' \
-                      f'All callset sample IDs:{mt.s.collect()}'
-            if (subset_count > anti_join_ht_count) and ignore_missing_samples:
-                logger.warning(message)
-            else:
-                raise MatrixTableSampleSetError(message, missing_samples)
-
-        mt = mt.semi_join_cols(subset_ht)
-        mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
-
-        logger.info(f'Finished subsetting samples. Kept {subset_count} '
-                    f'out of {mt.count()} samples in vds')
-        return mt
+            if anti_join_ht_count != 0:
+                missing_samples = anti_join_ht.s.collect()
+                message = f'Only {subset_count - anti_join_ht_count} out of {subset_count} ' \
+                          f'subsetting-table IDs matched IDs in the variant callset.\n' \
+                          f'IDs that aren\'t in the callset: {missing_samples}\n' \
+                          f'All callset sample IDs:{mt.s.collect()}'
+                if (subset_count > anti_join_ht_count) and ignore_missing_samples:
+                    logger.warning(message)
+                else:
+                    raise MatrixTableSampleSetError(message, missing_samples)
+            mt = mt.semi_join_cols(subset_ht)
+            logger.info(f'Finished subsetting samples. Kept {subset_count} '
+                        f'out of {mt.count()} samples in vds')
+        
+        return mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
 
     @staticmethod
     def remap_sample_ids(mt, remap_path):
