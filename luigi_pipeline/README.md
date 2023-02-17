@@ -22,7 +22,7 @@ Finally, for hail to be able to read or write to google storage buckets, install
 
 Then, to run the pipeline:
 ```
-$ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
+$ python3 seqr_loading_optimized.py SeqrMTToESOptimizedTask --local-scheduler \
     --source-paths  gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
     --genome-version 37 \
     --sample-type WES \
@@ -34,11 +34,11 @@ $ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
     --es-index-min-num-shards 3
 ```
 
-Run `PYTHONPATH=.. python3 seqr_loading.py SeqrMTToESTask --help` for a description of these args.
+Run `PYTHONPATH=.. python3 seqr_loading_optimized.py SeqrMTToESOptimizedTask --help` for a description of these args.
 Optionally, any of these parameters can also be set via config file instead of on the command line. 
 `configs/luigi.cfg` provides an example. The `LUIGI_CONFIG_PATH` environment variable can be used to specify the config file path:
 ```
-LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg
+LUIGI_CONFIG_PATH=configs/optimized_configs/seqr-loading-local.cfg
 ```
 
 ## Running on GCE Dataproc
@@ -63,8 +63,8 @@ Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` director
 
 ```
 $ hailctl dataproc submit seqr-loading-cluster \
-       seqr_loading.py --pyfiles "lib,../hail_scripts" \
-       SeqrMTToESTask --local-scheduler \
+       seqr_loading_optimized.py --pyfiles "lib,../hail_scripts" \
+       SeqrMTToESOptimizedTask --local-scheduler \
        --source-paths gs://seqr-datasets/GRCh37/1kg/1kg.vcf.gz \
        --genome-version 37 \
        --sample-type WES \
