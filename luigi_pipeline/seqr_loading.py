@@ -168,7 +168,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         elif genome_version == CONST_GRCh38:
             contig_check_result = SeqrVCFToMTTask.contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
 
-        print("BEN HERE", contig_check_result)
         if bool(contig_check_result):
             err_msg = ''
             for k,v in contig_check_result.items():
