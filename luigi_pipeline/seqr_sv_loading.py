@@ -5,7 +5,7 @@ import luigi
 import hail as hl
 
 from lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
-from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask
+from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 
@@ -35,7 +35,7 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
         }
 
 class SeqrSVGenotypesMTTask(BaseVCFToGenotypesMTTask):
-    VariantTask = SeqrSVVCFToVariantMTTask
+    VariantTask = SeqrSVVariantMTTask
     GenotypesSchema = SeqrSVGenotypesSchema
 
 class SeqrSVMTToESTask(BaseMTToESOptimizedTask):
