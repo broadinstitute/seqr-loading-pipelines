@@ -84,9 +84,14 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def filters(self):
-        return hl.array(self.mt.filters.filter(
+        filters = hl.array(self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
         ))
+        return hl.if_else(
+            hl.len(filters) > 0,
+            filters,
+            hl.missing(hl.dtype('array<str>')),
+        )
 
     @row_annotation()
     def bothsides_support(self):
