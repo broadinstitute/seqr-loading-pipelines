@@ -1,7 +1,7 @@
 import hail as hl
 
 from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
-from lib.model.seqr_mt_schema import SeqrVariantsAndGenotypesSchema
+from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
 
@@ -215,12 +215,8 @@ class SeqrSVVariantSchema(BaseMTSchema):
         return self.mt.rsid[0: max_length]
 
 
-class SeqrSVGenotypesSchema(BaseMTSchema):
+class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
-    @row_annotation()
-    def genotypes(self):
-        return hl.agg.collect(hl.struct(**self._genotype_fields()))
-    
     def _genotype_fields(self):
         # Convert the mt genotype entries into num_alt, gq, hl, mito_cn, contamination, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
@@ -230,6 +226,14 @@ class SeqrSVGenotypesSchema(BaseMTSchema):
             'cn': self.mt.RD_CN,
             'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
         }
+
+    @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_gq(self):
+        # struct of x_to_y to a set of samples in range of x and y for gq.
+        return super().samples_gq(start=0, end=1000, step=10)
+
+    def samples_ab(self):
+        pass
 
 class SeqrSVVariantsAndGenotypesSchema(
     SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrVariantsAndGenotypesSchema
