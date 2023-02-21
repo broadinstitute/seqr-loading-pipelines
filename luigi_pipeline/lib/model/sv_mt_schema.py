@@ -198,7 +198,8 @@ class SeqrSVVariantSchema(BaseMTSchema):
     def gene_ids(self):
         return hl.set(
             hl.map(
-                lambda x: x.gene_id, self.mt.sortedTranscriptConsequences.filter(
+                lambda x: x.gene_id,
+                self.mt.sortedTranscriptConsequences.filter(
                     lambda x: x.major_consequence != 'NEAREST_TSS'
                 )
             )
