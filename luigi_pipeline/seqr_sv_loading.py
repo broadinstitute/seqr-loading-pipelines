@@ -4,7 +4,7 @@ import sys
 import luigi
 import hail as hl
 
-from lib.model.mito_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, 
+from lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
