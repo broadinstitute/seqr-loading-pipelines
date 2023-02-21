@@ -48,6 +48,10 @@ class HailMatrixTableTask(luigi.Task):
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
                                                                                             'to annotate vep.')
+    ignore_missing_samples = luigi.BoolParameter(default=False, description="Allow missing samples in the callset.")
+    skip_sample_subset = luigi.BoolParameter(default=False, description=
+        "Skip subsetting samples... only subset on present variants."
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,16 +128,14 @@ class HailMatrixTableTask(luigi.Task):
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
     @staticmethod
-    def subset_samples_and_variants(mt, subset_path, ignore_missing_samples=False, skip_sample_subset=False):
+    def subset_samples_and_variants(mt, subset_path):
         """
         Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF
         :param subset_path: Path to a file with a single column 's'
-        :param ignore_missing_samples: ignore missing samples if true unless all samples are missing
-        :param skip_sample_subset: only subset on variants
         :return: MatrixTable subsetted to list of samples
         """
-        if not skip_sample_subset:
+        if not self.skip_sample_subset:
             subset_ht = hl.import_table(subset_path, key='s')
             subset_count = subset_ht.count()
             anti_join_ht = subset_ht.anti_join(mt.cols())
@@ -145,7 +147,7 @@ class HailMatrixTableTask(luigi.Task):
                           f'subsetting-table IDs matched IDs in the variant callset.\n' \
                           f'IDs that aren\'t in the callset: {missing_samples}\n' \
                           f'All callset sample IDs:{mt.s.collect()}'
-                if (subset_count > anti_join_ht_count) and ignore_missing_samples:
+                if (subset_count > anti_join_ht_count) and self.ignore_missing_samples:
                     logger.warning(message)
                 else:
                     raise MatrixTableSampleSetError(message, missing_samples)

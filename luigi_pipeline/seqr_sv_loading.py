@@ -4,6 +4,7 @@ import sys
 import luigi
 import hail as hl
 
+from lib.model.mito_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, 
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
@@ -11,29 +12,36 @@ from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 logger = logging.getLogger(__name__)
 
 
-class SeqrSVVCFToMTTask(SeqrVCFToVariantMTTask):
-    ignore_missing_samples = luigi.BoolParameter(default=False, description="Allow missing samples in the callset.")
-    skip_sample_subset = luigi.BoolParameter(default=False, description=
-        "Skip subsetting samples... only subset on present variants."
-    )
+class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
+    # Overrided inherited required params.
+    reference_ht_path = ""
+    clinvar_ht_path = ""
+    sample_type = "WGS"
+    genome_version = 38
+    dont_validate = True
+    dataset_type = "SV"
+
     gencode_release = luigi.IntParameter(default=43)
+    gencode_path = luigi.OptionalParameter(default="", description="Path for downloaded gencode data")
     RUN_VEP = False
+    SCHEMA_CLASS = SeqrSVVariantSchema
 
     # NB: electing not to override import_vcf here eventhough the inherited args are slightly different
     # than from the old pipeline.
 
     def get_schema_class_kwargs(self):
         return {
-            "gene_id_mapping" : hl.literal(load_gencode(gencode_release))
+            "gene_id_mapping" : hl.literal(load_gencode(self.gencode_release, self.gencode_path))
         }
 
+class SeqrSVGenotypesMTTask(BaseVCFToGenotypesMTTask):
+    VariantTask = SeqrSVVCFToVariantMTTask
+    GenotypesSchema = SeqrSVGenotypesSchema
 
-    def subset_samples_and_variants(self, *args):
-        return super().subset_samples_and_variants(
-            *args, 
-            ignore_missing_samples=self.ignore_missing_samples,
-            skip_sample_subset=self.skip_sample_subset,
-        )
+class SeqrSVMTToESTask(BaseMTToESOptimizedTask):
+    VariantTask = SeqrSVVariantMTTask
+    GenotypesTask = SeqrSVGenotypesMTTask
+    VariantsAndGenotypesSchema = SeqrSVVariantsAndGenotypesSchema
 
 
 
