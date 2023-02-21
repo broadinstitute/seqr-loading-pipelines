@@ -84,9 +84,9 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def filters(self):
-        return self.mt.filters.filter(
+        return hl.array(self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
-        )
+        ))
 
     @row_annotation()
     def bothsides_support(self):
@@ -111,7 +111,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
             hl.missing(hl.dtype(INTERVAL_TYPE))
         )
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def end_locus(self):
         return hl.if_else(
             hl.is_defined(self.mt.info.END2),
@@ -129,7 +129,20 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
 
 class SeqrSVGenotypesSchema(BaseMTSchema):
-    pass
+
+    @row_annotation()
+    def genotypes(self):
+        return hl.agg.collect(hl.struct(**self._genotype_fields()))
+    
+    def _genotype_fields(self):
+        # Convert the mt genotype entries into num_alt, gq, hl, mito_cn, contamination, dp, and sample_id.
+        is_called = hl.is_defined(self.mt.GT)
+        return {
+            'sample_id': self.mt.s,
+            'gq': self.mt.GQ,
+            'cn': self.mt.RD_CN,
+            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
+        }
 
 class SeqrSVVariantsAndGenotypesSchema(
     SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrVariantsAndGenotypesSchema
