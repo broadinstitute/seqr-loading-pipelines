@@ -9,6 +9,11 @@ from hail_scripts.computed_fields import variant_id
 BOTHSIDES_SUPPORT = "BOTHSIDES_SUPPORT"
 PASS = "PASS"
 
+# Used to filter mt.info fields.
+CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
+MAJOR_CONSEQ = 'major_consequence'
+NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
+
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
@@ -122,7 +127,36 @@ class SeqrSVVariantSchema(BaseMTSchema):
             hl.is_defined(self.mt.info.END2),
             hl.struct(contig=self.mt.info.CHR2, pos=self.mt.info.END2),
             hl.struct(contig=self.mt.locus.contig, pos=self.mt.info.END)
-        ),
+        )
+
+    @row_annotation(name='sortedTranscriptConsequences')
+    def sorted_transcript_consequences(self):
+        # NB: this function is nuts plz help.
+        conseq_predicted_gene_cols = [
+            gene_col for gene_col in self.mt.info if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
+            and gene_col not in NON_GENE_PREDICTIONS
+        ]
+        mapped_genes = [
+            rows.info[gene_col].map(
+                lambda gene: hl.struct(**{
+                    'gene_symbol': gene,
+                    'gene_id': self.gene_id_mapping[gene], 
+                    MAJOR_CONSEQ: gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
+                })
+            )
+            for gene_col in conseq_predicted_gene_cols
+        ]
+        return hl.flatmap(
+            lambda x: x, 
+            hl.filter(
+                lambda x: hl.is_defined(x),
+                mapped_genes,
+            )
+        )
+
+    @row_annotation(name='svType')
+    def sv_type(self):
+        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)[0]
 
     @row_annotation(fn_require=xpos)
     def xstart(self):
@@ -130,7 +164,16 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(fn_require=end_locus)
     def xstop(self):
-        return variant_id.get_expr_for_expos(self.mt.end_locus)
+        return variant_id.get_expr_for_xpos(self.mt.end_locus)
+
+    @row_annotation(name='variantId')
+    def variant_id(self):
+        return self.mt.rsid
+
+    # NB: This is the "elasticsearch_mapping_id" used inside of export_table_to_elasticsearch.
+    @row_annotation(name='docId', disable_index=True)
+    def doc_id(self, max_length=512):
+        return self.mt.rsid[0: max_length]
 
 
 class SeqrSVGenotypesSchema(BaseMTSchema):
