@@ -11,7 +11,6 @@ PASS = "PASS"
 
 # Used to filter mt.info fields.
 CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
-MAJOR_CONSEQ = 'major_consequence'
 NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
 
 
@@ -141,7 +140,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
                 lambda gene: hl.struct(**{
                     'gene_symbol': gene,
                     'gene_id': self.gene_id_mapping[gene], 
-                    MAJOR_CONSEQ: gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
+                    'major_consequence': gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
                 })
             )
             for gene_col in conseq_predicted_gene_cols
@@ -154,10 +153,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
             )
         )
 
-    @row_annotation(name='svType')
-    def sv_type(self):
-        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)[0]
-
     @row_annotation(fn_require=xpos)
     def xstart(self):
         return self.mt.xpos
@@ -165,6 +160,49 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation(fn_require=end_locus)
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.end_locus)
+
+    # rg37_locus is annotated by HailMatrixTableTask.add_37_coordinates
+
+    @row_annotation(fn_require=end_locus)
+    def rg37_locus_end(self):
+        return hl.if_else(
+            self.mt.end_locus <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
+            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.pos, reference_genome='GRCh38'), 'GRCh37'),
+            hl.missing('locus<GRCh37>')
+        )
+
+    @row_annotation(name='svType')
+    def sv_type(self):
+        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)[0]
+
+    @row_annotation(name='transcriptConsequenceTerms', fn_require=[
+        sorted_transcript_consequences, sv_type,
+    ])
+    def transcript_consequence_terms(self):
+        return self.mt.sortedTranscriptConsequences.map(lambda x: x.major_consequence).extend([self.mt.sv_type]),
+
+    @row_annotation()
+    def sv_type_detail(self):
+        sv_types = self.mt.alleles[1].replace('[<>]', '').split(':', 2)
+        return hl.if_else(
+            sv_types[0] == 'CPX',
+            self.mt.info.CPX_TYPE,
+            hl.if_else(
+                (sv_types[0] == 'INS') & (hl.len(sv_types) > 1),
+                sv_types[1],
+                hl.missing('str')
+            )
+        )
+
+    @row_annotation(name='geneIds', fn_require=sorted_transcript_consequences)
+    def gene_ids(self):
+        return hl.set(
+            hl.map(
+                lambda x: x.gene_id, self.mt.sortedTranscriptConsequences.filter(
+                    lambda x: x.major_consequence != 'NEAREST_TSS'
+                )
+            )
+        )
 
     @row_annotation(name='variantId')
     def variant_id(self):
