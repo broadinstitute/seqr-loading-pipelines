@@ -17,7 +17,7 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
     reference_ht_path = ""
     clinvar_ht_path = ""
     sample_type = "WGS"
-    genome_version = 38
+    genome_version = "38"
     dont_validate = True
     dataset_type = "SV"
 
