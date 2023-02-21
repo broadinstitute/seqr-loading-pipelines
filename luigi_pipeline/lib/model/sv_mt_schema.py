@@ -42,7 +42,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def sf(self):
-        return self.mt.info.AN[0]
+        return self.mt.info.AF[0]
 
     @row_annotation()
     def sn(self):
@@ -63,7 +63,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='sv_callset_Hom')
     def sv_callset_hom(self):
-        return self.mt.info.H_HOMALT
+        return self.mt.info.N_HOMALT
 
     @row_annotation(name='gnomad_svs_ID')
     def gnomad_svs_id(self):
@@ -104,7 +104,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
         )
 
     @row_annotation()
-    def algorithms():
+    def algorithms(self):
         return self.mt.info.ALGORITHMS
 
     @row_annotation()
@@ -136,7 +136,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
             and gene_col not in NON_GENE_PREDICTIONS
         ]
         mapped_genes = [
-            rows.info[gene_col].map(
+            self.mt.info[gene_col].map(
                 lambda gene: hl.struct(**{
                     'gene_symbol': gene,
                     'gene_id': self.gene_id_mapping[gene], 
@@ -166,7 +166,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation(fn_require=end_locus)
     def rg37_locus_end(self):
         return hl.if_else(
-            self.mt.end_locus <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
+            self.mt.end_locus.pos <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
             hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.pos, reference_genome='GRCh38'), 'GRCh37'),
             hl.missing('locus<GRCh37>')
         )
