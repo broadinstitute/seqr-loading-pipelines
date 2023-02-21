@@ -124,8 +124,8 @@ class SeqrSVVariantSchema(BaseMTSchema):
     def end_locus(self):
         return hl.if_else(
             hl.is_defined(self.mt.info.END2),
-            hl.struct(contig=self.mt.info.CHR2, pos=self.mt.info.END2),
-            hl.struct(contig=self.mt.locus.contig, pos=self.mt.info.END)
+            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
+            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
         )
 
     @row_annotation(name='sortedTranscriptConsequences')
@@ -166,8 +166,8 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation(fn_require=end_locus)
     def rg37_locus_end(self):
         return hl.if_else(
-            self.mt.end_locus.pos <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
-            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.pos, reference_genome='GRCh38'), 'GRCh37'),
+            self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
+            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
             hl.missing('locus<GRCh37>')
         )
 
