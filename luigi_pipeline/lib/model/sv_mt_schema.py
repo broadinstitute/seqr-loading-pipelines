@@ -218,7 +218,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
 class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     def _genotype_fields(self):
-        # Convert the mt genotype entries into num_alt, gq, hl, mito_cn, contamination, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
             'sample_id': self.mt.s,
@@ -229,7 +228,6 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
-        # struct of x_to_y to a set of samples in range of x and y for gq.
         return super().samples_gq(start=0, end=1000, step=10)
 
     def samples_ab(self):
