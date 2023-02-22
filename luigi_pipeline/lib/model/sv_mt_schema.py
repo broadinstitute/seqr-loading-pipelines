@@ -139,7 +139,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
             self.mt.info[gene_col].map(
                 lambda gene: hl.struct(**{
                     'gene_symbol': gene,
-                    'gene_id': self.gene_id_mapping.get(gene, hl.missing(hl.str)),
+                    'gene_id': self.gene_id_mapping.get(gene, hl.missing(hl.tstr)),
                     'major_consequence': gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
                 })
             )
