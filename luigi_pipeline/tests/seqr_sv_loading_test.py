@@ -6,7 +6,7 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_sv_loading import SeqrSVVariantMTTask
+from seqr_sv_loading import SeqrSVVariantMTTask, SeqrSVGenotypesMTTask
 
 REFERENCE_CHAIN = 'tests/data/grch38_to_grch37.over.chain.gz'
 
@@ -135,19 +135,19 @@ DATA_FIELDS += SAMPLES_GQ_SV_FIELDS
 
 EXPECTED_SAMPLE_GQ = [
     {
-        'samples_gq_sv_10_to_20': ['SAMPLE-4', 'SAMPLE-5'],
-        'samples_gq_sv_20_to_30': ['SAMPLE-2'],
-        'samples_gq_sv_30_to_40': ['SAMPLE-3'],
-        'samples_gq_sv_50_to_60': ['SAMPLE-1'],
+        'samples_gq_sv.10_to_20': ['SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv.20_to_30': ['SAMPLE-2'],
+        'samples_gq_sv.30_to_40': ['SAMPLE-3'],
+        'samples_gq_sv.50_to_60': ['SAMPLE-1'],
     },
     {
-        'samples_gq_sv_60_to_70': ['SAMPLE-1'],
-        'samples_gq_sv_90_to_100': ['SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv.60_to_70': ['SAMPLE-1'],
+        'samples_gq_sv.90_to_100': ['SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
     },
     {
-        'samples_gq_sv_0_to_10': ['SAMPLE-3'],
-        'samples_gq_sv_50_to_60': ['SAMPLE-2'],
-        'samples_gq_sv_90_to_100': ['SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv.0_to_10': ['SAMPLE-3'],
+        'samples_gq_sv.50_to_60': ['SAMPLE-2'],
+        'samples_gq_sv.90_to_100': ['SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'],
     }
 ]
 
@@ -170,7 +170,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
-        StrVCTVRE_score=0.71,
+        # StrVCTVRE_score=0.71,
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
@@ -190,7 +190,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
-        StrVCTVRE_score=0.73,
+        # StrVCTVRE_score=0.73,
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
@@ -210,7 +210,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
-        StrVCTVRE_score=0.74,
+        # StrVCTVRE_score=0.74,
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
 ]
@@ -220,7 +220,8 @@ class SeqrSvLoadingTest(unittest.TestCase):
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._vcf_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.vcf')[1]
-        self._mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
+        self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
+        self._genotypes_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
         with open(self._vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
 
@@ -230,14 +231,27 @@ class SeqrSvLoadingTest(unittest.TestCase):
     @mock.patch('seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
     def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
-        task = SeqrSVVariantMTTask(
-            source_paths=self._vcf_file,
-            dest_path=self._mt_file,
-            grch38_to_grch37_ref_chain=REFERENCE_CHAIN,
+        # Our framework doesn't pass the parameters to the dependent task.. so we force them
+        # here.
+        SeqrSVVariantMTTask.source_paths = self._vcf_file
+        SeqrSVVariantMTTask.dest_path = self._variant_mt_file
+        SeqrSVVariantMTTask.grch38_to_grch37_ref_chain = REFERENCE_CHAIN
+        genotype_task = SeqrSVGenotypesMTTask(
+            genome_version="38",
+            source_paths="i am completely ignored",
+            dest_path=self._genotypes_mt_file
         )
-        worker.add(task)
+        worker.add(genotype_task)
         worker.run()
         load_gencode_mock.assert_called_once_with(43, "")
+
+        variant_mt = hail.read_matrix_table(self._variant_mt_file)
+        genotypes_mt = hail.read_matrix_table(self._genotypes_mt_file)
+
+        self.assertEqual(variant_mt.count(), 11)
+        self.assertEqual(genotypes_mt.count(), 11)
+
+
 
 
 

@@ -228,7 +228,9 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
-        return super().samples_gq(start=0, end=1000, step=10)
+        # NB: super().samples_gq is a RowAnnotation... so we call the method under the hood.
+        # ew it is gross.
+        return super().samples_gq.fn(start=0, end=1000, step=10)
 
     def samples_ab(self):
         pass
