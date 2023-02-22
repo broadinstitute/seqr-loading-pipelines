@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 
 import hail as hl
 import luigi.worker
@@ -229,10 +230,10 @@ class SeqrSvLoadingTest(unittest.TestCase):
 
     def test_run_task(self):
         worker = luigi.worker.Worker()
-        worker.add(SeqrSVVariantMTTask(
+        task = SeqrSVVariantMTTask(
             source_paths=self._vcf_file,
             dest_path=self._mt_file,
             grch38_to_grch37_ref_chain=REFERENCE_CHAIN,
-        ))
+        )
+        worker.add(task)
         worker.run()
-        worker.stop()
