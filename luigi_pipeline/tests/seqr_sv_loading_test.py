@@ -6,7 +6,7 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_sv_loading import SeqrSVVariantMTTask, SeqrSVGenotypesMTTask
+from seqr_sv_loading import SeqrSVVariantMTTask, SeqrSVGenotypesMTTask, SeqrSVMTToESTask
 
 REFERENCE_CHAIN = 'tests/data/grch38_to_grch37.over.chain.gz'
 
@@ -123,15 +123,21 @@ VCF_DATA_ROW = [
 
 VCF_DATA = VCF_HEADER_META + ['\t'.join(row) for row in VCF_DATA_ROW]
 
-DATA_FIELDS = [
+GLOBAL_FIELDS = ['sourceFilePath', 'genomeVersion', 'sampleType', 'datasetType', 'hail_version']
+
+VARIANT_MT_FIELDS = [
     'contig', 'sc', 'sf', 'sn', 'start', 'end', 'sv_callset_Het', 'sv_callset_Hom', 'gnomad_svs_ID', 'gnomad_svs_AF',
     'gnomad_svs_AC', 'gnomad_svs_AN', 'pos', 'filters', 'bothsides_support', 'algorithms', 'xpos', 'cpx_intervals',
-    'xstart', 'xstop', 'rg37_locus', 'rg37_locus_end', 'svType', 'transcriptConsequenceTerms', 'sv_type_detail',
-    'geneIds', 'samples_no_call', 'samples_num_alt_1', 'samples_num_alt_2', 'variantId', 'sortedTranscriptConsequences',
-    'genotypes']
+    'xstart', 'xstop', 'rg37_locus_end', 'svType', 'transcriptConsequenceTerms', 'sv_type_detail',
+    'geneIds', 'variantId', 'sortedTranscriptConsequences', 'docId', 'end_locus.contig', 'end_locus.position'
+]
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
-DATA_FIELDS += SAMPLES_GQ_SV_FIELDS
+
+GENOTYPES_MT_FIELDS = [
+    'genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2',
+]
+GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
     {
@@ -157,7 +163,6 @@ EXPECTED_DATA = [
         gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=789481,
         filters=['PESR_GT_OVERDISPERSION', 'UNRESOLVED'], bothsides_support=False, algorithms=['manta'],
         xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
-        rg37_locus=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
         transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
         geneIds=frozenset(), samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
@@ -170,6 +175,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        docId='BND_chr1_9',
         # StrVCTVRE_score=0.71,
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -179,7 +185,6 @@ EXPECTED_DATA = [
         gnomad_svs_AN=3247, pos=4228405,
         filters=['HIGH_SR_BACKGROUND'], bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
         cpx_intervals=None, xstart=1004228405, xstop=1004228448,
-        rg37_locus=hl.Locus(contig=1, position=4288465, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
         transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=frozenset(),
         samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
@@ -190,6 +195,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        docId='INS_chr1_65',
         # StrVCTVRE_score=0.73,
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -199,7 +205,7 @@ EXPECTED_DATA = [
         filters=['HIGH_SR_BACKGROUND'], bothsides_support=True, algorithms=['manta'], xpos=1006558902,
         cpx_intervals=[hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
                        hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
-        xstop=1006559723, rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
+        xstop=1006559723,
         rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
         transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
         geneIds=frozenset({'ENSG00000173662'}), samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
@@ -210,6 +216,7 @@ EXPECTED_DATA = [
                    hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
+        docId='CPX_chr1_22',
         # StrVCTVRE_score=0.74,
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -250,6 +257,21 @@ class SeqrSvLoadingTest(unittest.TestCase):
 
         self.assertEqual(variant_mt.count(), (11, 5))
         self.assertEqual(genotypes_mt.count(), (11, 5))
+
+        global_fields = [x for x in variant_mt.globals._fields]
+        self.assertCountEqual(global_fields, GLOBAL_FIELDS)
+
+        disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None).get_disable_index_field()
+        self.assertCountEqual(disabled_index_fields, ["genotypes","end_locus", "docId"])
+
+        self.assertCountEqual([
+            key for key in variant_mt.rows().flatten().drop("locus", "alleles")._fields 
+            if key not in global_fields
+        ], VARIANT_MT_FIELDS)
+        self.assertCountEqual([
+            key for key in genotypes_mt.rows().flatten().drop("locus", "alleles")._fields
+            if key not in global_fields
+        ], GENOTYPES_MT_FIELDS)
 
 
 

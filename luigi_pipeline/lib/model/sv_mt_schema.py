@@ -27,7 +27,7 @@ def get_cpx_interval(x):
 
 class SeqrSVVariantSchema(BaseMTSchema):
 
-    def __init__(self, *args, gene_id_mapping, **kwargs):
+    def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.gene_id_mapping = gene_id_mapping
 
