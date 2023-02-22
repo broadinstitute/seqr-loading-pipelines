@@ -32,7 +32,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
     interval_ref_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None,
+    hgmd_ht_path = luigi.OptionalParameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '

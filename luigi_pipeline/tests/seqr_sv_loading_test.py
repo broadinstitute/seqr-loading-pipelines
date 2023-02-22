@@ -10,7 +10,6 @@ from seqr_sv_loading import SeqrSVVariantMTTask
 
 REFERENCE_CHAIN = 'tests/data/grch38_to_grch37.over.chain.gz'
 
-
 GENE_ID_MAPPING = {
     'OR4F5':    'ENSG00000186092', 
     'PLEKHG4B': 'ENSG00000153404', 
@@ -228,7 +227,8 @@ class SeqrSvLoadingTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self._temp_dir.name)
 
-    def test_run_task(self):
+    @mock.patch('seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
+    def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
         task = SeqrSVVariantMTTask(
             source_paths=self._vcf_file,
@@ -237,3 +237,7 @@ class SeqrSvLoadingTest(unittest.TestCase):
         )
         worker.add(task)
         worker.run()
+        load_gencode_mock.assert_called_once_with(43, "")
+
+
+
