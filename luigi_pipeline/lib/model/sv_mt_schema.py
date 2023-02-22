@@ -235,7 +235,8 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
     def samples_ab(self):
         pass
 
-class SeqrSVVariantsAndGenotypesSchema(
-    SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrVariantsAndGenotypesSchema
-):
-    pass
+class SeqrSVVariantsAndGenotypesSchema(SeqrSVVariantSchema, SeqrSVGenotypesSchema):
+    
+    @staticmethod
+    def elasticsearch_row(ds):
+        return SeqrVariantsAndGenotypesSchema.elasticsearch_row(ds)
