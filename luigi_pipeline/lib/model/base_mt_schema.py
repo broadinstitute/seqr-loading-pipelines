@@ -28,7 +28,7 @@ class RowAnnotation:
             requires = f' (requires: {", ".join(self.requirements)})'
         return f"{self.name}{requires}"
 
-    def __call__(self: "RowAnnotation", schema: "BaseMTSchema", overwrite: bool = False, **kwargs):
+    def __call__(self: "RowAnnotation", schema: "BaseMTSchema", overwrite: bool = False):
         """
         Call the annotation and track metadata in the calling instance's
         stats dict.
@@ -36,7 +36,7 @@ class RowAnnotation:
         """
         if self.name in schema.mt.rows()._fields and overwrite is False:
             return schema
-        schema.mt_instance_meta["row_annotations"][self.name]["result"] = self.fn(schema, **kwargs)
+        schema.mt_instance_meta["row_annotations"][self.name]["result"] = self.fn(schema)
         schema.mt_instance_meta["row_annotations"][self.name]["annotated"] += 1
         return schema
 

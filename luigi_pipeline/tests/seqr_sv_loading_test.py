@@ -245,11 +245,11 @@ class SeqrSvLoadingTest(unittest.TestCase):
         worker.run()
         load_gencode_mock.assert_called_once_with(43, "")
 
-        variant_mt = hail.read_matrix_table(self._variant_mt_file)
-        genotypes_mt = hail.read_matrix_table(self._genotypes_mt_file)
+        variant_mt = hl.read_matrix_table(self._variant_mt_file)
+        genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
 
-        self.assertEqual(variant_mt.count(), 11)
-        self.assertEqual(genotypes_mt.count(), 11)
+        self.assertEqual(variant_mt.count(), (11, 5))
+        self.assertEqual(genotypes_mt.count(), (11, 5))
 
 
 
