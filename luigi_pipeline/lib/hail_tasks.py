@@ -202,7 +202,6 @@ class HailMatrixTableTask(luigi.Task):
         rg38 = hl.get_reference('GRCh38')
         rg38.add_liftover(liftover_ref_path, rg37)
         mt = mt.annotate_rows(rg37_locus=hl.liftover(mt.locus, 'GRCh37'))
-        print("BENJ")
         return mt
 
 

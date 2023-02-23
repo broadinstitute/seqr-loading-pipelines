@@ -141,19 +141,19 @@ GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS
 
 EXPECTED_SAMPLE_GQ = [
     {
-        'samples_gq_sv.10_to_20': ['SAMPLE-4', 'SAMPLE-5'],
-        'samples_gq_sv.20_to_30': ['SAMPLE-2'],
-        'samples_gq_sv.30_to_40': ['SAMPLE-3'],
-        'samples_gq_sv.50_to_60': ['SAMPLE-1'],
+        'samples_gq_sv.10_to_20': {'SAMPLE-4', 'SAMPLE-5'},
+        'samples_gq_sv.20_to_30': {'SAMPLE-2'},
+        'samples_gq_sv.30_to_40': {'SAMPLE-3'},
+        'samples_gq_sv.50_to_60': {'SAMPLE-1'},
     },
     {
-        'samples_gq_sv.60_to_70': ['SAMPLE-1'],
-        'samples_gq_sv.90_to_100': ['SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv.60_to_70': {'SAMPLE-1'},
+        'samples_gq_sv.90_to_100': {'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
     },
     {
-        'samples_gq_sv.0_to_10': ['SAMPLE-3'],
-        'samples_gq_sv.50_to_60': ['SAMPLE-2'],
-        'samples_gq_sv.90_to_100': ['SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'],
+        'samples_gq_sv.0_to_10': {'SAMPLE-3'},
+        'samples_gq_sv.50_to_60': {'SAMPLE-2'},
+        'samples_gq_sv.90_to_100': {'SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'},
     }
 ]
 
@@ -207,42 +207,41 @@ EXPECTED_DATA_VARIANTS = [
 EXPECTED_DATA_GENOTYPES = [
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[0],
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
-        samples_num_alt_2=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'],
+        samples_no_call=None, 
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        **{"samples_num_alt.1": {'SAMPLE-4', 'SAMPLE-5'}, "samples_num_alt.2": {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'}},
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[1],
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
+        samples_no_call=None,
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+                   **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[2],
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
-        samples_num_alt_2=[],
+        samples_no_call=None,
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
-        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+        **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
+        **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )
 ]
 
 
 class SeqrSvLoadingTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._vcf_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.vcf')[1]
@@ -279,22 +278,26 @@ class SeqrSvLoadingTest(unittest.TestCase):
         self.assertEqual(variant_mt.count(), (11, 5))
         global_fields = [x for x in variant_mt.globals._fields]
         self.assertCountEqual(global_fields, GLOBAL_FIELDS)
-        variant_mt = variant_mt.rows().flatten().drop("locus", "alleles")
+        key_dropped_variant_mt = variant_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
-            key for key in variant_mt._fields 
+            key for key in key_dropped_variant_mt._fields 
             if key not in global_fields
         ], VARIANT_MT_FIELDS)
-        data = variant_mt.order_by(variant_mt.start).tail(8).take(3)
+        data = key_dropped_variant_mt.order_by(key_dropped_variant_mt.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_VARIANTS)
 
-        # Genotypes Assertions
+        # Genotypes (only) Assertions
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         self.assertEqual(genotypes_mt.count(), (11, 5))
-        genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
+        key_dropped_genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
-            key for key in genotypes_mt._fields
+            key for key in key_dropped_genotypes_mt._fields
             if key not in global_fields
         ], GENOTYPES_MT_FIELDS)
-        data = genotypes_mt.order_by(variant_mt.start).tail(8).take(3)
+
+        # Now mimic the join in BaseMTToESOptimizedTask
+        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
+        row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("locus", "alleles")
+        data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)
 

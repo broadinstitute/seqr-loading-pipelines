@@ -226,6 +226,12 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
         }
 
+    def _genotype_filter_samples(self, filter):
+        # NB: override this function here to mimic the existing null handling behavior.
+        samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('set<str>')))
+            
+
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
         # NB: super().samples_gq is a RowAnnotation... so we call the method under the hood.
