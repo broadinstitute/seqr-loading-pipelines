@@ -100,7 +100,7 @@ VCF_HEADER_META = [
     '##INFO=<ID=FEMALE_FREQ_HOMREF,Number=1,Type=Float,Description="FEMALE homozygous reference genotype frequency (biallelic sites only).">',
     '##INFO=<ID=FEMALE_FREQ_HET,Number=1,Type=Float,Description="FEMALE heterozygous genotype frequency (biallelic sites only).">',
     '##INFO=<ID=FEMALE_FREQ_HOMALT,Number=1,Type=Float,Description="FEMALE homozygous alternate genotype frequency (biallelic sites only).">',
-    '##INFO=<ID=gnomAD_V2_SVID,Number=.,Type=String,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
+    '##INFO=<ID=gnomAD_V2_SVID,Number=1,Type=String,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AF,Number=1,Type=Float,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AC_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AN_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
@@ -169,7 +169,6 @@ EXPECTED_DATA_VARIANTS = [
         sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
             hl.Struct(gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS')],
-
         docId='BND_chr1_9',
         **{"end_locus.contig": "chr1", "end_locus.position": 789481},
         # StrVCTVRE_score=0.71,
