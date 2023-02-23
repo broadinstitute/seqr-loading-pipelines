@@ -4,7 +4,6 @@ import requests
 import tempfile
 from contextlib import contextmanager
 import hail as hl
-
 from tqdm import tqdm
 
 from sv_pipeline.utils.common import parse_gs_path_to_bucket

@@ -2,7 +2,6 @@ import gzip
 import logging
 import os
 import pickle
-
 from tqdm import tqdm
 
 from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path, file_writer
