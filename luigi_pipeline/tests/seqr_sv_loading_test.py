@@ -157,7 +157,7 @@ EXPECTED_SAMPLE_GQ = [
     }
 ]
 
-EXPECTED_DATA = [
+EXPECTED_DATA_VARIANTS = [
     hl.Struct(
         contig='1', sc=7, sf=0.910684, sn=8, start=789481, end=789481, sv_callset_Het=520, sv_callset_Hom=2391,
         gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=789481,
@@ -165,19 +165,14 @@ EXPECTED_DATA = [
         xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
         rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
         transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
-        geneIds=frozenset(), samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
-        samples_num_alt_2=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'], variantId='BND_chr1_9',
+        geneIds=set(), variantId='BND_chr1_9',
         sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
             hl.Struct(gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS')],
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+
         docId='BND_chr1_9',
+        **{"end_locus.contig": "chr1", "end_locus.position": 789481},
         # StrVCTVRE_score=0.71,
-        **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         contig='1', sc=1, sf=0.10237, sn=8, start=4228405, end=4228448, sv_callset_Het=590, sv_callset_Hom=3,
@@ -186,18 +181,12 @@ EXPECTED_DATA = [
         filters=['HIGH_SR_BACKGROUND'], bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
         cpx_intervals=None, xstart=1004228405, xstop=1004228448,
         rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=frozenset(),
-        samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
+        transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=set(),
         variantId='INS_chr1_65', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS')],
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
         docId='INS_chr1_65',
+        **{"end_locus.contig": "chr1", "end_locus.position": 4228448},
         # StrVCTVRE_score=0.73,
-        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3,
@@ -208,22 +197,53 @@ EXPECTED_DATA = [
         xstop=1006559723,
         rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
         transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
-        geneIds=frozenset({'ENSG00000173662'}), samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
-        samples_num_alt_2=[], variantId='CPX_chr1_22', sortedTranscriptConsequences=[
+        geneIds=set({'ENSG00000173662'}), variantId='CPX_chr1_22', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
+        docId='CPX_chr1_22',
+        **{"end_locus.contig": "chr1", "end_locus.position": 6559723},
+        # StrVCTVRE_score=0.74,
+    ),
+]
+
+EXPECTED_DATA_GENOTYPES = [
+    hl.Struct(
+        **EXPECTED_DATA_VARIANTS[0],
+        samples_no_call=[], samples_num_alt_1=['SAMPLE-4', 'SAMPLE-5'],
+        samples_num_alt_2=['SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    ),
+    hl.Struct(
+        **EXPECTED_DATA_VARIANTS[1],
+        samples_no_call=[], samples_num_alt_1=['SAMPLE-1'], samples_num_alt_2=[],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    ),
+    hl.Struct(
+        **EXPECTED_DATA_VARIANTS[2],
+        samples_no_call=[], samples_num_alt_1=['SAMPLE-2', 'SAMPLE-3'],
+        samples_num_alt_2=[],
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
-        docId='CPX_chr1_22',
-        # StrVCTVRE_score=0.74,
-        **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
-    ),
+        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+    )
 ]
 
 
 class SeqrSvLoadingTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._vcf_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.vcf')[1]
@@ -252,28 +272,30 @@ class SeqrSvLoadingTest(unittest.TestCase):
         worker.run()
         load_gencode_mock.assert_called_once_with(43, "")
 
-        variant_mt = hl.read_matrix_table(self._variant_mt_file)
-        genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
-
-        self.assertEqual(variant_mt.count(), (11, 5))
-        self.assertEqual(genotypes_mt.count(), (11, 5))
-
-        global_fields = [x for x in variant_mt.globals._fields]
-        self.assertCountEqual(global_fields, GLOBAL_FIELDS)
-
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None).get_disable_index_field()
         self.assertCountEqual(disabled_index_fields, ["genotypes","end_locus", "docId"])
 
+        # Variants Assertions
+        variant_mt = hl.read_matrix_table(self._variant_mt_file)
+        self.assertEqual(variant_mt.count(), (11, 5))
+        global_fields = [x for x in variant_mt.globals._fields]
+        self.assertCountEqual(global_fields, GLOBAL_FIELDS)
+        variant_mt = variant_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
-            key for key in variant_mt.rows().flatten().drop("locus", "alleles")._fields 
+            key for key in variant_mt._fields 
             if key not in global_fields
         ], VARIANT_MT_FIELDS)
+        data = variant_mt.order_by(variant_mt.start).tail(8).take(3)
+        self.assertListEqual(data, EXPECTED_DATA_VARIANTS)
+
+        # Genotypes Assertions
+        genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
+        self.assertEqual(genotypes_mt.count(), (11, 5))
+        genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
-            key for key in genotypes_mt.rows().flatten().drop("locus", "alleles")._fields
+            key for key in genotypes_mt._fields
             if key not in global_fields
         ], GENOTYPES_MT_FIELDS)
-
-
-
-
+        data = genotypes_mt.order_by(variant_mt.start).tail(8).take(3)
+        self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)
 
