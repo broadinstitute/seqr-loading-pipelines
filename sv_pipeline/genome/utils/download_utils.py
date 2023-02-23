@@ -5,11 +5,7 @@ import tempfile
 from contextlib import contextmanager
 import hail as hl
 
-try:
-    from tqdm import tqdm
-    TQDM_INSTALLED = True
-except ModuleNotFoundError:
-    TQDM_INSTALLED = False
+from tqdm import tqdm
 
 from sv_pipeline.utils.common import parse_gs_path_to_bucket
 
@@ -81,7 +77,7 @@ def download_file(url, to_dir=None, verbose=True):
         input_iter = response if is_gz else response.iter_content()
         if verbose:
             logger.info("Downloading {} to {}".format(url, file_path))
-            input_iter = tqdm(input_iter, unit=" data" if is_gz else " lines") if TQDM_INSTALLED else input_iter
+            input_iter = tqdm(input_iter, unit=" data" if is_gz else " lines")
 
         f.writelines(input_iter)
         input_iter.close()

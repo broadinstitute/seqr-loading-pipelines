@@ -3,11 +3,7 @@ import logging
 import os
 import pickle
 
-try:
-    from tqdm import tqdm
-    TQDM_INSTALLED = True
-except ModuleNotFoundError:
-    TQDM_INSTALLED = False
+from tqdm import tqdm
 
 from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path, file_writer
 from sv_pipeline.utils.common import stream_gs_file
@@ -58,7 +54,7 @@ def _parse_gtf_data(gencode_gtf_path):
     is_gs = is_gs_path(gencode_gtf_path)
     gencode_file = gzip.decompress(stream_gs_file(gencode_gtf_path, raw_download=True)).decode().split('\n') \
         if is_gs else gzip.open(gencode_gtf_path, 'rt')
-    for i, line in enumerate(tqdm(gencode_file, unit=' gencode records') if TQDM_INSTALLED else gencode_file):
+    for i, line in enumerate(tqdm(gencode_file, unit=' gencode records')):
         line = line.rstrip('\r\n')
         if not line or line.startswith('#'):
             continue
