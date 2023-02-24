@@ -4,7 +4,7 @@ import sys
 import luigi
 import hail as hl
 
-from lib.model.gcnv_mt_schema import SeqrgCNVVariantSchema, SeqrgCNVGenotypesSchema, SeqrgCNVVariantsAndGenotypesSchema
+from lib.model.gcnv_mt_schema import SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema, SeqrGCNVVariantsAndGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
@@ -12,7 +12,7 @@ from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 logger = logging.getLogger(__name__)
 
 
-class SeqrgCNVVariantMTTask(SeqrVCFToVariantMTTask):
+class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     # Overrided inherited required params.
     reference_ht_path = ""
     clinvar_ht_path = ""
@@ -24,15 +24,22 @@ class SeqrgCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrgCNVVariantSchema
 
+    is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
+
     def import_dataset(self):
         return hl.import_table(self.source_paths[0], impute=True)
 
+    def get_schema_class_kwargs(self):
+        return {
+            "is_new_joint_call" : self.is_new_joint_call
+        }
 
-class SeqrgCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
+
+class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrgCNVVariantMTTask
     GenotypesSchema = SeqrgCNVGenotypesSchema
 
-class SeqrSVMTToESTask(BaseMTToESOptimizedTask):
+class SeqrGCNVMTToESTask(BaseMTToESOptimizedTask):
     VariantTask = SeqrgCNVVariantMTTask
     GenotypesTask = SeqrgCNVGenotypesMTTask
     VariantsAndGenotypesSchema = SeqrgCNVVariantsAndGenotypesSchema
