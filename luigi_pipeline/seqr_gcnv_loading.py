@@ -27,7 +27,8 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
     def import_dataset(self):
-        return hl.import_table(self.source_paths[0], impute=True)
+        ht = hl.import_table(self.source_paths[0], impute=True)
+        return ht.to_matrix_table(row_key=['variant_name', 'svtype'], col_key=['sample_fix'])
 
     def get_schema_class_kwargs(self):
         return {
