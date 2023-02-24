@@ -241,7 +241,7 @@ EXPECTED_DATA_GENOTYPES = [
 ]
 
 
-class SeqrSvLoadingTest(unittest.TestCase):
+class SeqrSVLoadingTest(unittest.TestCase):
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._vcf_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.vcf')[1]
