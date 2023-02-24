@@ -1,3 +1,4 @@
+import datetime
 import shutil
 import tempfile
 import unittest
@@ -36,13 +37,12 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             f.writelines('\n'.join(MERGED_TSV_DATA))
 
     def tearDown(self):
-        print("CALLED")
         shutil.rmtree(self._temp_dir.name)
 
-    def test_run_new_joint_tsv_task(self):
+    @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
+    def test_run_new_joint_tsv_task(self, mock_datetime):
+        mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
-        # Our framework doesn't pass the parameters to the dependent task.. so we force them
-        # here.
         SeqrGCNVVariantMTTask.source_paths = self._new_joint_bed_file
         SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
         genotype_task = SeqrGCNVGenotypesMTTask(
@@ -53,10 +53,10 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         worker.add(genotype_task)
         worker.run()
 
-    def test_run_merged_tsv_task(self):
+    @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
+    def test_run_merged_tsv_task(self, mock_datetime):
+        mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
-        # Our framework doesn't pass the parameters to the dependent task.. so we force them
-        # here.
         SeqrGCNVVariantMTTask.source_paths = self._merged_bed_file
         SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
         genotype_task = SeqrGCNVGenotypesMTTask(
