@@ -22,7 +22,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     dataset_type = "SV"
 
     RUN_VEP = False
-    SCHEMA_CLASS = SeqrgCNVVariantSchema
+    SCHEMA_CLASS = SeqrGCNVVariantSchema
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
@@ -36,12 +36,12 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
 
 
 class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
-    VariantTask = SeqrgCNVVariantMTTask
-    GenotypesSchema = SeqrgCNVGenotypesSchema
+    VariantTask = SeqrGCNVVariantMTTask
+    GenotypesSchema = SeqrGCNVGenotypesSchema
 
 class SeqrGCNVMTToESTask(BaseMTToESOptimizedTask):
-    VariantTask = SeqrgCNVVariantMTTask
-    GenotypesTask = SeqrgCNVGenotypesMTTask
+    VariantTask = SeqrGCNVVariantMTTask
+    GenotypesTask = SeqrGCNVGenotypesMTTask
     VariantsAndGenotypesSchema = SeqrgCNVVariantsAndGenotypesSchema
 
 
