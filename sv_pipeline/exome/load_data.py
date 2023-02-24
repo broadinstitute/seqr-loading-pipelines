@@ -141,10 +141,8 @@ SAMPLE_COLUMNS = [
 NEW_JOINT_CALL_SAMPLE_COLUMNS = SAMPLE_COLUMNS + [PREV_IDENTICAL_COL]
 NEW_JOINT_CALL_SAMPLE_COLUMNS.remove(IS_LATEST)
 
-BASE_COLUMNS = CORE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL]
-
-COLUMNS = BASE_COLUMNS + SAMPLE_COLUMNS
-NEW_JOINT_CALL_COLUMNS = BASE_COLUMNS + NEW_JOINT_CALL_SAMPLE_COLUMNS
+COLUMNS = CORE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL] + SAMPLE_COLUMNS
+NEW_JOINT_CALL_COLUMNS = CORE_COLUMNS + [SAMPLE_COL, VAR_NAME_COL] + NEW_JOINT_CALL_SAMPLE_COLUMNS
 
 QS_BIN_SIZE = 10
 
@@ -209,7 +207,6 @@ def get_parsed_column_values(row, header_indices, columns, col_configs=COL_CONFI
     """
     return {col_configs[col].get('field_name', col): get_field_val(row, col, header_indices, col_configs=col_configs)
             for col in columns}
-
 
 def parse_sv_row(row, parsed_svs_by_id, header_indices, sample_id, is_new_joint_call):
     """
