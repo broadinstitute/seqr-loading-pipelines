@@ -42,7 +42,7 @@ class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
 class SeqrGCNVMTToESTask(BaseMTToESOptimizedTask):
     VariantTask = SeqrGCNVVariantMTTask
     GenotypesTask = SeqrGCNVGenotypesMTTask
-    VariantsAndGenotypesSchema = SeqrgCNVVariantsAndGenotypesSchema
+    VariantsAndGenotypesSchema = SeqrGCNVVariantsAndGenotypesSchema
 
 
 if __name__ == '__main__':

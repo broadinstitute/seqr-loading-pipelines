@@ -36,13 +36,28 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             f.writelines('\n'.join(MERGED_TSV_DATA))
 
     def tearDown(self):
+        print("CALLED")
         shutil.rmtree(self._temp_dir.name)
 
-    def test_run_task(self, load_gencode_mock):
+    def test_run_new_joint_tsv_task(self):
         worker = luigi.worker.Worker()
         # Our framework doesn't pass the parameters to the dependent task.. so we force them
         # here.
         SeqrGCNVVariantMTTask.source_paths = self._new_joint_bed_file
+        SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
+        genotype_task = SeqrGCNVGenotypesMTTask(
+            genome_version="38",
+            source_paths="i am completely ignored",
+            dest_path=self._genotypes_mt_file
+        )
+        worker.add(genotype_task)
+        worker.run()
+
+    def test_run_merged_tsv_task(self):
+        worker = luigi.worker.Worker()
+        # Our framework doesn't pass the parameters to the dependent task.. so we force them
+        # here.
+        SeqrGCNVVariantMTTask.source_paths = self._merged_bed_file
         SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
         genotype_task = SeqrGCNVGenotypesMTTask(
             genome_version="38",

@@ -10,9 +10,10 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
         self._is_new_joint_call = is_new_joint_call
 
 
-class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
+class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
+    pass
 
-class SeqrSVVariantsAndGenotypesSchema(SeqrSVVariantSchema, SeqrSVGenotypesSchema):
+class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
     
     @staticmethod
     def elasticsearch_row(ds):
