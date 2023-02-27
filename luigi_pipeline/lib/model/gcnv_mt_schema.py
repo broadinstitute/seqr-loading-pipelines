@@ -23,10 +23,21 @@ def get_seqr_sample_id(raw_sample_id):
         raise ValueError(raw_sample_id)
 
 
-def parse_genes(gen_col):
-    return hl.agg.collect_as_set(
-        gene.split('.')[0] for gene in gene_col.split(',') 
-        if gene not in {'None', 'null', 'NA', ''}
+def parse_genes(gene_col):
+    return hl.fold(
+        lambda i, j: i | j, # Set UNION.
+        hl.empty_set(hl.tstr),
+        hl.agg.collect(
+            hl.set(
+                hl.filter(
+                    lambda gene: gene not in {'None', 'null', 'NA', ''},
+                    hl.map(
+                        lambda gene: gene.split('.')[0],
+                        gene_col.split(',')
+                    ),
+                ),
+            ),
+        )
     )
 
 class SeqrGCNVVariantSchema(BaseMTSchema):
@@ -81,19 +92,19 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='geneIds')
     def gene_ids(self):
-        return list(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+        return parse_genes(self.mt.genes_any_overlap_Ensemble_ID)
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
-        sv_type = {'gCNV_{}'.format(self.mt.svType)}
+        sv_type = ['gCNV_{}'.format(self.mt.svType)]
         
         if hl.len(parse_genes(self.mt.genes_LOF_Ensemble_ID)):
-            sv_type.add("LOF")
+            sv_type.append("LOF")
 
         if hl.len(parse_genes(self.mt.genes_CG_Ensemble_ID)):
-            sv_type.add("COPY_GAIN")
+            sv_type.append("COPY_GAIN")
 
-        return list(sv_type)
+        return sv_type
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
     def sorted_transcript_consequences(self):
