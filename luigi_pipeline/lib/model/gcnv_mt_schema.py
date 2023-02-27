@@ -74,9 +74,13 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     def _genotype_fields(self):
         return {
             'sample_id': get_seqr_sample_id(self.mt.sample_fix),
-            'qs': self.mt.qs,
-            'cn': self.mt.cn,
-            'defragged': BOOL_MAP[self.mt.defragmented.strip()]
+            'qs': self.mt.QS,
+            'cn': self.mt.CN,
+            'defragged': BOOL_MAP[self.mt.defragmented.strip()],
+            # Hail expression is to bool-ify a string value.
+            'prev_call': hl.if_else(hl.len(table.identical_ovl) > 0, True, False) if self.is_new_joint_call else not self.mt.is_latest,
+            'prev_overlap': hl.if_else(hl.len(table.any_ovl) > 0, True, False)  if self.is_new_joint_call else False,
+            'new_call': self.mt.no_ovl if self.is_new_joint_call else False,
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
