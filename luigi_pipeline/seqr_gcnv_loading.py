@@ -28,7 +28,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
 
     def run(self):
         ht = hl.import_table(self.source_paths[0], impute=True)
-        ht.to_matrix_table(row_key=['variant_name', 'svtype'], col_key=['sample_fix'])
+        mt = ht.to_matrix_table(row_key=['variant_name', 'svtype'], col_key=['sample_fix'])
 
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)

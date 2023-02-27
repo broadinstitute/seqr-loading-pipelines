@@ -37,7 +37,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def contig(self):
-        return variant_id.get_expr_for_contig(self.mt.chr)
+        return self.mt.chr.replace("^chr", "")
 
     @row_annotation()
     def sc(self):
