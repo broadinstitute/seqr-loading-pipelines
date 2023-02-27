@@ -49,7 +49,11 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def sn(self):
-        return self.mt.vac / self.mt.vaf
+        return hl.if_else(
+            hl.is_defined(self.mt.vaf),
+            self.mt.vac / self.mt.vaf,
+            hl.missing(hl.tint32)
+        )
 
     @row_annotation(name='svType')
     def sv_type(self):
@@ -102,8 +106,26 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
                 "major_consequence": "LOF" if gene in lof_genes else "COPY_GAIN"
             }
             if gene in major_consequence_genes else {"gene_id": gene}
-            for gene in self.geneIds
+            for gene in self.mt.geneIds
         ]
+
+    @row_annotation(fn_require=start)
+    def pos(self):
+        return self.mt.start
+
+    @row_annotation(fn_require=[contig, pos])
+    def xpos(self):
+        locus = hl.struct(contig=self.mt.contig, position=self.mt.pos),
+        return variant_id.get_expr_for_xpos(locus)
+
+    @row_annotation(fn_require=xpos)
+    def xstart(self):
+        return self.mt.xpos
+
+    @row_annotation(fn_require=[contig, end])
+    def xstop(self):
+        locus = hl.struct(contig=self.mt.contig, position=self.mt.end),
+        return variant_id.get_expr_for_xpos(locus)
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     
