@@ -22,6 +22,13 @@ def get_seqr_sample_id(raw_sample_id):
     except AttributeError:
         raise ValueError(raw_sample_id)
 
+
+def parse_genes(gen_col):
+    return hl.agg.collect_as_set(
+        gene.split('.')[0] for gene in gene_col.split(',') 
+        if gene not in {'None', 'null', 'NA', ''}
+    )
+
 class SeqrGCNVVariantSchema(BaseMTSchema):
 
     def __init__(self, *args, is_new_joint_call=None, **kwargs):
@@ -68,6 +75,35 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def num_exon(self):
         return hl.agg.max(self.mt.genes_any_overlap_totalExons)
 
+    @row_annotation(name='geneIds')
+    def gene_ids(self):
+        return list(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+
+    @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
+    def transcript_consequence_terms(self):
+        sv_type = {'gCNV_{}'.format(self.mt.svType)}
+        
+        if hl.len(parse_genes(self.mt.genes_LOF_Ensemble_ID)):
+            sv_type.add("LOF")
+
+        if hl.len(parse_genes(self.mt.genes_CG_Ensemble_ID)):
+            sv_type.add("COPY_GAIN")
+
+        return list(sv_type)
+
+    @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
+    def sorted_transcript_consequences(self):
+        lof_genes = parse_genes(self.mt.genes_LOF_Ensemble_ID)
+        copy_gain_genes = parse_genes(self.mt.genes_CG_Ensemble_ID)
+        major_consequence_genes = lof_genes | copy_gain_genes
+        return [
+            {
+                "gene_id": gene, 
+                "major_consequence": "LOF" if gene in lof_genes else "COPY_GAIN"
+            }
+            if gene in major_consequence_genes else {"gene_id": gene}
+            for gene in self.geneIds
+        ]
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     
@@ -80,6 +116,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             # Hail expression is to bool-ify a string value.
             'prev_call': hl.if_else(hl.len(table.identical_ovl) > 0, True, False) if self.is_new_joint_call else not self.mt.is_latest,
             'prev_overlap': hl.if_else(hl.len(table.any_ovl) > 0, True, False)  if self.is_new_joint_call else False,
+            # NB: previous implementation also falsified NA, but hail treats NA as an empty value.
             'new_call': self.mt.no_ovl if self.is_new_joint_call else False,
         }
 
