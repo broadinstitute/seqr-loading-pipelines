@@ -27,8 +27,13 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
     def run(self):
-        ht = hl.import_table(self.source_paths[0], impute=True)
-        mt = ht.to_matrix_table(row_key=['variant_name', 'svtype'], col_key=['sample_fix'])
+        ht = hl.import_table(self.source_paths[0], impute=True, min_partitions=500)
+        mt = ht.to_matrix_table(
+            row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
+            # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
+            row_fields=['chr', 'vac', 'vaf', 'svtype', 'strvctvre_score', 'variant_name'],
+            col_fields=['sample_fix']
+        )
 
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)

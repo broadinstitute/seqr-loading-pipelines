@@ -23,7 +23,7 @@ def get_seqr_sample_id(raw_sample_id):
         raise ValueError(raw_sample_id)
 
 
-def parse_genes(gene_col):
+def aggregate_genes(gene_col):
     return hl.fold(
         lambda i, j: i | j, # Set UNION.
         hl.empty_set(hl.tstr),
@@ -76,7 +76,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='variantId')
     def variant_id(self):
-        return f"{self.mt.variant_name}_{self.mt.svType}_{datetime.date.today():%m%d%Y}"
+        return f"{self.mt.variant_name}_{self.mt.svtype}_{datetime.date.today():%m%d%Y}"
 
     @row_annotation()
     def start(self):
