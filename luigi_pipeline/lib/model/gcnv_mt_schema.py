@@ -2,7 +2,7 @@ import datetime
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
+from lib.model.base_mt_schema import BaseMTSchema, row_annotation
 from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
@@ -61,17 +61,17 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
-        return self.mt.strvctvre_score
+       return self.mt.strvctvre_score
 
     @row_annotation(name='variantId')
     def variant_id(self):
-        return f'{self.mt.variant_name}_{self.mt.svtype}_{datetime.date.today():%m%d%Y}'
+        return f"{self.mt.variant_name}_{self.mt.svType}_{datetime.date.today():%m%d%Y}"
 
-    @row_annotation():
+    @row_annotation()
     def start(self):
         return hl.agg.min(self.mt.start)
 
-    @row_annotation():
+    @row_annotation()
     def end(self):
         return hl.agg.max(self.mt.end)
 
