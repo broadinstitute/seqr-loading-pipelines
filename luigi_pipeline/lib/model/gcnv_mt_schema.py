@@ -92,24 +92,24 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='geneIds')
     def gene_ids(self):
-        return parse_genes(self.mt.genes_any_overlap_Ensemble_ID)
+        return aggregate_genes(self.mt.genes_any_overlap_Ensemble_ID)
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
         sv_type = ['gCNV_{}'.format(self.mt.svType)]
         
-        if hl.len(parse_genes(self.mt.genes_LOF_Ensemble_ID)):
+        if hl.len(aggregate_genes(self.mt.genes_LOF_Ensemble_ID)):
             sv_type.append("LOF")
 
-        if hl.len(parse_genes(self.mt.genes_CG_Ensemble_ID)):
+        if hl.len(aggregate_genes(self.mt.genes_CG_Ensemble_ID)):
             sv_type.append("COPY_GAIN")
 
         return sv_type
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
     def sorted_transcript_consequences(self):
-        lof_genes = parse_genes(self.mt.genes_LOF_Ensemble_ID)
-        copy_gain_genes = parse_genes(self.mt.genes_CG_Ensemble_ID)
+        lof_genes = aggregate_genes(self.mt.genes_LOF_Ensemble_ID)
+        copy_gain_genes = aggregate_genes(self.mt.genes_CG_Ensemble_ID)
         major_consequence_genes = lof_genes | copy_gain_genes
         return [
             {
