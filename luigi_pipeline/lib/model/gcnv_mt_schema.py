@@ -128,13 +128,53 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
         return variant_id.get_expr_for_xpos(locus)
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
+
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
+    def samples(self):
+        return self._genotype_filter_samples(lambda g: True)
+
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_new_call(self):
+        return self._genotype_filter_samples(lambda g: g.new_call)
+
+    def samples_num_alt(self):
+        pass
+
+    def samples_gq(self):
+        pass
+
+    def samples_ab(self):
+        pass
+
+    @row_annotation(name="samples_qs", fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_qs(self, start=0, end=1000, step=10):
+        return hl.struct(**{
+            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
+            for i in range(start, end, step)
+        }, **{
+            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.gs > 1000)
+        })
+
+    @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_cn(self, start=0, end=4, step=1):
+        return hl.struct(**{
+            '%i' % i: self._genotype_filter_samples(lambda g: g.cn == i)
+            for i in range(start, end, step)
+        }, **{
+            "samples_cn_gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
+        })
+
+    def _genotype_filter_samples(self, filter):
+        # Overriden to support existing 
+        samples = self.mt.genotypes.filter(filter).map(lambda g: g.sample_id)
+        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('list<str>')))
     
     def _genotype_fields(self):
         return {
             'sample_id': get_seqr_sample_id(self.mt.sample_fix),
             'qs': self.mt.QS,
             'cn': self.mt.CN,
-            'defragged': BOOL_MAP[self.mt.defragmented.strip()],
+            'defragged': self.mt.defragmented,
             # Hail expression is to bool-ify a string value.
             'prev_call': hl.if_else(hl.len(table.identical_ovl) > 0, True, False) if self.is_new_joint_call else not self.mt.is_latest,
             'prev_overlap': hl.if_else(hl.len(table.any_ovl) > 0, True, False)  if self.is_new_joint_call else False,
