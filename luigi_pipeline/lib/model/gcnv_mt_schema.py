@@ -100,15 +100,20 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
-        sv_type = ['gCNV_{}'.format(self.mt.svType)]
-        
-        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))) > 0:
-            sv_type.append("LOF")
-
-        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))) > 0:
-            sv_type.append("COPY_GAIN")
-
-        return sv_type
+        lof = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))) > 0
+        copy_gain = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))) > 0
+        return hl.case().when(
+            lof & copy_gain, 
+            ['gCNV_{}'.format(self.mt.svType), "LOF", "COPY_GAIN"]
+        ).when(
+            lof, 
+            ['gCNV_{}'.format(self.mt.svType), "LOF"]
+        ).when(
+            copy_gain, 
+            ['gCNV_{}'.format(self.mt.svType), "COPY_GAIN"]
+        ).default(
+            ['gCNV_{}'.format(self.mt.svType)]
+        )
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
     def sorted_transcript_consequences(self):
