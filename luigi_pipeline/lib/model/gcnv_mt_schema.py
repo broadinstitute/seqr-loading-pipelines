@@ -22,23 +22,29 @@ def get_seqr_sample_id(raw_sample_id):
     except AttributeError:
         raise ValueError(raw_sample_id)
 
-
-def aggregate_genes(gene_col):
-    return hl.fold(
-        lambda i, j: i | j, # Set UNION.
-        hl.empty_set(hl.tstr),
-        hl.agg.collect(
-            hl.set(
-                hl.filter(
-                    lambda gene: gene not in {'None', 'null', 'NA', ''},
-                    hl.map(
-                        lambda gene: gene.split('.')[0],
-                        gene_col.split(',')
-                    ),
-                ),
+def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
+    """
+    Convert a string-ified gene list to a set()
+    """
+    return hl.set(
+        hl.filter(
+            lambda gene: gene not in {'None', 'null', 'NA', ''},
+            hl.map(
+                lambda gene: gene.split('.')[0],
+                gene_col.split(',')
             ),
-        )
+        ),
     )
+
+def hl_agg_collect_set_union(gene_col):
+    """
+    aggregate with the set union operator
+    """
+    return hl.fold(
+        lambda i, j: i | j,
+        hl.empty_set(hl.tstr),
+        hl.agg.collect(gene_col),
+    )[0]
 
 class SeqrGCNVVariantSchema(BaseMTSchema):
 
@@ -92,24 +98,24 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='geneIds')
     def gene_ids(self):
-        return aggregate_genes(self.mt.genes_any_overlap_Ensemble_ID)
+        return hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
         sv_type = ['gCNV_{}'.format(self.mt.svType)]
         
-        if hl.len(aggregate_genes(self.mt.genes_LOF_Ensemble_ID)):
+        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))):
             sv_type.append("LOF")
 
-        if hl.len(aggregate_genes(self.mt.genes_CG_Ensemble_ID)):
+        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))):
             sv_type.append("COPY_GAIN")
 
         return sv_type
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
     def sorted_transcript_consequences(self):
-        lof_genes = aggregate_genes(self.mt.genes_LOF_Ensemble_ID)
-        copy_gain_genes = aggregate_genes(self.mt.genes_CG_Ensemble_ID)
+        lof_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))
+        copy_gain_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))
         major_consequence_genes = lof_genes | copy_gain_genes
         return [
             {
