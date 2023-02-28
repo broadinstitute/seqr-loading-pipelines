@@ -31,8 +31,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
-            row_fields=['chr', 'vac', 'vaf', 'svtype', 'strvctvre_score', 'variant_name'],
-            col_fields=['sample_fix']
+            row_fields=['chr', 'vac', 'vaf', 'strvctvre_score'],
         )
 
         if self.remap_path:

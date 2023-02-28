@@ -96,7 +96,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='geneIds')
     def gene_ids(self):
-        return hl.list(hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID)))
+        return hl.array(hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID)))
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
