@@ -84,11 +84,11 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def start(self):
-        return hl.agg.min(self.mt.start)
+        return hl.agg.min(self.mt.sample_start)
 
     @row_annotation()
     def end(self):
-        return hl.agg.max(self.mt.end)
+        return hl.agg.max(self.mt.sample_end)
 
     @row_annotation()
     def num_exon(self):
@@ -102,10 +102,10 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def transcript_consequence_terms(self):
         sv_type = ['gCNV_{}'.format(self.mt.svType)]
         
-        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))):
+        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))) > 0:
             sv_type.append("LOF")
 
-        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))):
+        if hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))) > 0:
             sv_type.append("COPY_GAIN")
 
         return sv_type
@@ -115,14 +115,21 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
         lof_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))
         copy_gain_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))
         major_consequence_genes = lof_genes | copy_gain_genes
-        return [
-            {
-                "gene_id": gene, 
-                "major_consequence": "LOF" if gene in lof_genes else "COPY_GAIN"
-            }
-            if gene in major_consequence_genes else {"gene_id": gene}
-            for gene in self.mt.geneIds
-        ]
+        return hl.map(
+            lambda gene: hl.if_else(
+                major_consequence_genes.contains(gene),
+                {
+                    "gene_id": gene, 
+                    "major_consequence": hl.if_else(
+                        lof_genes.contains(gene),
+                        "LOF",
+                        "COPY_GAIN",
+                    )
+                },
+                {"gene_id": gene},
+            ),
+            self.mt.geneIds,
+        )
 
     @row_annotation(fn_require=start)
     def pos(self):

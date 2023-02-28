@@ -215,8 +215,6 @@ class SeqrSchema(BaseSeqrSchema):
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
 
-
-
     @row_annotation()
     def gnomad_non_coding_constraint(self):
         if self._interval_ref_data is None:

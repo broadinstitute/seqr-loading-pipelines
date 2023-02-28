@@ -33,6 +33,9 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
             row_fields=['chr', 'vac', 'vaf', 'strvctvre_score'],
         )
+        # This rename helps disambiguate between the 'start' & 'end' that are aggregations
+        # over samples and the start and end of each sample.
+        mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
 
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
