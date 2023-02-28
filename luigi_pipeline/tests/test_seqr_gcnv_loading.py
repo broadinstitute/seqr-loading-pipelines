@@ -20,10 +20,10 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         t1 = hl.Table.parallelize(
             [
                 {"genes": "AC118553.2,SLC35A3"}, 
-                {"genes": "AC118553.1,None"}, 
+                {"genes": "AC118553.1,None"},
                 {"genes": "None"},
-                {"genes": "SLC35A3.43"}, 
-                {"genes": ""}, 
+                {"genes": "SLC35A3.43"},
+                {"genes": ""},
                 {"genes": "SLC35A4.43"},
             ], 
             hl.tstruct(genes=hl.dtype('str')), 
@@ -38,7 +38,7 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
                 hl.Struct(genes="None", gene_set=set()),
                 hl.Struct(genes="SLC35A3.43", gene_set=set(["SLC35A3"])),
                 hl.Struct(genes="", gene_set=set()),
-                hl.Struct(genes="SLC35A4.43", gene_set=set(["SLC35A4"]))
+                hl.Struct(genes="SLC35A4.43", gene_set=set(["SLC35A4"])),
             ],
         )
 
