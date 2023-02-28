@@ -59,6 +59,11 @@ class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrGCNVVariantMTTask
     GenotypesSchema = SeqrGCNVGenotypesSchema
 
+    def get_schema_class_kwargs(self):
+        return {
+            "is_new_joint_call" : self.is_new_joint_call
+        }
+
 class SeqrGCNVMTToESTask(BaseMTToESOptimizedTask):
     VariantTask = SeqrGCNVVariantMTTask
     GenotypesTask = SeqrGCNVGenotypesMTTask

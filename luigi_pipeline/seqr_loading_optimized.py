@@ -30,6 +30,9 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
     subset_path = luigi.OptionalParameter(default=None,
                                           description="Path to a tsv file with one column of sample IDs: s.")
 
+    def get_schema_class_kwargs(self):
+        return {}
+
     def requires(self):
         return [self.VariantTask()]
 
@@ -41,7 +44,8 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
         if self.subset_path:
             mt = self.subset_samples_and_variants(mt, self.subset_path)
 
-        mt = self.GenotypesSchema(mt).annotate_all(overwrite=True).select_annotated_mt()
+        kwargs = self.get_schema_class_kwargs()
+        mt = self.GenotypesSchema(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)

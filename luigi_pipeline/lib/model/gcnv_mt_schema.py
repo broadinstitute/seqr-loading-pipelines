@@ -9,19 +9,7 @@ from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotyp
 from hail_scripts.computed_fields import variant_id
 
 BOOL_MAP = {'TRUE': True, 'FALSE': False}
-SAMPLE_ID_REGEX = '(?P<sample_id>.+)_v\d+_Exome_(C|RP-)\d+$'
-
-def get_seqr_sample_id(raw_sample_id):
-    """
-    Extract the seqr sample ID from the raw dataset sample id
-
-    :param raw_sample_id: dataset sample id
-    :return: seqr sample id
-    """
-    try:
-        return re.search(SAMPLE_ID_REGEX, raw_sample_id).group('sample_id')
-    except AttributeError:
-        raise ValueError(raw_sample_id)
+SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
 
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
@@ -159,6 +147,10 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
+    def __init__(self, *args, is_new_joint_call=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_new_joint_call = is_new_joint_call
+
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples(self):
         return self._genotype_filter_samples(lambda g: True)
@@ -201,7 +193,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     
     def _genotype_fields(self):
         return {
-            'sample_id': get_seqr_sample_id(self.mt.sample_fix),
+            'sample_id': self.mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0],
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
