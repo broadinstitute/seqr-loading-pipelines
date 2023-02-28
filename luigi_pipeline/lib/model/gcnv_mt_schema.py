@@ -142,8 +142,9 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(fn_require=[contig, pos])
     def xpos(self):
-        locus = hl.struct(contig=self.mt.contig, position=self.mt.pos),
-        return variant_id.get_expr_for_xpos(locus)
+        return variant_id.get_expr_for_xpos(
+            hl.locus(self.mt.contig, self.mt.pos)
+        )
 
     @row_annotation(fn_require=xpos)
     def xstart(self):
@@ -151,8 +152,9 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(fn_require=[contig, end])
     def xstop(self):
-        locus = hl.struct(contig=self.mt.contig, position=self.mt.end),
-        return variant_id.get_expr_for_xpos(locus)
+        return variant_id.get_expr_for_xpos(
+            hl.locus(self.mt.contig, self.mt.end)
+        )
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
