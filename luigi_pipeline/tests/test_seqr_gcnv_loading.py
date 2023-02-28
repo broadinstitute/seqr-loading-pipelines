@@ -20,8 +20,8 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         t1 = hl.Table.parallelize(
             [
                 {"genes": "AC118553.2,SLC35A3"}, 
-                {"genes": "AC118553.1,NONE"}, 
-                {"genes": "NONE"},
+                {"genes": "AC118553.1,None"}, 
+                {"genes": "None"},
                 {"genes": "SLC35A3.43"}, 
                 {"genes": ""}, 
                 {"genes": "SLC35A4.43"},
@@ -29,22 +29,39 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
             hl.tstruct(genes=hl.dtype('str')), 
             key="genes"
         )
-        t1 = t1.transmute(gene_set = parse_genes(t1.genes))
-        t1.show()
+        t1 = t1.annotate(gene_set = parse_genes(t1.genes))
         self.assertCountEqual(
             t1.collect(),
             [
-                hl.Struct(gene_set=set(["AC118553", "SLC35A3"])),
-                hl.Struct(gene_set=set(["AC118553"])),
-                hl.Struct(gene_set=set()),
-                hl.Struct(gene_set=set(["SLC35A3"])),
-                hl.Struct(gene_set=set()),
-                hl.Struct(gene_set=set(["SLC35A4"]))
+                hl.Struct(genes="AC118553.2,SLC35A3", gene_set=set(["AC118553", "SLC35A3"])),
+                hl.Struct(genes="AC118553.1,None", gene_set=set(["AC118553"])),
+                hl.Struct(genes="None", gene_set=set()),
+                hl.Struct(genes="SLC35A3.43", gene_set=set(["SLC35A3"])),
+                hl.Struct(genes="", gene_set=set()),
+                hl.Struct(genes="SLC35A4.43", gene_set=set(["SLC35A4"]))
             ],
         )
 
     def test_aggregate_parsed_genes(self):
-        pass
+        t1 = hl.Table.parallelize(
+            [
+                {"genes": "AC118553.2,SLC35A3"}, 
+                {"genes": "AC118553.1,None"}, 
+                {"genes": "None"},
+                {"genes": "SLC35A3.43"}, 
+                {"genes": ""}, 
+                {"genes": "SLC35A4.43"},
+            ], 
+            hl.tstruct(genes=hl.dtype('str')), 
+            key="genes"
+        )
+        aggregated_gene_set = t1.aggregate(
+            hl_agg_collect_set_union(parse_genes(t1.genes))
+        )
+        self.assertEqual(
+            aggregated_gene_set,
+            set(["SLC35A4", "SLC35A3", "AC118553"])
+        )
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
     def setUp(self):

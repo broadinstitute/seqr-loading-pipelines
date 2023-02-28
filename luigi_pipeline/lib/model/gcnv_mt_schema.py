@@ -26,17 +26,15 @@ def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
     """
-    return hl.set(
+    return hl.set(hl.map(
+        lambda gene: gene.split(r'\.')[0],
         hl.filter(
-            lambda gene: gene not in {'None', 'null', 'NA', ''},
-            hl.map(
-                lambda gene: gene.split('.')[0],
-                gene_col.split(',')
-            ),
-        ),
-    )
+            lambda gene: hl.if_else(hl.set({'None', 'null', 'NA', ''}).contains(gene), False, True),
+            gene_col.split(','),
+        )
+    ))
 
-def hl_agg_collect_set_union(gene_col):
+def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpression:
     """
     aggregate with the set union operator
     """
@@ -44,7 +42,7 @@ def hl_agg_collect_set_union(gene_col):
         lambda i, j: i | j,
         hl.empty_set(hl.tstr),
         hl.agg.collect(gene_col),
-    )[0]
+    )
 
 class SeqrGCNVVariantSchema(BaseMTSchema):
 
@@ -98,7 +96,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='geneIds')
     def gene_ids(self):
-        return hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+        return hl.list(hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID)))
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
