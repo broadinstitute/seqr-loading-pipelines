@@ -24,8 +24,6 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
 
-    is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
-
     # The run function is overriden here to avoid inheriting the default vcf chaining and allele splitting functionality.
     def run(self):
         ht = hl.import_table(self.source_paths[0], impute=True, min_partitions=500)
@@ -48,16 +46,21 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         mt = self.annotate_globals(mt)
         
         mt.describe()
-        mt.write(self.output().path, stage_locally=True, overwrite=True)       
+        mt.write(self.output().path, stage_locally=True, overwrite=True)
+
+    def get_schema_class_kwargs(self):
+        return {}     
 
 
 class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrGCNVVariantMTTask
     GenotypesSchema = SeqrGCNVGenotypesSchema
 
+    is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
+
     def get_schema_class_kwargs(self):
         return {
-            "is_new_joint_call" : self._is_new_joint_call
+            "is_new_joint_call" : self.is_new_joint_call
         }
 
 class SeqrGCNVMTToESTask(BaseMTToESOptimizedTask):

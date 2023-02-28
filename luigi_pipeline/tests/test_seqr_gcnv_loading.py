@@ -81,7 +81,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotype_task = SeqrGCNVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
-            dest_path=self._genotypes_mt_file
+            dest_path=self._genotypes_mt_file,
+            is_new_joint_call=True,
         )
         worker.add(genotype_task)
         worker.run()
@@ -98,7 +99,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotype_task = SeqrGCNVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
-            dest_path=self._genotypes_mt_file
+            dest_path=self._genotypes_mt_file,
+            is_new_joint_call=False,
         )
         worker.add(genotype_task)
         worker.run()
