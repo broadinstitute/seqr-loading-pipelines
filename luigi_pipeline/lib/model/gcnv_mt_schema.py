@@ -35,10 +35,6 @@ def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpr
 
 class SeqrGCNVVariantSchema(BaseMTSchema):
 
-    def __init__(self, *args, is_new_joint_call=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._is_new_joint_call = is_new_joint_call
-
     @row_annotation()
     def contig(self):
         return self.mt.chr.replace("^chr", "")
@@ -198,10 +194,10 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             # Hail expression is to bool-ify a string value.
-            'prev_call': hl.if_else(hl.len(table.identical_ovl) > 0, True, False) if self.is_new_joint_call else not self.mt.is_latest,
-            'prev_overlap': hl.if_else(hl.len(table.any_ovl) > 0, True, False)  if self.is_new_joint_call else False,
+            'prev_call': hl.if_else(hl.len(table.identical_ovl) > 0, True, False) if self._is_new_joint_call else not self.mt.is_latest,
+            'prev_overlap': hl.if_else(hl.len(table.any_ovl) > 0, True, False)  if self._is_new_joint_call else False,
             # NB: previous implementation also falsified NA, but hail treats NA as an empty value.
-            'new_call': self.mt.no_ovl if self.is_new_joint_call else False,
+            'new_call': self.mt.no_ovl if self._is_new_joint_call else False,
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
