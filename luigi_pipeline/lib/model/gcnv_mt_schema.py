@@ -155,6 +155,9 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     def samples_new_call(self):
         return self._genotype_filter_samples(lambda g: g.new_call)
 
+    def samples_no_call(self):
+        pass
+
     def samples_num_alt(self):
         pass
 
@@ -164,13 +167,13 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     def samples_ab(self):
         pass
 
-    @row_annotation(name="samples_qs", fn_require=SeqrGenotypesSchema.genotypes)
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_qs(self, start=0, end=1000, step=10):
         return hl.struct(**{
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
             for i in range(start, end, step)
         }, **{
-            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.gs > 1000)
+            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs > 1000)
         })
 
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
@@ -183,9 +186,8 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
         })
 
     def _genotype_filter_samples(self, filter):
-        # Overriden to support existing 
         samples = self.mt.genotypes.filter(filter).map(lambda g: g.sample_id)
-        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('list<str>')))
+        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('array<str>')))
     
     def _genotype_fields(self):
         return {

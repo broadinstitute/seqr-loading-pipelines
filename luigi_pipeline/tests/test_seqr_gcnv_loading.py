@@ -60,7 +60,7 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         )
         self.assertEqual(
             aggregated_gene_set,
-            set(["SLC35A4", "SLC35A3", "AC118553"])
+        set(["SLC35A4", "SLC35A3", "AC118553"])
         )
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
@@ -88,7 +88,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         worker.run()
 
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
-        self.assertEqual(variant_mt.count(), (11, 5))
+        self.assertEqual(variant_mt.count(), (2, 3))
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     def test_run_merged_tsv_task(self, mock_datetime):
@@ -104,3 +104,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         )
         worker.add(genotype_task)
         worker.run()
+
+        variant_mt = hl.read_matrix_table(self._variant_mt_file)
+        self.assertEqual(variant_mt.count(), (2, 3))
