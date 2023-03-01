@@ -84,24 +84,6 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def gene_ids(self):
         return hl.array(hl_agg_collect_set_union(parse_genes(self.mt.genes_any_overlap_Ensemble_ID)))
 
-    @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
-    def transcript_consequence_terms(self):
-        formatted_gcnv_consequence = hl.format('gCNV_%s', self.mt.svType)
-        lof = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))) > 0
-        copy_gain = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))) > 0
-        return hl.case().when(
-            lof & copy_gain, 
-            [formatted_gcnv_consequence, "LOF", "COPY_GAIN"]
-        ).when(
-            lof, 
-            [formatted_gcnv_consequence, "LOF"]
-        ).when(
-            copy_gain, 
-            [formatted_gcnv_consequence, "COPY_GAIN"]
-        ).default(
-            [formatted_gcnv_consequence]
-        )
-
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
     def sorted_transcript_consequences(self):
         lof_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))
@@ -121,6 +103,17 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
                 {"gene_id": gene},
             ),
             self.mt.geneIds,
+        )
+
+    @row_annotation(name='transcriptConsequenceTerms', fn_require=[
+        sv_type,
+        sorted_transcript_consequences,
+    ])
+    def transcript_consequence_terms(self):
+        default_consequences = hl.set([hl.format('gCNV_%s', self.mt.svType)])
+        gene_major_consequences = hl.set(self.mt.sortedTranscriptConsequences.map(lambda x: x["major_consequence"]))
+        return hl.array(
+            default_consequences.union(gene_major_consequences)
         )
 
     @row_annotation(fn_require=start)

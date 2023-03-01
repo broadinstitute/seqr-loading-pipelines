@@ -29,7 +29,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
             {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
             {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}
         ],
-        transcriptConsequenceTerms=['gCNV_DEL', 'LOF'],
+        transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100006937,
         xstart=1100006937,
         xstop=1100007881
@@ -51,7 +51,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
             {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
             {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}
         ],
-        transcriptConsequenceTerms=['gCNV_DEL', 'LOF'],
+        transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100017585,
         xstart=1100017585,
         xstop=1100023213,
@@ -70,7 +70,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
         sortedTranscriptConsequences=[
             {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}
         ],
-        transcriptConsequenceTerms=['gCNV_DEL', 'LOF'], 
+        transcriptConsequenceTerms=['LOF', 'gCNV_DEL'], 
         xpos=1100022289,
         xstart=1100022289,
         xstop=1100023213
@@ -164,7 +164,7 @@ MERGED_EXPECTED_VARIANT_DATA = [
         sn=22720,
         geneIds=['ENSG00000117620', 'ENSG00000283761'],
         sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
-        transcriptConsequenceTerms=['gCNV_DEL', 'LOF'],
+        transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100006937,
         xstart=1100006937,
         xstop=1100007881,
@@ -183,7 +183,7 @@ MERGED_EXPECTED_VARIANT_DATA = [
         sn=22719,
         geneIds=['ENSG00000117620', 'ENSG00000283761'],
         sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
-        transcriptConsequenceTerms=['gCNV_DEL', 'LOF'],
+        transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100017585,
         xstart=1100017585,
         xstop=1100023213,
@@ -251,6 +251,8 @@ def prune_empties(data):
     return data
 
 class SeqrGCNVGeneParsingTest(unittest.TestCase):
+    maxDiff = None
+
     def test_parse_genes(self):
         t1 = hl.Table.parallelize(
             [
@@ -299,6 +301,8 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         )
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
