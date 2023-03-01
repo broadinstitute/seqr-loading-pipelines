@@ -18,7 +18,7 @@ def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     return hl.set(hl.map(
         lambda gene: gene.split(r'\.')[0],
         hl.filter(
-            lambda gene: hl.if_else(hl.set({'None', 'null', 'NA', ''}).contains(gene), False, True),
+            lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene),
             gene_col.split(','),
         )
     ))
