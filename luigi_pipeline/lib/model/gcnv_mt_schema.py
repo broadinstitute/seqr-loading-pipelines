@@ -51,7 +51,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def sn(self):
         return hl.if_else(
             hl.is_defined(self.mt.vaf),
-            self.mt.vac / self.mt.vaf,
+            hl.int(self.mt.vac / self.mt.vaf),
             hl.missing(hl.tint32)
         )
 
@@ -65,7 +65,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='variantId')
     def variant_id(self):
-        return f"{self.mt.variant_name}_{self.mt.svtype}_{datetime.date.today():%m%d%Y}"
+        return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 
     @row_annotation()
     def start(self):
@@ -85,19 +85,20 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=sv_type)
     def transcript_consequence_terms(self):
+        formatted_gcnv_consequence = hl.format('gCNV_%s', self.mt.svType)
         lof = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_LOF_Ensemble_ID))) > 0
         copy_gain = hl.len(hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))) > 0
         return hl.case().when(
             lof & copy_gain, 
-            ['gCNV_{}'.format(self.mt.svType), "LOF", "COPY_GAIN"]
+            [formatted_gcnv_consequence, "LOF", "COPY_GAIN"]
         ).when(
             lof, 
-            ['gCNV_{}'.format(self.mt.svType), "LOF"]
+            [formatted_gcnv_consequence, "LOF"]
         ).when(
             copy_gain, 
-            ['gCNV_{}'.format(self.mt.svType), "COPY_GAIN"]
+            [formatted_gcnv_consequence, "COPY_GAIN"]
         ).default(
-            ['gCNV_{}'.format(self.mt.svType)]
+            [formatted_gcnv_consequence]
         )
 
     @row_annotation(name='sortedTranscriptConsequences', fn_require=gene_ids)
@@ -196,7 +197,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             # Hail expression is to bool-ify a string value.
-            'prev_call': hl.if_else(hl.len(self.mt.identical_ovl) > 0, True, False) if self._is_new_joint_call else not self.mt.is_latest,
+            'prev_call': hl.if_else(hl.len(self.mt.identical_ovl) > 0, True, False) if self._is_new_joint_call else ~self.mt.is_latest,
             'prev_overlap': hl.if_else(hl.len(self.mt.any_ovl) > 0, True, False)  if self._is_new_joint_call else False,
             # NB: previous implementation also falsified NA, but hail treats NA as an empty value.
             'new_call': self.mt.no_ovl if self._is_new_joint_call else False,
@@ -204,6 +205,9 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
     
+    # NB: we override this method because the row keys are different.
     @staticmethod
     def elasticsearch_row(ds):
-        return SeqrVariantsAndGenotypesSchema.elasticsearch_row(ds)
+        if isinstance(ds, hl.MatrixTable):
+            ds = ds.rows()
+        return table.drop(table.variant_name, table.svtype)
