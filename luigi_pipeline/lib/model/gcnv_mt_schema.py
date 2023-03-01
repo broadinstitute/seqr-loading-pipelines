@@ -14,13 +14,15 @@ def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
     """
-    return hl.set(hl.map(
-        lambda gene: gene.split(r'\.')[0],
-        hl.filter(
-            lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene),
-            gene_col.split(','),
+    return hl.set(
+        gene_col.split(',')
+        .filter(
+            lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene)
         )
-    ))
+        .map(
+            lambda gene: gene.split(r'\.')[0]
+        )
+    )
 
 def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpression:
     """
