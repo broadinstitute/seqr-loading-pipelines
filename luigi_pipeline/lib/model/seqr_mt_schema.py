@@ -342,7 +342,9 @@ class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
         table = ds.drop('vep').flatten()
         # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
         # be normal fields. We can also re-key, but I believe this is computational?
-        table = table.drop(table.locus, table.alleles)
-
+        #
+        # PS: locus and alleles used to be the only possible row keys... however we're extending to drop any row key!
+        row_key = table.row_key
+        table = table.drop(*row_key)
 
         return table

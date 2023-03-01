@@ -209,6 +209,4 @@ class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotype
     # NB: we override this method because the row keys are different.
     @staticmethod
     def elasticsearch_row(ds):
-        if isinstance(ds, hl.MatrixTable):
-            ds = ds.rows()
-        return table.drop(table.variant_name, table.svtype)
+        return SeqrVariantsAndGenotypesSchema.elasticsearch_row(ds)
