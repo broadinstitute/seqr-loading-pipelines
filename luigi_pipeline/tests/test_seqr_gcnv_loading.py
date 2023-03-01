@@ -299,8 +299,6 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         )
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
@@ -313,14 +311,17 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     def test_run_new_joint_tsv_task(self, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
-        SeqrGCNVVariantMTTask.source_paths = NEW_JOINT_CALLED_CALLSET
-        SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
+        variant_task = SeqrGCNVVariantMTTask(
+            source_paths=NEW_JOINT_CALLED_CALLSET,
+            dest_path=self._variant_mt_file,
+        )
         genotype_task = SeqrGCNVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=True,
         )
+        SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
 
@@ -348,14 +349,17 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     def test_run_merged_tsv_task(self, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
-        SeqrGCNVVariantMTTask.source_paths = MERGED_CALLSET
-        SeqrGCNVVariantMTTask.dest_path = self._variant_mt_file
+        variant_task = SeqrGCNVVariantMTTask(
+            source_paths=MERGED_CALLSET,
+            dest_path=self._variant_mt_file,
+        )
         genotype_task = SeqrGCNVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=False,
         )
+        SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
 

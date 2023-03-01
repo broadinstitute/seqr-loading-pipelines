@@ -258,14 +258,17 @@ class SeqrSVLoadingTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         # Our framework doesn't pass the parameters to the dependent task.. so we force them
         # here.
-        SeqrSVVariantMTTask.source_paths = self._vcf_file
-        SeqrSVVariantMTTask.dest_path = self._variant_mt_file
-        SeqrSVVariantMTTask.grch38_to_grch37_ref_chain = REFERENCE_CHAIN
+        variant_task = SeqrSVVariantMTTask(
+            source_paths=self._vcf_file,
+            dest_path=self._variant_mt_file,
+            grch38_to_grch37_ref_chain=REFERENCE_CHAIN,
+        ) 
         genotype_task = SeqrSVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
             dest_path=self._genotypes_mt_file
         )
+        SeqrSVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
         load_gencode_mock.assert_called_once_with(43, "")
