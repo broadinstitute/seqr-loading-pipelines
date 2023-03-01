@@ -11,6 +11,7 @@ from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 logger = logging.getLogger(__name__)
 
+SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
 
 class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     # Overrided inherited required params.
@@ -41,6 +42,10 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
             row_fields=['chr', 'vac', 'vaf', 'strvctvre_score'],
         )
+
+        # rename the sample id column before the sample subset happens
+        mt = mt.transmute_cols(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
+
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
         return mt.rename({'start': 'sample_start', 'end': 'sample_end'})

@@ -8,8 +8,6 @@ from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotyp
 
 from hail_scripts.computed_fields import variant_id
 
-SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
-
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
@@ -186,7 +184,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     
     def _genotype_fields(self):
         return {
-            'sample_id': self.mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0],
+            'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
