@@ -198,8 +198,8 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             # Hail expression is to bool-ify a string value.
-            'prev_call': hl.if_else(hl.len(self.mt.identical_ovl) > 0, True, False) if self._is_new_joint_call else ~self.mt.is_latest,
-            'prev_overlap': hl.if_else(hl.len(self.mt.any_ovl) > 0, True, False)  if self._is_new_joint_call else False,
+            'prev_call': (hl.len(self.mt.identical_ovl) > 0) if self._is_new_joint_call else ~self.mt.is_latest,
+            'prev_overlap': (hl.len(self.mt.any_ovl) > 0)  if self._is_new_joint_call else False,
             # NB: previous implementation also falsified NA, but hail treats NA as an empty value.
             'new_call': self.mt.no_ovl if self._is_new_joint_call else False,
         }
