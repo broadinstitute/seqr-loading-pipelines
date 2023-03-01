@@ -24,8 +24,17 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
 
-    # The run function is overriden here to avoid inheriting the default vcf chaining and allele splitting functionality.
-    def run(self):
+    def annotate_old_and_split_multi_hts(self, mt, *args, **kwargs):
+        return mt
+
+    def add_37_coordinates(self, mt, *args, **kwargs):
+        # TODO.. implement this (it was out of scope in the port but we want it eventually)
+        return mt
+
+    def generate_callstats(self, mt, *args, **kwargs):
+        return mt
+
+    def import_dataset(self):
         ht = hl.import_table(self.source_paths[0], impute=True, min_partitions=500)
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
@@ -34,19 +43,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         )
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
-        mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
-
-        if self.remap_path:
-            mt = self.remap_sample_ids(mt, self.remap_path)
-        if self.subset_path:
-            mt = self.subset_samples_and_variants(mt, self.subset_path)
-        
-        kwargs = self.get_schema_class_kwargs()
-        mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-        mt = self.annotate_globals(mt)
-        
-        mt.describe()
-        mt.write(self.output().path, stage_locally=True, overwrite=True)
+        return mt.rename({'start': 'sample_start', 'end': 'sample_end'})
 
     def get_schema_class_kwargs(self):
         return {}     
