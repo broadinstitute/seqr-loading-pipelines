@@ -175,7 +175,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
             for i in range(start, end, step)
         }, **{
-            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs > 1000)
+            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs >= 1000)
         })
 
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
