@@ -8,7 +8,6 @@ from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotyp
 
 from hail_scripts.computed_fields import variant_id
 
-BOOL_MAP = {'TRUE': True, 'FALSE': False}
 SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
 
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
