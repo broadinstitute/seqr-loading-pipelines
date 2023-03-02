@@ -183,16 +183,24 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
         return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('array<str>')))
     
     def _genotype_fields(self):
+        if self._is_new_joint_call:
+            call_fields = {
+                'prev_call': (hl.len(self.mt.identical_ovl) > 0),
+                'prev_overlap': (hl.len(self.mt.any_ovl) > 0),
+                'new_call': self.mt.no_ovl,
+            }
+        else:
+            call_fields = {
+                'prev_call': ~self.mt.is_latest,
+                'prev_overlap': False,
+                'new_call': False,
+            }
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
-            # Hail expression is to bool-ify a string value.
-            'prev_call': (hl.len(self.mt.identical_ovl) > 0) if self._is_new_joint_call else ~self.mt.is_latest,
-            'prev_overlap': (hl.len(self.mt.any_ovl) > 0)  if self._is_new_joint_call else False,
-            # NB: previous implementation also falsified NA, but hail treats NA as an empty value.
-            'new_call': self.mt.no_ovl if self._is_new_joint_call else False,
+            **call_fields
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
