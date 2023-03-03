@@ -50,8 +50,6 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
 
-    is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
-
     def annotate_old_and_split_multi_hts(self, mt, *args, **kwargs):
         return mt
 
