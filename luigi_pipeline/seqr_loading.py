@@ -95,7 +95,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
-        # NB: OPEN QUESTION IS THIS OK TO RUN ON MITO AND SV PIPELINES?
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
@@ -106,7 +105,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
 
-        # NB SHOULD WE SKIP THIS FOR MITO AND SV?
         mt = self.generate_callstats(mt)
 
         if self.RUN_VEP:

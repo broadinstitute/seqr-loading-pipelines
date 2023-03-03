@@ -29,7 +29,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.gene_id_mapping = gene_id_mapping
+        self._gene_id_mapping = gene_id_mapping
 
     @row_annotation()
     def contig(self):
@@ -130,7 +130,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='sortedTranscriptConsequences')
     def sorted_transcript_consequences(self):
-        # NB: this function is nuts plz help.
         conseq_predicted_gene_cols = [
             gene_col for gene_col in self.mt.info if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
             and gene_col not in NON_GENE_PREDICTIONS
@@ -139,19 +138,16 @@ class SeqrSVVariantSchema(BaseMTSchema):
             self.mt.info[gene_col].map(
                 lambda gene: hl.struct(**{
                     'gene_symbol': gene,
-                    'gene_id': self.gene_id_mapping.get(gene, hl.missing(hl.tstr)),
+                    'gene_id': self._gene_id_mapping.get(gene, hl.missing(hl.tstr)),
                     'major_consequence': gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
                 })
             )
             for gene_col in conseq_predicted_gene_cols
         ]
-        return hl.flatmap(
-            lambda x: x, 
-            hl.filter(
-                lambda x: hl.is_defined(x),
-                mapped_genes,
-            )
-        )
+        return hl.filter(
+            hl.is_defined,
+            mapped_genes
+        ).flatmap(lambda x: x)
 
     @row_annotation(fn_require=xpos)
     def xstart(self):
@@ -197,11 +193,10 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation(name='geneIds', fn_require=sorted_transcript_consequences)
     def gene_ids(self):
         return hl.set(
-            hl.map(
-                lambda x: x.gene_id,
-                self.mt.sortedTranscriptConsequences.filter(
-                    lambda x: x.major_consequence != 'NEAREST_TSS'
-                )
+            self.mt.sortedTranscriptConsequences.filter(
+                lambda x: x.major_consequence != 'NEAREST_TSS'
+            ).map(
+                lambda x: x.gene_id
             )
         )
 
