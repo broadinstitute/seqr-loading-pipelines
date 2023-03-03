@@ -18,46 +18,20 @@ EXPECTED_TYPES = {
     "chr": hl.tstr, 
     "start": hl.tint32, 
     "end": hl.tint32, 
-    "name": hl.tstr, 
-    "sample": hl.tstr, 
     "sample_fix": hl.tstr, 
     "svtype": hl.tstr, 
-    "GT": hl.tint32, 
     "CN": hl.tint32,
-    "NP": hl.tint32, 
-    "QA": hl.tint32,
     "QS": hl.tint32, 
-    "QSE": hl.tint32, 
-    "QSS": hl.tint32, 
-    "ploidy": hl.tint32,
-    "strand": hl.tstr, 
     "variant_name": hl.tstr, 
-    "ID": hl.tint32, 
-    "rmsstd": hl.tint32,
     "defragmented": hl.tbool, 
     "vaf": hl.tfloat64, 
-    "vac": hl.tint32, 
-    "lt100_raw_calls": hl.tbool,
-    "lt10_highQS_rare_calls": hl.tbool, 
-    "PASS_SAMPLE": hl.tbool,
-    "PASS_FREQ": hl.tbool,
-    "PASS_QS": hl.tbool,
-    "HIGH_QUALITY": hl.tbool, 
-    "genes_any_overlap": hl.tstr,
-    "genes_any_overlap_exonsPerGene": hl.tstr, 
-    "genes_any_overlap_totalExons": hl.tint32, 
-    "genes_strict_overlap": hl.tstr,
-    "genes_strict_overlap_exonsPerGene": hl.tint32,
-    "genes_strict_overlap_totalExons": hl.tint32,
-    "genes_CG": hl.tstr, 
-    "genes_LOF": hl.tstr, 
+    "vac": hl.tint32,
+    "genes_any_overlap_totalExons": hl.tint32,
     "genes_any_overlap_Ensemble_ID": hl.tstr,
+    "genes_strict_overlap_totalExons": hl.tint32,
     "genes_LOF_Ensemble_ID": hl.tstr,
     "genes_CG_Ensemble_ID": hl.tstr,
-    "var_source": hl.tstr,
-    "callset_ovl": hl.tstr,
     "identical_ovl": hl.tstr, 
-    "partial_0_5_ovl": hl.tstr,
     "any_ovl": hl.tstr,
     "no_ovl": hl.tbool, 
     "strvctvre_score": hl.tfloat64,
@@ -78,14 +52,6 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
-    @staticmethod
-    def validate_ht_types(ht, expected_types=EXPECTED_TYPES):
-        for field, type_ in ht.row.dtype.items():
-            if field not in expected_types:
-                raise SeqrValidationError(f"Unexpected column: {field}")
-            if type_ != expected_types[field]:
-                raise SeqrValidationError(f"Field: {field} has unexpected type {type_}")
-
     def annotate_old_and_split_multi_hts(self, mt, *args, **kwargs):
         return mt
 
@@ -97,8 +63,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         return mt
 
     def import_dataset(self):
-        ht = hl.import_table(self.source_paths[0], impute=True, min_partitions=500)
-        SeqrGCNVVariantMTTask.validate_ht_types(ht)
+        ht = hl.import_table(self.source_paths[0], types=EXPECTED_TYPES, min_partitions=500)
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation

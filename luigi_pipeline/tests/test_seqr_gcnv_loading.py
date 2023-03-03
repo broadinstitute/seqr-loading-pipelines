@@ -251,36 +251,6 @@ def prune_empties(data):
             data = data.drop(k)
     return data
 
-class SeqrGCNValidateHTTypes(unittest.TestCase):
-    
-    def test_validate_ht_types(self):
-        t1 = hl.Table.parallelize(
-            [
-                {"a": 1, "b": "c"}, 
-                {"a": 2, "b": "d"},
-                {"a": 3, "b": "e"},
-            ], 
-            hl.tstruct(a=hl.dtype('int32'), b=hl.dtype('str')),
-            key="a",
-        )
-
-        SeqrGCNVVariantMTTask.validate_ht_types(t1, {"a": hl.tint32, "b": hl.tstr})
-        SeqrGCNVVariantMTTask.validate_ht_types(t1, {"a": hl.tint32, "b": hl.tstr, "c": hl.tint32})
-        self.assertRaisesRegex(
-            SeqrValidationError,
-            "Unexpected column: b",
-            SeqrGCNVVariantMTTask.validate_ht_types, 
-            t1,
-            {"a": hl.tint32}
-        )
-        self.assertRaisesRegex(
-            SeqrValidationError,
-            "Field: b has unexpected type hl.str",
-            SeqrGCNVVariantMTTask.validate_ht_types, 
-            t1,
-            {"a": hl.tint32, "b": hl.tint32}
-        )
-
 class SeqrGCNVGeneParsingTest(unittest.TestCase):
     maxDiff = None
 
