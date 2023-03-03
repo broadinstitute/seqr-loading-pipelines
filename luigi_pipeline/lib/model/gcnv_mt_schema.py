@@ -195,12 +195,25 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 'prev_overlap': False,
                 'new_call': False,
             }
+
+        optional_sample_fields = {}
+        if self.mt.sample_start != self.mt.start:
+            optional_sample_fields['start'] = self.mt.sample_start
+        if self.mt.sample_end != self.mt.end:
+            optional_sample_fields['end'] = self.mt.sample_end
+        if self.mt.genes_any_overlap_totalExons != self.mt.num_exon:
+            optional_sample_fields['num_exon'] = self.mt.genes_any_overlap_totalExons,
+        parsed_genes = parse_genes(self.mt.genes_any_overlap_totalExons)
+        if parsed_genes != self.mt.geneIds:
+            optional_sample_fields['geneIds'] = parsed_genes
+
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
-            **call_fields
+            **call_fields,
+            **optional_sample_fields,
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
