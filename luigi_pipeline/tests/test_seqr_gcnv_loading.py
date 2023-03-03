@@ -186,8 +186,8 @@ MERGED_EXPECTED_VARIANT_DATA = [
         sn=22719,
         geneIds=['ENSG00000117620', 'ENSG00000283761', 'ENSG22222222222'],
         sortedTranscriptConsequences=[
-            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}, 
             {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
+            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}, 
             {'gene_id': 'ENSG22222222222'}
         ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
@@ -218,6 +218,14 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
     ),
     hl.Struct(
         genotypes=[
+            hl.Struct(**{'cn': 0,
+                'defragged': False,
+                'new_call': False,
+                'prev_call': True,
+                'prev_overlap': False,
+                'qs': 30,
+                'sample_id': 'BEN_0234_01_1'
+            }),
             hl.Struct(**{
                 'qs': 30,
                 'cn': 0, 
@@ -237,12 +245,12 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                 'sample_id':  'PIE_OGI313_000747_1'
             }),
         ],
-        samples=['MAN_0354_01_1', 'PIE_OGI313_000747_1'], 
+        samples=['BEN_0234_01_1', 'MAN_0354_01_1', 'PIE_OGI313_000747_1'], 
         **{
             'samples_cn.1': ['PIE_OGI313_000747_1'],
             'samples_qs.0_to_10': ['PIE_OGI313_000747_1'], 
-            'samples_cn.0': ['MAN_0354_01_1'],
-            'samples_qs.30_to_40': ['MAN_0354_01_1'],
+            'samples_cn.0': ['BEN_0234_01_1', 'MAN_0354_01_1'],
+            'samples_qs.30_to_40': ['BEN_0234_01_1', 'MAN_0354_01_1'],
         },
     ),
 ]
