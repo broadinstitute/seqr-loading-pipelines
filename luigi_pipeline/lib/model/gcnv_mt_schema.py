@@ -201,38 +201,36 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             }
 
 
-        #start = hl.if_else(
-        #    self.mt.sample_start != self.mt.start,
-        #    {"start": self.mt.sample_start},
-        #    hl.empty_dict(hl.tstr, hl.tint32),
-        #)
-        #end = hl.if_else(
-        #    self.mt.sample_end != self.mt.end,
-        #    {"end": self.mt.sample_end},
-        #    hl.empty_dict(hl.tstr, hl.tint32),
-        #)
-        #num_exon = hl.if_else(
-        #    self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
-        #    {"num_exon": self.mt.genes_any_overlap_totalExons},
-        #    hl.empty_dict(hl.tstr, hl.tint32),
-        #)
-        #parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
-        #gene_ids = hl.if_else(
-        #    parsed_genes != self.mt.geneIds,
-        #    {"geneIds": parsed_genes},
-        #    hl.empty_dict(hl.tstr, hl.dtype('array<str>')),
-        #)
-            
+        parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+        sample_fields = {
+            "start": hl.if_else(
+                self.mt.sample_start != self.mt.start,
+                self.mt.sample_start,
+                hl.missing(hl.tint32),
+            ),
+            "end": hl.if_else(
+                self.mt.sample_end != self.mt.end,
+                self.mt.sample_end,
+                hl.missing(hl.tint32),
+            ),
+            "num_exon": hl.if_else(
+                self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
+                self.mt.genes_any_overlap_totalExons,
+                hl.missing(hl.tint32),
+            ),
+            "geneIds": hl.if_else(
+                parsed_genes != self.mt.geneIds,
+                parsed_genes,
+                hl.missing(hl.dtype('array<str>')),
+            ),
+        }
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             **call_fields,
-            #**start,
-            #**end,
-            #**num_exon,
-            #**gene_ids,
+            **sample_fields
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
