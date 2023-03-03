@@ -163,7 +163,10 @@ MERGED_EXPECTED_VARIANT_DATA = [
         pos=100006937,
         sn=22720,
         geneIds=['ENSG00000117620', 'ENSG00000283761'],
-        sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
+        sortedTranscriptConsequences=[
+            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
+            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}
+        ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100006937,
         xstart=1100006937,
@@ -181,8 +184,12 @@ MERGED_EXPECTED_VARIANT_DATA = [
         num_exon=3,
         pos=100017585,
         sn=22719,
-        geneIds=['ENSG00000117620', 'ENSG00000283761'],
-        sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
+        geneIds=['ENSG00000117620', 'ENSG00000283761', 'ENSG22222222222'],
+        sortedTranscriptConsequences=[
+            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}, 
+            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
+            {'gene_id': 'ENSG22222222222'}
+        ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100017585,
         xstart=1100017585,
@@ -368,14 +375,14 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         worker.run()
 
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
-        self.assertEqual(variant_mt.count(), (2, 3))
+        self.assertEqual(variant_mt.count(), (2, 4))
 
         key_dropped_variant_mt = variant_mt.rows().flatten().drop("variant_name", "svtype")
         data = key_dropped_variant_mt.collect()
         self.assertCountEqual(data, MERGED_EXPECTED_VARIANT_DATA)
 
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
-        self.assertEqual(genotypes_mt.count(), (2, 3))
+        self.assertEqual(genotypes_mt.count(), (2, 4))
 
         # Now mimic the join in BaseMTToESOptimizedTask
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])

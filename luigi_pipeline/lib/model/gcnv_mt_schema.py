@@ -109,7 +109,11 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     ])
     def transcript_consequence_terms(self):
         default_consequences = hl.set([hl.format('gCNV_%s', self.mt.svType)])
-        gene_major_consequences = hl.set(self.mt.sortedTranscriptConsequences.map(lambda x: x["major_consequence"]))
+        gene_major_consequences = hl.set(
+            self.mt.sortedTranscriptConsequences
+            .map(lambda x: x.get("major_consequence", hl.missing(hl.tstr)))
+            .filter(lambda x: ~hl.is_missing(x))
+        )
         return hl.array(
             default_consequences.union(gene_major_consequences)
         )
@@ -196,24 +200,39 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 'new_call': False,
             }
 
-        optional_sample_fields = {}
-        if self.mt.sample_start != self.mt.start:
-            optional_sample_fields['start'] = self.mt.sample_start
-        if self.mt.sample_end != self.mt.end:
-            optional_sample_fields['end'] = self.mt.sample_end
-        if self.mt.genes_any_overlap_totalExons != self.mt.num_exon:
-            optional_sample_fields['num_exon'] = self.mt.genes_any_overlap_totalExons,
-        parsed_genes = parse_genes(self.mt.genes_any_overlap_totalExons)
-        if parsed_genes != self.mt.geneIds:
-            optional_sample_fields['geneIds'] = parsed_genes
 
+        #start = hl.if_else(
+        #    self.mt.sample_start != self.mt.start,
+        #    {"start": self.mt.sample_start},
+        #    hl.empty_dict(hl.tstr, hl.tint32),
+        #)
+        #end = hl.if_else(
+        #    self.mt.sample_end != self.mt.end,
+        #    {"end": self.mt.sample_end},
+        #    hl.empty_dict(hl.tstr, hl.tint32),
+        #)
+        #num_exon = hl.if_else(
+        #    self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
+        #    {"num_exon": self.mt.genes_any_overlap_totalExons},
+        #    hl.empty_dict(hl.tstr, hl.tint32),
+        #)
+        #parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+        #gene_ids = hl.if_else(
+        #    parsed_genes != self.mt.geneIds,
+        #    {"geneIds": parsed_genes},
+        #    hl.empty_dict(hl.tstr, hl.dtype('array<str>')),
+        #)
+            
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             **call_fields,
-            **optional_sample_fields,
+            #**start,
+            #**end,
+            #**num_exon,
+            #**gene_ids,
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
