@@ -220,13 +220,18 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
         genotypes=[
             hl.Struct(**{'cn': 0,
                 'defragged': False,
+                'start': 100017586,
+                'end': 100023212,
+                'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
                 'new_call': False,
+                'num_exon': 2,
                 'prev_call': True,
                 'prev_overlap': False,
                 'qs': 30,
                 'sample_id': 'BEN_0234_01_1'
             }),
             hl.Struct(**{
+                'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                 'qs': 30,
                 'cn': 0, 
                 'defragged': False, 
@@ -236,6 +241,7 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                 'sample_id': 'MAN_0354_01_1'
             }),
             hl.Struct(**{
+                'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                 'qs': 5,
                 'cn': 1, 
                 'defragged': False, 
@@ -258,11 +264,13 @@ MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     hl.Struct(**x, **y) for (x, y) in zip(MERGED_EXPECTED_VARIANT_DATA, MERGED_EXPECTED_GENOTYPES_DATA)
 ]
 
-
 def prune_empties(data):
-    for k, v in data.items():
-        if v == None:
-            data = data.drop(k)
+    if isinstance(data, list):
+        data = [prune_empties(x) for x in data if x is not None]
+    elif isinstance(data, hl.Struct):
+        data = hl.Struct(**{k : prune_empties(v) for k, v in data.items() if v is not None})
+    elif isinstance(data, dict):
+        data = {k: prune_empties(v) for k, v in data.items() if v is not None}
     return data
 
 class SeqrGCNVGeneParsingTest(unittest.TestCase):
@@ -359,9 +367,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
         row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("variant_name", "svtype")
         data = row_ht.collect()
-        for i, row in enumerate(data):
-            data[i] = prune_empties(row)
-        self.assertListEqual(data, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        data = prune_empties(data)
+        self.assertCountEqual(data, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
@@ -396,6 +403,5 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
         row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("variant_name", "svtype")
         data = row_ht.collect()
-        for i, row in enumerate(data):
-            data[i] = prune_empties(row)
+        data = prune_empties(data)
         self.assertListEqual(data, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)

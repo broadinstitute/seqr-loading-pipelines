@@ -202,35 +202,33 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
 
         parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
-        sample_fields = {
-            "start": hl.if_else(
-                self.mt.sample_start != self.mt.start,
-                self.mt.sample_start,
-                hl.missing(hl.tint32),
-            ),
-            "end": hl.if_else(
-                self.mt.sample_end != self.mt.end,
-                self.mt.sample_end,
-                hl.missing(hl.tint32),
-            ),
-            "num_exon": hl.if_else(
-                self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
-                self.mt.genes_any_overlap_totalExons,
-                hl.missing(hl.tint32),
-            ),
-            "geneIds": hl.if_else(
-                parsed_genes != self.mt.geneIds,
-                parsed_genes,
-                hl.missing(hl.dtype('array<str>')),
-            ),
-        }
+        start_or_end_unequal = (self.mt.sample_start != self.mt.start) | (self.mt.sample_end != self.mt.end)
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
+            'start': hl.if_else(
+                start_or_end_unequal,
+                self.mt.sample_start,
+                hl.missing(hl.tint32),
+            ),
+            'end': hl.if_else(
+                start_or_end_unequal,
+                self.mt.sample_end,
+                hl.missing(hl.tint32),
+            ),
+            'num_exon': hl.if_else(
+                self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
+                self.mt.genes_any_overlap_totalExons,
+                hl.missing(hl.tint32),
+            ),
+            'geneIds': hl.if_else(
+                parsed_genes != self.mt.geneIds,
+                parsed_genes,
+                hl.missing(hl.dtype('array<str>')),
+            ),
             **call_fields,
-            **sample_fields
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):
