@@ -21,7 +21,7 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
     dont_validate = True
     dataset_type = "SV"
 
-    gencode_release = luigi.IntParameter(default=43)
+    gencode_release = luigi.IntParameter(default=42)
     gencode_path = luigi.OptionalParameter(default="", description="Path for downloaded gencode data")
     RUN_VEP = False
     SCHEMA_CLASS = SeqrSVVariantSchema
