@@ -7,7 +7,6 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_loading import SeqrValidationError
 from seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
 from lib.model.gcnv_mt_schema import parse_genes, hl_agg_collect_set_union
 
