@@ -202,19 +202,19 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
 
         parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
-        start_or_end_unequal = (self.mt.sample_start != self.mt.start) | (self.mt.sample_end != self.mt.end)
+        start_and_end_equal = (self.mt.sample_start == self.mt.start) & (self.mt.sample_end == self.mt.end)
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
             'start': hl.if_else(
-                start_or_end_unequal,
+                ~start_and_end_equal,
                 self.mt.sample_start,
                 hl.missing(hl.tint32),
             ),
             'end': hl.if_else(
-                start_or_end_unequal,
+                ~start_and_end_equal,
                 self.mt.sample_end,
                 hl.missing(hl.tint32),
             ),
