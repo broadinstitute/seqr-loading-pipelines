@@ -5,7 +5,6 @@ import luigi
 import hail as hl
 
 from lib.model.gcnv_mt_schema import SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema, SeqrGCNVVariantsAndGenotypesSchema
-from luigi_pipeline.seqr_loading import SeqrValidationError
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
