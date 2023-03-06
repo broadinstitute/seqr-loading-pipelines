@@ -208,26 +208,13 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
-            'start': hl.if_else(
-                ~start_and_end_equal,
-                self.mt.sample_start,
-                hl.missing(hl.tint32),
-            ),
-            'end': hl.if_else(
-                ~start_and_end_equal,
-                self.mt.sample_end,
-                hl.missing(hl.tint32),
-            ),
-            'num_exon': hl.if_else(
+            'start': hl.or_missing(~start_and_end_equal, self.mt.sample_start),
+            'end': hl.or_missing(~start_and_end_equal, self.mt.sample_end),
+            'num_exon': hl.or_missing(
                 self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
                 self.mt.genes_any_overlap_totalExons,
-                hl.missing(hl.tint32),
             ),
-            'geneIds': hl.if_else(
-                parsed_genes != self.mt.geneIds,
-                parsed_genes,
-                hl.missing(hl.dtype('array<str>')),
-            ),
+            'geneIds': hl.or_missing(parsed_genes != self.mt.geneIds,parsed_genes,),
             **call_fields,
         }
 
