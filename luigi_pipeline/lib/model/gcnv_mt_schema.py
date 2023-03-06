@@ -214,7 +214,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
                 self.mt.genes_any_overlap_totalExons,
             ),
-            'geneIds': hl.or_missing(parsed_genes != self.mt.geneIds,parsed_genes,),
+            'geneIds': hl.or_missing(parsed_genes != self.mt.geneIds, parsed_genes),
             **call_fields,
         }
 
