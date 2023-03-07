@@ -135,6 +135,7 @@ VARIANT_MT_FIELDS = [
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
 GENOTYPES_MT_FIELDS = [
+    'contig', 'pos', 'start', 'xpos', 'xstart',
     'genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2',
 ]
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
@@ -268,10 +269,10 @@ class SeqrSvLoadingTest(unittest.TestCase):
         )
         worker.add(genotype_task)
         worker.run()
-        load_gencode_mock.assert_called_once_with(43, "")
+        load_gencode_mock.assert_called_once_with(42, "")
 
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None).get_disable_index_field()
-        self.assertCountEqual(disabled_index_fields, ["genotypes","end_locus", "docId"])
+        self.assertCountEqual(disabled_index_fields, ["contig", "start", "xstart", "genotypes","end_locus", "docId"])
 
         # Variants Assertions
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
@@ -292,11 +293,12 @@ class SeqrSvLoadingTest(unittest.TestCase):
         key_dropped_genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
             key for key in key_dropped_genotypes_mt._fields
-            if key not in global_fields
+            if key not in GLOBAL_FIELDS
         ], GENOTYPES_MT_FIELDS)
 
         # Now mimic the join in BaseMTToESOptimizedTask
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
+        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.row.keys() if k in variant_mt.row.keys() and k not in variant_mt.row_key])
         row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("locus", "alleles")
         data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)

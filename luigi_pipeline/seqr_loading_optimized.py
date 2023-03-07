@@ -65,6 +65,7 @@ class BaseMTToESOptimizedTask(HailElasticSearchTask):
         variants_mt = hl.read_matrix_table(self.input()[0].path)
         genotypes_mt = hl.read_matrix_table(self.input()[1].path)
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
+        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.row.keys() if k in variants_mt.row.keys() and k not in variant_mt.row_key])
         row_ht = genotypes_mt.rows().join(variants_mt.rows())
 
         row_ht = self.VariantsAndGenotypesSchema.elasticsearch_row(row_ht)
