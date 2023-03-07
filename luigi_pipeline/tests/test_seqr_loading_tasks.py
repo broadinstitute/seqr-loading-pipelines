@@ -57,10 +57,10 @@ class TestSeqrLoadingTasks(unittest.TestCase):
     def test_seqr_loading_validate_wes_mismatch(self, mock_sample_type_stats, mock_contig_check):
         # Supposed to be WES but we report as WGS.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(0, 0, False, 0, 0, True)
-        self.assertRaisesRegex(SeqrValidationError, "specified as WGS but appears to be WES", SeqrVCFToMTTask.validate_mt, None, '37', 'WGS')
+        self.assertRaisesRegex(SeqrValidationError, "specified as WGS but appears to be WES", SeqrVCFToMTTask.validate_mt, self.test_mt, '37', 'WGS')
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_wgs_mismatch(self, mock_sample_type_stats, mock_contig_check):
         # Supposed to be WGS but we report as WES.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(0, 0, True, 0, 0, True)
-        self.assertRaisesRegex(SeqrValidationError, "specified as WES but appears to be WGS", SeqrVCFToMTTask.validate_mt, None, '37', 'WGS')
+        self.assertRaisesRegex(SeqrValidationError, "specified as WES but appears to be WGS", SeqrVCFToMTTask.validate_mt, self.test_mt, '37', 'WGS')
