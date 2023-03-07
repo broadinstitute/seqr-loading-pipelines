@@ -235,3 +235,24 @@ class BaseMTSchema:
                 disabled_indices += [field.name]
   
         return disabled_indices
+
+    # Default field implementations
+    @row_annotation(disable_index=True)
+    def contig(self):
+        return variant_id.get_expr_for_contig(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def start(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def pos(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def xpos(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def xstart(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)

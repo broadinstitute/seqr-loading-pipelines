@@ -32,11 +32,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
         self._gene_id_mapping = gene_id_mapping
 
     @row_annotation()
-    def contig(self):
-        # 'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
-        return variant_id.get_expr_for_contig(self.mt.locus)
-
-    @row_annotation()
     def sc(self):
         return self.mt.info.AC[0]
 
@@ -47,11 +42,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation()
     def sn(self):
         return self.mt.info.AN
-
-    @row_annotation()
-    def start(self):
-        # 'start': lambda rows: rows.locus.position,
-        return variant_id.get_expr_for_start_pos(self.mt)
 
     @row_annotation()
     def end(self):
@@ -82,11 +72,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
         return self.mt.info.gnomAD_V2_AN_AF
 
     @row_annotation()
-    def pos(self):
-        # 'start': lambda rows: rows.locus.position,
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation()
     def filters(self):
         filters = hl.array(self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
@@ -106,11 +91,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation()
     def algorithms(self):
         return self.mt.info.ALGORITHMS
-
-    @row_annotation()
-    def xpos(self):
-        # 'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
-        return variant_id.get_expr_for_xpos(self.mt.locus)
 
     @row_annotation()
     def cpx_intervals(self):
@@ -148,10 +128,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
             hl.is_defined,
             mapped_genes
         ).flatmap(lambda x: x)
-
-    @row_annotation(fn_require=xpos)
-    def xstart(self):
-        return self.mt.xpos
 
     @row_annotation(fn_require=end_locus)
     def xstop(self):
