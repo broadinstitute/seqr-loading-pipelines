@@ -153,7 +153,6 @@ class HailMatrixTableTask(luigi.Task):
 
         logger.info(f'Finished subsetting samples. Kept {subset_count} '
                     f'out of {mt.count()} samples in vds')
-        
         return mt
 
     @staticmethod
