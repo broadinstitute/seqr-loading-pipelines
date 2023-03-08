@@ -136,10 +136,7 @@ VARIANT_MT_FIELDS = [
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
-GENOTYPES_MT_FIELDS = [
-    'contig', 'pos', 'start', 'xpos', 'xstart',
-    'genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2',
-]
+GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
@@ -300,7 +297,6 @@ class SeqrSvLoadingTest(unittest.TestCase):
 
         # Now mimic the join in BaseMTToESOptimizedTask
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
-        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.row.keys() if k in variant_mt.row.keys() and k not in variant_mt.row_key])
         row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("locus", "alleles")
         data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)
