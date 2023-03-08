@@ -7,6 +7,9 @@ from hail_scripts.computed_fields import variant_id
 
 
 BOTHSIDES_SUPPORT = "BOTHSIDES_SUPPORT"
+GENE_SYMBOL = "gene_symbol"
+GENE_ID = "gene_id"
+MAJOR_CONSEQUENCE = "major_consequence"
 PASS = "PASS"
 
 # Used to filter mt.info fields.
@@ -30,6 +33,9 @@ class SeqrSVVariantSchema(BaseMTSchema):
     def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._gene_id_mapping = gene_id_mapping
+
+    def sv_types(self):
+        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)
 
     @row_annotation()
     def sc(self):
@@ -117,9 +123,9 @@ class SeqrSVVariantSchema(BaseMTSchema):
         mapped_genes = [
             self.mt.info[gene_col].map(
                 lambda gene: hl.struct(**{
-                    'gene_symbol': gene,
-                    'gene_id': self._gene_id_mapping.get(gene, hl.missing(hl.tstr)),
-                    'major_consequence': gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
+                    GENE_SYMBOL: gene,
+                    GENE_ID: self._gene_id_mapping.get(gene, hl.missing(hl.tstr)),
+                    MAJOR_CONSEQUENCE: gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
                 })
             )
             for gene_col in conseq_predicted_gene_cols
@@ -145,17 +151,17 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='svType')
     def sv_type(self):
-        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)[0]
+        return self.sv_types()[0]
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=[
         sorted_transcript_consequences, sv_type,
     ])
     def transcript_consequence_terms(self):
-        return self.mt.sortedTranscriptConsequences.map(lambda x: x.major_consequence).extend([self.mt.svType])
+        return self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType])
 
     @row_annotation()
     def sv_type_detail(self):
-        sv_types = self.mt.alleles[1].replace('[<>]', '').split(':', 2)
+        sv_types = self.sv_types()
         return hl.if_else(
             sv_types[0] == 'CPX',
             self.mt.info.CPX_TYPE,
@@ -170,9 +176,9 @@ class SeqrSVVariantSchema(BaseMTSchema):
     def gene_ids(self):
         return hl.set(
             self.mt.sortedTranscriptConsequences.filter(
-                lambda x: x.major_consequence != 'NEAREST_TSS'
+                lambda x: x[MAJOR_CONSEQUENCE] != 'NEAREST_TSS'
             ).map(
-                lambda x: x.gene_id
+                lambda x: x[GENE_ID]
             )
         )
 
