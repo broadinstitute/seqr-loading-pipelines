@@ -82,17 +82,17 @@ class SeqrSVVariantSchema(BaseMTSchema):
             hl.missing(hl.dtype('array<str>')),
         )
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def bothsides_support(self):
         return self.mt.filters.any(
             lambda x: x == BOTHSIDES_SUPPORT
         )
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def algorithms(self):
         return self.mt.info.ALGORITHMS
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def cpx_intervals(self):
         return hl.if_else(
             hl.is_defined(self.mt.info.CPX_INTERVALS),
@@ -176,7 +176,7 @@ class SeqrSVVariantSchema(BaseMTSchema):
             )
         )
 
-    @row_annotation(name='variantId')
+    @row_annotation(name='variantId', disable_index=True)
     def variant_id(self):
         return self.mt.rsid
 
