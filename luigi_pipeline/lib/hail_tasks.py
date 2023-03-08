@@ -150,8 +150,9 @@ class HailMatrixTableTask(luigi.Task):
 
         mt = mt.semi_join_cols(subset_ht)
         mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
+
         logger.info(f'Finished subsetting samples. Kept {subset_count} '
-                        f'out of {mt.count()} samples in vds')
+                    f'out of {mt.count()} samples in vds')
         
         return mt
 
