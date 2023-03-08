@@ -106,9 +106,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
-
         mt = self.generate_callstats(mt)
-
         if self.RUN_VEP:
             mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner,
                                              vep_config_json_path=self.vep_config_json_path)
