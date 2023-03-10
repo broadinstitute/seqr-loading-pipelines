@@ -346,11 +346,8 @@ class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
             ds = ds.rows()
         # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
         table = ds.drop('vep').flatten()
-        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
+        # When flattening, the table is unkeyed, which causes problems because our row keys should not
         # be normal fields. We can also re-key, but I believe this is computational?
-        #
         # PS: locus and alleles used to be the only possible row keys... however we're extending to drop any row key!
         row_key = table.row_key
-        table = table.drop(*row_key)
-
-        return table
+        return table.drop(*row_key)
