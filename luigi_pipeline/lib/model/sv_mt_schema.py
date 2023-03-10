@@ -1,7 +1,7 @@
 import hail as hl
 
 from lib.model.base_mt_schema import row_annotation, RowAnnotationOmit
-from lib.model.seqr_mt_schema import BaseVariantsSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
 
@@ -28,7 +28,7 @@ def get_cpx_interval(x):
     return hl.struct(type=type_chr[0], chrom=chr_pos[0], start=hl.int32(pos[0]), end=hl.int32(pos[1]))
 
 
-class SeqrSVVariantSchema(BaseVariantsSchema):
+class SeqrSVVariantSchema(BaseVariantSchema):
 
     def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
