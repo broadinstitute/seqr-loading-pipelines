@@ -77,6 +77,10 @@ class SeqrSVVariantSchema(BaseVariantSchema):
     def gnomad_svs_an(self):
         return self.mt.info.gnomAD_V2_AN_AF
 
+    @row_annotation(name='StrVCTVRE_score')
+    def strvctvre(self):
+        return self.mt.info.StrVCTVRE
+
     @row_annotation()
     def filters(self):
         filters = self.mt.filters.filter(
