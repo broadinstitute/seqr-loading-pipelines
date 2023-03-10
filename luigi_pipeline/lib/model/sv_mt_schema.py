@@ -79,10 +79,10 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation()
     def filters(self):
-        filters = hl.array(self.mt.filters.filter(
+        filters = self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
-        ))
-        return hl.or_missing(hl.len(filters) > 0, filters)
+        )
+        return hl.or_missing(filters.size() > 0, filters)
 
     @row_annotation(disable_index=True)
     def bothsides_support(self):
@@ -196,9 +196,9 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
         }
 
-    def _genotype_filter_samples(self, filter):
-        # NB: override this function here to mimic the existing null handling behavior.
-        samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+    # NB: override this function here to mimic the existing null handling behavior.
+    def _genotype_filter_samples(self, filter_):
+        samples = super()._genotype_filter_samples(filter_)
         return hl.or_missing(hl.len(samples) > 0, samples)            
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)

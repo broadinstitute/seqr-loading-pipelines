@@ -161,7 +161,7 @@ EXPECTED_DATA_VARIANTS = [
     hl.Struct(
         contig='1', sc=7, sf=0.910684, sn=8, start=789481, end=789481, sv_callset_Het=520, sv_callset_Hom=2391,
         gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=789481,
-        filters=['PESR_GT_OVERDISPERSION', 'UNRESOLVED'], bothsides_support=False, algorithms=['manta'],
+        filters=set(['PESR_GT_OVERDISPERSION', 'UNRESOLVED']), bothsides_support=False, algorithms=['manta'],
         xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
         rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
         transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
@@ -177,7 +177,7 @@ EXPECTED_DATA_VARIANTS = [
         contig='1', sc=1, sf=0.10237, sn=8, start=4228405, end=4228448, sv_callset_Het=590, sv_callset_Hom=3,
         gnomad_svs_ID='gnomAD-SV_v2.1_INS_chr1_65', gnomad_svs_AF=0.068962998688221, gnomad_svs_AC=224,
         gnomad_svs_AN=3247, pos=4228405,
-        filters=['HIGH_SR_BACKGROUND'], bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
+        filters=set(['HIGH_SR_BACKGROUND']), bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
         cpx_intervals=None, xstart=1004228405, xstop=1004228448,
         rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
         transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=set(),
@@ -190,7 +190,7 @@ EXPECTED_DATA_VARIANTS = [
     hl.Struct(
         contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3,
         gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=6558902,
-        filters=['HIGH_SR_BACKGROUND'], bothsides_support=True, algorithms=['manta'], xpos=1006558902,
+        filters=set(['HIGH_SR_BACKGROUND']), bothsides_support=True, algorithms=['manta'], xpos=1006558902,
         cpx_intervals=[hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
                        hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
         xstop=1006559723,
