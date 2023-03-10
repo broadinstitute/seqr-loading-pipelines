@@ -274,7 +274,6 @@ def prune_empties(data):
     return data
 
 class SeqrGCNVGeneParsingTest(unittest.TestCase):
-    maxDiff = None
 
     def test_parse_genes(self):
         t1 = hl.Table.parallelize(
@@ -324,7 +323,6 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         )
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
-    maxDiff = None
 
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()

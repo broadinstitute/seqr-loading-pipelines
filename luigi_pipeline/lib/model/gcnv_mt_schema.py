@@ -8,6 +8,9 @@ from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotyp
 
 from hail_scripts.computed_fields import variant_id
 
+GENE_ID = "gene_id"
+MAJOR_CONSEQUENCE = "major_consequence"
+
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
@@ -48,10 +51,9 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
 
     @row_annotation()
     def sn(self):
-        return hl.if_else(
+        return hl.or_missing(
             hl.is_defined(self.mt.vaf),
             hl.int(self.mt.vac / self.mt.vaf),
-            hl.missing(hl.tint32)
         )
 
     @row_annotation(name='svType')
@@ -91,14 +93,14 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
             lambda gene: hl.if_else(
                 major_consequence_genes.contains(gene),
                 {
-                    "gene_id": gene, 
-                    "major_consequence": hl.if_else(
+                    GENE_ID: gene,
+                    MAJOR_CONSEQUENCE: hl.if_else(
                         lof_genes.contains(gene),
                         "LOF",
                         "COPY_GAIN",
                     )
                 },
-                {"gene_id": gene},
+                {GENE_ID: gene},
             ),
             self.mt.geneIds,
         )
@@ -111,7 +113,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
         default_consequences = hl.set([hl.format('gCNV_%s', self.mt.svType)])
         gene_major_consequences = hl.set(
             self.mt.sortedTranscriptConsequences
-            .map(lambda x: x.get("major_consequence", hl.missing(hl.tstr)))
+            .map(lambda x: x.get(MAJOR_CONSEQUENCE, hl.missing(hl.tstr)))
             .filter(lambda x: ~hl.is_missing(x))
         )
         return hl.array(
