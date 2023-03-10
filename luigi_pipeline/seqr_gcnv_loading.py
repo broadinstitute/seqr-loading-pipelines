@@ -14,24 +14,15 @@ logger = logging.getLogger(__name__)
 SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
 
 EXPECTED_TYPES = {
-    "chr": hl.tstr, 
     "start": hl.tint32, 
     "end": hl.tint32, 
-    "sample_fix": hl.tstr, 
-    "svtype": hl.tstr, 
     "CN": hl.tint32,
     "QS": hl.tint32, 
-    "variant_name": hl.tstr, 
     "defragmented": hl.tbool, 
     "vaf": hl.tfloat64, 
     "vac": hl.tint32,
     "genes_any_overlap_totalExons": hl.tint32,
-    "genes_any_overlap_Ensemble_ID": hl.tstr,
     "genes_strict_overlap_totalExons": hl.tint32,
-    "genes_LOF_Ensemble_ID": hl.tstr,
-    "genes_CG_Ensemble_ID": hl.tstr,
-    "identical_ovl": hl.tstr, 
-    "any_ovl": hl.tstr,
     "no_ovl": hl.tbool, 
     "strvctvre_score": hl.tfloat64,
     "is_latest": hl.tbool
