@@ -82,11 +82,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         filters = hl.array(self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
         ))
-        return hl.if_else(
-            hl.len(filters) > 0,
-            filters,
-            hl.missing(hl.dtype('array<str>')),
-        )
+        return hl.or_missing(hl.len(filters) > 0, filters)
 
     @row_annotation(disable_index=True)
     def bothsides_support(self):
@@ -100,10 +96,9 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(disable_index=True)
     def cpx_intervals(self):
-        return hl.if_else(
+        return hl.or_missing(
             hl.is_defined(self.mt.info.CPX_INTERVALS),
             self.mt.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
-            hl.missing(hl.dtype(INTERVAL_TYPE))
         )
 
     @row_annotation(disable_index=True)
@@ -143,10 +138,9 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(fn_require=end_locus)
     def rg37_locus_end(self):
-        return hl.if_else(
+        return hl.or_missing(
             self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
             hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
-            hl.missing('locus<GRCh37>')
         )
 
     @row_annotation(name='svType')
@@ -165,10 +159,9 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         return hl.if_else(
             sv_types[0] == 'CPX',
             self.mt.info.CPX_TYPE,
-            hl.if_else(
+            hl.or_missing(
                 (sv_types[0] == 'INS') & (hl.len(sv_types) > 1),
                 sv_types[1],
-                hl.missing('str')
             )
         )
 
@@ -206,8 +199,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
     def _genotype_filter_samples(self, filter):
         # NB: override this function here to mimic the existing null handling behavior.
         samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
-        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('set<str>')))
-            
+        return hl.or_missing(hl.len(samples) > 0, samples)            
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
