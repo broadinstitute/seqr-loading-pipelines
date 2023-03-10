@@ -4,8 +4,6 @@ from typing import List
 from inspect import getmembers
 from collections import defaultdict
 
-from hail_scripts.computed_fields import variant_id
-
 logger = logging.getLogger(__name__)
 
 
