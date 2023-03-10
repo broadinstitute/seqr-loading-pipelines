@@ -6,6 +6,9 @@ from hail_scripts.computed_fields import vep
 
 class BaseVariantSchema(BaseMTSchema):
 
+    def __init__(self, mt, *args, **kwargs):
+        super().__init__(mt)
+
     @row_annotation(disable_index=True)
     def contig(self):
         return variant_id.get_expr_for_contig(self.mt.locus)
@@ -297,6 +300,9 @@ class SeqrGenotypesSchema(BaseMTSchema):
             for i in range(start, end, step)
         })
 
+    def _num_alt(self, is_called):
+        return hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
+
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
         return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
@@ -305,7 +311,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
-            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1),
+            'num_alt': self._num_alt(is_called),
             'gq': hl.if_else(is_called, self.mt.GQ, 0),
             'ab': hl.bind(
                 lambda total: hl.if_else((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),

@@ -77,12 +77,16 @@ class SeqrSVVariantSchema(BaseVariantSchema):
     def gnomad_svs_an(self):
         return self.mt.info.gnomAD_V2_AN_AF
 
+    @row_annotation(name='StrVCTVRE_score')
+    def strvctvre(self):
+        return self.mt.info.StrVCTVRE
+
     @row_annotation()
     def filters(self):
-        filters = hl.array(self.mt.filters.filter(
+        filters = self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
-        ))
-        return hl.or_missing(hl.len(filters) > 0, filters)
+        )
+        return hl.or_missing(filters.size() > 0, filters)
 
     @row_annotation(disable_index=True)
     def bothsides_support(self):
@@ -193,12 +197,12 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'sample_id': self.mt.s,
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
-            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
+            'num_alt': self._num_alt(is_called)
         }
 
-    def _genotype_filter_samples(self, filter):
-        # NB: override this function here to mimic the existing null handling behavior.
-        samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
+    # NB: override this function here to mimic the existing null handling behavior.
+    def _genotype_filter_samples(self, filter_):
+        samples = super()._genotype_filter_samples(filter_)
         return hl.or_missing(hl.len(samples) > 0, samples)            
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
