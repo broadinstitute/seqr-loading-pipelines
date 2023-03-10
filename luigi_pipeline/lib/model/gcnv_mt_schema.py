@@ -110,15 +110,13 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
         sorted_transcript_consequences,
     ])
     def transcript_consequence_terms(self):
-        default_consequences = hl.set([hl.format('gCNV_%s', self.mt.svType)])
-        gene_major_consequences = hl.set(
+        default_consequences = [hl.format('gCNV_%s', self.mt.svType)]
+        gene_major_consequences = hl.array(hl.set(
             self.mt.sortedTranscriptConsequences
-            .map(lambda x: x.get(MAJOR_CONSEQUENCE, hl.missing(hl.tstr)))
-            .filter(lambda x: ~hl.is_missing(x))
-        )
-        return hl.array(
-            default_consequences.union(gene_major_consequences)
-        )
+            .filter(lambda x: x.contains(MAJOR_CONSEQUENCE))
+            .map(lambda x: x[MAJOR_CONSEQUENCE])
+        ))
+        return default_consequences.extend(gene_major_consequences)
 
     @row_annotation(fn_require=start)
     def pos(self):
