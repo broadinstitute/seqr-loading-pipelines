@@ -4,8 +4,29 @@ from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotation
 from hail_scripts.computed_fields import variant_id
 from hail_scripts.computed_fields import vep
 
+class BaseVariantSchema(BaseMTSchema):
 
-class BaseSeqrSchema(BaseMTSchema):
+    @row_annotation(disable_index=True)
+    def contig(self):
+        return variant_id.get_expr_for_contig(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def start(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def pos(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def xpos(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def xstart(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+class BaseSeqrSchema(BaseVariantSchema):
 
     def __init__(self, *args, ref_data, interval_ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
@@ -63,18 +84,6 @@ class BaseSeqrSchema(BaseMTSchema):
         return variant_id.get_expr_for_variant_id(self.mt)
 
     @row_annotation(disable_index=True)
-    def contig(self):
-        return variant_id.get_expr_for_contig(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def pos(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
-    def start(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
     def end(self):
         return variant_id.get_expr_for_end_pos(self.mt)
 
@@ -85,14 +94,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation(disable_index=True)
     def alt(self):
         return variant_id.get_expr_for_alt_allele(self.mt)
-
-    @row_annotation()
-    def xpos(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def xstart(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
 
     @row_annotation()
     def xstop(self):
@@ -139,7 +140,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp
-
 
 class SeqrSchema(BaseSeqrSchema):
     @row_annotation(disable_index=True)

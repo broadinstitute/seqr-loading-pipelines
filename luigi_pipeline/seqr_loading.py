@@ -70,17 +70,20 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     def get_schema_class_kwargs(self):
         ref = hl.read_table(self.reference_ht_path)
         interval_ref_data = hl.read_table(self.interval_ref_ht_path) if self.interval_ref_ht_path else None
-        clinvar = hl.read_table(self.clinvar_ht_path)
+        clinvar_data = hl.read_table(self.clinvar_ht_path)
         # hgmd is optional.
         hgmd = hl.read_table(self.hgmd_ht_path) if self.hgmd_ht_path else None
-        return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar, 'hgmd_data': hgmd}
+        return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar_data, 'hgmd_data': hgmd}
 
-    def annotate_globals(self, mt):
-        return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+    def annotate_globals(self, mt, clinvar_data):
+        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
                                  datasetType=self.dataset_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)
+        if clinvar_data:
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.version)
+        return mt
 
     def import_dataset(self):
         logger.info("Args:")
@@ -94,7 +97,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
-        # NB: OPEN QUESTION IS THIS OK TO RUN ON MITO AND SV PIPELINES?
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
@@ -104,18 +106,14 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)
-
-        # NB SHOULD WE SKIP THIS FOR MITO AND SV?
         mt = self.generate_callstats(mt)
-
         if self.RUN_VEP:
             mt = HailMatrixTableTask.run_vep(mt, self.genome_version, self.vep_runner,
                                              vep_config_json_path=self.vep_config_json_path)
 
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-
-        mt = self.annotate_globals(mt)
+        mt = self.annotate_globals(mt, kwargs.get("clinvar_data"))
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
@@ -204,15 +202,15 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
             # Only coding should be WES.
             if sample_type != 'WES':
                 raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as {} but appears to be '
-                    'WGS because it contains many common coding variants'.format(sample_type)
+                    'Sample type validation error: dataset sample-type is specified as WGS but appears to be '
+                    'WES because it contains many common coding variants'
                 )
         elif has_noncoding and has_coding:
             # Both should be WGS.
             if sample_type != 'WGS':
                 raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as {} but appears to be '
-                    'WES because it contains many common non-coding variants'.format(sample_type)
+                    'Sample type validation error: dataset sample-type is specified as WES but appears to be '
+                    'WGS because it contains many common non-coding variants'
                 )
         return True
 

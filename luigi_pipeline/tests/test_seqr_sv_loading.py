@@ -125,6 +125,8 @@ VCF_DATA = VCF_HEADER_META + ['\t'.join(row) for row in VCF_DATA_ROW]
 
 GLOBAL_FIELDS = ['sourceFilePath', 'genomeVersion', 'sampleType', 'datasetType', 'hail_version']
 
+DISABLED_INDEX_FIELDS = ["contig", "start", "xstart", "genotypes","end_locus", "docId", "algorithms", "bothsides_support", "cpx_intervals", "variantId"]
+
 VARIANT_MT_FIELDS = [
     'contig', 'sc', 'sf', 'sn', 'start', 'end', 'sv_callset_Het', 'sv_callset_Hom', 'gnomad_svs_ID', 'gnomad_svs_AF',
     'gnomad_svs_AC', 'gnomad_svs_AN', 'pos', 'filters', 'bothsides_support', 'algorithms', 'xpos', 'cpx_intervals',
@@ -134,9 +136,7 @@ VARIANT_MT_FIELDS = [
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
-GENOTYPES_MT_FIELDS = [
-    'genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2',
-]
+GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
@@ -271,10 +271,10 @@ class SeqrSVLoadingTest(unittest.TestCase):
         SeqrSVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
-        load_gencode_mock.assert_called_once_with(43, "")
+        load_gencode_mock.assert_called_once_with(42, "")
 
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None).get_disable_index_field()
-        self.assertCountEqual(disabled_index_fields, ["genotypes","end_locus", "docId"])
+        self.assertCountEqual(disabled_index_fields, DISABLED_INDEX_FIELDS)
 
         # Variants Assertions
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
@@ -295,7 +295,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         key_dropped_genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
         self.assertCountEqual([
             key for key in key_dropped_genotypes_mt._fields
-            if key not in global_fields
+            if key not in GLOBAL_FIELDS
         ], GENOTYPES_MT_FIELDS)
 
         # Now mimic the join in BaseMTToESOptimizedTask

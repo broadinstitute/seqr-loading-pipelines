@@ -1,12 +1,15 @@
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
-from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from lib.model.base_mt_schema import row_annotation, RowAnnotationOmit
+from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
 
 
 BOTHSIDES_SUPPORT = "BOTHSIDES_SUPPORT"
+GENE_SYMBOL = "gene_symbol"
+GENE_ID = "gene_id"
+MAJOR_CONSEQUENCE = "major_consequence"
 PASS = "PASS"
 
 # Used to filter mt.info fields.
@@ -25,16 +28,14 @@ def get_cpx_interval(x):
     return hl.struct(type=type_chr[0], chrom=chr_pos[0], start=hl.int32(pos[0]), end=hl.int32(pos[1]))
 
 
-class SeqrSVVariantSchema(BaseMTSchema):
+class SeqrSVVariantSchema(BaseVariantSchema):
 
     def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.gene_id_mapping = gene_id_mapping
+        self._gene_id_mapping = gene_id_mapping
 
-    @row_annotation()
-    def contig(self):
-        # 'contig': lambda rows: rows.locus.contig.replace('^chr', ''),
-        return variant_id.get_expr_for_contig(self.mt.locus)
+    def sv_types(self):
+        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)
 
     @row_annotation()
     def sc(self):
@@ -47,11 +48,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
     @row_annotation()
     def sn(self):
         return self.mt.info.AN
-
-    @row_annotation()
-    def start(self):
-        # 'start': lambda rows: rows.locus.position,
-        return variant_id.get_expr_for_start_pos(self.mt)
 
     @row_annotation()
     def end(self):
@@ -82,42 +78,27 @@ class SeqrSVVariantSchema(BaseMTSchema):
         return self.mt.info.gnomAD_V2_AN_AF
 
     @row_annotation()
-    def pos(self):
-        # 'start': lambda rows: rows.locus.position,
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation()
     def filters(self):
         filters = hl.array(self.mt.filters.filter(
             lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT)
         ))
-        return hl.if_else(
-            hl.len(filters) > 0,
-            filters,
-            hl.missing(hl.dtype('array<str>')),
-        )
+        return hl.or_missing(hl.len(filters) > 0, filters)
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def bothsides_support(self):
         return self.mt.filters.any(
             lambda x: x == BOTHSIDES_SUPPORT
         )
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def algorithms(self):
         return self.mt.info.ALGORITHMS
 
-    @row_annotation()
-    def xpos(self):
-        # 'xpos': lambda rows: get_xpos(rows.locus.contig, rows.locus.position),
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def cpx_intervals(self):
-        return hl.if_else(
+        return hl.or_missing(
             hl.is_defined(self.mt.info.CPX_INTERVALS),
             self.mt.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
-            hl.missing(hl.dtype(INTERVAL_TYPE))
         )
 
     @row_annotation(disable_index=True)
@@ -130,7 +111,6 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(name='sortedTranscriptConsequences')
     def sorted_transcript_consequences(self):
-        # NB: this function is nuts plz help.
         conseq_predicted_gene_cols = [
             gene_col for gene_col in self.mt.info if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
             and gene_col not in NON_GENE_PREDICTIONS
@@ -138,24 +118,17 @@ class SeqrSVVariantSchema(BaseMTSchema):
         mapped_genes = [
             self.mt.info[gene_col].map(
                 lambda gene: hl.struct(**{
-                    'gene_symbol': gene,
-                    'gene_id': self.gene_id_mapping.get(gene, hl.missing(hl.tstr)),
-                    'major_consequence': gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
+                    GENE_SYMBOL: gene,
+                    GENE_ID: self._gene_id_mapping.get(gene, hl.missing(hl.tstr)),
+                    MAJOR_CONSEQUENCE: gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)
                 })
             )
             for gene_col in conseq_predicted_gene_cols
         ]
-        return hl.flatmap(
-            lambda x: x, 
-            hl.filter(
-                lambda x: hl.is_defined(x),
-                mapped_genes,
-            )
-        )
-
-    @row_annotation(fn_require=xpos)
-    def xstart(self):
-        return self.mt.xpos
+        return hl.filter(
+            hl.is_defined,
+            mapped_genes
+        ).flatmap(lambda x: x)
 
     @row_annotation(fn_require=end_locus)
     def xstop(self):
@@ -165,47 +138,44 @@ class SeqrSVVariantSchema(BaseMTSchema):
 
     @row_annotation(fn_require=end_locus)
     def rg37_locus_end(self):
-        return hl.if_else(
+        return hl.or_missing(
             self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
             hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
-            hl.missing('locus<GRCh37>')
         )
 
     @row_annotation(name='svType')
     def sv_type(self):
-        return self.mt.alleles[1].replace('[<>]', '').split(':', 2)[0]
+        return self.sv_types()[0]
 
     @row_annotation(name='transcriptConsequenceTerms', fn_require=[
         sorted_transcript_consequences, sv_type,
     ])
     def transcript_consequence_terms(self):
-        return self.mt.sortedTranscriptConsequences.map(lambda x: x.major_consequence).extend([self.mt.svType])
+        return self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType])
 
     @row_annotation()
     def sv_type_detail(self):
-        sv_types = self.mt.alleles[1].replace('[<>]', '').split(':', 2)
+        sv_types = self.sv_types()
         return hl.if_else(
             sv_types[0] == 'CPX',
             self.mt.info.CPX_TYPE,
-            hl.if_else(
+            hl.or_missing(
                 (sv_types[0] == 'INS') & (hl.len(sv_types) > 1),
                 sv_types[1],
-                hl.missing('str')
             )
         )
 
     @row_annotation(name='geneIds', fn_require=sorted_transcript_consequences)
     def gene_ids(self):
         return hl.set(
-            hl.map(
-                lambda x: x.gene_id,
-                self.mt.sortedTranscriptConsequences.filter(
-                    lambda x: x.major_consequence != 'NEAREST_TSS'
-                )
+            self.mt.sortedTranscriptConsequences.filter(
+                lambda x: x[MAJOR_CONSEQUENCE] != 'NEAREST_TSS'
+            ).map(
+                lambda x: x[GENE_ID]
             )
         )
 
-    @row_annotation(name='variantId')
+    @row_annotation(name='variantId', disable_index=True)
     def variant_id(self):
         return self.mt.rsid
 
@@ -229,8 +199,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
     def _genotype_filter_samples(self, filter):
         # NB: override this function here to mimic the existing null handling behavior.
         samples = hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
-        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('set<str>')))
-            
+        return hl.or_missing(hl.len(samples) > 0, samples)            
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
