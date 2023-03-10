@@ -6,6 +6,9 @@ from hail_scripts.computed_fields import vep
 
 class BaseVariantSchema(BaseMTSchema):
 
+    def __init__(self, mt, *args, **kwargs):
+        super().__init__(mt)
+
     @row_annotation(disable_index=True)
     def contig(self):
         return variant_id.get_expr_for_contig(self.mt.locus)

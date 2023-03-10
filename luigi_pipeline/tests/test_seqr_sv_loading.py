@@ -270,7 +270,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         worker.run()
         load_gencode_mock.assert_called_once_with(42, "")
 
-        disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None).get_disable_index_field()
+        disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(None, ref_data=None, interval_ref_data=None, clinvar_data=None).get_disable_index_field()
         self.assertCountEqual(disabled_index_fields, DISABLED_INDEX_FIELDS)
 
         # Variants Assertions
