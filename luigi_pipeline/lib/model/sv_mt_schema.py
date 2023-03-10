@@ -193,7 +193,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'sample_id': self.mt.s,
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
-            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
+            'num_alt': self._num_alt(is_called)
         }
 
     # NB: override this function here to mimic the existing null handling behavior.
