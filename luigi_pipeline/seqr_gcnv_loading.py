@@ -13,6 +13,21 @@ logger = logging.getLogger(__name__)
 
 SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
 
+FIELD_TYPES = {
+    "start": hl.tint32, 
+    "end": hl.tint32, 
+    "CN": hl.tint32,
+    "QS": hl.tint32, 
+    "defragmented": hl.tbool, 
+    "vaf": hl.tfloat64, 
+    "vac": hl.tint32,
+    "genes_any_overlap_totalExons": hl.tint32,
+    "genes_strict_overlap_totalExons": hl.tint32,
+    "no_ovl": hl.tbool, 
+    "strvctvre_score": hl.tfloat64,
+    "is_latest": hl.tbool
+}
+
 class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     # Overrided inherited required params.
     reference_ht_path = ""
@@ -36,7 +51,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         return mt
 
     def import_dataset(self):
-        ht = hl.import_table(self.source_paths[0], impute=True, min_partitions=500)
+        ht = hl.import_table(self.source_paths[0], types=FIELD_TYPES, min_partitions=500)
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
