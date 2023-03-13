@@ -116,7 +116,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
             .filter(lambda x: x.contains(MAJOR_CONSEQUENCE))
             .map(lambda x: x[MAJOR_CONSEQUENCE])
         ))
-        return default_consequences.extend(gene_major_consequences)
+        return gene_major_consequences.extend(default_consequences)
 
     @row_annotation(fn_require=start)
     def pos(self):
