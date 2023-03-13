@@ -15,24 +15,21 @@ def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
     """
-    return hl.set(
-        gene_col.split(',')
-        .filter(
-            lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene)
-        )
-        .map(
-            lambda gene: gene.split(r'\.')[0]
-        )
+    return gene_col.split(',').filter(
+        lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene)
+    ).map(
+        lambda gene: gene.split(r'\.')[0]
     )
 
 def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpression:
     """
     aggregate with the set union operator
     """
-    return hl.fold(
-        lambda i, j: i | j,
-        hl.empty_set(hl.tstr),
-        hl.agg.collect(gene_col),
+
+    return hl.set(
+        hl.flatten(
+            hl.agg.collect(gene_col)
+        )
     )
 
 class SeqrGCNVVariantSchema(BaseMTSchema):
