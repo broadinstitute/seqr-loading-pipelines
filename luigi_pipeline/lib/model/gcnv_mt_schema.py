@@ -200,7 +200,6 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 'new_call': False,
             }
 
-
         parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
         start_and_end_equal = (self.mt.sample_start == self.mt.start) & (self.mt.sample_end == self.mt.end)
         return {
