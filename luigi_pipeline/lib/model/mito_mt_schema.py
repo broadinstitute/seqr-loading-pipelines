@@ -79,7 +79,7 @@ class SeqrMitoGenotypesSchema(SeqrGenotypesSchema):
     def samples_hl(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for heteroplasmy level.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+            f'{i}_to_{i + step}': self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.hl*100) >= i) & ((g.hl*100) < i+step))
             )
             for i in range(start, end, step)
