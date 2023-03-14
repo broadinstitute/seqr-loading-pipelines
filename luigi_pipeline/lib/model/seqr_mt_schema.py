@@ -344,10 +344,12 @@ class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
         # Converts a mt to the row equivalent.
         if isinstance(ds, hl.MatrixTable):
             ds = ds.rows()
+        if 'vep' in ds.row:
+            ds = ds.drop('vep')
+        key = ds.key
         # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = ds.drop('vep').flatten()
+        table = ds.flatten()
         # When flattening, the table is unkeyed, which causes problems because our row keys should not
         # be normal fields. We can also re-key, but I believe this is computational?
-        # PS: locus and alleles used to be the only possible row keys... however we're extending to drop any row key!
-        row_key = table.row_key
-        return table.drop(*row_key)
+        # PS: row key is often locus and allele, but does not have to be
+        return table.drop(*key)

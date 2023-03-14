@@ -3,8 +3,8 @@ import re
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
-from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from lib.model.base_mt_schema import row_annotation
+from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
 
@@ -15,31 +15,28 @@ def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
     """
-    return hl.set(
-        gene_col.split(',')
-        .filter(
-            lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene)
-        )
-        .map(
-            lambda gene: gene.split(r'\.')[0]
-        )
+    return gene_col.split(',').filter(
+        lambda gene: ~hl.set({'None', 'null', 'NA', ''}).contains(gene)
+    ).map(
+        lambda gene: gene.split(r'\.')[0]
     )
 
 def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpression:
     """
     aggregate with the set union operator
     """
-    return hl.fold(
-        lambda i, j: i | j,
-        hl.empty_set(hl.tstr),
-        hl.agg.collect(gene_col),
+
+    return hl.set(
+        hl.flatten(
+            hl.agg.collect(gene_col)
+        )
     )
 
-class SeqrGCNVVariantSchema(BaseMTSchema):
+class SeqrGCNVVariantSchema(BaseVariantSchema):
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def contig(self):
-        return self.mt.chr.replace("^chr", "")
+        return variant_id.replace_chr_prefix(self.mt.chr)
 
     @row_annotation()
     def sc(self):
@@ -68,7 +65,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def variant_id(self):
         return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def start(self):
         return hl.agg.min(self.mt.sample_start)
 
@@ -128,7 +125,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
             hl.locus(self.mt.contig, self.mt.pos)
         )
 
-    @row_annotation(fn_require=xpos)
+    @row_annotation(disable_index=True, fn_require=xpos)
     def xstart(self):
         return self.mt.xpos
 
