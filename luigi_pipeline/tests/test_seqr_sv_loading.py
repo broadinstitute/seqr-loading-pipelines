@@ -126,7 +126,7 @@ VCF_DATA = VCF_HEADER_META + ['\t'.join(row) for row in VCF_DATA_ROW]
 
 GLOBAL_FIELDS = ['sourceFilePath', 'genomeVersion', 'sampleType', 'datasetType', 'hail_version']
 
-DISABLED_INDEX_FIELDS = ["contig", "start", "xstart", "genotypes","end_locus", "docId", "algorithms", "bothsides_support", "cpx_intervals", "variantId"]
+DISABLED_INDEX_FIELDS = ["contig", "start", "xstart", "genotypes", "end_locus", "docId", "algorithms", "bothsides_support", "cpx_intervals", "variantId"]
 
 VARIANT_MT_FIELDS = [
     'contig', 'sc', 'sf', 'sn', 'start', 'end', 'sv_callset_Het', 'sv_callset_Hom', 'gnomad_svs_ID', 'gnomad_svs_AF',
