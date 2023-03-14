@@ -7,8 +7,9 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
+from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 from lib.model.gcnv_mt_schema import parse_genes, hl_agg_collect_set_union
+from seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
 
 NEW_JOINT_CALLED_CALLSET = 'tests/data/gcnv_new_joint_called_callset.tsv'
 NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
@@ -310,7 +311,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         shutil.rmtree(self._temp_dir.name)
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
-    def test_run_new_joint_tsv_task(self, mock_datetime):
+    @mock.patch('lib.hail_tasks.HailElasticsearchClient')
+    def test_run_new_joint_tsv_task(self, mock_elasticsearch_client, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
@@ -323,8 +325,11 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=True,
         )
+        export_task = SeqrGCNVMTToESTask()
+        export_task._es.reset_mock()
         SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
-        worker.add(genotype_task)
+        SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
+        worker.add(export_task)
         worker.run()
 
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
@@ -338,17 +343,16 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         self.assertEqual(genotypes_mt.count(), (3, 4))
 
-        # Now mimic the join in BaseMTToESOptimizedTask
-        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
-        row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("variant_name", "svtype")
-        data = row_ht.collect()
-        for i, row in enumerate(data):
-            data[i] = prune_empties(row)
-        self.assertListEqual(data, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
-        
+        export_task._es.export_table_to_elasticsearch.assert_called_once()
+        args, kwargs = export_task._es.export_table_to_elasticsearch.call_args
+        row_ht = args[0].collect()
+        for i, row in enumerate(row_ht):
+            row_ht[i] = prune_empties(row)
+        self.assertListEqual(row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
-    def test_run_merged_tsv_task(self, mock_datetime):
+    @mock.patch('lib.hail_tasks.HailElasticsearchClient')
+    def test_run_merged_tsv_task(self, mock_elasticsearch_client, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
@@ -361,8 +365,11 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=False,
         )
+        export_task = SeqrGCNVMTToESTask()
+        export_task._es.reset_mock()
         SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
-        worker.add(genotype_task)
+        SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
+        worker.add(export_task)
         worker.run()
 
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
@@ -375,10 +382,9 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         self.assertEqual(genotypes_mt.count(), (2, 3))
 
-        # Now mimic the join in BaseMTToESOptimizedTask
-        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
-        row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("variant_name", "svtype")
-        data = row_ht.collect()
-        for i, row in enumerate(data):
-            data[i] = prune_empties(row)
-        self.assertListEqual(data, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        export_task._es.export_table_to_elasticsearch.assert_called_once()
+        args, kwargs = export_task._es.export_table_to_elasticsearch.call_args
+        row_ht = args[0].collect()
+        for i, row in enumerate(row_ht):
+            row_ht[i] = prune_empties(row)
+        self.assertListEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)

@@ -3,8 +3,8 @@ import re
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
-from lib.model.seqr_mt_schema import SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from lib.model.base_mt_schema import row_annotation
+from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 from hail_scripts.computed_fields import variant_id
 
@@ -32,9 +32,9 @@ def hl_agg_collect_set_union(gene_col: hl.expr.SetExpression) -> hl.expr.SetExpr
         )
     )
 
-class SeqrGCNVVariantSchema(BaseMTSchema):
+class SeqrGCNVVariantSchema(BaseVariantSchema):
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def contig(self):
         return variant_id.replace_chr_prefix(self.mt.chr)
 
@@ -65,7 +65,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
     def variant_id(self):
         return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 
-    @row_annotation()
+    @row_annotation(disable_index=True)
     def start(self):
         return hl.agg.min(self.mt.sample_start)
 
@@ -123,7 +123,7 @@ class SeqrGCNVVariantSchema(BaseMTSchema):
             hl.locus(self.mt.contig, self.mt.pos)
         )
 
-    @row_annotation(fn_require=xpos)
+    @row_annotation(disable_index=True, fn_require=xpos)
     def xstart(self):
         return self.mt.xpos
 
