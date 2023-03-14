@@ -265,6 +265,8 @@ MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     hl.Struct(**x, **y) for (x, y) in zip(MERGED_EXPECTED_VARIANT_DATA, MERGED_EXPECTED_GENOTYPES_DATA)
 ]
 
+EXPECTED_DISABLED_INDEX_FIELDS = ['contig', 'genotypes', 'start', 'xstart', 'variantId']
+
 def prune_empties(data):
     if isinstance(data, list):
         data = [prune_empties(x) for x in data if x is not None]
@@ -371,6 +373,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         row_ht = prune_empties(row_ht)
         self.assertListEqual(row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        self.assertListEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     @mock.patch('lib.hail_tasks.HailElasticsearchClient')
@@ -409,3 +412,4 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         row_ht = prune_empties(row_ht)
         self.assertListEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        self.assertListEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)

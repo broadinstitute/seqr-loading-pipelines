@@ -61,7 +61,7 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
     def strvctvre(self):
        return self.mt.strvctvre_score
 
-    @row_annotation(name='variantId')
+    @row_annotation(name='variantId', disable_index=True)
     def variant_id(self):
         return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 
