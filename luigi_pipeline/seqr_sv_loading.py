@@ -4,9 +4,9 @@ import sys
 import luigi
 import hail as hl
 
-from lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
+from hail_scripts.utils.mapping_gene_ids import load_gencode
+from luigi_pipeline.lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
 
 logger = logging.getLogger(__name__)
