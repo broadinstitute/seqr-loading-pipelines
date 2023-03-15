@@ -1,5 +1,5 @@
 import unittest
-import mock
+from unittest import mock
 
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
