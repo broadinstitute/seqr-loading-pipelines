@@ -1,9 +1,11 @@
+from contextlib import contextmanager
 import logging
 import os
 import requests
 import tempfile
-from contextlib import contextmanager
+
 import hail as hl
+from google.cloud import storage
 
 logger = logging.getLogger(__name__)
 
