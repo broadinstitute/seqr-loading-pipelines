@@ -173,7 +173,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_cn(self, start=0, end=4, step=1):
         return hl.struct(**{
-            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: g.cn == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.cn == i)
             for i in range(start, end, step)
         }, **{
             "samples_cn_gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
