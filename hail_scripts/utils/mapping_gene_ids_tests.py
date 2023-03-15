@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
+from hail_scripts.utils.mapping_gene_ids import load_gencode
 
 DOWNLOAD_PATH = 'test/path'
 GS_DOWNLOAD_PATH ='gs://test-bucket/test/path'
@@ -19,13 +19,13 @@ GENE_ID_MAPPING = {"DDX11L1": "ENSG00000223972", "OR4F16": "ENSG00000284662", "A
 
 class LoadGencodeTestCase(unittest.TestCase):
 
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.path_exists')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.open')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip.open')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.file_writer')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.download_file')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.logger')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.path_exists')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.pickle')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.open')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.gzip.open')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.file_writer')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.download_file')
     def test_load_gencode_local(self, mock_download_file, mock_file_writer, mock_gopen, mock_open, mock_pickle,
                                 mock_path_exists, mock_logger):
         # test using saved file
@@ -109,12 +109,12 @@ class LoadGencodeTestCase(unittest.TestCase):
             _ = load_gencode(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
 
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.gzip')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.logger')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.path_exists')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.pickle')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.stream_gs_file')
-    @mock.patch('sv_pipeline.genome.utils.mapping_gene_ids.file_writer')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.gzip')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.logger')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.path_exists')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.pickle')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.stream_gs_file')
+    @mock.patch('hail_scripts.utils.mapping_gene_ids.file_writer')
     def test_load_gencode_using_gs(self, mock_file_writer, mock_stream_gs_file, mock_pickle, mock_path_exists,
                                    mock_logger, mock_gzip):
 

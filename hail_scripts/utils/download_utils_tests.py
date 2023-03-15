@@ -2,7 +2,7 @@ import unittest
 from unittest import mock
 import responses
 
-from sv_pipeline.genome.utils.download_utils import download_file, file_writer
+from hail_scripts.utils.download_utils import download_file, file_writer
 
 DEFAULT_TEST_DIR = 'default_test/dir'
 TEST_DIR = 'test/dir'
@@ -17,13 +17,13 @@ GZ_DATA = 'test data\nanother line\n'.encode()
 class DownloadUtilsTest(unittest.TestCase):
 
     @responses.activate
-    @mock.patch('sv_pipeline.genome.utils.download_utils.DEFAULT_TO_DIR', DEFAULT_TEST_DIR)
-    @mock.patch('sv_pipeline.genome.utils.download_utils.logger')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.os.path.isfile')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.os.path.getsize')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.open')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.tempfile.gettempdir')
-    @mock.patch('sv_pipeline.genome.utils.download_utils.parse_gs_path_to_bucket')
+    @mock.patch('hail_scripts.utils.download_utils.DEFAULT_TO_DIR', DEFAULT_TEST_DIR)
+    @mock.patch('hail_scripts.utils.download_utils.logger')
+    @mock.patch('hail_scripts.utils.download_utils.os.path.isfile')
+    @mock.patch('hail_scripts.utils.download_utils.os.path.getsize')
+    @mock.patch('hail_scripts.utils.download_utils.open')
+    @mock.patch('hail_scripts.utils.download_utils.tempfile.gettempdir')
+    @mock.patch('hail_scripts.utils.download_utils.parse_gs_path_to_bucket')
     def test_download_file(self, mock_get_bucket, mock_gettempdir, mock_open, mock_getsize, mock_isfile,
                            mock_logger):
         responses.add(responses.HEAD, GZ_DATA_URL, headers={"Content-Length": "1024"}, status=200)

@@ -3,7 +3,7 @@ import logging
 import os
 import pickle
 
-from sv_pipeline.genome.utils.download_utils import download_file, path_exists, is_gs_path, file_writer, stream_gs_file
+from hail_scripts.utils.download_utils import download_file, path_exists, is_gs_path, file_writer, stream_gs_file
 
 GENOME_VERSION_GRCh37 = "37"
 GENOME_VERSION_GRCh38 = "38"
