@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import hail as hl
+
 from hail_scripts.utils import hail_utils
 
 

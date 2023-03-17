@@ -1,3 +1,5 @@
 [tool.isort]
 profile = "black"
 include_trailing_comma = "True"
+known_first_party = "hail_scripts"
+known_local_folder = "lib,luigi_pipeline,seqr_loading,tests"
