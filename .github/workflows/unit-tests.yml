@@ -29,7 +29,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r luigi_pipeline/requirements.txt
           pip install -r luigi_pipeline/requirements-dev.txt
       - name: Check Import Sort
         run: isort --diff --check luigi_pipeline
