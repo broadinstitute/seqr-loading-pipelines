@@ -1,8 +1,7 @@
 import logging
-
-from typing import List
-from inspect import getmembers
 from collections import defaultdict
+from inspect import getmembers
+from typing import List
 
 logger = logging.getLogger(__name__)
 
