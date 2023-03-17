@@ -1,11 +1,11 @@
 """
 Tasks for Hail.
 """
+from collections import Counter
 import json
 import logging
 import math
 import os
-from collections import Counter
 
 import hail as hl
 import luigi
@@ -14,8 +14,8 @@ from luigi.parameter import ParameterVisibility
 
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
-import lib.hail_vep_runners as vep_runners
 from lib.global_config import GlobalConfig
+import lib.hail_vep_runners as vep_runners
 
 logger = logging.getLogger(__name__)
 

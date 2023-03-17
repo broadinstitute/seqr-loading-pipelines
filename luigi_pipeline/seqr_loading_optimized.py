@@ -1,6 +1,6 @@
+from collections import defaultdict
 import logging
 import sys
-from collections import defaultdict
 
 import hail as hl
 import luigi

@@ -4,9 +4,9 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+from elasticsearch.client.indices import IndicesClient
 import hail as hl
 import luigi
-from elasticsearch.client.indices import IndicesClient
 
 from lib.global_config import GlobalConfig
 from lib.hail_tasks import (
