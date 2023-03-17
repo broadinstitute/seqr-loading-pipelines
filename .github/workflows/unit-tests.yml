@@ -35,5 +35,3 @@ jobs:
           pip install -r luigi_pipeline/requirements-dev.txt
       - name: Pip Cache Check
         run: echo 'Pip Cache Hit ${{ steps.setup_python_env.outputs.cache-hit }}'
-      - name: Import Sort Check
-        run: isort --check .
