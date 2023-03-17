@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from seqr_loading import SeqrVCFToMTTask, SeqrValidationError
-from tests.data.sample_vep import VEP_DATA, DERIVED_DATA
+from seqr_loading import SeqrValidationError, SeqrVCFToMTTask
+from tests.data.sample_vep import DERIVED_DATA, VEP_DATA
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
 
