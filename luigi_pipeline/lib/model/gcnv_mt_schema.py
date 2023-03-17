@@ -164,7 +164,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_qs(self, start=0, end=1000, step=10):
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
+            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
             for i in range(start, end, step)
         }, **{
             "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs >= 1000)
@@ -173,7 +173,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_cn(self, start=0, end=4, step=1):
         return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.cn == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.cn == i)
             for i in range(start, end, step)
         }, **{
             "samples_cn_gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)

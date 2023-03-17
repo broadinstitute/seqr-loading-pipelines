@@ -278,7 +278,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     @row_annotation(fn_require=genotypes)
     def samples_num_alt(self, start=1, end=3, step=1):
         return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.num_alt == i)
             for i in range(start, end, step)
         })
 
@@ -286,7 +286,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_gq(self, start=0, end=95, step=5):
         # struct of x_to_y to a set of samples in range of x and y for gq.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
+            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
             for i in range(start, end, step)
         })
 
@@ -294,7 +294,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for ab.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+            f'{i}_to_{i + step}': self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.ab*100) >= i) & ((g.ab*100) < i+step))
             )
             for i in range(start, end, step)
