@@ -96,4 +96,3 @@ def process_jinja_template(input_base_dir, relative_file_path, template_variable
 
     #os.chmod(output_file_path, 0x777)
     logger.info("-- wrote out %s" % output_file_path)
-

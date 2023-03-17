@@ -173,4 +173,3 @@ class TestBaseModel(unittest.TestCase):
 
         count_dict = self._count_dicts(test_schema)
         self.assertEqual(count_dict, {'a': 1, 'b': 1, 'c_1': 1, 'info': 1})
-

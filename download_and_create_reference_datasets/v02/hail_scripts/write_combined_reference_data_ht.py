@@ -11,7 +11,7 @@ OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
 '''
-Configurations of dataset to combine. 
+Configurations of dataset to combine.
 Format:
 '<Name of dataset>': {
     '<Reference genome version>': {
@@ -24,7 +24,7 @@ Format:
     },
 '''
 CONFIG = {
-    '1kg': { #tgp 
+    '1kg': { #tgp
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
             'select': {'AC': 'info.AC#', 'AF': 'info.AF#', 'AN': 'info.AN', 'POPMAX_AF': 'POPMAX_AF'},
@@ -260,7 +260,7 @@ def custom_gnomad_select_v2(ht):
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF, ht.freq[global_idx].AF)
-    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95 
+    selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
     selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['gnomad_male']].AC)
     return selects

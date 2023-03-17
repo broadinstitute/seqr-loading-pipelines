@@ -133,4 +133,3 @@ if __name__ == "__main__":
     settings = _get_es_node_settings(args.k8s_cluster_name, args.num_nodes)
 
     _create_es_nodes(settings)
-

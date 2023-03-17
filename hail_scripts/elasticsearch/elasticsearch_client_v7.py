@@ -133,7 +133,7 @@ class ElasticsearchClient:
 
     def wait_for_shard_transfer(self, index_name, num_attempts=1000):
         """
-        Wait for shards to move off of the loading nodes before connecting to seqr 
+        Wait for shards to move off of the loading nodes before connecting to seqr
         """
         for i in range(num_attempts):
             shards = self.es.cat.shards(index=index_name)

@@ -221,5 +221,5 @@ class BaseMTSchema:
         for field in all_fields:
             if field.disable_index == True:
                 disabled_indices += [field.name]
-  
+
         return disabled_indices

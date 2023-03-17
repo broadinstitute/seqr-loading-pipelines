@@ -30,12 +30,12 @@ $ python3 seqr_loading.py SeqrMTToESTask --local-scheduler \
     --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
     --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
     --es-host 100.15.0.1 \
-    --es-index new-es-index-name \ 
+    --es-index new-es-index-name \
     --es-index-min-num-shards 3
 ```
 
 Run `PYTHONPATH=.. python3 seqr_loading.py SeqrMTToESTask --help` for a description of these args.
-Optionally, any of these parameters can also be set via config file instead of on the command line. 
+Optionally, any of these parameters can also be set via config file instead of on the command line.
 `configs/luigi.cfg` provides an example. The `LUIGI_CONFIG_PATH` environment variable can be used to specify the config file path:
 ```
 LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg
@@ -44,8 +44,8 @@ LUIGI_CONFIG_PATH=configs/seqr-loading-local.cfg
 ## Running on GCE Dataproc
 ### Create a cluster
 
-Installing [hail](http://hail.is) also installs the hailctl utility which makes it easy to start up Dataproc clusters 
-and submitting jobs to them. 
+Installing [hail](http://hail.is) also installs the hailctl utility which makes it easy to start up Dataproc clusters
+and submitting jobs to them.
 ```
 $ hailctl dataproc start \
     --pkgs luigi,google-api-python-client \
@@ -58,7 +58,7 @@ $ hailctl dataproc start \
 
 ### Run
 
-This command is identical to the one under Running Locally, except the script is submitted to Dataproc. 
+This command is identical to the one under Running Locally, except the script is submitted to Dataproc.
 Before running, cd to the `hail_elasticsearch_pipelines/luigi_pipeline` directory.
 
 ```
@@ -72,6 +72,6 @@ $ hailctl dataproc submit seqr-loading-cluster \
        --reference-ht-path  gs://seqr-reference-data/GRCh37/all_reference_data/combined_reference_data_grch37.ht \
        --clinvar-ht-path gs://seqr-reference-data/GRCh37/clinvar/clinvar.GRCh37.ht \
        --es-host 100.15.0.1 \
-       --es-index new-es-index-name \ 
+       --es-index new-es-index-name \
        --es-index-min-num-shards 3
    ```

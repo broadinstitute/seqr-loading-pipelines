@@ -33,18 +33,18 @@ def check_if_path_exists(path, label=""):
 
 def contig_check(mt, standard_contigs, threshold):
     check_result_dict = {}
-    
-    # check chromosomes that are not in the VCF  
+
+    # check chromosomes that are not in the VCF
     row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
     contigs_set = set(row_dict.keys())
-    
+
     all_missing_contigs = standard_contigs - contigs_set
     missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
 
     if missing_contigs_without_optional:
         check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
         logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
-                       
+
     for k,v in row_dict.items():
         if k not in standard_contigs:
             check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
@@ -52,7 +52,7 @@ def contig_check(mt, standard_contigs, threshold):
         elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
             check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
             logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
-                            
+
     return check_result_dict
 
 class SeqrValidationError(Exception):

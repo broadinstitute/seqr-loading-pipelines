@@ -77,7 +77,7 @@ class BaseMTToESOptimizedTask(HailElasticSearchTask):
         disabled_fields = self.VariantsAndGenotypesSchema(None, ref_data=defaultdict(dict), interval_ref_data=None, clinvar_data=None).get_disable_index_field()
 
         self.export_table_to_elasticsearch(table=row_ht, num_shards=es_shards, disabled_fields=disabled_fields)
-        
+
         self.cleanup(es_shards)
 
 

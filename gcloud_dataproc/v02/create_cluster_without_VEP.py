@@ -43,4 +43,3 @@ if __name__ == '__main__':
     create_cluster(
         cluster=args.cluster, machine_type=args.machine_type, max_idle=args.max_idle, num_workers=args.num_workers,
         num_preemptible_workers=args.num_preemptible_workers, region=args.region)
-

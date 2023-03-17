@@ -9,7 +9,7 @@ from gcloud_dataproc.v02.create_cluster_without_VEP import create_cluster
 from gcloud_dataproc.submit import submit
 
 """
-Example command: 
+Example command:
 
 python sv_pipeline/genome/run_dataproc_load_data.py --input=gs://seqr-datasets-gcnv/GRCh38/RDG_WGS_Broad_Internal/v1/phase2.svid.vcf.bgz \
  --strvctvre=gs://seqr-datasets-gcnv/GRCh38/RDG_WGS_Broad_Internal/v1/phase2.STRVCTRE.vcf.bgz --ignore-missing-samples \
