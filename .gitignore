@@ -1,7 +1,6 @@
 # Repo-specific additions
 .idea*
 *.iml
-*.log
 *.DS_Store
 temp
 *.vcf.gz
