@@ -19,7 +19,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["lib"]
+package-dir = {"" = "lib"}
 
 [tool.black]
 line-length = 88
