@@ -7,7 +7,6 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-added-large-files
     -   id: check-merge-conflict
-repos:
 -   repo: https://github.com/jazzband/pip-tools
     rev: 6.12.3
     hooks:
