@@ -12,10 +12,10 @@ repos:
     rev: 6.12.3
     hooks:
     -   id: pip-compile
-        name: luigi_project/requirements.txt
-        files: luigi_project/pyproject.toml
-        args: [--output-file=requirements.txt, pyproject.toml]
+        name: luigi_pipeline/requirements.txt
+        files: luigi_pipeline/pyproject.toml
+        args: [--output-file=luigi_pipeline/requirements.txt, luigi_pipeline/pyproject.toml]
     -   id: pip-compile
-        name: luigi_project/requirements-dev.txt
-        files: luigi_project/pyproject.toml
-        args: [--extra=dev, --output-file=requirements-dev.txt, pyproject.toml]
+        name: luigi_pipeline/requirements-dev.txt
+        files: luigi_pipeline/pyproject.toml
+        args: [--extra=dev, --output-file=luigi_pipeline/requirements-dev.txt, luigi_pipeline/pyproject.toml]
