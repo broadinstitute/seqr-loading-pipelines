@@ -7,3 +7,15 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-added-large-files
     -   id: check-merge-conflict
+repos:
+-   repo: https://github.com/jazzband/pip-tools
+    rev: 6.12.3
+    hooks:
+    -   id: pip-compile
+        name: luigi_project/requirements.txt
+        files: luigi_project/pyproject.toml
+        args: [--output-file=requirements.txt, pyproject.toml]
+    -   id: pip-compile
+        name: luigi_project/requirements-dev.txt
+        files: luigi_project/pyproject.toml
+        args: [--extra=dev, --output-file=requirements-dev.txt, pyproject.toml]
