@@ -8,10 +8,10 @@ import luigi
 import pkg_resources
 
 from lib.hail_tasks import (
-    GCSorLocalTarget,
-    HailElasticSearchTask,
-    HailMatrixTableTask,
-    MatrixTableSampleSetError,
+    GCSorLocalTarget, 
+    HailElasticSearchTask, 
+    HailMatrixTableTask, 
+    MatrixTableSampleSetError, 
 )
 from lib.model.seqr_mt_schema import (
     SeqrGenotypesSchema,
