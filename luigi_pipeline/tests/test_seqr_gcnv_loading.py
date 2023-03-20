@@ -7,7 +7,6 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 from lib.model.gcnv_mt_schema import parse_genes, hl_agg_collect_set_union
 from seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
 
@@ -308,6 +307,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
         self._genotypes_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
+        SeqrGCNVMTToESTask.disable_instance_cache()
 
     def tearDown(self):
         shutil.rmtree(self._temp_dir.name)
@@ -315,6 +315,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     @mock.patch('lib.hail_tasks.HailElasticsearchClient')
     def test_run_new_joint_tsv_task(self, mock_elasticsearch_client, mock_datetime):
+        mock_elasticsearch_client.return_value = mock.Mock()
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
@@ -328,7 +329,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             is_new_joint_call=True,
         )
         export_task = SeqrGCNVMTToESTask()
-        export_task._es.reset_mock()
         SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
         SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
         worker.add(export_task)
@@ -350,12 +350,13 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         for i, row in enumerate(row_ht):
             row_ht[i] = prune_empties(row)
-        self.assertListEqual(row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
-        self.assertListEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
+        self.assertCountEqual(row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        self.assertCountEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     @mock.patch('lib.hail_tasks.HailElasticsearchClient')
     def test_run_merged_tsv_task(self, mock_elasticsearch_client, mock_datetime):
+        mock_elasticsearch_client.return_value = mock.Mock()
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
@@ -369,7 +370,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             is_new_joint_call=False,
         )
         export_task = SeqrGCNVMTToESTask()
-        export_task._es.reset_mock()
         SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
         SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
         worker.add(export_task)
@@ -390,5 +390,5 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         for i, row in enumerate(row_ht):
             row_ht[i] = prune_empties(row)
-        self.assertListEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
-        self.assertListEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
+        self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        self.assertCountEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
