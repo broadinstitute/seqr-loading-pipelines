@@ -271,12 +271,12 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
         self.assertCountEqual(
             t1.collect(),
             [
-                hl.Struct(genes="AC118553.2,SLC35A3", gene_set=["AC118553", "SLC35A3"]),
-                hl.Struct(genes="AC118553.1,None", gene_set=["AC118553"]),
-                hl.Struct(genes="None", gene_set=[]),
-                hl.Struct(genes="SLC35A3.43", gene_set=["SLC35A3"]),
-                hl.Struct(genes="", gene_set=[]),
-                hl.Struct(genes="SLC35A4.43", gene_set=["SLC35A4"]),
+                hl.Struct(genes="AC118553.2,SLC35A3", gene_set=set(["AC118553", "SLC35A3"])),
+                hl.Struct(genes="AC118553.1,None", gene_set=set(["AC118553"])),
+                hl.Struct(genes="None", gene_set=set()),
+                hl.Struct(genes="SLC35A3.43", gene_set=set(["SLC35A3"])),
+                hl.Struct(genes="", gene_set=set()),
+                hl.Struct(genes="SLC35A4.43", gene_set=set(["SLC35A4"])),
             ],
         )
 
