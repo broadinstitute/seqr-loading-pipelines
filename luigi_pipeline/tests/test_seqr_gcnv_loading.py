@@ -315,7 +315,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     @mock.patch('lib.hail_tasks.HailElasticsearchClient')
     def test_run_new_joint_tsv_task(self, mock_elasticsearch_client, mock_datetime):
-        mock_elasticsearch_client.return_value = mock.Mock()
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
@@ -356,7 +355,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
     @mock.patch('lib.hail_tasks.HailElasticsearchClient')
     def test_run_merged_tsv_task(self, mock_elasticsearch_client, mock_datetime):
-        mock_elasticsearch_client.return_value = mock.Mock()
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
         variant_task = SeqrGCNVVariantMTTask(
