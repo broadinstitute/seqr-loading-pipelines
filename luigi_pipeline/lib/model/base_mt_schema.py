@@ -70,8 +70,7 @@ def row_annotation(name=None, disable_index=False, fn_require=None):
             for fn in fn_requirements:
                 if not isinstance(fn, RowAnnotation):
                     raise ValueError(
-                        'Schema: dependency %s is not a row annotation method.' 
-                        % (fn_require.__name__ if hasattr(fn_require, "__name__") else str(fn_require))
+                        f'Schema: dependency {(fn_require.__name__ if hasattr(fn_require, "__name__") else str(fn_require))} is not a row annotation method.' 
                     )
             requirements = [fn.name for fn in fn_requirements]
 
