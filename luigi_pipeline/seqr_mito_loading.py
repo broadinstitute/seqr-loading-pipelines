@@ -36,13 +36,8 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
-    ignore_missing_samples = luigi.BoolParameter(default=False, description='Allow missing samples in the callset.')
     VariantTask = SeqrMitoVariantMTTask
     GenotypesSchema = SeqrMitoGenotypesSchema
-
-    def subset_samples_and_variants(self, *args):
-        return super().subset_samples_and_variants(*args, ignore_missing_samples=self.ignore_missing_samples)
-
 
 class SeqrMitoMTToESTask(BaseMTToESOptimizedTask):
     VariantTask = SeqrMitoVariantMTTask

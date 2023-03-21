@@ -32,13 +32,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
     interval_ref_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None,
+    hgmd_ht_path = luigi.OptionalParameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
-                                         description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS',
+                                         description='VARIANTS or SV or MITO.')
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
@@ -76,11 +76,14 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar_data, 'hgmd_data': hgmd}
 
     def annotate_globals(self, mt, clinvar_data):
-        return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
-                                 hail_version=pkg_resources.get_distribution('hail').version,
-                                 clinvar_version=clinvar_data.version)
+                                 datasetType=self.dataset_type,
+                                 hail_version=pkg_resources.get_distribution('hail').version)
+        if clinvar_data:
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.version)
+        return mt
 
     def import_dataset(self):
         logger.info("Args:")
@@ -110,8 +113,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-
-        mt = self.annotate_globals(mt, kwargs["clinvar_data"])
+        mt = self.annotate_globals(mt, kwargs.get("clinvar_data"))
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
@@ -222,11 +224,11 @@ class SeqrMTToESTask(HailElasticSearchTask):
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
     interval_ref_ht_path = luigi.Parameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
+    hgmd_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")
