@@ -8,7 +8,6 @@ from hail_scripts.utils.mapping_gene_ids import load_gencode
 from luigi_pipeline.lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 
-
 logger = logging.getLogger(__name__)
 
 
