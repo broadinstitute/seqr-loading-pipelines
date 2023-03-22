@@ -1,11 +1,8 @@
 [project]
 name = "seqr_luigi"
 requires-python = ">=3.8"
-dynamic = ["version"]
+version = "1.9.9"
 
 [tool.setuptools]
 packages = ["luigi_pipeline.lib", "hail_scripts"]
 py-modules = ["luigi_pipeline.seqr_loading", "luigi_pipeline.seqr_loading_optimized"]
-
-[tool.setuptools.dynamic]
-version = {attr = "luigi_pipeline.__version__"}

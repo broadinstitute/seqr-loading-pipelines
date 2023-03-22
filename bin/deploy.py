@@ -3,35 +3,44 @@
 import argparse
 from build.__main__ import main as build
 import glob
+import itertools
 import os
-import pkg_resources
+import tempfile
 from typing import Iterator, Tuple
 
 from google.cloud import storage
+import tomli
 
-import luigi_pipeline
+PYSCRIPTS_ZIP = "pyscripts.zip"
 
-def find_pyfiles_for_upload(bin_directory: str, gcs_prefix: str) -> Iterator[Tuple[str, str]]:
-    local_files = glob.iglob(os.path.join(dags_directory, "**/*.py"), recursive=True)
+def parse_version() -> str:
+    with open('pyproject.toml', mode='rb') as config:
+        toml_file = tomli.load(config)
+        return toml_file['project']['version']
+
+def find_files_for_upload(directory: str, gcs_prefix: str, suffix: str, forced_remote_file_name: str = None) -> Iterator[Tuple[str, str]]:
+    local_files = glob.iglob(os.path.join(directory, suffix))
     for local_file in local_files:
-        if any((pattern in local_file for pattern in EXCLUDE_PATTERNS)):
-            continue
-        rel_path = os.path.relpath(local_file, dags_directory)
-        remote_file = os.path.join(gcs_prefix, rel_path)
+        rel_path = os.path.relpath(local_file, directory)
+        remote_file = os.path.join(gcs_prefix, forced_remote_file_name if forced_remote_file_name else rel_path)
         yield local_file, remote_file
 
 def main(
     bin_directory: str, gcs_project: str, gcs_bucket_name: str, gcs_prefix: str,
 ) -> None:
     # Build the module
-    # This is equivalent to `python -m build` from the command line
-    build('')    
+    # This is equivalent to `python -m build -o` from the command line
+    dist = tempfile.TemporaryDirectory()
+    build(['--outdir', f'{dist.name}'])
 
     storage_client = storage.Client(project=gcs_project)
     bucket = storage_client.bucket(gcs_bucket_name)
-    for local_file, remote_file in find_pyfiles_for_upload(bin_directory, gcs_prefix):
+    for local_file, remote_file in itertools.chain(
+        find_files_for_upload(bin_directory, gcs_prefix, "*.py"),
+        find_files_for_upload(dist.name, gcs_prefix, "*.whl", forced_remote_file_name=PYSCRIPTS_ZIP),
+    ):
         blob = bucket.blob(remote_file)
-        #blob.upload_from_filename(local_file)
+        blob.upload_from_filename(local_file)
         print(f"File {local_file} uploaded to {gcs_bucket_name}/{remote_file}.")
   
 if __name__ == "__main__":
@@ -52,13 +61,13 @@ if __name__ == "__main__":
         help="Name of the deployment bucket without the gs:// prefix",
     )
     parser.add_argument(
-    	"--gcs-prefix",
-    	default=f"releases/optimized-v{luigi_pipeline.__version__}",
-    	help="Prefix within the deployment bucket"
+        "--gcs-prefix",
+        default=f"releases/optimized-v{parse_version()}",
+        help="Prefix within the deployment bucket"
     )
     args = parser.parse_args()
     main(
-        args.bin_directory, 
+        args.bin_directory,
         args.gcs_project,
         args.gcs_bucket_name,
         args.gcs_prefix,

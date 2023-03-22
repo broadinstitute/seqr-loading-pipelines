@@ -1,1 +1,1 @@
-seqr_loading_optimized.py
+/Users/bblanken/Desktop/code/seqr-loading-pipelines/luigi_pipeline/seqr_loading_optimized.py
