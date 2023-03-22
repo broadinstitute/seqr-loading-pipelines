@@ -36,7 +36,7 @@ def main(
     storage_client = storage.Client(project=gcs_project)
     bucket = storage_client.bucket(gcs_bucket_name)
     for local_file, remote_file in itertools.chain(
-        find_files_for_upload(bin_directory, gcs_prefix, "*.py"),
+        find_files_for_upload(bin_directory, gcs_prefix, "seqr*.py"),
         find_files_for_upload(dist.name, gcs_prefix, "*.whl", forced_remote_file_name=PYSCRIPTS_ZIP),
     ):
         blob = bucket.blob(remote_file)
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--bin-directory",
-        default="luigi_pipeline/bin",
+        default="luigi_pipeline",
         help="Relative path to the source directory containing executable mains",
     )
     parser.add_argument(
