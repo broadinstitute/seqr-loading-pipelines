@@ -31,30 +31,6 @@ def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
         raise ValueError(f"{label} path not found: {path}")
 
-def contig_check(mt, standard_contigs, threshold):
-    check_result_dict = {}
-    
-    # check chromosomes that are not in the VCF  
-    row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
-    contigs_set = set(row_dict.keys())
-    
-    all_missing_contigs = standard_contigs - contigs_set
-    missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
-
-    if missing_contigs_without_optional:
-        check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
-        logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
-                       
-    for k,v in row_dict.items():
-        if k not in standard_contigs:
-            check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
-            logger.warning('Chromosome %s is unexpected.', k)
-        elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
-            check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
-            logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
-                            
-    return check_result_dict
-
 class SeqrValidationError(Exception):
     pass
 
@@ -65,13 +41,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
     interval_ref_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None,
+    hgmd_ht_path = luigi.OptionalParameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
-                                         description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS',
+                                         description='VARIANTS or SV or MITO.')
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
@@ -109,11 +85,14 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar_data, 'hgmd_data': hgmd}
 
     def annotate_globals(self, mt, clinvar_data):
-        return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
-                                 hail_version=pkg_resources.get_distribution('hail').version,
-                                 clinvar_version=clinvar_data.version)
+                                 datasetType=self.dataset_type,
+                                 hail_version=pkg_resources.get_distribution('hail').version)
+        if clinvar_data:
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.version)
+        return mt
 
     def import_dataset(self):
         logger.info("Args:")
@@ -143,8 +122,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-
-        mt = self.annotate_globals(mt, kwargs["clinvar_data"])
+        mt = self.annotate_globals(mt, kwargs.get("clinvar_data"))
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
@@ -158,6 +136,30 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
         return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
 
+    @staticmethod
+    def contig_check(mt, standard_contigs, threshold):
+        check_result_dict = {}
+
+        # check chromosomes that are not in the VCF  
+        row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
+        contigs_set = set(row_dict.keys())
+
+        all_missing_contigs = standard_contigs - contigs_set
+        missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
+
+        if missing_contigs_without_optional:
+            check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
+            logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
+
+        for k,v in row_dict.items():
+            if k not in standard_contigs:
+                check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
+                logger.warning('Chromosome %s is unexpected.', k)
+            elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
+                check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
+                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
+
+        return check_result_dict
 
     @staticmethod
     def validate_mt(mt, genome_version, sample_type):
@@ -170,10 +172,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         :param sample_type: WGS or WES
         :return: True or Exception
         """
+        if mt is None or not isinstance(mt, hl.MatrixTable):
+            raise SeqrValidationError("mt should probably be a MatrixTable")
+
         if genome_version == CONST_GRCh37:
-            contig_check_result = contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+            contig_check_result = SeqrVCFToMTTask.contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
         elif genome_version == CONST_GRCh38:
-            contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
+            contig_check_result = SeqrVCFToMTTask.contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
 
         if bool(contig_check_result):
             err_msg = ''
@@ -228,11 +233,11 @@ class SeqrMTToESTask(HailElasticSearchTask):
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
     interval_ref_ht_path = luigi.Parameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
+    hgmd_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS', description='VARIANTS or SV.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")

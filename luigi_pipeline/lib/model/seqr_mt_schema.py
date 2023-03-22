@@ -4,8 +4,32 @@ from hail_scripts.computed_fields import variant_id, vep
 
 from lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
 
+class BaseVariantSchema(BaseMTSchema):
 
-class BaseSeqrSchema(BaseMTSchema):
+    def __init__(self, mt, *args, **kwargs):
+        super().__init__(mt)
+
+    @row_annotation(disable_index=True)
+    def contig(self):
+        return variant_id.get_expr_for_contig(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def start(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def pos(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def xpos(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def xstart(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+class BaseSeqrSchema(BaseVariantSchema):
 
     def __init__(self, *args, ref_data, interval_ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
@@ -63,18 +87,6 @@ class BaseSeqrSchema(BaseMTSchema):
         return variant_id.get_expr_for_variant_id(self.mt)
 
     @row_annotation(disable_index=True)
-    def contig(self):
-        return variant_id.get_expr_for_contig(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def pos(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
-    def start(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
     def end(self):
         return variant_id.get_expr_for_end_pos(self.mt)
 
@@ -85,14 +97,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation(disable_index=True)
     def alt(self):
         return variant_id.get_expr_for_alt_allele(self.mt)
-
-    @row_annotation()
-    def xpos(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def xstart(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
 
     @row_annotation()
     def xstop(self):
@@ -139,7 +143,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp
-
 
 class SeqrSchema(BaseSeqrSchema):
     @row_annotation(disable_index=True)
@@ -299,6 +302,9 @@ class SeqrGenotypesSchema(BaseMTSchema):
             for i in range(start, end, step)
         })
 
+    def _num_alt(self, is_called):
+        return hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
+
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
         return hl.set(self.mt.genotypes.filter(filter).map(lambda g: g.sample_id))
@@ -307,7 +313,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
-            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1),
+            'num_alt': self._num_alt(is_called),
             'gq': hl.if_else(is_called, self.mt.GQ, 0),
             'ab': hl.bind(
                 lambda total: hl.if_else((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
