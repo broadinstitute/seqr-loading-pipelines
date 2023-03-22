@@ -2,8 +2,8 @@ import unittest
 
 import hail as hl
 
-from lib.model.seqr_mt_schema import SeqrVariantSchema
-from tests.data.sample_vep import VEP_DATA, DERIVED_DATA
+from luigi_pipeline.lib.model.seqr_mt_schema import SeqrVariantSchema
+from luigi_pipeline.tests.data.sample_vep import VEP_DATA, DERIVED_DATA
 
 class TestSeqrModel(unittest.TestCase):
 

@@ -5,8 +5,8 @@ import hail as hl
 import luigi
 
 from elasticsearch.client.indices import IndicesClient
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, MatrixTableSampleSetError
-from lib.global_config import GlobalConfig
+from luigi_pipeline.lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, MatrixTableSampleSetError
+from luigi_pipeline.lib.global_config import GlobalConfig
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
 

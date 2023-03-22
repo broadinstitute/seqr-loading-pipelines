@@ -6,7 +6,7 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_sv_loading import SeqrSVVariantMTTask, SeqrSVGenotypesMTTask, SeqrSVMTToESTask
+from luigi_pipeline.seqr_sv_loading import SeqrSVVariantMTTask, SeqrSVGenotypesMTTask, SeqrSVMTToESTask
 
 REFERENCE_CHAIN = 'tests/data/grch38_to_grch37.over.chain.gz'
 

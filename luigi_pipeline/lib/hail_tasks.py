@@ -13,8 +13,8 @@ from luigi.contrib import gcs
 from luigi.parameter import ParameterVisibility
 
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
-from lib.global_config import GlobalConfig
-import lib.hail_vep_runners as vep_runners
+from luigi_pipeline.lib.global_config import GlobalConfig
+import luigi_pipeline.lib.hail_vep_runners as vep_runners
 
 logger = logging.getLogger(__name__)
 

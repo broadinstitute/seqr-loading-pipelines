@@ -29,7 +29,7 @@ def main(
     bin_directory: str, gcs_project: str, gcs_bucket_name: str, gcs_prefix: str,
 ) -> None:
     # Build the module
-    # This is equivalent to `python -m build -o` from the command line
+    # This is equivalent to `python -m build --outdir` from the command line
     dist = tempfile.TemporaryDirectory()
     build(['--outdir', f'{dist.name}'])
 

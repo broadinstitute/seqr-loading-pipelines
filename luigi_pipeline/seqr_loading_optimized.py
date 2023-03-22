@@ -6,9 +6,9 @@ import hail as hl
 
 from collections import defaultdict
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
-from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
-from seqr_loading import SeqrVCFToMTTask
+from luigi_pipeline.lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask
+from luigi_pipeline.lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from luigi_pipeline.seqr_loading import SeqrVCFToMTTask
 
 logger = logging.getLogger(__name__)
 
