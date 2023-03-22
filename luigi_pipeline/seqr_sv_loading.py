@@ -1,13 +1,20 @@
 import logging
 import sys
 
-import luigi
 import hail as hl
-
-from lib.model.sv_mt_schema import SeqrSVVariantSchema, SeqrSVGenotypesSchema, SeqrSVVariantsAndGenotypesSchema
-from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
+import luigi
 from sv_pipeline.genome.utils.mapping_gene_ids import load_gencode
 
+from lib.model.sv_mt_schema import (
+    SeqrSVGenotypesSchema,
+    SeqrSVVariantsAndGenotypesSchema,
+    SeqrSVVariantSchema,
+)
+from luigi_pipeline.seqr_loading_optimized import (
+    BaseMTToESOptimizedTask,
+    BaseVCFToGenotypesMTTask,
+    SeqrVCFToVariantMTTask,
+)
 
 logger = logging.getLogger(__name__)
 
