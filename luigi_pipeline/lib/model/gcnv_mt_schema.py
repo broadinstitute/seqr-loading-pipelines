@@ -99,11 +99,13 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         sorted_transcript_consequences,
     ])
     def transcript_consequence_terms(self):
-        default_consequences = hl.set([hl.format('gCNV_%s', self.mt.svType)])
-        gene_major_consequences = hl.set(self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]))
-        return hl.array(
-            default_consequences.union(gene_major_consequences)
-        )
+        default_consequences = [hl.format('gCNV_%s', self.mt.svType)]
+        gene_major_consequences = hl.array(hl.set(
+            self.mt.sortedTranscriptConsequences
+            .filter(lambda x: x.contains(MAJOR_CONSEQUENCE))
+            .map(lambda x: x[MAJOR_CONSEQUENCE])
+        ))
+        return gene_major_consequences.extend(default_consequences)
 
     @row_annotation(fn_require=start)
     def pos(self):
@@ -154,7 +156,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_qs(self, start=0, end=1000, step=10):
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
+            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
             for i in range(start, end, step)
         }, **{
             "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs >= 1000)
@@ -163,7 +165,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_cn(self, start=0, end=4, step=1):
         return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.cn == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.cn == i)
             for i in range(start, end, step)
         }, **{
             "samples_cn_gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
@@ -186,12 +188,22 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 'prev_overlap': False,
                 'new_call': False,
             }
+
+        parsed_genes = hl.array(parse_genes(self.mt.genes_any_overlap_Ensemble_ID))
+        start_and_end_equal = (self.mt.sample_start == self.mt.start) & (self.mt.sample_end == self.mt.end)
         return {
             'sample_id': self.mt.s,
             'qs': self.mt.QS,
             'cn': self.mt.CN,
             'defragged': self.mt.defragmented,
-            **call_fields
+            'start': hl.or_missing(~start_and_end_equal, self.mt.sample_start),
+            'end': hl.or_missing(~start_and_end_equal, self.mt.sample_end),
+            'num_exon': hl.or_missing(
+                self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
+                self.mt.genes_any_overlap_totalExons,
+            ),
+            'geneIds': hl.or_missing(parsed_genes != self.mt.geneIds, parsed_genes),
+            **call_fields,
         }
 
 class SeqrGCNVVariantsAndGenotypesSchema(SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema):

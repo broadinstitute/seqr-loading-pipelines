@@ -145,10 +145,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         for k,v in row_dict.items():
             if k not in standard_contigs:
                 check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
-                logger.warning('Chromosome %s is unexpected.', k)
+                logger.warning(f'Chromosome {k} is unexpected.')
             elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
                 check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
-                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
+                logger.warning(f'Chromosome {k} has {v} rows, which is lower than threshold {threshold}.')
 
         return check_result_dict
 

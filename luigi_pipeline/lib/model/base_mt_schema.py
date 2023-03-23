@@ -163,7 +163,7 @@ class BaseMTSchema:
                         'MT using schema class %s already has "%s" annotation.' % (self.__class__.__name__, annotation.name))
                     if not overwrite:
                         continue
-                    logger.info('Overwriting matrix table annotation %s' % annotation.name)
+                    logger.info(f'Overwriting matrix table annotation {annotation.name}')
 
                 if annotation.requirements and any(r not in called_annotations for r in annotation.requirements):
                     # this annotation has unfulfilled annotations,

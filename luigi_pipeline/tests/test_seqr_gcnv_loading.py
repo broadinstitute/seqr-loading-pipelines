@@ -163,7 +163,10 @@ MERGED_EXPECTED_VARIANT_DATA = [
         pos=100006937,
         sn=22720,
         geneIds=['ENSG00000117620', 'ENSG00000283761'],
-        sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
+        sortedTranscriptConsequences=[
+            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
+            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}
+        ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100006937,
         xstart=1100006937,
@@ -181,8 +184,12 @@ MERGED_EXPECTED_VARIANT_DATA = [
         num_exon=3,
         pos=100017585,
         sn=22719,
-        geneIds=['ENSG00000117620', 'ENSG00000283761'],
-        sortedTranscriptConsequences=[{'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}, {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}],
+        geneIds=['ENSG00000117620', 'ENSG00000283761', 'ENSG22222222222'],
+        sortedTranscriptConsequences=[
+            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
+            {'gene_id': 'ENSG00000283761', 'major_consequence': 'LOF'}, 
+            {'gene_id': 'ENSG22222222222'}
+        ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100017585,
         xstart=1100017585,
@@ -211,7 +218,20 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
     ),
     hl.Struct(
         genotypes=[
+            hl.Struct(**{'cn': 0,
+                'defragged': False,
+                'start': 100017586,
+                'end': 100023212,
+                'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
+                'new_call': False,
+                'num_exon': 2,
+                'prev_call': True,
+                'prev_overlap': False,
+                'qs': 30,
+                'sample_id': 'BEN_0234_01_1'
+            }),
             hl.Struct(**{
+                'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                 'qs': 30,
                 'cn': 0, 
                 'defragged': False, 
@@ -221,6 +241,7 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                 'sample_id': 'MAN_0354_01_1'
             }),
             hl.Struct(**{
+                'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
                 'qs': 5,
                 'cn': 1, 
                 'defragged': False, 
@@ -230,12 +251,12 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                 'sample_id':  'PIE_OGI313_000747_1'
             }),
         ],
-        samples=['MAN_0354_01_1', 'PIE_OGI313_000747_1'], 
+        samples=['BEN_0234_01_1', 'MAN_0354_01_1', 'PIE_OGI313_000747_1'], 
         **{
             'samples_cn.1': ['PIE_OGI313_000747_1'],
             'samples_qs.0_to_10': ['PIE_OGI313_000747_1'], 
-            'samples_cn.0': ['MAN_0354_01_1'],
-            'samples_qs.30_to_40': ['MAN_0354_01_1'],
+            'samples_cn.0': ['BEN_0234_01_1', 'MAN_0354_01_1'],
+            'samples_qs.30_to_40': ['BEN_0234_01_1', 'MAN_0354_01_1'],
         },
     ),
 ]
@@ -245,11 +266,13 @@ MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
 
 EXPECTED_DISABLED_INDEX_FIELDS = ['contig', 'genotypes', 'start', 'xstart', 'variantId']
 
-
 def prune_empties(data):
-    for k, v in data.items():
-        if v == None:
-            data = data.drop(k)
+    if isinstance(data, list):
+        data = [prune_empties(x) for x in data if x is not None]
+    elif isinstance(data, hl.Struct):
+        data = hl.Struct(**{k : prune_empties(v) for k, v in data.items() if v is not None})
+    elif isinstance(data, dict):
+        data = {k: prune_empties(v) for k, v in data.items() if v is not None}
     return data
 
 class SeqrGCNVGeneParsingTest(unittest.TestCase):
@@ -347,8 +370,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         export_task._es.export_table_to_elasticsearch.assert_called_once()
         args, kwargs = export_task._es.export_table_to_elasticsearch.call_args
         row_ht = args[0].collect()
-        for i, row in enumerate(row_ht):
-            row_ht[i] = prune_empties(row)
+        row_ht = prune_empties(row_ht)
         self.assertCountEqual(row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         self.assertCountEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
 
@@ -374,19 +396,18 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         worker.run()
 
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
-        self.assertEqual(variant_mt.count(), (2, 3))
+        self.assertEqual(variant_mt.count(), (2, 4))
 
         key_dropped_variant_mt = variant_mt.rows().flatten().drop("variant_name", "svtype")
         data = key_dropped_variant_mt.collect()
         self.assertCountEqual(data, MERGED_EXPECTED_VARIANT_DATA)
 
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
-        self.assertEqual(genotypes_mt.count(), (2, 3))
+        self.assertEqual(genotypes_mt.count(), (2, 4))
 
         export_task._es.export_table_to_elasticsearch.assert_called_once()
         args, kwargs = export_task._es.export_table_to_elasticsearch.call_args
         row_ht = args[0].collect()
-        for i, row in enumerate(row_ht):
-            row_ht[i] = prune_empties(row)
+        row_ht = prune_empties(row_ht)
         self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         self.assertCountEqual(kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS)
