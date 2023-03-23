@@ -1,10 +1,13 @@
 import hail as hl
 
-from lib.model.base_mt_schema import row_annotation, RowAnnotationOmit
-from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
-
 from hail_scripts.computed_fields import variant_id
 
+from lib.model.base_mt_schema import RowAnnotationOmit, row_annotation
+from lib.model.seqr_mt_schema import (
+    BaseVariantSchema,
+    SeqrGenotypesSchema,
+    SeqrVariantsAndGenotypesSchema,
+)
 
 BOTHSIDES_SUPPORT = "BOTHSIDES_SUPPORT"
 GENE_SYMBOL = "gene_symbol"

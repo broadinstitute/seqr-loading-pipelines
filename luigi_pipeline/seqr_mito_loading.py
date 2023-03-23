@@ -1,12 +1,20 @@
 import logging
 import sys
 
-import luigi
 import hail as hl
+import luigi
 
-from lib.model.mito_mt_schema import SeqrMitoVariantsAndGenotypesSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema
-from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
+from lib.model.mito_mt_schema import (
+    SeqrMitoGenotypesSchema,
+    SeqrMitoVariantsAndGenotypesSchema,
+    SeqrMitoVariantSchema,
+)
 from luigi_pipeline.lib.hail_tasks import MatrixTableSampleSetError
+from luigi_pipeline.seqr_loading_optimized import (
+    BaseMTToESOptimizedTask,
+    BaseVCFToGenotypesMTTask,
+    SeqrVCFToVariantMTTask,
+)
 
 logger = logging.getLogger(__name__)
 
