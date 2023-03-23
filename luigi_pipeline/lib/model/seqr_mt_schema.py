@@ -1,8 +1,9 @@
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation, RowAnnotationOmit
-from hail_scripts.computed_fields import variant_id
-from hail_scripts.computed_fields import vep
+from hail_scripts.computed_fields import variant_id, vep
+
+from lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
+
 
 class BaseVariantSchema(BaseMTSchema):
 
