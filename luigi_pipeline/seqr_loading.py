@@ -27,8 +27,13 @@ VARIANT_THRESHOLD = 100
 CONST_GRCh37 = '37'
 CONST_GRCh38 = '38'
 
+def does_path_exist(path):
+    if path.startswith("gs://"):
+        return hl.hadoop_exists(path)
+    return os.path.exists(path)
+
 def check_if_path_exists(path, label=""):
-    if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
+    if not does_path_exist(path):
         raise ValueError(f"{label} path not found: {path}")
 
 class SeqrValidationError(Exception):
@@ -109,9 +114,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = self.annotate_old_and_split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
-        if self.remap_path:
+        if self.remap_path and does_path_exist(self.remap_path):
             mt = self.remap_sample_ids(mt, self.remap_path)
-        if self.subset_path:
+        if self.subset_path and does_path_exist(self.remap_path):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
         if self.genome_version == '38':
             mt = self.add_37_coordinates(mt, self.grch38_to_grch37_ref_chain)

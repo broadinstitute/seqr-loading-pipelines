@@ -11,7 +11,7 @@ from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
 )
-from luigi_pipeline.seqr_loading import SeqrVCFToMTTask
+from luigi_pipeline.seqr_loading import does_path_exist, SeqrVCFToMTTask
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
 
-        if self.remap_path:
+        if self.remap_path and does_path_exist(self.remap_path):
             mt = self.remap_sample_ids(mt, self.remap_path)
-        if self.subset_path:
+        if self.subset_path and does_path_exist(self.subset_path):
             mt = self.subset_samples_and_variants(mt, self.subset_path)
 
         kwargs = self.get_schema_class_kwargs()
