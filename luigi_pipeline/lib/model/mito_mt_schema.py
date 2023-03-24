@@ -1,7 +1,7 @@
 import hail as hl
 
-from lib.model.base_mt_schema import row_annotation
-from lib.model.seqr_mt_schema import (
+from luigi_pipeline.lib.model.base_mt_schema import row_annotation
+from luigi_pipeline.lib.model.seqr_mt_schema import (
     BaseSeqrSchema,
     SeqrGenotypesSchema,
     SeqrVariantsAndGenotypesSchema,

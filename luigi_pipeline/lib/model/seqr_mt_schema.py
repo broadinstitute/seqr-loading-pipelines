@@ -2,7 +2,7 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id, vep
 
-from lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
+from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
 
 
 class BaseVariantSchema(BaseMTSchema):
