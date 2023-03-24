@@ -7,13 +7,13 @@ import hail as hl
 import luigi
 import pkg_resources
 
-from lib.hail_tasks import (
+from luigi_pipeline.lib.hail_tasks import (
     GCSorLocalTarget,
     HailElasticSearchTask,
     HailMatrixTableTask,
     MatrixTableSampleSetError,
 )
-from lib.model.seqr_mt_schema import (
+from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrGenotypesSchema,
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
