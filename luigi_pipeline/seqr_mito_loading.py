@@ -4,12 +4,12 @@ import sys
 import hail as hl
 import luigi
 
+from luigi_pipeline.lib.hail_tasks import MatrixTableSampleSetError
 from luigi_pipeline.lib.model.mito_mt_schema import (
     SeqrMitoGenotypesSchema,
     SeqrMitoVariantsAndGenotypesSchema,
     SeqrMitoVariantSchema,
 )
-from luigi_pipeline.lib.hail_tasks import MatrixTableSampleSetError
 from luigi_pipeline.seqr_loading_optimized import (
     BaseMTToESOptimizedTask,
     BaseVCFToGenotypesMTTask,

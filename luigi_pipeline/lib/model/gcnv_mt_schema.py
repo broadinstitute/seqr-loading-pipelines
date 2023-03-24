@@ -3,10 +3,14 @@ import re
 
 import hail as hl
 
-from lib.model.base_mt_schema import row_annotation
-from lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
-
 from hail_scripts.computed_fields import variant_id
+
+from lib.model.base_mt_schema import row_annotation
+from lib.model.seqr_mt_schema import (
+    BaseVariantSchema,
+    SeqrGenotypesSchema,
+    SeqrVariantsAndGenotypesSchema,
+)
 
 GENE_ID = "gene_id"
 MAJOR_CONSEQUENCE = "major_consequence"
