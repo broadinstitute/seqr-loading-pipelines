@@ -1,0 +1,8 @@
+[project]
+name = "seqr_luigi"
+requires-python = ">=3.8"
+version = "1.6.0"
+
+[tool.setuptools]
+packages = ["luigi_pipeline.lib", "hail_scripts"]
+py-modules = ["luigi_pipeline.seqr_loading", "luigi_pipeline.seqr_loading_optimized"]
