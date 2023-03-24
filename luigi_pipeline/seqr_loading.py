@@ -96,7 +96,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                  datasetType=self.dataset_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)
         if clinvar_data:
-            mt = mt.annotate_globals(clinvar_version=clinvar_data.version)
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.index_globals().version)
         return mt
 
     def import_dataset(self):
