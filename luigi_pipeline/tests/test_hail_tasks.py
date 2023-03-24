@@ -8,8 +8,8 @@ import hail as hl
 import luigi
 from elasticsearch.client.indices import IndicesClient
 
-from lib.global_config import GlobalConfig
-from lib.hail_tasks import (
+from luigi_pipeline.lib.global_config import GlobalConfig
+from luigi_pipeline.lib.hail_tasks import (
     HailElasticSearchTask,
     HailMatrixTableTask,
     MatrixTableSampleSetError,
