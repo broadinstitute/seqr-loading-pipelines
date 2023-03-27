@@ -11,7 +11,7 @@ from lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
 )
-from seqr_loading import SeqrVCFToMTTask
+from seqr_loading import SeqrVCFToMTTask, check_if_path_exists
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,8 @@ class SeqrVCFToVariantMTTask(SeqrVCFToMTTask):
 
     def run(self):
         # We only want to use the Variant Schema.
+        if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
+        if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
         self.read_input_write_mt()
 
 
@@ -42,6 +44,8 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
 
+        if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
+        if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
         if self.remap_path:
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
