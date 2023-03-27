@@ -7,8 +7,8 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from lib.model.gcnv_mt_schema import parse_genes, hl_agg_collect_set_union
-from seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
+from luigi_pipeline.lib.model.gcnv_mt_schema import parse_genes, hl_agg_collect_set_union
+from luigi_pipeline.seqr_gcnv_loading import SeqrGCNVVariantMTTask, SeqrGCNVGenotypesMTTask, SeqrGCNVMTToESTask
 
 NEW_JOINT_CALLED_CALLSET = 'tests/data/gcnv_new_joint_called_callset.tsv'
 NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [

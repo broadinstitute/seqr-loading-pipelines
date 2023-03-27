@@ -4,7 +4,7 @@ import sys
 import hail as hl
 import luigi
 
-from lib.model.mito_mt_schema import (
+from luigi_pipeline.lib.model.mito_mt_schema import (
     SeqrMitoGenotypesSchema,
     SeqrMitoVariantsAndGenotypesSchema,
     SeqrMitoVariantSchema,

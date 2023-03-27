@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
+from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, row_annotation
 
 
 class TestBaseModel(unittest.TestCase):

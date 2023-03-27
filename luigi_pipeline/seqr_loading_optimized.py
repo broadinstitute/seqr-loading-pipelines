@@ -5,13 +5,13 @@ from collections import defaultdict
 import hail as hl
 import luigi
 
-from lib.hail_tasks import HailElasticSearchTask, HailMatrixTableTask
-from lib.model.seqr_mt_schema import (
+from luigi_pipeline.lib.hail_tasks import HailElasticSearchTask, HailMatrixTableTask
+from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrGenotypesSchema,
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
 )
-from seqr_loading import SeqrVCFToMTTask, check_if_path_exists
+from luigi_pipeline.seqr_loading import SeqrVCFToMTTask, check_if_path_exists
 
 logger = logging.getLogger(__name__)
 
