@@ -6,7 +6,6 @@ import hail as hl
 
 from luigi_pipeline.lib.model.gcnv_mt_schema import SeqrGCNVVariantSchema, SeqrGCNVGenotypesSchema, SeqrGCNVVariantsAndGenotypesSchema
 from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
-from hail_scripts.utils.mapping_gene_ids import load_gencode
 
 
 logger = logging.getLogger(__name__)
