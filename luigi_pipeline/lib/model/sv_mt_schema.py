@@ -19,9 +19,24 @@ PASS = "PASS"
 CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
 NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
 
+PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict({
+    # Map of concordance string -> previous n_alt_alleles()
 
-INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
+    # Concordant
+    frozenset(["TN"]): 0,       # 0/0 -> 0/0
+    frozenset(["TN", "TP"]): 1, # 0/1 -> 0/1
+    frozenset(["TP"]): 2,       # 1/1 -> 1/1
 
+    # Novel
+    frozenset(["TN", "FP"]): 0, # 0/0 -> 0/1
+    frozenset(["FP"]): 0,       # 0/0 -> 1/1
+
+    # Discordant
+    frozenset(["TN", "FN"]): 1, # 0/1 -> 0/0
+    frozenset(["FN"]): 2,       # 1/1 -> 0/0
+    frozenset(["FP", "TP"]): 1, # 0/1 -> 1/1
+    frozenset(["FN", "TP"]): 2, # 1/1 -> 0/1
+})
 
 def get_cpx_interval(x):
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
@@ -196,17 +211,35 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     def _genotype_fields(self):
         is_called = hl.is_defined(self.mt.GT)
+        was_previously_called = hl.is_defined(self.mt.CONC_ST)
+        num_alt = self._num_alt(is_called)
+        prev_num_alt = hl.if_else(
+            was_previously_called,
+            PREVIOUS_GENOTYPE_N_ALT_ALLELES.get(hl.set(self.mt.CONC_ST)),
+            -1,
+        )
+        discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
+        novel_genotype = (num_alt != prev_num_alt) & (prev_num_alt == 0)
         return {
             'sample_id': self.mt.s,
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
-            'num_alt': self._num_alt(is_called)
+            'num_alt': num_alt,
+            'prev_num_alt': prev_num_alt,
+            'new_genotype': hl.or_missing(
+                is_called & was_previously_called, discordant_genotype
+            ),
+            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
     # NB: override this function here to mimic the existing null handling behavior.
     def _genotype_filter_samples(self, filter_):
         samples = super()._genotype_filter_samples(filter_)
-        return hl.or_missing(hl.len(samples) > 0, samples)            
+        return hl.or_missing(hl.len(samples) > 0, samples)
+
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_new_call(self):
+        return self._genotype_filter_samples(lambda g: g.new_call)            
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):

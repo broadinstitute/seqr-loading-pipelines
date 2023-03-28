@@ -105,6 +105,7 @@ VCF_HEADER_META = [
     '##INFO=<ID=gnomAD_V2_AC_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AN_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=StrVCTVRE,Number=1,Type=Float,Description="StrVCTVRE score">',
+    '##FORMAT=<ID=CONC_ST,Number=.,Type=String,Description="The genotype concordance contingency state">'
 ]
 
 VCF_DATA_ROW = [
@@ -114,7 +115,21 @@ VCF_DATA_ROW = [
     ['chr1', '413968', 'DEL_chr1_12', 'N', '<DEL>', '999', 'PASS', 'ALGORITHMS=depth;CHR2=chr1;END=428500;EVIDENCE=RD;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=OR4F29;SVLEN=14532;SVTYPE=DEL;AN=8;AC=1;AF=0.064926;N_BI_GENOS=2911;N_HOMREF=2538;N_HET=368;N_HOMALT=5;FREQ_HOMREF=0.871865;FREQ_HET=0.126417;FREQ_HOMALT=0.00171762;MALE_AN=2894;MALE_AC=172;MALE_AF=0.059433;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1278;MALE_N_HET=166;MALE_N_HOMALT=3;MALE_FREQ_HOMREF=0.883207;MALE_FREQ_HET=0.11472;MALE_FREQ_HOMALT=0.00207325;FEMALE_AN=2906;FEMALE_AC=205;FEMALE_AF=0.070544;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1250;FEMALE_N_HET=201;FEMALE_N_HOMALT=2;FEMALE_FREQ_HOMREF=0.860289;FEMALE_FREQ_HET=0.138334;FEMALE_FREQ_HOMALT=0.00137646', 'GT:EV:GQ:RD_CN:RD_GQ', '0/0:RD:12:2:12', '0/0:RD:0:2:0', '0/1:RD:99:1:99', '0/0:RD:2:2:2', '0/0:RD:2:2:2'],
     ['chr1', '789481', 'BND_chr1_9', 'N', '<BND>', '999', 'PESR_GT_OVERDISPERSION;UNRESOLVED', 'ALGORITHMS=manta;CHR2=chr1;END=789481;EVIDENCE=PE;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=FBXO28,OR4F16;PREDICTED_NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;STRANDS=-+;SVLEN=223225007;SVTYPE=BND;UNRESOLVED_TYPE=SINGLE_ENDER_-+;AN=8;AC=7;AF=0.910684;N_BI_GENOS=2911;N_HOMREF=0;N_HET=520;N_HOMALT=2391;FREQ_HOMREF=0;FREQ_HET=0.178633;FREQ_HOMALT=0.821367;MALE_AN=2894;MALE_AC=2639;MALE_AF=0.911887;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=0;MALE_N_HET=255;MALE_N_HOMALT=1192;MALE_FREQ_HOMREF=0;MALE_FREQ_HET=0.176227;MALE_FREQ_HOMALT=0.823773;FEMALE_AN=2906;FEMALE_AC=2643;FEMALE_AF=0.909498;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=0;FEMALE_N_HET=263;FEMALE_N_HOMALT=1190;FEMALE_FREQ_HOMREF=0;FEMALE_FREQ_HET=0.181005;FEMALE_FREQ_HOMALT=0.818995', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '1/1:PE:59:59:2:99:0', '1/1:PE:26:26:2:99:0', '1/1:PE:39:39:2:99:0', '0/1:PE:19:19:1:99:0', '0/1:PE:19:19:1:99:0'],
     ['chr1', '4228405', 'INS_chr1_65', 'N', '<INS:ME:ALU>', '605', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=manta,melt;CHR2=chr1;END=4228448;EVIDENCE=SR;gnomAD_V2_SVID=gnomAD-SV_v2.1_INS_chr1_65;gnomAD_V2_AF=0.068962998688221;gnomAD_V2_AC_AF=224;gnomAD_V2_AN_AF=3247;StrVCTVRE=0.1255;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=C1orf174;SVLEN=298;SVTYPE=INS;AN=8;AC=1;AF=0.10237;N_BI_GENOS=2911;N_HOMREF=2318;N_HET=590;N_HOMALT=3;FREQ_HOMREF=0.79629;FREQ_HET=0.202679;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=293;MALE_AF=0.101244;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1156;MALE_N_HET=289;MALE_N_HOMALT=2;MALE_FREQ_HOMREF=0.798894;MALE_FREQ_HET=0.199724;MALE_FREQ_HOMALT=0.00138217;FEMALE_AN=2906;FEMALE_AC=302;FEMALE_AF=0.103923;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1152;FEMALE_N_HET=300;FEMALE_N_HOMALT=1;FEMALE_FREQ_HOMREF=0.792842;FEMALE_FREQ_HET=0.206469;FEMALE_FREQ_HOMALT=0.000688231', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:SR:62:99:0:62:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0'],
-    ['chr1', '6558902', 'CPX_chr1_22', 'N', '<CPX>', '644', 'BOTHSIDES_SUPPORT;HIGH_SR_BACKGROUND', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=INV_chr1:6558902-6559723,DUP_chr1:6559655-6559723;CPX_TYPE=INVdup;END=6559723;EVIDENCE=PE,SR;PREDICTED_INTRONIC=TAS1R1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=821;SVTYPE=CPX;AN=8;AC=2;AF=0.169873;N_BI_GENOS=2911;N_HOMREF=1925;N_HET=983;N_HOMALT=3;FREQ_HOMREF=0.661285;FREQ_HET=0.337685;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=497;MALE_AF=0.171735;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=950;MALE_N_HET=497;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.656531;MALE_FREQ_HET=0.343469;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=488;FEMALE_AF=0.167928;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=968;FEMALE_N_HET=482;FEMALE_N_HOMALT=3;FEMALE_FREQ_HOMREF=0.666208;FEMALE_FREQ_HET=0.331727;FEMALE_FREQ_HOMALT=0.00206469', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT:RD_CN', '0/0:PE,SR:99:99:0:99:0:2', '0/1:PE,SR:57:0:0:57:1:2', '0/1:PE,SR:0:0:1:99:0:2', '0/0:PE,SR:99:99:0:0:0:3', '0/0:PE,SR:99:99:0:0:0:1'],
+    [
+        'chr1',
+        '6558902',
+        'CPX_chr1_22',
+        'N', '<CPX>',
+        '644',
+        'BOTHSIDES_SUPPORT;HIGH_SR_BACKGROUND',
+        'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=INV_chr1:6558902-6559723,DUP_chr1:6559655-6559723;CPX_TYPE=INVdup;END=6559723;EVIDENCE=PE,SR;PREDICTED_INTRONIC=TAS1R1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=821;SVTYPE=CPX;AN=8;AC=2;AF=0.169873;N_BI_GENOS=2911;N_HOMREF=1925;N_HET=983;N_HOMALT=3;FREQ_HOMREF=0.661285;FREQ_HET=0.337685;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=497;MALE_AF=0.171735;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=950;MALE_N_HET=497;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.656531;MALE_FREQ_HET=0.343469;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=488;FEMALE_AF=0.167928;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=968;FEMALE_N_HET=482;FEMALE_N_HOMALT=3;FEMALE_FREQ_HOMREF=0.666208;FEMALE_FREQ_HET=0.331727;FEMALE_FREQ_HOMALT=0.00206469',
+        'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT:RD_CN:CONC_ST',
+        '0/0:PE,SR:99:99:0:99:0:2:TN',
+        '0/1:PE,SR:57:0:0:57:1:2:FP',
+        '0/1:PE,SR:0:0:1:99:0:2:FN',
+        '0/0:PE,SR:99:99:0:0:0:3:TP,FN',
+        '0/0:PE,SR:99:99:0:0:0:1'
+    ],
     ['chr1', '16088760', 'CPX_chr1_41', 'N', '<CPX>', '684', 'PASS', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:16088760-16088835,INV_chr1:16088760-16089601;CPX_TYPE=dupINV;END=16089601;EVIDENCE=PE,SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=FAM131C;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=841;SVTYPE=CPX;AN=8;AC=2;AF=0.218138;N_BI_GENOS=2911;N_HOMREF=1659;N_HET=1234;N_HOMALT=18;FREQ_HOMREF=0.569907;FREQ_HET=0.423909;FREQ_HOMALT=0.00618344;MALE_AN=2894;MALE_AC=635;MALE_AF=0.219419;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=818;MALE_N_HET=623;MALE_N_HOMALT=6;MALE_FREQ_HOMREF=0.565308;MALE_FREQ_HET=0.430546;MALE_FREQ_HOMALT=0.00414651;FEMALE_AN=2906;FEMALE_AC=629;FEMALE_AF=0.216449;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=836;FEMALE_N_HET=605;FEMALE_N_HOMALT=12;FEMALE_FREQ_HOMREF=0.575361;FEMALE_FREQ_HET=0.41638;FEMALE_FREQ_HOMALT=0.00825877', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:SR:52:0:0:52:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:62:0:0:62:1', '0/1:SR:62:0:0:62:1'],
     ['chr1', '17465707', 'INS_chr1_268', 'N', '<INS:ME:SVA>', '263', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=melt;CHR2=chr1;END=17465723;EVIDENCE=SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=RCC2;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=955;SVTYPE=INS;AN=8;AC=1;AF=0.004466;N_BI_GENOS=2911;N_HOMREF=2885;N_HET=26;N_HOMALT=0;FREQ_HOMREF=0.991068;FREQ_HET=0.00893164;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=14;MALE_AF=0.004838;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1433;MALE_N_HET=14;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.990325;MALE_FREQ_HET=0.00967519;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=11;FEMALE_AF=0.003785;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1442;FEMALE_N_HET=11;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.992429;FEMALE_FREQ_HET=0.00757054;FEMALE_FREQ_HOMALT=0', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:0:99:0:0:1', '0/0:PE,SR:99:99:0:2:0', '0/0:PE,SR:99:99:0:2:0'],
     ['chr1', '21427498', 'CPX_chr1_54', 'N', '<CPX>', '733', 'PASS', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:21427498-21427959,INV_chr1:21427498-21480073,DEL_chr1:21480073-21480419;CPX_TYPE=dupINVdel;END=21480419;EVIDENCE=PE;PREDICTED_LOF=NBPF3;PREDICTED_NONCODING_BREAKPOINT=DNase,Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=52921;SVTYPE=CPX;AN=8;AC=4;AF=0.499656;N_BI_GENOS=2911;N_HOMREF=51;N_HET=2811;N_HOMALT=49;FREQ_HOMREF=0.0175198;FREQ_HET=0.965648;FREQ_HOMALT=0.0168327;MALE_AN=2894;MALE_AC=1453;MALE_AF=0.502073;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=19;MALE_N_HET=1403;MALE_N_HOMALT=25;MALE_FREQ_HOMREF=0.0131306;MALE_FREQ_HET=0.969592;MALE_FREQ_HOMALT=0.0172771;FEMALE_AN=2906;FEMALE_AC=1445;FEMALE_AF=0.497247;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=32;FEMALE_N_HET=1397;FEMALE_N_HOMALT=24;FEMALE_FREQ_HOMREF=0.0220234;FEMALE_FREQ_HET=0.961459;FEMALE_FREQ_HOMALT=0.0165175', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:PE:93:93:1:99:0', '0/1:PE:79:79:1:99:0', '0/1:PE:33:33:1:6:0', '0/1:PE,SR:39:39:1:99:0', '0/1:PE,SR:39:39:1:99:0'],
@@ -137,7 +152,7 @@ VARIANT_MT_FIELDS = [
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
-GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
+GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_new_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
@@ -208,34 +223,37 @@ EXPECTED_DATA_VARIANTS = [
 EXPECTED_DATA_GENOTYPES = [
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[0],
-        samples_no_call=None, 
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1)],
+        samples_no_call=None,
+        samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1)],
         **{"samples_num_alt.1": {'SAMPLE-4', 'SAMPLE-5'}, "samples_num_alt.2": {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'}},
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[1],
         samples_no_call=None,
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
+        samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1)],
                    **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[2],
         samples_no_call=None,
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
+        samples_new_call={'SAMPLE-2', 'SAMPLE-5'},
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=False, new_genotype=False, prev_num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=True,  new_genotype=False, prev_num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=False, new_genotype=True, prev_num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=False, new_genotype=True, prev_num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=True,  new_genotype=None, prev_num_alt=-1)],
         **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )
@@ -254,7 +272,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self._temp_dir.name)
 
-    @mock.patch('seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
+    @mock.patch('luigi_pipeline.seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
     def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
         # Our framework doesn't pass the parameters to the dependent task.. so we force them
