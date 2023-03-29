@@ -124,11 +124,11 @@ VCF_DATA_ROW = [
         'BOTHSIDES_SUPPORT;HIGH_SR_BACKGROUND',
         'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=INV_chr1:6558902-6559723,DUP_chr1:6559655-6559723;CPX_TYPE=INVdup;END=6559723;EVIDENCE=PE,SR;PREDICTED_INTRONIC=TAS1R1;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=821;SVTYPE=CPX;AN=8;AC=2;AF=0.169873;N_BI_GENOS=2911;N_HOMREF=1925;N_HET=983;N_HOMALT=3;FREQ_HOMREF=0.661285;FREQ_HET=0.337685;FREQ_HOMALT=0.00103057;MALE_AN=2894;MALE_AC=497;MALE_AF=0.171735;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=950;MALE_N_HET=497;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.656531;MALE_FREQ_HET=0.343469;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=488;FEMALE_AF=0.167928;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=968;FEMALE_N_HET=482;FEMALE_N_HOMALT=3;FEMALE_FREQ_HOMREF=0.666208;FEMALE_FREQ_HET=0.331727;FEMALE_FREQ_HOMALT=0.00206469',
         'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT:RD_CN:CONC_ST',
-        '0/0:PE,SR:99:99:0:99:0:2:TN',
-        '0/1:PE,SR:57:0:0:57:1:2:FP',
-        '0/1:PE,SR:0:0:1:99:0:2:FN',
-        '0/0:PE,SR:99:99:0:0:0:3:TP,FN',
-        '0/0:PE,SR:99:99:0:0:0:1'
+        '0/0:PE,SR:99:99:0:99:0:2', # Absent in previous callset
+        '0/1:PE,SR:57:0:0:57:1:2:TN,TP', # Concordant Genotype
+        '0/1:PE,SR:0:0:1:99:0:2:FP,TN', # Novel Genotype
+        '0/0:PE,SR:99:99:0:0:0:3:FN', # Absent Genotype
+        '0/0:PE,SR:99:99:0:0:0:1:FP,TP', # Discordant Genotype
     ],
     ['chr1', '16088760', 'CPX_chr1_41', 'N', '<CPX>', '684', 'PASS', 'ALGORITHMS=manta;CHR2=chr1;CPX_INTERVALS=DUP_chr1:16088760-16088835,INV_chr1:16088760-16089601;CPX_TYPE=dupINV;END=16089601;EVIDENCE=PE,SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=FAM131C;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;PREDICTED_NONCODING_SPAN=DNase;SVLEN=841;SVTYPE=CPX;AN=8;AC=2;AF=0.218138;N_BI_GENOS=2911;N_HOMREF=1659;N_HET=1234;N_HOMALT=18;FREQ_HOMREF=0.569907;FREQ_HET=0.423909;FREQ_HOMALT=0.00618344;MALE_AN=2894;MALE_AC=635;MALE_AF=0.219419;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=818;MALE_N_HET=623;MALE_N_HOMALT=6;MALE_FREQ_HOMREF=0.565308;MALE_FREQ_HET=0.430546;MALE_FREQ_HOMALT=0.00414651;FEMALE_AN=2906;FEMALE_AC=629;FEMALE_AF=0.216449;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=836;FEMALE_N_HET=605;FEMALE_N_HOMALT=12;FEMALE_FREQ_HOMREF=0.575361;FEMALE_FREQ_HET=0.41638;FEMALE_FREQ_HOMALT=0.00825877', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/1:SR:52:0:0:52:1', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:62:0:0:62:1', '0/1:SR:62:0:0:62:1'],
     ['chr1', '17465707', 'INS_chr1_268', 'N', '<INS:ME:SVA>', '263', 'HIGH_SR_BACKGROUND', 'ALGORITHMS=melt;CHR2=chr1;END=17465723;EVIDENCE=SR;PREDICTED_INTERGENIC;PREDICTED_NEAREST_TSS=RCC2;PREDICTED_NONCODING_BREAKPOINT=Tommerup_TADanno;SVLEN=955;SVTYPE=INS;AN=8;AC=1;AF=0.004466;N_BI_GENOS=2911;N_HOMREF=2885;N_HET=26;N_HOMALT=0;FREQ_HOMREF=0.991068;FREQ_HET=0.00893164;FREQ_HOMALT=0;MALE_AN=2894;MALE_AC=14;MALE_AF=0.004838;MALE_N_BI_GENOS=1447;MALE_N_HOMREF=1433;MALE_N_HET=14;MALE_N_HOMALT=0;MALE_FREQ_HOMREF=0.990325;MALE_FREQ_HET=0.00967519;MALE_FREQ_HOMALT=0;FEMALE_AN=2906;FEMALE_AC=11;FEMALE_AF=0.003785;FEMALE_N_BI_GENOS=1453;FEMALE_N_HOMREF=1442;FEMALE_N_HET=11;FEMALE_N_HOMALT=0;FEMALE_FREQ_HOMREF=0.992429;FEMALE_FREQ_HET=0.00757054;FEMALE_FREQ_HOMALT=0', 'GT:EV:GQ:PE_GQ:PE_GT:SR_GQ:SR_GT', '0/0:PE,SR:99:99:0:99:0', '0/0:PE,SR:99:99:0:99:0', '0/1:SR:0:99:0:0:1', '0/0:PE,SR:99:99:0:2:0', '0/0:PE,SR:99:99:0:2:0'],
@@ -152,7 +152,7 @@ VARIANT_MT_FIELDS = [
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
-GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_new_call', 'samples_num_alt.1', 'samples_num_alt.2']
+GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_new_call', 'samples_new_genotype', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
@@ -225,11 +225,12 @@ EXPECTED_DATA_GENOTYPES = [
         **EXPECTED_DATA_VARIANTS[0],
         samples_no_call=None,
         samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1)],
+        samples_new_genotype=None,
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1)],
         **{"samples_num_alt.1": {'SAMPLE-4', 'SAMPLE-5'}, "samples_num_alt.2": {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'}},
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -237,23 +238,25 @@ EXPECTED_DATA_GENOTYPES = [
         **EXPECTED_DATA_VARIANTS[1],
         samples_no_call=None,
         samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=None, prev_num_alt=-1)],
+        samples_new_genotype=None,
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1)],
                    **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[2],
         samples_no_call=None,
-        samples_new_call={'SAMPLE-2', 'SAMPLE-5'},
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=False, new_genotype=False, prev_num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=True,  new_genotype=False, prev_num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=False, new_genotype=True, prev_num_alt=2),
+        samples_new_call={'SAMPLE-1', 'SAMPLE-3'},
+        samples_new_genotype={'SAMPLE-4', 'SAMPLE-5'},
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=False,  new_genotype=False, prev_num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=0),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=False, new_genotype=True, prev_num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=True,  new_genotype=None, prev_num_alt=-1)],
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=False,  new_genotype=True, prev_num_alt=1)],
         **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )

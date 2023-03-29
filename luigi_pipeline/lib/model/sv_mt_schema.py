@@ -24,16 +24,16 @@ PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict({
 
     # Concordant
     frozenset(["TN"]): 0,       # 0/0 -> 0/0
-    frozenset(["TN", "TP"]): 1, # 0/1 -> 0/1
     frozenset(["TP"]): 2,       # 1/1 -> 1/1
+    frozenset(["TN", "TP"]): 1, # 0/1 -> 0/1
 
     # Novel
-    frozenset(["TN", "FP"]): 0, # 0/0 -> 0/1
     frozenset(["FP"]): 0,       # 0/0 -> 1/1
+    frozenset(["TN", "FP"]): 0, # 0/0 -> 0/1
 
     # Discordant
-    frozenset(["TN", "FN"]): 1, # 0/1 -> 0/0
     frozenset(["FN"]): 2,       # 1/1 -> 0/0
+    frozenset(["TN", "FN"]): 1, # 0/1 -> 0/0
     frozenset(["FP", "TP"]): 1, # 0/1 -> 1/1
     frozenset(["FN", "TP"]): 2, # 1/1 -> 0/1
 })
@@ -226,9 +226,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.RD_CN,
             'num_alt': num_alt,
             'prev_num_alt': prev_num_alt,
-            'new_genotype': hl.or_missing(
-                is_called & was_previously_called, discordant_genotype
-            ),
+            'new_genotype': hl.or_missing(is_called, discordant_genotype),
             'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
@@ -239,7 +237,11 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_new_call(self):
-        return self._genotype_filter_samples(lambda g: g.new_call)            
+        return self._genotype_filter_samples(lambda g: g.new_call)
+
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_new_genotype(self):
+        return self._genotype_filter_samples(lambda g: g.new_genotype)
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
