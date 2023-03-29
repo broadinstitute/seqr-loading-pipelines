@@ -211,7 +211,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     def _genotype_fields(self):
         is_called = hl.is_defined(self.mt.GT)
-        was_previously_called = hl.is_defined(self.mt.CONC_ST)
+        was_previously_called = hl.is_defined(self.mt.CONC_ST) & ~self.mt.CONC_ST.contains("EMPTY")
         num_alt = self._num_alt(is_called)
         prev_num_alt = hl.if_else(
             was_previously_called,
