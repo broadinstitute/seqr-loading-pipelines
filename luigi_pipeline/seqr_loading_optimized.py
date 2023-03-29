@@ -38,7 +38,6 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
 
-        # Note project remap path is optional and we can skip if it doesn't exist even if provided.
         if self.remap_path:
             check_if_path_exists(self.remap_path, "remap_path")
             mt = self.remap_sample_ids(mt, self.remap_path)
