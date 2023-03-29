@@ -11,7 +11,7 @@ from lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
 )
-from seqr_loading import SeqrVCFToMTTask, check_if_path_exists, does_file_exist
+from seqr_loading import SeqrVCFToMTTask, check_if_path_exists
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,8 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
         mt = hl.read_matrix_table(self.input()[0].path)
 
         # Note project remap path is optional and we can skip if it doesn't exist even if provided.
-        if self.remap_path and does_file_exist(self.remap_path):
+        if self.remap_path:
+            check_if_path_exists(self.remap_path, "remap_path")
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
             check_if_path_exists(self.subset_path, "subset_path")
