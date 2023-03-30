@@ -27,8 +27,13 @@ VARIANT_THRESHOLD = 100
 CONST_GRCh37 = '37'
 CONST_GRCh38 = '38'
 
+def does_file_exist(path):
+    if path.startswith("gs://"):
+        return hl.hadoop_exists(path)
+    return os.path.exists(path)
+
 def check_if_path_exists(path, label=""):
-    if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
+    if not does_file_exist(path):
         raise ValueError(f"{label} path not found: {path}")
 
 class SeqrValidationError(Exception):

@@ -43,12 +43,11 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
 
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
-
-        if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
-        if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
         if self.remap_path:
+            check_if_path_exists(self.remap_path, "remap_path")
             mt = self.remap_sample_ids(mt, self.remap_path)
         if self.subset_path:
+            check_if_path_exists(self.subset_path, "subset_path")
             mt = self.subset_samples_and_variants(mt, self.subset_path)
 
         kwargs = self.get_schema_class_kwargs()
