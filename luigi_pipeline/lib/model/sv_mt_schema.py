@@ -217,7 +217,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
         num_alt = self._num_alt(is_called)
         prev_num_alt = hl.if_else(
             was_previously_called,
-            PREVIOUS_GENOTYPE_N_ALT_ALLELES.get(hl.set(self.mt.CONC_ST)),
+            PREVIOUS_GENOTYPE_N_ALT_ALLELES.get(hl.set(self.mt.CONC_ST), -1),
             -1,
         )
         discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
@@ -227,8 +227,8 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
             'num_alt': num_alt,
-            'prev_num_alt': prev_num_alt,
-            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
+            'prev_num_alt': hl.or_missing(discordant_genotype, prev_num_alt),
+            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype | discordant_genotype),
         }
 
     # NB: override this function here to mimic the existing null handling behavior.
