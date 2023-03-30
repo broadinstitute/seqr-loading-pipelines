@@ -227,7 +227,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
             'num_alt': num_alt,
-            'prev_num_alt': prev_num_alt,
+            'prev_num_alt': hl.or_missing(discordant_genotype, prev_num_alt),
             'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
