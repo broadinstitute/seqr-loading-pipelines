@@ -6,7 +6,7 @@ import luigi
 
 from hail_scripts.utils.mapping_gene_ids import load_gencode
 
-from lib.model.sv_mt_schema import (
+from luigi_pipeline.lib.model.sv_mt_schema import (
     SeqrSVGenotypesSchema,
     SeqrSVVariantsAndGenotypesSchema,
     SeqrSVVariantSchema,

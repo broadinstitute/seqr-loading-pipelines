@@ -5,13 +5,13 @@ from collections import defaultdict
 import hail as hl
 import luigi
 
-from lib.hail_tasks import HailElasticSearchTask, HailMatrixTableTask
-from lib.model.seqr_mt_schema import (
+from luigi_pipeline.lib.hail_tasks import HailElasticSearchTask, HailMatrixTableTask
+from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrGenotypesSchema,
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
 )
-from seqr_loading import SeqrVCFToMTTask, check_if_path_exists
+from luigi_pipeline.seqr_loading import SeqrVCFToMTTask, check_if_path_exists
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,6 @@ class BaseVCFToGenotypesMTTask(HailMatrixTableTask):
 
     def run(self):
         mt = hl.read_matrix_table(self.input()[0].path)
-
         if self.remap_path:
             check_if_path_exists(self.remap_path, "remap_path")
             mt = self.remap_sample_ids(mt, self.remap_path)
