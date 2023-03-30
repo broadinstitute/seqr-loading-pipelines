@@ -18,9 +18,8 @@ def run(seqr_reference_data_prefix):
             gold_stars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
         )
         ht.describe()
+        ht = ht.transmute(info=ht.info.select('ALLELEID', 'CLNSIG')).select('info', 'gold_stars')
         ht = ht.repartition(100)
-        ht = ht.transmute(info=ht.info.select('ALLELEID', 'CLNSIG'))
-        ht = ht.select('info', 'gold_stars')
         write_ht(
             ht,
             CLINVAR_HT_PATH.format(
