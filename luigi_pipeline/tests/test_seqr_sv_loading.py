@@ -152,7 +152,7 @@ VARIANT_MT_FIELDS = [
 
 SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
 
-GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_new_call', 'samples_new_genotype', 'samples_num_alt.1', 'samples_num_alt.2']
+GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_new_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
@@ -225,12 +225,11 @@ EXPECTED_DATA_GENOTYPES = [
         **EXPECTED_DATA_VARIANTS[0],
         samples_no_call=None,
         samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
-        samples_new_genotype=None,
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1)],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=19, cn=None, num_alt=1, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1, new_call=True, prev_num_alt=-1)],
         **{"samples_num_alt.1": {'SAMPLE-4', 'SAMPLE-5'}, "samples_num_alt.2": {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'}},
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -238,12 +237,11 @@ EXPECTED_DATA_GENOTYPES = [
         **EXPECTED_DATA_VARIANTS[1],
         samples_no_call=None,
         samples_new_call={'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
-        samples_new_genotype=None,
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1)],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0, new_call=True, prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0, new_call=True, prev_num_alt=-1)],
                    **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -251,12 +249,11 @@ EXPECTED_DATA_GENOTYPES = [
         **EXPECTED_DATA_VARIANTS[2],
         samples_no_call=None,
         samples_new_call={'SAMPLE-1', 'SAMPLE-3'},
-        samples_new_genotype={'SAMPLE-4', 'SAMPLE-5'},
-        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=True, new_genotype=False, prev_num_alt=-1),
-                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=False,  new_genotype=False, prev_num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=True, new_genotype=False, prev_num_alt=0),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=False, new_genotype=True, prev_num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=False,  new_genotype=True, prev_num_alt=1)],
+        genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=True,  prev_num_alt=-1),
+                   hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=False, prev_num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=True,  prev_num_alt=0),
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=False, prev_num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=False, prev_num_alt=1)],
         **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )
