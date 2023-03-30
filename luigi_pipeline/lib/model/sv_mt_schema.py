@@ -224,7 +224,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.RD_CN,
             'num_alt': num_alt,
             'prev_num_alt': hl.or_missing(discordant_genotype, prev_num_alt),
-            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype | discordant_genotype),
+            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
     # NB: override this function here to mimic the existing null handling behavior.
@@ -234,7 +234,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_new_call(self):
-        return self._genotype_filter_samples(lambda g: g.new_call)
+        return self._genotype_filter_samples(lambda g: g.new_call | hl.is_defined(g.prev_num_alt))
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):

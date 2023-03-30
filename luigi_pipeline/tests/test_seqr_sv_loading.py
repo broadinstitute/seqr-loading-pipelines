@@ -252,8 +252,8 @@ EXPECTED_DATA_GENOTYPES = [
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0, new_call=True, prev_num_alt=None),
                    hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1, new_call=False, prev_num_alt=None),
                    hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1, new_call=True, prev_num_alt=None),
-                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=True, prev_num_alt=2),
-                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=True, prev_num_alt=1)],
+                   hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0, new_call=False, prev_num_alt=2),
+                   hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0, new_call=False, prev_num_alt=1)],
         **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )
