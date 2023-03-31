@@ -22,6 +22,12 @@ NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT'
 PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict({
     # Map of concordance string -> previous n_alt_alleles()
 
+    # TODO: Prefer to implement this with hl.or_missing()
+    # over the dictionary lookup.  Requires: https://github.com/hail-is/hail/commit/f748f98937c6f5d62c3badf994fa5c59107bc2a8
+    # to be released.
+    hl.missing(hl.tset(hl.tstr)): -1,
+    frozenset(["EMPTY"]): -1,
+
     # Concordant
     frozenset(["TN"]): 0,       # 0/0 -> 0/0
     frozenset(["TP"]): 2,       # 1/1 -> 1/1
@@ -215,7 +221,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
         is_called = hl.is_defined(self.mt.GT)
         was_previously_called = hl.is_defined(self.mt.CONC_ST) & ~self.mt.CONC_ST.contains("EMPTY")
         num_alt = self._num_alt(is_called)
-        prev_num_alt = PREVIOUS_GENOTYPE_N_ALT_ALLELES.get(hl.set(self.mt.CONC_ST), -1)
+        prev_num_alt = PREVIOUS_GENOTYPE_N_ALT_ALLELES[hl.set(self.mt.CONC_ST)]
         discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
         novel_genotype = (num_alt != prev_num_alt) & (prev_num_alt == 0)
         return {
