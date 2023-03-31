@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--seqr-reference-data-prefix",
         default="",
-        choices=["", "/dev"]
+        choices=["v03", "v03/dev"]
     )
     args = parser.parse_args()
     run(args.seqr_reference_data_prefix)
