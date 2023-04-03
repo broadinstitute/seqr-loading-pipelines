@@ -254,7 +254,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self._temp_dir.name)
 
-    @mock.patch('seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
+    @mock.patch('luigi_pipeline.seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING)
     def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
         # Our framework doesn't pass the parameters to the dependent task.. so we force them
