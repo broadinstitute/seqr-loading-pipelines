@@ -160,7 +160,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         sorted_transcript_consequences, sv_type,
     ])
     def transcript_consequence_terms(self):
-        return self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType])
+        return hl.set(self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType]))
 
     @row_annotation()
     def sv_type_detail(self):

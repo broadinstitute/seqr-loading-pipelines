@@ -187,7 +187,7 @@ EXPECTED_DATA_VARIANTS = [
         xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
         rg37_locus=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
+        transcriptConsequenceTerms={'NEAREST_TSS', 'BND'}, sv_type_detail=None,
         geneIds=set(), variantId='BND_chr1_9',
         sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
@@ -203,7 +203,7 @@ EXPECTED_DATA_VARIANTS = [
         cpx_intervals=None, xstart=1004228405, xstop=1004228448,
         rg37_locus=hl.Locus(contig=1, position=4288465, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
-        transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=set(),
+        transcriptConsequenceTerms={'NEAREST_TSS', 'INS'}, sv_type_detail='ME:ALU', geneIds=set(),
         variantId='INS_chr1_65', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS')],
         docId='INS_chr1_65',
@@ -218,7 +218,7 @@ EXPECTED_DATA_VARIANTS = [
         xstop=1006559723,
         rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
-        transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
+        transcriptConsequenceTerms={'INTRONIC', 'CPX'}, sv_type_detail='INVdup',
         geneIds=set({'ENSG00000173662'}), variantId='CPX_chr1_22', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
         docId='CPX_chr1_22',
