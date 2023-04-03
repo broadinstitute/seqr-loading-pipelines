@@ -104,7 +104,7 @@ VCF_HEADER_META = [
     '##INFO=<ID=gnomAD_V2_AF,Number=1,Type=Float,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AC,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AN,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
-    '##INFO=<ID=StrVCTVRE,Number=1,Type=Float,Description="StrVCTVRE score">',
+    '##INFO=<ID=StrVCTVRE,Number=1,Type=String,Description="StrVCTVRE score">',
 ]
 
 VCF_DATA_ROW = [
@@ -126,34 +126,55 @@ VCF_DATA = VCF_HEADER_META + ['\t'.join(row) for row in VCF_DATA_ROW]
 
 GLOBAL_FIELDS = ['sourceFilePath', 'genomeVersion', 'sampleType', 'datasetType', 'hail_version']
 
-DISABLED_INDEX_FIELDS = ["contig", "start", "xstart", "genotypes", "end_locus", "docId", "algorithms", "bothsides_support", "cpx_intervals", "variantId"]
+DISABLED_INDEX_FIELDS = ["contig", "start", "xstart", "genotypes", "docId", "algorithms", "bothsides_support", "cpx_intervals"]
 
 VARIANT_MT_FIELDS = [
     'contig', 'sc', 'sf', 'sn', 'start', 'end', 'sv_callset_Het', 'sv_callset_Hom', 'gnomad_svs_ID', 'gnomad_svs_AF',
     'gnomad_svs_AC', 'gnomad_svs_AN', 'pos', 'filters', 'bothsides_support', 'algorithms', 'xpos', 'cpx_intervals',
-    'xstart', 'xstop', 'rg37_locus_end', 'svType', 'transcriptConsequenceTerms', 'sv_type_detail',
-    'geneIds', 'variantId', 'sortedTranscriptConsequences', 'docId', 'end_locus.contig', 'end_locus.position', 'StrVCTVRE_score',
+    'xstart', 'xstop', 'rg37_locus', 'rg37_locus_end', 'svType', 'transcriptConsequenceTerms', 'sv_type_detail',
+    'geneIds', 'variantId', 'sortedTranscriptConsequences', 'docId', 'StrVCTVRE_score',
 ]
 
-SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 1000, 10)]
+SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 100, 10)]
 
 GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
 
 EXPECTED_SAMPLE_GQ = [
     {
+        'samples_gq_sv.0_to_10': set(),
         'samples_gq_sv.10_to_20': {'SAMPLE-4', 'SAMPLE-5'},
         'samples_gq_sv.20_to_30': {'SAMPLE-2'},
         'samples_gq_sv.30_to_40': {'SAMPLE-3'},
+        'samples_gq_sv.40_to_50': set(),
         'samples_gq_sv.50_to_60': {'SAMPLE-1'},
+        'samples_gq_sv.60_to_70': set(),
+        'samples_gq_sv.70_to_80': set(),
+        'samples_gq_sv.80_to_90': set(),
+        'samples_gq_sv.90_to_100': set(),
     },
     {
+        'samples_gq_sv.0_to_10': set(),
+        'samples_gq_sv.10_to_20': set(),
+        'samples_gq_sv.20_to_30': set(),
+        'samples_gq_sv.30_to_40': set(),
+        'samples_gq_sv.40_to_50': set(),
+        'samples_gq_sv.50_to_60': set(),
         'samples_gq_sv.60_to_70': {'SAMPLE-1'},
+        'samples_gq_sv.70_to_80': set(),
+        'samples_gq_sv.80_to_90': set(),
         'samples_gq_sv.90_to_100': {'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
     },
     {
         'samples_gq_sv.0_to_10': {'SAMPLE-3'},
+        'samples_gq_sv.10_to_20': set(),
+        'samples_gq_sv.20_to_30': set(),
+        'samples_gq_sv.30_to_40': set(),
+        'samples_gq_sv.40_to_50': set(),
         'samples_gq_sv.50_to_60': {'SAMPLE-2'},
+        'samples_gq_sv.60_to_70': set(),
+        'samples_gq_sv.70_to_80': set(),
+        'samples_gq_sv.80_to_90': set(),
         'samples_gq_sv.90_to_100': {'SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'},
     }
 ]
@@ -164,6 +185,7 @@ EXPECTED_DATA_VARIANTS = [
         gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=789481,
         filters=set(['PESR_GT_OVERDISPERSION', 'UNRESOLVED']), bothsides_support=False, algorithms=['manta'],
         xpos=1000789481, cpx_intervals=None, xstart=1000789481, xstop=1000789481,
+        rg37_locus=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=724861, reference_genome='GRCh37'), svType='BND',
         transcriptConsequenceTerms=['NEAREST_TSS', 'NEAREST_TSS', 'BND'], sv_type_detail=None,
         geneIds=set(), variantId='BND_chr1_9',
@@ -171,7 +193,6 @@ EXPECTED_DATA_VARIANTS = [
             hl.Struct(gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'),
             hl.Struct(gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS')],
         docId='BND_chr1_9',
-        **{"end_locus.contig": "chr1", "end_locus.position": 789481},
         StrVCTVRE_score=None,
     ),
     hl.Struct(
@@ -180,27 +201,27 @@ EXPECTED_DATA_VARIANTS = [
         gnomad_svs_AN=3247, pos=4228405,
         filters=set(['HIGH_SR_BACKGROUND']), bothsides_support=False, algorithms=['manta', 'melt'], xpos=1004228405,
         cpx_intervals=None, xstart=1004228405, xstop=1004228448,
+        rg37_locus=hl.Locus(contig=1, position=4288465, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=4288508, reference_genome='GRCh37'), svType='INS',
         transcriptConsequenceTerms=['NEAREST_TSS', 'INS'], sv_type_detail='ME:ALU', geneIds=set(),
         variantId='INS_chr1_65', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS')],
         docId='INS_chr1_65',
-        **{"end_locus.contig": "chr1", "end_locus.position": 4228448},
         StrVCTVRE_score=0.1255,
     ),
     hl.Struct(
-        contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3,
-        gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None, pos=6558902,
-        filters=set(['HIGH_SR_BACKGROUND']), bothsides_support=True, algorithms=['manta'], xpos=1006558902,
+        contig='1', sc=2, sf=0.169873, sn=8, start=6558902, end=6559723, sv_callset_Het=983, sv_callset_Hom=3, 
+        gnomad_svs_ID=None, gnomad_svs_AF=None, gnomad_svs_AC=None, gnomad_svs_AN=None,
+        pos=6558902, filters=set(['HIGH_SR_BACKGROUND']), bothsides_support=True, algorithms=['manta'], xpos=1006558902,
         cpx_intervals=[hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
                        hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723)], xstart=1006558902,
         xstop=1006559723,
+        rg37_locus=hl.Locus(contig=1, position=6618962, reference_genome='GRCh37'),
         rg37_locus_end=hl.Locus(contig=1, position=6619783, reference_genome='GRCh37'), svType='CPX',
         transcriptConsequenceTerms=['INTRONIC', 'CPX'], sv_type_detail='INVdup',
         geneIds=set({'ENSG00000173662'}), variantId='CPX_chr1_22', sortedTranscriptConsequences=[
             hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')],
         docId='CPX_chr1_22',
-        **{"end_locus.contig": "chr1", "end_locus.position": 6559723},
         StrVCTVRE_score=None,
     ),
 ]
@@ -208,7 +229,7 @@ EXPECTED_DATA_VARIANTS = [
 EXPECTED_DATA_GENOTYPES = [
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[0],
-        samples_no_call=None, 
+        samples_no_call=set(),
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=59, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-2', gq=26, cn=None, num_alt=2),
                    hl.Struct(sample_id='SAMPLE-3', gq=39, cn=None, num_alt=2),
@@ -219,24 +240,24 @@ EXPECTED_DATA_GENOTYPES = [
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[1],
-        samples_no_call=None,
+        samples_no_call=set(),
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=62, cn=None, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-2', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-3', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0)],
-                   **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": None},
+                   **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": set()},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[2],
-        samples_no_call=None,
+        samples_no_call=set(),
         genotypes=[hl.Struct(sample_id='SAMPLE-1', gq=99, cn=2, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-2', gq=57, cn=2, num_alt=1),
-                   hl.Struct(sample_id='SAMPLE-3', gq=0, cn=2, num_alt=1),
+                   hl.Struct(sample_id='SAMPLE-3', gq=0,  cn=2, num_alt=1),
                    hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
                    hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0)],
-        **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": None},
+        **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": set()},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     )
 ]

@@ -37,6 +37,13 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         super().__init__(*args, **kwargs)
         self._gene_id_mapping = gene_id_mapping
 
+    def end_locus(self):
+        return hl.if_else(
+            hl.is_defined(self.mt.info.END2),
+            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
+            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
+        )
+
     def sv_types(self):
         return self.mt.alleles[1].replace('[<>]', '').split(':', 2)
 
@@ -82,7 +89,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
-        return self.mt.info.StrVCTVRE
+        return hl.parse_float(self.mt.info.StrVCTVRE)
 
     @row_annotation()
     def filters(self):
@@ -108,14 +115,6 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             self.mt.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
         )
 
-    @row_annotation(disable_index=True)
-    def end_locus(self):
-        return hl.if_else(
-            hl.is_defined(self.mt.info.END2),
-            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
-            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
-        )
-
     @row_annotation(name='sortedTranscriptConsequences')
     def sorted_transcript_consequences(self):
         conseq_predicted_gene_cols = [
@@ -137,17 +136,20 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             mapped_genes
         ).flatmap(lambda x: x)
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def xstop(self):
-        return variant_id.get_expr_for_xpos(self.mt.end_locus)
+        return variant_id.get_expr_for_xpos(self.end_locus())
 
-    # rg37_locus is annotated by HailMatrixTableTask.add_37_coordinates
+    @row_annotation()
+    def rg37_locus(self):
+        return self.mt.rg37_locus
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def rg37_locus_end(self):
+        end_locus = self.end_locus()
         return hl.or_missing(
-            self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
-            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
+            end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[end_locus.contig],
+            hl.liftover(hl.locus(end_locus.contig, end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
         )
 
     @row_annotation(name='svType')
@@ -182,7 +184,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             )
         )
 
-    @row_annotation(name='variantId', disable_index=True)
+    @row_annotation(name='variantId')
     def variant_id(self):
         return self.mt.rsid
 
@@ -203,16 +205,11 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'num_alt': self._num_alt(is_called)
         }
 
-    # NB: override this function here to mimic the existing null handling behavior.
-    def _genotype_filter_samples(self, filter_):
-        samples = super()._genotype_filter_samples(filter_)
-        return hl.or_missing(hl.len(samples) > 0, samples)            
-
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
         # NB: super().samples_gq is a RowAnnotation... so we call the method under the hood.
         # ew it is gross.
-        return super().samples_gq.fn(self, start=0, end=1000, step=10)
+        return super().samples_gq.fn(self, start=0, end=100, step=10)
 
     def samples_ab(self):
         pass
