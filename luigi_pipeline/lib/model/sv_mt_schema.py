@@ -74,11 +74,11 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='gnomad_svs_AC')
     def gnomad_svs_ac(self):
-        return self.mt.info.gnomAD_V2_AC_AF
+        return self.mt.info.gnomAD_V2_AC
 
     @row_annotation(name='gnomad_svs_AN')
     def gnomad_svs_an(self):
-        return self.mt.info.gnomAD_V2_AN_AF
+        return self.mt.info.gnomAD_V2_AN
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):

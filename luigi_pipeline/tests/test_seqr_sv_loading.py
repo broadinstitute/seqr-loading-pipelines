@@ -102,8 +102,8 @@ VCF_HEADER_META = [
     '##INFO=<ID=FEMALE_FREQ_HOMALT,Number=1,Type=Float,Description="FEMALE homozygous alternate genotype frequency (biallelic sites only).">',
     '##INFO=<ID=gnomAD_V2_SVID,Number=1,Type=String,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=gnomAD_V2_AF,Number=1,Type=Float,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
-    '##INFO=<ID=gnomAD_V2_AC_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
-    '##INFO=<ID=gnomAD_V2_AN_AF,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
+    '##INFO=<ID=gnomAD_V2_AC,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
+    '##INFO=<ID=gnomAD_V2_AN,Number=1,Type=Integer,Description="Allele frequency (for biallelic sites) or copy-state frequency (for multiallelic sites) of an overlapping event in gnomad.">',
     '##INFO=<ID=StrVCTVRE,Number=1,Type=Float,Description="StrVCTVRE score">',
 ]
 
