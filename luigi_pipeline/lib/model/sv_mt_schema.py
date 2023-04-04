@@ -22,6 +22,13 @@ NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT'
 
 INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
 
+def unsafe_cast_int32(f: hl.tfloat32) -> hl.int32:
+    i = hl.int32(f)
+    return (hl.case()
+        .when(hl.approx_equal(f, i), i)
+        .or_error(f"Found non-integer value {f}")
+    )
+
 
 def get_cpx_interval(x):
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
@@ -81,11 +88,11 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='gnomad_svs_AC')
     def gnomad_svs_ac(self):
-        return hl.int32(self.mt.info.gnomAD_V2_AC)
+        return unsafe_cast_int32(self.mt.info.gnomad_svs_AC)
 
     @row_annotation(name='gnomad_svs_AN')
     def gnomad_svs_an(self):
-        return hl.int32(self.mt.info.gnomAD_V2_AN)
+        return unsafe_cast_int32(self.mt.info.gnomad_svs_AN)
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
