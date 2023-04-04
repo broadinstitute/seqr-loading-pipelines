@@ -102,7 +102,7 @@ class BaseSeqrSchema(BaseVariantSchema):
     @row_annotation()
     def xstop(self):
         return variant_id.get_expr_for_xpos(self.mt.locus) + hl.len(variant_id.get_expr_for_ref_allele(self.mt)) - 1
-   
+
     @row_annotation()
     def rg37_locus(self):
         if self.mt.locus.dtype.reference_genome.name != "GRCh38":
