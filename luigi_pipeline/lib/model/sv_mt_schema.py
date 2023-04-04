@@ -46,6 +46,13 @@ PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict({
     frozenset(["FN", "TP"]): 2, # 1/1 -> 0/1
 })
 
+def unsafe_cast_int32(f: hl.tfloat32) -> hl.int32:
+    i = hl.int32(f)
+    return (hl.case()
+        .when(hl.approx_equal(f, i), i)
+        .or_error(f"Found non-integer value {f}")
+    )
+
 def get_cpx_interval(x):
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
     type_chr = x.split('_chr')
@@ -59,6 +66,13 @@ class SeqrSVVariantSchema(BaseVariantSchema):
     def __init__(self, *args, gene_id_mapping=None, **kwargs):
         super().__init__(*args, **kwargs)
         self._gene_id_mapping = gene_id_mapping
+
+    def end_locus(self):
+        return hl.if_else(
+            hl.is_defined(self.mt.info.END2),
+            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
+            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
+        )
 
     def sv_types(self):
         return self.mt.alleles[1].replace('[<>]', '').split(':', 2)
@@ -97,15 +111,15 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='gnomad_svs_AC')
     def gnomad_svs_ac(self):
-        return self.mt.info.gnomAD_V2_AC_AF
+        return unsafe_cast_int32(self.mt.info.gnomad_svs_AC)
 
     @row_annotation(name='gnomad_svs_AN')
     def gnomad_svs_an(self):
-        return self.mt.info.gnomAD_V2_AN_AF
+        return unsafe_cast_int32(self.mt.info.gnomad_svs_AN)
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
-        return self.mt.info.StrVCTVRE
+        return hl.parse_float(self.mt.info.StrVCTVRE)
 
     @row_annotation()
     def filters(self):
@@ -131,14 +145,6 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             self.mt.info.CPX_INTERVALS.map(lambda x: get_cpx_interval(x)),
         )
 
-    @row_annotation(disable_index=True)
-    def end_locus(self):
-        return hl.if_else(
-            hl.is_defined(self.mt.info.END2),
-            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
-            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
-        )
-
     @row_annotation(name='sortedTranscriptConsequences')
     def sorted_transcript_consequences(self):
         conseq_predicted_gene_cols = [
@@ -160,17 +166,20 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             mapped_genes
         ).flatmap(lambda x: x)
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def xstop(self):
-        return variant_id.get_expr_for_xpos(self.mt.end_locus)
+        return variant_id.get_expr_for_xpos(self.end_locus())
 
-    # rg37_locus is annotated by HailMatrixTableTask.add_37_coordinates
+    @row_annotation()
+    def rg37_locus(self):
+        return self.mt.rg37_locus
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def rg37_locus_end(self):
+        end_locus = self.end_locus()
         return hl.or_missing(
-            self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
-            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
+            end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[end_locus.contig],
+            hl.liftover(hl.locus(end_locus.contig, end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
         )
 
     @row_annotation(name='svType')
@@ -181,7 +190,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         sorted_transcript_consequences, sv_type,
     ])
     def transcript_consequence_terms(self):
-        return self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType])
+        return hl.set(self.mt.sortedTranscriptConsequences.map(lambda x: x[MAJOR_CONSEQUENCE]).extend([self.mt.svType]))
 
     @row_annotation()
     def sv_type_detail(self):
@@ -205,7 +214,7 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             )
         )
 
-    @row_annotation(name='variantId', disable_index=True)
+    @row_annotation(name='variantId')
     def variant_id(self):
         return self.mt.rsid
 
@@ -233,11 +242,6 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
-    # NB: override this function here to mimic the existing null handling behavior.
-    def _genotype_filter_samples(self, filter_):
-        samples = super()._genotype_filter_samples(filter_)
-        return hl.or_missing(hl.len(samples) > 0, samples)
-
     @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
     def samples_new_call(self):
         return self._genotype_filter_samples(lambda g: g.new_call | hl.is_defined(g.prev_num_alt))
@@ -246,7 +250,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
     def samples_gq(self):
         # NB: super().samples_gq is a RowAnnotation... so we call the method under the hood.
         # ew it is gross.
-        return super().samples_gq.fn(self, start=0, end=1000, step=10)
+        return super().samples_gq.fn(self, end=90, step=10)
 
     def samples_ab(self):
         pass
