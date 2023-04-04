@@ -135,7 +135,7 @@ VARIANT_MT_FIELDS = [
     'geneIds', 'variantId', 'sortedTranscriptConsequences', 'docId', 'StrVCTVRE_score',
 ]
 
-SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 100, 10)]
+SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i+10) for i in range(0, 90, 10)]
 
 GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS 
@@ -151,7 +151,6 @@ EXPECTED_SAMPLE_GQ = [
         'samples_gq_sv.60_to_70': set(),
         'samples_gq_sv.70_to_80': set(),
         'samples_gq_sv.80_to_90': set(),
-        'samples_gq_sv.90_to_100': set(),
     },
     {
         'samples_gq_sv.0_to_10': set(),
@@ -163,7 +162,6 @@ EXPECTED_SAMPLE_GQ = [
         'samples_gq_sv.60_to_70': {'SAMPLE-1'},
         'samples_gq_sv.70_to_80': set(),
         'samples_gq_sv.80_to_90': set(),
-        'samples_gq_sv.90_to_100': {'SAMPLE-2', 'SAMPLE-3', 'SAMPLE-4', 'SAMPLE-5'},
     },
     {
         'samples_gq_sv.0_to_10': {'SAMPLE-3'},
@@ -175,7 +173,6 @@ EXPECTED_SAMPLE_GQ = [
         'samples_gq_sv.60_to_70': set(),
         'samples_gq_sv.70_to_80': set(),
         'samples_gq_sv.80_to_90': set(),
-        'samples_gq_sv.90_to_100': {'SAMPLE-1', 'SAMPLE-4', 'SAMPLE-5'},
     }
 ]
 
