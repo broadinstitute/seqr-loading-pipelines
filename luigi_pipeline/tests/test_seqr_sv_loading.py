@@ -6,7 +6,11 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from seqr_sv_loading import SeqrSVGenotypesMTTask, SeqrSVMTToESTask, SeqrSVVariantMTTask
+from luigi_pipeline.seqr_sv_loading import (
+    SeqrSVGenotypesMTTask,
+    SeqrSVMTToESTask,
+    SeqrSVVariantMTTask,
+)
 
 REFERENCE_CHAIN = 'tests/data/grch38_to_grch37.over.chain.gz'
 
@@ -304,7 +308,13 @@ VCF_DATA_ROW = [
 
 VCF_DATA = VCF_HEADER_META + ['\t'.join(row) for row in VCF_DATA_ROW]
 
-GLOBAL_FIELDS = ['sourceFilePath', 'genomeVersion', 'sampleType', 'datasetType', 'hail_version']
+GLOBAL_FIELDS = [
+    'sourceFilePath',
+    'genomeVersion',
+    'sampleType',
+    'datasetType',
+    'hail_version',
+]
 
 DISABLED_INDEX_FIELDS = [
     "contig",
@@ -353,9 +363,16 @@ VARIANT_MT_FIELDS = [
     'StrVCTVRE_score',
 ]
 
-SAMPLES_GQ_SV_FIELDS = ['samples_gq_sv.{}_to_{}'.format(i, i + 10) for i in range(0, 1000, 10)]
+SAMPLES_GQ_SV_FIELDS = [
+    'samples_gq_sv.{}_to_{}'.format(i, i + 10) for i in range(0, 1000, 10)
+]
 
-GENOTYPES_MT_FIELDS = ['genotypes', 'samples_no_call', 'samples_num_alt.1', 'samples_num_alt.2']
+GENOTYPES_MT_FIELDS = [
+    'genotypes',
+    'samples_no_call',
+    'samples_num_alt.1',
+    'samples_num_alt.2',
+]
 GENOTYPES_MT_FIELDS += SAMPLES_GQ_SV_FIELDS
 
 EXPECTED_SAMPLE_GQ = [
@@ -406,10 +423,14 @@ EXPECTED_DATA_VARIANTS = [
         variantId='BND_chr1_9',
         sortedTranscriptConsequences=[
             hl.Struct(
-                gene_symbol='FBXO28', gene_id='ENSG00000143756', major_consequence='NEAREST_TSS'
+                gene_symbol='FBXO28',
+                gene_id='ENSG00000143756',
+                major_consequence='NEAREST_TSS',
             ),
             hl.Struct(
-                gene_symbol='OR4F16', gene_id='ENSG00000186192', major_consequence='NEAREST_TSS'
+                gene_symbol='OR4F16',
+                gene_id='ENSG00000186192',
+                major_consequence='NEAREST_TSS',
             ),
         ],
         docId='BND_chr1_9',
@@ -445,7 +466,9 @@ EXPECTED_DATA_VARIANTS = [
         variantId='INS_chr1_65',
         sortedTranscriptConsequences=[
             hl.Struct(
-                gene_symbol='C1orf174', gene_id='ENSG00000198912', major_consequence='NEAREST_TSS'
+                gene_symbol='C1orf174',
+                gene_id='ENSG00000198912',
+                major_consequence='NEAREST_TSS',
             )
         ],
         docId='INS_chr1_65',
@@ -483,7 +506,11 @@ EXPECTED_DATA_VARIANTS = [
         geneIds=set({'ENSG00000173662'}),
         variantId='CPX_chr1_22',
         sortedTranscriptConsequences=[
-            hl.Struct(gene_symbol='TAS1R1', gene_id='ENSG00000173662', major_consequence='INTRONIC')
+            hl.Struct(
+                gene_symbol='TAS1R1',
+                gene_id='ENSG00000173662',
+                major_consequence='INTRONIC',
+            )
         ],
         docId='CPX_chr1_22',
         **{"end_locus.contig": "chr1", "end_locus.position": 6559723},
@@ -541,8 +568,12 @@ class SeqrSVLoadingTest(unittest.TestCase):
     def setUp(self):
         self._temp_dir = tempfile.TemporaryDirectory()
         self._vcf_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.vcf')[1]
-        self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
-        self._genotypes_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[1]
+        self._variant_mt_file = tempfile.mkstemp(dir=self._temp_dir.name, suffix='.mt')[
+            1
+        ]
+        self._genotypes_mt_file = tempfile.mkstemp(
+            dir=self._temp_dir.name, suffix='.mt'
+        )[1]
         with open(self._vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
 
@@ -554,14 +585,17 @@ class SeqrSVLoadingTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         # Our framework doesn't pass the parameters to the dependent task.. so we force them
         # here.
-        SeqrSVVariantMTTask.source_paths = self._vcf_file
-        SeqrSVVariantMTTask.dest_path = self._variant_mt_file
-        SeqrSVVariantMTTask.grch38_to_grch37_ref_chain = REFERENCE_CHAIN
+        variant_task = SeqrSVVariantMTTask(
+            source_paths=self._vcf_file,
+            dest_path=self._variant_mt_file,
+            grch38_to_grch37_ref_chain=REFERENCE_CHAIN,
+        )
         genotype_task = SeqrSVGenotypesMTTask(
             genome_version="38",
             source_paths="i am completely ignored",
             dest_path=self._genotypes_mt_file,
         )
+        SeqrSVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
         load_gencode_mock.assert_called_once_with(42, "")
@@ -581,20 +615,35 @@ class SeqrSVLoadingTest(unittest.TestCase):
             [key for key in key_dropped_variant_mt._fields if key not in global_fields],
             VARIANT_MT_FIELDS,
         )
-        data = key_dropped_variant_mt.order_by(key_dropped_variant_mt.start).tail(8).take(3)
+        data = (
+            key_dropped_variant_mt.order_by(key_dropped_variant_mt.start)
+            .tail(8)
+            .take(3)
+        )
         self.assertListEqual(data, EXPECTED_DATA_VARIANTS)
 
         # Genotypes (only) Assertions
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         self.assertEqual(genotypes_mt.count(), (11, 5))
-        key_dropped_genotypes_mt = genotypes_mt.rows().flatten().drop("locus", "alleles")
+        key_dropped_genotypes_mt = (
+            genotypes_mt.rows().flatten().drop("locus", "alleles")
+        )
         self.assertCountEqual(
-            [key for key in key_dropped_genotypes_mt._fields if key not in GLOBAL_FIELDS],
+            [
+                key
+                for key in key_dropped_genotypes_mt._fields
+                if key not in GLOBAL_FIELDS
+            ],
             GENOTYPES_MT_FIELDS,
         )
 
         # Now mimic the join in BaseMTToESOptimizedTask
         genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
-        row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop("locus", "alleles")
+        row_ht = (
+            genotypes_mt.rows()
+            .join(variant_mt.rows())
+            .flatten()
+            .drop("locus", "alleles")
+        )
         data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)

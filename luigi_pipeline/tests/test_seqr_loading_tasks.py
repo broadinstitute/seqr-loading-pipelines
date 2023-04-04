@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import hail as hl
 
-from seqr_loading import SeqrValidationError, SeqrVCFToMTTask
-from tests.data.sample_vep import DERIVED_DATA, VEP_DATA
+from luigi_pipeline.seqr_loading import SeqrValidationError, SeqrVCFToMTTask
+from luigi_pipeline.tests.data.sample_vep import DERIVED_DATA, VEP_DATA
 
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
 
@@ -16,7 +16,13 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         self.test_mt = hl.import_vcf(TEST_DATA_MT_1KG)
 
     def _sample_type_stats_return_value(
-        self, nc_match_count, nc_total_count, nc_match, c_match_count, c_total_count, c_match
+        self,
+        nc_match_count,
+        nc_total_count,
+        nc_match,
+        c_match_count,
+        c_total_count,
+        c_match,
     ):
         return {
             'noncoding': {
@@ -32,14 +38,24 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         }
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
-    def test_seqr_loading_validate_non_mt(self, mock_sample_type_stats, mock_contig_check):
+    def test_seqr_loading_validate_non_mt(
+        self, mock_sample_type_stats, mock_contig_check
+    ):
         mock_sample_type_stats.return_value = None
-        self.assertRaises(SeqrValidationError, SeqrVCFToMTTask.validate_mt, None, '37', None)
-        self.assertRaises(SeqrValidationError, SeqrVCFToMTTask.validate_mt, 12345, '37', None)
-        self.assertRaises(SeqrValidationError, SeqrVCFToMTTask.validate_mt, {}, '37', None)
+        self.assertRaises(
+            SeqrValidationError, SeqrVCFToMTTask.validate_mt, None, '37', None
+        )
+        self.assertRaises(
+            SeqrValidationError, SeqrVCFToMTTask.validate_mt, 12345, '37', None
+        )
+        self.assertRaises(
+            SeqrValidationError, SeqrVCFToMTTask.validate_mt, {}, '37', None
+        )
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
-    def test_seqr_loading_validate_match_none(self, mock_sample_type_stats, mock_contig_check):
+    def test_seqr_loading_validate_match_none(
+        self, mock_sample_type_stats, mock_contig_check
+    ):
         # Matched none should fail.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(
             0, 0, False, 0, 0, False
@@ -49,7 +65,9 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
-    def test_seqr_loading_validate_match_both(self, mock_sample_type_stats, mock_contig_check):
+    def test_seqr_loading_validate_match_both(
+        self, mock_sample_type_stats, mock_contig_check
+    ):
         # Proper WGS, should pass.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(
             0, 0, True, 0, 0, True
@@ -79,7 +97,9 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
-    def test_seqr_loading_validate_wes_mismatch(self, mock_sample_type_stats, mock_contig_check):
+    def test_seqr_loading_validate_wes_mismatch(
+        self, mock_sample_type_stats, mock_contig_check
+    ):
         # Supposed to be WES but we report as WGS.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(
             0, 0, False, 0, 0, True
@@ -94,7 +114,9 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
 
     @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
-    def test_seqr_loading_validate_wgs_mismatch(self, mock_sample_type_stats, mock_contig_check):
+    def test_seqr_loading_validate_wgs_mismatch(
+        self, mock_sample_type_stats, mock_contig_check
+    ):
         # Supposed to be WGS but we report as WES.
         mock_sample_type_stats.return_value = self._sample_type_stats_return_value(
             0, 0, True, 0, 0, True

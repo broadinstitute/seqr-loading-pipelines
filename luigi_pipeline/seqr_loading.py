@@ -7,13 +7,13 @@ import hail as hl
 import luigi
 import pkg_resources
 
-from lib.hail_tasks import (
+from luigi_pipeline.lib.hail_tasks import (
     GCSorLocalTarget,
     HailElasticSearchTask,
     HailMatrixTableTask,
     MatrixTableSampleSetError,
 )
-from lib.model.seqr_mt_schema import (
+from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrGenotypesSchema,
     SeqrVariantsAndGenotypesSchema,
     SeqrVariantSchema,
@@ -27,8 +27,13 @@ VARIANT_THRESHOLD = 100
 CONST_GRCh37 = '37'
 CONST_GRCh38 = '38'
 
+def does_file_exist(path):
+    if path.startswith("gs://"):
+        return hl.hadoop_exists(path)
+    return os.path.exists(path)
+
 def check_if_path_exists(path, label=""):
-    if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
+    if not does_file_exist(path):
         raise ValueError(f"{label} path not found: {path}")
 
 class SeqrValidationError(Exception):
@@ -91,7 +96,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
                                  datasetType=self.dataset_type,
                                  hail_version=pkg_resources.get_distribution('hail').version)
         if clinvar_data:
-            mt = mt.annotate_globals(clinvar_version=clinvar_data.version)
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.index_globals().version)
         return mt
 
     def import_dataset(self):
@@ -154,10 +159,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         for k,v in row_dict.items():
             if k not in standard_contigs:
                 check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
-                logger.warning('Chromosome %s is unexpected.', k)
+                logger.warning(f'Chromosome {k} is unexpected.')
             elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
                 check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
-                logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
+                logger.warning(f'Chromosome {k} has {v} rows, which is lower than threshold {threshold}.')
 
         return check_result_dict
 

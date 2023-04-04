@@ -2,7 +2,7 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id, vep
 
-from lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
+from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
 
 
 class BaseVariantSchema(BaseMTSchema):
@@ -219,8 +219,6 @@ class SeqrSchema(BaseSeqrSchema):
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
 
-
-
     @row_annotation()
     def gnomad_non_coding_constraint(self):
         if self._interval_ref_data is None:
@@ -281,7 +279,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     @row_annotation(fn_require=genotypes)
     def samples_num_alt(self, start=1, end=3, step=1):
         return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.num_alt == i)
             for i in range(start, end, step)
         })
 
@@ -289,7 +287,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_gq(self, start=0, end=95, step=5):
         # struct of x_to_y to a set of samples in range of x and y for gq.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
+            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
             for i in range(start, end, step)
         })
 
@@ -297,7 +295,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for ab.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+            f'{i}_to_{i + step}': self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.ab*100) >= i) & ((g.ab*100) < i+step))
             )
             for i in range(start, end, step)
@@ -347,11 +345,12 @@ class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
         # Converts a mt to the row equivalent.
         if isinstance(ds, hl.MatrixTable):
             ds = ds.rows()
+        if 'vep' in ds.row:
+            ds = ds.drop('vep')
+        key = ds.key
         # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = ds.drop('vep').flatten()
-        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
+        table = ds.flatten()
+        # When flattening, the table is unkeyed, which causes problems because our row keys should not
         # be normal fields. We can also re-key, but I believe this is computational?
-        table = table.drop(table.locus, table.alleles)
-
-
-        return table
+        # PS: row key is often locus and allele, but does not have to be
+        return table.drop(*key)

@@ -14,8 +14,8 @@ from luigi.parameter import ParameterVisibility
 
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
 
-import lib.hail_vep_runners as vep_runners
-from lib.global_config import GlobalConfig
+import luigi_pipeline.lib.hail_vep_runners as vep_runners
+from luigi_pipeline.lib.global_config import GlobalConfig
 
 logger = logging.getLogger(__name__)
 
@@ -104,8 +104,8 @@ class HailMatrixTableTask(luigi.Task):
         """
         stats = {}
         types_to_ht_path = {
-            'noncoding': GlobalConfig().param_kwargs['validation_%s_noncoding_ht' % genome_version],
-            'coding': GlobalConfig().param_kwargs['validation_%s_coding_ht' % genome_version]
+            'noncoding': GlobalConfig().param_kwargs[f'validation_{genome_version}_noncoding_ht'],
+            'coding': GlobalConfig().param_kwargs[f'validation_{genome_version}_coding_ht']
         }
         for sample_type, ht_path in types_to_ht_path.items():
             ht = hl.read_table(ht_path)

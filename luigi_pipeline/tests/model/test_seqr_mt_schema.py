@@ -2,8 +2,8 @@ import unittest
 
 import hail as hl
 
-from lib.model.seqr_mt_schema import SeqrVariantSchema
-from tests.data.sample_vep import DERIVED_DATA, VEP_DATA
+from luigi_pipeline.lib.model.seqr_mt_schema import SeqrVariantSchema
+from luigi_pipeline.tests.data.sample_vep import DERIVED_DATA, VEP_DATA
 
 
 class TestSeqrModel(unittest.TestCase):
@@ -61,9 +61,27 @@ class TestSeqrModel(unittest.TestCase):
         actual = {gen['sample_id']: dict(gen) for gen in genotypes}
 
         expected = {
-            'HG00731': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 73.0, 'sample_id': 'HG00731'},
-            'HG00732': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 70.0, 'sample_id': 'HG00732'},
-            'HG00733': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 66.0, 'sample_id': 'HG00733'},
+            'HG00731': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 73.0,
+                'sample_id': 'HG00731',
+            },
+            'HG00732': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 70.0,
+                'sample_id': 'HG00732',
+            },
+            'HG00733': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 66.0,
+                'sample_id': 'HG00733',
+            },
             'NA19675': {
                 'num_alt': 1,
                 'gq': 99,
@@ -71,7 +89,13 @@ class TestSeqrModel(unittest.TestCase):
                 'dp': 29.0,
                 'sample_id': 'NA19675',
             },
-            'NA19678': {'num_alt': 0, 'gq': 78, 'ab': 0.0, 'dp': 28.0, 'sample_id': 'NA19678'},
+            'NA19678': {
+                'num_alt': 0,
+                'gq': 78,
+                'ab': 0.0,
+                'dp': 28.0,
+                'sample_id': 'NA19678',
+            },
             'NA19679': {
                 'num_alt': 1,
                 'gq': 99,
@@ -93,8 +117,20 @@ class TestSeqrModel(unittest.TestCase):
                 'dp': 74.0,
                 'sample_id': 'NA20872',
             },
-            'NA20874': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 69.0, 'sample_id': 'NA20874'},
-            'NA20875': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 93.0, 'sample_id': 'NA20875'},
+            'NA20874': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 69.0,
+                'sample_id': 'NA20874',
+            },
+            'NA20875': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 93.0,
+                'sample_id': 'NA20875',
+            },
             'NA20876': {
                 'num_alt': 1,
                 'gq': 99,
@@ -102,11 +138,41 @@ class TestSeqrModel(unittest.TestCase):
                 'dp': 70.0,
                 'sample_id': 'NA20876',
             },
-            'NA20877': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 76.0, 'sample_id': 'NA20877'},
-            'NA20878': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 73.0, 'sample_id': 'NA20878'},
-            'NA20881': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 69.0, 'sample_id': 'NA20881'},
-            'NA20885': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 82.0, 'sample_id': 'NA20885'},
-            'NA20888': {'num_alt': 0, 'gq': 99, 'ab': 0.0, 'dp': 74.0, 'sample_id': 'NA20888'},
+            'NA20877': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 76.0,
+                'sample_id': 'NA20877',
+            },
+            'NA20878': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 73.0,
+                'sample_id': 'NA20878',
+            },
+            'NA20881': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 69.0,
+                'sample_id': 'NA20881',
+            },
+            'NA20885': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 82.0,
+                'sample_id': 'NA20885',
+            },
+            'NA20888': {
+                'num_alt': 0,
+                'gq': 99,
+                'ab': 0.0,
+                'dp': 74.0,
+                'sample_id': 'NA20888',
+            },
         }
         self.assertEqual(actual, expected)
 
@@ -118,7 +184,8 @@ class TestSeqrModel(unittest.TestCase):
         row = mt.rows().flatten().collect()[0]
         self.assertEqual(row.samples_no_call, set())
         self.assertEqual(
-            row['samples_num_alt.1'], {'NA19679', 'NA19675', 'NA20870', 'NA20876', 'NA20872'}
+            row['samples_num_alt.1'],
+            {'NA19679', 'NA19675', 'NA20870', 'NA20876', 'NA20872'},
         )
         self.assertEqual(row['samples_num_alt.2'], set())
 
@@ -138,7 +205,7 @@ class TestSeqrModel(unittest.TestCase):
             self.assertEqual(row[name], samples)
 
         for i in range(start, end, step):
-            name = 'samples_gq.%i_to_%i' % (i, i + step)
+            name = f'samples_gq.{i}_to_{i + step}'
             if name not in non_empty:
                 self.assertEqual(row[name], set())
 

@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from lib.model.base_mt_schema import BaseMTSchema, row_annotation
+from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, row_annotation
 
 
 class TestBaseModel(unittest.TestCase):
@@ -25,7 +25,10 @@ class TestBaseModel(unittest.TestCase):
             return 30
 
     def _count_dicts(self, schema):
-        return {k: v['annotated'] for k, v in schema.mt_instance_meta['row_annotations'].items()}
+        return {
+            k: v['annotated']
+            for k, v in schema.mt_instance_meta['row_annotations'].items()
+        }
 
     def test_schema_called_once_counts(self):
         test_schema = TestBaseModel.TestSchema()
@@ -76,7 +79,9 @@ class TestBaseModel(unittest.TestCase):
                     return 0
 
         except ValueError as e:
-            self.assertEqual(str(e), 'Schema: dependency hello is not a row annotation method.')
+            self.assertEqual(
+                str(e), 'Schema: dependency hello is not a row annotation method.'
+            )
             return True
         self.fail('Did not raise ValueError.')
 
@@ -92,7 +97,9 @@ class TestBaseModel(unittest.TestCase):
                     return 0
 
         except ValueError as e:
-            self.assertEqual(str(e), 'Schema: dependency dummy is not a row annotation method.')
+            self.assertEqual(
+                str(e), 'Schema: dependency dummy is not a row annotation method.'
+            )
             return True
         self.fail('Did not raise ValueError.')
 

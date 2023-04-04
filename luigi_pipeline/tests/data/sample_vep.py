@@ -89,11 +89,20 @@ VEP_DATA = {
                                 'distance': hl.null('int32'),
                                 'domains': hl.array(
                                     [
-                                        hl.struct(**{'db': 'hmmpanther', 'name': 'PTHR12687'}),
-                                        hl.struct(**{'db': 'hmmpanther', 'name': 'PTHR12687'}),
-                                        hl.struct(**{'db': 'Pfam_domain', 'name': 'PF03715'}),
                                         hl.struct(
-                                            **{'db': 'Superfamily_domains', 'name': 'SSF48371'}
+                                            **{'db': 'hmmpanther', 'name': 'PTHR12687'}
+                                        ),
+                                        hl.struct(
+                                            **{'db': 'hmmpanther', 'name': 'PTHR12687'}
+                                        ),
+                                        hl.struct(
+                                            **{'db': 'Pfam_domain', 'name': 'PF03715'}
+                                        ),
+                                        hl.struct(
+                                            **{
+                                                'db': 'Superfamily_domains',
+                                                'name': 'SSF48371',
+                                            }
                                         ),
                                     ]
                                 ),
@@ -140,7 +149,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 1963,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -186,7 +197,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 1963,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -232,7 +245,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 2279,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -278,7 +293,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 3646,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -324,7 +341,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 3736,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -370,7 +389,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 3544,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -467,7 +488,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['downstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['downstream_gene_variant']
+                                ),
                                 'distance': 4365,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -564,7 +587,9 @@ VEP_DATA = {
                                 'cds_end': hl.null('int32'),
                                 'cds_start': hl.null('int32'),
                                 'codons': hl.null('str'),
-                                'consequence_terms': hl.array(['upstream_gene_variant']),
+                                'consequence_terms': hl.array(
+                                    ['upstream_gene_variant']
+                                ),
                                 'distance': 976,
                                 'domains': hl.null('array<struct{db: str, name: str}>'),
                                 'exon': hl.null('str'),
@@ -618,7 +643,11 @@ DERIVED_DATA = {
         'codingGeneIds': {'ENSG00000188976'},
         'contig': '1',
         'docId': '1-881918-G-A',
-        'domains': {'Pfam_domain:PF03715', 'Superfamily_domains:SSF48371', 'hmmpanther:PTHR12687'},
+        'domains': {
+            'Pfam_domain:PF03715',
+            'Superfamily_domains:SSF48371',
+            'hmmpanther:PTHR12687',
+        },
         'end': 881919,
         'filters': set(),
         'geneIds': {'ENSG00000188976'},

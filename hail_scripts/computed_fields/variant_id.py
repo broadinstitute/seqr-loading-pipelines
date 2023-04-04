@@ -4,11 +4,12 @@ import hail as hl
 def get_expr_for_alt_allele(table:hl.Table) -> hl.str:
     return table.alleles[1]
 
+def replace_chr_prefix(contig: str):
+    return contig.replace("^chr", "")
 
 def get_expr_for_contig(locus: hl.expr.LocusExpression) -> hl.expr.StringExpression:
     """Normalized contig name"""
-    return locus.contig.replace("^chr", "")
-
+    return replace_chr_prefix(locus.contig)
 
 def get_expr_for_contig_number(
     locus: hl.expr.LocusExpression

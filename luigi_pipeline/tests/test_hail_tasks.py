@@ -8,8 +8,8 @@ import hail as hl
 import luigi
 from elasticsearch.client.indices import IndicesClient
 
-from lib.global_config import GlobalConfig
-from lib.hail_tasks import (
+from luigi_pipeline.lib.global_config import GlobalConfig
+from luigi_pipeline.lib.hail_tasks import (
     HailElasticSearchTask,
     HailMatrixTableTask,
     MatrixTableSampleSetError,
@@ -33,7 +33,9 @@ class TestHailTasks(unittest.TestCase):
     def _hail_matrix_table_task(self):
         temp_dest_path = self._temp_dest_path()
         return HailMatrixTableTask(
-            source_paths=[TEST_DATA_MT_1KG], dest_path=temp_dest_path, genome_version='37'
+            source_paths=[TEST_DATA_MT_1KG],
+            dest_path=temp_dest_path,
+            genome_version='37',
         )
 
     def _set_validation_configs(self):
@@ -43,7 +45,9 @@ class TestHailTasks(unittest.TestCase):
         ] = global_config.validation_37_coding_ht = 'tests/data/validation_37_coding.ht'
         global_config.param_kwargs[
             'validation_37_noncoding_ht'
-        ] = global_config.validation_37_noncoding_ht = 'tests/data/validation_37_noncoding.ht'
+        ] = (
+            global_config.validation_37_noncoding_ht
+        ) = 'tests/data/validation_37_noncoding.ht'
 
     def test_hail_matrix_table_load(self):
         task = self._hail_matrix_table_task()
@@ -75,9 +79,9 @@ class TestHailTasks(unittest.TestCase):
         self._set_validation_configs()
 
         # Tested to get under threshold 0.5 of coding variants.
-        coding_under_threshold_ht = hl.read_table(GlobalConfig().validation_37_coding_ht).sample(
-            threshold - 0.2, 0
-        )
+        coding_under_threshold_ht = hl.read_table(
+            GlobalConfig().validation_37_coding_ht
+        ).sample(threshold - 0.2, 0)
         # Tested to get over threshold 0.5 of non-coding variants.
         noncoding_over_threshold_ht = hl.read_table(
             GlobalConfig().validation_37_noncoding_ht
@@ -91,7 +95,11 @@ class TestHailTasks(unittest.TestCase):
         self.assertEqual(
             stats,
             {
-                'noncoding': {'matched_count': 1545, 'total_count': 2243, 'match': True},
+                'noncoding': {
+                    'matched_count': 1545,
+                    'total_count': 2243,
+                    'match': True,
+                },
                 'coding': {'matched_count': 118, 'total_count': 359, 'match': False},
             },
         )
