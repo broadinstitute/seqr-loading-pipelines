@@ -35,7 +35,7 @@ def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTabl
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    with tempfile.NamedTemporaryFile(suffix='.vcf.gz') as local_tmp_file_path:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.vcf.gz') as local_tmp_file_path:
         urllib.request.urlretrieve(clinvar_url, local_tmp_file_path.name)
         clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path.name)
         mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None

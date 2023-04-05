@@ -24,21 +24,21 @@ def run(environment: str):
         ht.describe()
         ht = ht.transmute(info=ht.info.select('ALLELEID', 'CLNSIG')).select('info', 'gold_stars')
         ht = ht.repartition(100)
-        write_ht(
-            ht,
-            CLINVAR_HT_PATH.format(
-                environment=environment,
-                genome_version=genome_version,
-                timestamp=timestamp,
-            )
+        destination_path = CLINVAR_HT_PATH.format(
+            environment=environment,
+            genome_version=genome_version,
+            timestamp=timestamp,
         )
+        print(f'Uploading ht from {hl.eval(ht.sourceFilePath)} to {destination_path}')
+        write_ht(ht, destination_path)
+        os.remove(ht.sourceFilePath)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--environment",
-        default="",
-        choices=["dev", "prod"]
+        '--environment',
+        default='dev',
+        choices=['dev', 'prod']
     )
     args = parser.parse_args()
-    run(args.seqr_reference_data_prefix)
+    run(args.environment)
