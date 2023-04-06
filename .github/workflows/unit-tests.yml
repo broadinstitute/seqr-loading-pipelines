@@ -32,4 +32,8 @@ jobs:
           pip install -r luigi_pipeline/requirements.txt
           pip install -r luigi_pipeline/requirements-dev.txt
       - name: Check Import Sort
-        run: isort --diff --check luigi_pipeline
+        run: isort . --check --diff
+      - name: Check Black
+        run: black . --check --diff
+      - name: Check Ruff
+        run: ruff . --format github

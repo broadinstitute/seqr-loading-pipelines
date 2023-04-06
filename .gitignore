@@ -8,6 +8,7 @@ download_and_create_reference_datasets/*.txt
 download_and_create_reference_datasets/*.gz
 *.ht
 *.mt
+.ruff_cache/
 
 # Standard python gitignore below
 ######################################################################
