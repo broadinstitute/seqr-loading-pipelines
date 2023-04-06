@@ -3,8 +3,9 @@ line-length = 88
 skip-string-normalization = true
 
 [tool.isort]
-include_trailing_comma = "True"
+include_trailing_comma = 'True'
 known_external_package = ['hail_scripts']
 line_length = 88
-profile = "black"
+profile = 'black'
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 'LOCALFOLDER']
+skip_glob = ['download_and_create_reference_datasets/*', 'gcloud_dataproc/*', 'hail_scripts/*', 'kubernetes/*']
