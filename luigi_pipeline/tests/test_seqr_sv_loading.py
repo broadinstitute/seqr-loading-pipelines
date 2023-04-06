@@ -317,14 +317,14 @@ GLOBAL_FIELDS = [
 ]
 
 DISABLED_INDEX_FIELDS = [
-    "contig",
-    "start",
-    "xstart",
-    "genotypes",
-    "docId",
-    "algorithms",
-    "bothsides_support",
-    "cpx_intervals",
+    'contig',
+    'start',
+    'xstart',
+    'genotypes',
+    'docId',
+    'algorithms',
+    'bothsides_support',
+    'cpx_intervals',
 ]
 
 VARIANT_MT_FIELDS = [
@@ -545,8 +545,8 @@ EXPECTED_DATA_GENOTYPES = [
             hl.Struct(sample_id='SAMPLE-5', gq=19, cn=None, num_alt=1),
         ],
         **{
-            "samples_num_alt.1": {'SAMPLE-4', 'SAMPLE-5'},
-            "samples_num_alt.2": {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'},
+            'samples_num_alt.1': {'SAMPLE-4', 'SAMPLE-5'},
+            'samples_num_alt.2': {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'},
         },
         **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
@@ -560,7 +560,7 @@ EXPECTED_DATA_GENOTYPES = [
             hl.Struct(sample_id='SAMPLE-4', gq=99, cn=None, num_alt=0),
             hl.Struct(sample_id='SAMPLE-5', gq=99, cn=None, num_alt=0),
         ],
-        **{"samples_num_alt.1": {'SAMPLE-1'}, "samples_num_alt.2": set()},
+        **{'samples_num_alt.1': {'SAMPLE-1'}, 'samples_num_alt.2': set()},
         **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
     hl.Struct(
@@ -573,7 +573,7 @@ EXPECTED_DATA_GENOTYPES = [
             hl.Struct(sample_id='SAMPLE-4', gq=99, cn=3, num_alt=0),
             hl.Struct(sample_id='SAMPLE-5', gq=99, cn=1, num_alt=0),
         ],
-        **{"samples_num_alt.1": {'SAMPLE-2', 'SAMPLE-3'}, "samples_num_alt.2": set()},
+        **{'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'}, 'samples_num_alt.2': set()},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
 ]
@@ -608,14 +608,14 @@ class SeqrSVLoadingTest(unittest.TestCase):
             grch38_to_grch37_ref_chain=REFERENCE_CHAIN,
         )
         genotype_task = SeqrSVGenotypesMTTask(
-            genome_version="38",
-            source_paths="i am completely ignored",
+            genome_version='38',
+            source_paths='i am completely ignored',
             dest_path=self._genotypes_mt_file,
         )
         SeqrSVGenotypesMTTask.requires = lambda self: [variant_task]
         worker.add(genotype_task)
         worker.run()
-        load_gencode_mock.assert_called_once_with(42, "")
+        load_gencode_mock.assert_called_once_with(42, '')
 
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(
             None, ref_data=None, interval_ref_data=None, clinvar_data=None
@@ -627,7 +627,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         self.assertEqual(variant_mt.count(), (11, 5))
         global_fields = [x for x in variant_mt.globals._fields]
         self.assertCountEqual(global_fields, GLOBAL_FIELDS)
-        key_dropped_variant_mt = variant_mt.rows().flatten().drop("locus", "alleles")
+        key_dropped_variant_mt = variant_mt.rows().flatten().drop('locus', 'alleles')
         self.assertCountEqual(
             [key for key in key_dropped_variant_mt._fields if key not in global_fields],
             VARIANT_MT_FIELDS,
@@ -643,7 +643,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         self.assertEqual(genotypes_mt.count(), (11, 5))
         key_dropped_genotypes_mt = (
-            genotypes_mt.rows().flatten().drop("locus", "alleles")
+            genotypes_mt.rows().flatten().drop('locus', 'alleles')
         )
         self.assertCountEqual(
             [
@@ -660,7 +660,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
             genotypes_mt.rows()
             .join(variant_mt.rows())
             .flatten()
-            .drop("locus", "alleles")
+            .drop('locus', 'alleles')
         )
         data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)

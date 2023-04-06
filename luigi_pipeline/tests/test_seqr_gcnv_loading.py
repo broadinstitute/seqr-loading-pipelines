@@ -313,48 +313,48 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
     def test_parse_genes(self):
         t1 = hl.Table.parallelize(
             [
-                {"genes": "AC118553.2,SLC35A3"},
-                {"genes": "AC118553.1,None"},
-                {"genes": "None"},
-                {"genes": "SLC35A3.43"},
-                {"genes": ""},
-                {"genes": "SLC35A4.43"},
+                {'genes': 'AC118553.2,SLC35A3'},
+                {'genes': 'AC118553.1,None'},
+                {'genes': 'None'},
+                {'genes': 'SLC35A3.43'},
+                {'genes': ''},
+                {'genes': 'SLC35A4.43'},
             ],
             hl.tstruct(genes=hl.dtype('str')),
-            key="genes",
+            key='genes',
         )
         t1 = t1.annotate(gene_set=parse_genes(t1.genes))
         self.assertCountEqual(
             t1.collect(),
             [
                 hl.Struct(
-                    genes="AC118553.2,SLC35A3", gene_set=set(["AC118553", "SLC35A3"])
+                    genes='AC118553.2,SLC35A3', gene_set=set(['AC118553', 'SLC35A3'])
                 ),
-                hl.Struct(genes="AC118553.1,None", gene_set=set(["AC118553"])),
-                hl.Struct(genes="None", gene_set=set()),
-                hl.Struct(genes="SLC35A3.43", gene_set=set(["SLC35A3"])),
-                hl.Struct(genes="", gene_set=set()),
-                hl.Struct(genes="SLC35A4.43", gene_set=set(["SLC35A4"])),
+                hl.Struct(genes='AC118553.1,None', gene_set=set(['AC118553'])),
+                hl.Struct(genes='None', gene_set=set()),
+                hl.Struct(genes='SLC35A3.43', gene_set=set(['SLC35A3'])),
+                hl.Struct(genes='', gene_set=set()),
+                hl.Struct(genes='SLC35A4.43', gene_set=set(['SLC35A4'])),
             ],
         )
 
     def test_aggregate_parsed_genes(self):
         t1 = hl.Table.parallelize(
             [
-                {"genes": "AC118553.2,SLC35A3"},
-                {"genes": "AC118553.1,None"},
-                {"genes": "None"},
-                {"genes": "SLC35A3.43"},
-                {"genes": ""},
-                {"genes": "SLC35A4.43"},
+                {'genes': 'AC118553.2,SLC35A3'},
+                {'genes': 'AC118553.1,None'},
+                {'genes': 'None'},
+                {'genes': 'SLC35A3.43'},
+                {'genes': ''},
+                {'genes': 'SLC35A4.43'},
             ],
             hl.tstruct(genes=hl.dtype('str')),
-            key="genes",
+            key='genes',
         )
         aggregated_gene_set = t1.aggregate(
             hl_agg_collect_set_union(parse_genes(t1.genes))
         )
-        self.assertEqual(aggregated_gene_set, set(["SLC35A4", "SLC35A3", "AC118553"]))
+        self.assertEqual(aggregated_gene_set, set(['SLC35A4', 'SLC35A3', 'AC118553']))
 
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
@@ -381,8 +381,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             dest_path=self._variant_mt_file,
         )
         genotype_task = SeqrGCNVGenotypesMTTask(
-            genome_version="38",
-            source_paths="i am completely ignored",
+            genome_version='38',
+            source_paths='i am completely ignored',
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=True,
         )
@@ -396,7 +396,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         self.assertEqual(variant_mt.count(), (3, 4))
 
         key_dropped_variant_mt = (
-            variant_mt.rows().flatten().drop("variant_name", "svtype")
+            variant_mt.rows().flatten().drop('variant_name', 'svtype')
         )
         data = key_dropped_variant_mt.collect()
         self.assertCountEqual(data, NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA)
@@ -413,7 +413,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA
         )
         self.assertCountEqual(
-            kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS
+            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS
         )
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
@@ -426,8 +426,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             dest_path=self._variant_mt_file,
         )
         genotype_task = SeqrGCNVGenotypesMTTask(
-            genome_version="38",
-            source_paths="i am completely ignored",
+            genome_version='38',
+            source_paths='i am completely ignored',
             dest_path=self._genotypes_mt_file,
             is_new_joint_call=False,
         )
@@ -441,7 +441,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         self.assertEqual(variant_mt.count(), (2, 4))
 
         key_dropped_variant_mt = (
-            variant_mt.rows().flatten().drop("variant_name", "svtype")
+            variant_mt.rows().flatten().drop('variant_name', 'svtype')
         )
         data = key_dropped_variant_mt.collect()
         self.assertCountEqual(data, MERGED_EXPECTED_VARIANT_DATA)
@@ -455,5 +455,5 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         self.assertCountEqual(
-            kwargs["disable_index_for_fields"], EXPECTED_DISABLED_INDEX_FIELDS
+            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS
         )
