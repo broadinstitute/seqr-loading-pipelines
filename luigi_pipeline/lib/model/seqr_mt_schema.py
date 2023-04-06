@@ -2,10 +2,35 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id, vep
 
-from lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
+from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, RowAnnotationOmit, row_annotation
 
 
-class BaseSeqrSchema(BaseMTSchema):
+class BaseVariantSchema(BaseMTSchema):
+
+    def __init__(self, mt, *args, **kwargs):
+        super().__init__(mt)
+
+    @row_annotation(disable_index=True)
+    def contig(self):
+        return variant_id.get_expr_for_contig(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def start(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def pos(self):
+        return variant_id.get_expr_for_start_pos(self.mt)
+
+    @row_annotation()
+    def xpos(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+    @row_annotation(disable_index=True)
+    def xstart(self):
+        return variant_id.get_expr_for_xpos(self.mt.locus)
+
+class BaseSeqrSchema(BaseVariantSchema):
 
     def __init__(self, *args, ref_data, interval_ref_data, clinvar_data, hgmd_data=None, **kwargs):
         self._ref_data = ref_data
@@ -63,18 +88,6 @@ class BaseSeqrSchema(BaseMTSchema):
         return variant_id.get_expr_for_variant_id(self.mt)
 
     @row_annotation(disable_index=True)
-    def contig(self):
-        return variant_id.get_expr_for_contig(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def pos(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
-    def start(self):
-        return variant_id.get_expr_for_start_pos(self.mt)
-
-    @row_annotation(disable_index=True)
     def end(self):
         return variant_id.get_expr_for_end_pos(self.mt)
 
@@ -85,14 +98,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation(disable_index=True)
     def alt(self):
         return variant_id.get_expr_for_alt_allele(self.mt)
-
-    @row_annotation()
-    def xpos(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
-
-    @row_annotation(disable_index=True)
-    def xstart(self):
-        return variant_id.get_expr_for_xpos(self.mt.locus)
 
     @row_annotation()
     def xstop(self):
@@ -139,7 +144,6 @@ class BaseSeqrSchema(BaseMTSchema):
     @row_annotation()
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp
-
 
 class SeqrSchema(BaseSeqrSchema):
     @row_annotation(disable_index=True)
@@ -215,8 +219,6 @@ class SeqrSchema(BaseSeqrSchema):
         return hl.struct(**{'accession': self._hgmd_data[self.mt.row_key].rsid,
                             'class': self._hgmd_data[self.mt.row_key].info.CLASS})
 
-
-
     @row_annotation()
     def gnomad_non_coding_constraint(self):
         if self._interval_ref_data is None:
@@ -277,7 +279,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     @row_annotation(fn_require=genotypes)
     def samples_num_alt(self, start=1, end=3, step=1):
         return hl.struct(**{
-            '%i' % i: self._genotype_filter_samples(lambda g: g.num_alt == i)
+            f'{i}': self._genotype_filter_samples(lambda g: g.num_alt == i)
             for i in range(start, end, step)
         })
 
@@ -285,7 +287,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_gq(self, start=0, end=95, step=5):
         # struct of x_to_y to a set of samples in range of x and y for gq.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
+            f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.gq >= i) & (g.gq < i+step)))
             for i in range(start, end, step)
         })
 
@@ -293,11 +295,14 @@ class SeqrGenotypesSchema(BaseMTSchema):
     def samples_ab(self, start=0, end=45, step=5):
         # struct of x_to_y to a set of samples in range of x and y for ab.
         return hl.struct(**{
-            '%i_to_%i' % (i, i+step): self._genotype_filter_samples(
+            f'{i}_to_{i + step}': self._genotype_filter_samples(
                 lambda g: ((g.num_alt == 1) & ((g.ab*100) >= i) & ((g.ab*100) < i+step))
             )
             for i in range(start, end, step)
         })
+
+    def _num_alt(self, is_called):
+        return hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1)
 
     def _genotype_filter_samples(self, filter):
         # Filter on the genotypes.
@@ -307,7 +312,7 @@ class SeqrGenotypesSchema(BaseMTSchema):
         # Convert the mt genotype entries into num_alt, gq, ab, dp, and sample_id.
         is_called = hl.is_defined(self.mt.GT)
         return {
-            'num_alt': hl.if_else(is_called, self.mt.GT.n_alt_alleles(), -1),
+            'num_alt': self._num_alt(is_called),
             'gq': hl.if_else(is_called, self.mt.GQ, 0),
             'ab': hl.bind(
                 lambda total: hl.if_else((is_called) & (total != 0) & (hl.len(self.mt.AD) > 1),
@@ -340,11 +345,12 @@ class SeqrVariantsAndGenotypesSchema(SeqrVariantSchema, SeqrGenotypesSchema):
         # Converts a mt to the row equivalent.
         if isinstance(ds, hl.MatrixTable):
             ds = ds.rows()
+        if 'vep' in ds.row:
+            ds = ds.drop('vep')
+        key = ds.key
         # Converts nested structs into one field, e.g. {a: {b: 1}} => a.b: 1
-        table = ds.drop('vep').flatten()
-        # When flattening, the table is unkeyed, which causes problems because our locus and alleles should not
+        table = ds.flatten()
+        # When flattening, the table is unkeyed, which causes problems because our row keys should not
         # be normal fields. We can also re-key, but I believe this is computational?
-        table = table.drop(table.locus, table.alleles)
-
-
-        return table
+        # PS: row key is often locus and allele, but does not have to be
+        return table.drop(*key)

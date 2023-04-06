@@ -1,6 +1,6 @@
+import logging
 from collections import defaultdict
 from inspect import getmembers
-import logging
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -26,6 +26,18 @@ class RowAnnotation:
         if self.requirements:
             requires = f' (requires: {", ".join(self.requirements)})'
         return f"{self.name}{requires}"
+
+    def __call__(self: "RowAnnotation", schema: "BaseMTSchema", overwrite: bool = False):
+        """
+        Call the annotation and track metadata in the calling instance's
+        stats dict.
+        NB: No dependency resolution here!
+        """
+        if self.name in schema.mt.rows()._fields and overwrite is False:
+            return schema
+        schema.mt_instance_meta["row_annotations"][self.name]["result"] = self.fn(schema)
+        schema.mt_instance_meta["row_annotations"][self.name]["annotated"] += 1
+        return schema
 
 
 def row_annotation(name=None, disable_index=False, fn_require=None):
@@ -56,7 +68,9 @@ def row_annotation(name=None, disable_index=False, fn_require=None):
             fn_requirements = fn_require if isinstance(fn_require, list) else [fn_require]
             for fn in fn_requirements:
                 if not isinstance(fn, RowAnnotation):
-                    raise ValueError('Schema: dependency %s is not a row annotation method.' % fn_require.__name__)
+                    raise ValueError(
+                        f'Schema: dependency {(fn_require.__name__ if hasattr(fn_require, "__name__") else str(fn_require))} is not a row annotation method.' 
+                    )
             requirements = [fn.name for fn in fn_requirements]
 
         return RowAnnotation(func, name=name, disable_index=disable_index, requirements=requirements)
@@ -148,7 +162,7 @@ class BaseMTSchema:
                         'MT using schema class %s already has "%s" annotation.' % (self.__class__.__name__, annotation.name))
                     if not overwrite:
                         continue
-                    logger.info('Overwriting matrix table annotation %s' % annotation.name)
+                    logger.info(f'Overwriting matrix table annotation {annotation.name}')
 
                 if annotation.requirements and any(r not in called_annotations for r in annotation.requirements):
                     # this annotation has unfulfilled annotations,
@@ -158,16 +172,12 @@ class BaseMTSchema:
 
                 try:
                     # evaluate the function
-                    func_ret = annotation.fn(self)
+                    annotation(self, overwrite=overwrite)
+                    annotations_to_apply[annotation.name] = instance_metadata['result']
                 except RowAnnotationOmit:
                     # Do not annotate when RowAnnotationOmit raised.
                     logger.debug(f'Received RowAnnotationOmit for "{annotation.name}"')
-                    continue
 
-                annotations_to_apply[annotation.name] = func_ret
-
-                instance_metadata['annotated'] += 1
-                instance_metadata['result'] = func_ret
 
             # update the mt
             logger.debug('Applying annotations: ' + ', '.join(annotations_to_apply.keys()))

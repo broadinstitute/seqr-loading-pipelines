@@ -1,14 +1,31 @@
+from contextlib import contextmanager
 import logging
 import os
 import requests
 import tempfile
-from contextlib import contextmanager
-import hail as hl
-from tqdm import tqdm
 
-from sv_pipeline.utils.common import parse_gs_path_to_bucket
+import hail as hl
+from google.cloud import storage
 
 logger = logging.getLogger(__name__)
+
+def parse_gs_path_to_bucket(gs_path):
+    bucket_name = gs_path.replace('gs://', '').split('/')[0]
+    file_name = gs_path.split(bucket_name)[-1].lstrip('/')
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+
+    return bucket, file_name
+
+
+def stream_gs_file(gs_path, raw_download=False):
+    logger.info(f'Stream from GCS: {gs_path}')
+    bucket, file_name = parse_gs_path_to_bucket(gs_path)
+
+    blob = bucket.get_blob(file_name)
+
+    return blob and blob.download_as_string(raw_download=raw_download)
 
 @contextmanager
 def file_writer(file_path, get_existing_size=False):
@@ -76,7 +93,6 @@ def download_file(url, to_dir=None, verbose=True):
         input_iter = response if is_gz else response.iter_content()
         if verbose:
             logger.info("Downloading {} to {}".format(url, file_path))
-            input_iter = tqdm(input_iter, unit=" data" if is_gz else " lines")
 
         f.writelines(input_iter)
         input_iter.close()
