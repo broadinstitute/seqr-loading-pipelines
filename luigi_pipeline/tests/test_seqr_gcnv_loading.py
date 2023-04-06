@@ -8,13 +8,13 @@ import hail as hl
 import luigi.worker
 
 from luigi_pipeline.lib.model.gcnv_mt_schema import (
-    parse_genes,
     hl_agg_collect_set_union,
+    parse_genes,
 )
 from luigi_pipeline.seqr_gcnv_loading import (
-    SeqrGCNVVariantMTTask,
     SeqrGCNVGenotypesMTTask,
     SeqrGCNVMTToESTask,
+    SeqrGCNVVariantMTTask,
 )
 
 NEW_JOINT_CALLED_CALLSET = 'tests/data/gcnv_new_joint_called_callset.tsv'

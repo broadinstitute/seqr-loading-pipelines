@@ -5,5 +5,6 @@ skip-string-normalization = true
 [tool.isort]
 include_trailing_comma = "True"
 known_external_package = ['hail_scripts']
+line_length = 88
 profile = "black"
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 'LOCALFOLDER']
