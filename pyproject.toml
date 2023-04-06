@@ -3,7 +3,6 @@ line-length = 88
 skip-string-normalization = true
 include = 'luigi_pipeline/tests/.*\.py$'
 
-
 [tool.isort]
 include_trailing_comma = 'True'
 known_external_package = ['hail_scripts']
