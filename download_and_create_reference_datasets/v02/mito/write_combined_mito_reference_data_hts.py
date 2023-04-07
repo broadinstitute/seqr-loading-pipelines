@@ -4,7 +4,7 @@ import logging
 
 import hail as hl
 
-from download_and_create_reference_datasets.v02.hail_scripts.write_combined_reference_data_ht import join_hts
+from hail_scripts.reference_data.combine import join_hts
 
 OUTPUT_PATH = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
 
