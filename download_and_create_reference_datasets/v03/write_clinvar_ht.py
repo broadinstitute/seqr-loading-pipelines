@@ -3,14 +3,14 @@ import argparse
 
 import hail as hl
 
-from hail_scripts.reference_data.constants import GCS_PREFIX
+from hail_scripts.reference_data.constants import V03_GCS_PREFIX
 from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,
     CLINVAR_GOLD_STARS_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
-CLINVAR_HT_PATH = os.path.join(GCS_PREFIX, 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht')
+CLINVAR_HT_PATH = os.path.join(V03_GCS_PREFIX, 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht')
 
 def run(environment: str):
     for genome_version in ['37', '38']:
