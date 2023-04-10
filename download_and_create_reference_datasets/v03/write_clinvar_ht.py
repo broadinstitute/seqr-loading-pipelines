@@ -56,9 +56,9 @@ def run(environment: str):
         ht.describe()
         ht = ht.transmute(
             alleleId=ht.info.select('ALLELEID'),
-            clinical_significance_id=hl.dict(CLINVAR_SIGNIFICANCES)[hl.delimit(x)],
+            clinical_significance_id=hl.dict(CLINVAR_SIGNIFICANCES).get(hl.delimit(ht.info.CLNSIG)),
             gold_stars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
-        )
+        ).select('alleleId', 'clinical_significance_id', 'gold_stars')
         ht = ht.repartition(PARTITIONS)
         destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
             environment=environment,
