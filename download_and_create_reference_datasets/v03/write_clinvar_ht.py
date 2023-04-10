@@ -56,7 +56,7 @@ def run(environment: str):
         ht.describe()
         ht = ht.transmute(
             alleleId=ht.info.select('ALLELEID'),
-            clinical_significance_ids=ht.info.CLNSIG.map(lambda x: hl.dict(CLINVAR_SIGNIFICANCES)[x]),
+            clinical_significance_id=hl.dict(CLINVAR_SIGNIFICANCES)[hl.delimit(x)],
             gold_stars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
         )
         ht = ht.repartition(PARTITIONS)
