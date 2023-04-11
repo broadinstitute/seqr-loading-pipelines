@@ -21,7 +21,6 @@ def run(environment: str):
         timestamp = hl.eval(mt.version)
         ht = mt.rows()
         ht.describe()
-        print(hl.eval(ht.aggregate(hl.agg.counter(ht.info.CLNSIG))))
         ht = ht.annotate(
             alleleId=ht.info.select('ALLELEID'),
             clinical_significance_id=CLINVAR_SIGNIFICANCES_LOOKUP.get(hl.delimit(ht.info.CLNSIG)),
