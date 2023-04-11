@@ -7,8 +7,8 @@ import hail as hl
 from hail_scripts.reference_data.constants import GCS_PREFIXES
 from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,
-    CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP,
-    CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP,
+    CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
+    CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
     CLINVAR_GOLD_STARS_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
@@ -26,12 +26,21 @@ def run(environment: str):
         ht = mt.rows()
         ht.describe()
         ht = ht.annotate(
-            alleleId=ht.info.select('ALLELEID'),
-            clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP.get(parsed_clnsig(ht)[0]),
-            clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP.get(x)).filter(hl.is_defined),
-            goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
-        ).select('alleleId', 'clinicalSignificance_id', 'goldStars')
-        ht = ht.repartition(PARTITIONS)
+                alleleId=ht.info.select('ALLELEID'),
+                clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP.get(parsed_clnsig(ht)[0]),
+                clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP.get(x)).filter(hl.is_defined),
+                goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
+            ).select(
+                'alleleId',
+                'clinicalSignificance_id',
+                'clinicalSignifanceModifier_ids',
+                'goldStars'
+            ).annotate_globals(
+                clinicalSignificanceLookup=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
+                clinicalSignifanceModifierLookup=CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
+            ).repartition(
+                PARTITIONS,
+        )
         destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
             environment=environment,
             genome_version=genome_version,

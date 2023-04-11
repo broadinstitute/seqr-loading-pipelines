@@ -9,7 +9,7 @@ from hail_scripts.utils.hail_utils import import_vcf
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"
 
-CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP = hl.dict(
+CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP = hl.dict(
     hl.enumerate(
         # NB: sorted by pathogenicity
         [
@@ -27,7 +27,7 @@ CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP = hl.dict(
         index_first=False
     )
 )
-CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP = hl.dict(
+CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP = hl.dict(
     hl.enumerate(
         # NB: alphabetical
         [
@@ -43,7 +43,7 @@ CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP = hl.dict(
             'protective',
         ],
         index_first=False,
-        start=hl.len(CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP),
+        start=hl.len(CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP),
     ),
 )
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
