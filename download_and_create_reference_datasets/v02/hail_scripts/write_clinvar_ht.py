@@ -27,3 +27,4 @@ for genome_version in ["37", "38"]:
         + timestamp
         + ".ht",
     )
+    os.remove(hl.eval(ht.sourceFilePath))

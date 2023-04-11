@@ -1,5 +1,4 @@
 import gzip
-import os
 import tempfile
 import urllib.request
 
@@ -10,6 +9,43 @@ from hail_scripts.utils.hail_utils import import_vcf
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"
 
+CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP = hl.dict(
+    hl.enumerate(
+        # NB: sorted by pathogenicity
+        [
+            'Pathogenic',
+            'Pathogenic/Likely_pathogenic',
+            'Likely_pathogenic',
+            'Likely_risk_allele',
+            'Conflicting_interpretations_of_pathogenicity',
+            'Uncertain_risk_allele',
+            'Uncertain_significance',
+            'Likely_benign',
+            'Benign/Likely_benign',
+            'Benign',
+        ],
+        index_first=False
+    )
+)
+CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP = hl.dict(
+    hl.enumerate(
+        # NB: alphabetical
+        [
+            'Affects',
+            'association',
+            'association_not_found',
+            'confers_sensitivity',
+            'drug_response',
+            'low_penetrance',
+            'NA',
+            'not_provided',
+            'other',
+            'protective',
+        ],
+        index_first=False,
+        start=hl.len(CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP),
+    ),
+)
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         "no_interpretation_for_the_single_variant": 0,
@@ -23,7 +59,6 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     }
 )
 
-
 def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTable:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
@@ -35,12 +70,12 @@ def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTabl
         raise ValueError("Invalid genome_version: " + str(genome_version))
 
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.vcf.gz') as local_tmp_file_path:
-        urllib.request.urlretrieve(clinvar_url, local_tmp_file_path.name)
-        clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path.name)
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.vcf.gz') as local_tmp_file:
+        urllib.request.urlretrieve(clinvar_url, local_tmp_file.name)
+        clinvar_release_date = _parse_clinvar_release_date(local_tmp_file.name)
         mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
         mt = import_vcf(
-            local_tmp_file_path.name,
+            local_tmp_file.name,
             genome_version,
             drop_samples=True,
             min_partitions=2000,
