@@ -55,6 +55,7 @@ CLINVAR_SIGNIFICANCES_LOOKUP = {sig: i for i, sig in enumerate([
 ])}
 # In production - use actual values in latest clinvar file version
 CLINVAR_SIGNIFICANCES_LOOKUP.update({sig.replace(',_', '|'): i for sig, i in CLINVAR_SIGNIFICANCES_LOOKUP.items()})
+CLINVAR_SIGNIFICANCES_LOOKUP = hl.dict(CLINVAR_SIGNIFICANCES_LOOKUP)
 
 
 def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTable:
