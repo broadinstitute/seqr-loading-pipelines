@@ -21,7 +21,7 @@ def run(environment: str):
         timestamp = hl.eval(mt.version)
         ht = mt.rows()
         ht.describe()
-        ht = ht.transmute(
+        ht = ht.annotate(
             alleleId=ht.info.select('ALLELEID'),
             clinical_significance_id=CLINVAR_SIGNIFICANCES_LOOKUP.get(hl.delimit(ht.info.CLNSIG)),
             gold_stars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
