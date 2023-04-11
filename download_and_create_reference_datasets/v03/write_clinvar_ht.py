@@ -17,7 +17,7 @@ CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'
 PARTITIONS = 100 # per https://github.com/broadinstitute/seqr-loading-pipelines/pull/383
 
 def parsed_clnsig(ht: hl.Table):
-    return ht.info.CLNSIG.flatmap(lambda x: x.split('|')).map(lambda x: x.replace('$_', ''))
+    return ht.info.CLNSIG.flatmap(lambda x: x.split(r'\|')).map(lambda x: x.replace(r'$_', ''))
 
 def run(environment: str):
     for genome_version in ['37', '38']:
@@ -27,7 +27,7 @@ def run(environment: str):
         ht.describe()
         ht = ht.annotate(
             alleleId=ht.info.select('ALLELEID'),
-            clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP[parsed_clnsig(ht)[0]],
+            clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP.get(parsed_clnsig(ht)[0]),
             clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP.get(x)).filter(hl.is_defined),
             goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
         ).select('alleleId', 'clinicalSignificance_id', 'goldStars')

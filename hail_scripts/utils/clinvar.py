@@ -42,7 +42,8 @@ CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIERS_LOOKUP = hl.dict(
             'other',
             'protective',
         ],
-        index_first=False
+        index_first=False,
+        start=hl.len(CLINVAR_CLINICAL_SIGNIFICANCES_LOOKUP),
     ),
 )
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
