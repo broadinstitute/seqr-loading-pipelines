@@ -8,7 +8,7 @@ from hail_scripts.reference_data.combine import join_hts
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
-INTERVAL_REFERENCE_HT_PATH = 'interval_reference/interval_reference.GRCh{genome_version}-{version}.ht'
+INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_reference.GRCh{genome_version}-{version}.ht'
 VERSION = '1.0.0'
 
 SCREEN_REGION_TYPE_LOOKUP = hl.dict(
@@ -30,7 +30,9 @@ SCREEN_REGION_TYPE_LOOKUP = hl.dict(
 def run(environment: str):
     genome_version = '38'
     ht = join_hts(
-        ['gnomad_non_coding_constraint', 'screen'], VERSION, reference_genome="38"
+        ['gnomad_non_coding_constraint', 'screen'],
+        VERSION,
+        reference_genome=genome_version,
     )
     ht = ht.transmute(
         screen = hl.Struct(regionType_ids=ht.screen.region_type.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x])),
