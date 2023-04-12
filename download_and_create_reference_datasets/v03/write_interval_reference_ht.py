@@ -11,12 +11,31 @@ from hail_scripts.utils.hail_utils import write_ht
 INTERVAL_REFERENCE_HT_PATH = 'interval_reference/interval_reference.GRCh{genome_version}-{version}.ht'
 VERSION = '1.0.0'
 
+SCREEN_REGION_TYPE_LOOKUP = hl.dict(
+     hl.enumerate(
+         # NB: sorted alphabetically
+        [
+            'CTCF-bound',
+            'CTCF-only',
+            'DNase-H3K4me3',
+            'PLS',
+            'dELS',
+            'pELS'
+        ],
+        index_first=False
+     )
+ )
+
 
 def run(environment: str):
     genome_version = '38'
     ht = join_hts(
         ['gnomad_non_coding_constraint', 'screen'], VERSION, reference_genome="38"
     )
+    ht = ht.transmute(
+        screen = hl.Struct(regionType_ids=ht.screen.region_type.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x])),
+    )
+    import pdb; pdb.set_trace()
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
