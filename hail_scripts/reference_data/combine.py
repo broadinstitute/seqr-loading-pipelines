@@ -4,7 +4,6 @@ import functools
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
-from hail_scripts.reference_data.constants import VERSION
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
@@ -72,7 +71,7 @@ def get_ht(dataset, reference_genome):
     return base_ht.select(**select_query).distinct()
 
 
-def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
@@ -86,6 +85,6 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     # Add metadata, but also removes previous globals.
     joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
                                          datasets=hl.dict(included_dataset),
-                                         version=VERSION)
+                                         version=version)
     joined_ht.describe()
     return joined_ht
