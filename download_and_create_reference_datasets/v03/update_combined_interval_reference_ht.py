@@ -30,7 +30,9 @@ SCREEN_REGION_TYPE_LOOKUP = hl.dict(
 def run(environment: str):
     genome_version = '38'
     ht = join_hts(
-        ['gnomad_non_coding_constraint', 'screen'], VERSION, reference_genome="38"
+        ['gnomad_non_coding_constraint', 'screen'],
+        VERSION,
+        reference_genome=genome_version,
     )
     ht = ht.transmute(
         screen = hl.Struct(regionType_ids=ht.screen.region_type.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x])),
@@ -53,5 +55,5 @@ if __name__ == "__main__":
         default='dev',
         choices=['dev', 'prod']
     )
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     run(args.environment)
