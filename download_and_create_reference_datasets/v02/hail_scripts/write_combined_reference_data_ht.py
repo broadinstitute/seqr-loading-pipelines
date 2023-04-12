@@ -6,7 +6,6 @@ import os
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
-from hail_scripts.reference_data.constants import VERSION
 
 VERSION = '2.0.5'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
