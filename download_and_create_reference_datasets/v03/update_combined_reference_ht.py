@@ -53,5 +53,5 @@ if __name__ == "__main__":
         choices=['37', '38'],
         default='38'
     )
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     run(args.environment, args.genome_version)
