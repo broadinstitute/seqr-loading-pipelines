@@ -5,9 +5,8 @@ import hail as hl
 
 from hail_scripts.reference_data.combine import join_hts
 from hail_scripts.reference_data.config import CONFIG
-from hail_scripts.reference_data.constants import VERSION
 
-
+VERSION = '2.0.5'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
@@ -15,6 +14,7 @@ def run(args):
     hl._set_flags(no_whole_stage_codegen='1')  # hail 0.2.78 hits an error on the join, this flag gets around it
     joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
               'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
+              VERSION,
              ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
