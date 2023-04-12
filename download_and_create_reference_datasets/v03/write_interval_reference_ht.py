@@ -13,11 +13,11 @@ VERSION = '1.0.0'
 
 
 def run(environment: str):
-	genome_version = '38'
+    genome_version = '38'
     ht = join_hts(
         ['gnomad_non_coding_constraint', 'screen'], reference_genome="38"
     )
-	destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
+    destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
         version=version,
