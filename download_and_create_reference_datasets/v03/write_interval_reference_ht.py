@@ -34,8 +34,9 @@ def run(environment: str):
     )
     ht = ht.transmute(
         screen = hl.Struct(regionType_ids=ht.screen.region_type.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x])),
+    ).annotate_globals(
+        screenRegionTypeLookup=SCREEN_REGION_TYPE_LOOKUP,
     )
-    import pdb; pdb.set_trace()
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
