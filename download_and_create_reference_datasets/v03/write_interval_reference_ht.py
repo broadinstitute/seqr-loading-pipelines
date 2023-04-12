@@ -15,14 +15,14 @@ VERSION = '1.0.0'
 def run(environment: str):
     genome_version = '38'
     ht = join_hts(
-        ['gnomad_non_coding_constraint', 'screen'], reference_genome="38"
+        ['gnomad_non_coding_constraint', 'screen'], VERSION, reference_genome="38"
     )
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
-        version=version,
+        version=VERSION,
     )
-    print(f'Uploading ht from {hl.eval(ht.sourceFilePath)} to {destination_path}')
+    print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
 
