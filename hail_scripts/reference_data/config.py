@@ -53,7 +53,7 @@ Format:
             in the reference dataset. If '#' is at the end, we know to select the appropriate biallelic
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
-        'custom_select': '<Optional function name of custom select function>',
+        'custom_select': '<Optional function of custom select function>',
     },
 '''
 CONFIG = {
