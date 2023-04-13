@@ -20,7 +20,6 @@ def run(environment: str, dataset: str):
     dataset_ht = get_ht(dataset, genome_version)
     destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
     destination_ht = update_joined_ht_globals(destination_ht)
-    destination_ht = destination_ht.annotate_globals(screenRegionTypeLookup=SCREEN_REGION_TYPE_LOOKUP)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 

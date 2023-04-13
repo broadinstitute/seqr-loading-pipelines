@@ -73,10 +73,16 @@ def get_ht(dataset, reference_genome):
 def update_joined_ht_globals(joined_ht, datasets, coverage_datasets, reference_genome):
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
+    enum_definitions = [
+        v[reference_genome]['enum_definitions']
+        for v in CONFIG.values() if k in datasets + coverage_datasets
+        if 'enum_definitions' in v[reference_genome]
+    ]
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
         date=datetime.now().isoformat(),
         datasets=hl.dict(included_dataset),
+        **enum_definitions
     )
 
 def join_hts(datasets, coverage_datasets=[], reference_genome='37'):

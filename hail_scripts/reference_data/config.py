@@ -223,6 +223,7 @@ CONFIG = {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
             'custom_select': custom_screen_select,
+            'enum_definitions': {'screenRegionTypeLookup' : SCREEN_REGION_TYPE_LOOKUP}
         },
     },
     'geno2mp': {

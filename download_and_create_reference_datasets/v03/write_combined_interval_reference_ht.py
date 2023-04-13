@@ -16,7 +16,6 @@ def run(environment: str):
         ['gnomad_non_coding_constraint', 'screen'],
         reference_genome=genome_version,
     )
-    ht = ht.annotate_globals(screenRegionTypeLookup=SCREEN_REGION_TYPE_LOOKUP)
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
