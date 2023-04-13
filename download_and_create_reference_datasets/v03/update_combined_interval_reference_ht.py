@@ -14,12 +14,12 @@ VERSION = '1.0.0'
 
 def run(environment: str, dataset: str):
     genome_version = '38'
+    dataset_ht = get_ht(dataset, genome_version)
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
     )
     destination_ht = import_table(destination_path)
-    dataset_ht = get_ht(dataset, genome_version)
     destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
     destination_ht = update_joined_ht_globals(destination_ht, DATASETS, VERSION, [], genome_version)
     print(f'Uploading ht to {destination_path}')
