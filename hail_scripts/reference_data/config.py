@@ -2,6 +2,21 @@ from copy import deepcopy
 
 import hail as hl
 
+SCREEN_REGION_TYPE_LOOKUP = hl.dict(
+    hl.enumerate(
+         # NB: sorted alphabetically
+        [
+            'CTCF-bound',
+            'CTCF-only',
+            'DNase-H3K4me3',
+            'PLS',
+            'dELS',
+            'pELS'
+        ],
+        index_first=False
+    )
+)
+
 def custom_gnomad_select_v2(ht):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
@@ -42,6 +57,11 @@ def custom_gnomad_select_v3(ht):
     selects['Hemi'] = hl.if_else(ht.locus.in_autosome_or_par(),
                               0, ht.freq[ht.globals.freq_index_dict['XY-adj']].AC)
     return selects
+
+def custom_screen_select(ht):
+    return {
+        'regionType_ids': ht.target.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x]),
+    }
 
 '''
 Configurations of dataset to combine. 
@@ -202,8 +222,8 @@ CONFIG = {
     'screen': {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'select': {'region_type': 'target'}
-        }
+            'custom_select': custom_screen_select,
+        },
     },
     'geno2mp': {
         '37': {

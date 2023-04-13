@@ -70,8 +70,16 @@ def get_ht(dataset, reference_genome):
     print(select_fields)
     return base_ht.select(**select_query).distinct()
 
+def update_joined_ht_globals(joined_ht, datasets, coverage_datasets):
+    # Track the dataset we've added as well as the source path.
+    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
+    # Add metadata, but also removes previous globals.
+    return joined_ht.select_globals(
+        date=datetime.now().isoformat(),
+        datasets=hl.dict(included_dataset),
+    )
 
-def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
@@ -80,11 +88,6 @@ def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
-    # Track the dataset we've added as well as the source path.
-    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
-    # Add metadata, but also removes previous globals.
-    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
-                                         datasets=hl.dict(included_dataset),
-                                         version=version)
+    joined_ht = update_joined_ht_globals(joined_ht, datasets, coverage_datasets)
     joined_ht.describe()
     return joined_ht
