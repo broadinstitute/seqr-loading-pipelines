@@ -57,5 +57,5 @@ if __name__ == "__main__":
         default='dev',
         choices=['dev', 'prod']
     )
-    args = parser.parse_args()
+    args = parser.parse_known_args()
     run(args.environment)
