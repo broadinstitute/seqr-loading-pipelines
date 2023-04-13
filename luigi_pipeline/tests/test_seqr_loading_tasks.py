@@ -106,7 +106,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
         self.assertRaisesRegex(
             SeqrValidationError,
-            "specified as WGS but appears to be WES",
+            'specified as WGS but appears to be WES',
             SeqrVCFToMTTask.validate_mt,
             self.test_mt,
             '37',
@@ -123,7 +123,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
         self.assertRaisesRegex(
             SeqrValidationError,
-            "specified as WES but appears to be WGS",
+            'specified as WES but appears to be WGS',
             SeqrVCFToMTTask.validate_mt,
             self.test_mt,
             '37',
