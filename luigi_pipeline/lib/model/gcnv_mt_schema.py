@@ -3,10 +3,14 @@ import re
 
 import hail as hl
 
-from luigi_pipeline.lib.model.base_mt_schema import row_annotation
-from luigi_pipeline.lib.model.seqr_mt_schema import BaseVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
-
 from hail_scripts.computed_fields import variant_id
+
+from luigi_pipeline.lib.model.base_mt_schema import row_annotation
+from luigi_pipeline.lib.model.seqr_mt_schema import (
+    BaseVariantSchema,
+    SeqrGenotypesSchema,
+    SeqrVariantsAndGenotypesSchema,
+)
 
 GENE_ID = "gene_id"
 MAJOR_CONSEQUENCE = "major_consequence"
