@@ -75,7 +75,7 @@ def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, re
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
     enum_definitions = [
         v[reference_genome]['enum_definitions']
-        for v in CONFIG.values() if k in datasets + coverage_datasets
+        for k, v in CONFIG.items() if k in datasets + coverage_datasets
         if 'enum_definitions' in v[reference_genome]
     ]
     # Add metadata, but also removes previous globals.
