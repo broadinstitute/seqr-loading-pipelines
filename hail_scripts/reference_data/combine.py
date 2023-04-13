@@ -70,7 +70,7 @@ def get_ht(dataset, reference_genome):
     print(select_fields)
     return base_ht.select(**select_query).distinct()
 
-def update_joined_ht_globals(joined_ht, datasets, coverage_datasets):
+def update_joined_ht_globals(joined_ht, datasets, coverage_datasets, reference_genome):
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
     # Add metadata, but also removes previous globals.
@@ -88,6 +88,6 @@ def join_hts(datasets, coverage_datasets=[], reference_genome='37'):
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
-    joined_ht = update_joined_ht_globals(joined_ht, datasets, coverage_datasets)
+    joined_ht = update_joined_ht_globals(joined_ht, datasets, coverage_datasets, reference_genome)
     joined_ht.describe()
     return joined_ht

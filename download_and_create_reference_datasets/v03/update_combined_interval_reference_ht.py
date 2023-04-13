@@ -16,9 +16,9 @@ def run(environment: str, dataset: str):
         environment=environment,
         genome_version=genome_version,
     )
-    ht = import_table(destination_path)
+    destination_ht = import_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    ht.transmute({dataset: dataset_ht})
+    ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
     ht = update_joined_ht_globals(ht)
     ht = ht.annotate_globals(screenRegionTypeLookup=SCREEN_REGION_TYPE_LOOKUP)
     print(f'Uploading ht to {destination_path}')
