@@ -125,8 +125,7 @@ class HailMatrixTableTask(luigi.Task):
 
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
-    @staticmethod
-    def subset_samples_and_variants(mt, subset_path):
+    def subset_samples_and_variants(self, mt, subset_path):
         """
         Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF

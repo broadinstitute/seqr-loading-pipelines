@@ -159,7 +159,8 @@ class TestHailTasks(unittest.TestCase):
     def test_hail_matrix_table_subset_14(self):
         # Tests the subset_samples_and_variants function using 14 samples which should leave 29 variants
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
-        subset_mt = HailMatrixTableTask.subset_samples_and_variants(
+        hmtt = HailMatrixTableTask(source_paths='a', dest_path='b', genome_version='38')
+        subset_mt = hmtt.subset_samples_and_variants(
             mt, self._create_temp_sample_subset_file(mt, 14)
         )
         self.assertEqual(subset_mt.count(), (29, 14))
@@ -167,9 +168,11 @@ class TestHailTasks(unittest.TestCase):
     def test_hail_matrix_table_subset_raise_e(self):
         # Tests if subsetting with an incorrect sample ID will raise the MatrixTableSampleSetError
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        hmtt = HailMatrixTableTask(source_paths='a', dest_path='b', genome_version='38')
         self.assertRaises(
             MatrixTableSampleSetError,
-            HailMatrixTableTask.subset_samples_and_variants,
+            hmtt.subset_samples_and_variants,
+            hmtt,
             mt,
             self._create_temp_sample_subset_file(mt, 1, True),
         )
@@ -177,8 +180,9 @@ class TestHailTasks(unittest.TestCase):
     def test_hail_matrix_table_subset_wrong_sample_id_correct(self):
         # Tests if subsetting with an incorrect sample ID will raise the MatrixTableSampleSetError and return the appropriate wrong id
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
+        hmtt = HailMatrixTableTask(source_paths='a', dest_path='b', genome_version='38')
         with self.assertRaises(MatrixTableSampleSetError) as e:
-            HailMatrixTableTask.subset_samples_and_variants(
+            hmtt.subset_samples_and_variants(
                 mt, self._create_temp_sample_subset_file(mt, 1, True)
             )
             self.assertEqual(e.missing_samples, ['wrong_sample'])
