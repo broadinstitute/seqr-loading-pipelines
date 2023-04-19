@@ -1,4 +1,6 @@
+from datetime import datetime
 import unittest
+from unittest import mock
 
 import hail as hl
 
@@ -40,7 +42,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
 
-    def test_update_joined_ht_globals(self):
+    @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
+    def test_update_joined_ht_globals(self, mock_datetime):
+        mock_datetime.now.return_value = datetime(2023, 4, 19, 16, 43, 39, 361110)
         ht = hl.Table.parallelize(
            [
                {'a': ['1', '2'], 'b': 2},
@@ -50,8 +54,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         ht = update_joined_ht_globals(ht, ['cadd', 'screen'], '1.2.3', ['gnomad_exome_coverage'], '38')
         self.assertEqual(
+            ht.globals.collect()[0],
             hl.Struct(
-                date='2023-04-19T16:29:14.870116',
+                date='2023-04-19T16:43:39.361110',
                 datasets={
                     'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
                     'gnomad_exome_coverage': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
