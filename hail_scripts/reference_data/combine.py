@@ -46,6 +46,17 @@ def get_select_fields(selects, base_ht):
                 select_fields[key] = ht
     return select_fields
 
+def get_enum_select_fields(enum_selects, base_ht):
+    enum_select_fields = {}
+    for enum_select in enum_selects:
+        src, dst, mapping = enum_select['src'], enum_select['dst'], enum_select['mapping']
+        if base_ht[src].dtype == hl.tarray('str') or base_ht[src].dtype == hl.tset('str'):
+            enum_select_fields[dst] = base_ht[src].map(lambda x: mapping[x])
+        elif base_ht[src].dtype == hl.tstr:
+            enum_select_fields[dst] = mapping[base_ht[src]]
+        else:
+            raise ValueError("Enum Selection is only supported for strings or collections of strings")
+    return enum_select_fields
 
 def get_ht(dataset, reference_genome):
     ' Returns the appropriate deduped hail table with selects applied.'
@@ -56,11 +67,13 @@ def get_ht(dataset, reference_genome):
     if config.get('filter'):
         base_ht = base_ht.filter(config['filter'](base_ht))
 
-    # 'select' and 'custom_select's to generate dict.
+    # 'select', 'enum_definitions', and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
 
+    if 'enum_selects' in config:
+        select_fields = {**select_fields, **get_enum_select_fields(config['enum_selects'], base_ht)}
 
     field_name = config.get('field_name') or dataset
     select_query = {

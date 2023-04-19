@@ -2,21 +2,6 @@ from copy import deepcopy
 
 import hail as hl
 
-SCREEN_REGION_TYPE_LOOKUP = hl.dict(
-    hl.enumerate(
-         # NB: sorted alphabetically
-        [
-            'CTCF-bound',
-            'CTCF-only',
-            'DNase-H3K4me3',
-            'PLS',
-            'dELS',
-            'pELS'
-        ],
-        index_first=False
-    )
-)
-
 def custom_gnomad_select_v2(ht):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
@@ -58,11 +43,6 @@ def custom_gnomad_select_v3(ht):
                               0, ht.freq[ht.globals.freq_index_dict['XY-adj']].AC)
     return selects
 
-def custom_screen_select(ht):
-    return {
-        'regionType_ids': ht.target.map(lambda x: SCREEN_REGION_TYPE_LOOKUP[x]),
-    }
-
 '''
 Configurations of dataset to combine. 
 Format:
@@ -74,7 +54,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
-        'enum_definitions': '<Optional dictionary of enum mappings to be added to the globals() of the joined ht>',
+        'enum_selects': 
     },
 '''
 CONFIG = {
@@ -223,8 +203,24 @@ CONFIG = {
     'screen': {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'custom_select': custom_screen_select,
-            'enum_definitions': {'screenRegionTypeLookup' : SCREEN_REGION_TYPE_LOOKUP}
+            'enum_selects': [{
+                'src': 'target',
+                'dst': 'regionType_ids',
+                'mapping': hl.dict(
+                    hl.enumerate(
+                         # NB: sorted alphabetically
+                        [
+                            'CTCF-bound',
+                            'CTCF-only',
+                            'DNase-H3K4me3',
+                            'PLS',
+                            'dELS',
+                            'pELS'
+                        ],
+                        index_first=False
+                    )
+                ),
+            }],
         },
     },
     'geno2mp': {
