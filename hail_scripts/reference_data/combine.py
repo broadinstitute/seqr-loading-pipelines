@@ -87,16 +87,16 @@ def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, re
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
     enum_definitions = {
-        name: lookup
-        for k, v in CONFIG.items() if k in datasets + coverage_datasets if 'enum_definitions' in v[reference_genome]
-        for name, lookup in v[reference_genome]['enum_definitions'].items()
+        k: {enum_select['dst']: enum_select['mapping']}
+        for k, v in CONFIG.items() if k in datasets + coverage_datasets if 'enum_selects' in v[reference_genome]
+        for enum_select in v[reference_genome]['enum_selects']
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
         date=datetime.now().isoformat(),
         datasets=hl.dict(included_dataset),
         version=version,
-        **enum_definitions,
+        enum_definitions=hl.dict(enum_definitions),
     )
 
 def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):

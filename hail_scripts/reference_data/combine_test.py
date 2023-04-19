@@ -2,9 +2,12 @@ import unittest
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import get_enum_select_fields
+from hail_scripts.reference_data.combine import (
+    get_enum_select_fields,
+    update_joined_ht_globals,
+)
 
-class SeqrSVLoadingTest(unittest.TestCase):
+class ReferenceDataCombineTest(unittest.TestCase):
 
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
@@ -36,6 +39,41 @@ class SeqrSVLoadingTest(unittest.TestCase):
         ], ht)
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
+
+    def test_update_joined_ht_globals(self):
+        ht = hl.Table.parallelize(
+           [
+               {'a': ['1', '2'], 'b': 2},
+               {'a': ['1', '4'], 'b': 3},
+           ],
+           hl.tstruct(a=hl.tarray('str'), b=hl.tint32),
+        )
+        ht = update_joined_ht_globals(ht, ['cadd', 'screen'], '1.2.3', ['gnomad_exome_coverage'], '38')
+        self.assertEqual(
+            hl.Struct(
+                date='2023-04-19T16:29:14.870116',
+                datasets={
+                    'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+                    'gnomad_exome_coverage': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
+                    'screen': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht'
+                },
+                version='1.2.3', 
+                enum_definitions={
+                    'screen': {
+                        'regionType_ids': {
+                            'CTCF-bound': 0,
+                            'CTCF-only': 1,
+                            'DNase-H3K4me3': 2,
+                            'PLS': 3,
+                            'dELS': 4,
+                            'pELS': 5
+                        }
+                    }
+                }
+            )
+        )
+
+
 
 
 
