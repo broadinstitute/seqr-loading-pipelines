@@ -33,8 +33,8 @@ def run(environment: str):
                     goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
                 ).select(
                     'alleleId',
-                    'clinicalSignificance_id',
-                    'clinicalSignifanceModifier_ids',
+                    'clinicalSignificancePathogenicities_id',
+                    'clinicalSignificanceAssertions_ids',
                     'goldStars'
                 ).annotate_globals(
                     clinicalSignificanceLookup=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
