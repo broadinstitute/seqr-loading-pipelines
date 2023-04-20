@@ -286,5 +286,10 @@ GCS_PREFIXES = {
     ('dev', 'public'): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
     ('dev', 'private'): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
     ('prod', 'public'): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
-    ('prod', 'private'): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03/',
+    ('prod', 'private'): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
+}
+
+HGMD_CONFIG = {
+    '37': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
+    '38': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
 }
