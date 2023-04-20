@@ -6,11 +6,11 @@ from luigi_pipeline.lib.model.base_mt_schema import BaseMTSchema, row_annotation
 
 
 class TestBaseModel(unittest.TestCase):
-
     class TestSchema(BaseMTSchema):
-
         def __init__(self):
-            super(TestBaseModel.TestSchema, self).__init__(hl.import_vcf('tests/data/1kg_30variants.vcf.bgz'))
+            super(TestBaseModel.TestSchema, self).__init__(
+                hl.import_vcf('tests/data/1kg_30variants.vcf.bgz')
+            )
 
         @row_annotation()
         def a(self):
@@ -72,33 +72,39 @@ class TestBaseModel(unittest.TestCase):
 
     def test_fn_require_type_error(self):
         try:
-            class TestSchema(BaseMTSchema):
 
+            class TestSchema(BaseMTSchema):
                 @row_annotation(fn_require='hello')
                 def a(self):
                     return 0
+
         except ValueError as e:
-            self.assertEqual(str(e), 'Schema: dependency hello is not a row annotation method.')
+            self.assertEqual(
+                str(e), 'Schema: dependency hello is not a row annotation method.'
+            )
             return True
         self.fail('Did not raise ValueError.')
 
     def test_fn_require_class_error(self):
         def dummy():
             pass
-        try:
-            class TestSchema(BaseMTSchema):
 
+        try:
+
+            class TestSchema(BaseMTSchema):
                 @row_annotation(fn_require=dummy)
                 def a(self):
                     return 0
+
         except ValueError as e:
-            self.assertEqual(str(e), 'Schema: dependency dummy is not a row annotation method.')
+            self.assertEqual(
+                str(e), 'Schema: dependency dummy is not a row annotation method.'
+            )
             return True
         self.fail('Did not raise ValueError.')
 
     def test_inheritance(self):
         class TestSchemaChild(TestBaseModel.TestSchema):
-
             @row_annotation(fn_require=TestBaseModel.TestSchema.a)
             def d(self):
                 return self.mt.a + 4
@@ -113,7 +119,6 @@ class TestBaseModel(unittest.TestCase):
     def test_overwrite_default_false(self):
         # info field is already in our mt.
         class TestSchema(TestBaseModel.TestSchema):
-
             @row_annotation()
             def info(self):
                 return 0
@@ -128,7 +133,6 @@ class TestBaseModel(unittest.TestCase):
     def test_overwrite_true(self):
         # info field is already in our mt.
         class TestSchema(TestBaseModel.TestSchema):
-
             @row_annotation()
             def info(self):
                 return 0
@@ -143,7 +147,6 @@ class TestBaseModel(unittest.TestCase):
     def test_annotate_all_overwrite_defailt_false(self):
         # info field is already in our mt.
         class TestSchema(TestBaseModel.TestSchema):
-
             @row_annotation()
             def info(self):
                 return 0
@@ -157,7 +160,6 @@ class TestBaseModel(unittest.TestCase):
     def test_annotate_all_overwrite_true(self):
         # info field is already in our mt.
         class TestSchema(TestBaseModel.TestSchema):
-
             @row_annotation()
             def info(self):
                 return 0
@@ -167,4 +169,3 @@ class TestBaseModel(unittest.TestCase):
 
         count_dict = self._count_dicts(test_schema)
         self.assertEqual(count_dict, {'a': 1, 'b': 1, 'c': 1, 'info': 1})
-
