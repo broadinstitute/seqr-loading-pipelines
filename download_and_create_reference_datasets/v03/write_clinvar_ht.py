@@ -21,34 +21,34 @@ def parsed_clnsig(ht: hl.Table):
 
 def run(environment: str):
     for genome_version in ['37', '38']:
-        mt = download_and_import_latest_clinvar_vcf(genome_version)
-        timestamp = hl.eval(mt.version)
-        ht = mt.rows()
-        ht.describe()
-        ht = ht.annotate(
-                alleleId=ht.info.select('ALLELEID'),
-                clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP.get(parsed_clnsig(ht)[0]),
-                clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP.get(x)).filter(hl.is_defined),
-                goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
-            ).select(
-                'alleleId',
-                'clinicalSignificance_id',
-                'clinicalSignifanceModifier_ids',
-                'goldStars'
-            ).annotate_globals(
-                clinicalSignificanceLookup=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
-                clinicalSignifanceModifierLookup=CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
-            ).repartition(
-                PARTITIONS,
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.vcf.gz') as tmp_file:
+            mt = download_and_import_latest_clinvar_vcf(genome_version, tmp_file)
+            timestamp = hl.eval(mt.version)
+            ht = mt.rows()
+            ht.describe()
+            ht = ht.annotate(
+                    alleleId=ht.info.select('ALLELEID'),
+                    clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP.get(parsed_clnsig(ht)[0]),
+                    clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP.get(x)).filter(hl.is_defined),
+                    goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
+                ).select(
+                    'alleleId',
+                    'clinicalSignificance_id',
+                    'clinicalSignifanceModifier_ids',
+                    'goldStars'
+                ).annotate_globals(
+                    clinicalSignificanceLookup=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
+                    clinicalSignifanceModifierLookup=CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
+                ).repartition(
+                    PARTITIONS,
+                )
+            destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
+                environment=environment,
+                genome_version=genome_version,
+                timestamp=timestamp,
             )
-        destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
-            environment=environment,
-            genome_version=genome_version,
-            timestamp=timestamp,
-        )
-        print(f'Uploading ht from {hl.eval(ht.sourceFilePath)} to {destination_path}')
-        write_ht(ht, destination_path)
-        os.remove(hl.eval(ht.sourceFilePath))
+            print(f'Uploading ht from {hl.eval(ht.sourceFilePath)} to {destination_path}')
+            write_ht(ht, destination_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
