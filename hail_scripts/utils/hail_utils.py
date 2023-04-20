@@ -40,7 +40,9 @@ def import_vcf(
         force_bgz: bool = True,
         drop_samples: bool = False,
         skip_invalid_loci: bool = False,
-        split_multi_alleles: bool = True):
+        split_multi_alleles: bool = True,
+        force: bool = False,
+    ):
     """Import vcf and return MatrixTable.
 
     :param str vcf_path: MT to annotate with VEP
@@ -50,6 +52,7 @@ def import_vcf(
     :param bool force_bgz: read .gz as a bgzipped file
     :param bool drop_samples: if True, discard genotype info
     :param bool skip_invalid_loci: if True, skip loci that are not consistent with the reference_genome.
+    :param bool force: if True, load .vcf.gz files serially. No downstream operations can be parallelized, so this mode is strongly discouraged.
     """
 
     if genome_version not in ("37", "38"):
@@ -72,7 +75,9 @@ def import_vcf(
         min_partitions=min_partitions,
         force_bgz=force_bgz,
         drop_samples=drop_samples,
-        skip_invalid_loci=skip_invalid_loci)
+        skip_invalid_loci=skip_invalid_loci,
+        force=force,
+    )
 
     mt = mt.annotate_globals(sourceFilePath=vcf_path, genomeVersion=genome_version)
 

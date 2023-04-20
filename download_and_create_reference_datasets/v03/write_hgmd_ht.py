@@ -5,9 +5,10 @@ import os
 import hail as hl
 
 from hail_scripts.reference_data.config import GCS_PREFIXES, HGMD_CONFIG
-from hail_scripts.utils.hail_utils import write_ht
+from hail_scripts.utils.hail_utils import import_vcf, write_ht
 
 HGMD_HT_PATH = 'hgmd/hgmd.GRCh{genome_version}.ht'
+PARTITIONS = 100
 VERSION = '1.0.0'
 
 HGMD_CLASS_MAPPING = hl.dict(
@@ -30,8 +31,8 @@ def run(environment: str, genome_version: str):
         environment=environment,
         genome_version=genome_version,
     )
-    mt = hl.import_vcf(source_path)
-    ht = mt.rows()
+    mt = import_vcf(source_path, genome_version=genome_version, force=True)
+    ht = mt.rows().repartition(PARTITIONS)
     ht = ht.select(accession=ht.rsid, class_id=HGMD_CLASS_MAPPING[ht.info.CLASS])
     ht.annotate_globals(
         date=datetime.now().isoformat(),
