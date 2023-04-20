@@ -77,9 +77,3 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 }
             )
         )
-
-
-
-
-
-
