@@ -27,11 +27,11 @@ def create_new(genome_version: str):
 
 def run(environment: str):
     genome_version = '38'
-    destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
+    destination_path = os.path.join(GCS_PREFIXES[(environment, 'public')], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, "_SUCCESS")):
+    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing(destination_path, dataset, genome_version)
     else:
         ht = create_new(genome_version)
