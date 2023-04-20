@@ -67,7 +67,7 @@ def get_ht(dataset, reference_genome):
     if config.get('filter'):
         base_ht = base_ht.filter(config['filter'](base_ht))
 
-    # 'select', 'enum_definitions', and 'custom_select's to generate dict.
+    # 'select', 'enum_selects', and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
