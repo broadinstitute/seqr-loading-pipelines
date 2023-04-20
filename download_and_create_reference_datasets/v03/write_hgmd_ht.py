@@ -35,6 +35,7 @@ def run(environment: str, genome_version: str):
     ht = ht.select(accession=ht.rsid, class_id=HGMD_CLASS_MAPPING[ht.info.CLASS])
     ht.annotate_globals(
         date=datetime.now().isoformat(),
+        version=VERSION,
         enum_definitions=hl.dict({'hgmd': {'class_id': HGMD_CLASS_MAPPING}}),
     )
     print(f'Uploading ht to {destination_path}')
