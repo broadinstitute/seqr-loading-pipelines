@@ -22,7 +22,7 @@ PARTITIONS = 100 # per https://github.com/broadinstitute/seqr-loading-pipelines/
 
 def run(environment: str):
     for genome_version in ['37', '38']:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.vcf.gz') as tmp_file:
+        with tempfile.NamedTemporaryFile(suffix='.vcf.gz') as tmp_file:
             mt = download_and_import_latest_clinvar_vcf(genome_version, tmp_file)
             timestamp = hl.eval(mt.version)
             ht = mt.rows()
