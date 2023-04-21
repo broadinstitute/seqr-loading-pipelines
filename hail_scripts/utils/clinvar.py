@@ -6,32 +6,11 @@ import hail as hl
 
 from hail_scripts.utils.hail_utils import import_vcf
 
+CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"
 
-CLINVAR_CLINICAL_SIGNIFICANCE_PATHOGENICITIES_LOOKUP = hl.dict(
-    hl.enumerate(
-        # NB: sorted by pathogenicity
-        [
-            'Pathogenic',
-            'Pathogenic/Likely_pathogenic',
-            'Pathogenic/Likely_pathogenic/Likely_risk_allele',
-            'Pathogenic/Likely_risk_allele',
-            'Likely_pathogenic',
-            'Likely_pathogenic/Likely_risk_allele',
-            'Likely_risk_allele',
-            'Conflicting_interpretations_of_pathogenicity',
-            'Uncertain_risk_allele',
-            'Uncertain_significance/Uncertain_risk_allele',
-            'Uncertain_significance',
-            'Likely_benign',
-            'Benign/Likely_benign',
-            'Benign',
-        ],
-        index_first=False
-    )
-)
-CLINVAR_CLINICAL_SIGNIFICANCE_ASSERTIONS_LOOKUP = hl.dict(
+CLINVAR_ASSERTIONS_LOOKUP = hl.dict(
     hl.enumerate(
         # NB: alphabetical
         [
@@ -61,6 +40,66 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         "practice_guideline": 4,
     }
 )
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
+    hl.enumerate(
+        # NB: sorted by pathogenicity
+        [
+            'Pathogenic',
+            'Pathogenic/Likely_pathogenic',
+            'Pathogenic/Likely_pathogenic/Likely_risk_allele',
+            'Pathogenic/Likely_risk_allele',
+            'Likely_pathogenic',
+            'Likely_pathogenic/Likely_risk_allele',
+            'Likely_risk_allele',
+            'Conflicting_interpretations_of_pathogenicity',
+            'Established_risk_allele',
+            'Uncertain_risk_allele',
+            'Uncertain_significance/Uncertain_risk_allele',
+            'Uncertain_significance',
+            'Likely_benign',
+            'Benign/Likely_benign',
+            'Benign',
+            CLINVAR_DEFAULT_PATHOGENICITY,
+        ],
+        index_first=False
+    )
+)
+
+def parsed_clnsig(ht: hl.Table):
+    return (
+        hl.delimit(ht.info.CLNSIG)
+        .replace(
+            'Likely_pathogenic,_low_penetrance', 'Likely_pathogenic|low_penetrance',
+        )
+        .replace(
+            '/Pathogenic,_low_penetrance', '|low_penetrance',
+        )
+        .split(r'\|')
+    )
+
+def parsed_clnsigconf(ht: hl.Table):
+
+    def parse_to_count(entry: str):
+        splt = entry.split(r'\(') # pattern, count = entry... if destructuring worked on a hail expression!
+        return hl.tuple([
+            splt[0], 
+            hl.int32(splt[1][:-1])
+        ])
+
+    return (
+        hl.delimit(ht.info.CLNSIGCONF)
+        .replace(',_low_penetrance', '')
+        .split(r'\|')
+        .map(parse_to_count)
+        .group_by(lambda x: x[0])
+        .map_values(lambda values: (
+            values.fold(
+                lambda x, y: x + y[1],
+                0,
+            )
+        ))
+        .items()
+    )
 
 def download_and_import_latest_clinvar_vcf(genome_version: str, tmp_file: str) -> hl.MatrixTable:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.

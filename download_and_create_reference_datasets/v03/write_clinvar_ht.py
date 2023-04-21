@@ -7,17 +7,16 @@ import hail as hl
 from hail_scripts.reference_data.constants import GCS_PREFIXES
 from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,
-    CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
-    CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
+    parsed_clnsig,
+    CLINVAR_ASSERTIONS_LOOKUP,
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
     CLINVAR_GOLD_STARS_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
 CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'
 PARTITIONS = 100 # per https://github.com/broadinstitute/seqr-loading-pipelines/pull/383
-
-def parsed_clnsig(ht: hl.Table):
-    return ht.info.CLNSIG.flatmap(lambda x: x.split(r'\|')).map(lambda x: x.replace(r'$_', ''))
 
 def run(environment: str):
     for genome_version in ['37', '38']:
@@ -26,22 +25,34 @@ def run(environment: str):
             timestamp = hl.eval(mt.version)
             ht = mt.rows()
             ht.describe()
-            ht = ht.annotate(
-                    alleleId=ht.info.select('ALLELEID'),
-                    clinicalSignificance_id=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP.get(parsed_clnsig(ht)[0]),
-                    clinicalSignifanceModifier_ids=parsed_clnsig(ht).map(lambda x: CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP.get(x)).filter(hl.is_defined),
-                    goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
-                ).select(
-                    'alleleId',
-                    'clinicalSignificancePathogenicities_id',
-                    'clinicalSignificanceAssertions_ids',
-                    'goldStars'
-                ).annotate_globals(
-                    clinicalSignificanceLookup=CLINVAR_CLINICAL_SIGNIFICANCE_LOOKUP,
-                    clinicalSignifanceModifierLookup=CLINVAR_CLINICAL_SIGNIFICANCE_MODIFIER_LOOKUP,
-                ).repartition(
-                    PARTITIONS,
-                )
+            ht = ht.select(
+                alleleId=ht.info.ALLELEID,
+                pathogenicities_id=CLINVAR_PATHOGENICITIES_LOOKUP.get(
+                    parsed_clnsig(ht)[0], 
+                    CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_DEFAULT_PATHOGENICITY],
+                ),
+                assertions_ids=(
+                    parsed_clnsig(ht)
+                    .filter(lambda x: ~CLINVAR_PATHOGENICITIES_LOOKUP.contains(x))
+                    .map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x])
+                ),
+                conflictingPathogenicities_ids=(
+                    parsed_clnsigconf(ht)
+                    .starmap(lambda pathogenicity, count: CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity])
+                ),
+                conflictingPathogenicities_counts=(
+                    parsed_clnsigconf(ht)
+                    .starmap(lambda pathogenicity, count: count)
+                ),
+                goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
+            ).annotate_globals(
+                enum_definitions=hl.dict(
+                    pathogenicities_id=CLINVAR_PATHOGENICITIES_LOOKUP,
+                    assertions_ids=CLINVAR_ASSERTIONS_LOOKUP,
+                ),
+            ).repartition(
+                PARTITIONS,
+            )
             destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
                 environment=environment,
                 genome_version=genome_version,
