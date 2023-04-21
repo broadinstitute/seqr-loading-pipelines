@@ -9,8 +9,6 @@ from hail_scripts.utils.clinvar import (
 )
 
 class ClinvarTest(unittest.TestCase):
-    maxDiff = None
-
     def test_parsed_clnsig(self):
         ht = hl.Table.parallelize(
             [
