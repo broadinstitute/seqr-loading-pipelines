@@ -1,3 +1,5 @@
+import tempfile
+
 import hail as hl
 from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import tempfile
 
 import hail as hl
 
@@ -8,6 +9,7 @@ from hail_scripts.reference_data.constants import GCS_PREFIXES
 from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,
     parsed_clnsig,
+    parsed_clnsigconf,
     CLINVAR_ASSERTIONS_LOOKUP,
     CLINVAR_DEFAULT_PATHOGENICITY,
     CLINVAR_PATHOGENICITIES_LOOKUP,
@@ -24,7 +26,6 @@ def run(environment: str):
             mt = download_and_import_latest_clinvar_vcf(genome_version, tmp_file)
             timestamp = hl.eval(mt.version)
             ht = mt.rows()
-            ht.describe()
             ht = ht.select(
                 alleleId=ht.info.ALLELEID,
                 pathogenicities_id=CLINVAR_PATHOGENICITIES_LOOKUP.get(
@@ -38,18 +39,18 @@ def run(environment: str):
                 ),
                 conflictingPathogenicities_ids=(
                     parsed_clnsigconf(ht)
-                    .starmap(lambda pathogenicity, count: CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity])
+                    .starmap(lambda pathogenicity, _: CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity])
                 ),
                 conflictingPathogenicities_counts=(
                     parsed_clnsigconf(ht)
-                    .starmap(lambda pathogenicity, count: count)
+                    .starmap(lambda _, count: count)
                 ),
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
             ).annotate_globals(
-                enum_definitions=hl.dict(
-                    pathogenicities_id=CLINVAR_PATHOGENICITIES_LOOKUP,
-                    assertions_ids=CLINVAR_ASSERTIONS_LOOKUP,
-                ),
+                enum_definitions=hl.dict({
+                    'pathogenicities_id': CLINVAR_PATHOGENICITIES_LOOKUP,
+                    'assertions_ids': CLINVAR_ASSERTIONS_LOOKUP,
+                }),
             ).repartition(
                 PARTITIONS,
             )
@@ -68,5 +69,5 @@ if __name__ == "__main__":
         default='dev',
         choices=['dev', 'prod']
     )
-    args = parser.parse_known_args()
+    args, _ = parser.parse_known_args()
     run(args.environment)
