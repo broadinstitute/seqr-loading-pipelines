@@ -50,16 +50,16 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
             'Pathogenic/Likely_risk_allele',
             'Likely_pathogenic',
             'Likely_pathogenic/Likely_risk_allele',
+            'Established_risk_allele',
             'Likely_risk_allele',
             'Conflicting_interpretations_of_pathogenicity',
-            'Established_risk_allele',
             'Uncertain_risk_allele',
             'Uncertain_significance/Uncertain_risk_allele',
             'Uncertain_significance',
+            CLINVAR_DEFAULT_PATHOGENICITY,
             'Likely_benign',
             'Benign/Likely_benign',
             'Benign',
-            CLINVAR_DEFAULT_PATHOGENICITY,
         ],
         index_first=False
     )

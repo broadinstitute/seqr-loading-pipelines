@@ -28,7 +28,7 @@ def run(environment: str):
             ht = mt.rows()
             ht = ht.select(
                 alleleId=ht.info.ALLELEID,
-                pathogenicities_id=CLINVAR_PATHOGENICITIES_LOOKUP.get(
+                pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP.get(
                     parsed_clnsig(ht)[0], 
                     CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_DEFAULT_PATHOGENICITY],
                 ),
@@ -37,13 +37,12 @@ def run(environment: str):
                     .filter(lambda x: ~CLINVAR_PATHOGENICITIES_LOOKUP.contains(x))
                     .map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x])
                 ),
-                conflictingPathogenicities_ids=(
+                conflictingPathogenicities=(
                     parsed_clnsigconf(ht)
-                    .starmap(lambda pathogenicity, _: CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity])
-                ),
-                conflictingPathogenicities_counts=(
-                    parsed_clnsigconf(ht)
-                    .starmap(lambda _, count: count)
+                    .starmap(lambda pathogenicity, count: hl.Struct(
+                        pathogencity_id=CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity],
+                        count=count,
+                    )),
                 ),
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
             ).annotate_globals(
