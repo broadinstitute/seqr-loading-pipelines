@@ -206,20 +206,16 @@ CONFIG = {
             'enum_selects': [{
                 'src': 'target',
                 'dst': 'regionType_ids',
-                'mapping': hl.dict(
-                    hl.enumerate(
-                         # NB: sorted alphabetically
-                        [
-                            'CTCF-bound',
-                            'CTCF-only',
-                            'DNase-H3K4me3',
-                            'PLS',
-                            'dELS',
-                            'pELS'
-                        ],
-                        index_first=False
-                    )
-                ),
+                'values': [
+                    'CTCF-bound',
+                    'CTCF-only',
+                    'DNase-H3K4me3',
+                    'PLS',
+                    'dELS',
+                    'pELS',
+                    'DNase-only',
+                    'low-DNase',
+                ],
             }],
         },
     },
