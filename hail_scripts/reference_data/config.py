@@ -54,7 +54,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
-        'enum_selects': '<Optional list of dictionaries with required keys ['src', 'dst', 'mapping']'
+        'enum_selects': '<Optional list of dictionaries with required keys ['src', 'dst', 'values']'
     },
 '''
 CONFIG = {

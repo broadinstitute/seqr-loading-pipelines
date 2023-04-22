@@ -1,5 +1,6 @@
 from datetime import datetime
 import functools
+import re
 
 import hail as hl
 
@@ -51,9 +52,12 @@ def get_enum_select_fields(enum_selects, base_ht):
     for enum_select in enum_selects:
         src, dst, values = enum_select['src'], enum_select['dst'], enum_select['values']
         mapping = hl.dict(hl.enumerate(values, index_first=False))
-        if base_ht[src].dtype != hl.tstr:
+        if base_ht[src].dtype == hl.tarray('str') or base_ht[src].dtype == hl.tset('str'):
+            enum_select_fields[dst] = base_ht[src].map(lambda x: mapping[x])
+        elif base_ht[src].dtype == hl.tstr:
+            enum_select_fields[dst] = mapping[base_ht[src]]
+        else:
             raise ValueError("Enum Selection is only supported for strings or collections of strings")
-        enum_select_fields[dst] = mapping[base_ht[src]]            
     return enum_select_fields
 
 def get_ht(dataset, reference_genome):
@@ -85,7 +89,9 @@ def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, re
     # Track the dataset we've added as well as the source path.
     included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
     enum_definitions = {
-        k: {enum_select['dst']: enum_select['values']}
+        k: {
+            re.sub(r'_id(s?)$', '', enum_select['dst']): enum_select['values']
+        }
         for k, v in CONFIG.items() if k in datasets + coverage_datasets if 'enum_selects' in v[reference_genome]
         for enum_select in v[reference_genome]['enum_selects']
     }
