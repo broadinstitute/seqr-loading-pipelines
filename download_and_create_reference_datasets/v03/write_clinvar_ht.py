@@ -10,14 +10,16 @@ from hail_scripts.utils.clinvar import (
     download_and_import_latest_clinvar_vcf,
     parsed_clnsig,
     parsed_clnsigconf,
-    CLINVAR_ASSERTIONS_LOOKUP,
+    CLINVAR_ASSERTIONS,
     CLINVAR_DEFAULT_PATHOGENICITY,
-    CLINVAR_PATHOGENICITIES_LOOKUP,
+    CLINVAR_PATHOGENICITIES,
     CLINVAR_GOLD_STARS_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
 CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'
+CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False))
 PARTITIONS = 100 # per https://github.com/broadinstitute/seqr-loading-pipelines/pull/383
 
 def run(environment: str):
@@ -26,17 +28,18 @@ def run(environment: str):
             mt = download_and_import_latest_clinvar_vcf(genome_version, tmp_file)
             timestamp = hl.eval(mt.version)
             ht = mt.rows()
+            clnsigs = parsed_clnsig(ht)
             ht = ht.select(
                 alleleId=ht.info.ALLELEID,
                 pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP.get(
-                    parsed_clnsig(ht)[0], 
+                    clnsigs[0],
                     CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_DEFAULT_PATHOGENICITY],
                 ),
-                assertions_ids=(
-                    parsed_clnsig(ht)
-                    .filter(lambda x: ~CLINVAR_PATHOGENICITIES_LOOKUP.contains(x))
-                    .map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x])
-                ),
+                assertions_ids=hl.if_else(
+                    CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
+                    clinsigs[1:],
+                    clinsigs,
+                ).map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x]),
                 conflictingPathogenicities=(
                     parsed_clnsigconf(ht)
                     .starmap(lambda pathogenicity, count: hl.Struct(
@@ -47,8 +50,8 @@ def run(environment: str):
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
             ).annotate_globals(
                 enum_definitions=hl.dict({
-                    'pathogenicities_id': CLINVAR_PATHOGENICITIES_LOOKUP,
-                    'assertions_ids': CLINVAR_ASSERTIONS_LOOKUP,
+                    'assertions': CLINVAR_ASSERTIONS,
+                    'pathogenicities': CLINVAR_PATHOGENICITIES,
                 }),
             ).repartition(
                 PARTITIONS,

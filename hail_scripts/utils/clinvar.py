@@ -10,24 +10,19 @@ CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"
 
-CLINVAR_ASSERTIONS_LOOKUP = hl.dict(
-    hl.enumerate(
-        # NB: alphabetical
-        [
-            'Affects',
-            'association',
-            'association_not_found',
-            'confers_sensitivity',
-            'drug_response',
-            'low_penetrance',
-            'not_provided',
-            'other',
-            'protective',
-            'risk_factor',
-        ],
-        index_first=False,
-    ),
-)
+# NB: alphabetical
+CLINVAR_ASSERTIONS =  [
+    'Affects',
+    'association',
+    'association_not_found',
+    'confers_sensitivity',
+    'drug_response',
+    'low_penetrance',
+    'not_provided',
+    'other',
+    'protective',
+    'risk_factor',
+]
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         "no_interpretation_for_the_single_variant": 0,
@@ -40,30 +35,25 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         "practice_guideline": 4,
     }
 )
-CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
-    hl.enumerate(
-        # NB: sorted by pathogenicity
-        [
-            'Pathogenic',
-            'Pathogenic/Likely_pathogenic',
-            'Pathogenic/Likely_pathogenic/Likely_risk_allele',
-            'Pathogenic/Likely_risk_allele',
-            'Likely_pathogenic',
-            'Likely_pathogenic/Likely_risk_allele',
-            'Established_risk_allele',
-            'Likely_risk_allele',
-            'Conflicting_interpretations_of_pathogenicity',
-            'Uncertain_risk_allele',
-            'Uncertain_significance/Uncertain_risk_allele',
-            'Uncertain_significance',
-            CLINVAR_DEFAULT_PATHOGENICITY,
-            'Likely_benign',
-            'Benign/Likely_benign',
-            'Benign',
-        ],
-        index_first=False
-    )
-)
+# NB: sorted by pathogenicity
+CLINVAR_PATHOGENICITIES = [
+    'Pathogenic',
+    'Pathogenic/Likely_pathogenic',
+    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
+    'Pathogenic/Likely_risk_allele',
+    'Likely_pathogenic',
+    'Likely_pathogenic/Likely_risk_allele',
+    'Established_risk_allele',
+    'Likely_risk_allele',
+    'Conflicting_interpretations_of_pathogenicity',
+    'Uncertain_risk_allele',
+    'Uncertain_significance/Uncertain_risk_allele',
+    'Uncertain_significance',
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    'Likely_benign',
+    'Benign/Likely_benign',
+    'Benign',
+]
 
 def parsed_clnsig(ht: hl.Table):
     return (
