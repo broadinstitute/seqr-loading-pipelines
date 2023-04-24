@@ -11,15 +11,15 @@ from hail_scripts.utils.clinvar import (
     parsed_clnsig,
     parsed_clnsigconf,
     CLINVAR_ASSERTIONS,
+    CLINVAR_ASSERTIONS_LOOKUP,
     CLINVAR_DEFAULT_PATHOGENICITY,
     CLINVAR_GOLD_STARS_LOOKUP,
     CLINVAR_PATHOGENICITIES,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
 CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'
-CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
-CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False))
 PARTITIONS = 100 # per https://github.com/broadinstitute/seqr-loading-pipelines/pull/383
 
 def run(environment: str):
@@ -40,13 +40,7 @@ def run(environment: str):
                     clnsigs[1:],
                     clnsigs,
                 ).map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x]),
-                conflictingPathogenicities=(
-                    parsed_clnsigconf(ht)
-                    .map(lambda s: hl.Struct(
-                        pathogencity_id=CLINVAR_PATHOGENICITIES_LOOKUP[s.pathogenicity],
-                        count=s.count,
-                    ))
-                ),
+                conflictingPathogenicities=parsed_clnsigconf(ht),
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
             ).annotate_globals(
                 enum_definitions=hl.dict({

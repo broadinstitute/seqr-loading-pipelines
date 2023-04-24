@@ -23,6 +23,7 @@ CLINVAR_ASSERTIONS =  [
     'protective',
     'risk_factor',
 ]
+CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         "no_interpretation_for_the_single_variant": 0,
@@ -54,6 +55,7 @@ CLINVAR_PATHOGENICITIES = [
     'Benign/Likely_benign',
     'Benign',
 ]
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False))
 
 def parsed_clnsig(ht: hl.Table):
     return (
@@ -90,7 +92,7 @@ def parsed_clnsigconf(ht: hl.Table):
         ))
         .items()
         .map(
-            lambda x: hl.Struct(pathogenicity=x[0], count=x[1])
+            lambda x: hl.Struct(pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP[x[0]], count=x[1])
         )
     )
 
