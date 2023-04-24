@@ -12,8 +12,8 @@ from hail_scripts.utils.clinvar import (
     parsed_clnsigconf,
     CLINVAR_ASSERTIONS,
     CLINVAR_DEFAULT_PATHOGENICITY,
-    CLINVAR_PATHOGENICITIES,
     CLINVAR_GOLD_STARS_LOOKUP,
+    CLINVAR_PATHOGENICITIES,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
@@ -35,17 +35,17 @@ def run(environment: str):
                     clnsigs[0],
                     CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_DEFAULT_PATHOGENICITY],
                 ),
-                assertions_ids=hl.if_else(
+                assertion_ids=hl.if_else(
                     CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
-                    clinsigs[1:],
-                    clinsigs,
+                    clnsigs[1:],
+                    clnsigs,
                 ).map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x]),
                 conflictingPathogenicities=(
                     parsed_clnsigconf(ht)
                     .starmap(lambda pathogenicity, count: hl.Struct(
                         pathogencity_id=CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity],
                         count=count,
-                    )),
+                    ))
                 ),
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
             ).annotate_globals(
