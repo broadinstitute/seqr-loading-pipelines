@@ -31,7 +31,7 @@ def run(environment: str):
         environment=environment,
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, "_SUCCESS")):
+    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing(destination_path, dataset, genome_version)
     else:
         ht = create_new(genome_version)

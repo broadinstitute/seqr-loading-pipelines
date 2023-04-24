@@ -80,9 +80,3 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 }
             )
         )
-
-
-
-
-
-
