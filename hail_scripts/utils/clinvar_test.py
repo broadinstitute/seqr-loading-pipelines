@@ -44,8 +44,8 @@ class ClinvarTest(unittest.TestCase):
             [
                 None,
                 [
-                    hl.Struct(count=2, pathogenicity_id=4),
                     hl.Struct(count=9, pathogenicity_id=0),
+                    hl.Struct(count=2, pathogenicity_id=4),
                     hl.Struct(count=1, pathogenicity_id=11),
                 ]
             ],

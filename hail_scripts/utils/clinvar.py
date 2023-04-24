@@ -69,30 +69,29 @@ def parsed_clnsig(ht: hl.Table):
         .split(r'\|')
     )
 
+def parse_to_count(entry: str):
+    splt = entry.split(r'\(') # pattern, count = entry... if destructuring worked on a hail expression!
+    return hl.Struct(
+        pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP[splt[0]],
+        count=hl.int32(splt[1][:-1])
+    )
+
 def parsed_clnsigconf(ht: hl.Table):
-
-    def parse_to_count(entry: str):
-        splt = entry.split(r'\(') # pattern, count = entry... if destructuring worked on a hail expression!
-        return hl.tuple([
-            splt[0], 
-            hl.int32(splt[1][:-1])
-        ])
-
     return (
         hl.delimit(ht.info.CLNSIGCONF)
         .replace(',_low_penetrance', '')
         .split(r'\|')
         .map(parse_to_count)
-        .group_by(lambda x: x[0])
+        .group_by(lambda x: x.pathogenicity_id)
         .map_values(lambda values: (
             values.fold(
-                lambda x, y: x + y[1],
+                lambda x, y: x + y.count,
                 0,
             )
         ))
         .items()
         .map(
-            lambda x: hl.Struct(pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP[x[0]], count=x[1])
+            lambda x: hl.Struct(pathogenicity_id=x[0], count=x[1])
         )
     )
 
