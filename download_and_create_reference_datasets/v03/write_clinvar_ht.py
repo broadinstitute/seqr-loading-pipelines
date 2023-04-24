@@ -42,9 +42,9 @@ def run(environment: str):
                 ).map(lambda x: CLINVAR_ASSERTIONS_LOOKUP[x]),
                 conflictingPathogenicities=(
                     parsed_clnsigconf(ht)
-                    .starmap(lambda pathogenicity, count: hl.Struct(
-                        pathogencity_id=CLINVAR_PATHOGENICITIES_LOOKUP[pathogenicity],
-                        count=count,
+                    .map(lambda s: hl.Struct(
+                        pathogencity_id=CLINVAR_PATHOGENICITIES_LOOKUP[s.pathogenicity],
+                        count=s.count,
                     ))
                 ),
                 goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),

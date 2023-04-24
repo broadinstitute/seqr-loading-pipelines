@@ -12,11 +12,11 @@ class ClinvarTest(unittest.TestCase):
     def test_parsed_clnsig(self):
         ht = hl.Table.parallelize(
             [
-               {'info': hl.struct(CLNSIG=['Pathogenic|Affects'])},
-               {'info': hl.struct(CLNSIG=['Pathogenic/Likely_pathogenic/Pathogenic', '_low_penetrance'])},
-               {'info': hl.struct(CLNSIG=['Likely_pathogenic/Pathogenic', '_low_penetrance|association|protective'])},
-               {'info': hl.struct(CLNSIG=['Likely_pathogenic', '_low_penetrance'])},
-               {'info': hl.struct(CLNSIG=['association|protective'])},
+               {'info': hl.Struct(CLNSIG=['Pathogenic|Affects'])},
+               {'info': hl.Struct(CLNSIG=['Pathogenic/Likely_pathogenic/Pathogenic', '_low_penetrance'])},
+               {'info': hl.Struct(CLNSIG=['Likely_pathogenic/Pathogenic', '_low_penetrance|association|protective'])},
+               {'info': hl.Struct(CLNSIG=['Likely_pathogenic', '_low_penetrance'])},
+               {'info': hl.Struct(CLNSIG=['association|protective'])},
             ],
             hl.tstruct(info=hl.tstruct(CLNSIG=hl.tarray(hl.tstr))),
         )
@@ -34,8 +34,8 @@ class ClinvarTest(unittest.TestCase):
     def test_parsed_clnsigconf(self):
         ht = hl.Table.parallelize(
             [
-               {'info': hl.struct(CLNSIGCONF=hl.missing(hl.tarray(hl.tstr)))},
-               {'info': hl.struct(CLNSIGCONF=['Pathogenic(8)|Likely_pathogenic(2)|Pathogenic', '_low_penetrance(1)|Uncertain_significance(1)'])},
+               {'info': hl.Struct(CLNSIGCONF=hl.missing(hl.tarray(hl.tstr)))},
+               {'info': hl.Struct(CLNSIGCONF=['Pathogenic(8)|Likely_pathogenic(2)|Pathogenic', '_low_penetrance(1)|Uncertain_significance(1)'])},
             ],
             hl.tstruct(info=hl.tstruct(CLNSIGCONF=hl.tarray(hl.tstr))),
         )
@@ -44,9 +44,9 @@ class ClinvarTest(unittest.TestCase):
             [
                 None,
                 [
-                    ('Likely_pathogenic', 2),
-                    ('Pathogenic', 9),
-                    ('Uncertain_significance', 1),
+                    hl.Struct(count=2, pathogenicity='Likely_pathogenic'),
+                    hl.Struct(count=9, pathogenicity='Pathogenic'),
+                    hl.Struct(count=1, pathogenicity='Uncertain_significance',),
                 ]
             ],
         )

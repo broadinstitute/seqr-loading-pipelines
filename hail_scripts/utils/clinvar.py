@@ -89,6 +89,9 @@ def parsed_clnsigconf(ht: hl.Table):
             )
         ))
         .items()
+        .map(
+            lambda x: hl.Struct(pathogenicity=x[0], count=x[1])
+        )
     )
 
 def download_and_import_latest_clinvar_vcf(genome_version: str, tmp_file: str) -> hl.MatrixTable:
