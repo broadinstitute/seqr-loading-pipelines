@@ -54,6 +54,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
+        'enum_selects': '<Optional list of dictionaries with required keys ['src', 'dst', 'values']'
     },
 '''
 CONFIG = {
@@ -202,8 +203,21 @@ CONFIG = {
     'screen': {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'select': {'region_type': 'target'}
-        }
+            'enum_selects': [{
+                'src': 'target',
+                'dst': 'regionType_ids',
+                'values': [
+                    'CTCF-bound',
+                    'CTCF-only',
+                    'DNase-H3K4me3',
+                    'PLS',
+                    'dELS',
+                    'pELS',
+                    'DNase-only',
+                    'low-DNase',
+                ],
+            }],
+        },
     },
     'geno2mp': {
         '37': {
