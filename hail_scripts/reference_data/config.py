@@ -126,10 +126,32 @@ CONFIG = {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
             'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
+            'enum_selects': [{
+                'src': 'target',
+                'dst': 'regionType_ids',
+                'values': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
+            }],
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.ht',
             'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
+            'enum_selects': [{
+                'src': 'info.splice_consequence',
+                'dst': 'spliceConsequence_id',
+                'values': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
+            }],
         },
     },
     'topmed': {
