@@ -11,18 +11,18 @@ from hail_scripts.utils.hail_utils import write_ht
 COMBINED_REFERENCE_HT_PATH = 'combined_reference/combined_reference.GRCh{genome_version}-{version}.ht'
 COVERAGE_DATASETS = ['gnomad_genome_coverage', 'gnomad_exome_coverage']
 DATASETS = [
-    'cadd',
     '1kg',
-    'mpc',
-    'eigen',
+    'cadd',
     'dbnsfp',
-    'topmed',
-    'primate_ai',
-    'splice_ai',
+    'eigen',
     'exac',
+    'geno2mp',
     'gnomad_genomes',
     'gnomad_exomes',
-    'geno2mp'
+    'mpc',
+    'primate_ai',
+    'splice_ai',
+    'topmed',
 ]
 VERSION = '1.0.0'
 
