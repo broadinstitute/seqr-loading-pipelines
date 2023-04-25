@@ -10,7 +10,6 @@ from hail_scripts.reference_data.combine import (
 )
 
 class ReferenceDataCombineTest(unittest.TestCase):
-    maxDiff = None
 
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
@@ -36,12 +35,35 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(target_ids=[3], sv_type_id=3)
             ],
         )
-
         enum_select_fields = get_enum_select_fields([
             {'src': 'sv_type', 'dst': 'sv_type_id', 'values': ['d']},
         ], ht)
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
+
+    def test_get_enum_select_nested_field(self):
+        ht = hl.Table.parallelize(
+           [
+               {'info': hl.Struct(a=hl.Struct(b='b'))},
+               {'info': hl.Struct(a=hl.Struct(b='c'))},
+               {'info': hl.Struct(a=hl.Struct(b='a'))},
+               {'info': hl.Struct(a=hl.Struct(b='d'))},
+           ],
+           hl.tstruct(info=hl.dtype('struct{a: struct{b:str}}')),
+        )
+        enum_select_fields = get_enum_select_fields([
+            {'src': 'info.a.b', 'dst': 'target_id', 'values': ['a', 'b', 'c', 'd']},
+        ], ht)
+        mapped_ht = ht.select(**enum_select_fields)
+        self.assertListEqual(
+            mapped_ht.collect(),
+            [
+                hl.Struct(target_id=1),
+                hl.Struct(target_id=2),
+                hl.Struct(target_id=0),
+                hl.Struct(target_id=3),
+            ],
+        )
 
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     def test_update_joined_ht_globals(self, mock_datetime):
