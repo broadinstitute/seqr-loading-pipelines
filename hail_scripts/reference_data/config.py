@@ -128,7 +128,7 @@ CONFIG = {
             'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
             'enum_selects': [{
                 'src': 'target',
-                'dst': 'regionType_ids',
+                'dst': 'spliceConsequence_id',
                 'values': [
                     'Acceptor gain',
                     'Acceptor loss',
