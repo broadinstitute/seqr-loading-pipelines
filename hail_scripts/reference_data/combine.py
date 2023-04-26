@@ -7,18 +7,6 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-def annotate_coverages(ht, coverage_dataset, reference_genome):
-    """
-    Annotates the hail table with the coverage dataset.
-        '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
-    :param ht: hail table
-    :param coverage_dataset: coverage dataset e.g. gnomad genomes or exomes coverage
-    :param reference_genome: '37' or '38'
-    :return: hail table with proper annotation
-    """
-    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
-    return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
-
 def extract_field_from_ht(ht, val):
     for attr in val.split('.'):
         # Select from multi-allelic list.
@@ -108,13 +96,8 @@ def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, re
 
 def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets + coverage_datasets]
     joined_ht = functools.reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
-
-    # Annotate coverages.
-    for coverage_dataset in coverage_datasets:
-        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
-
     joined_ht = update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, reference_genome)
     joined_ht.describe()
     return joined_ht
