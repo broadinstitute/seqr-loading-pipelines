@@ -161,10 +161,12 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
         "cdna_start",
         "cdna_end",
         "codons",
+        "exon",
         "gene_id",
         "gene_symbol",
         "hgvsc",
         "hgvsp",
+        "intron",
         "transcript_id",
     ]
 
