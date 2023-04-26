@@ -19,8 +19,26 @@ PASS = "PASS"
 CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
 NON_GENE_PREDICTIONS = {'PREDICTED_INTERGENIC', 'PREDICTED_NONCODING_BREAKPOINT', 'PREDICTED_NONCODING_SPAN'}
 
+PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict({
+    # Map of concordance string -> previous n_alt_alleles()
 
-INTERVAL_TYPE = 'array<struct{type: str, chrom: str, start: int32, end: int32}>'
+    # Concordant
+    frozenset(["TN"]): 0,       # 0/0 -> 0/0
+    frozenset(["TP"]): 2,       # 1/1 -> 1/1
+    frozenset(["TN", "TP"]): 1, # 0/1 -> 0/1
+
+    # Novel
+    frozenset(["FP"]): 0,       # 0/0 -> 1/1
+    frozenset(["TN", "FP"]): 0, # 0/0 -> 0/1
+
+    # Absent
+    frozenset(["FN"]): 2,       # 1/1 -> 0/0
+    frozenset(["TN", "FN"]): 1, # 0/1 -> 0/0
+
+    # Discordant
+    frozenset(["FP", "TP"]): 1, # 0/1 -> 1/1
+    frozenset(["FN", "TP"]): 2, # 1/1 -> 0/1
+})
 
 def unsafe_cast_int32(f: hl.tfloat32) -> hl.int32:
     i = hl.int32(f)
@@ -28,7 +46,6 @@ def unsafe_cast_int32(f: hl.tfloat32) -> hl.int32:
         .when(hl.approx_equal(f, i), i)
         .or_error(f"Found non-integer value {f}")
     )
-
 
 def get_cpx_interval(x):
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
@@ -88,11 +105,11 @@ class SeqrSVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='gnomad_svs_AC')
     def gnomad_svs_ac(self):
-        return unsafe_cast_int32(self.mt.info.gnomad_svs_AC)
+        return unsafe_cast_int32(self.mt.info.gnomAD_V2_AC)
 
     @row_annotation(name='gnomad_svs_AN')
     def gnomad_svs_an(self):
-        return unsafe_cast_int32(self.mt.info.gnomad_svs_AN)
+        return unsafe_cast_int32(self.mt.info.gnomAD_V2_AN)
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
@@ -205,12 +222,23 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
 
     def _genotype_fields(self):
         is_called = hl.is_defined(self.mt.GT)
+        was_previously_called = hl.is_defined(self.mt.CONC_ST) & ~self.mt.CONC_ST.contains("EMPTY")
+        num_alt = self._num_alt(is_called)
+        prev_num_alt = hl.if_else(was_previously_called, PREVIOUS_GENOTYPE_N_ALT_ALLELES[hl.set(self.mt.CONC_ST)], -1)
+        discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
+        novel_genotype = (num_alt != prev_num_alt) & (prev_num_alt == 0)
         return {
             'sample_id': self.mt.s,
             'gq': self.mt.GQ,
             'cn': self.mt.RD_CN,
-            'num_alt': self._num_alt(is_called)
+            'num_alt': num_alt,
+            'prev_num_alt': hl.or_missing(discordant_genotype, prev_num_alt),
+            'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
+
+    @row_annotation(fn_require=SeqrGenotypesSchema.genotypes)
+    def samples_new_call(self):
+        return self._genotype_filter_samples(lambda g: g.new_call | hl.is_defined(g.prev_num_alt))
 
     @row_annotation(name="samples_gq_sv", fn_require=SeqrGenotypesSchema.genotypes)
     def samples_gq(self):
