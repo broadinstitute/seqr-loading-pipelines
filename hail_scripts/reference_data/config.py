@@ -102,6 +102,40 @@ CONFIG = {
             'select': {'Eigen_phred': 'info.Eigen-phred'},
         },
     },
+    'hgmd': {
+        '37': {
+            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
+            'select': {'accession': 'rsid'},
+            'enum_selects': [{
+                'src':
+                'dst':
+                'values': [
+                    'DFP',
+                    'DM',
+                    'DM?',
+                    'DP', 
+                    'FP',
+                    'R',
+                ],
+            }],
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
+            'select': {'accession': 'rsid'},
+            'enum_selects': [{
+                'src':
+                'dst':
+                'values': [
+                    'DFP',
+                    'DM',
+                    'DM?',
+                    'DP', 
+                    'FP',
+                    'R',
+                ],
+            }],
+        },
+    },
     'mpc': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
@@ -283,9 +317,4 @@ GCS_PREFIXES = {
     ('dev', 'private'): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
     ('prod', 'public'): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
     ('prod', 'private'): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
-}
-
-HGMD_CONFIG = {
-    '37': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
-    '38': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
 }
