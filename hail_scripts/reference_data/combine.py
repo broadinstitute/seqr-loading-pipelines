@@ -119,7 +119,14 @@ def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     joined_ht.describe()
     return joined_ht
 
-def update_existing_joined_hts(destination_path, dataset, datasets, version, coverage_datasets, reference_genome):
+def update_existing_joined_hts(
+    destination_path: str,
+    dataset: str,
+    datasets: List[str],
+    version: str,
+    coverage_datasets: List[str],
+    reference_genome: str
+):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, reference_genome)
     destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
