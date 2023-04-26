@@ -110,6 +110,8 @@ def update_existing_joined_hts(
     coverage_datasets: List[str],
     reference_genome: str
 ):
+    if dataset not in (datasets + coverage_datasets):
+        raise ValueError(f'{dataset} is not included in the joined ht defined by {datasets}, {coverage_datasets}')
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, reference_genome)
     destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
