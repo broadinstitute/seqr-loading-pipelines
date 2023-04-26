@@ -13,16 +13,6 @@ DATASETS = ['gnomad_non_coding_constraint', 'screen']
 INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
 VERSION = '1.0.0'
 
-def update_existing(destination_path: str, dataset: str, genome_version: str):
-    dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = hl.read_table(destination_path)
-    destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, COVERAGE_DATASETS, genome_version) 
-
-def create_new(genome_version: str):
-    ht = join_hts(DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
-    return update_joined_ht_globals(ht, DATASETS, VERSION, COVERAGE_DATASETS, genome_version) 
-
 def run(environment: str):
     genome_version = '38'
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
