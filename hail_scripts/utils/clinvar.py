@@ -1,14 +1,29 @@
 import gzip
-import os
-import subprocess
+import tempfile
+import urllib.request
 
 import hail as hl
 
 from hail_scripts.utils.hail_utils import import_vcf
 
+CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_FTP_PATH = "ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz"
 CLINVAR_HT_PATH = "gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht"
 
+# NB: alphabetical
+CLINVAR_ASSERTIONS =  [
+    'Affects',
+    'association',
+    'association_not_found',
+    'confers_sensitivity',
+    'drug_response',
+    'low_penetrance',
+    'not_provided',
+    'other',
+    'protective',
+    'risk_factor',
+]
+CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         "no_interpretation_for_the_single_variant": 0,
@@ -21,9 +36,66 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         "practice_guideline": 4,
     }
 )
+# NB: sorted by pathogenicity
+CLINVAR_PATHOGENICITIES = [
+    'Pathogenic',
+    'Pathogenic/Likely_pathogenic',
+    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
+    'Pathogenic/Likely_risk_allele',
+    'Likely_pathogenic',
+    'Likely_pathogenic/Likely_risk_allele',
+    'Established_risk_allele',
+    'Likely_risk_allele',
+    'Conflicting_interpretations_of_pathogenicity',
+    'Uncertain_risk_allele',
+    'Uncertain_significance/Uncertain_risk_allele',
+    'Uncertain_significance',
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    'Likely_benign',
+    'Benign/Likely_benign',
+    'Benign',
+]
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False))
 
+def parsed_clnsig(ht: hl.Table):
+    return (
+        hl.delimit(ht.info.CLNSIG)
+        .replace(
+            'Likely_pathogenic,_low_penetrance', 'Likely_pathogenic|low_penetrance',
+        )
+        .replace(
+            '/Pathogenic,_low_penetrance', '|low_penetrance',
+        )
+        .split(r'\|')
+    )
 
-def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTable:
+def parse_to_count(entry: str):
+    splt = entry.split(r'\(') # pattern, count = entry... if destructuring worked on a hail expression!
+    return hl.Struct(
+        pathogenicity_id=CLINVAR_PATHOGENICITIES_LOOKUP[splt[0]],
+        count=hl.int32(splt[1][:-1])
+    )
+
+def parsed_clnsigconf(ht: hl.Table):
+    return (
+        hl.delimit(ht.info.CLNSIGCONF)
+        .replace(',_low_penetrance', '')
+        .split(r'\|')
+        .map(parse_to_count)
+        .group_by(lambda x: x.pathogenicity_id)
+        .map_values(lambda values: (
+            values.fold(
+                lambda x, y: x + y.count,
+                0,
+            )
+        ))
+        .items()
+        .map(
+            lambda x: hl.Struct(pathogenicity_id=x[0], count=x[1])
+        )
+    )
+
+def download_and_import_latest_clinvar_vcf(genome_version: str, tmp_file: str) -> hl.MatrixTable:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
     Args:
@@ -32,20 +104,19 @@ def download_and_import_latest_clinvar_vcf(genome_version: str) -> hl.MatrixTabl
 
     if genome_version not in ["37", "38"]:
         raise ValueError("Invalid genome_version: " + str(genome_version))
-
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    local_tmp_file_path = "/tmp/clinvar.vcf.gz"
-
-    subprocess.run(["wget", clinvar_url, "-O", local_tmp_file_path], check=True)
-    subprocess.run(["hdfs", "dfs", "-copyFromLocal", "-f", f"file://{local_tmp_file_path}", local_tmp_file_path])
-    clinvar_release_date = _parse_clinvar_release_date(local_tmp_file_path)
+    urllib.request.urlretrieve(clinvar_url, tmp_file.name)
+    clinvar_release_date = _parse_clinvar_release_date(tmp_file.name)
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
-    mt = import_vcf(local_tmp_file_path, genome_version, drop_samples=True, min_partitions=2000, skip_invalid_loci=True,
-                    more_contig_recoding=mt_contig_recoding)
-    mt = mt.annotate_globals(version=clinvar_release_date)
-
-    return mt
-
+    mt = import_vcf(
+        tmp_file.name,
+        genome_version,
+        drop_samples=True,
+        min_partitions=2000,
+        skip_invalid_loci=True,
+        more_contig_recoding=mt_contig_recoding
+    )
+    return mt.annotate_globals(version=clinvar_release_date)
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:
     """Parse clinvar release date from the VCF header.
