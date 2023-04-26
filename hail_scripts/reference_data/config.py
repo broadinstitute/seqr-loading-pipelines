@@ -2,6 +2,9 @@ from copy import deepcopy
 
 import hail as hl
 
+def predictor_parse(src_field):
+    return src_field.split(';').find(lambda p: p != '.')
+
 def custom_gnomad_select_v2(ht):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
@@ -85,11 +88,63 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
                        'GERP_RS', 'phastCons100way_vertebrate'],
+            'enum_selects': [
+                {
+                    'dst': 'SIFT_pred_id',
+                    'src': 'SIFT_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'T'],
+                },
+                {
+                    'dst': 'Polyphen2_HVAR_pred_id',
+                    'src': 'Polyphen2_HVAR_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'P', 'B'],
+                },
+                {   
+                    'dst': 'MutationTaster_pred',
+                    'src': 'MutationTaster_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'A', 'N', 'P'],
+                },
+                {
+                    'dst': 'FATHMM_pred_id',
+                    'src': 'FATHMM_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'T'],
+                }
+            ]
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': ['SIFT_pred', 'Polyphen2_HVAR_pred', 'MutationTaster_pred', 'FATHMM_pred', 'MetaSVM_pred', 'REVEL_score',
                        'GERP_RS', 'phastCons100way_vertebrate', 'VEST4_score', 'fathmm_MKL_coding_pred', 'MutPred_score'],
+            'enum_selects': [
+                {
+                    'dst': 'SIFT_pred_id',
+                    'src': 'SIFT_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'T'],
+                },
+                {
+                    'dst': 'Polyphen2_HVAR_pred_id',
+                    'src': 'Polyphen2_HVAR_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'P', 'B'],
+                },
+                {
+                    'dst': 'MutationTaster_pred_id',
+                    'src': 'MutationTaster_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'A', 'N', 'P'],
+                },
+                {
+                    'dst': 'FATHMM_pred_id',
+                    'src': 'FATHMM_pred',
+                    'src_transform': predictor_parse,
+                    'values': ['D', 'T'],
+                },
+            ]
         },
     },
     'eigen': {
@@ -127,7 +182,7 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
             'select': {'delta_score': 'info.max_DS', 'splice_consequence': 'info.splice_consequence'},
             'enum_selects': [{
-                'src': 'target',
+                'src': 'info.splice_consequence',
                 'dst': 'spliceConsequence_id',
                 'values': [
                     'Acceptor gain',

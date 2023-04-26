@@ -65,6 +65,35 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ],
         )
 
+    def test_get_select_transformed_field(self):
+        ht = hl.Table.parallelize(
+           [
+               {'info': hl.Struct(a='a')},
+               {'info': hl.Struct(a='b')},
+               {'info': hl.Struct(a='c')},
+               {'info': hl.Struct(a='d')},
+           ],
+           hl.tstruct(info=hl.dtype('struct{a:str}')),
+        )
+        enum_select_fields = get_enum_select_fields([
+            {
+                'src': 'info.a',
+                'src_transform': lambda x: x * 2,
+                'dst': 'target_id',
+                'values': ['aa', 'bb', 'cc', 'dd']
+            },
+        ], ht)
+        mapped_ht = ht.select(**enum_select_fields)
+        self.assertListEqual(
+            mapped_ht.collect(),
+            [
+                hl.Struct(target_id=0),
+                hl.Struct(target_id=1),
+                hl.Struct(target_id=2),
+                hl.Struct(target_id=3),
+            ],
+        )
+
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     def test_update_joined_ht_globals(self, mock_datetime):
         mock_datetime.now.return_value = datetime(2023, 4, 19, 16, 43, 39, 361110)

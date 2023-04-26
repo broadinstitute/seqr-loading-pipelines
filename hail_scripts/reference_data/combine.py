@@ -7,7 +7,7 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-def extract_field_from_ht(ht, val):
+def extract_field_from_ht(ht, val, field_transform):
     for attr in val.split('.'):
         # Select from multi-allelic list.
         if attr.endswith('#'):
@@ -15,7 +15,18 @@ def extract_field_from_ht(ht, val):
             ht = ht[attr][base_ht.a_index-1]
         else:
             ht = ht[attr]
-    return ht
+    return field_transform(ht) if field_transform else ht
+
+def enum_values_to_mapping(values):
+    mapping = hl.dict(
+        hl.enumerate(values, index_first=False).extend(
+            # NB: adding missing values here allows us to
+            # hard fail if a mapped key is present but an unexpected value
+            # but also propagate missing values.
+            [(hl.missing(hl.tstr), hl.missing(hl.tint32))]
+        )
+    )
+    return mapping
 
 def get_select_fields(selects, base_ht):
     """
@@ -40,9 +51,14 @@ def get_select_fields(selects, base_ht):
 def get_enum_select_fields(enum_selects, base_ht):
     enum_select_fields = {}
     for enum_select in enum_selects:
-        src, dst, values = enum_select['src'], enum_select['dst'], enum_select['values']
-        mapping = hl.dict(hl.enumerate(values, index_first=False))
-        src_field = extract_field_from_ht(base_ht, src)
+        src, src_transform, dst, values = (
+            enum_select['src'],
+            enum_select.get('src_transform', None),
+            enum_select['dst'],
+            enum_select['values'],
+        )
+        mapping = enum_values_to_mapping(values)
+        src_field = extract_field_from_ht(base_ht, src, src_transform)
         if src_field.dtype == hl.tarray('str') or src_field.dtype == hl.tset('str'):
             enum_select_fields[dst] = src_field.map(lambda x: mapping[x])
         elif src_field.dtype == hl.tstr:
