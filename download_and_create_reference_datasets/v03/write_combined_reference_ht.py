@@ -4,7 +4,7 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import join_hts
+from hail_scripts.reference_data.combine import create_new, update_existing
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
@@ -25,20 +25,6 @@ DATASETS = [
     'topmed',
 ]
 VERSION = '1.0.0'
-
-def update_existing(destination_path: str, genome_version: str, dataset: str):
-    dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = hl.read_table(destination_path)
-    destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
-
-def create_new(genome_version: str):
-    return join_hts(
-        DATASETS,
-        VERSION,
-        coverage_datasets=COVERAGE_DATASETS,
-        reference_genome=genome_version,
-    )
 
 def run(environment: str, genome_version: str, dataset: str):
     destination_path = os.path.join(GCS_PREFIXES[environment], COMBINED_REFERENCE_HT_PATH).format(
