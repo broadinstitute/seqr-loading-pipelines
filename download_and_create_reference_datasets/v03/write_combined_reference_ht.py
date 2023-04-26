@@ -4,7 +4,7 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import create_new, update_existing
+from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
@@ -33,9 +33,9 @@ def run(environment: str, genome_version: str, dataset: str):
         version=VERSION,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
-        ht = update_existing(destination_path, dataset, genome_version)
+        ht = update_existing_joined_hts(destination_path, dataset, DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
     else:
-        ht = create_new(genome_version)
+        ht = join_hts(DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 

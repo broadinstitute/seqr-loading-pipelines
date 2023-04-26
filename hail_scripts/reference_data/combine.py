@@ -1,6 +1,7 @@
 from datetime import datetime
 import functools
 import re
+from typing import List
 
 import hail as hl
 
@@ -114,15 +115,12 @@ def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
+    joined_ht = update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, reference_genome)
     joined_ht.describe()
     return joined_ht
 
-def update_existing(destination_path: str, dataset: str, genome_version: str):
-    dataset_ht = get_ht(dataset, genome_version)
+def update_existing_joined_hts(destination_path, dataset, datasets, version, coverage_datasets, reference_genome):
     destination_ht = hl.read_table(destination_path)
+    dataset_ht = get_ht(dataset, reference_genome)
     destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, COVERAGE_DATASETS, genome_version) 
-
-def create_new(genome_version: str):
-    ht = join_hts(DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
-    return update_joined_ht_globals(ht, DATASETS, VERSION, COVERAGE_DATASETS, genome_version)
+    return update_joined_ht_globals(destination_ht, datasets, version, coverage_datasets, reference_genome) 
