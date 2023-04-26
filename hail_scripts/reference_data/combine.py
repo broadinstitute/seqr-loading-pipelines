@@ -6,6 +6,17 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
+def extract_field_from_ht(ht, val):
+    # Grab the field and continually select it from the hail table.
+    for attr in val.split('.'):
+        # Select from multi-allelic list.
+        if attr.endswith('#'):
+            attr = attr[:-1]
+            ht = ht[attr][base_ht.a_index-1]
+        else:
+            ht = ht[attr]
+    return ht
+
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
     Annotates the hail table with the coverage dataset.
@@ -35,16 +46,7 @@ def get_select_fields(selects, base_ht):
             select_fields = { selection: base_ht[selection] for selection in selects }
         elif isinstance(selects, dict):
             for key, val in selects.items():
-                # Grab the field and continually select it from the hail table.
-                ht = base_ht
-                for attr in val.split('.'):
-                    # Select from multi-allelic list.
-                    if attr.endswith('#'):
-                        attr = attr[:-1]
-                        ht = ht[attr][base_ht.a_index-1]
-                    else:
-                        ht = ht[attr]
-                select_fields[key] = ht
+                select_fields[key] = extract_field_from_ht(base_ht, val)
     return select_fields
 
 def get_enum_select_fields(enum_selects, base_ht):
@@ -52,10 +54,11 @@ def get_enum_select_fields(enum_selects, base_ht):
     for enum_select in enum_selects:
         src, dst, values = enum_select['src'], enum_select['dst'], enum_select['values']
         mapping = hl.dict(hl.enumerate(values, index_first=False))
-        if base_ht[src].dtype == hl.tarray('str') or base_ht[src].dtype == hl.tset('str'):
-            enum_select_fields[dst] = base_ht[src].map(lambda x: mapping[x])
-        elif base_ht[src].dtype == hl.tstr:
-            enum_select_fields[dst] = mapping[base_ht[src]]
+        src_field = extract_field_from_ht(base_ht, src)
+        if src_field.dtype == hl.tarray('str') or src_field.dtype == hl.tset('str'):
+            enum_select_fields[dst] = src_field.map(lambda x: mapping[x])
+        elif src_field.dtype == hl.tstr:
+            enum_select_fields[dst] = mapping[src_field]
         else:
             raise ValueError("Enum Selection is only supported for strings or collections of strings")
     return enum_select_fields

@@ -4,8 +4,8 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import get_enum_select_fields, get_select_fields
-from hail_scripts.reference_data.config import GCS_PREFIXES
+from hail_scripts.reference_data.combine import get_enum_select_fields, get_select_fields, update_joined_ht_globals
+from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES
 from hail_scripts.utils.hail_utils import import_vcf, write_ht
 
 DATASETS = ['hgmd']
@@ -14,7 +14,8 @@ PARTITIONS = 100
 VERSION = '1.0.0'
 
 def run(environment: str, genome_version: str):
-    source_path = HGMD_CONFIG[genome_version]['path']
+    dataset = 'hgmd'
+    source_path = CONFIG[dataset][genome_version]['path']
     destination_path = os.path.join(GCS_PREFIXES[(environment, 'private')], HGMD_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
@@ -22,8 +23,8 @@ def run(environment: str, genome_version: str):
     mt = import_vcf(source_path, genome_version=genome_version, force=True)
     ht = mt.rows().repartition(PARTITIONS)
     select_fields = {
-        **get_select_fields(HGMD_CONFIG[genome_version]['select'], base_ht),
-        **get_enum_select_fields(HGMD_CONFIG[genome_version]['enum_selects'], base_ht)
+        **get_select_fields(CONFIG[dataset][genome_version]['select'], ht),
+        **get_enum_select_fields(CONFIG[dataset][genome_version]['enum_selects'], ht)
     }
     ht = ht.select(**select_fields)
     ht = update_joined_ht_globals(ht, DATASETS, VERSION, [], genome_version)
@@ -40,7 +41,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--genome-version',
         default='37',
-        chouices=['37', '38'],
+        choices=['37', '38'],
     )
     args, _ = parser.parse_known_args()
     run(args.environment, args.genome_version)
