@@ -10,34 +10,35 @@ from hail_scripts.reference_data.combine import (
 )
 
 class ReferenceDataCombineTest(unittest.TestCase):
+    maxDiff = None
 
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
            [
-               {'variant': ['1', '2'], 'sv_type': '2', 'sample_fix': '1', 'data' : 5},
-               {'variant': ['1', '4'], 'sv_type': '2', 'sample_fix': '2', 'data' : 6},
-               {'variant': ['2', '4', '4'], 'sv_type': '2', 'sample_fix': '3', 'data' : 7},
-               {'variant': ['1', '3', '4'], 'sv_type': '2', 'sample_fix': '4', 'data' : 8},
+               {'variant': ['1', '2'], 'sv_type': 'a', 'sample_fix': '1', 'data' : 5},
+               {'variant': ['1', '3', '2'], 'sv_type': 'b', 'sample_fix': '2', 'data' : 6},
+               {'variant': ['1', '3'], 'sv_type': 'c', 'sample_fix': '3', 'data' : 7},
+               {'variant': ['4'], 'sv_type': 'd', 'sample_fix': '4', 'data' : 8},
            ],
            hl.tstruct(variant=hl.dtype('array<str>'), sv_type=hl.dtype('str'), sample_fix=hl.dtype('str'), data=hl.dtype('int32')),
         )
         enum_select_fields = get_enum_select_fields([
-            {'src': 'variant', 'dst': 'variant_ids', 'mapping': hl.dict({'1': 1, '2': 2, '3': 3, '4': 4})},
-            {'src': 'sv_type', 'dst': 'sv_type_id', 'mapping': hl.dict({'1': 1, '2': 2, '3': 3, '4': 4})},
+            {'src': 'variant', 'dst': 'target_ids', 'values': ['1', '2', '3', '4']},
+            {'src': 'sv_type', 'dst': 'sv_type_id', 'values': ['a', 'b', 'c', 'd']},
         ], ht)
         mapped_ht = ht.select(**enum_select_fields)
         self.assertListEqual(
             mapped_ht.collect(),
             [
-                hl.Struct(variant_ids=[1, 2], sv_type_id=2),
-                hl.Struct(variant_ids=[1, 4], sv_type_id=2), 
-                hl.Struct(variant_ids=[2, 4, 4], sv_type_id=2), 
-                hl.Struct(variant_ids=[1, 3, 4], sv_type_id=2)
+                hl.Struct(target_ids=[0, 1], sv_type_id=0),
+                hl.Struct(target_ids=[0, 2, 1], sv_type_id=1), 
+                hl.Struct(target_ids=[0, 2], sv_type_id=2), 
+                hl.Struct(target_ids=[3], sv_type_id=3)
             ],
         )
 
         enum_select_fields = get_enum_select_fields([
-            {'src': 'variant', 'dst': 'variant_ids', 'mapping': hl.dict({'1': 1})},
+            {'src': 'sv_type', 'dst': 'sv_type_id', 'values': ['d']},
         ], ht)
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
@@ -65,21 +66,17 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 version='1.2.3', 
                 enum_definitions={
                     'screen': {
-                        'regionType_ids': {
-                            'CTCF-bound': 0,
-                            'CTCF-only': 1,
-                            'DNase-H3K4me3': 2,
-                            'PLS': 3,
-                            'dELS': 4,
-                            'pELS': 5
-                        }
+                        'regionType': [
+                            'CTCF-bound',
+                            'CTCF-only',
+                            'DNase-H3K4me3',
+                            'PLS',
+                            'dELS',
+                            'pELS',
+                            'DNase-only',
+                            'low-DNase',
+                        ]
                     }
                 }
             )
         )
-
-
-
-
-
-
