@@ -50,7 +50,7 @@ def run(environment: str):
             ).repartition(
                 PARTITIONS,
             )
-            destination_path = os.path.join(GCS_PREFIXES[environment], CLINVAR_HT_PATH).format(
+            destination_path = os.path.join(GCS_PREFIXES[(environment, 'public')], CLINVAR_HT_PATH).format(
                 environment=environment,
                 genome_version=genome_version,
                 timestamp=timestamp,
