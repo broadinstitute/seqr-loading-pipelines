@@ -1,7 +1,12 @@
 [tool.black]
 line-length = 88
 skip-string-normalization = true
-include = 'luigi_pipeline/tests/.*\.py$'
+include = '''
+(
+    luigi_pipeline/tests/.*\.py$
+    | download_and_create_reference_datasets/v03
+)
+'''
 
 [tool.isort]
 include_trailing_comma = 'True'
@@ -9,11 +14,16 @@ known_external_package = ['hail_scripts']
 line_length = 88
 profile = 'black'
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 'LOCALFOLDER']
-skip_glob = ['download_and_create_reference_datasets/*', 'gcloud_dataproc/*', 'hail_scripts/*', 'kubernetes/*']
+skip_glob = [
+    'download_and_create_reference_datasets/v02/*',
+    'gcloud_dataproc/*',
+    'hail_scripts/*',
+    'kubernetes/*'
+]
 
 [tool.ruff]
 extend-exclude = [
-    'download_and_create_reference_datasets/*',
+    'download_and_create_reference_datasets/v02/*',
     'gcloud_dataproc/*',
     'hail_scripts/*',
     'kubernetes/*',
