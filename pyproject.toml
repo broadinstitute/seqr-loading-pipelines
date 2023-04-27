@@ -5,6 +5,7 @@ include = '''
 (
     luigi_pipeline/tests/.*\.py$
     | download_and_create_reference_datasets/v03
+    | hail_scripts/reference_data
 )
 '''
 
@@ -17,7 +18,10 @@ sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 
 skip_glob = [
     'download_and_create_reference_datasets/v02/*',
     'gcloud_dataproc/*',
-    'hail_scripts/*',
+    'hail_scripts/computed_fields/*',
+    'hail_scripts/elasticsearch/*',
+    'hail_scripts/update_models/*',
+    'hail_scripts/utils/*',
     'kubernetes/*'
 ]
 
@@ -25,7 +29,10 @@ skip_glob = [
 extend-exclude = [
     'download_and_create_reference_datasets/v02/*',
     'gcloud_dataproc/*',
-    'hail_scripts/*',
+    'hail_scripts/computed_fields/*',
+    'hail_scripts/elasticsearch/*',
+    'hail_scripts/update_models/*',
+    'hail_scripts/utils/*',
     'kubernetes/*',
     'luigi_pipeline/lib/*',
     'luigi_pipeline/seqr*.py',
