@@ -1,7 +1,7 @@
 import tempfile
 
 import hail as hl
-from hail_scripts.utils.clinvar import (
+from hail_scripts.reference_data.clinvar import (
     download_and_import_latest_clinvar_vcf,
     CLINVAR_HT_PATH,
     CLINVAR_GOLD_STARS_LOOKUP,

@@ -3,7 +3,7 @@ from unittest import mock
 
 import hail as hl
 
-from hail_scripts.utils.clinvar import (
+from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
     parsed_clnsigconf,
 )
