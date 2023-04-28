@@ -10,7 +10,6 @@ from hail_scripts.reference_data.combine import (
 )
 
 class ReferenceDataCombineTest(unittest.TestCase):
-    maxDiff = None
 
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
