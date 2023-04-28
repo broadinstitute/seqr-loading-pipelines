@@ -274,10 +274,9 @@ CONFIG = {
     'screen': {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'enum_selects': [{
-                'src': 'target',
-                'dst': 'regionType_ids',
-                'values': [
+            'select': {'region_type': 'target'},
+            'enum_selects': {
+                'region_type': [
                     'CTCF-bound',
                     'CTCF-only',
                     'DNase-H3K4me3',
@@ -287,7 +286,7 @@ CONFIG = {
                     'DNase-only',
                     'low-DNase',
                 ],
-            }],
+            },
         },
     },
     'geno2mp': {

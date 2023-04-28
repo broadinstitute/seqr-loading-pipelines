@@ -21,23 +21,25 @@ class ReferenceDataCombineTest(unittest.TestCase):
            ],
            hl.tstruct(variant=hl.dtype('array<str>'), sv_type=hl.dtype('str'), sample_fix=hl.dtype('str'), data=hl.dtype('int32')),
         )
-        enum_select_fields = get_enum_select_fields([
-            {'src': 'variant', 'dst': 'target_ids', 'values': ['1', '2', '3', '4']},
-            {'src': 'sv_type', 'dst': 'sv_type_id', 'values': ['a', 'b', 'c', 'd']},
-        ], ht)
-        mapped_ht = ht.select(**enum_select_fields)
+        enum_select_fields = get_enum_select_fields(
+            {
+                'variant': ['1', '2', '3', '4'],
+                'sv_type': ['a', 'b', 'c', 'd'],
+            },
+        , ht)
+        mapped_ht = ht.transmute(**enum_select_fields)
         self.assertListEqual(
             mapped_ht.collect(),
             [
-                hl.Struct(target_ids=[0, 1], sv_type_id=0),
-                hl.Struct(target_ids=[0, 2, 1], sv_type_id=1), 
-                hl.Struct(target_ids=[0, 2], sv_type_id=2), 
-                hl.Struct(target_ids=[3], sv_type_id=3)
+                hl.Struct(variant_ids=[0, 1], sv_type_id=0),
+                hl.Struct(variant_ids=[0, 2, 1], sv_type_id=1), 
+                hl.Struct(variant_ids=[0, 2], sv_type_id=2), 
+                hl.Struct(variant_ids=[3], sv_type_id=3)
             ],
         )
 
         enum_select_fields = get_enum_select_fields([
-            {'src': 'sv_type', 'dst': 'sv_type_id', 'values': ['d']},
+            {'sv_type': ['d']},
         ], ht)
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
