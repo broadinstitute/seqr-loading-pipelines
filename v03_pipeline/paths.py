@@ -12,7 +12,10 @@ from v03_pipeline.constants import (
 
 
 def family_table_path(
-    env: Env, reference_genome: ReferenceGenome, dataset_type: DatasetType, family: str,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    family: str,
 ) -> str:
     return os.path.join(
         SEQR_SCRATCH_TEMP if env == Env.DEV else SEQR_LOADING_TEMP,
@@ -26,7 +29,10 @@ def family_table_path(
 
 
 def project_table_path(
-    env: Env, reference_genome: ReferenceGenome, dataset_type: DatasetType, project: str,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    project: str,
 ) -> str:
     return os.path.join(
         SEQR_SCRATCH_TEMP if env == Env.DEV else SEQR_DATASETS,
@@ -40,7 +46,9 @@ def project_table_path(
 
 
 def variant_annotations_table_path(
-    env: Env, reference_genome: ReferenceGenome, dataset_type: DatasetType,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
         SEQR_SCRATCH_TEMP if env == Env.DEV else SEQR_DATASETS,
@@ -48,4 +56,18 @@ def variant_annotations_table_path(
         V03,
         dataset_type.value,
         'annotations.ht',
+    )
+
+
+def variant_lookup_table_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> None:
+    return os.path.join(
+        SEQR_SCRATCH_TEMP if env == Env.DEV else SEQR_DATASETS,
+        reference_genome.value,
+        V03,
+        dataset_type.value,
+        'lookup.ht',
     )
