@@ -1,21 +1,13 @@
-from datetime import datetime
 import functools
 import re
+from datetime import datetime
 
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-def extract_field_from_ht(ht, val):
-    # Grab the field and continually select it from the hail table.
-    for attr in val.split('.'):
-        # Select from multi-allelic list.
-        if attr.endswith('#'):
-            attr = attr[:-1]
-            ht = ht[attr][base_ht.a_index-1]
-        else:
-            ht = ht[attr]
-    return ht
+ENUM_MAPPABLE_TYPES = set([hl.tarray(hl.tstr), hl.tset(hl.tstr)])
+
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
@@ -43,28 +35,39 @@ def get_select_fields(selects, base_ht):
     select_fields = {}
     if selects is not None:
         if isinstance(selects, list):
-            select_fields = { selection: base_ht[selection] for selection in selects }
+            select_fields = {selection: base_ht[selection] for selection in selects}
         elif isinstance(selects, dict):
             for key, val in selects.items():
-                select_fields[key] = extract_field_from_ht(base_ht, val)
+                # Grab the field and continually select it from the hail table.
+                ht = base_ht
+                for attr in val.split('.'):
+                    # Select from multi-allelic list.
+                    if attr.endswith('#'):
+                        attr = attr[:-1]
+                        ht = ht[attr][base_ht.a_index - 1]
+                    else:
+                        ht = ht[attr]
+                select_fields[key] = ht
     return select_fields
 
-def get_enum_select_fields(enum_selects, base_ht):
+
+def get_enum_select_fields(enum_selects, ht):
     enum_select_fields = {}
-    for enum_select in enum_selects:
-        src, dst, values = enum_select['src'], enum_select['dst'], enum_select['values']
-        mapping = hl.dict(hl.enumerate(values, index_first=False))
-        src_field = extract_field_from_ht(base_ht, src)
-        if src_field.dtype == hl.tarray('str') or src_field.dtype == hl.tset('str'):
-            enum_select_fields[dst] = src_field.map(lambda x: mapping[x])
-        elif src_field.dtype == hl.tstr:
-            enum_select_fields[dst] = mapping[src_field]
+    if enum_selects is None:
+        return enum_select_fields
+    for field_name, values in enum_selects.items():
+        lookup = hl.dict(hl.enumerate(values, index_first=False))
+        # NB: this is conditioning on type is
+        # happening "outside" the hail expression context.
+        if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
+            enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(lambda x: lookup[x])
         else:
-            raise ValueError("Enum Selection is only supported for strings or collections of strings")
+            enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
     return enum_select_fields
 
+
 def get_ht(dataset, reference_genome):
-    ' Returns the appropriate deduped hail table with selects applied.'
+    'Returns the appropriate deduped hail table with selects applied.'
     config = CONFIG[dataset][reference_genome]
     print(f"Reading in {dataset}")
     base_ht = hl.read_table(config['path'])
@@ -72,31 +75,38 @@ def get_ht(dataset, reference_genome):
     if config.get('filter'):
         base_ht = base_ht.filter(config['filter'](base_ht))
 
-    # 'select', 'enum_selects', and 'custom_select's to generate dict.
+    # 'select' and 'custom_select's to generate dict.
     select_fields = get_select_fields(config.get('select'), base_ht)
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
 
-    if 'enum_selects' in config:
-        select_fields = {**select_fields, **get_enum_select_fields(config['enum_selects'], base_ht)}
-
     field_name = config.get('field_name') or dataset
-    select_query = {
-        field_name: hl.struct(**select_fields)
-    }
+    select_query = {field_name: hl.struct(**select_fields)}
 
     print(select_fields)
-    return base_ht.select(**select_query).distinct()
+    # First pass with selects and custom_selects
+    ht = base_ht.select(**select_query).distinct()
 
-def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, reference_genome):
+    # Second pass will transmute w/ the mapped enum
+    enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
+    return ht.transmute(**enum_select_fields)
+
+
+def update_joined_ht_globals(
+    joined_ht, datasets, version, coverage_datasets, reference_genome
+):
     # Track the dataset we've added as well as the source path.
-    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
+    included_dataset = {
+        k: v[reference_genome]['path']
+        for k, v in CONFIG.items()
+        if k in datasets + coverage_datasets
+    }
     enum_definitions = {
-        k: {
-            re.sub(r'_id(s?)$', '', enum_select['dst']): enum_select['values']
-        }
-        for k, v in CONFIG.items() if k in datasets + coverage_datasets if 'enum_selects' in v[reference_genome]
-        for enum_select in v[reference_genome]['enum_selects']
+        k: {enum_field_name: enum_values}
+        for k, v in CONFIG.items()
+        if k in datasets + coverage_datasets
+        if 'enum_select' in v[reference_genome]
+        for enum_field_name, enum_values in v[reference_genome]['enum_select'].items()
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
@@ -106,15 +116,20 @@ def update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, re
         enum_definitions=hl.dict(enum_definitions),
     )
 
+
 def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
-    joined_ht = functools.reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
+    joined_ht = functools.reduce(
+        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts
+    )
 
     # Annotate coverages.
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
-    joined_ht = update_joined_ht_globals(joined_ht, datasets, version, coverage_datasets, reference_genome)
+    joined_ht = update_joined_ht_globals(
+        joined_ht, datasets, version, coverage_datasets, reference_genome
+    )
     joined_ht.describe()
     return joined_ht
