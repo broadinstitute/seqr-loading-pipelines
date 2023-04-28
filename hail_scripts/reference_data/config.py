@@ -288,8 +288,6 @@ CONFIG = {
                     'low-DNase',
                 ],
             }],
-            'path': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-            'select': {'region_type': 'target'},
         },
     },
     'geno2mp': {
