@@ -6,7 +6,7 @@ import tempfile
 import hail as hl
 
 from hail_scripts.reference_data.constants import GCS_PREFIXES
-from hail_scripts.utils.clinvar import (
+from hail_scripts.reference_data.clinvar import (
     download_and_import_latest_clinvar_vcf,
     parsed_clnsig,
     parsed_clnsigconf,
