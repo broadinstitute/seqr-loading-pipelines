@@ -64,7 +64,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
-        'enum_selects': '<Optional list of dictionaries with required keys ['src', 'dst', 'values']'
+        'enum_select': '<Optional dictionary mapping field_name to select to a list of enumerated values.>'
     },
 """
 CONFIG = {
@@ -275,7 +275,7 @@ CONFIG = {
         '38': {
             'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
             'select': {'region_type': 'target'},
-            'enum_selects': {
+            'enum_select': {
                 'region_type': [
                     'CTCF-bound',
                     'CTCF-only',

@@ -88,7 +88,7 @@ def get_ht(dataset, reference_genome):
     ht = base_ht.select(**select_query).distinct()
 
     # Second pass will transmute w/ the mapped enum
-    enum_select_fields = get_enum_select_fields(config.get('enum_selects'), ht)
+    enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
     return ht.transmute(**enum_select_fields)
 
 
@@ -105,8 +105,8 @@ def update_joined_ht_globals(
         k: {enum_field_name: enum_values}
         for k, v in CONFIG.items()
         if k in datasets + coverage_datasets
-        if 'enum_selects' in v[reference_genome]
-        for enum_field_name, enum_values in v[reference_genome]['enum_selects'].items()
+        if 'enum_select' in v[reference_genome]
+        for enum_field_name, enum_values in v[reference_genome]['enum_select'].items()
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
