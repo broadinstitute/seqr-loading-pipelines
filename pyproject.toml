@@ -11,6 +11,11 @@ profile = 'black'
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 'LOCALFOLDER']
 skip_glob = ['download_and_create_reference_datasets/*', 'gcloud_dataproc/*', 'hail_scripts/*', 'kubernetes/*']
 
+[tool.mypy]
+packages = 'v03_pipeline'
+python_version = "3.8"
+strict = 'True'
+
 [tool.ruff]
 extend-exclude = [
     'download_and_create_reference_datasets/*',
