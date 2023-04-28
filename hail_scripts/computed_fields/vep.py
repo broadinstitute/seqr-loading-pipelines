@@ -64,7 +64,7 @@ def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root):
     )
     return hl.if_else(
         any_canonical_and_non_coding_transcript_exon_variant,
-        vep_consequence_terms_set.add(f'{NON_CODING_TRANSCRIPT_EXON_VARIANT}__canonical')
+        vep_consequence_terms_set.add(f'{NON_CODING_TRANSCRIPT_EXON_VARIANT}__canonical'),
         vep_consequence_terms_set,
     )
 
