@@ -144,11 +144,9 @@ CONFIG = {
     'hgmd': {
         '37': {
             'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
-            'select': {'accession': 'rsid'},
-            'enum_selects': [{
-                'src': 'info.CLASS',
-                'dst': 'class_id',
-                'values': [
+            'select': {'accession': 'rsid', 'class': 'info.CLASS'},
+            'enum_select': {
+                'class': [
                     'DFP',
                     'DM',
                     'DM?',
@@ -156,15 +154,13 @@ CONFIG = {
                     'FP',
                     'R',
                 ],
-            }],
+            },
         },
         '38': {
             'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
-            'select': {'accession': 'rsid'},
-            'enum_selects': [{
-                'src': 'info.CLASS',
-                'dst': 'class_id',
-                'values': [
+            'select': {'accession': 'rsid', 'class': 'info.CLASS'},
+            'enum_select': {
+                'class': [
                     'DFP',
                     'DM',
                     'DM?',
@@ -172,7 +168,7 @@ CONFIG = {
                     'FP',
                     'R',
                 ],
-            }],
+            },
         },
     },
     'mpc': {
