@@ -178,7 +178,7 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation(disable_index=True)
     def gnomad_exome_coverage(self):
-        return self._selected_ref_data.gnomad_exome_coverage
+        return self._selected_ref_data.gnomad_exome_coverage.x10
 
     @row_annotation()
     def gnomad_genomes(self):
@@ -186,7 +186,7 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation(disable_index=True)
     def gnomad_genome_coverage(self):
-        return self._selected_ref_data.gnomad_genome_coverage
+        return self._selected_ref_data.gnomad_genome_coverage.x10
 
     @row_annotation()
     def eigen(self):
@@ -198,7 +198,7 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation()
     def g1k(self):
-        return self._selected_ref_data.g1k
+        return self._selected_ref_data._1kg
 
     @row_annotation()
     def mpc(self):
