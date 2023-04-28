@@ -19,8 +19,6 @@ from luigi_pipeline.seqr_loading import (
 
 logger = logging.getLogger(__name__)
 
-PYSPARK_SUBMIT_ARGS = "--driver-memory 400G pyspark-shell"
-
 FEMALE_PLOIDY = "XX"
 MALE_PLOIDY = "XY"
 SEX_PLOIDY_ANNOTATIONS = [
@@ -98,7 +96,7 @@ class SexPloidyCheckTask(luigi.Task):
         default="[]", description="Path or list of paths of VCFs to be loaded."
     )
     wes_filter_source_paths = luigi.OptionalParameter(
-        default=None, description="Path to delivered VCFs with filter annotation"
+        default=[], description="Path to delivered VCFs with filter annotation"
     )
     output_dir = luigi.Parameter(
         description="Path to write the sex ploidy output table.",
@@ -106,7 +104,7 @@ class SexPloidyCheckTask(luigi.Task):
     )
     temp_dir = luigi.Parameter(
         description="Path to write the temporary output. End with '/'",
-        default="gs://seqr-scratch-temp/luigi-sex-check/",
+        default="gs://seqr-scratch-temp/",
     )
     genome_version = luigi.ChoiceParameter(
         description="Reference Genome Version (37 or 38)",
@@ -156,10 +154,6 @@ class SexPloidyCheckTask(luigi.Task):
         default="20",
         description="Autosome to use to normalize sex chromosome coverage. Default is chromosome 20.",
     )
-    hail_temp_dir = luigi.OptionalParameter(
-        default="gs://seqr-scratch-temp/",
-        description="Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.",
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -184,9 +178,9 @@ class SexPloidyCheckTask(luigi.Task):
 
     def run(self):
         # first validate paths
-        if self.hail_temp_dir:
+        if self.temp_dir:
             hl.init(
-                tmp_dir=self.hail_temp_dir,
+                tmp_dir=self.temp_dir,
             )  # Need to use the GCP bucket as temp storage for very large callset joins
         hl._set_flags(
             use_new_shuffle="1"
@@ -194,11 +188,10 @@ class SexPloidyCheckTask(luigi.Task):
 
         for source_path in [self.source_paths]:
             check_if_path_exists(source_path, "source_path")
-        if self.wes_filter_source_paths:
-            for wes_filter_source_path in self.wes_filter_source_paths:
+        for wes_filter_source_path in self.wes_filter_source_paths:
                 check_if_path_exists(source_path, "source_path")
-        if self.hail_temp_dir:
-            check_if_path_exists(self.hail_temp_dir, "hail_temp_dir")
+        if self.temp_dir:
+            check_if_path_exists(self.temp_dir, "temp_dir")
 
         self.read_input_write_mt()
         self.call_sex()
