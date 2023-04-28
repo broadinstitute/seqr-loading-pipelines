@@ -64,7 +64,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
-        'enum_select': '<Optional dictionary mapping field_name to select to a list of enumerated values.>'
+        'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
     },
 """
 CONFIG = {
