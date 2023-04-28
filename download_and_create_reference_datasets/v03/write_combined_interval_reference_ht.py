@@ -5,7 +5,7 @@ import os
 import hail as hl
 
 from hail_scripts.reference_data.combine import get_ht, join_hts, update_joined_ht_globals
-from hail_scripts.reference_data.config import GCS_PREFIXES
+from hail_scripts.reference_data.config import AccessControl, GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
@@ -27,7 +27,7 @@ def create_new(genome_version: str):
 
 def run(environment: str):
     genome_version = '38'
-    destination_path = os.path.join(GCS_PREFIXES[(environment, 'public')], INTERVAL_REFERENCE_HT_PATH).format(
+    destination_path = os.path.join(GCS_PREFIXES[(environment, AccessControl.PUBLIC)], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
     )

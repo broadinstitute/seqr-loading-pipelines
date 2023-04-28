@@ -1,7 +1,11 @@
 from copy import deepcopy
+from enum import Enum
 
 import hail as hl
 
+class AccessControl(Enum):
+    PUBLIC = 'public'
+    PRIVATE = 'private'
 
 def custom_gnomad_select_v2(ht):
     """
@@ -379,8 +383,8 @@ CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 GCS_PREFIXES = {
-    ('dev', 'public'): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('dev', 'private'): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('prod', 'public'): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
-    ('prod', 'private'): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
+    ('dev', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('dev', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('prod', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
+    ('prod', AccessControl.PRIVATE): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
 }

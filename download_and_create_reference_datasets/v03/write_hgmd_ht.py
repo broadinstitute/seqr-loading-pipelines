@@ -5,7 +5,7 @@ import os
 import hail as hl
 
 from hail_scripts.reference_data.combine import get_enum_select_fields, get_select_fields, update_joined_ht_globals
-from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES
+from hail_scripts.reference_data.config import AccessControl, CONFIG, GCS_PREFIXES
 from hail_scripts.utils.hail_utils import import_vcf, write_ht
 
 DATASETS = ['hgmd']
@@ -16,7 +16,7 @@ VERSION = '1.0.0'
 def run(environment: str, genome_version: str):
     dataset = 'hgmd'
     source_path = CONFIG[dataset][genome_version]['path']
-    destination_path = os.path.join(GCS_PREFIXES[(environment, 'private')], HGMD_HT_PATH).format(
+    destination_path = os.path.join(GCS_PREFIXES[(environment, AccessControl.PRIVATE)], HGMD_HT_PATH).format(
         environment=environment,
         genome_version=genome_version,
     )
