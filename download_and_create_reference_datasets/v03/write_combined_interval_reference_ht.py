@@ -5,7 +5,7 @@ import os
 import hail as hl
 
 from hail_scripts.reference_data.combine import get_ht, join_hts, update_joined_ht_globals
-from hail_scripts.reference_data.config import GCS_PREFIXES, SCREEN_REGION_TYPE_LOOKUP
+from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
@@ -13,9 +13,9 @@ INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_refe
 VERSION = '1.0.0'
 
 def update_existing(destination_path: str, dataset: str, genome_version: str):
-    dataset_ht = get_ht(dataset, genome_version)
     destination_ht = hl.read_table(destination_path)
-    destination_ht = destination_ht.transmute(**{dataset: dataset_ht[destination_ht.key][dataset]})
+    dataset_ht = get_ht(dataset, genome_version)
+    destination_ht = destination_ht.drop(dataset).join(dataset_ht, 'outer')
     return update_joined_ht_globals(destination_ht, DATASETS, VERSION, [], genome_version) 
 
 def create_new(genome_version: str):
