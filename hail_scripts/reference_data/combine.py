@@ -44,8 +44,7 @@ def get_enum_select_fields(enum_selects, ht):
         return enum_select_fields
     for field_name, values in enum_selects.items():
         lookup = hl.dict(hl.enumerate(values, index_first=False))
-        # NB: this is conditioning on type is
-        # happening "outside" the hail expression context.
+        # NB: this conditioning on type is "outside" the hail expression context.
         if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(lambda x: lookup[x])
         else:
