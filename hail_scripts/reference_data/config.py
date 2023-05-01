@@ -2,8 +2,8 @@ from copy import deepcopy
 
 import hail as hl
 
-def predictor_parse(ht):
-    src_field.split(';').find(lambda p: p != '.')
+def predictor_parse(field: hl.StringExpression):
+    return field.split(';').find(lambda p: p != '.')
 
 def dbnsfp_custom_select(ht):
     return {

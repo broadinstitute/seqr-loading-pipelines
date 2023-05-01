@@ -1,12 +1,12 @@
 import functools
-import re
 from datetime import datetime
+from typing import List
 
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-ENUM_MAPPABLE_TYPES = set([hl.tarray(hl.tstr), hl.tset(hl.tstr)])
+ENUM_MAPPABLE_TYPES = {hl.tarray(hl.tstr), hl.tset(hl.tstr)}
 
 
 def get_select_fields(selects, base_ht):
@@ -48,8 +48,8 @@ def get_enum_select_fields(enum_selects, ht):
                  # NB: adding missing values here allows us to
                  # hard fail if a mapped key is present but an unexpected value
                  # but also propagate missing values.
-                 [(hl.missing(hl.tstr), hl.missing(hl.tint32))]
-            )
+                 [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
+            ),
         )
         # NB: this conditioning on type is "outside" the hail expression context.
         if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
@@ -60,9 +60,9 @@ def get_enum_select_fields(enum_selects, ht):
 
 
 def get_ht(dataset, reference_genome):
-    'Returns the appropriate deduped hail table with selects applied.'
+    "Returns the appropriate deduped hail table with selects applied."
     config = CONFIG[dataset][reference_genome]
-    print(f"Reading in {dataset}")
+    print(f'Reading in {dataset}')
     base_ht = hl.read_table(config['path'])
 
     if config.get('filter'):
@@ -85,7 +85,7 @@ def get_ht(dataset, reference_genome):
 
 
 def update_joined_ht_globals(
-    joined_ht, datasets, version, reference_genome
+    joined_ht, datasets, version, reference_genome,
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
@@ -113,11 +113,11 @@ def join_hts(datasets, version, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce(
-        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts
+        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts,
     )
 
     joined_ht = update_joined_ht_globals(
-        joined_ht, datasets, version, reference_genome
+        joined_ht, datasets, version, reference_genome,
     )
     joined_ht.describe()
     return joined_ht
@@ -127,7 +127,7 @@ def update_existing_joined_hts(
     dataset: str,
     datasets: List[str],
     version: str,
-    genome_version: str
+    genome_version: str,
 ):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
@@ -135,7 +135,7 @@ def update_existing_joined_hts(
         .drop(dataset)
         .join(dataset_ht, 'outer')
         .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets])
+            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets]),
         )
     )
     return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
