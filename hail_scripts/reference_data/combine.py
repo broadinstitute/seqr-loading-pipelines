@@ -135,7 +135,7 @@ def update_existing_joined_hts(
         .drop(dataset)
         .join(dataset_ht, 'outer')
         .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS])
+            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets])
         )
     )
     return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
