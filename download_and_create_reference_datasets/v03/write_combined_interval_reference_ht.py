@@ -15,8 +15,14 @@ VERSION = '1.0.0'
 def update_existing(destination_path: str, dataset: str, genome_version: str):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = destination_ht.drop(dataset).join(dataset_ht, 'outer')
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version) 
+    destination_ht = (destination_ht
+        .drop(dataset)
+        .join(dataset_ht, 'outer')
+        .filter(
+            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS])
+        )
+    )
+    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
 
 def create_new(genome_version: str):
     return join_hts(
