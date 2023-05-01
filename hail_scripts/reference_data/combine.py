@@ -73,15 +73,16 @@ def get_ht(dataset, reference_genome):
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
 
-    select_query = {dataset: hl.struct(**select_fields)}
-
     print(select_fields)
     # First pass with selects and custom_selects
-    ht = base_ht.select(**select_query).distinct()
+    ht = base_ht.select(**select_fields).distinct()
 
     # Second pass will transmute w/ the mapped enum
     enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
-    return ht.transmute(**enum_select_fields)
+    ht = ht.transmute(**enum_select_fields)
+
+    # Last pass nested the selected fields (except for the key) in a struct
+    return ht.select(**{dataset: ht.row.drop(*ht.key)})
 
 
 def update_joined_ht_globals(

@@ -4,8 +4,10 @@ from unittest import mock
 
 import hail as hl
 
+from hail_scripts.reference_data.config import dbnsfp_custom_select
 from hail_scripts.reference_data.combine import (
     get_enum_select_fields,
+    get_ht,
     update_joined_ht_globals,
 )
 
@@ -54,6 +56,88 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
 
+    @mock.patch.dict('hail_scripts.reference_data.combine.CONFIG', {
+        'mock_dbnsfp': {
+            '38': {
+                'path': '',
+                'select': [
+                    'REVEL_score',
+                    'fathmm_MKL_coding_pred',
+                ],
+                'custom_select': dbnsfp_custom_select,
+                'enum_select': {
+                    'SIFT_pred': ['D', 'T'],
+                    'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                    'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                    'FATHMM_pred': ['D', 'T'],
+                    'fathmm_MKL_coding_pred': ['D', 'N'],
+                },
+            }
+        }
+    })
+    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    def test_custom_select(self, mock_read_table):
+        mock_read_table.return_value = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'REVEL_score': hl.missing(hl.tstr),
+                    'SIFT_pred': '.;.;T',
+                    'Polyphen2_HVAR_pred': '.;.;P',
+                    'MutationTaster_pred': 'P',
+                    'FATHMM_pred': '.;.;T',
+                    'fathmm_MKL_coding_pred': 'N',
+                },
+                {
+                    'id': 1,
+                    'REVEL_score': '0.052',
+                    'SIFT_pred': '.;.',
+                    'Polyphen2_HVAR_pred': 'B',
+                    'MutationTaster_pred': 'P',
+                    'FATHMM_pred': '.;.;D',
+                    'fathmm_MKL_coding_pred': 'D'
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                REVEL_score=hl.tstr,
+                SIFT_pred=hl.tstr,
+                Polyphen2_HVAR_pred=hl.tstr,
+                MutationTaster_pred=hl.tstr,
+                FATHMM_pred=hl.tstr,
+                fathmm_MKL_coding_pred=hl.tstr,
+            ),
+            key='id',
+        )
+        ht = get_ht('mock_dbnsfp', '38')
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    mock_dbnsfp=hl.Struct(
+                        REVEL_score=None,
+                        SIFT_pred_id=1,
+                        Polyphen2_HVAR_pred_id=1,
+                        MutationTaster_pred_id=3,
+                        FATHMM_pred_id=1,
+                        fathmm_MKL_coding_pred_id=1,
+                    )
+                ),
+                hl.Struct(
+                    id=1,
+                    mock_dbnsfp=hl.Struct(
+                        REVEL_score='0.052',
+                        SIFT_pred_id=None,
+                        Polyphen2_HVAR_pred_id=2,
+                        MutationTaster_pred_id=3,
+                        FATHMM_pred_id=0,
+                        fathmm_MKL_coding_pred_id=0,
+                    ),
+                )
+            ]
+        )
+
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     def test_update_joined_ht_globals(self, mock_datetime):
         mock_datetime.now.return_value = datetime(2023, 4, 19, 16, 43, 39, 361110)
@@ -65,7 +149,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             hl.tstruct(a=hl.tarray('str'), b=hl.tint32),
         )
         ht = update_joined_ht_globals(
-            ht, ['cadd', 'screen'], '1.2.3', ['gnomad_exome_coverage'], '38',
+            ht, ['cadd', 'screen', 'gnomad_exome_coverage'], '1.2.3', '38',
         )
         self.assertEqual(
             ht.globals.collect()[0],

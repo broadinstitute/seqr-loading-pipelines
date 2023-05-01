@@ -6,12 +6,12 @@ def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
 
 def dbnsfp_custom_select(ht):
-    return {
-        'SIFT_pred': predictor_parse(ht.SIFT_pred),
-        'Polyphen2_HVAR_pred': predictor_parse(ht.Polyphen2_HVAR_pred),
-        'MutationTaster_pred': predictor_parse(ht.MutationTaster_pred),
-        'FATHMM_pred': predictor_parse(ht.FATHMM_pred),
-    }
+    selects = {}
+    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
+    selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
+    selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
+    selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
+    return selects
 
 def custom_gnomad_select_v2(ht):
     """
@@ -118,7 +118,7 @@ CONFIG = {
                 'phastCons100way_vertebrate',
             ],
             'custom_select': dbnsfp_custom_select,
-            'enum_selects': {
+            'enum_select': {
                 'SIFT_pred': ['D', 'T'],
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -137,7 +137,7 @@ CONFIG = {
                 'fathmm_MKL_coding_pred',
             ],
             'custom_select': dbnsfp_custom_select,
-            'enum_selects': {
+            'enum_select': {
                 'SIFT_pred': ['D', 'T'],
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -183,7 +183,7 @@ CONFIG = {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
             },
-            'enum_selects': {
+            'enum_select': {
                 'splice_consequence': [
                     'Acceptor gain',
                     'Acceptor loss',
@@ -199,7 +199,7 @@ CONFIG = {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
             },
-            'enum_selects': {
+            'enum_select': {
                 'splice_consequence': [
                     'Acceptor gain',
                     'Acceptor loss',
