@@ -2,6 +2,16 @@ from copy import deepcopy
 
 import hail as hl
 
+def predictor_parse(ht):
+    src_field.split(';').find(lambda p: p != '.')
+
+def dbnsfp_custom_select(ht):
+    return {
+        'SIFT_pred': predictor_parse(ht.SIFT_pred),
+        'Polyphen2_HVAR_pred': predictor_parse(ht.Polyphen2_HVAR_pred),
+        'MutationTaster_pred': predictor_parse(ht.MutationTaster_pred),
+        'FATHMM_pred': predictor_parse(ht.FATHMM_pred),
+    }
 
 def custom_gnomad_select_v2(ht):
     """
@@ -102,31 +112,38 @@ CONFIG = {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
-                'SIFT_pred',
-                'Polyphen2_HVAR_pred',
-                'MutationTaster_pred',
-                'FATHMM_pred',
                 'MetaSVM_pred',
                 'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
             ],
+            'custom_select': dbnsfp_custom_select,
+            'enum_selects': {
+                'SIFT_pred': ['D', 'T'],
+                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                'FATHMM_pred': ['D', 'T'],
+            },
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
-                'SIFT_pred',
-                'Polyphen2_HVAR_pred',
-                'MutationTaster_pred',
-                'FATHMM_pred',
                 'MetaSVM_pred',
                 'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
                 'VEST4_score',
-                'fathmm_MKL_coding_pred',
                 'MutPred_score',
+                'fathmm_MKL_coding_pred',
             ],
+            'custom_select': dbnsfp_custom_select,
+            'enum_selects': {
+                'SIFT_pred': ['D', 'T'],
+                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                'FATHMM_pred': ['D', 'T'],
+                'fathmm_MKL_coding_pred': ['D', 'N'],
+            },
         },
     },
     'eigen': {
@@ -166,12 +183,30 @@ CONFIG = {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
             },
+            'enum_selects': {
+                'splice_consequence': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
+            },
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.ht',
             'select': {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
+            },
+            'enum_selects': {
+                'splice_consequence': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
             },
         },
     },
