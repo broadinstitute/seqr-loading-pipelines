@@ -122,7 +122,13 @@ def join_hts(datasets, version, reference_genome='37'):
     joined_ht.describe()
     return joined_ht
 
-def update_existing_joined_hts(destination_path: str, dataset: str, genome_version: str):
+def update_existing_joined_hts(
+    destination_path: str,
+    dataset: str,
+    datasets: List[str],
+    version: str,
+    genome_version: str
+):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
     destination_ht = (destination_ht
@@ -132,5 +138,5 @@ def update_existing_joined_hts(destination_path: str, dataset: str, genome_versi
             hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS])
         )
     )
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
+    return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
 
