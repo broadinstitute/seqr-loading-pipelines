@@ -66,8 +66,7 @@ def get_ht(dataset, reference_genome):
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
 
-    field_name = config.get('field_name') or dataset
-    select_query = {field_name: hl.struct(**select_fields)}
+    select_query = {dataset: hl.struct(**select_fields)}
 
     print(select_fields)
     # First pass with selects and custom_selects
