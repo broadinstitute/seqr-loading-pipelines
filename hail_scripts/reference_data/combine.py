@@ -43,7 +43,14 @@ def get_enum_select_fields(enum_selects, ht):
     if enum_selects is None:
         return enum_select_fields
     for field_name, values in enum_selects.items():
-        lookup = hl.dict(hl.enumerate(values, index_first=False))
+        lookup = hl.dict(
+            hl.enumerate(values, index_first=False).extend(
+                 # NB: adding missing values here allows us to
+                 # hard fail if a mapped key is present but an unexpected value
+                 # but also propagate missing values.
+                 [(hl.missing(hl.tstr), hl.missing(hl.tint32))]
+            )
+        )
         # NB: this conditioning on type is "outside" the hail expression context.
         if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(lambda x: lookup[x])
@@ -114,3 +121,16 @@ def join_hts(datasets, version, reference_genome='37'):
     )
     joined_ht.describe()
     return joined_ht
+
+def update_existing_joined_hts(destination_path: str, dataset: str, genome_version: str):
+    destination_ht = hl.read_table(destination_path)
+    dataset_ht = get_ht(dataset, genome_version)
+    destination_ht = (destination_ht
+        .drop(dataset)
+        .join(dataset_ht, 'outer')
+        .filter(
+            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS])
+        )
+    )
+    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
+
