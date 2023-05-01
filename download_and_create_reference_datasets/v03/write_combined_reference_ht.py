@@ -40,18 +40,18 @@ def run(environment: str, genome_version: str, dataset: str):
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--environment',
         default='dev',
-        choices=['dev', 'prod']
+        choices=['dev', 'prod'],
     )
     parser.add_argument(
         '--genome-version',
         help='Reference build, 37 or 38',
         choices=['37', '38'],
-        default='38'
+        default='38',
     )
     parser.add_argument(
         '--dataset',

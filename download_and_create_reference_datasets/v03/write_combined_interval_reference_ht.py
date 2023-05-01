@@ -12,7 +12,7 @@ DATASETS = ['gnomad_non_coding_constraint', 'screen']
 INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
 VERSION = '1.0.0'
 
-def run(environment: str):
+def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
@@ -25,12 +25,12 @@ def run(environment: str):
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--environment',
         default='dev',
-        choices=['dev', 'prod']
+        choices=['dev', 'prod'],
     )
     parser.add_argument(
         '--dataset',
