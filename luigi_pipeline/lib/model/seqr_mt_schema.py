@@ -198,7 +198,7 @@ class SeqrSchema(BaseSeqrSchema):
 
     @row_annotation()
     def g1k(self):
-        return self._selected_ref_data._1kg
+        return self._selected_ref_data.tgp
 
     @row_annotation()
     def mpc(self):

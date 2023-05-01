@@ -68,7 +68,7 @@ Format:
     },
 """
 CONFIG = {
-    '_1kg': {  # tgp
+    'tgp': {  # tgp
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
             'select': {
