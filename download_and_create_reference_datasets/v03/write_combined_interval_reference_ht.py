@@ -4,7 +4,11 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import get_ht, join_hts, update_joined_ht_globals
+from hail_scripts.reference_data.combine import (
+    get_ht,
+    join_hts,
+    update_joined_ht_globals,
+)
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
@@ -31,7 +35,7 @@ def create_new(genome_version: str):
         reference_genome=genome_version,
     )
 
-def run(environment: str):
+def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,

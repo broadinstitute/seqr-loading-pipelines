@@ -6,7 +6,7 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-ENUM_MAPPABLE_TYPES = set([hl.tarray(hl.tstr), hl.tset(hl.tstr)])
+ENUM_MAPPABLE_TYPES = {hl.tarray(hl.tstr), hl.tset(hl.tstr)}
 
 
 def get_select_fields(selects, base_ht):
@@ -70,11 +70,14 @@ def get_ht(dataset, reference_genome):
 
     print(select_fields)
     # First pass with selects and custom_selects
-    ht = base_ht.select(**select_query).distinct()
+    ht = base_ht.select(**select_fields).distinct()
 
     # Second pass will transmute w/ the mapped enum
     enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
-    return ht.transmute(**enum_select_fields)
+    ht = ht.transmute(**enum_select_fields)
+    
+    # Last pass will nest the selected fields (except for the key) in a struct
+    return ht.select(**{field_name: ht.row.drop(*ht.key)})
 
 
 def update_joined_ht_globals(
