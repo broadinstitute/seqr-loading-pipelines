@@ -61,7 +61,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
             '38': {
                 'path': '',
                 'select': [
-                    'REVEL_score',
                     'fathmm_MKL_coding_pred',
                 ],
                 'custom_select': dbnsfp_custom_select,
@@ -127,7 +126,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     id=1,
                     mock_dbnsfp=hl.Struct(
-                        REVEL_score='0.052',
+                        REVEL_score=0.052,
                         SIFT_pred_id=None,
                         Polyphen2_HVAR_pred_id=2,
                         MutationTaster_pred_id=3,

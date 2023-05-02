@@ -7,6 +7,7 @@ def predictor_parse(field: hl.StringExpression):
 
 def dbnsfp_custom_select(ht):
     selects = {}
+    selects['REVEL_score'] = hl.parse_float(ht.REVEL_score)
     selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
@@ -62,6 +63,10 @@ def custom_gnomad_select_v3(ht):
     )
     return selects
 
+def custom_mpc_select(ht):
+    selects = {}
+    selects['MPC'] = hl.parse_float(ht.info.MPC)
+    return selects
 
 """
 Configurations of dataset to combine.
@@ -113,7 +118,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
                 'MetaSVM_pred',
-                'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
             ],
@@ -129,7 +133,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
                 'MetaSVM_pred',
-                'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
                 'VEST4_score',
@@ -159,11 +162,11 @@ CONFIG = {
     'mpc': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
-            'select': {'MPC': 'info.MPC'},
+            'custom_select': custom_mpc_select,
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/MPC/fordist_constraint_official_mpc_values.liftover.GRCh38.ht',
-            'select': {'MPC': 'info.MPC'},
+            'custom_select': custom_mpc_select,
         },
     },
     'primate_ai': {
