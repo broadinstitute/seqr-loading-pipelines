@@ -11,43 +11,10 @@ from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLoca
 from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
 
 logger = logging.getLogger(__name__)
-GRCh37_STANDARD_CONTIGS = {'1','10','11','12','13','14','15','16','17','18','19','2','20','21','22','3','4','5','6','7','8','9','X','Y', 'MT'}
-GRCh38_STANDARD_CONTIGS = {'chr1','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr2','chr20','chr21','chr22','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chrX','chrY', 'chrM'}
-OPTIONAL_CHROMOSOMES = ['MT', 'chrM', 'Y', 'chrY']
-VARIANT_THRESHOLD = 100
-CONST_GRCh37 = '37'
-CONST_GRCh38 = '38'
 
 def check_if_path_exists(path, label=""):
     if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
         raise ValueError(f"{label} path not found: {path}")
-
-def contig_check(mt, standard_contigs, threshold):
-    check_result_dict = {}
-    
-    # check chromosomes that are not in the VCF  
-    row_dict = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
-    contigs_set = set(row_dict.keys())
-    
-    all_missing_contigs = standard_contigs - contigs_set
-    missing_contigs_without_optional = [contig for contig in all_missing_contigs if contig not in OPTIONAL_CHROMOSOMES]
-
-    if missing_contigs_without_optional:
-        check_result_dict['Missing contig(s)'] = missing_contigs_without_optional
-        logger.warning('Missing the following chromosomes(s):{}'.format(', '.join(missing_contigs_without_optional)))
-                       
-    for k,v in row_dict.items():
-        if k not in standard_contigs:
-            check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
-            logger.warning('Chromosome %s is unexpected.', k)
-        elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
-            check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
-            logger.warning('Chromosome %s has %d rows, which is lower than threshold %d.', k, v, threshold)
-                            
-    return check_result_dict
-
-class SeqrValidationError(Exception):
-    pass
 
 class SeqrVCFToMTTask(HailMatrixTableTask):
     """
@@ -148,66 +115,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         """
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
         return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
-
-
-    @staticmethod
-    def validate_mt(mt, genome_version, sample_type):
-        """
-        Validate the mt by checking against a list of common coding and non-coding variants given its
-        genome version. This validates genome_version, variants, and the reported sample type.
-
-        :param mt: mt to validate
-        :param genome_version: reference genome version
-        :param sample_type: WGS or WES
-        :return: True or Exception
-        """
-        if genome_version == CONST_GRCh37:
-            contig_check_result = contig_check(mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD)
-        elif genome_version == CONST_GRCh38:
-            contig_check_result = contig_check(mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD)
-
-        if bool(contig_check_result):
-            err_msg = ''
-            for k,v in contig_check_result.items():
-                err_msg += '{k}: {v}. '.format(k=k, v=', '.join(v))
-            raise SeqrValidationError(err_msg)
-
-        sample_type_stats = HailMatrixTableTask.sample_type_stats(mt, genome_version)
-
-        for name, stat in sample_type_stats.items():
-            logger.info('Table contains %i out of %i common %s variants.' %
-                        (stat['matched_count'], stat['total_count'], name))
-
-        has_coding = sample_type_stats['coding']['match']
-        has_noncoding = sample_type_stats['noncoding']['match']
-
-        if not has_coding and not has_noncoding:
-            # No common variants detected.
-            raise SeqrValidationError(
-                'Genome version validation error: dataset specified as GRCh{genome_version} but doesn\'t contain '
-                'the expected number of common GRCh{genome_version} variants'.format(genome_version=genome_version)
-            )
-        elif has_noncoding and not has_coding:
-            # Non coding only.
-            raise SeqrValidationError(
-                'Sample type validation error: Dataset contains noncoding variants but is missing common coding '
-                'variants for GRCh{}. Please verify that the dataset contains coding variants.' .format(genome_version)
-            )
-        elif has_coding and not has_noncoding:
-            # Only coding should be WES.
-            if sample_type != 'WES':
-                raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as WGS but appears to be '
-                    'WES because it contains many common coding variants'
-                )
-        elif has_noncoding and has_coding:
-            # Both should be WGS.
-            if sample_type != 'WGS':
-                raise SeqrValidationError(
-                    'Sample type validation error: dataset sample-type is specified as WES but appears to be '
-                    'WGS because it contains many common non-coding variants'
-                )
-        return True
 
 
 class SeqrMTToESTask(HailElasticSearchTask):
