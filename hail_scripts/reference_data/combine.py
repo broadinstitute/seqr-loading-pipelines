@@ -70,6 +70,7 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
+    field_name = config.get('field_name') or dataset
     ht = hl.read_table(config['path']).distinct()
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(**{
@@ -77,7 +78,7 @@ def get_ht(dataset: str, reference_genome: str):
         **get_custom_select_fields(config.get('custom_select'), ht),
     })
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
-    ht = ht.select(**{dataset: ht.row.drop(*ht.key)})
+    ht = ht.select(**{field_name: ht.row.drop(*ht.key)})
     return ht
 
 def update_joined_ht_globals(
