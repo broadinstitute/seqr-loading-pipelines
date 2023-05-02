@@ -63,28 +63,17 @@ def get_enum_select_fields(enum_selects, ht):
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
     return enum_select_fields
 
-def get_ht(dataset, reference_genome):
+def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
-    base_ht = hl.read_table(config['path'])
-
-    if 'filter' in config:
-        base_ht = base_ht.filter(config['filter'](base_ht))
-
-    select_fields = {
-        **get_select_fields(config.get('select'), base_ht),
-        **get_custom_select_fields(config.get('custom_select'), base_ht)
-    }
-    enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
-
-    # First pass with selects and custom_selects
-    # Second pass will transmute w/ the mapped enum
-    # Last pass will nest the selected fields (except for the key) in a struct
-    ht = (base_ht
-        .select(**select_fields)
-        .distinct()
-        .transmute(**enum_select_fields)
-    )
-    return ht.select(**{dataset: base.row.drop(*ht.key)})
+    ht = hl.read_table(config['path']).distinct()
+    ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
+    ht = ht.select(**{
+        **get_select_fields(config.get('select'), ht),
+        **get_custom_select_fields(config.get('custom_select'), ht),
+    })
+    ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
+    ht = ht.select(**{dataset: ht.row.drop(*ht.key)})
+    return ht
 
 def update_joined_ht_globals(
     joined_ht, datasets, version, reference_genome,
