@@ -31,7 +31,7 @@ def create_new(genome_version: str):
         reference_genome=genome_version,
     )
 
-def run(environment: str):
+def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(GCS_PREFIXES[(environment, AccessControl.PUBLIC)], INTERVAL_REFERENCE_HT_PATH).format(
         environment=environment,
