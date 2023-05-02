@@ -2,10 +2,8 @@ import unittest
 
 import hail as hl
 
-from hail_scripts.reference_data.clinvar import (
-    parsed_clnsig,
-    parsed_clnsigconf,
-)
+from hail_scripts.reference_data.clinvar import parsed_clnsig, parsed_clnsigconf
+
 
 class ClinvarTest(unittest.TestCase):
     def test_parsed_clnsig(self):
