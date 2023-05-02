@@ -4,7 +4,11 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import get_ht, join_hts, update_joined_ht_globals
+from hail_scripts.reference_data.combine import (
+    get_ht,
+    join_hts,
+    update_joined_ht_globals,
+)
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
