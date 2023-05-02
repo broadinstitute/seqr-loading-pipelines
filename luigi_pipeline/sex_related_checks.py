@@ -19,6 +19,14 @@ from luigi_pipeline.seqr_loading import (
 
 logger = logging.getLogger(__name__)
 
+FINAL_SEX_ANNOTATIONS=[
+            "is_female",
+            "f_stat",
+            "n_called",
+            "expected_homs",
+            "observed_homs",
+            "sex",
+        ]
 FEMALE_PLOIDY = "XX"
 MALE_PLOIDY = "XY"
 SEX_PLOIDY_ANNOTATIONS = [
@@ -29,79 +37,20 @@ SEX_PLOIDY_ANNOTATIONS = [
     "observed_homs",
     "sex",
 ]
-GRCh37_STANDARD_CONTIGS = {
-    "1",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "2",
-    "20",
-    "21",
-    "22",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    "X",
-    "Y",
-    "MT",
-}
-GRCh38_STANDARD_CONTIGS = {
-    "chr1",
-    "chr10",
-    "chr11",
-    "chr12",
-    "chr13",
-    "chr14",
-    "chr15",
-    "chr16",
-    "chr17",
-    "chr18",
-    "chr19",
-    "chr2",
-    "chr20",
-    "chr21",
-    "chr22",
-    "chr3",
-    "chr4",
-    "chr5",
-    "chr6",
-    "chr7",
-    "chr8",
-    "chr9",
-    "chrX",
-    "chrY",
-    "chrM",
-}
-OPTIONAL_CHROMOSOMES = ["MT", "chrM", "Y", "chrY"]
-VARIANT_THRESHOLD = 100
 
 
-class SexPloidyCheckTask(luigi.Task):
+
+class ValidateVCFTask(HailMatrixTableTask):
     """
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
-
     source_paths = luigi.Parameter(
-        default="[]", description="Path or list of paths of VCFs to be loaded."
+        default="[]", description="Path or list of paths of VCFs to be loaded." # NOTE: Not sure when default is in quotes
     )
     wes_filter_source_paths = luigi.OptionalParameter(
-        default=[], description="Path to delivered VCFs with filter annotation"
+        default="[]", description="Path to delivered VCFs with filter annotation"
     )
-    output_dir = luigi.Parameter(
-        description="Path to write the sex ploidy output table.",
-        default="gs://seqr-loading-temp/luigi-sex-check/",
-    )
+    dest_path = luigi.Parameter(description='Path to write the matrix table.') #TODO: Rename thjis to be task specific or use output()?
     temp_dir = luigi.Parameter(
         description="Path to write the temporary output. End with '/'",
         default="gs://seqr-scratch-temp/",
@@ -118,11 +67,57 @@ class SexPloidyCheckTask(luigi.Task):
         description="Disable checking whether the dataset matches the specified "
         "genome version and WGS vs. WES sample type."
     )
-    remap_path = luigi.OptionalParameter(
-        default=None, description="Path to a tsv file with two columns: s and seqr_id."
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def run(self):
+        # first validate paths
+        if self.temp_dir:
+            hl.init(
+                tmp_dir=self.temp_dir,
+            )  # Need to use the GCP bucket as temp storage for very large callset joins
+
+        for source_path in [self.source_paths]:
+            check_if_path_exists(source_path, "source_path")
+        for wes_filter_source_path in self.wes_filter_source_paths:
+                check_if_path_exists(source_path, "source_path")
+        if self.temp_dir:
+            check_if_path_exists(self.temp_dir, "temp_dir")
+        mt = self.import_vcf()
+
+        if not self.dont_validate:
+            self.validate_mt(mt, self.genome_version, self.sample_type)
+
+        mt.write(self.output().path)
+
+
+class SexPloidyCheckTask(luigi.Task):
+    """
+    Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
+    """
+    source_paths = luigi.Parameter(
+        default="[]", description="Path or list of paths of VCFs to be loaded." # NOTE: Not sure when default is in quotes
     )
-    subset_path = luigi.OptionalParameter(
-        default=None, description="Path to a tsv file with one column of sample IDs: s."
+    wes_filter_source_paths = luigi.OptionalParameter(
+        default="[]", description="Path to delivered VCFs with filter annotation"
+    )
+    dest_path = luigi.Parameter(description='Path to write the matrix table.') #TODO: Rename thjis to be task specific or use output()?
+    temp_dir = luigi.Parameter(
+        description="Path to write the temporary output. End with '/'",
+        default="gs://seqr-scratch-temp/",
+    )
+    genome_version = luigi.ChoiceParameter(
+        description="Reference Genome Version (37 or 38)",
+        choices=["GRCh37", "GRCh38"],
+        default="GRCh38",
+    )
+    sample_type = luigi.ChoiceParameter(
+        choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
+    )
+    dont_validate = luigi.BoolParameter(
+        description="Disable checking whether the dataset matches the specified "
+        "genome version and WGS vs. WES sample type."
     )
     use_y_cov = luigi.BoolParameter(
         description="Whether to use chromosome Y coverage when inferring sex. Note that Y coverage is required to infer sex aneuploidies."
@@ -158,11 +153,19 @@ class SexPloidyCheckTask(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def output_directory(self):
-        return GCSorLocalTarget(self.output_dir)
+    def requires(self):
+        return [ValidateVCFTask(
+            source_paths=self.source_paths,
+
+            dest_path=self.dest_path,
+            temp_dir=self.temp_dir,
+            genome_version=self.genome_version,
+            sample_type=self.sample_type,
+            dont_validate=self.dont_validate,
+        )]
 
     def temp_directory(self):
-        return GCSorLocalTarget(self.temp_dir)
+        return self.temp_dir
 
     def output(self):
         return GCSorLocalTarget(f"{self.output_directory().path}sex_ploidy_check.ht")
@@ -177,43 +180,28 @@ class SexPloidyCheckTask(luigi.Task):
         return GCSorLocalTarget(f"{self.output_directory().path}callset.mt")
 
     def run(self):
-        # first validate paths
-        if self.temp_dir:
-            hl.init(
-                tmp_dir=self.temp_dir,
-            )  # Need to use the GCP bucket as temp storage for very large callset joins
-        hl._set_flags(
-            use_new_shuffle="1"
-        )  # Interval ref data join causes shuffle death, this prevents it
-
-        for source_path in [self.source_paths]:
-            check_if_path_exists(source_path, "source_path")
-        for wes_filter_source_path in self.wes_filter_source_paths:
-                check_if_path_exists(source_path, "source_path")
-        if self.temp_dir:
-            check_if_path_exists(self.temp_dir, "temp_dir")
-
         self.read_input_write_mt()
-        self.call_sex()
+        self.call_sex(
+            self.use_y_cov,
+            self.add_x_cov,
+            self.y_cov_threshold,
+            self.normalization_contig,
+            self.xy_fstat_threshold,
+            self.xx_fstat_threshold,
+            self.aaf_threshold,
+            self.callrate_threshold,
+            )
 
     def call_sex(
         self,
-        use_y_cov: bool = False,
-        add_x_cov: bool = False,
-        y_cov_threshold: float = 0.1,
-        normalization_contig: str = "20",
-        xy_fstat_threshold: float = 0.75,
-        xx_fstat_threshold: float = 0.5,
-        aaf_threshold: float = 0.05,
-        call_rate_threshold: float = 0.25,
-        final_annotations: List[str] = [
-            "is_female",
-            "f_stat",
-            "n_called",
-            "expected_homs",
-            "observed_homs",
-            "sex",
-        ],
+        use_y_cov: bool,
+        add_x_cov: bool, 
+        y_cov_threshold: float,
+        normalization_contig: str,
+        xy_fstat_threshold: float,
+        xx_fstat_threshold: float,
+        aaf_threshold: float,
+        call_rate_threshold: float,
     ):
         """
         Call sex for the samples in a given callset and export results file to the desired path.
@@ -231,7 +219,6 @@ class SexPloidyCheckTask(luigi.Task):
         :param call_rate_threshold: Minimum required call rate. Default is 0.25
         """
         # Read in matrix table and define output file name prefix
-
         logger.info("Using chromosome Y coverage? %s", use_y_cov)
         mt = hl.read_matrix_table(self.mt_path().path)
         ref_genome = mt.locus.dtype.reference_genome.name
@@ -260,13 +247,12 @@ class SexPloidyCheckTask(luigi.Task):
         )
 
         if use_y_cov:
-            final_annotations.extend(
-                [
-                    f"chr{normalization_contig}_mean_dp",
-                    "chrY_mean_dp",
-                    "normalized_y_coverage",
-                ]
-            )
+            logger.info("Calculating normalized Y coverage...")
+            final_annotations = [*FINAL_SEX_ANNOTATIONS, *[
+                     f"chr{normalization_contig}_mean_dp",
+                     "chrY_mean_dp",
+                     "normalized_y_coverage",
+                 ]]
             norm_ht = self.get_chr_cov(
                 mt, ref_genome, normalization_contig, call_rate_threshold
             )
@@ -442,7 +428,7 @@ class SexPloidyCheckTask(luigi.Task):
         )
 
     def read_input_write_mt(self):
-        mt = self.import_dataset()
+        mt = self.import_vcf()
         mt = hl.split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
@@ -520,40 +506,6 @@ class SexPloidyCheckTask(luigi.Task):
                     "WGS because it contains many common non-coding variants"
                 )
         return True
-
-    def import_dataset(self):
-        """
-        Imports VCF to a MatrixTable.
-
-        If optional WES filters VCF is passed, import and join with VCF.
-        :return: hl.MatirxTable
-        """
-        # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
-        recode = {}
-        if self.genome_version == "38":
-            recode = {f"{i}": f"chr{i}" for i in (list(range(1, 23)) + ["X", "Y"])}
-        elif self.genome_version == "37":
-            recode = {f"chr{i}": f"{i}" for i in (list(range(1, 23)) + ["X", "Y"])}
-
-        mt = hl.import_vcf(
-            self.source_paths,
-            reference_genome=self.genome_version,
-            skip_invalid_loci=True,
-            contig_recoding=recode,
-            force_bgz=True,
-            min_partitions=500,
-        )
-        if self.wes_filter_source_paths:
-            filters_ht = hl.import_vcf(
-                self.wes_filter_source_paths,
-                reference_genome=self.genome_version,
-                skip_invalid_loci=True,
-                contig_recoding=recode,
-                force_bgz=True,
-                min_partitions=500,
-            ).rows()
-            mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
-        return mt
 
 
 if __name__ == "__main__":
