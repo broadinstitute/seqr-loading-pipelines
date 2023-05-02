@@ -81,7 +81,7 @@ def get_ht(dataset, reference_genome):
     enum_select_fields = get_enum_select_fields(config.get('enum_select'), ht)
     ht = ht.transmute(**enum_select_fields)
 
-    # Last pass nested the selected fields (except for the key) in a struct
+    # Last pass will nest the selected fields (except for the key) in a struct
     return ht.select(**{dataset: ht.row.drop(*ht.key)})
 
 
