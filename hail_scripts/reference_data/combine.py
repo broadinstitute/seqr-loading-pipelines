@@ -19,9 +19,9 @@ def get_select_fields(selects, base_ht):
     :param base_ht: base_ht to traverse
     :return: select mapping from annotation name to base_ht annotation
     """
-    if selects is None:
-        return {}
     select_fields = {}
+    if selects is None:
+        return select_fields
     if isinstance(selects, list):
         select_fields = {selection: base_ht[selection] for selection in selects}
     elif isinstance(selects, dict):
@@ -44,9 +44,9 @@ def get_custom_select_fields(custom_select, ht):
     return custom_select(ht)
 
 def get_enum_select_fields(enum_selects, ht):
-    if enum_selects is None:
-        return {}
     enum_select_fields = {}
+    if enum_selects is None:
+        return enum_select_fields
     for field_name, values in enum_selects.items():
         lookup = hl.dict(
             hl.enumerate(values, index_first=False).extend(
