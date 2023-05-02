@@ -44,6 +44,9 @@ class HailMatrixTableTask(luigi.Task):
     """
 
     source_paths = luigi.Parameter(description='Path or list of paths of VCFs to be loaded.')
+    wes_filter_source_paths = luigi.OptionalParameter(
+        default=[], description="Path or list of delivered VCFs with filter annotations."
+    )
     dest_path = luigi.Parameter(description='Path to write the matrix table.')
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
@@ -82,12 +85,26 @@ class HailMatrixTableTask(luigi.Task):
             recode = {f"{i}": f"chr{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
         elif self.genome_version == "37":
             recode = {f"chr{i}": f"{i}" for i in (list(range(1, 23)) + ['X', 'Y'])}
+        mt = hl.import_vcf(
+            self.source_paths,
+            reference_genome=self.genome_version,
+            skip_invalid_loci=True,
+            contig_recoding=recode,
+            force_bgz=True,
+            min_partitions=500,
+        )
+        if self.wes_filter_source_paths:
+            filters_ht = hl.import_vcf(
+                self.wes_filter_source_paths,
+                reference_genome=self.genome_version,
+                skip_invalid_loci=True,
+                contig_recoding=recode,
+                force_bgz=True,
+                min_partitions=500,
+            ).rows()
+            mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
+        return mt
 
-        return hl.import_vcf([vcf_file for vcf_file in self.source_paths],
-                             reference_genome='GRCh' + self.genome_version,
-                             skip_invalid_loci=True,
-                             contig_recoding=recode,
-                             force_bgz=True, min_partitions=500)
 
     @staticmethod
     def sample_type_stats(mt, genome_version, threshold=0.3):
