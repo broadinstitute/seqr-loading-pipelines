@@ -223,7 +223,7 @@ VCF_DATA_ROW = [
         '0/1:PE,SR:57:0:0:57:1:2:TN,TP',  # Concordant Genotype
         '0/1:PE,SR:0:0:1:99:0:2:FP,TN',  # Novel Genotype
         '0/0:PE,SR:99:99:0:0:0:3:FN',  # Absent Genotype
-        '0/0:PE,SR:99:99:0:0:0:1:FP,TP',  # Discordant Genotype
+        '1/1:PE,SR:99:99:0:0:0:1:FP,TP',  # Discordant Genotype
     ],
     [
         'chr1',
@@ -547,6 +547,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=2,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -555,6 +556,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=2,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -563,6 +565,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=2,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -571,6 +574,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=1,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -579,6 +583,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=1,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
         ],
@@ -599,6 +604,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=1,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -607,6 +613,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=0,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -615,6 +622,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=0,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -623,6 +631,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=0,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -631,6 +640,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=None,
                 num_alt=0,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
         ],
@@ -648,6 +658,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=2,
                 num_alt=0,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -656,6 +667,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=2,
                 num_alt=1,
                 new_call=False,
+                prev_call=True,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -664,6 +676,7 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=2,
                 num_alt=1,
                 new_call=True,
+                prev_call=False,
                 prev_num_alt=None,
             ),
             hl.Struct(
@@ -672,18 +685,20 @@ EXPECTED_DATA_GENOTYPES = [
                 cn=3,
                 num_alt=0,
                 new_call=False,
+                prev_call=False,
                 prev_num_alt=2,
             ),
             hl.Struct(
                 sample_id='SAMPLE-5',
                 gq=99,
                 cn=1,
-                num_alt=0,
+                num_alt=2,
                 new_call=False,
+                prev_call=False,
                 prev_num_alt=1,
             ),
         ],
-        **{'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'}, 'samples_num_alt.2': set()},
+        **{'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'}, 'samples_num_alt.2': {'SAMPLE-5'}},
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
 ]
