@@ -80,7 +80,8 @@ class TestBaseModel(unittest.TestCase):
 
         except ValueError as e:
             self.assertEqual(
-                str(e), 'Schema: dependency hello is not a row annotation method.',
+                str(e),
+                'Schema: dependency hello is not a row annotation method.',
             )
             return True
         self.fail('Did not raise ValueError.')
@@ -99,7 +100,8 @@ class TestBaseModel(unittest.TestCase):
 
         except ValueError as e:
             self.assertEqual(
-                str(e), 'Schema: dependency dummy is not a row annotation method.',
+                str(e),
+                'Schema: dependency dummy is not a row annotation method.',
             )
             return True
         self.fail('Did not raise ValueError.')

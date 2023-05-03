@@ -89,15 +89,13 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
     hl.Struct(
         genotypes=[
             hl.Struct(
-                **{
-                    'cn': 1,
-                    'defragged': False,
-                    'new_call': False,
-                    'prev_call': True,
-                    'prev_overlap': True,
-                    'qs': 4,
-                    'sample_id': 'PIE_OGI2271_003780_D1',
-                },
+                cn=1,
+                defragged=False,
+                new_call=False,
+                prev_call=True,
+                prev_overlap=True,
+                qs=4,
+                sample_id='PIE_OGI2271_003780_D1',
             ),
         ],
         samples=['PIE_OGI2271_003780_D1'],
@@ -109,26 +107,22 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
     hl.Struct(
         genotypes=[
             hl.Struct(
-                **{
-                    'qs': 30,
-                    'cn': 0,
-                    'defragged': False,
-                    'prev_overlap': True,
-                    'new_call': False,
-                    'prev_call': True,
-                    'sample_id': 'MAN_0354_01_1',
-                },
+                qs=30,
+                cn=0,
+                defragged=False,
+                prev_overlap=True,
+                new_call=False,
+                prev_call=True,
+                sample_id='MAN_0354_01_1',
             ),
             hl.Struct(
-                **{
-                    'qs': 5,
-                    'cn': 1,
-                    'defragged': False,
-                    'prev_overlap': True,
-                    'new_call': False,
-                    'prev_call': True,
-                    'sample_id': 'PIE_OGI313_000747_1',
-                },
+                qs=5,
+                cn=1,
+                defragged=False,
+                prev_overlap=True,
+                new_call=False,
+                prev_call=True,
+                sample_id='PIE_OGI313_000747_1',
             ),
         ],
         samples=['MAN_0354_01_1', 'PIE_OGI313_000747_1'],
@@ -142,15 +136,13 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
     hl.Struct(
         genotypes=[
             hl.Struct(
-                **{
-                    'qs': 3,
-                    'cn': 1,
-                    'defragged': False,
-                    'prev_overlap': False,
-                    'new_call': True,
-                    'prev_call': False,
-                    'sample_id': 'GLE-4772-4-2-a',
-                },
+                qs=3,
+                cn=1,
+                defragged=False,
+                prev_overlap=False,
+                new_call=True,
+                prev_call=False,
+                sample_id='GLE-4772-4-2-a',
             ),
         ],
         samples=['GLE-4772-4-2-a'],
@@ -164,7 +156,8 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
 NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     hl.Struct(**x, **y)
     for (x, y) in zip(
-        NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA, NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA,
+        NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA,
+        NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA,
     )
 ]
 
@@ -221,15 +214,13 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
     hl.Struct(
         genotypes=[
             hl.Struct(
-                **{
-                    'cn': 1,
-                    'defragged': False,
-                    'new_call': False,
-                    'prev_call': True,
-                    'prev_overlap': False,
-                    'qs': 4,
-                    'sample_id': 'PIE_OGI2271_003780_D1',
-                },
+                cn=1,
+                defragged=False,
+                new_call=False,
+                prev_call=True,
+                prev_overlap=False,
+                qs=4,
+                sample_id='PIE_OGI2271_003780_D1',
             ),
         ],
         samples=['PIE_OGI2271_003780_D1'],
@@ -241,43 +232,37 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
     hl.Struct(
         genotypes=[
             hl.Struct(
-                **{
-                    'cn': 0,
-                    'defragged': False,
-                    'start': 100017586,
-                    'end': 100023212,
-                    'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
-                    'new_call': False,
-                    'num_exon': 2,
-                    'prev_call': True,
-                    'prev_overlap': False,
-                    'qs': 30,
-                    'sample_id': 'BEN_0234_01_1',
-                },
+                cn=0,
+                defragged=False,
+                start=100017586,
+                end=100023212,
+                geneIds=['ENSG00000283761', 'ENSG22222222222'],
+                new_call=False,
+                num_exon=2,
+                prev_call=True,
+                prev_overlap=False,
+                qs=30,
+                sample_id='BEN_0234_01_1',
             ),
             hl.Struct(
-                **{
-                    'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
-                    'qs': 30,
-                    'cn': 0,
-                    'defragged': False,
-                    'prev_overlap': False,
-                    'new_call': False,
-                    'prev_call': True,
-                    'sample_id': 'MAN_0354_01_1',
-                },
+                geneIds=['ENSG00000117620', 'ENSG00000283761'],
+                qs=30,
+                cn=0,
+                defragged=False,
+                prev_overlap=False,
+                new_call=False,
+                prev_call=True,
+                sample_id='MAN_0354_01_1',
             ),
             hl.Struct(
-                **{
-                    'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
-                    'qs': 5,
-                    'cn': 1,
-                    'defragged': False,
-                    'prev_overlap': False,
-                    'new_call': False,
-                    'prev_call': False,
-                    'sample_id': 'PIE_OGI313_000747_1',
-                },
+                geneIds=['ENSG00000117620', 'ENSG00000283761'],
+                qs=5,
+                cn=1,
+                defragged=False,
+                prev_overlap=False,
+                new_call=False,
+                prev_call=False,
+                sample_id='PIE_OGI313_000747_1',
             ),
         ],
         samples=['BEN_0234_01_1', 'MAN_0354_01_1', 'PIE_OGI313_000747_1'],
@@ -328,7 +313,8 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
             t1.collect(),
             [
                 hl.Struct(
-                    genes='AC118553.2,SLC35A3', gene_set={'AC118553', 'SLC35A3'},
+                    genes='AC118553.2,SLC35A3',
+                    gene_set={'AC118553', 'SLC35A3'},
                 ),
                 hl.Struct(genes='AC118553.1,None', gene_set={'AC118553'}),
                 hl.Struct(genes='None', gene_set=set()),
@@ -364,7 +350,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             1
         ]
         self._genotypes_mt_file = tempfile.mkstemp(
-            dir=self._temp_dir.name, suffix='.mt',
+            dir=self._temp_dir.name,
+            suffix='.mt',
         )[1]
         SeqrGCNVMTToESTask.disable_instance_cache()
 
@@ -387,8 +374,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             is_new_joint_call=True,
         )
         export_task = SeqrGCNVMTToESTask()
-        SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
-        SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
+        SeqrGCNVGenotypesMTTask.requires = lambda _: [variant_task]
+        SeqrGCNVMTToESTask.requires = lambda _: [variant_task, genotype_task]
         worker.add(export_task)
         worker.run()
 
@@ -410,10 +397,12 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(
-            row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA,
+            row_ht,
+            NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA,
         )
         self.assertCountEqual(
-            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS,
+            kwargs['disable_index_for_fields'],
+            EXPECTED_DISABLED_INDEX_FIELDS,
         )
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
@@ -432,8 +421,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             is_new_joint_call=False,
         )
         export_task = SeqrGCNVMTToESTask()
-        SeqrGCNVGenotypesMTTask.requires = lambda self: [variant_task]
-        SeqrGCNVMTToESTask.requires = lambda self: [variant_task, genotype_task]
+        SeqrGCNVGenotypesMTTask.requires = lambda _: [variant_task]
+        SeqrGCNVMTToESTask.requires = lambda _: [variant_task, genotype_task]
         worker.add(export_task)
         worker.run()
 
@@ -455,5 +444,6 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         self.assertCountEqual(
-            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS,
+            kwargs['disable_index_for_fields'],
+            EXPECTED_DISABLED_INDEX_FIELDS,
         )

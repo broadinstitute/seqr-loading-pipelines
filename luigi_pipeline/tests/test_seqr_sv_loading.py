@@ -361,9 +361,7 @@ VARIANT_MT_FIELDS = [
     'StrVCTVRE_score',
 ]
 
-SAMPLES_GQ_SV_FIELDS = [
-    f'samples_gq_sv.{i}_to_{i + 10}' for i in range(0, 90, 10)
-]
+SAMPLES_GQ_SV_FIELDS = [f'samples_gq_sv.{i}_to_{i + 10}' for i in range(0, 90, 10)]
 
 GENOTYPES_MT_FIELDS = [
     'genotypes',
@@ -715,7 +713,8 @@ class SeqrSVLoadingTest(unittest.TestCase):
             1
         ]
         self._genotypes_mt_file = tempfile.mkstemp(
-            dir=self._temp_dir.name, suffix='.mt',
+            dir=self._temp_dir.name,
+            suffix='.mt',
         )[1]
         with open(self._vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
@@ -724,7 +723,8 @@ class SeqrSVLoadingTest(unittest.TestCase):
         shutil.rmtree(self._temp_dir.name)
 
     @mock.patch(
-        'luigi_pipeline.seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING,
+        'luigi_pipeline.seqr_sv_loading.load_gencode',
+        return_value=GENE_ID_MAPPING,
     )
     def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
@@ -740,13 +740,16 @@ class SeqrSVLoadingTest(unittest.TestCase):
             source_paths='i am completely ignored',
             dest_path=self._genotypes_mt_file,
         )
-        SeqrSVGenotypesMTTask.requires = lambda self: [variant_task]
+        SeqrSVGenotypesMTTask.requires = lambda _: [variant_task]
         worker.add(genotype_task)
         worker.run()
         load_gencode_mock.assert_called_once_with(42, '')
 
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(
-            None, ref_data=None, interval_ref_data=None, clinvar_data=None,
+            None,
+            ref_data=None,
+            interval_ref_data=None,
+            clinvar_data=None,
         ).get_disable_index_field()
         self.assertCountEqual(disabled_index_fields, DISABLED_INDEX_FIELDS)
 

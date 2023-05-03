@@ -144,7 +144,8 @@ class TestHailTasks(unittest.TestCase):
         # Tests the remap_sample_id function when there are no samples to be remapped
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
         remap_mt = HailMatrixTableTask.remap_sample_ids(
-            mt, self._create_temp_sample_remap_file(mt, 0),
+            mt,
+            self._create_temp_sample_remap_file(mt, 0),
         )
         self.assertEqual(remap_mt.anti_join_cols(mt.cols()).count_cols(), 0)
 
@@ -152,7 +153,8 @@ class TestHailTasks(unittest.TestCase):
         # Tests the remap_sample_id function when a single sample needs to be remapped
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
         remap_mt = HailMatrixTableTask.remap_sample_ids(
-            mt, self._create_temp_sample_remap_file(mt, 1),
+            mt,
+            self._create_temp_sample_remap_file(mt, 1),
         )
         self.assertEqual(remap_mt.anti_join_cols(mt.cols()).count_cols(), 1)
 
@@ -161,7 +163,8 @@ class TestHailTasks(unittest.TestCase):
         mt = hl.import_vcf(TEST_DATA_MT_1KG)
         hmtt = HailMatrixTableTask(source_paths='a', dest_path='b', genome_version='38')
         subset_mt = hmtt.subset_samples_and_variants(
-            mt, self._create_temp_sample_subset_file(mt, 14),
+            mt,
+            self._create_temp_sample_subset_file(mt, 14),
         )
         self.assertEqual(subset_mt.count(), (29, 14))
 
@@ -183,7 +186,8 @@ class TestHailTasks(unittest.TestCase):
         hmtt = HailMatrixTableTask(source_paths='a', dest_path='b', genome_version='38')
         with self.assertRaises(MatrixTableSampleSetError) as e:
             hmtt.subset_samples_and_variants(
-                mt, self._create_temp_sample_subset_file(mt, 1, True),
+                mt,
+                self._create_temp_sample_subset_file(mt, 1, True),
             )
             self.assertEqual(e.missing_samples, ['wrong_sample'])
 
