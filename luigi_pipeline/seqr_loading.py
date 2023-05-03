@@ -130,8 +130,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
         mt = self.annotate_globals(mt, kwargs.get("clinvar_data"))
-        mt.describe()
 
+        mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
 
     def annotate_old_and_split_multi_hts(self, mt):
