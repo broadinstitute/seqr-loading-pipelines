@@ -5,7 +5,6 @@ import tempfile
 
 import hail as hl
 
-from hail_scripts.reference_data.constants import GCS_PREFIXES
 from hail_scripts.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_ASSERTIONS_LOOKUP,

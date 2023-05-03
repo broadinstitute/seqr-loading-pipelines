@@ -698,7 +698,10 @@ EXPECTED_DATA_GENOTYPES = [
                 prev_num_alt=1,
             ),
         ],
-        **{'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'}, 'samples_num_alt.2': {'SAMPLE-5'}},
+        **{
+            'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'},
+            'samples_num_alt.2': {'SAMPLE-5'},
+        },
         **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
     ),
 ]
