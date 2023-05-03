@@ -42,8 +42,9 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
             "gene_id_mapping" : hl.literal(load_gencode(self.gencode_release, self.gencode_path))
         }
 
-    def re_key(self, mt):
-        return mt.key_rows_by('locus', 'alleles', 'end_locus')
+    def export_dataset(self, mt):
+        mt = mt.key_rows_by('locus', 'alleles', 'end_locus')
+        mt.write(self.output().path, stage_locally=True, overwrite=True)
 
 class SeqrSVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrSVVariantMTTask
