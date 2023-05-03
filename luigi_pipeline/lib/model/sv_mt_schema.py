@@ -225,6 +225,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
         was_previously_called = hl.is_defined(self.mt.CONC_ST) & ~self.mt.CONC_ST.contains("EMPTY")
         num_alt = self._num_alt(is_called)
         prev_num_alt = hl.if_else(was_previously_called, PREVIOUS_GENOTYPE_N_ALT_ALLELES[hl.set(self.mt.CONC_ST)], -1)
+        concordant_genotype = num_alt == prev_num_alt
         discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
         novel_genotype = (num_alt != prev_num_alt) & (prev_num_alt == 0)
         return {
@@ -233,6 +234,7 @@ class SeqrSVGenotypesSchema(SeqrGenotypesSchema):
             'cn': self.mt.RD_CN,
             'num_alt': num_alt,
             'prev_num_alt': hl.or_missing(discordant_genotype, prev_num_alt),
+            'prev_call': hl.or_missing(is_called, was_previously_called & concordant_genotype),
             'new_call': hl.or_missing(is_called, ~was_previously_called | novel_genotype),
         }
 
