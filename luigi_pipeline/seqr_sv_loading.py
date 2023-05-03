@@ -39,7 +39,7 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
 
     def import_dataset(self):
         mt = self.import_vcf()
-        return mt.key_rows_by('locus', 'alleles', 'rsid')
+        return mt.key_rows_by('rsid')
 
     def annotate_old_and_split_multi_hts(self, mt):
         return mt
