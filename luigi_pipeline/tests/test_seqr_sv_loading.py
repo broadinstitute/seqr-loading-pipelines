@@ -362,7 +362,7 @@ VARIANT_MT_FIELDS = [
 ]
 
 SAMPLES_GQ_SV_FIELDS = [
-    'samples_gq_sv.{}_to_{}'.format(i, i + 10) for i in range(0, 90, 10)
+    f'samples_gq_sv.{i}_to_{i + 10}' for i in range(0, 90, 10)
 ]
 
 GENOTYPES_MT_FIELDS = [
@@ -425,7 +425,7 @@ EXPECTED_DATA_VARIANTS = [
         gnomad_svs_AC=None,
         gnomad_svs_AN=None,
         pos=789481,
-        filters=set(['PESR_GT_OVERDISPERSION', 'UNRESOLVED']),
+        filters={'PESR_GT_OVERDISPERSION', 'UNRESOLVED'},
         bothsides_support=False,
         algorithms=['manta'],
         xpos=1000789481,
@@ -468,7 +468,7 @@ EXPECTED_DATA_VARIANTS = [
         gnomad_svs_AC=224,
         gnomad_svs_AN=3247,
         pos=4228405,
-        filters=set(['HIGH_SR_BACKGROUND']),
+        filters={'HIGH_SR_BACKGROUND'},
         bothsides_support=False,
         algorithms=['manta', 'melt'],
         xpos=1004228405,
@@ -487,7 +487,7 @@ EXPECTED_DATA_VARIANTS = [
                 gene_symbol='C1orf174',
                 gene_id='ENSG00000198912',
                 major_consequence='NEAREST_TSS',
-            )
+            ),
         ],
         docId='INS_chr1_65',
         StrVCTVRE_score=0.1255,
@@ -506,7 +506,7 @@ EXPECTED_DATA_VARIANTS = [
         gnomad_svs_AC=None,
         gnomad_svs_AN=None,
         pos=6558902,
-        filters=set(['HIGH_SR_BACKGROUND']),
+        filters={'HIGH_SR_BACKGROUND'},
         bothsides_support=True,
         algorithms=['manta'],
         xpos=1006558902,
@@ -528,7 +528,7 @@ EXPECTED_DATA_VARIANTS = [
                 gene_symbol='TAS1R1',
                 gene_id='ENSG00000173662',
                 major_consequence='INTRONIC',
-            )
+            ),
         ],
         docId='CPX_chr1_22',
         StrVCTVRE_score=None,
@@ -591,7 +591,7 @@ EXPECTED_DATA_GENOTYPES = [
             'samples_num_alt.1': {'SAMPLE-4', 'SAMPLE-5'},
             'samples_num_alt.2': {'SAMPLE-1', 'SAMPLE-2', 'SAMPLE-3'},
         },
-        **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+        **{key: EXPECTED_SAMPLE_GQ[0].get(key) for key in SAMPLES_GQ_SV_FIELDS},
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[1],
@@ -645,7 +645,7 @@ EXPECTED_DATA_GENOTYPES = [
             ),
         ],
         **{'samples_num_alt.1': {'SAMPLE-1'}, 'samples_num_alt.2': set()},
-        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+        **{key: EXPECTED_SAMPLE_GQ[1].get(key) for key in SAMPLES_GQ_SV_FIELDS},
     ),
     hl.Struct(
         **EXPECTED_DATA_VARIANTS[2],
@@ -702,7 +702,7 @@ EXPECTED_DATA_GENOTYPES = [
             'samples_num_alt.1': {'SAMPLE-2', 'SAMPLE-3'},
             'samples_num_alt.2': {'SAMPLE-5'},
         },
-        **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS}
+        **{key: EXPECTED_SAMPLE_GQ[2].get(key) for key in SAMPLES_GQ_SV_FIELDS},
     ),
 ]
 
@@ -715,7 +715,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
             1
         ]
         self._genotypes_mt_file = tempfile.mkstemp(
-            dir=self._temp_dir.name, suffix='.mt'
+            dir=self._temp_dir.name, suffix='.mt',
         )[1]
         with open(self._vcf_file, 'w') as f:
             f.writelines('\n'.join(VCF_DATA))
@@ -724,7 +724,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         shutil.rmtree(self._temp_dir.name)
 
     @mock.patch(
-        'luigi_pipeline.seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING
+        'luigi_pipeline.seqr_sv_loading.load_gencode', return_value=GENE_ID_MAPPING,
     )
     def test_run_task(self, load_gencode_mock):
         worker = luigi.worker.Worker()
@@ -746,14 +746,14 @@ class SeqrSVLoadingTest(unittest.TestCase):
         load_gencode_mock.assert_called_once_with(42, '')
 
         disabled_index_fields = SeqrSVMTToESTask.VariantsAndGenotypesSchema(
-            None, ref_data=None, interval_ref_data=None, clinvar_data=None
+            None, ref_data=None, interval_ref_data=None, clinvar_data=None,
         ).get_disable_index_field()
         self.assertCountEqual(disabled_index_fields, DISABLED_INDEX_FIELDS)
 
         # Variants Assertions
         variant_mt = hl.read_matrix_table(self._variant_mt_file)
         self.assertEqual(variant_mt.count(), (11, 5))
-        global_fields = [x for x in variant_mt.globals._fields]
+        global_fields = list(variant_mt.globals._fields)
         self.assertCountEqual(global_fields, GLOBAL_FIELDS)
         key_dropped_variant_mt = variant_mt.rows().flatten().drop('locus', 'alleles')
         self.assertCountEqual(
@@ -783,7 +783,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         )
 
         # Now mimic the join in BaseMTToESOptimizedTask
-        genotypes_mt = genotypes_mt.drop(*[k for k in genotypes_mt.globals.keys()])
+        genotypes_mt = genotypes_mt.drop(*list(genotypes_mt.globals.keys()))
         row_ht = (
             genotypes_mt.rows()
             .join(variant_mt.rows())

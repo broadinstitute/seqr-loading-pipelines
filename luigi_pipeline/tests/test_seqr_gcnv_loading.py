@@ -77,7 +77,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
         pos=100022289,
         sn=22720,
         sortedTranscriptConsequences=[
-            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'}
+            {'gene_id': 'ENSG00000117620', 'major_consequence': 'LOF'},
         ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100022289,
@@ -97,8 +97,8 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
                     'prev_overlap': True,
                     'qs': 4,
                     'sample_id': 'PIE_OGI2271_003780_D1',
-                }
-            )
+                },
+            ),
         ],
         samples=['PIE_OGI2271_003780_D1'],
         **{
@@ -117,7 +117,7 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
                     'new_call': False,
                     'prev_call': True,
                     'sample_id': 'MAN_0354_01_1',
-                }
+                },
             ),
             hl.Struct(
                 **{
@@ -128,7 +128,7 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
                     'new_call': False,
                     'prev_call': True,
                     'sample_id': 'PIE_OGI313_000747_1',
-                }
+                },
             ),
         ],
         samples=['MAN_0354_01_1', 'PIE_OGI313_000747_1'],
@@ -150,8 +150,8 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
                     'new_call': True,
                     'prev_call': False,
                     'sample_id': 'GLE-4772-4-2-a',
-                }
-            )
+                },
+            ),
         ],
         samples=['GLE-4772-4-2-a'],
         samples_new_call=['GLE-4772-4-2-a'],
@@ -164,7 +164,7 @@ NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA = [
 NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     hl.Struct(**x, **y)
     for (x, y) in zip(
-        NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA, NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA
+        NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA, NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA,
     )
 ]
 
@@ -229,8 +229,8 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                     'prev_overlap': False,
                     'qs': 4,
                     'sample_id': 'PIE_OGI2271_003780_D1',
-                }
-            )
+                },
+            ),
         ],
         samples=['PIE_OGI2271_003780_D1'],
         **{
@@ -253,7 +253,7 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                     'prev_overlap': False,
                     'qs': 30,
                     'sample_id': 'BEN_0234_01_1',
-                }
+                },
             ),
             hl.Struct(
                 **{
@@ -265,7 +265,7 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                     'new_call': False,
                     'prev_call': True,
                     'sample_id': 'MAN_0354_01_1',
-                }
+                },
             ),
             hl.Struct(
                 **{
@@ -277,7 +277,7 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
                     'new_call': False,
                     'prev_call': False,
                     'sample_id': 'PIE_OGI313_000747_1',
-                }
+                },
             ),
         ],
         samples=['BEN_0234_01_1', 'MAN_0354_01_1', 'PIE_OGI313_000747_1'],
@@ -302,7 +302,7 @@ def prune_empties(data):
         data = [prune_empties(x) for x in data if x is not None]
     elif isinstance(data, hl.Struct):
         data = hl.Struct(
-            **{k: prune_empties(v) for k, v in data.items() if v is not None}
+            **{k: prune_empties(v) for k, v in data.items() if v is not None},
         )
     elif isinstance(data, dict):
         data = {k: prune_empties(v) for k, v in data.items() if v is not None}
@@ -328,13 +328,13 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
             t1.collect(),
             [
                 hl.Struct(
-                    genes='AC118553.2,SLC35A3', gene_set=set(['AC118553', 'SLC35A3'])
+                    genes='AC118553.2,SLC35A3', gene_set={'AC118553', 'SLC35A3'},
                 ),
-                hl.Struct(genes='AC118553.1,None', gene_set=set(['AC118553'])),
+                hl.Struct(genes='AC118553.1,None', gene_set={'AC118553'}),
                 hl.Struct(genes='None', gene_set=set()),
-                hl.Struct(genes='SLC35A3.43', gene_set=set(['SLC35A3'])),
+                hl.Struct(genes='SLC35A3.43', gene_set={'SLC35A3'}),
                 hl.Struct(genes='', gene_set=set()),
-                hl.Struct(genes='SLC35A4.43', gene_set=set(['SLC35A4'])),
+                hl.Struct(genes='SLC35A4.43', gene_set={'SLC35A4'}),
             ],
         )
 
@@ -352,9 +352,9 @@ class SeqrGCNVGeneParsingTest(unittest.TestCase):
             key='genes',
         )
         aggregated_gene_set = t1.aggregate(
-            hl_agg_collect_set_union(parse_genes(t1.genes))
+            hl_agg_collect_set_union(parse_genes(t1.genes)),
         )
-        self.assertEqual(aggregated_gene_set, set(['SLC35A4', 'SLC35A3', 'AC118553']))
+        self.assertEqual(aggregated_gene_set, {'SLC35A4', 'SLC35A3', 'AC118553'})
 
 
 class SeqrGCNVLoadingTest(unittest.TestCase):
@@ -364,7 +364,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             1
         ]
         self._genotypes_mt_file = tempfile.mkstemp(
-            dir=self._temp_dir.name, suffix='.mt'
+            dir=self._temp_dir.name, suffix='.mt',
         )[1]
         SeqrGCNVMTToESTask.disable_instance_cache()
 
@@ -410,10 +410,10 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = args[0].collect()
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(
-            row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA
+            row_ht, NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA,
         )
         self.assertCountEqual(
-            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS
+            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS,
         )
 
     @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
@@ -455,5 +455,5 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
         self.assertCountEqual(
-            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS
+            kwargs['disable_index_for_fields'], EXPECTED_DISABLED_INDEX_FIELDS,
         )
