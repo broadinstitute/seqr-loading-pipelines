@@ -107,7 +107,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         logger.info("Args:")
         pprint.pprint(self.__dict__)
 
-        return self.import_vcf()        
+        return self.import_vcf()
 
     def read_input_write_mt(self):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
@@ -131,6 +131,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
         mt = self.annotate_globals(mt, kwargs.get("clinvar_data"))
         mt.describe()
+
         mt.write(self.output().path, stage_locally=True, overwrite=True)
 
     def annotate_old_and_split_multi_hts(self, mt):
