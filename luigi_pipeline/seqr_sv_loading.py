@@ -37,14 +37,14 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
     # NB: electing not to override import_vcf here eventhough the inherited args are slightly different
     # than from the old pipeline.
 
+    def import_dataset(self):
+        mt = self.import_vcf()
+        return mt.key_by('locus', 'alleles', 'rsid')
+
     def get_schema_class_kwargs(self):
         return {
             "gene_id_mapping" : hl.literal(load_gencode(self.gencode_release, self.gencode_path))
         }
-
-    def export_dataset(self, mt):
-        mt = mt.key_rows_by('locus', 'alleles', 'end_locus')
-        mt.write(self.output().path, stage_locally=True, overwrite=True)
 
 class SeqrSVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrSVVariantMTTask

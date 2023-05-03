@@ -61,12 +61,11 @@ class SeqrSVVariantSchema(BaseVariantSchema):
         super().__init__(*args, **kwargs)
         self._gene_id_mapping = gene_id_mapping
 
-    @row_annotation()
     def end_locus(self):
         return hl.if_else(
             hl.is_defined(self.mt.info.END2),
-            hl.locus(self.mt.info.CHR2, self.mt.info.END2, 'GRCh38'),
-            hl.locus(self.mt.locus.contig, self.mt.info.END, 'GRCh38'),
+            hl.struct(contig=self.mt.info.CHR2, position=self.mt.info.END2),
+            hl.struct(contig=self.mt.locus.contig, position=self.mt.info.END)
         )
 
     def sv_types(self):
@@ -161,19 +160,20 @@ class SeqrSVVariantSchema(BaseVariantSchema):
             mapped_genes
         ).flatmap(lambda x: x)
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def xstop(self):
-        return variant_id.get_expr_for_xpos(self.mt.end_locus)
+        return variant_id.get_expr_for_xpos(self.end_locus())
 
     @row_annotation()
     def rg37_locus(self):
         return self.mt.rg37_locus
 
-    @row_annotation(fn_require=end_locus)
+    @row_annotation()
     def rg37_locus_end(self):
+        end_locus = self.end_locus()
         return hl.or_missing(
-            self.mt.end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[self.mt.end_locus.contig],
-            hl.liftover(hl.locus(self.mt.end_locus.contig, self.mt.end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
+            end_locus.position <= hl.literal(hl.get_reference('GRCh38').lengths)[end_locus.contig],
+            hl.liftover(hl.locus(end_locus.contig, end_locus.position, reference_genome='GRCh38'), 'GRCh37'),
         )
 
     @row_annotation(name='svType')
