@@ -1,7 +1,5 @@
 import logging
-import pkg_resources
 import sys
-from typing import List
 import matplotlib.pyplot as plt
 
 import luigi
@@ -13,20 +11,18 @@ from luigi_pipeline.lib.hail_tasks import (
 )
 from luigi_pipeline.seqr_loading import (
     check_if_path_exists,
-    contig_check,
-    SeqrValidationError,
 )
 
 logger = logging.getLogger(__name__)
 
-FINAL_SEX_ANNOTATIONS=[
-            "is_female",
-            "f_stat",
-            "n_called",
-            "expected_homs",
-            "observed_homs",
-            "sex",
-        ]
+FINAL_SEX_ANNOTATIONS = [
+    "is_female",
+    "f_stat",
+    "n_called",
+    "expected_homs",
+    "observed_homs",
+    "sex",
+]
 FEMALE_PLOIDY = "XX"
 MALE_PLOIDY = "XY"
 SEX_PLOIDY_ANNOTATIONS = [
@@ -39,26 +35,24 @@ SEX_PLOIDY_ANNOTATIONS = [
 ]
 
 
-
 class ValidateVCFTask(HailMatrixTableTask):
     """
     Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
     """
+
     source_paths = luigi.Parameter(
-        default="[]", description="Path or list of paths of VCFs to be loaded." # NOTE: Not sure when default is in quotes
+        default="[]",
+        description="Path or list of paths of VCFs to be loaded.",  # NOTE: Not sure when default is in quotes
     )
     wes_filter_source_paths = luigi.OptionalParameter(
         default="[]", description="Path to delivered VCFs with filter annotation"
     )
-    dest_path = luigi.Parameter(description='Path to write the matrix table.') #TODO: Rename thjis to be task specific or use output()?
+    dest_path = luigi.Parameter(
+        description="Path to write the matrix table."
+    )  # TODO: Rename this to be task specific or use output()?
     temp_dir = luigi.Parameter(
         description="Path to write the temporary output. End with '/'",
         default="gs://seqr-scratch-temp/",
-    )
-    genome_version = luigi.ChoiceParameter(
-        description="Reference Genome Version (37 or 38)",
-        choices=["GRCh37", "GRCh38"],
-        default="GRCh38",
     )
     sample_type = luigi.ChoiceParameter(
         choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
@@ -78,39 +72,42 @@ class ValidateVCFTask(HailMatrixTableTask):
                 tmp_dir=self.temp_dir,
             )  # Need to use the GCP bucket as temp storage for very large callset joins
 
-        for source_path in [self.source_paths]:
+        for source_path in self.source_paths:
             check_if_path_exists(source_path, "source_path")
         for wes_filter_source_path in self.wes_filter_source_paths:
-                check_if_path_exists(source_path, "source_path")
+            check_if_path_exists(source_path, "source_path")
         if self.temp_dir:
             check_if_path_exists(self.temp_dir, "temp_dir")
         mt = self.import_vcf()
 
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
-
         mt.write(self.output().path)
 
 
-class SexPloidyCheckTask(luigi.Task):
+class SexInferenceTask(luigi.Task):
     """
-    Inherits from a Hail MT Class to get helper function logic. Main logic to do annotations here.
+    Runs sex inference on a matrix table and writes the output.
     """
+
     source_paths = luigi.Parameter(
-        default="[]", description="Path or list of paths of VCFs to be loaded." # NOTE: Not sure when default is in quotes
+        default="[]",
+        description="Path or list of paths of VCFs to be loaded.",  # NOTE: Not sure when default is in quotes
     )
     wes_filter_source_paths = luigi.OptionalParameter(
         default="[]", description="Path to delivered VCFs with filter annotation"
     )
-    dest_path = luigi.Parameter(description='Path to write the matrix table.') #TODO: Rename thjis to be task specific or use output()?
+    dest_path = luigi.Parameter(
+        description="Path to write the matrix table."
+    )  # TODO: Rename thjis to be task specific or use output()?
     temp_dir = luigi.Parameter(
         description="Path to write the temporary output. End with '/'",
         default="gs://seqr-scratch-temp/",
     )
     genome_version = luigi.ChoiceParameter(
         description="Reference Genome Version (37 or 38)",
-        choices=["GRCh37", "GRCh38"],
-        default="GRCh38",
+        choices=["37", "38"],
+        default="38",
     )
     sample_type = luigi.ChoiceParameter(
         choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
@@ -154,21 +151,25 @@ class SexPloidyCheckTask(luigi.Task):
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [ValidateVCFTask(
-            source_paths=self.source_paths,
-
-            dest_path=self.dest_path,
-            temp_dir=self.temp_dir,
-            genome_version=self.genome_version,
-            sample_type=self.sample_type,
-            dont_validate=self.dont_validate,
-        )]
+        return [
+            ValidateVCFTask(
+                source_paths=self.source_paths,
+                wes_filter_source_paths=self.wes_filter_source_paths,
+                dest_path=self.dest_path,
+                temp_dir=self.temp_dir,
+                genome_version=self.genome_version,
+                sample_type=self.sample_type,
+                dont_validate=self.dont_validate,
+            )
+        ]
 
     def temp_directory(self):
         return self.temp_dir
 
     def output(self):
-        return GCSorLocalTarget(f"{self.output_directory().path}sex_ploidy_check.ht")
+        return GCSorLocalTarget(
+            f"{self.input()[0].path[:-3]}/sex_inference/sex_ploidy_check.ht"
+        )
 
     def complete(self):
         # Complete is called by Luigi to check if the task is done and will skip if it is.
@@ -176,12 +177,12 @@ class SexPloidyCheckTask(luigi.Task):
         # _SUCCESS file to make sure it was not terminated halfway.
         return GCSorLocalTarget(f"{self.output().path}/_SUCCESS").exists()
 
-    def mt_path(self):
-        return GCSorLocalTarget(f"{self.output_directory().path}callset.mt")
+    def mt(self):
+        return hl.read_matrix_table(self.input()[0].path)
 
     def run(self):
-        self.read_input_write_mt()
         self.call_sex(
+            self.mt(),
             self.use_y_cov,
             self.add_x_cov,
             self.y_cov_threshold,
@@ -190,12 +191,13 @@ class SexPloidyCheckTask(luigi.Task):
             self.xx_fstat_threshold,
             self.aaf_threshold,
             self.callrate_threshold,
-            )
+        )
 
     def call_sex(
         self,
+        mt: hl.MatrixTable,
         use_y_cov: bool,
-        add_x_cov: bool, 
+        add_x_cov: bool,
         y_cov_threshold: float,
         normalization_contig: str,
         xy_fstat_threshold: float,
@@ -220,7 +222,6 @@ class SexPloidyCheckTask(luigi.Task):
         """
         # Read in matrix table and define output file name prefix
         logger.info("Using chromosome Y coverage? %s", use_y_cov)
-        mt = hl.read_matrix_table(self.mt_path().path)
         ref_genome = mt.locus.dtype.reference_genome.name
 
         # Filter to SNVs and biallelics
@@ -232,27 +233,30 @@ class SexPloidyCheckTask(luigi.Task):
         mt = mt.filter_rows(
             hl.is_missing(mt.filters) | (mt.filters.length() == 0), keep=True
         )
-
+        print(self.input()[0].path[:-3])
         logger.info("Inferring sex...")
         sex_ht = self.run_hails_impute_sex(
             mt,
             ref_genome,
-            self.output_directory().path,
+            self.input()[0].path[:-3],
             xy_fstat_threshold,
             xx_fstat_threshold,
             aaf_threshold,
         )
         sex_ht = sex_ht.checkpoint(
-            f"{self.temp_directory().path}temp_sex.ht", overwrite=True
+            f"{self.temp_directory()}temp_sex.ht", overwrite=True
         )
 
         if use_y_cov:
             logger.info("Calculating normalized Y coverage...")
-            final_annotations = [*FINAL_SEX_ANNOTATIONS, *[
-                     f"chr{normalization_contig}_mean_dp",
-                     "chrY_mean_dp",
-                     "normalized_y_coverage",
-                 ]]
+            final_annotations = [
+                *FINAL_SEX_ANNOTATIONS,
+                *[
+                    f"chr{normalization_contig}_mean_dp",
+                    "chrY_mean_dp",
+                    "normalized_y_coverage",
+                ],
+            ]
             norm_ht = self.get_chr_cov(
                 mt, ref_genome, normalization_contig, call_rate_threshold
             )
@@ -357,7 +361,7 @@ class SexPloidyCheckTask(luigi.Task):
         plt.axvline(xy_fstat_threshold, color="blue", linestyle="dashed", linewidth=1)
         plt.axvline(xx_fstat_threshold, color="red", linestyle="dashed", linewidth=1)
 
-        out_path = f"{out_bucket}fstat_histogram.png"
+        out_path = f"{out_bucket}/sex_inference/fstat_histogram.png"
         with hl.hadoop_open(out_path, "wb") as out:
             plt.savefig(out)
 
@@ -418,94 +422,6 @@ class SexPloidyCheckTask(luigi.Task):
         logger.info("Returning mean coverage on chromosome %s...", chr_name)
         sex_mt = sex_mt.annotate_cols(**{f"{chr_name}_mean_dp": hl.agg.mean(sex_mt.DP)})
         return sex_mt.cols()
-
-    def annotate_globals(self, mt):
-        return mt.annotate_globals(
-            sourceFilePath=",".join(self.source_paths),
-            genomeVersion=self.genome_version,
-            sampleType=self.sample_type,
-            hail_version=pkg_resources.get_distribution("hail").version,
-        )
-
-    def read_input_write_mt(self):
-        mt = self.import_vcf()
-        mt = hl.split_multi_hts(mt)
-        if not self.dont_validate:
-            self.validate_mt(mt, self.genome_version, self.sample_type)
-
-        mt.describe()
-        mt = mt.checkpoint(
-            self.mt_path().path, stage_locally=True, _read_if_exists=True
-        )
-
-    # NOTE: HYPOTHETICAL INHERITANCE?
-    def validate_mt(self, mt, genome_version, sample_type):
-        """
-        Validate the mt by checking against a list of common coding and non-coding variants given its
-        genome version. This validates genome_version, variants, and the reported sample type.
-
-        :param mt: mt to validate
-        :param genome_version: reference genome version
-        :param sample_type: WGS or WES
-        :return: True or Exception
-        """
-        if genome_version == "GRCh37":
-            contig_check_result = contig_check(
-                mt, GRCh37_STANDARD_CONTIGS, VARIANT_THRESHOLD
-            )
-        elif genome_version == "GRCh38":
-            contig_check_result = contig_check(
-                mt, GRCh38_STANDARD_CONTIGS, VARIANT_THRESHOLD
-            )
-
-        if bool(contig_check_result):
-            err_msg = ""
-            for k, v in contig_check_result.items():
-                err_msg += "{k}: {v}. ".format(k=k, v=", ".join(v))
-            raise SeqrValidationError(err_msg)
-
-        sample_type_stats = HailMatrixTableTask.sample_type_stats(mt, genome_version)
-
-        for name, stat in sample_type_stats.items():
-            logger.info(
-                "Table contains %i out of %i common %s variants."
-                % (stat["matched_count"], stat["total_count"], name)
-            )
-
-        has_coding = sample_type_stats["coding"]["match"]
-        has_noncoding = sample_type_stats["noncoding"]["match"]
-
-        if not has_coding and not has_noncoding:
-            # No common variants detected.
-            raise SeqrValidationError(
-                "Genome version validation error: dataset specified as {} but doesn't contain "
-                "the expected number of common this build's variants".format(
-                    genome_version
-                )
-            )
-        elif has_noncoding and not has_coding:
-            # Non coding only.
-            raise SeqrValidationError(
-                "Sample type validation error: Dataset contains noncoding variants but is missing common coding "
-                "variants for {}. Please verify that the dataset contains coding variants.".format(
-                    genome_version
-                )
-            )
-        elif has_coding and not has_noncoding:
-            # Only coding should be WES.
-            if sample_type != "WES":
-                raise SeqrValidationError(
-                    "Sample type validation error: dataset sample-type is specified as WGS but appears to be "
-                    "WES because it contains many common coding variants"
-                )
-        elif has_noncoding and has_coding:
-            # Both should be WGS.
-            if sample_type != "WGS":
-                raise SeqrValidationError(
-                    "Sample type validation error: dataset sample-type is specified as WES but appears to be "
-                    "WGS because it contains many common non-coding variants"
-                )
-        return True
 
 
 if __name__ == "__main__":
