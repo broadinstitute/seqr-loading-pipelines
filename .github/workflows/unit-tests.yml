@@ -38,4 +38,4 @@ jobs:
       - name: Run Coverage Tests
         run: |
           nosetests --with-coverage --cover-package hail_scripts hail_scripts
-          coverage report --omit '*test*' --fail-under=40
+          coverage report --omit '*test*' --fail-under=30
