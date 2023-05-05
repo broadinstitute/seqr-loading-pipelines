@@ -109,7 +109,7 @@ COPY hail_builds/ ./hail_builds
 COPY hail_scripts/ ./hail_scripts
 COPY luigi_pipeline/ ./luigi_pipeline
 
-RUN python3 -m pip install -r ./luigi_pipeline/requirements.txt
+RUN python3 -m pip install -r ./requirements.txt
 
 COPY docker/vep_configs/* /vep_configs/
 

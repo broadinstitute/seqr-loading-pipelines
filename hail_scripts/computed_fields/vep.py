@@ -1,5 +1,6 @@
 import hail as hl
 
+NON_CODING_TRANSCRIPT_EXON_VARIANT = "non_coding_transcript_exon_variant"
 
 # Consequence terms in order of severity (more severe to less severe) as estimated by Ensembl.
 # See https://ensembl.org/info/genome/variation/prediction/predicted_data.html
@@ -26,7 +27,7 @@ CONSEQUENCE_TERMS = [
     "mature_miRNA_variant",
     "5_prime_UTR_variant",
     "3_prime_UTR_variant",
-    "non_coding_transcript_exon_variant",
+    NON_CODING_TRANSCRIPT_EXON_VARIANT,
     "non_coding_exon_variant",  # deprecated
     "intron_variant",
     "NMD_transcript_variant",
@@ -55,8 +56,17 @@ OMIT_CONSEQUENCE_TERMS = [
 ]
 
 def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root):
-    return hl.set(vep_transcript_consequences_root.flatmap(lambda c: c.consequence_terms))
-
+    vep_consequence_terms_set = hl.set(vep_transcript_consequences_root.flatmap(lambda c: c.consequence_terms))
+    any_canonical_and_non_coding_transcript_exon_variant = hl.any(
+        vep_transcript_consequences_root.map(
+            lambda c: hl.or_else(c.canonical, 0) == 1 & c.consequence_terms.contains(NON_CODING_TRANSCRIPT_EXON_VARIANT)
+        )
+    )
+    return hl.if_else(
+        any_canonical_and_non_coding_transcript_exon_variant,
+        vep_consequence_terms_set.add(f'{NON_CODING_TRANSCRIPT_EXON_VARIANT}__canonical'),
+        vep_consequence_terms_set,
+    )
 
 def get_expr_for_vep_gene_ids_set(vep_transcript_consequences_root, only_coding_genes=False):
     """Expression to compute the set of gene ids in VEP annotations for this variant.
@@ -161,10 +171,12 @@ def get_expr_for_vep_sorted_transcript_consequences_array(vep_root,
         "cdna_start",
         "cdna_end",
         "codons",
+        "exon",
         "gene_id",
         "gene_symbol",
         "hgvsc",
         "hgvsp",
+        "intron",
         "transcript_id",
     ]
 

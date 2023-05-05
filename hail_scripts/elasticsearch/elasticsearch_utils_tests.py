@@ -1,6 +1,6 @@
 import unittest
 
-from elasticsearch_utils import encode_field_name, ES_FIELD_NAME_ESCAPE_CHAR, ES_FIELD_NAME_SPECIAL_CHAR_MAP, StringIO
+from hail_scripts.elasticsearch.elasticsearch_utils import encode_field_name, ES_FIELD_NAME_ESCAPE_CHAR, ES_FIELD_NAME_SPECIAL_CHAR_MAP, StringIO
 
 def _decode_field_name(field_name):
     """Converts an elasticsearch field name back to the original unencoded string"""
