@@ -1,9 +1,10 @@
-from datetime import datetime
 import functools
+from datetime import datetime
 
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
+
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
