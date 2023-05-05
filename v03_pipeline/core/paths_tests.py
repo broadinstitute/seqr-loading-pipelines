@@ -1,12 +1,12 @@
 import unittest
 
-from v03_pipeline.definitions import (
+from v03_pipeline.core.definitions import (
     DatasetType,
     Env,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.paths import (
+from v03_pipeline.core.paths import (
     family_table_path,
     project_table_path,
     reference_dataset_collection_path,

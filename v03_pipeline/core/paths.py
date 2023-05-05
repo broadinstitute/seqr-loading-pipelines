@@ -1,7 +1,7 @@
 import os
 from typing import Literal
 
-from v03_pipeline.definitions import (
+from v03_pipeline.core.definitions import (
     AccessControl,
     DatasetType,
     Env,
