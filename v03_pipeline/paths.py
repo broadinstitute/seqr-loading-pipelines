@@ -2,10 +2,9 @@ import os
 from typing import Literal
 
 from v03_pipeline.definitions import (
+    AccessControl,
     DatasetType,
     Env,
-    MitoReferenceDataset,
-    ReferenceDataset,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
@@ -74,14 +73,19 @@ def reference_dataset_collection_path(
     reference_dataset_collection: ReferenceDatasetCollection,
     version: str,
 ) -> str:
+    prod_bucket = (
+        SEQR_REFERENCE_DATA
+        if reference_dataset_collection.AccessControl == AccessControl.PUBLIC
+        else SEQR_REFERENCE_DATA_PRIVATE
+    )
     return os.path.join(
         _v03_pipeline_prefix(
-            SEQR_REFERENCE_DATA,
+            prod_bucket,
             env,
             reference_genome,
         ),
         reference_dataset_collection.value,
-        '{version}.ht',
+        f'{version}.ht',
     )
 
 
