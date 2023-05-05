@@ -55,11 +55,16 @@ class ValidateVCFTask(HailMatrixTableTask):
         default="gs://seqr-scratch-temp/",
     )
     sample_type = luigi.ChoiceParameter(
-        choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
+        choices=["WGS", "WES"],
+        description="Sample type, WGS or WES",
+        var_type=str,
     )
     dont_validate = luigi.BoolParameter(
         description="Disable checking whether the dataset matches the specified "
         "genome version and WGS vs. WES sample type."
+    )
+    genome_version = luigi.ChoiceParameter(
+        description="Reference Genome Version (37 or 38)", choices=["37", "38"]
     )
 
     def __init__(self, *args, **kwargs):
@@ -90,31 +95,9 @@ class SexInferenceTask(luigi.Task):
     Runs sex inference on a matrix table and writes the output.
     """
 
-    source_paths = luigi.Parameter(
-        default="[]",
-        description="Path or list of paths of VCFs to be loaded.",  # NOTE: Not sure when default is in quotes
-    )
-    wes_filter_source_paths = luigi.OptionalParameter(
-        default="[]", description="Path to delivered VCFs with filter annotation"
-    )
-    dest_path = luigi.Parameter(
-        description="Path to write the matrix table."
-    )  # TODO: Rename thjis to be task specific or use output()?
     temp_dir = luigi.Parameter(
         description="Path to write the temporary output. End with '/'",
         default="gs://seqr-scratch-temp/",
-    )
-    genome_version = luigi.ChoiceParameter(
-        description="Reference Genome Version (37 or 38)",
-        choices=["37", "38"],
-        default="38",
-    )
-    sample_type = luigi.ChoiceParameter(
-        choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
-    )
-    dont_validate = luigi.BoolParameter(
-        description="Disable checking whether the dataset matches the specified "
-        "genome version and WGS vs. WES sample type."
     )
     use_y_cov = luigi.BoolParameter(
         description="Whether to use chromosome Y coverage when inferring sex. Note that Y coverage is required to infer sex aneuploidies."
@@ -147,28 +130,22 @@ class SexInferenceTask(luigi.Task):
         description="Autosome to use to normalize sex chromosome coverage. Default is chromosome 20.",
     )
 
+    upstream_task = luigi.TaskParameter(
+        description="Upstream task that task is dependent on."
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def requires(self):
-        return [
-            ValidateVCFTask(
-                source_paths=self.source_paths,
-                wes_filter_source_paths=self.wes_filter_source_paths,
-                dest_path=self.dest_path,
-                temp_dir=self.temp_dir,
-                genome_version=self.genome_version,
-                sample_type=self.sample_type,
-                dont_validate=self.dont_validate,
-            )
-        ]
+        return self.upstream_task
 
     def temp_directory(self):
         return self.temp_dir
 
     def output(self):
         return GCSorLocalTarget(
-            f"{self.input()[0].path[:-3]}/sex_inference/sex_ploidy_check.ht"
+            f"{self.input().path[:-3]}/sex_inference/sex_ploidy_check.ht"
         )
 
     def complete(self):
@@ -178,7 +155,7 @@ class SexInferenceTask(luigi.Task):
         return GCSorLocalTarget(f"{self.output().path}/_SUCCESS").exists()
 
     def mt(self):
-        return hl.read_matrix_table(self.input()[0].path)
+        return hl.read_matrix_table(self.input().path)
 
     def run(self):
         self.call_sex(
@@ -233,12 +210,12 @@ class SexInferenceTask(luigi.Task):
         mt = mt.filter_rows(
             hl.is_missing(mt.filters) | (mt.filters.length() == 0), keep=True
         )
-        print(self.input()[0].path[:-3])
+        print(self.input().path[:-3])
         logger.info("Inferring sex...")
         sex_ht = self.run_hails_impute_sex(
             mt,
             ref_genome,
-            self.input()[0].path[:-3],
+            self.input().path[:-3],
             xy_fstat_threshold,
             xx_fstat_threshold,
             aaf_threshold,
@@ -422,6 +399,98 @@ class SexInferenceTask(luigi.Task):
         logger.info("Returning mean coverage on chromosome %s...", chr_name)
         sex_mt = sex_mt.annotate_cols(**{f"{chr_name}_mean_dp": hl.agg.mean(sex_mt.DP)})
         return sex_mt.cols()
+
+
+class WorkflowTask(luigi.Task):
+    """
+    Runs the entire workflow.
+    """
+
+    source_paths = luigi.Parameter(
+        default="[]",
+        description="Path or list of paths of VCFs to be loaded.",  # NOTE: Not sure when default is in quotes
+    )
+    wes_filter_source_paths = luigi.OptionalParameter(
+        default="[]", description="Path to delivered VCFs with filter annotation"
+    )
+    dest_path = luigi.Parameter(
+        description="Path to write the matrix table."
+    )  # TODO: Rename thjis to be task specific or use output()?
+    temp_dir = luigi.Parameter(
+        description="Path to write the temporary output. End with '/'",
+        default="gs://seqr-scratch-temp/",
+    )
+    genome_version = luigi.ChoiceParameter(
+        description="Reference Genome Version (37 or 38)",
+        choices=["37", "38"],
+        default="38",
+    )
+    sample_type = luigi.ChoiceParameter(
+        choices=["WGS", "WES"], description="Sample type, WGS or WES", var_type=str
+    )
+    dont_validate = luigi.BoolParameter(
+        description="Disable checking whether the dataset matches the specified "
+        "genome version and WGS vs. WES sample type."
+    )
+    genome_version = luigi.ChoiceParameter(
+        description="Reference Genome Version (37 or 38)", choices=["37", "38"]
+    )
+    use_y_cov = luigi.BoolParameter(
+        description="Whether to use chromosome Y coverage when inferring sex. Note that Y coverage is required to infer sex aneuploidies."
+    )
+    add_x_cov = luigi.BoolParameter(
+        description="Whether to also calculate chromosome X mean coverage. Must be specified with use-y-cov."
+    )
+    y_cov_threshold = luigi.FloatParameter(
+        default=0.1,
+        description="Y coverage threshold used to infer sex aneuploidies (XY samples below and XX samples above this threshold will be inferred as having aneuploidies).",
+    )
+    xy_fstat_threshold = luigi.FloatParameter(
+        default=0.75,
+        description="F-stat threshold above which a sample will be called XY. Default is 0.75.",
+    )
+    xx_fstat_threshold = luigi.FloatParameter(
+        default=0.50,
+        description="F-stat threshold below which a sample will be called XX. Default is 0.50.",
+    )
+    aaf_threshold = luigi.FloatParameter(
+        default=0.05,
+        description="Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05.",
+    )
+    callrate_threshold = luigi.FloatParameter(
+        default=0.25,
+        description="Minimum variant call rate threshold. Default is 0.25.",
+    )
+    normalization_contig = luigi.Parameter(
+        default="20",
+        description="Autosome to use to normalize sex chromosome coverage. Default is chromosome 20.",
+    )
+
+    def requires(self):
+        validate_vcf_task = ValidateVCFTask(
+            source_paths=self.source_paths,
+            wes_filter_source_paths=self.wes_filter_source_paths,
+            dest_path=self.dest_path,
+            temp_dir=self.temp_dir,
+            sample_type=self.sample_type,
+            genome_version=self.genome_version,
+        )
+        sex_inference_task = SexInferenceTask(
+            upstream_task=validate_vcf_task,
+            temp_dir=self.temp_dir,
+            use_y_cov=self.use_y_cov,
+            add_x_cov=self.add_x_cov,
+            y_cov_threshold=self.y_cov_threshold,
+            xy_fstat_threshold=self.xy_fstat_threshold,
+            xx_fstat_threshold=self.xx_fstat_threshold,
+            aaf_threshold=self.aaf_threshold,
+            callrate_threshold=self.callrate_threshold,
+            normalization_contig=self.normalization_contig,
+        )
+        return sex_inference_task
+
+    def output(self):
+        return self.input()
 
 
 if __name__ == "__main__":
