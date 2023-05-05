@@ -358,8 +358,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self._temp_dir.name)
 
-    @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
-    @mock.patch('lib.hail_tasks.HailElasticsearchClient')
+    @mock.patch('luigi_pipeline.lib.model.gcnv_mt_schema.datetime', wraps=datetime)
+    @mock.patch('luigi_pipeline.lib.hail_tasks.HailElasticsearchClient')
     def test_run_new_joint_tsv_task(self, mock_elasticsearch_client, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
@@ -405,8 +405,8 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
             EXPECTED_DISABLED_INDEX_FIELDS,
         )
 
-    @mock.patch('lib.model.gcnv_mt_schema.datetime', wraps=datetime)
-    @mock.patch('lib.hail_tasks.HailElasticsearchClient')
+    @mock.patch('luigi_pipeline.lib.model.gcnv_mt_schema.datetime', wraps=datetime)
+    @mock.patch('luigi_pipeline.lib.hail_tasks.HailElasticsearchClient')
     def test_run_merged_tsv_task(self, mock_elasticsearch_client, mock_datetime):
         mock_datetime.date.today.return_value = datetime.date(2022, 12, 2)
         worker = luigi.worker.Worker()
