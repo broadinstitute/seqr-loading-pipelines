@@ -3,8 +3,8 @@ from typing import Set
 
 
 class AccessControl(Enum):
-    PUBLIC = 'public'
-    PRIVATE = 'private'
+    PUBLIC = 'PUBLIC'
+    PRIVATE = 'PRIVATE'
 
 
 class DatasetType(Enum):
@@ -15,8 +15,8 @@ class DatasetType(Enum):
 
 
 class Env(Enum):
-    DEV = 'dev'
-    PROD = 'prod'
+    DEV = 'DEV'
+    PROD = 'PROD'
 
 
 class ReferenceDataset(Enum):
