@@ -1,10 +1,14 @@
 import os
 from typing import Literal
 
-from v03_pipeline.definitions import (DatasetType, Env, MitoReferenceDataset,
-                                      ReferenceDataset,
-                                      ReferenceDatasetCollection,
-                                      ReferenceGenome)
+from v03_pipeline.definitions import (
+    DatasetType,
+    Env,
+    MitoReferenceDataset,
+    ReferenceDataset,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
 
 SEQR_DATASETS = 'gs://seqr-datasets'
 SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
@@ -12,6 +16,7 @@ SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
 SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
 SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 V03 = 'v03'
+
 
 def _v03_pipeline_prefix(
     prod_bucket: Literal[SEQR_DATASETS, SEQR_REFERENCE_DATA],
@@ -23,6 +28,7 @@ def _v03_pipeline_prefix(
         reference_genome.value,
         V03,
     )
+
 
 def family_table_path(
     env: Env,
@@ -42,6 +48,7 @@ def family_table_path(
         'all_samples.ht',
     )
 
+
 def project_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -60,6 +67,7 @@ def project_table_path(
         'all_samples.ht',
     )
 
+
 def reference_dataset_collection_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -76,6 +84,7 @@ def reference_dataset_collection_path(
         '{version}.ht',
     )
 
+
 def variant_annotations_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -90,6 +99,7 @@ def variant_annotations_table_path(
         dataset_type.value,
         'annotations.ht',
     )
+
 
 def variant_lookup_table_path(
     env: Env,

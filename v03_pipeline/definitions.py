@@ -5,19 +5,23 @@ class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
 
+
 class DatasetType(Enum):
     GCNV = 'GCNV'
     MITO = 'MITO'
     SNV = 'SNV'
     SV = 'SV'
 
+
 class Env(Enum):
     DEV = 'dev'
     PROD = 'prod'
 
+
 class ReferenceDataset(Enum):
     CLINVAR = 'clinvar'
     DBNSFP = 'dbnsfp'
+
 
 class MITOReferenceDataset(ReferenceDataset):
     GNOMAD_MITO = 'gnomad_mito'
@@ -25,6 +29,7 @@ class MITOReferenceDataset(ReferenceDataset):
     HMTVAR = 'hmtvar'
     MITOMAP = 'mitomap'
     MITIMPACT = 'mitimpact'
+
 
 class SNVReferenceDataset(ReferenceDataset):
     CADD = 'cadd'
@@ -44,6 +49,7 @@ class SNVReferenceDataset(ReferenceDataset):
     TGP = 'tgp'
     TOPMED = 'topmed'
 
+
 class ReferenceDatasetCollection(Enum):
     CLINVAR = 'clinvar'
     COMBINED = 'combined'
@@ -56,10 +62,12 @@ class ReferenceDatasetCollection(Enum):
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
+
 class ReferenceGenome(Enum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
 
+
 class SampleType(Enum):
     WES = 'WES'
-    WGS = 'WGS' 
+    WGS = 'WGS'
