@@ -16,9 +16,8 @@ SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
 SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 V03 = 'v03'
 
-
 def _v03_pipeline_prefix(
-    prod_bucket: Literal[SEQR_DATASETS, SEQR_REFERENCE_DATA],
+    prod_bucket: str,
     env: Env,
     reference_genome: ReferenceGenome,
 ) -> str:
@@ -75,7 +74,7 @@ def reference_dataset_collection_path(
 ) -> str:
     prod_bucket = (
         SEQR_REFERENCE_DATA
-        if reference_dataset_collection.AccessControl == AccessControl.PUBLIC
+        if reference_dataset_collection.access_control == AccessControl.PUBLIC
         else SEQR_REFERENCE_DATA_PRIVATE
     )
     return os.path.join(
@@ -109,7 +108,7 @@ def variant_lookup_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-) -> None:
+) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
             SEQR_DATASETS,

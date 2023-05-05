@@ -57,6 +57,7 @@ class ReferenceDatasetCollection(Enum):
     HGMD = 'hgmd'
     INTERVAL_REFERENCE = 'interval_reference'
 
+    @property
     def access_control(self) -> AccessControl:
         if self == ReferenceDatasetCollection.HGMD:
             return AccessControl.PRIVATE
