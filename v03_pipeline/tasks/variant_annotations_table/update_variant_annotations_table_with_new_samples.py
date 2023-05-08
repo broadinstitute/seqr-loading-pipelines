@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.tasks.files import RawFile
-from v03_pipeline.tasks.variant_annotations_table import BaseVariantAnnotationsTable
+from v03_pipeline.tasks.variant_annotations_table.base_variant_annotations_table import BaseVariantAnnotationsTable
 
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTable):
