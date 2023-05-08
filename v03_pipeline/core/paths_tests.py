@@ -6,9 +6,12 @@ from v03_pipeline.core.definitions import (
     Env,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleSource,
+    SampleType,
 )
 from v03_pipeline.core.paths import (
     family_table_path,
+    project_pedigree_path,
     project_table_path,
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -46,6 +49,28 @@ class TestPaths(unittest.TestCase):
                 'R0652_pipeline_test',
             ),
             'gs://seqr-datasets/GRCh38/v03/MITO/projects/R0652_pipeline_test/all_samples.ht',
+        )
+
+    def test_project_pedigree_path(self) -> None:
+        self.assertEqual(
+            project_pedigree_path(
+                ReferenceGenome.GRCh38,
+                SampleSource.ANVIL,
+                SampleType.WES,
+                '123_abc'
+            ),
+            'gs://seqr-datasets/v02/GRCh38/AnVIL_WES/base/projects/123_abc/123_abc_pedigree.tsv',
+        )
+
+    def test_project_remap_path(self) -> None:
+        self.assertEqual(
+            project_pedigree_path(
+                ReferenceGenome.GRCh37,
+                SampleSource.RDG_BROAD_INTERNAL,
+                SampleType.WGS,
+                '015_test'
+            ),
+            'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_Internal/base/projects/015_test/015_test_pedigree.tsv',
         )
 
     def reference_dataset_collection_path(self) -> None:

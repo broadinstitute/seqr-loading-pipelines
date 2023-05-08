@@ -10,7 +10,7 @@ from v03_pipeline.core.definitions import (
     SampleType,
 )
 
-BASE_PROJECTS = '/base/projects'
+BASE_PROJECTS = 'base/projects'
 LOCAL_DATA_ROOT = os.environ.get('LOCAL_DATA_ROOT', '/var/seqr')
 SEQR_DATASETS = 'gs://seqr-datasets'
 SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
@@ -21,13 +21,12 @@ V02 = 'v02'
 V03 = 'v03'
 
 def _v02_pipeline_prefix(
-    remote_root: str,
     reference_genome: ReferenceGenome,
     sample_source: SampleSource,
     sample_type: SampleType,
 ) -> str:
     return os.path.join(
-        remote_root,
+        SEQR_DATASETS,
         V02,
         reference_genome.value,
         sample_source.gcs_prefix(sample_type),
@@ -76,7 +75,6 @@ def project_pedigree_path(
 ) -> str:
     return os.path.join(
         _v02_pipeline_prefix(
-            SEQR_DATASETS,
             reference_genome,
             sample_source,
             sample_type,
@@ -93,7 +91,6 @@ def project_remap_path(
 ) -> str:
     return os.path.join(
         _v02_pipeline_prefix(
-            SEQR_DATASETS,
             reference_genome,
             sample_source,
             sample_type,
@@ -111,7 +108,6 @@ def project_subset_path(
 ) -> str:
     return os.path.join(
         _v02_pipeline_prefix(
-            SEQR_DATASETS,
             reference_genome,
             sample_source,
             sample_type,
