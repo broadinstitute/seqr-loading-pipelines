@@ -1,5 +1,5 @@
+from __future__ import annotations
 from enum import Enum
-from typing import Set
 
 
 class AccessControl(Enum):
@@ -64,7 +64,7 @@ class ReferenceDatasetCollection(Enum):
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
-    def reference_datasets(self) -> Set[ReferenceDataset]:
+    def reference_datasets(self) -> set[ReferenceDataset]:
         return {
             ReferenceDatasetCollection.CLINVAR: {ReferenceDataset.CLINVAR},
             ReferenceDatasetCollection.COMBINED: {
@@ -104,6 +104,23 @@ class ReferenceDatasetCollection(Enum):
 class ReferenceGenome(Enum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
+
+
+class SampleSource(Enum):
+    ANVIL = 'ANVIL'
+    RDG_BROAD_EXTERNAL = 'RDG_BROAD_EXTERNAL'
+    RDG_BROAD_INTERNAL = 'RDG_BROAD_INTERNAL'
+
+    def gcs_prefix(self, sample_type: SampleType) -> str:
+        if self == SampleSource.ANVIL:
+            return f'AnVIL_{sample_type.value}'
+        if self == SampleSource.RDG_BROAD_EXTERNAL:
+            return f'RDG_{sample_type.value}_Broad_External'
+        if self == SampleSource.RDG_BROAD_INTERNAL:
+            return f'RDG_{sample_type.value}_Broad_Internal'
+
+        msg = f'gcs_prefix unimplemented for {self.value}'
+        raise ValueError(msg)
 
 
 class SampleType(Enum):

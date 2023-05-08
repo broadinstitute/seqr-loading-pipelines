@@ -6,16 +6,32 @@ from v03_pipeline.core.definitions import (
     Env,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleSource,
+    SampleType,
 )
 
-LOCAL_ROOT = '/var/seqr'
+BASE_PROJECTS = '/base/projects'
+LOCAL_DATA_ROOT = os.environ.get('LOCAL_DATA_ROOT', '/var/seqr')
 SEQR_DATASETS = 'gs://seqr-datasets'
 SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
 SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
 SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
 SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
+V02 = 'v02'
 V03 = 'v03'
 
+def _v02_pipeline_prefix(
+    remote_root: str,
+    reference_genome: ReferenceGenome,
+    sample_source: SampleSource,
+    sample_type: SampleType,
+) -> str:
+    return os.path.join(
+        remote_root,
+        V02,
+        reference_genome.value,
+        sample_source.gcs_prefix(sample_type),
+    )
 
 def _v03_pipeline_prefix(
     env: Env,
@@ -26,7 +42,7 @@ def _v03_pipeline_prefix(
     if env == Env.DEV:
         root = SEQR_SCRATCH_TEMP
     elif env == Env.LOCAL:
-        root = LOCAL_ROOT
+        root = LOCAL_DATA_ROOT
     return os.path.join(
         root,
         reference_genome.value,
@@ -50,6 +66,58 @@ def family_table_path(
         'families',
         family,
         'all_samples.ht',
+    )
+
+def project_pedigree_path(
+    reference_genome: ReferenceGenome,
+    sample_source: SampleSource,
+    sample_type: SampleType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _v02_pipeline_prefix(
+            SEQR_DATASETS,
+            reference_genome,
+            sample_source,
+            sample_type,
+        ),
+        BASE_PROJECTS,
+        f'{project_guid}/{project_guid}_pedigree.tsv',
+    )
+
+def project_remap_path(
+    reference_genome: ReferenceGenome,
+    sample_source: SampleSource,
+    sample_type: SampleType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _v02_pipeline_prefix(
+            SEQR_DATASETS,
+            reference_genome,
+            sample_source,
+            sample_type,
+        ),
+        BASE_PROJECTS,
+        f'{project_guid}/{project_guid}_remap.tsv',
+    )
+
+
+def project_subset_path(
+    reference_genome: ReferenceGenome,
+    sample_source: SampleSource,
+    sample_type: SampleType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _v02_pipeline_prefix(
+            SEQR_DATASETS,
+            reference_genome,
+            sample_source,
+            sample_type,
+        ),
+        BASE_PROJECTS,
+        f'{project_guid}/{project_guid}_ids.txt',
     )
 
 
