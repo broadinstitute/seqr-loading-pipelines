@@ -3,8 +3,8 @@ import os
 import pprint
 import sys
 
-import luigi
 import hail as hl
+import luigi
 import pkg_resources
 
 from luigi_pipeline.lib.hail_tasks import (
@@ -28,6 +28,7 @@ def does_file_exist(path):
 
 def check_if_path_exists(path, label=""):
     if not does_file_exist(path):
+        raise ValueError(f"{label} path not found: {path}")
     
 class SeqrValidationError(Exception):
     pass
@@ -68,7 +69,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         if self.dataset_type in set(['VARIANTS', 'MITO']):
             check_if_path_exists(self.reference_ht_path, "reference_ht_path")
             check_if_path_exists(self.clinvar_ht_path, "clinvar_ht_path")
-        check_if_path_exists(self.reference_ht_path, "reference_ht_path")
         if self.interval_ref_ht_path: check_if_path_exists(self.interval_ref_ht_path, "interval_ref_ht_path")
         if self.hgmd_ht_path: check_if_path_exists(self.hgmd_ht_path, "hgmd_ht_path")
         if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
@@ -123,7 +123,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-        mt = self.annotate_globals(mt, kwargs["clinvar_data"])
+        mt = self.annotate_globals(mt, kwargs.get(["clinvar_data"]))
 
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)

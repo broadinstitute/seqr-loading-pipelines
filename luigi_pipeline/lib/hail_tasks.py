@@ -238,13 +238,11 @@ class HailMatrixTableTask(luigi.Task):
 
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
-    @staticmethod
     def subset_samples_and_variants(self, mt, subset_path):
         """
         Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF
         :param subset_path: Path to a file with a single column 's'
-        :param ignore_missing_samples: ignore missing samples if true unless all samples are missing
         :return: MatrixTable subsetted to list of samples
         """
         subset_ht = hl.import_table(subset_path, key='s')
