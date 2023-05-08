@@ -1,12 +1,20 @@
 import logging
 import sys
 
-import luigi
 import hail as hl
+import luigi
 
-from lib.model.mito_mt_schema import SeqrMitoVariantsAndGenotypesSchema, SeqrMitoVariantSchema, SeqrMitoGenotypesSchema
-from luigi_pipeline.seqr_loading_optimized import SeqrVCFToVariantMTTask, BaseVCFToGenotypesMTTask, BaseMTToESOptimizedTask
 from luigi_pipeline.lib.hail_tasks import MatrixTableSampleSetError
+from luigi_pipeline.lib.model.mito_mt_schema import (
+    SeqrMitoGenotypesSchema,
+    SeqrMitoVariantsAndGenotypesSchema,
+    SeqrMitoVariantSchema,
+)
+from luigi_pipeline.seqr_loading_optimized import (
+    BaseMTToESOptimizedTask,
+    BaseVCFToGenotypesMTTask,
+    SeqrVCFToVariantMTTask,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +23,7 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     """
     Loads all annotations for the variants of a Matrix Table into a Hail Table.
     """
+    dataset_type = 'MITO'
     high_constraint_interval_path = luigi.Parameter(description='Path to the tsv file storing the high constraint intervals.')
     RUN_VEP = False
     SCHEMA_CLASS = SeqrMitoVariantSchema
@@ -30,19 +39,14 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
 
     def annotate_globals(self, mt):
         # Remove all existing global fields and annotate a new 'datasetType' field
-        mt = mt.select_globals(datasetType='MITO')
+        mt = mt.select_globals(datasetType=self.dataset_type)
 
         return super().annotate_globals(mt)
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
-    ignore_missing_samples = luigi.BoolParameter(default=False, description='Allow missing samples in the callset.')
     VariantTask = SeqrMitoVariantMTTask
     GenotypesSchema = SeqrMitoGenotypesSchema
-
-    def subset_samples_and_variants(self, *args):
-        return super().subset_samples_and_variants(*args, ignore_missing_samples=self.ignore_missing_samples)
-
 
 class SeqrMitoMTToESTask(BaseMTToESOptimizedTask):
     VariantTask = SeqrMitoVariantMTTask

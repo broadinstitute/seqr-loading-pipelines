@@ -1,0 +1,65 @@
+[tool.black]
+line-length = 88
+skip-string-normalization = true
+include = '''
+(
+    luigi_pipeline/tests/.*\.py$
+    | download_and_create_reference_datasets/v03
+    | hail_scripts/reference_data
+)
+'''
+
+[tool.isort]
+include_trailing_comma = 'True'
+known_external_package = ['hail_scripts']
+line_length = 88
+profile = 'black'
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'EXTERNAL_PACKAGE', 'FIRSTPARTY', 'LOCALFOLDER']
+skip_glob = [
+    'download_and_create_reference_datasets/v02/*',
+    'gcloud_dataproc/*',
+    'hail_scripts/computed_fields/*',
+    'hail_scripts/elasticsearch/*',
+    'hail_scripts/update_models/*',
+    'hail_scripts/utils/*',
+    'kubernetes/*'
+]
+
+[tool.ruff]
+extend-exclude = [
+    'download_and_create_reference_datasets/v02/*',
+    'gcloud_dataproc/*',
+    'hail_scripts/computed_fields/*',
+    'hail_scripts/elasticsearch/*',
+    'hail_scripts/update_models/*',
+    'hail_scripts/utils/*',
+    'kubernetes/*',
+    'luigi_pipeline/lib/*',
+    'luigi_pipeline/seqr*.py',
+]
+ignore = [
+    # Individual Rules
+    "E501",  # Black is less aggressive here when touching comments and strings, we're going to let those through.
+    "G004",  # logging-f-string, these are fine for now
+
+    # Rule Groupings
+    "I",     # isort is enabled so this is unnecessary (for now, maybe we want to disable isort)
+    "D",     # pydocstyle is for docs... we have none
+    "FBT",   # flake-boolean-trap... disallows boolean args to functions... fixing this code will require refactors.
+    "ANN",   # flake8-annotations is for typed code
+    "DJ",    # django specific
+    "T20",   # forbids print, we print quite a bit
+    "PYI",   # pyi is typing stub files
+    "PT",    # pytest specific
+    "PTH",   # pathlib is preferred, but we're not using it yet
+    "PD",    # pandas specific
+    "NPY",   # numpy specific
+]
+line-length = 88
+select = [
+    "ALL"
+]
+target-version = "py38"
+
+[tool.ruff.flake8-quotes]
+inline-quotes = "single"

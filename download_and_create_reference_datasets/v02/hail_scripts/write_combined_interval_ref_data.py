@@ -3,10 +3,9 @@ import logging
 
 import hail as hl
 
-from download_and_create_reference_datasets.v02.hail_scripts.write_combined_reference_data_ht import (
-    join_hts,
-)
+from hail_scripts.reference_data.combine import join_hts
 
+VERSION = '2.0.5'
 OUTPUT_PATH = "gs://seqr-reference-data/GRCh38/combined_interval_reference_data/combined_interval_reference_data.ht"
 
 logging.basicConfig(format="%(asctime)s %(levelname)-8s %(message)s", level="INFO")
@@ -17,7 +16,7 @@ def run(args):
     hl.init(default_reference="GRCh38")
     logger.info("Joining the interval reference datasets")
     joined_ht = join_hts(
-        ["gnomad_non_coding_constraint", "screen"], reference_genome="38"
+        ["gnomad_non_coding_constraint", "screen"], VERSION, reference_genome="38"
     )
 
     output_path = args.output_path if args.output_path else OUTPUT_PATH

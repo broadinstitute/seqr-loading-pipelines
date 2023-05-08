@@ -1,5 +1,6 @@
 import luigi
 
+
 class GlobalConfig(luigi.Config):
     validation_37_noncoding_ht = luigi.Parameter(
         default='gs://seqr-reference-data/GRCh37/validate_ht/common_noncoding_variants.grch37.ht'
