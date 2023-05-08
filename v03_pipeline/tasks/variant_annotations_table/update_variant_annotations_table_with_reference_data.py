@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 import hail as hl
@@ -7,6 +6,7 @@ import luigi
 from v03_pipeline.core.definitions import ReferenceDatasetCollection
 from v03_pipeline.core.paths import reference_dataset_collection_path
 from v03_pipeline.tasks.files import HailTable
+from v03_pipeline.tasks.variant_annotations_table import BaseVariantAnnotationsTable
 
 
 class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable):
