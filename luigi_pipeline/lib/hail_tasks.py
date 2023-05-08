@@ -1,11 +1,11 @@
 """
 Tasks for Hail.
 """
-from collections import Counter
 import json
 import logging
 import math
 import os
+from collections import Counter
 
 import hail as hl
 import luigi
@@ -13,8 +13,9 @@ from luigi.contrib import gcs
 from luigi.parameter import ParameterVisibility
 
 from hail_scripts.elasticsearch.hail_elasticsearch_client import HailElasticsearchClient
-from lib.global_config import GlobalConfig
-import lib.hail_vep_runners as vep_runners
+
+import luigi_pipeline.lib.hail_vep_runners as vep_runners
+from luigi_pipeline.lib.global_config import GlobalConfig
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +61,7 @@ class HailMatrixTableTask(luigi.Task):
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
                                                                                             'to annotate vep.')
+    ignore_missing_samples = luigi.BoolParameter(default=False, description='Allow missing samples in the callset.')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -154,8 +156,8 @@ class HailMatrixTableTask(luigi.Task):
         """
         stats = {}
         types_to_ht_path = {
-            'noncoding': GlobalConfig().param_kwargs['validation_%s_noncoding_ht' % genome_version],
-            'coding': GlobalConfig().param_kwargs['validation_%s_coding_ht' % genome_version]
+            'noncoding': GlobalConfig().param_kwargs[f'validation_{genome_version}_noncoding_ht'],
+            'coding': GlobalConfig().param_kwargs[f'validation_{genome_version}_coding_ht']
         }
         for sample_type, ht_path in types_to_ht_path.items():
             ht = hl.read_table(ht_path)
@@ -237,7 +239,7 @@ class HailMatrixTableTask(luigi.Task):
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
     @staticmethod
-    def subset_samples_and_variants(mt, subset_path, ignore_missing_samples=False):
+    def subset_samples_and_variants(self, mt, subset_path):
         """
         Subset the MatrixTable to the provided list of samples and to variants present in those samples
         :param mt: MatrixTable from VCF
@@ -256,7 +258,7 @@ class HailMatrixTableTask(luigi.Task):
                       f'subsetting-table IDs matched IDs in the variant callset.\n' \
                       f'IDs that aren\'t in the callset: {missing_samples}\n' \
                       f'All callset sample IDs:{mt.s.collect()}'
-            if (subset_count > anti_join_ht_count) and ignore_missing_samples:
+            if (subset_count > anti_join_ht_count) and self.ignore_missing_samples:
                 logger.warning(message)
             else:
                 raise MatrixTableSampleSetError(message, missing_samples)

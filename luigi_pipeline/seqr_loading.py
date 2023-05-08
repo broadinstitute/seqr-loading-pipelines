@@ -1,20 +1,36 @@
 import logging
 import os
-import pkg_resources
 import pprint
 import sys
 
 import luigi
 import hail as hl
+import pkg_resources
 
-from lib.hail_tasks import HailMatrixTableTask, HailElasticSearchTask, GCSorLocalTarget, MatrixTableSampleSetError
-from lib.model.seqr_mt_schema import SeqrVariantSchema, SeqrGenotypesSchema, SeqrVariantsAndGenotypesSchema
+from luigi_pipeline.lib.hail_tasks import (
+    GCSorLocalTarget,
+    HailElasticSearchTask,
+    HailMatrixTableTask,
+    MatrixTableSampleSetError,
+)
+from luigi_pipeline.lib.model.seqr_mt_schema import (
+    SeqrGenotypesSchema,
+    SeqrVariantsAndGenotypesSchema,
+    SeqrVariantSchema,
+)
 
 logger = logging.getLogger(__name__)
 
+def does_file_exist(path):
+    if path.startswith("gs://"):
+        return hl.hadoop_exists(path)
+    return os.path.exists(path)
+
 def check_if_path_exists(path, label=""):
-    if (path.startswith("gs://") and not hl.hadoop_exists(path)) or (not path.startswith("gs://") and not os.path.exists(path)):
-        raise ValueError(f"{label} path not found: {path}")
+    if not does_file_exist(path):
+    
+class SeqrValidationError(Exception):
+    pass
 
 class SeqrVCFToMTTask(HailMatrixTableTask):
     """
@@ -23,13 +39,13 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     reference_ht_path = luigi.Parameter(description='Path to the Hail table storing locus and allele keyed reference data.')
     interval_ref_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None,
+    hgmd_ht_path = luigi.OptionalParameter(default=None,
                                    description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(choices=['WGS', 'WES'], description='Sample type, WGS or WES', var_type=str)
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS',
-                                         description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS',
+                                         description='VARIANTS or SV or MITO.')
     remap_path = luigi.OptionalParameter(default=None,
                                          description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None,
@@ -43,12 +59,17 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
     SCHEMA_CLASS = SeqrVariantsAndGenotypesSchema
 
     def run(self):
+        if self.hail_temp_dir:
+            hl.init(tmp_dir=self.hail_temp_dir) # Need to use the GCP bucket as temp storage for very large callset joins
+
         # first validate paths
         for source_path in self.source_paths:
             check_if_path_exists(source_path, "source_path")
+        if self.dataset_type in set(['VARIANTS', 'MITO']):
+            check_if_path_exists(self.reference_ht_path, "reference_ht_path")
+            check_if_path_exists(self.clinvar_ht_path, "clinvar_ht_path")
         check_if_path_exists(self.reference_ht_path, "reference_ht_path")
         if self.interval_ref_ht_path: check_if_path_exists(self.interval_ref_ht_path, "interval_ref_ht_path")
-        if self.clinvar_ht_path: check_if_path_exists(self.clinvar_ht_path, "clinvar_ht_path")
         if self.hgmd_ht_path: check_if_path_exists(self.hgmd_ht_path, "hgmd_ht_path")
         if self.remap_path: check_if_path_exists(self.remap_path, "remap_path")
         if self.subset_path: check_if_path_exists(self.subset_path, "subset_path")
@@ -67,11 +88,14 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return {'ref_data': ref, 'interval_ref_data': interval_ref_data, 'clinvar_data': clinvar_data, 'hgmd_data': hgmd}
 
     def annotate_globals(self, mt, clinvar_data):
-        return mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
+        mt = mt.annotate_globals(sourceFilePath=','.join(self.source_paths),
                                  genomeVersion=self.genome_version,
                                  sampleType=self.sample_type,
-                                 hail_version=pkg_resources.get_distribution('hail').version,
-                                 clinvar_version=clinvar_data.version)
+                                 datasetType=self.dataset_type,
+                                 hail_version=pkg_resources.get_distribution('hail').version)
+        if clinvar_data:
+            mt = mt.annotate_globals(clinvar_version=clinvar_data.index_globals().version)
+        return mt
 
     def import_dataset(self):
         logger.info("Args:")
@@ -80,8 +104,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         return self.import_vcf()
 
     def read_input_write_mt(self):
-        if self.hail_temp_dir:
-            hl.init(tmp_dir=self.hail_temp_dir) # Need to use the GCP bucket as temp storage for very large callset joins
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
@@ -101,7 +123,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         kwargs = self.get_schema_class_kwargs()
         mt = self.SCHEMA_CLASS(mt, **kwargs).annotate_all(overwrite=True).select_annotated_mt()
-
         mt = self.annotate_globals(mt, kwargs["clinvar_data"])
 
         mt.describe()
@@ -126,11 +147,11 @@ class SeqrMTToESTask(HailElasticSearchTask):
     reference_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the reference variants.')
     interval_ref_ht_path = luigi.Parameter(default=None, description='Path to the Hail Table storing interval-keyed reference data.')
     clinvar_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the clinvar variants.')
-    hgmd_ht_path = luigi.Parameter(default=None, description='Path to the Hail table storing the hgmd variants.')
+    hgmd_ht_path = luigi.OptionalParameter(default=None, description='Path to the Hail table storing the hgmd variants.')
     sample_type = luigi.ChoiceParameter(default="WES", choices=['WGS', 'WES'], description='Sample type, WGS or WES')
     dont_validate = luigi.BoolParameter(description='Disable checking whether the dataset matches the specified '
                                                     'genome version and WGS vs. WES sample type.')
-    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV'], default='VARIANTS', description='VARIANTS or SV.')
+    dataset_type = luigi.ChoiceParameter(choices=['VARIANTS', 'SV', 'MITO'], default='VARIANTS', description='VARIANTS or SV or MITO.')
     remap_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with two columns: s and seqr_id.")
     subset_path = luigi.OptionalParameter(default=None, description="Path to a tsv file with one column of sample IDs: s.")
     vep_config_json_path = luigi.OptionalParameter(default=None, description="Path of hail vep config .json file")
