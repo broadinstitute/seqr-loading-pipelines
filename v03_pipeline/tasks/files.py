@@ -4,7 +4,7 @@ import luigi
 from luigi.contrib import gcs
 
 
-def GCSorLocalTarget(filename) -> luigi.Target:  # noqa: N802
+def GCSorLocalTarget(filename: str) -> luigi.Target:  # noqa: N802
     return (
         gcs.GCSTarget(filename)
         if filename.startswith('gs://')
