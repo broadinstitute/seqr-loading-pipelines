@@ -1,5 +1,4 @@
 import os
-from typing import Literal
 
 from v03_pipeline.core.definitions import (
     AccessControl,
@@ -9,6 +8,7 @@ from v03_pipeline.core.definitions import (
     ReferenceGenome,
 )
 
+LOCAL_ROOT = '/var/seqr'
 SEQR_DATASETS = 'gs://seqr-datasets'
 SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
 SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
@@ -16,13 +16,19 @@ SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
 SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 V03 = 'v03'
 
+
 def _v03_pipeline_prefix(
-    prod_bucket: str,
     env: Env,
+    remote_root: str,
     reference_genome: ReferenceGenome,
 ) -> str:
+    root = remote_root
+    if env == Env.DEV:
+        root = SEQR_SCRATCH_TEMP
+    elif env == Env.LOCAL:
+        root = LOCAL_ROOT
     return os.path.join(
-        SEQR_SCRATCH_TEMP if env == Env.DEV else prod_bucket,
+        root,
         reference_genome.value,
         V03,
     )
@@ -36,8 +42,8 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            SEQR_LOADING_TEMP,
             env,
+            SEQR_LOADING_TEMP,
             reference_genome,
         ),
         dataset_type.value,
@@ -55,8 +61,8 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            SEQR_DATASETS,
             env,
+            SEQR_DATASETS,
             reference_genome,
         ),
         dataset_type.value,
@@ -72,15 +78,15 @@ def reference_dataset_collection_path(
     reference_dataset_collection: ReferenceDatasetCollection,
     version: str,
 ) -> str:
-    prod_bucket = (
+    remote_root = (
         SEQR_REFERENCE_DATA
         if reference_dataset_collection.access_control == AccessControl.PUBLIC
         else SEQR_REFERENCE_DATA_PRIVATE
     )
     return os.path.join(
         _v03_pipeline_prefix(
-            prod_bucket,
             env,
+            remote_root,
             reference_genome,
         ),
         reference_dataset_collection.value,
@@ -95,8 +101,8 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            SEQR_DATASETS,
             env,
+            SEQR_DATASETS,
             reference_genome,
         ),
         dataset_type.value,
@@ -111,8 +117,8 @@ def variant_lookup_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            SEQR_DATASETS,
             env,
+            SEQR_DATASETS,
             reference_genome,
         ),
         dataset_type.value,

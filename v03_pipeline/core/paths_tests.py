@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from v03_pipeline.core.definitions import (
     DatasetType,
@@ -85,4 +86,15 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SV,
             ),
             'gs://seqr-datasets/GRCh37/v03/SV/lookup.ht',
+        )
+
+    @mock.patch('v03_pipeline.core.paths.LOCAL_ROOT', '/tmp/abcd')
+    def test_local_prefix(self) -> None:
+        self.assertEqual(
+            variant_lookup_table_path(
+                Env.LOCAL,
+                ReferenceGenome.GRCh37,
+                DatasetType.SV,
+            ),
+            '/tmp/abcd/GRCh37/v03/SV/lookup.ht',
         )

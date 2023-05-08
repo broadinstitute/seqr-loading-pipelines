@@ -16,6 +16,7 @@ class DatasetType(Enum):
 
 class Env(Enum):
     DEV = 'DEV'
+    LOCAL = 'LOCAL'
     PROD = 'PROD'
 
 
