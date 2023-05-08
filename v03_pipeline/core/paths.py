@@ -20,6 +20,18 @@ SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 V02 = 'v02'
 V03 = 'v03'
 
+
+def _v02_dag_name(sample_source: SampleSource, sample_type: SampleType) -> str:
+    if sample_source == SampleSource.ANVIL:
+        return f'AnVIL_{sample_type.value}'
+    if sample_source == SampleSource.RDG_BROAD_EXTERNAL:
+        return f'RDG_{sample_type.value}_Broad_External'
+    if sample_source == SampleSource.RDG_BROAD_INTERNAL:
+        return f'RDG_{sample_type.value}_Broad_Internal'
+    msg = f'_v02_dag_name unimplemented for {sample_source}'
+    raise ValueError(msg)
+
+
 def _v02_pipeline_prefix(
     reference_genome: ReferenceGenome,
     sample_source: SampleSource,
@@ -29,8 +41,9 @@ def _v02_pipeline_prefix(
         SEQR_DATASETS,
         V02,
         reference_genome.value,
-        sample_source.gcs_prefix(sample_type),
+        _v02_dag_name(sample_source, sample_type),
     )
+
 
 def _v03_pipeline_prefix(
     env: Env,
@@ -67,6 +80,7 @@ def family_table_path(
         'all_samples.ht',
     )
 
+
 def project_pedigree_path(
     reference_genome: ReferenceGenome,
     sample_source: SampleSource,
@@ -82,6 +96,7 @@ def project_pedigree_path(
         BASE_PROJECTS,
         f'{project_guid}/{project_guid}_pedigree.tsv',
     )
+
 
 def project_remap_path(
     reference_genome: ReferenceGenome,

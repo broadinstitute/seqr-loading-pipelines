@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from enum import Enum
 
 
@@ -110,17 +111,6 @@ class SampleSource(Enum):
     ANVIL = 'ANVIL'
     RDG_BROAD_EXTERNAL = 'RDG_BROAD_EXTERNAL'
     RDG_BROAD_INTERNAL = 'RDG_BROAD_INTERNAL'
-
-    def gcs_prefix(self, sample_type: SampleType) -> str:
-        if self == SampleSource.ANVIL:
-            return f'AnVIL_{sample_type.value}'
-        if self == SampleSource.RDG_BROAD_EXTERNAL:
-            return f'RDG_{sample_type.value}_Broad_External'
-        if self == SampleSource.RDG_BROAD_INTERNAL:
-            return f'RDG_{sample_type.value}_Broad_Internal'
-
-        msg = f'gcs_prefix unimplemented for {self.value}'
-        raise ValueError(msg)
 
 
 class SampleType(Enum):
