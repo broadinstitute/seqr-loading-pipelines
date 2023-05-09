@@ -15,21 +15,51 @@ from hail_scripts.utils.hail_utils import write_ht
 VALIDATION_HT_PATH = 'coding_validation/validation.GRCh{genome_version}.{version}.ht'
 VERSION = '1.0.0'
 
+
+def read_gnomad_subset(genome_version: str):
+    filtered_contig = '1' if genome_version == '37' else 'chr1'
+    ht = hl.read_table(CONFIG['gnomad_genomes'][genome_version])
+    ht = hl.filter_intervals(
+        ht,
+        [
+            hl.parse_locus_interval(
+                filtered_contig, reference_genome='GRCh%s' % genome_version
+            )
+        ],
+    )
+    ht = ht.filter(ht.freq[0].AF > 0.90)
+    ht = ht.annotate(
+        sorted_transaction_consequences=(
+            get_expr_for_vep_sorted_transcript_consequences_array(
+                ht.vep, omit_consequences=[]
+            )
+        )
+    )
+    ht = ht.annotate(
+        main_transcript=(
+            get_expr_for_worst_transcript_consequence_annotations_struct(
+                ht.sorted_transaction_consequences
+            )
+        )
+    )
+    return ht
+
+
 def run(environment: str, genome_version: str):
-    destination_path = os.path.join(GCS_PREFIXES[environment], VALIDATION_HT_PATH).format(
+    ht = read_gnomad_subset(genome_version)
+    destination_path = os.path.join(
+        GCS_PREFIXES[environment], VALIDATION_HT_PATH
+    ).format(
         genome_version=genome_version,
         version=VERSION,
     )
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--environment',
-        default='dev',
-        choices=['dev', 'prod']
-    )
+    parser.add_argument('--environment', default='dev', choices=['dev', 'prod'])
     parser.add_argument(
         '--genome-version',
         help='Reference build, 37 or 38',
