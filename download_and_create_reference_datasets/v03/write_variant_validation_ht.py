@@ -12,7 +12,7 @@ from hail_scripts.computed_fields.vep import (
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
-VALIDATION_HT_PATH = 'coding_validation/validation.GRCh{genome_version}.{version}.ht'
+VARIANT_VALIDATION_HT_PATH = 'variant_validation/variant_validation.GRCh{genome_version}.{version}.ht'
 VERSION = '1.0.0'
 
 
@@ -52,7 +52,7 @@ def run(environment: str, genome_version: str):
         noncoding_variants=hl.int(ht.main_transcript.major_consequence_rank) >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
     )
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], VALIDATION_HT_PATH
+        GCS_PREFIXES[environment], VARIANT_VALIDATION_HT_PATH
     ).format(
         genome_version=genome_version,
         version=VERSION,
