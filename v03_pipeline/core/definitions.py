@@ -22,7 +22,7 @@ class Env(Enum):
 
 
 class ReferenceDataset(Enum):
-    # Shared
+    # Shared (SNV & MITO)
     CLINVAR = 'clinvar'
     DBNSFP = 'dbnsfp'
 
@@ -51,6 +51,10 @@ class ReferenceDataset(Enum):
     MITOMAP = 'mitomap'
     MITIMPACT = 'mitimpact'
 
+    # Validation
+    CODING_VALIDATION = 'coding_validation'
+    NONCODING_VALIDATION = 'noncoding_validation'
+
 
 class ReferenceDatasetCollection(Enum):
     CLINVAR = 'clinvar'
@@ -58,6 +62,8 @@ class ReferenceDatasetCollection(Enum):
     COMBINED_MITO = 'combined_mito'
     HGMD = 'hgmd'
     INTERVAL_REFERENCE = 'interval_reference'
+    CODING_VALIDATION = 'coding_validation'
+    NONCODING_VALIDATION = 'noncoding_validation'
 
     @property
     def access_control(self) -> AccessControl:
@@ -99,6 +105,12 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
                 ReferenceDataset.SCREEN,
             },
+            ReferenceDatasetCollection.CODING_VALIDATION: {
+                ReferenceDataset.CODING_VALIDATION,
+            },
+            ReferenceDatasetCollection.NONCODING_VALIDATION: {
+                ReferenceDataset.NONCODING_VALIDATION,
+            }
         }[self]
 
 
