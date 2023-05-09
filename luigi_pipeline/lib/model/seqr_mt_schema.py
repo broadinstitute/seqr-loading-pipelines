@@ -149,7 +149,7 @@ class BaseSeqrSchema(BaseVariantSchema):
     def dbnsfp(self):
         return self._selected_ref_data.dbnsfp
 
-class SeqrSchema(BaseSeqrSchema):
+class SeqrVariantSchema(BaseSeqrSchema):
     @row_annotation(disable_index=True)
     def aIndex(self):
         return self.mt.a_index
@@ -251,8 +251,6 @@ class SeqrSchema(BaseSeqrSchema):
             }
         )
 
-class SeqrVariantSchema(SeqrSchema):
-
     @row_annotation(name='AC')
     def ac(self):
         return self.mt.gt_stats.AC[1]
@@ -268,7 +266,6 @@ class SeqrVariantSchema(SeqrSchema):
     @row_annotation(name='homozygote_count')
     def hom_alt(self):
         return self.mt.gt_stats.homozygote_count[1]
-
 
 class SeqrGenotypesSchema(BaseMTSchema):
 
