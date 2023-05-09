@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import hail as hl
 
+
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
 

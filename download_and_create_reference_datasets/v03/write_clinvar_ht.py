@@ -65,7 +65,6 @@ def run(environment: str):
                 GCS_PREFIXES[environment],
                 CLINVAR_HT_PATH,
             ).format(
-                environment=environment,
                 genome_version=genome_version,
                 timestamp=timestamp,
             )

@@ -4,12 +4,12 @@ from unittest import mock
 
 import hail as hl
 
-from hail_scripts.reference_data.config import dbnsfp_custom_select
 from hail_scripts.reference_data.combine import (
     get_enum_select_fields,
     get_ht,
     update_joined_ht_globals,
 )
+from hail_scripts.reference_data.config import dbnsfp_custom_select
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
