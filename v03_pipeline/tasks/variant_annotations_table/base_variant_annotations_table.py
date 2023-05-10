@@ -14,7 +14,7 @@ class BaseVariantAnnotationsTable(luigi.Task):
     sample_type = luigi.EnumParameter(enum=SampleType)
 
     @property
-    def path(self) -> str:
+    def variant_annotations_table_path(self) -> str:
         return variant_annotations_table_path(
             self.env,
             self.reference_genome,
@@ -22,10 +22,12 @@ class BaseVariantAnnotationsTable(luigi.Task):
         )
 
     def output(self) -> luigi.Target:
-        return GCSorLocalTarget(self.path)
+        return GCSorLocalTarget(self.variant_annotations_table_path)
 
     def complete(self) -> bool:
-        return GCSorLocalTarget(os.path.join(self.path, '_SUCCESS')).exists()
+        return GCSorLocalTarget(
+            os.path.join(self.variant_annotations_table_path, '_SUCCESS'),
+        ).exists()
 
     def run(self) -> None:
         raise NotImplementedError

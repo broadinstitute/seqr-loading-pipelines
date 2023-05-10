@@ -8,6 +8,7 @@ from v03_pipeline.core.definitions import (
     ReferenceGenome,
     SampleSource,
     SampleType,
+    ValidationDatasetCollection,
 )
 from v03_pipeline.core.paths import (
     family_table_path,
@@ -16,6 +17,7 @@ from v03_pipeline.core.paths import (
     project_subset_path,
     project_table_path,
     reference_dataset_collection_path,
+    validation_dataset_collection_path,
     variant_annotations_table_path,
     variant_lookup_table_path,
     vcf_remap_path,
@@ -127,15 +129,15 @@ class TestPaths(unittest.TestCase):
             'gs://seqr-datasets/GRCh37/v03/SV/lookup.ht',
         )
 
-    @mock.patch('v03_pipeline.core.paths.LOCAL_DATA_ROOT', '/var/abcd')
-    def test_local_prefix(self) -> None:
+    def test_validation_dataset_collection_path(self) -> None:
         self.assertEqual(
-            variant_lookup_table_path(
-                Env.LOCAL,
-                ReferenceGenome.GRCh37,
-                DatasetType.SV,
+            validation_dataset_collection_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                ValidationDatasetCollection.VARIANT_VALIDATION,
+                '3.2.1',
             ),
-            '/var/abcd/GRCh37/v03/SV/lookup.ht',
+            'gs://seqr-reference-data/GRCh38/v03/variant_validation/3.2.1.ht',
         )
 
     def test_vcf_remap_path(self) -> None:
@@ -146,4 +148,15 @@ class TestPaths(unittest.TestCase):
                 'v36',
             ),
             'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv',
+        )
+
+    @mock.patch('v03_pipeline.core.paths.LOCAL_DATA_ROOT', '/var/abcd')
+    def test_local_prefix(self) -> None:
+        self.assertEqual(
+            variant_lookup_table_path(
+                Env.LOCAL,
+                ReferenceGenome.GRCh37,
+                DatasetType.SV,
+            ),
+            '/var/abcd/GRCh37/v03/SV/lookup.ht',
         )

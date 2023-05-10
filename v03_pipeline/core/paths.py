@@ -8,6 +8,7 @@ from v03_pipeline.core.definitions import (
     ReferenceGenome,
     SampleSource,
     SampleType,
+    ValidationDatasetCollection,
 )
 
 BASE_PROJECTS = 'base/projects'
@@ -206,6 +207,23 @@ def variant_lookup_table_path(
         ),
         dataset_type.value,
         'lookup.ht',
+    )
+
+
+def validation_dataset_collection_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    validation_dataset_collection: ValidationDatasetCollection,
+    validation_dataset_collection_version: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            SEQR_REFERENCE_DATA,
+            reference_genome,
+        ),
+        validation_dataset_collection.value.lower(),
+        f'{validation_dataset_collection_version}.ht',
     )
 
 

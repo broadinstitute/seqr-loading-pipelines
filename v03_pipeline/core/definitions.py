@@ -51,9 +51,6 @@ class ReferenceDataset(Enum):
     MITOMAP = 'MITOMAP'
     MITIMPACT = 'MITIMPACT'
 
-    # Validation
-    VARIANT_VALIDATION = 'VARIANT_VALIDATION'
-
 
 class ReferenceDatasetCollection(Enum):
     CLINVAR = 'CLINVAR'
@@ -61,7 +58,6 @@ class ReferenceDatasetCollection(Enum):
     COMBINED_MITO = 'COMBINED_MITO'
     HGMD = 'HGMD'
     INTERVAL_REFERENCE = 'INTERVAL_REFERENCE'
-    VARIANT_VALIDATION = 'VARIANT_VALIDATION'
 
     @property
     def access_control(self) -> AccessControl:
@@ -69,6 +65,17 @@ class ReferenceDatasetCollection(Enum):
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
+    @property
+    def dataset_types(self) -> set[DatasetType]:
+        return {
+            ReferenceDatasetCollection.CLINVAR: {DatasetType.MITO, DatasetType.SNV},
+            ReferenceDatasetCollection.COMBINED: {DatasetType.SNV},
+            ReferenceDatasetCollection.COMBINED_MITO: {DatasetType.MITO},
+            ReferenceDatasetCollection.HGMD: {DatasetType.SNV},
+            ReferenceDatasetCollection.INTERVAL_REFERENCE: {DatasetType.SNV},
+        }
+
+    @property
     def reference_datasets(self) -> set[ReferenceDataset]:
         return {
             ReferenceDatasetCollection.CLINVAR: {ReferenceDataset.CLINVAR},
@@ -103,9 +110,6 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
                 ReferenceDataset.SCREEN,
             },
-            ReferenceDatasetCollection.VARIANT_VALIDATION: {
-                ReferenceDataset.VARIANT_VALIDATION,
-            },
         }[self]
 
 
@@ -123,3 +127,7 @@ class SampleSource(Enum):
 class SampleType(Enum):
     WES = 'WES'
     WGS = 'WGS'
+
+
+class ValidationDatasetCollection(Enum):
+    VARIANT_VALIDATION = 'VARIANT_VALIDATION'

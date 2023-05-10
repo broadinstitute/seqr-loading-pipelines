@@ -1,5 +1,3 @@
-from typing import List
-
 import hail as hl
 import luigi
 
@@ -22,8 +20,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTable):
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.read_table(self.path).globals.sample_vcfs.contains(self.vcf_file),
+            hl.read_table(
+                self.variant_annotations_table_path,
+            ).globals.sample_vcfs.contains(self.vcf_file),
         )
 
     def run(self) -> None:
-        print("Running UpdateVariantAnnotationsTableWithNewSamples")
+        print('Running UpdateVariantAnnotationsTableWithNewSamples')

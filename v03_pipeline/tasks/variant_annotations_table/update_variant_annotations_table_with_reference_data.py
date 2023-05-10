@@ -1,5 +1,3 @@
-from typing import List
-
 import hail as hl
 import luigi
 
@@ -17,27 +15,26 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
         description='Version of the reference dataset collection',
     )
 
+    @property
+    def reference_dataset_collection_path(self):
+        return reference_dataset_collection_path(
+            self.env,
+            self.reference_genome,
+            self.reference_dataset_collection,
+            self.reference_dataset_collection_version,
+        )
+
     def requires(self) -> luigi.Task:
-        return HailTable(
-            reference_dataset_collection_path(
-                self.env,
-                self.reference_genome,
-                self.reference_dataset_collection,
-                self.reference_dataset_collection_version,
-            ),
-        ),
+        return (HailTable(self.reference_dataset_collection_path),)
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.read_table(self.path).globals.reference_datasets.contains(
-                reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    self.reference_dataset_collection,
-                    self.reference_dataset_collection_version,
-                ),
+            hl.read_table(
+                self.variant_annotations_table_path,
+            ).globals.reference_datasets.contains(
+                self.reference_dataset_collection_path,
             ),
         )
 
     def run(self) -> None:
-        print("Running UpdateVariantAnnotationsTableWithReferenceData")
+        print('Running UpdateVariantAnnotationsTableWithReferenceData')
