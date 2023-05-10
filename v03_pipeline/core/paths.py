@@ -1,6 +1,4 @@
 import os
-import re
-from typing import Literal
 
 from v03_pipeline.core.definitions import (
     AccessControl,
@@ -210,6 +208,7 @@ def variant_lookup_table_path(
         'lookup.ht',
     )
 
+
 def vcf_remap_path(
     reference_genome: ReferenceGenome,
     sample_source: SampleSource,
@@ -223,5 +222,5 @@ def vcf_remap_path(
             sample_type,
         ),
         vcf_version,
-        f'{_v02_dag_name(sample_source, sample_type)}{REMAP_SUFFIX}'
+        f'{_v02_dag_name(sample_source, sample_type)}{REMAP_SUFFIX}',
     )

@@ -22,7 +22,7 @@ class Env(Enum):
 
 
 class ReferenceDataset(Enum):
-    # Shared (SNV & MITO)
+    # Shared (used by SNV and MITO)
     CLINVAR = 'clinvar'
     DBNSFP = 'dbnsfp'
 
@@ -53,6 +53,7 @@ class ReferenceDataset(Enum):
 
     # Validation
     VARIANT_VALIDATION = 'coding_validation'
+
 
 class ReferenceDatasetCollection(Enum):
     CLINVAR = 'clinvar'
@@ -104,7 +105,7 @@ class ReferenceDatasetCollection(Enum):
             },
             ReferenceDatasetCollection.VARIANT_VALIDATION: {
                 ReferenceDataset.VARIANT_VALIDATION,
-            }
+            },
         }[self]
 
 

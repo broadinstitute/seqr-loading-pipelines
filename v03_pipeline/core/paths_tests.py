@@ -57,7 +57,10 @@ class TestPaths(unittest.TestCase):
     def test_project_pedigree_path(self) -> None:
         self.assertEqual(
             project_pedigree_path(
-                ReferenceGenome.GRCh38, SampleSource.ANVIL, SampleType.WES, '123_abc',
+                ReferenceGenome.GRCh38,
+                SampleSource.ANVIL,
+                SampleType.WES,
+                '123_abc',
             ),
             'gs://seqr-datasets/v02/GRCh38/AnVIL_WES/base/projects/123_abc/123_abc_pedigree.tsv',
         )
@@ -142,5 +145,5 @@ class TestPaths(unittest.TestCase):
                 SampleSource.RDG_BROAD_INTERNAL,
                 'v36',
             ),
-            'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv'
+            'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv',
         )
