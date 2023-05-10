@@ -25,7 +25,7 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
         )
 
     def requires(self) -> luigi.Task:
-        return (HailTable(self.reference_dataset_collection_path),)
+        return HailTable(self.reference_dataset_collection_path)
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
