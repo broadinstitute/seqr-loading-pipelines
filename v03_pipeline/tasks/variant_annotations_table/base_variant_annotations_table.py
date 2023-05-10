@@ -14,7 +14,7 @@ class BaseVariantAnnotationsTable(luigi.Task):
     sample_type = luigi.EnumParameter(enum=SampleType)
 
     @property
-    def path(self):
+    def path(self) -> str:
         return variant_annotations_table_path(
             self.env,
             self.reference_genome,

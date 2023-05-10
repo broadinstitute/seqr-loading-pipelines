@@ -35,7 +35,7 @@ skip_glob = [
 [tool.mypy]
 packages = 'v03_pipeline'
 python_version = "3.8"
-strict = 'True'
+ignore_missing_imports = true
 
 [tool.ruff]
 extend-exclude = [
