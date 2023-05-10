@@ -52,9 +52,7 @@ class ReferenceDataset(Enum):
     MITIMPACT = 'mitimpact'
 
     # Validation
-    CODING_VALIDATION = 'coding_validation'
-    NONCODING_VALIDATION = 'noncoding_validation'
-
+    VARIANT_VALIDATION = 'coding_validation'
 
 class ReferenceDatasetCollection(Enum):
     CLINVAR = 'clinvar'
@@ -62,8 +60,7 @@ class ReferenceDatasetCollection(Enum):
     COMBINED_MITO = 'combined_mito'
     HGMD = 'hgmd'
     INTERVAL_REFERENCE = 'interval_reference'
-    CODING_VALIDATION = 'coding_validation'
-    NONCODING_VALIDATION = 'noncoding_validation'
+    VARIANT_VALIDATION = 'coding_validation'
 
     @property
     def access_control(self) -> AccessControl:
@@ -105,11 +102,8 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDataset.GNOMAD_NON_CODING_CONSTRAINT,
                 ReferenceDataset.SCREEN,
             },
-            ReferenceDatasetCollection.CODING_VALIDATION: {
-                ReferenceDataset.CODING_VALIDATION,
-            },
-            ReferenceDatasetCollection.NONCODING_VALIDATION: {
-                ReferenceDataset.NONCODING_VALIDATION,
+            ReferenceDatasetCollection.VARIANT_VALIDATION: {
+                ReferenceDataset.VARIANT_VALIDATION,
             }
         }[self]
 
