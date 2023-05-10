@@ -31,11 +31,11 @@ def read_gnomad_subset(genome_version):
                                                           reference_genome='GRCh%s'%genome_version)])
     ht = ht.filter(ht.freq[0].AF > 0.90)
 
-    ht = ht.annotate(sorted_transaction_consequences=(
-        get_expr_for_vep_sorted_transcript_consequences_array(ht.vep, omit_consequences=[]))
-    )
     ht = ht.annotate(main_transcript=(
-        get_expr_for_worst_transcript_consequence_annotations_struct(ht.sorted_transaction_consequences))
+            get_expr_for_worst_transcript_consequence_annotations_struct(
+                get_expr_for_vep_sorted_transcript_consequences_array(ht.vep, omit_consequences=[]),
+            ),
+        )
     )
 
     ht.describe()

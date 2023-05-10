@@ -1,4 +1,5 @@
 from copy import deepcopy
+import functools
 
 import hail as hl
 
@@ -15,7 +16,7 @@ def dbnsfp_custom_select(ht):
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
 
-def custom_gnomad_select_v2(ht):
+def custom_gnomad_select_v2(ht, genome_version: str):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
     'AF', 'AN', and generates 'hemi'.
@@ -41,7 +42,7 @@ def custom_gnomad_select_v2(ht):
     return selects
 
 
-def custom_gnomad_select_v3(ht):
+def custom_gnomad_select_v3(ht, genome_version: str):
     """
     Custom select for public gnomad v3 dataset (which we did not generate). Extracts fields like
     'AF', 'AN', and generates 'hemi'.

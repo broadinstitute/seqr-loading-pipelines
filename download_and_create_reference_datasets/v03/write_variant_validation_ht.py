@@ -29,28 +29,30 @@ def read_gnomad_subset(genome_version: str):
     )
     ht = ht.filter(ht.freq[0].AF > 0.90)
     ht = ht.annotate(
-        sorted_transaction_consequences=(
-            get_expr_for_vep_sorted_transcript_consequences_array(
-                ht.vep, omit_consequences=[]
+        main_transcript=(
+            get_expr_for_worst_transcript_consequence_annotations_struct(
+                get_expr_for_vep_sorted_transcript_consequences_array(
+                    ht.vep, omit_consequences=[]
+                )
             )
         )
     )
-    ht = ht.annotate(
-        main_transcript=(
-            get_expr_for_worst_transcript_consequence_annotations_struct(
-                ht.sorted_transaction_consequences
-            )
-        )
+    ht = ht.annotate_rows(
+        coding_variants=(
+            hl.int(ht.main_transcript.major_consequence_rank) <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'))
+        ),
+        noncoding_variants=(
+            hl.int(ht.main_transcript.major_consequence_rank) >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
+        ),
+    )
+    ht = ht.filter(
+        ht.coding_variants | ht.noncoding_variants
     )
     return ht
 
 
 def run(environment: str, genome_version: str):
     ht = read_gnomad_subset(genome_version)
-    ht = ht.annotate_rows(
-        coding_variants=hl.int(ht.main_transcript.major_consequence_rank) <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant')),
-        noncoding_variants=hl.int(ht.main_transcript.major_consequence_rank) >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
-    )
     destination_path = os.path.join(
         GCS_PREFIXES[environment], VARIANT_VALIDATION_HT_PATH
     ).format(
