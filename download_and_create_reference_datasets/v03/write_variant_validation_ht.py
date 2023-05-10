@@ -37,7 +37,7 @@ def read_gnomad_subset(genome_version: str):
             )
         )
     )
-    ht = ht.annotate_rows(
+    ht = ht.annotate(
         coding_variants=(
             hl.int(ht.main_transcript.major_consequence_rank) <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'))
         ),
