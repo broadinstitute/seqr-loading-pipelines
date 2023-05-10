@@ -17,19 +17,17 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
         description='Version of the reference dataset collection',
     )
 
-    def requires(self) -> List[luigi.Task]:
-        return [
-            HailTable(
-                reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    self.reference_dataset_collection,
-                    self.reference_dataset_version,
-                ),
+    def requires(self) -> luigi.Task:
+        return HailTable(
+            reference_dataset_collection_path(
+                self.env,
+                self.reference_genome,
+                self.reference_dataset_collection,
+                self.reference_dataset_version,
             ),
-        ]
+        ),
 
-    def complete(self) -> None:
+    def complete(self) -> bool:
         return super().complete() and hl.eval(
             hl.read_table(self.path).globals.reference_datasets.contains(
                 reference_dataset_collection_path(
@@ -40,3 +38,6 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
                 ),
             ),
         )
+
+    def run(self) -> None:
+        print("Running UpdateVariantAnnotationsTableWithReferenceData")

@@ -21,11 +21,11 @@ class BaseVariantAnnotationsTable(luigi.Task):
             self.dataset_type,
         )
 
-    def output(self):
+    def output(self) -> luigi.Target:
         return GCSorLocalTarget(self.path)
 
-    def complete(self):
+    def complete(self) -> bool:
         return GCSorLocalTarget(os.path.join(self.path, '_SUCCESS')).exists()
 
-    def run(self):
+    def run(self) -> None:
         raise NotImplementedError
