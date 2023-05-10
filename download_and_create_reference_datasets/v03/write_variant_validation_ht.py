@@ -9,9 +9,10 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from hail_scripts.reference_data.config import GCS_PREFIXES
+from hail_scripts.reference_data.config import GCS_PREFIXES, CONFIG
 from hail_scripts.utils.hail_utils import write_ht
 
+AF_THRESHOLD = 0.9
 VARIANT_VALIDATION_HT_PATH = (
     'variant_validation/variant_validation.GRCh{genome_version}.{version}.ht'
 )
@@ -20,26 +21,26 @@ VERSION = '1.0.0'
 
 def read_gnomad_subset(genome_version: str):
     filtered_contig = '1' if genome_version == '37' else 'chr1'
-    ht = hl.read_table(CONFIG['gnomad_genomes'][genome_version])
+    ht = hl.read_table(CONFIG['gnomad_genomes'][genome_version]['path'])
     ht = hl.filter_intervals(
         ht,
         [
             hl.parse_locus_interval(
-                filtered_contig, reference_genome='GRCh%s' % genome_version
-            )
+                filtered_contig, reference_genome='GRCh%s' % genome_version,
+            ),
         ],
     )
-    ht = ht.filter(ht.freq[0].AF > 0.90)
+    ht = ht.filter(ht.freq[0].AF > AF_THRESHOLD)
     ht = ht.annotate(
         main_transcript=(
             get_expr_for_worst_transcript_consequence_annotations_struct(
                 get_expr_for_vep_sorted_transcript_consequences_array(
-                    ht.vep, omit_consequences=[]
-                )
+                    ht.vep, omit_consequences=[],
+                ),
             )
-        )
+        ),
     )
-    ht = ht.annotate(
+    ht = ht.select(
         coding_variants=(
             hl.int(ht.main_transcript.major_consequence_rank)
             <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'))
@@ -49,14 +50,13 @@ def read_gnomad_subset(genome_version: str):
             >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
         ),
     )
-    ht = ht.filter(ht.coding_variants | ht.noncoding_variants)
-    return ht
+    return ht.filter(ht.coding_variants | ht.noncoding_variants)
 
 
 def run(environment: str, genome_version: str):
     ht = read_gnomad_subset(genome_version)
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], VARIANT_VALIDATION_HT_PATH
+        GCS_PREFIXES[environment], VARIANT_VALIDATION_HT_PATH,
     ).format(
         genome_version=genome_version,
         version=VERSION,

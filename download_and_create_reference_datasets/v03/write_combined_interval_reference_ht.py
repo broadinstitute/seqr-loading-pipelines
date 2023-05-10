@@ -10,7 +10,7 @@ from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
 INTERVAL_REFERENCE_HT_PATH = (
-    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
+    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.{version}ht'
 )
 VERSION = '1.0.0'
 
@@ -18,14 +18,14 @@ VERSION = '1.0.0'
 def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH
+        GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH,
     ).format(
-        environment=environment,
         genome_version=genome_version,
+        version=VERSION,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
-            destination_path, dataset, DATASETS, VERSION, genome_version
+            destination_path, dataset, DATASETS, VERSION, genome_version,
         )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
