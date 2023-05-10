@@ -159,7 +159,7 @@ def reference_dataset_collection_path(
     env: Env,
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
-    version: str,
+    reference_dataset_collection_version: str,
 ) -> str:
     remote_root = (
         SEQR_REFERENCE_DATA
@@ -172,8 +172,8 @@ def reference_dataset_collection_path(
             remote_root,
             reference_genome,
         ),
-        reference_dataset_collection.value,
-        f'{version}.ht',
+        reference_dataset_collection.value.lower(),
+        f'{reference_dataset_collection_version}.ht',
     )
 
 

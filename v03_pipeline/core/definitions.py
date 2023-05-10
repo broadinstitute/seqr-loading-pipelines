@@ -23,45 +23,45 @@ class Env(Enum):
 
 class ReferenceDataset(Enum):
     # Shared (used by SNV and MITO)
-    CLINVAR = 'clinvar'
-    DBNSFP = 'dbnsfp'
+    CLINVAR = 'CLINVAR'
+    DBNSFP = 'DBNSFP'
 
     # SNV
-    CADD = 'cadd'
-    EIGEN = 'eigen'
-    EXAC = 'exac'
-    GENO2MP = 'geno2mp'
-    GNOMAD_EXOME_COVERAGE = 'gnomad_exome_coverage'
-    GNOMAD_EXOMES = 'gnomad_exomes'
-    GNOMAD_GENOME_COVERAGE = 'gnomad_genome_coverage'
-    GNOMAD_GENOMES = 'gnomad_genomes'
-    GNOMAD_NON_CODING_CONSTRAINT = 'gnomad_non_coding_constraint'
-    HGMD = 'hgmd'
-    MPC = 'mpc'
-    PRIMATE_AI = 'primate_ai'
-    SCREEN = 'screen'
-    SPLICE_AI = 'splice_ai'
-    TGP = 'tgp'
-    TOPMED = 'topmed'
+    CADD = 'CADD'
+    EIGEN = 'EIGEN'
+    EXAC = 'EXAC'
+    GENO2MP = 'GENO2MP'
+    GNOMAD_EXOME_COVERAGE = 'GNOMAD_EXOME_COVERAGE'
+    GNOMAD_EXOMES = 'GNOMAD_EXOMES'
+    GNOMAD_GENOME_COVERAGE = 'GNOMAD_GENOME_COVERAGE'
+    GNOMAD_GENOMES = 'GNOMAD_GENOMES'
+    GNOMAD_NON_CODING_CONSTRAINT = 'GNOMAD_NON_CODING_CONSTRAINT'
+    HGMD = 'HGMD'
+    MPC = 'MPC'
+    PRIMATE_AI = 'PRIMATE_AI'
+    SCREEN = 'SCREEN'
+    SPLICE_AI = 'SPLICE_AI'
+    TGP = 'TGP'
+    TOPMED = 'TOPMED'
 
     # MITO
-    GNOMAD_MITO = 'gnomad_mito'
-    HELIX_MITO = 'helix_mito'
-    HMTVAR = 'hmtvar'
-    MITOMAP = 'mitomap'
-    MITIMPACT = 'mitimpact'
+    GNOMAD_MITO = 'GNOMAD_MITO'
+    HELIX_MITO = 'HELIX_MITO'
+    HMTVAR = 'HMTVAR'
+    MITOMAP = 'MITOMAP'
+    MITIMPACT = 'MITIMPACT'
 
     # Validation
-    VARIANT_VALIDATION = 'coding_validation'
+    VARIANT_VALIDATION = 'VARIANT_VALIDATION'
 
 
 class ReferenceDatasetCollection(Enum):
-    CLINVAR = 'clinvar'
-    COMBINED = 'combined'
-    COMBINED_MITO = 'combined_mito'
-    HGMD = 'hgmd'
-    INTERVAL_REFERENCE = 'interval_reference'
-    VARIANT_VALIDATION = 'coding_validation'
+    CLINVAR = 'CLINVAR'
+    COMBINED = 'COMBINED'
+    COMBINED_MITO = 'COMBINED_MITO'
+    HGMD = 'HGMD'
+    INTERVAL_REFERENCE = 'INTERVAL_REFERENCE'
+    VARIANT_VALIDATION = 'VARIANT_VALIDATION'
 
     @property
     def access_control(self) -> AccessControl:

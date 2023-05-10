@@ -13,7 +13,7 @@ from v03_pipeline.tasks.variant_annotations_table.base_variant_annotations_table
 
 class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
-    reference_dataset_version = luigi.Parameter(
+    reference_dataset_collection_version = luigi.Parameter(
         description='Version of the reference dataset collection',
     )
 
@@ -23,7 +23,7 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
                 self.env,
                 self.reference_genome,
                 self.reference_dataset_collection,
-                self.reference_dataset_version,
+                self.reference_dataset_collection_version,
             ),
         ),
 
@@ -34,7 +34,7 @@ class UpdateVariantAnnotationsTableWithReferenceData(BaseVariantAnnotationsTable
                     self.env,
                     self.reference_genome,
                     self.reference_dataset_collection,
-                    self.reference_dataset_version,
+                    self.reference_dataset_collection_version,
                 ),
             ),
         )
