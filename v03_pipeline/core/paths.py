@@ -66,7 +66,7 @@ def family_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    family: str,
+    family_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
@@ -76,7 +76,7 @@ def family_table_path(
         ),
         dataset_type.value,
         'families',
-        family,
+        family_guid,
         'all_samples.ht',
     )
 
@@ -136,7 +136,7 @@ def project_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    project: str,
+    project_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
@@ -146,7 +146,7 @@ def project_table_path(
         ),
         dataset_type.value,
         'projects',
-        project,
+        project_guid,
         'all_samples.ht',
     )
 
