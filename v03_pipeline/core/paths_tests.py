@@ -12,10 +12,13 @@ from v03_pipeline.core.definitions import (
 from v03_pipeline.core.paths import (
     family_table_path,
     project_pedigree_path,
+    project_remap_path,
+    project_subset_path,
     project_table_path,
     reference_dataset_collection_path,
     variant_annotations_table_path,
     variant_lookup_table_path,
+    vcf_remap_path,
 )
 
 
@@ -61,13 +64,24 @@ class TestPaths(unittest.TestCase):
 
     def test_project_remap_path(self) -> None:
         self.assertEqual(
-            project_pedigree_path(
+            project_remap_path(
                 ReferenceGenome.GRCh37,
                 SampleSource.RDG_BROAD_INTERNAL,
                 SampleType.WGS,
                 '015_test',
             ),
-            'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_Internal/base/projects/015_test/015_test_pedigree.tsv',
+            'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_Internal/base/projects/015_test/015_test_remap.tsv',
+        )
+
+    def test_project_subset_path(self) -> None:
+        self.assertEqual(
+            project_subset_path(
+                ReferenceGenome.GRCh38,
+                SampleSource.RDG_BROAD_INTERNAL,
+                SampleType.WES,
+                '015_test',
+            ),
+            'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/015_test/015_test_ids.txt',
         )
 
     def reference_dataset_collection_path(self) -> None:
@@ -119,4 +133,18 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SV,
             ),
             '/var/abcd/GRCh37/v03/SV/lookup.ht',
+        )
+
+    def test_vcf_remap_path(self) -> None:
+        self.assertEqual(
+            vcf_remap_path(
+                'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_External/v3/RDG_WGS_Broad_External.vcf.bgz'
+            ),
+            'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_External/v3/RDG_WGS_Broad_External_remap.tsv'
+        )
+        self.assertEqual(
+            vcf_remap_path(
+                'local.vcf'
+            ),
+            'local_remap.tsv'
         )

@@ -10,16 +10,16 @@ from v03_pipeline.tasks.variant_annotations_table.base_variant_annotations_table
 
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTable):
-    new_vcf = luigi.Parameter(
+    vcf_file = luigi.Parameter(
         description='Path to the vcf containing the new samples.',
     )
 
     def requires(self) -> List[luigi.Task]:
         return [
-            RawFile(self.new_sample_vcf),
+            RawFile(self.vcf_file),
         ]
 
     def complete(self) -> None:
         return super().complete() and hl.eval(
-            hl.read_table(self.path).globals.sample_vcfs.contains(self.new_vcf),
+            hl.read_table(self.path).globals.sample_vcfs.contains(self.vcf_file),
         )

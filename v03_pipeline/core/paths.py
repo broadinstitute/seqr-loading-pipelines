@@ -1,4 +1,5 @@
 import os
+import re
 
 from v03_pipeline.core.definitions import (
     AccessControl,
@@ -12,6 +13,7 @@ from v03_pipeline.core.definitions import (
 
 BASE_PROJECTS = 'base/projects'
 LOCAL_DATA_ROOT = os.environ.get('LOCAL_DATA_ROOT', '/var/seqr')
+REMAP_SUFFIX = '_remap.tsv'
 SEQR_DATASETS = 'gs://seqr-datasets'
 SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
 SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
@@ -111,7 +113,7 @@ def project_remap_path(
             sample_type,
         ),
         BASE_PROJECTS,
-        f'{project_guid}/{project_guid}_remap.tsv',
+        f'{project_guid}/{project_guid}{REMAP_SUFFIX}',
     )
 
 
@@ -202,4 +204,14 @@ def variant_lookup_table_path(
         ),
         dataset_type.value,
         'lookup.ht',
+    )
+
+def vcf_remap_path(
+    vcf_file: str,
+) -> str:
+    return re.sub(
+        r'\.vcf$|\.vcf\.gz$|\.vcf\.bgz$',
+        REMAP_SUFFIX,
+        vcf_file,
+        count=1,
     )
