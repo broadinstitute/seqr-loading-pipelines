@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Literal
 
 from v03_pipeline.core.definitions import (
     AccessControl,
@@ -96,7 +97,8 @@ def project_pedigree_path(
             sample_type,
         ),
         BASE_PROJECTS,
-        f'{project_guid}/{project_guid}_pedigree.tsv',
+        project_guid,
+        f'{project_guid}_pedigree.tsv',
     )
 
 
@@ -113,7 +115,8 @@ def project_remap_path(
             sample_type,
         ),
         BASE_PROJECTS,
-        f'{project_guid}/{project_guid}{REMAP_SUFFIX}',
+        project_guid,
+        f'{project_guid}{REMAP_SUFFIX}',
     )
 
 
@@ -130,7 +133,8 @@ def project_subset_path(
             sample_type,
         ),
         BASE_PROJECTS,
-        f'{project_guid}/{project_guid}_ids.txt',
+        project_guid,
+        f'{project_guid}_ids.txt',
     )
 
 
@@ -207,11 +211,17 @@ def variant_lookup_table_path(
     )
 
 def vcf_remap_path(
-    vcf_file: str,
+    reference_genome: ReferenceGenome,
+    sample_source: SampleSource,
+    vcf_version: str,
 ) -> str:
-    return re.sub(
-        r'\.vcf$|\.vcf\.gz$|\.vcf\.bgz$',
-        REMAP_SUFFIX,
-        vcf_file,
-        count=1,
+    sample_type = SampleType.WGS
+    return os.path.join(
+        _v02_pipeline_prefix(
+            reference_genome,
+            sample_source,
+            sample_type,
+        ),
+        vcf_version,
+        f'{_v02_dag_name(sample_source, sample_type)}{REMAP_SUFFIX}'
     )

@@ -138,13 +138,9 @@ class TestPaths(unittest.TestCase):
     def test_vcf_remap_path(self) -> None:
         self.assertEqual(
             vcf_remap_path(
-                'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_External/v3/RDG_WGS_Broad_External.vcf.bgz'
+                ReferenceGenome.GRCh38,
+                SampleSource.RDG_BROAD_INTERNAL,
+                'v36',
             ),
-            'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_External/v3/RDG_WGS_Broad_External_remap.tsv'
-        )
-        self.assertEqual(
-            vcf_remap_path(
-                'local.vcf'
-            ),
-            'local_remap.tsv'
+            'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv'
         )
