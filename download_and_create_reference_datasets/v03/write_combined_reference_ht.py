@@ -8,7 +8,9 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
-COMBINED_REFERENCE_HT_PATH = 'combined_reference/combined_reference.GRCh{genome_version}-{version}.ht'
+COMBINED_REFERENCE_HT_PATH = (
+    'combined_reference/combined_reference.GRCh{genome_version}-{version}.ht'
+)
 DATASETS = [
     'tgp',
     'cadd',
@@ -27,18 +29,24 @@ DATASETS = [
 ]
 VERSION = '1.0.0'
 
+
 def run(environment: str, genome_version: str, dataset: str):
-    destination_path = os.path.join(GCS_PREFIXES[environment], COMBINED_REFERENCE_HT_PATH).format(
+    destination_path = os.path.join(
+        GCS_PREFIXES[environment], COMBINED_REFERENCE_HT_PATH
+    ).format(
         environment=environment,
         genome_version=genome_version,
         version=VERSION,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
-        ht = update_existing_joined_hts(destination_path, dataset, DATASETS, VERSION, genome_version)
+        ht = update_existing_joined_hts(
+            destination_path, dataset, DATASETS, VERSION, genome_version
+        )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

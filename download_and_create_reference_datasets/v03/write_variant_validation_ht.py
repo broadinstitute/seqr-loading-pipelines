@@ -12,7 +12,9 @@ from hail_scripts.computed_fields.vep import (
 from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
-VARIANT_VALIDATION_HT_PATH = 'variant_validation/variant_validation.GRCh{genome_version}.{version}.ht'
+VARIANT_VALIDATION_HT_PATH = (
+    'variant_validation/variant_validation.GRCh{genome_version}.{version}.ht'
+)
 VERSION = '1.0.0'
 
 
@@ -39,15 +41,15 @@ def read_gnomad_subset(genome_version: str):
     )
     ht = ht.annotate(
         coding_variants=(
-            hl.int(ht.main_transcript.major_consequence_rank) <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'))
+            hl.int(ht.main_transcript.major_consequence_rank)
+            <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'))
         ),
         noncoding_variants=(
-            hl.int(ht.main_transcript.major_consequence_rank) >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
+            hl.int(ht.main_transcript.major_consequence_rank)
+            >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
         ),
     )
-    ht = ht.filter(
-        ht.coding_variants | ht.noncoding_variants
-    )
+    ht = ht.filter(ht.coding_variants | ht.noncoding_variants)
     return ht
 
 
