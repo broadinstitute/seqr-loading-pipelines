@@ -114,7 +114,8 @@ def join_hts(datasets, version, reference_genome='37'):
     )
 
     # NB: coverage datasets are keyed by locus rather than locus
-    # and alleles.
+    # and alleles, so we cannot join.  Instead we annotate w/ locus as
+    # as the key.
     coverage_hts = [
         (dataset, get_ht(dataset, reference_genome))
         for dataset in datasets
