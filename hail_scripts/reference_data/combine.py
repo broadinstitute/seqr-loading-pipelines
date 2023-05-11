@@ -1,6 +1,5 @@
-import functools
-import re
 from datetime import datetime
+import functools
 
 import hail as hl
 
