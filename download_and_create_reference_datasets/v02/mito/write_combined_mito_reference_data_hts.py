@@ -6,7 +6,7 @@ import hail as hl
 
 from hail_scripts.reference_data.combine import join_hts
 
-VERSION = '2.0.5'
+VERSION = '2.0.4'
 OUTPUT_PATH = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')

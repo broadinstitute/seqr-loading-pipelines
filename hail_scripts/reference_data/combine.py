@@ -1,13 +1,10 @@
+import datetime
 import functools
-from datetime import datetime
-from typing import List
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
-
-ENUM_MAPPABLE_TYPES = {hl.tarray(hl.tstr), hl.tset(hl.tstr)}
-
 
 def get_select_fields(selects, base_ht):
     """
@@ -130,4 +127,3 @@ def update_existing_joined_hts(
         )
     )
     return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
-
