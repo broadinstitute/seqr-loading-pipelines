@@ -3,9 +3,11 @@ from enum import Enum
 
 import hail as hl
 
+
 class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
+
 
 def custom_gnomad_select_v2(ht):
     """
@@ -155,7 +157,7 @@ CONFIG = {
                     'DFP',
                     'DM',
                     'DM?',
-                    'DP', 
+                    'DP',
                     'FP',
                     'R',
                 ],
@@ -169,7 +171,7 @@ CONFIG = {
                     'DFP',
                     'DM',
                     'DM?',
-                    'DP', 
+                    'DP',
                     'FP',
                     'R',
                 ],
@@ -387,5 +389,8 @@ GCS_PREFIXES = {
     ('dev', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
     ('dev', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
     ('prod', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
-    ('prod', AccessControl.PRIVATE): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
+    (
+        'prod',
+        AccessControl.PRIVATE,
+    ): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
 }
