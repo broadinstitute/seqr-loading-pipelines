@@ -20,8 +20,8 @@ def run(environment: str, genome_version: str):
         environment=environment,
         genome_version=genome_version,
     )
-    mt = import_vcf(source_path, genome_version=genome_version, force=True)
-    ht = mt.rows().repartition(PARTITIONS)
+    mt = import_vcf(source_path, genome_version=genome_version, force=True, min_partitions=PARTITIONS), skip_invalid_loci=True)
+    ht = mt.rows()
     select_fields = {
         **get_select_fields(CONFIG[dataset][genome_version]['select'], ht),
         **get_enum_select_fields(CONFIG[dataset][genome_version]['enum_selects'], ht)
