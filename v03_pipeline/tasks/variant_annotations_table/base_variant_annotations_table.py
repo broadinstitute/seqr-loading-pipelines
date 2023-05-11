@@ -2,16 +2,23 @@ import os
 
 import luigi
 
-from v03_pipeline.core.definitions import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.core.definitions import (
+    DatasetType,
+    Env,
+    ReferenceGenome,
+    SampleSource,
+    SampleType,
+)
 from v03_pipeline.core.paths import variant_annotations_table_path
 from v03_pipeline.tasks.files import GCSorLocalTarget
 
 
 class BaseVariantAnnotationsTable(luigi.Task):
-    env = luigi.EnumParameter(enum=Env)
-    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
+    env = luigi.EnumParameter(enum=Env, default=Env.LOCAL)
+    reference_genome = luigi.EnumParameter(enum=ReferenceGenome, default=ReferenceGenome.GRCh38)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
+    sample_source = luigi.EnumParameter(enum=SampleSource, default=SampleSource.LOCAL)
 
     @property
     def variant_annotations_table_path(self) -> str:

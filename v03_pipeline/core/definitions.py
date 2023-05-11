@@ -15,18 +15,19 @@ class DatasetType(Enum):
     SV = 'sv'
 
 
-class Env(Enum):
-    DEV = 'dev'
-    PROD = 'prod'
-
-
-class GCSBucket(Enum):
+class DataRoot(Enum):
+    LOCAL_DATASETS = '/var/seqr-datasets'
+    LOCAL_REFERENCE_DATA = '/var/seqr-reference-data'
     SEQR_DATASETS = 'gs://seqr-datasets'
     SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
     SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
     SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
     SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 
+class Env(Enum):
+    DEV = 'dev'
+    LOCAL = 'local'
+    PROD = 'prod'
 
 class PipelineVersion(Enum):
     V02 = 'v02'
@@ -132,6 +133,7 @@ class ReferenceGenome(Enum):
 
 class SampleSource(Enum):
     ANVIL = 'anvil'
+    LOCAL = 'local'
     RDG_BROAD_EXTERNAL = 'rdg_broad_external'
     RDG_BROAD_INTERNAL = 'rdg_broad_internal'
 

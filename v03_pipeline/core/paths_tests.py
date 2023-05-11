@@ -19,12 +19,20 @@ from v03_pipeline.core.paths import (
     validation_dataset_collection_path,
     variant_annotations_table_path,
     variant_lookup_table_path,
-    vcf_remap_path,
 )
 
 
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
+        self.assertEqual(
+            family_table_path(
+                Env.LOCAL,
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV,
+                'franklin',
+            ),
+            '/var/seqr-datasets/GRCh37/v03/snv/families/franklin/all_samples.ht',
+        )
         self.assertEqual(
             family_table_path(
                 Env.DEV,
@@ -88,7 +96,7 @@ class TestPaths(unittest.TestCase):
             'gs://seqr-datasets/v02/GRCh38/RDG_WES_Broad_Internal/base/projects/015_test/015_test_ids.txt',
         )
 
-    def reference_dataset_collection_path(self) -> None:
+    def test_reference_dataset_collection_path(self) -> None:
         self.assertEqual(
             reference_dataset_collection_path(
                 Env.PROD,
@@ -106,6 +114,26 @@ class TestPaths(unittest.TestCase):
                 '1.2.3',
             ),
             'gs://seqr-scratch-temp/GRCh37/v03/clinvar/1.2.3.ht',
+        )
+
+    def test_validation_dataset_collection_path(self) -> None:
+        self.assertEqual(
+            validation_dataset_collection_path(
+                Env.LOCAL,
+                ReferenceGenome.GRCh37,
+                ValidationDatasetCollection.SAMPLE_TYPE_VALIDATION,
+                '3.2.1',
+            ),
+            '/var/seqr-reference-data/GRCh37/v03/sample_type_validation/3.2.1.ht',
+        )
+        self.assertEqual(
+            validation_dataset_collection_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                ValidationDatasetCollection.SAMPLE_TYPE_VALIDATION,
+                '3.2.1',
+            ),
+            'gs://seqr-reference-data/GRCh38/v03/sample_type_validation/3.2.1.ht',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -126,25 +154,4 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SV,
             ),
             'gs://seqr-datasets/GRCh37/v03/sv/lookup.ht',
-        )
-
-    def test_validation_dataset_collection_path(self) -> None:
-        self.assertEqual(
-            validation_dataset_collection_path(
-                Env.PROD,
-                ReferenceGenome.GRCh38,
-                ValidationDatasetCollection.SAMPLE_TYPE_VALIDATION,
-                '3.2.1',
-            ),
-            'gs://seqr-reference-data/GRCh38/v03/sample_type_validation/3.2.1.ht',
-        )
-
-    def test_vcf_remap_path(self) -> None:
-        self.assertEqual(
-            vcf_remap_path(
-                ReferenceGenome.GRCh38,
-                SampleSource.RDG_BROAD_INTERNAL,
-                'v36',
-            ),
-            'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv',
         )

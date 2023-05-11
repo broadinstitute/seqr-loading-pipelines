@@ -13,9 +13,6 @@ class UpdateVariantAnnotationsTableWithNewProject(BaseVariantAnnotationsTable):
     vcf_file = luigi.Parameter(
         description='Path to the vcf containing the new samples.',
     )
-    vcf_remap_version = luigi.OptionalParameter(
-        description='Path suffix used to find the vcf remap file',
-    )
 
     def requires(self) -> luigi.Task:
         return [

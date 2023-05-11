@@ -3,10 +3,7 @@ import sys
 
 import luigi
 
-from v03_pipeline.tasks.variant_annotations_table import (  # noqa: F401
-    UpdateVariantAnnotationsTableWithNewProject,
-    UpdateVariantAnnotationsTableWithReferenceData,
-)
+import v03_pipeline.tasks # noqa: F401
 
 if __name__ == '__main__':
     luigi.run() or sys.exit(1)
