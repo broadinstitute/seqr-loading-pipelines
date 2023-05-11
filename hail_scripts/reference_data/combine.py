@@ -92,6 +92,7 @@ def update_joined_ht_globals(
     )
 
 def join_hts(datasets, version, reference_genome='37'):
+    
     # Get a list of hail tables and combine into an outer join.
     hts = [
         get_ht(dataset, reference_genome)
@@ -101,6 +102,9 @@ def join_hts(datasets, version, reference_genome='37'):
     joined_ht = functools.reduce(
         (lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts
     )
+
+    # NB: coverage datasets are keyed by locus rather than locus
+    # and alleles.
     coverage_hts = [
         (dataset, get_ht(dataset, reference_genome))
         for dataset in datasets
@@ -108,6 +112,7 @@ def join_hts(datasets, version, reference_genome='37'):
     ]
     for dataset, coverage_ht in coverage_hts:
         joined_ht.annotate(dataset = coverage_ht[ht.locus][dataset])
+
     joined_ht = update_joined_ht_globals(
         joined_ht, datasets, version, coverage_datasets, reference_genome
     )
