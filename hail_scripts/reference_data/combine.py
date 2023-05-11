@@ -5,8 +5,6 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
-STANDARD_JOIN_KEY = {'locus', 'alleles'}
-
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
