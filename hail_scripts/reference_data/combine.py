@@ -1,13 +1,9 @@
-import functools
-import re
 from datetime import datetime
+import functools
 
 import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
-
-ENUM_MAPPABLE_TYPES = {hl.tarray(hl.tstr), hl.tset(hl.tstr)}
-
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
@@ -62,7 +58,10 @@ def get_enum_select_fields(enum_selects, ht):
     for field_name, values in enum_selects.items():
         lookup = hl.dict(hl.enumerate(values, index_first=False))
         # NB: this conditioning on type is "outside" the hail expression context.
-        if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
+        if (
+            isinstance(ht[field_name].dtype, (hl.tarray, hl.tset)) and 
+            ht[field_name].dtype.element_type == hl.tstr
+        ):
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(lambda x: lookup[x])
         else:
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
@@ -70,15 +69,15 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
-    ht = hl.read_table(config['path']).distinct()
+    field_name = config.get('field_name') or dataset
+    ht = hl.read_table(config['path'])
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(**{
         **get_select_fields(config.get('select'), ht),
         **get_custom_select_fields(config.get('custom_select'), ht),
     })
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
-    ht = ht.select(**{dataset: ht.row.drop(*ht.key)})
-    return ht
+    return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
 
 def update_joined_ht_globals(
     joined_ht, datasets, version, coverage_datasets, reference_genome

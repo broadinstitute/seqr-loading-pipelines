@@ -6,7 +6,7 @@ import hail as hl
 from hail_scripts.reference_data.combine import join_hts
 from hail_scripts.reference_data.config import CONFIG
 
-VERSION = '2.0.5'
+VERSION = '2.0.4'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
                   'all_reference_data/v2/combined_reference_data_grch{genome_version}-{version}.ht'
 
