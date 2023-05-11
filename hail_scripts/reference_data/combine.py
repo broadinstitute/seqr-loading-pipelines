@@ -1,9 +1,11 @@
-from datetime import datetime
+import datetime
 import functools
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
+
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
@@ -104,11 +106,15 @@ def update_joined_ht_globals(
     )
 
 
-def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, version, coverage_datasets=None, reference_genome='37'):
+    if coverage_datasets is None:
+        coverage_datasets = []
+
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce(
-        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts
+        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
+        hts,
     )
 
     # Annotate coverages.

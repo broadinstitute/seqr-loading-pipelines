@@ -1,0 +1,37 @@
+name: Unit Tests
+
+# Run the test suite on pushes (incl. merges) to master and dev
+# Run the test suite when a PR is opened, pushed to, or reopened
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  unit_tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: 'requirements**.txt'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Check Import Sort
+        run: isort . --check --diff
+      - name: Check Black
+        run: black . --check --diff
+      - name: Check Ruff
+        run: ruff . --format github
