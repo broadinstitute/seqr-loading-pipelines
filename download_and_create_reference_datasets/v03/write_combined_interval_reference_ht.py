@@ -26,7 +26,11 @@ def run(environment: str, dataset: str):
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
-            destination_path, dataset, DATASETS, VERSION, genome_version,
+            destination_path,
+            dataset,
+            DATASETS,
+            VERSION,
+            genome_version,
         )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
