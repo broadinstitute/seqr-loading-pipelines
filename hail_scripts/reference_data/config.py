@@ -22,7 +22,8 @@ def custom_gnomad_select_v2(ht):
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.or_else(
-        ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF, ht.freq[global_idx].AF,
+        ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF,
+        ht.freq[global_idx].AF,
     )
     selects['FAF_AF'] = ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95
     selects['Hemi'] = hl.if_else(
@@ -307,7 +308,7 @@ CONFIG = {
     },
     'screen': {
         '38': {
-            'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
             'select': {'region_type': 'target'},
             'enum_select': {
                 'region_type': [

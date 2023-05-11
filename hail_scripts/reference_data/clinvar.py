@@ -9,9 +9,7 @@ CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_FTP_PATH = (
     'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
 )
-CLINVAR_HT_PATH = (
-    'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
-)
+CLINVAR_HT_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
 
 CLINVAR_ASSERTIONS = [
     'Affects',
@@ -108,7 +106,8 @@ def parsed_clnsigconf(ht: hl.Table):
 
 
 def download_and_import_latest_clinvar_vcf(
-    genome_version: str, tmp_file: str,
+    genome_version: str,
+    tmp_file: str,
 ) -> hl.MatrixTable:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
@@ -119,7 +118,7 @@ def download_and_import_latest_clinvar_vcf(
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
     clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    urllib.request.urlretrieve(clinvar_url, tmp_file.name) # noqa: S310
+    urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
     clinvar_release_date = _parse_clinvar_release_date(tmp_file.name)
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     mt = import_vcf(
