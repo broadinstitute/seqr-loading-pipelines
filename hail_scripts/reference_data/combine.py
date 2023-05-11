@@ -5,6 +5,8 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
+COMBINED_JOIN_KEY = {'locus', 'alleles'}
+
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -67,8 +69,8 @@ def get_ht(dataset: str, reference_genome: str):
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
 
-def update_joined_ht_globals(
-    joined_ht, datasets, version, reference_genome
+def update_combined_ht_globals(
+    combined_ht, datasets, version, reference_genome
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
@@ -84,30 +86,24 @@ def update_joined_ht_globals(
         for enum_field_name, enum_values in v[reference_genome]['enum_select'].items()
     }
     # Add metadata, but also removes previous globals.
-    return joined_ht.select_globals(
+    return combined_ht.select_globals(
         date=datetime.now().isoformat(),
         datasets=hl.dict(included_dataset),
         version=version,
         enum_definitions=hl.dict(enum_definitions),
     )
 
+def combine_hts(joined_ht, ht):
+    if set(joined_ht.key) == COMBINED_JOIN_KEY:
+        return joined_ht.join(ht, 'outer')
+    dataset = list(ht.row_value)[0]
+    return joined_ht.annotate(dataset = ht[ht.locus][dataset])
 
 def join_hts(datasets, version, reference_genome='37'):
-
     # Get a list of hail tables and combine into an outer join.
-    non_coverage_hts = [get_ht(dataset, reference_genome) for dataset in datasets if 'coverage' not in dataset]
-    joined_ht = functools.reduce(
-        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
-        non_coverage_hts, 
-    )
-    coverage_hts = [get_ht(dataset, reference_genome) for dataset in datasets if 'coverage' in dataset]
-    joined_ht = functools.reduce(
-        (lambda joined_ht, ht: joined_ht.annotate(dataset = ht[ht.locus][dataset]))
-        coverage_hts,
-    )
-
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    joined_ht = functools.reduce(combine_hts, hts)
     joined_ht = update_joined_ht_globals(
         joined_ht, datasets, version, reference_genome
     )
-    joined_ht.describe()
     return joined_ht
