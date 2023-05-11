@@ -13,17 +13,20 @@ from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
-INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
+INTERVAL_REFERENCE_HT_PATH = (
+    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
+)
 VERSION = '1.0.0'
+
 
 def update_existing(destination_path: str, dataset: str, genome_version: str):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = (destination_ht
-        .drop(dataset)
+    destination_ht = (
+        destination_ht.drop(dataset)
         .join(dataset_ht, 'outer')
         .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS])
+            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS]),
         )
     )
     return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
@@ -35,9 +38,13 @@ def create_new(genome_version: str):
         reference_genome=genome_version,
     )
 
+
 def run(environment: str, dataset: str):
     genome_version = '38'
-    destination_path = os.path.join(GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH).format(
+    destination_path = os.path.join(
+        GCS_PREFIXES[environment],
+        INTERVAL_REFERENCE_HT_PATH,
+    ).format(
         environment=environment,
         genome_version=genome_version,
     )
@@ -48,13 +55,10 @@ def run(environment: str, dataset: str):
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--environment',
-        default='dev',
-        choices=['dev', 'prod']
-    )
+    parser.add_argument('--environment', default='dev', choices=['dev', 'prod'])
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
