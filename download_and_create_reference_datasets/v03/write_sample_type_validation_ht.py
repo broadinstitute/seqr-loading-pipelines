@@ -13,8 +13,8 @@ from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 AF_THRESHOLD = 0.9
-VARIANT_VALIDATION_HT_PATH = (
-    'variant_validation/variant_validation.GRCh{genome_version}.{version}.ht'
+SAMPLE_TYPE_VALIDATION_HT_PATH = (
+    'sample_type_validation/sample_type_validation.GRCh{genome_version}.{version}.ht'
 )
 VERSION = '1.0.0'
 
@@ -59,7 +59,7 @@ def run(environment: str, genome_version: str):
     ht = read_gnomad_subset(genome_version)
     destination_path = os.path.join(
         GCS_PREFIXES[environment],
-        VARIANT_VALIDATION_HT_PATH,
+        SAMPLE_TYPE_VALIDATION_HT_PATH,
     ).format(
         genome_version=genome_version,
         version=VERSION,
