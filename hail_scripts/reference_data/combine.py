@@ -49,10 +49,10 @@ def get_enum_select_fields(enum_selects, ht):
     for field_name, values in enum_selects.items():
         lookup = hl.dict(
             hl.enumerate(values, index_first=False).extend(
-                 # NB: adding missing values here allows us to
-                 # hard fail if a mapped key is present but an unexpected value
-                 # but also propagate missing values.
-                 [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
+                # NB: adding missing values here allows us to
+                # hard fail if a mapped key is present but an unexpected value
+                # but also propagate missing values.
+                [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
             ),
         )
         # NB: this conditioning on type is "outside" the hail expression context.
@@ -133,10 +133,14 @@ def join_hts(datasets, version, reference_genome='37'):
         joined_ht.annotate(dataset=coverage_ht[coverage_ht.locus][dataset])
 
     joined_ht = update_joined_ht_globals(
-        joined_ht, datasets, version, reference_genome,
+        joined_ht,
+        datasets,
+        version,
+        reference_genome,
     )
     joined_ht.describe()
     return joined_ht
+
 
 def update_existing_joined_hts(
     destination_path: str,
@@ -147,12 +151,11 @@ def update_existing_joined_hts(
 ):
     destination_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = (destination_ht
-        .drop(dataset)
+    destination_ht = (
+        destination_ht.drop(dataset)
         .join(dataset_ht, 'outer')
         .filter(
             hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets]),
         )
     )
     return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
-

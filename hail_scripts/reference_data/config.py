@@ -2,8 +2,10 @@ from copy import deepcopy
 
 import hail as hl
 
+
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
+
 
 def dbnsfp_custom_select(ht):
     selects = {}
@@ -13,6 +15,7 @@ def dbnsfp_custom_select(ht):
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
+
 
 def custom_gnomad_select_v2(ht):
     """
@@ -64,10 +67,12 @@ def custom_gnomad_select_v3(ht):
     )
     return selects
 
+
 def custom_mpc_select(ht):
     selects = {}
     selects['MPC'] = hl.parse_float(ht.info.MPC)
     return selects
+
 
 """
 Configurations of dataset to combine.
