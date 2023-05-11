@@ -2,7 +2,6 @@ import datetime
 import functools
 
 import hail as hl
-import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
@@ -18,6 +17,7 @@ def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
     coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
     return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
+
 
 def get_select_fields(selects, base_ht):
     """
@@ -48,10 +48,12 @@ def get_select_fields(selects, base_ht):
             select_fields[key] = ht
     return select_fields
 
+
 def get_custom_select_fields(custom_select, ht):
     if custom_select is None:
         return {}
     return custom_select(ht)
+
 
 def get_enum_select_fields(enum_selects, ht):
     enum_select_fields = {}
@@ -61,28 +63,34 @@ def get_enum_select_fields(enum_selects, ht):
         lookup = hl.dict(hl.enumerate(values, index_first=False))
         # NB: this conditioning on type is "outside" the hail expression context.
         if (
-            isinstance(ht[field_name].dtype, (hl.tarray, hl.tset)) and 
-            ht[field_name].dtype.element_type == hl.tstr
+            isinstance(ht[field_name].dtype, (hl.tarray, hl.tset))
+            and ht[field_name].dtype.element_type == hl.tstr
         ):
-            enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(lambda x: lookup[x])
+            enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
+                lambda x: lookup[x],
+            )
         else:
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
     return enum_select_fields
+
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
     field_name = config.get('field_name') or dataset
     ht = hl.read_table(config['path'])
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
-    ht = ht.select(**{
-        **get_select_fields(config.get('select'), ht),
-        **get_custom_select_fields(config.get('custom_select'), ht),
-    })
+    ht = ht.select(
+        **{
+            **get_select_fields(config.get('select'), ht),
+            **get_custom_select_fields(config.get('custom_select'), ht),
+        },
+    )
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
 
+
 def update_joined_ht_globals(
-    joined_ht, datasets, version, coverage_datasets, reference_genome
+    joined_ht, datasets, version, coverage_datasets, reference_genome,
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
@@ -122,7 +130,7 @@ def join_hts(datasets, version, coverage_datasets=None, reference_genome='37'):
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
     joined_ht = update_joined_ht_globals(
-        joined_ht, datasets, version, coverage_datasets, reference_genome
+        joined_ht, datasets, version, coverage_datasets, reference_genome,
     )
     joined_ht.describe()
     return joined_ht

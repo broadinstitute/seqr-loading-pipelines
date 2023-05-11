@@ -274,7 +274,7 @@ CONFIG = {
     },
     'screen': {
         '38': {
-            'path' : 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
             'select': {'region_type': 'target'},
             'enum_select': {
                 'region_type': [
