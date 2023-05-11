@@ -9,7 +9,7 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from hail_scripts.reference_data.config import GCS_PREFIXES, CONFIG
+from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 AF_THRESHOLD = 0.9
@@ -26,7 +26,8 @@ def read_gnomad_subset(genome_version: str):
         ht,
         [
             hl.parse_locus_interval(
-                filtered_contig, reference_genome='GRCh%s' % genome_version,
+                filtered_contig,
+                reference_genome='GRCh%s' % genome_version,
             ),
         ],
     )
@@ -35,7 +36,8 @@ def read_gnomad_subset(genome_version: str):
         main_transcript=(
             get_expr_for_worst_transcript_consequence_annotations_struct(
                 get_expr_for_vep_sorted_transcript_consequences_array(
-                    ht.vep, omit_consequences=[],
+                    ht.vep,
+                    omit_consequences=[],
                 ),
             )
         ),
@@ -56,7 +58,8 @@ def read_gnomad_subset(genome_version: str):
 def run(environment: str, genome_version: str):
     ht = read_gnomad_subset(genome_version)
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], VARIANT_VALIDATION_HT_PATH,
+        GCS_PREFIXES[environment],
+        VARIANT_VALIDATION_HT_PATH,
     ).format(
         genome_version=genome_version,
         version=VERSION,
