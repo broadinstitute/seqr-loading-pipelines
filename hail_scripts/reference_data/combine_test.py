@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import dbnsfp_custom_select
 from hail_scripts.reference_data.combine import (
@@ -139,7 +140,16 @@ class ReferenceDataCombineTest(unittest.TestCase):
 
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     def test_update_joined_ht_globals(self, mock_datetime):
-        mock_datetime.now.return_value = datetime(2023, 4, 19, 16, 43, 39, 361110)
+        mock_datetime.now.return_value = datetime(
+            2023,
+            4,
+            19,
+            16,
+            43,
+            39,
+            361110,
+            tzinfo=pytz.timezone('US/Eastern'),
+        )
         ht = hl.Table.parallelize(
             [
                 {'a': ['1', '2'], 'b': 2},
