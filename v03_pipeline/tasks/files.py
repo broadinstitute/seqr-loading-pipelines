@@ -3,7 +3,7 @@ import os
 import luigi
 from luigi.contrib import gcs
 
-BGZ_GLOB_SUFFIX = '/*.bgz'
+BGZ_GLOB_SUFFIX = '*.bgz'
 
 
 def GCSorLocalTarget(filename: str) -> luigi.Target:  # noqa: N802
