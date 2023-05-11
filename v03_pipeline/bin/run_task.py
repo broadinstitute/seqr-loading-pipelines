@@ -4,7 +4,7 @@ import sys
 import luigi
 
 from v03_pipeline.tasks.variant_annotations_table import (  # noqa: F401
-    UpdateVariantAnnotationsTableWithNewSamples,
+    UpdateVariantAnnotationsTableWithNewProject,
     UpdateVariantAnnotationsTableWithReferenceData,
 )
 

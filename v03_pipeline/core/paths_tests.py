@@ -1,5 +1,4 @@
 import unittest
-from unittest import mock
 
 from v03_pipeline.core.definitions import (
     DatasetType,
@@ -33,7 +32,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV,
                 'franklin',
             ),
-            'gs://seqr-scratch-temp/GRCh37/v03/SNV/families/franklin/all_samples.ht',
+            'gs://seqr-scratch-temp/GRCh37/v03/snv/families/franklin/all_samples.ht',
         )
         self.assertEqual(
             family_table_path(
@@ -42,18 +41,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV,
                 'franklin',
             ),
-            'gs://seqr-loading-temp/GRCh37/v03/SNV/families/franklin/all_samples.ht',
-        )
-
-    def test_project_table_path(self) -> None:
-        self.assertEqual(
-            project_table_path(
-                Env.PROD,
-                ReferenceGenome.GRCh38,
-                DatasetType.MITO,
-                'R0652_pipeline_test',
-            ),
-            'gs://seqr-datasets/GRCh38/v03/MITO/projects/R0652_pipeline_test/all_samples.ht',
+            'gs://seqr-loading-temp/GRCh37/v03/snv/families/franklin/all_samples.ht',
         )
 
     def test_project_pedigree_path(self) -> None:
@@ -76,6 +64,17 @@ class TestPaths(unittest.TestCase):
                 '015_test',
             ),
             'gs://seqr-datasets/v02/GRCh37/RDG_WGS_Broad_Internal/base/projects/015_test/015_test_remap.tsv',
+        )
+
+    def test_project_table_path(self) -> None:
+        self.assertEqual(
+            project_table_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                'R0652_pipeline_test',
+            ),
+            'gs://seqr-datasets/GRCh38/v03/mito/projects/R0652_pipeline_test/all_samples.ht',
         )
 
     def test_project_subset_path(self) -> None:
@@ -116,7 +115,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/annotations.ht',
+            'gs://seqr-scratch-temp/GRCh38/v03/gcnv/annotations.ht',
         )
 
     def test_variant_lookup_table_path(self) -> None:
@@ -126,7 +125,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            'gs://seqr-datasets/GRCh37/v03/SV/lookup.ht',
+            'gs://seqr-datasets/GRCh37/v03/sv/lookup.ht',
         )
 
     def test_validation_dataset_collection_path(self) -> None:
@@ -134,10 +133,10 @@ class TestPaths(unittest.TestCase):
             validation_dataset_collection_path(
                 Env.PROD,
                 ReferenceGenome.GRCh38,
-                ValidationDatasetCollection.VARIANT_VALIDATION,
+                ValidationDatasetCollection.SAMPLE_TYPE_VALIDATION,
                 '3.2.1',
             ),
-            'gs://seqr-reference-data/GRCh38/v03/variant_validation/3.2.1.ht',
+            'gs://seqr-reference-data/GRCh38/v03/sample_type_validation/3.2.1.ht',
         )
 
     def test_vcf_remap_path(self) -> None:
@@ -148,15 +147,4 @@ class TestPaths(unittest.TestCase):
                 'v36',
             ),
             'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/v36/RDG_WGS_Broad_Internal_remap.tsv',
-        )
-
-    @mock.patch('v03_pipeline.core.paths.LOCAL_DATA_ROOT', '/var/abcd')
-    def test_local_prefix(self) -> None:
-        self.assertEqual(
-            variant_lookup_table_path(
-                Env.LOCAL,
-                ReferenceGenome.GRCh37,
-                DatasetType.SV,
-            ),
-            '/var/abcd/GRCh37/v03/SV/lookup.ht',
         )

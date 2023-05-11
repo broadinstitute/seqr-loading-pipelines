@@ -4,60 +4,72 @@ from enum import Enum
 
 
 class AccessControl(Enum):
-    PUBLIC = 'PUBLIC'
-    PRIVATE = 'PRIVATE'
+    PUBLIC = 'public'
+    PRIVATE = 'private'
 
 
 class DatasetType(Enum):
-    GCNV = 'GCNV'
-    MITO = 'MITO'
-    SNV = 'SNV'
-    SV = 'SV'
+    GCNV = 'gcnv'
+    MITO = 'mito'
+    SNV = 'snv'
+    SV = 'sv'
 
 
 class Env(Enum):
-    DEV = 'DEV'
-    LOCAL = 'LOCAL'
-    PROD = 'PROD'
+    DEV = 'dev'
+    PROD = 'prod'
+
+
+class GCSBucket(Enum):
+    SEQR_DATASETS = 'gs://seqr-datasets'
+    SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
+    SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
+    SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
+    SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
+
+
+class PipelineVersion(Enum):
+    V02 = 'v02'
+    V03 = 'v03'
 
 
 class ReferenceDataset(Enum):
     # Shared (used by SNV and MITO)
-    CLINVAR = 'CLINVAR'
-    DBNSFP = 'DBNSFP'
+    CLINVAR = 'clinvar'
+    DBNSFP = 'dbnsfp'
 
     # SNV
-    CADD = 'CADD'
-    EIGEN = 'EIGEN'
-    EXAC = 'EXAC'
-    GENO2MP = 'GENO2MP'
-    GNOMAD_EXOME_COVERAGE = 'GNOMAD_EXOME_COVERAGE'
-    GNOMAD_EXOMES = 'GNOMAD_EXOMES'
-    GNOMAD_GENOME_COVERAGE = 'GNOMAD_GENOME_COVERAGE'
-    GNOMAD_GENOMES = 'GNOMAD_GENOMES'
-    GNOMAD_NON_CODING_CONSTRAINT = 'GNOMAD_NON_CODING_CONSTRAINT'
-    HGMD = 'HGMD'
-    MPC = 'MPC'
-    PRIMATE_AI = 'PRIMATE_AI'
-    SCREEN = 'SCREEN'
-    SPLICE_AI = 'SPLICE_AI'
-    TGP = 'TGP'
-    TOPMED = 'TOPMED'
+    CADD = 'cadd'
+    EIGEN = 'eigen'
+    EXAC = 'exac'
+    GENO2MP = 'geno2mp'
+    GNOMAD_EXOME_COVERAGE = 'gnomad_exome_coverage'
+    GNOMAD_EXOMES = 'gnomad_exomes'
+    GNOMAD_GENOME_COVERAGE = 'gnomad_genome_coverage'
+    GNOMAD_GENOMES = 'gnomad_genomes'
+    GNOMAD_NON_CODING_CONSTRAINT = 'gnomad_non_coding_constraint'
+    HGMD = 'hgmd'
+    MPC = 'mpc'
+    PRIMATE_AI = 'primate_ai'
+    SCREEN = 'screen'
+    SPLICE_AI = 'splice_ai'
+    TGP = 'tgp'
+    TOPMED = 'topmed'
 
     # MITO
-    GNOMAD_MITO = 'GNOMAD_MITO'
-    HELIX_MITO = 'HELIX_MITO'
-    HMTVAR = 'HMTVAR'
-    MITOMAP = 'MITOMAP'
-    MITIMPACT = 'MITIMPACT'
+    GNOMAD_MITO = 'gnomad_mito'
+    HELIX_MITO = 'helix_mito'
+    HMTVAR = 'hmtvar'
+    MITOMAP = 'mitomap'
+    MITIMPACT = 'mitimpact'
 
 
 class ReferenceDatasetCollection(Enum):
-    CLINVAR = 'CLINVAR'
-    COMBINED = 'COMBINED'
-    COMBINED_MITO = 'COMBINED_MITO'
-    HGMD = 'HGMD'
-    INTERVAL_REFERENCE = 'INTERVAL_REFERENCE'
+    CLINVAR = 'clinvar'
+    COMBINED = 'combined'
+    COMBINED_MITO = 'combined_mito'
+    HGMD = 'hgmd'
+    INTERVAL_REFERENCE = 'interval_reference'
 
     @property
     def access_control(self) -> AccessControl:
@@ -73,7 +85,7 @@ class ReferenceDatasetCollection(Enum):
             ReferenceDatasetCollection.COMBINED_MITO: {DatasetType.MITO},
             ReferenceDatasetCollection.HGMD: {DatasetType.SNV},
             ReferenceDatasetCollection.INTERVAL_REFERENCE: {DatasetType.SNV},
-        }
+        }[self]
 
     @property
     def reference_datasets(self) -> set[ReferenceDataset]:
@@ -119,15 +131,15 @@ class ReferenceGenome(Enum):
 
 
 class SampleSource(Enum):
-    ANVIL = 'ANVIL'
-    RDG_BROAD_EXTERNAL = 'RDG_BROAD_EXTERNAL'
-    RDG_BROAD_INTERNAL = 'RDG_BROAD_INTERNAL'
+    ANVIL = 'anvil'
+    RDG_BROAD_EXTERNAL = 'rdg_broad_external'
+    RDG_BROAD_INTERNAL = 'rdg_broad_internal'
 
 
 class SampleType(Enum):
-    WES = 'WES'
-    WGS = 'WGS'
+    WES = 'wes'
+    WGS = 'wgs'
 
 
 class ValidationDatasetCollection(Enum):
-    VARIANT_VALIDATION = 'VARIANT_VALIDATION'
+    SAMPLE_TYPE_VALIDATION = 'sample_type_validation'

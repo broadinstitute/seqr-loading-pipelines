@@ -4,6 +4,8 @@ from v03_pipeline.core.definitions import (
     AccessControl,
     DatasetType,
     Env,
+    GCSBucket,
+    PipelineVersion,
     ReferenceDatasetCollection,
     ReferenceGenome,
     SampleSource,
@@ -12,24 +14,17 @@ from v03_pipeline.core.definitions import (
 )
 
 BASE_PROJECTS = 'base/projects'
-LOCAL_DATA_ROOT = os.environ.get('LOCAL_DATA_ROOT', '/var/seqr')
 REMAP_SUFFIX = '_remap.tsv'
-SEQR_DATASETS = 'gs://seqr-datasets'
-SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
-SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
-SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
-SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
-V02 = 'v02'
-V03 = 'v03'
 
 
 def _v02_dag_name(sample_source: SampleSource, sample_type: SampleType) -> str:
+    formatted_sample_type = sample_type.value.upper()
     if sample_source == SampleSource.ANVIL:
-        return f'AnVIL_{sample_type.value}'
+        return f'AnVIL_{formatted_sample_type}'
     if sample_source == SampleSource.RDG_BROAD_EXTERNAL:
-        return f'RDG_{sample_type.value}_Broad_External'
+        return f'RDG_{formatted_sample_type}_Broad_External'
     if sample_source == SampleSource.RDG_BROAD_INTERNAL:
-        return f'RDG_{sample_type.value}_Broad_Internal'
+        return f'RDG_{formatted_sample_type}_Broad_Internal'
     msg = f'_v02_dag_name unimplemented for {sample_source}'
     raise ValueError(msg)
 
@@ -40,27 +35,40 @@ def _v02_pipeline_prefix(
     sample_type: SampleType,
 ) -> str:
     return os.path.join(
-        SEQR_DATASETS,
-        V02,
+        GCSBucket.SEQR_DATASETS.value,
+        PipelineVersion.V02.value,
         reference_genome.value,
         _v02_dag_name(sample_source, sample_type),
     )
 
 
+def _v03_reference_data_prefix(
+    env: Env,
+    root: GCSBucket,
+    reference_genome: ReferenceGenome,
+):
+    if env == Env.DEV:
+        root = GCSBucket.SEQR_SCRATCH_TEMP
+    return os.path.join(
+        root.value,
+        reference_genome.value,
+        PipelineVersion.V03.value,
+    )
+
+
 def _v03_pipeline_prefix(
     env: Env,
-    remote_root: str,
+    root: GCSBucket,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ) -> str:
-    root = remote_root
     if env == Env.DEV:
-        root = SEQR_SCRATCH_TEMP
-    elif env == Env.LOCAL:
-        root = LOCAL_DATA_ROOT
+        root = GCSBucket.SEQR_SCRATCH_TEMP
     return os.path.join(
-        root,
+        root.value,
         reference_genome.value,
-        V03,
+        PipelineVersion.V03.value,
+        dataset_type.value,
     )
 
 
@@ -73,10 +81,10 @@ def family_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            SEQR_LOADING_TEMP,
+            GCSBucket.SEQR_LOADING_TEMP,
             reference_genome,
+            dataset_type,
         ),
-        dataset_type.value,
         'families',
         family_guid,
         'all_samples.ht',
@@ -146,10 +154,10 @@ def project_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            SEQR_DATASETS,
+            GCSBucket.SEQR_DATASETS,
             reference_genome,
+            dataset_type,
         ),
-        dataset_type.value,
         'projects',
         project_guid,
         'all_samples.ht',
@@ -162,18 +170,18 @@ def reference_dataset_collection_path(
     reference_dataset_collection: ReferenceDatasetCollection,
     reference_dataset_collection_version: str,
 ) -> str:
-    remote_root = (
-        SEQR_REFERENCE_DATA
+    root = (
+        GCSBucket.SEQR_REFERENCE_DATA
         if reference_dataset_collection.access_control == AccessControl.PUBLIC
-        else SEQR_REFERENCE_DATA_PRIVATE
+        else GCSBucket.SEQR_REFERENCE_DATA_PRIVATE
     )
     return os.path.join(
-        _v03_pipeline_prefix(
+        _v03_reference_data_prefix(
             env,
-            remote_root,
+            root,
             reference_genome,
         ),
-        reference_dataset_collection.value.lower(),
+        reference_dataset_collection.value,
         f'{reference_dataset_collection_version}.ht',
     )
 
@@ -186,10 +194,10 @@ def variant_annotations_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            SEQR_DATASETS,
+            GCSBucket.SEQR_DATASETS,
             reference_genome,
+            dataset_type,
         ),
-        dataset_type.value,
         'annotations.ht',
     )
 
@@ -202,10 +210,10 @@ def variant_lookup_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            SEQR_DATASETS,
+            GCSBucket.SEQR_DATASETS,
             reference_genome,
+            dataset_type,
         ),
-        dataset_type.value,
         'lookup.ht',
     )
 
@@ -217,12 +225,12 @@ def validation_dataset_collection_path(
     validation_dataset_collection_version: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _v03_reference_data_prefix(
             env,
-            SEQR_REFERENCE_DATA,
+            GCSBucket.SEQR_REFERENCE_DATA,
             reference_genome,
         ),
-        validation_dataset_collection.value.lower(),
+        validation_dataset_collection.value,
         f'{validation_dataset_collection_version}.ht',
     )
 
