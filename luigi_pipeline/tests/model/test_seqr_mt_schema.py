@@ -18,7 +18,7 @@ class TestSeqrModel(unittest.TestCase):
 
         seqr_schema = SeqrVariantSchema(mt)
         seqr_schema.sorted_transcript_consequences().doc_id(
-            length=512
+            length=512,
         ).variant_id().contig().pos().start().end().ref().alt().pos().xstart().xstop().xpos().transcript_consequence_terms().transcript_ids().main_transcript().gene_ids().coding_gene_ids().domains().ac().af().an().annotate_all()
         mt = seqr_schema.select_annotated_mt()
 

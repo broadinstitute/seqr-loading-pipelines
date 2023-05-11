@@ -1,9 +1,11 @@
-from datetime import datetime
+import datetime
 import functools
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
+
 
 def annotate_coverages(ht, coverage_dataset, reference_genome):
     """
@@ -31,7 +33,7 @@ def get_select_fields(selects, base_ht):
     select_fields = {}
     if selects is not None:
         if isinstance(selects, list):
-            select_fields = { selection: base_ht[selection] for selection in selects }
+            select_fields = {selection: base_ht[selection] for selection in selects}
         elif isinstance(selects, dict):
             for key, val in selects.items():
                 # Grab the field and continually select it from the hail table.
@@ -39,8 +41,8 @@ def get_select_fields(selects, base_ht):
                 for attr in val.split('.'):
                     # Select from multi-allelic list.
                     if attr.endswith('#'):
-                        attr = attr[:-1]
-                        ht = ht[attr][base_ht.a_index-1]
+                        cleaned_attr = attr[:-1]
+                        ht = ht[cleaned_attr][base_ht.a_index - 1]
                     else:
                         ht = ht[attr]
                 select_fields[key] = ht
@@ -48,9 +50,9 @@ def get_select_fields(selects, base_ht):
 
 
 def get_ht(dataset, reference_genome):
-    ' Returns the appropriate deduped hail table with selects applied.'
+    "Returns the appropriate deduped hail table with selects applied."
     config = CONFIG[dataset][reference_genome]
-    print(f"Reading in {dataset}")
+    print(f'Reading in {dataset}')
     base_ht = hl.read_table(config['path'])
 
     if config.get('filter'):
@@ -61,30 +63,39 @@ def get_ht(dataset, reference_genome):
     if 'custom_select' in config:
         select_fields = {**select_fields, **config['custom_select'](base_ht)}
 
-
     field_name = config.get('field_name') or dataset
-    select_query = {
-        field_name: hl.struct(**select_fields)
-    }
+    select_query = {field_name: hl.struct(**select_fields)}
 
     print(select_fields)
     return base_ht.select(**select_query).distinct()
 
 
-def join_hts(datasets, version, coverage_datasets=[], reference_genome='37'):
+def join_hts(datasets, version, coverage_datasets=None, reference_genome='37'):
+    if coverage_datasets is None:
+        coverage_datasets = []
+
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
-    joined_ht = functools.reduce((lambda joined_ht, ht: joined_ht.join(ht, 'outer')), hts)
+    joined_ht = functools.reduce(
+        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
+        hts,
+    )
 
     # Annotate coverages.
     for coverage_dataset in coverage_datasets:
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
     # Track the dataset we've added as well as the source path.
-    included_dataset = {k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets + coverage_datasets}
+    included_dataset = {
+        k: v[reference_genome]['path']
+        for k, v in CONFIG.items()
+        if k in datasets + coverage_datasets
+    }
     # Add metadata, but also removes previous globals.
-    joined_ht = joined_ht.select_globals(date=datetime.now().isoformat(),
-                                         datasets=hl.dict(included_dataset),
-                                         version=version)
+    joined_ht = joined_ht.select_globals(
+        date=datetime.datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
+        datasets=hl.dict(included_dataset),
+        version=version,
+    )
     joined_ht.describe()
     return joined_ht
