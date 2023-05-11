@@ -31,6 +31,7 @@ def update_existing(destination_path: str, dataset: str, genome_version: str):
     )
     return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
 
+
 def create_new(genome_version: str):
     return join_hts(
         DATASETS,

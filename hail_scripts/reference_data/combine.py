@@ -5,6 +5,7 @@ import hail as hl
 
 from hail_scripts.reference_data.config import CONFIG
 
+
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -75,21 +76,14 @@ def get_ht(dataset: str, reference_genome: str):
 
 
 def update_joined_ht_globals(
-<<<<<<< HEAD
-    joined_ht, datasets, version, reference_genome
-=======
     joined_ht,
     datasets,
     version,
-    coverage_datasets,
     reference_genome,
->>>>>>> 247d9ceb0182413bec1796e1f4808cd0081dc5c7
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
-        k: v[reference_genome]['path']
-        for k, v in CONFIG.items()
-        if k in datasets
+        k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets
     }
     enum_definitions = {
         k: {enum_field_name: enum_values}
@@ -105,6 +99,7 @@ def update_joined_ht_globals(
         version=version,
         enum_definitions=hl.dict(enum_definitions),
     )
+
 
 def join_hts(datasets, version, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
@@ -126,13 +121,12 @@ def join_hts(datasets, version, reference_genome='37'):
         if 'coverage' in dataset
     ]
     for dataset, coverage_ht in coverage_hts:
-        joined_ht.annotate(dataset = coverage_ht[ht.locus][dataset])
+        joined_ht.annotate(dataset=coverage_ht[coverage_ht.locus][dataset])
 
     joined_ht = update_joined_ht_globals(
         joined_ht,
         datasets,
         version,
-        coverage_datasets,
         reference_genome,
     )
     joined_ht.describe()
