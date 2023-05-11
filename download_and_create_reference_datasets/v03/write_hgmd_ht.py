@@ -40,7 +40,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         '--genome-version',
-        default='37',
+        default='38',
         choices=['37', '38'],
     )
     args, _ = parser.parse_known_args()
