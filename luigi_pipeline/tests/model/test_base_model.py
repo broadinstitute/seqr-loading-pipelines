@@ -9,7 +9,7 @@ class TestBaseModel(unittest.TestCase):
     class TestSchema(BaseMTSchema):
         def __init__(self):
             super(TestBaseModel.TestSchema, self).__init__(
-                hl.import_vcf('tests/data/1kg_30variants.vcf.bgz')
+                hl.import_vcf('tests/data/1kg_30variants.vcf.bgz'),
             )
 
         @row_annotation()
@@ -80,10 +80,12 @@ class TestBaseModel(unittest.TestCase):
 
         except ValueError as e:
             self.assertEqual(
-                str(e), 'Schema: dependency hello is not a row annotation method.'
+                str(e),
+                'Schema: dependency hello is not a row annotation method.',
             )
             return True
         self.fail('Did not raise ValueError.')
+        return None
 
     def test_fn_require_class_error(self):
         def dummy():
@@ -98,10 +100,12 @@ class TestBaseModel(unittest.TestCase):
 
         except ValueError as e:
             self.assertEqual(
-                str(e), 'Schema: dependency dummy is not a row annotation method.'
+                str(e),
+                'Schema: dependency dummy is not a row annotation method.',
             )
             return True
         self.fail('Did not raise ValueError.')
+        return None
 
     def test_inheritance(self):
         class TestSchemaChild(TestBaseModel.TestSchema):
