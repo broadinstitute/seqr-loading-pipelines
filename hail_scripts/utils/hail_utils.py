@@ -52,6 +52,7 @@ def import_vcf(
     :param bool force_bgz: read .gz as a bgzipped file
     :param bool drop_samples: if True, discard genotype info
     :param bool skip_invalid_loci: if True, skip loci that are not consistent with the reference_genome.
+    :param split_multi_alleles: if True, split multiallelic variants.
     :param bool force: if True, load .vcf.gz files serially. No downstream operations can be parallelized, so this mode is strongly discouraged.
     """
 
