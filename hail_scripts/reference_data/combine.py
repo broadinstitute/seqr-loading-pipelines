@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
@@ -102,7 +103,7 @@ def update_joined_ht_globals(
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
-        date=datetime.now().isoformat(),
+        date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
         datasets=hl.dict(included_dataset),
         version=version,
         enum_definitions=hl.dict(enum_definitions),

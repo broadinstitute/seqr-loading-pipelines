@@ -14,6 +14,7 @@ INTERVAL_REFERENCE_HT_PATH = (
 )
 VERSION = '1.0.0'
 
+
 def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(
@@ -24,11 +25,14 @@ def run(environment: str, dataset: str):
         genome_version=genome_version,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
-        ht = update_existing_joined_hts(destination_path, dataset, DATASETS, VERSION, genome_version)
+        ht = update_existing_joined_hts(
+            destination_path, dataset, DATASETS, VERSION, genome_version,
+        )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
