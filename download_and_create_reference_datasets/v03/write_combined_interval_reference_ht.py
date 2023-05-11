@@ -30,7 +30,11 @@ def update_existing(destination_path: str, dataset: str, genome_version: str):
         )
     )
     return update_joined_ht_globals(
-        destination_ht, DATASETS, VERSION, [], genome_version,
+        destination_ht,
+        DATASETS,
+        VERSION,
+        [],
+        genome_version,
     )
 
 
@@ -45,7 +49,8 @@ def create_new(genome_version: str):
 def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], INTERVAL_REFERENCE_HT_PATH,
+        GCS_PREFIXES[environment],
+        INTERVAL_REFERENCE_HT_PATH,
     ).format(
         environment=environment,
         genome_version=genome_version,

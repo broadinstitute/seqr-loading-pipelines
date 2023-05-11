@@ -65,7 +65,11 @@ class ReferenceDataCombineTest(unittest.TestCase):
             hl.tstruct(a=hl.tarray('str'), b=hl.tint32),
         )
         ht = update_joined_ht_globals(
-            ht, ['cadd', 'screen'], '1.2.3', ['gnomad_exome_coverage'], '38',
+            ht,
+            ['cadd', 'screen'],
+            '1.2.3',
+            ['gnomad_exome_coverage'],
+            '38',
         )
         self.assertEqual(
             ht.globals.collect()[0],

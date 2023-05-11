@@ -90,7 +90,11 @@ def get_ht(dataset: str, reference_genome: str):
 
 
 def update_joined_ht_globals(
-    joined_ht, datasets, version, coverage_datasets, reference_genome,
+    joined_ht,
+    datasets,
+    version,
+    coverage_datasets,
+    reference_genome,
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
@@ -130,7 +134,11 @@ def join_hts(datasets, version, coverage_datasets=None, reference_genome='37'):
         joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
 
     joined_ht = update_joined_ht_globals(
-        joined_ht, datasets, version, coverage_datasets, reference_genome,
+        joined_ht,
+        datasets,
+        version,
+        coverage_datasets,
+        reference_genome,
     )
     joined_ht.describe()
     return joined_ht
