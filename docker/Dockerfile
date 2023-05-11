@@ -103,13 +103,14 @@ RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 # install hail utils
 RUN python3 -m pip install git+https://github.com/bw2/hail-utils.git
 
-# copy files from seqr-loading-pipelines repo
 WORKDIR /seqr-loading-pipelines
+COPY requirements.txt .
+RUN python3 -m pip install -r ./requirements.txt
+
+# copy files from seqr-loading-pipelines repo
 COPY hail_builds/ ./hail_builds
 COPY hail_scripts/ ./hail_scripts
 COPY luigi_pipeline/ ./luigi_pipeline
-
-RUN python3 -m pip install -r ./requirements.txt
 
 COPY docker/vep_configs/* /vep_configs/
 

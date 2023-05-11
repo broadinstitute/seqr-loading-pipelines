@@ -4,8 +4,9 @@ import logging
 
 import hail as hl
 
-from download_and_create_reference_datasets.v02.hail_scripts.write_combined_reference_data_ht import join_hts
+from hail_scripts.reference_data.combine import join_hts
 
+VERSION = '2.0.4'
 OUTPUT_PATH = 'gs://seqr-reference-data/GRCh38/mitochondrial/all_mito_reference_data/combined_reference_data_chrM.ht'
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s', level='INFO')
@@ -21,8 +22,11 @@ def run(args):
     hl.init(default_reference='GRCh38', min_block_size=128, master='local[32]')
 
     logger.info('Joining the mitochondrial reference datasets')
-    joined_ht = join_hts(['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'dbnsfp_mito'],
-                         reference_genome='38')
+    joined_ht = join_hts(
+        ['gnomad_mito', 'mitomap', 'mitimpact', 'hmtvar', 'helix_mito', 'dbnsfp_mito'],
+        VERSION,
+        reference_genome='38'
+    )
 
     joined_ht = joined_ht.rename({'dbnsfp_mito': 'dbnsfp'})
     output_path = args.output_path if args.output_path else OUTPUT_PATH
