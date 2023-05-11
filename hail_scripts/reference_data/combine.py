@@ -150,13 +150,16 @@ def update_existing_joined_hts(
     version: str,
     genome_version: str,
 ):
-    destination_ht = hl.read_table(destination_path)
+    joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = (
-        destination_ht.drop(dataset)
-        .join(dataset_ht, 'outer')
-        .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets]),
+    if 'coverage' in dataset:
+        joined_ht = (
+            joined_ht.drop(dataset)
+            .join(dataset_ht, 'outer')
+            .filter(
+                hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
+            )
         )
-    )
-    return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
+    else:
+        joined_ht.annotate(dataset=dataset_ht[dataset_ht.locus][dataset])
+    return update_joined_ht_globals(joined_ht, dataset, version, genome_version)
