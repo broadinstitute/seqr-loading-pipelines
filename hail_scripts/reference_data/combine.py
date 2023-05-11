@@ -1,7 +1,9 @@
-import datetime
 import functools
+from datetime import datetime
+from typing import List
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
@@ -28,8 +30,7 @@ def get_select_fields(selects, base_ht):
             for attr in val.split('.'):
                 # Select from multi-allelic list.
                 if attr.endswith('#'):
-                    attr = attr[:-1]
-                    ht = ht[attr][base_ht.a_index - 1]
+                    ht = ht[attr[:-1]][base_ht.a_index - 1]
                 else:
                     ht = ht[attr]
             select_fields[key] = ht
@@ -56,9 +57,12 @@ def get_enum_select_fields(enum_selects, ht):
             ),
         )
         # NB: this conditioning on type is "outside" the hail expression context.
-        if ht[field_name].dtype in ENUM_MAPPABLE_TYPES:
+        if (
+            isinstance(ht[field_name].dtype, (hl.tarray, hl.tset))
+            and ht[field_name].dtype.element_type == hl.tstr
+        ):
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
-                lambda x: lookup[x],
+                lambda x: lookup[x],  # noqa: B023
             )
         else:
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
@@ -67,7 +71,8 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
-    ht = hl.read_table(config['path']).distinct()
+    field_name = config.get('field_name') or dataset
+    ht = hl.read_table(config['path'])
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
         **{
@@ -76,8 +81,8 @@ def get_ht(dataset: str, reference_genome: str):
         },
     )
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
-    ht = ht.select(**{dataset: ht.row.drop(*ht.key)})
-    return ht
+    return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
+
 
 
 def update_joined_ht_globals(
@@ -99,7 +104,7 @@ def update_joined_ht_globals(
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
-        date=datetime.now().isoformat(),
+        date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
         datasets=hl.dict(included_dataset),
         version=version,
         enum_definitions=hl.dict(enum_definitions),
@@ -108,11 +113,26 @@ def update_joined_ht_globals(
 
 def join_hts(datasets, version, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    hts = [
+        get_ht(dataset, reference_genome)
+        for dataset in datasets
+        if 'coverage' not in dataset
+    ]
     joined_ht = functools.reduce(
         (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
         hts,
     )
+
+    # NB: coverage datasets are keyed by locus rather than locus
+    # and alleles, so we cannot join.  Instead we annotate w/ locus as
+    # as the key.
+    coverage_hts = [
+        (dataset, get_ht(dataset, reference_genome))
+        for dataset in datasets
+        if 'coverage' in dataset
+    ]
+    for dataset, coverage_ht in coverage_hts:
+        joined_ht.annotate(dataset=coverage_ht[coverage_ht.locus][dataset])
 
     joined_ht = update_joined_ht_globals(
         joined_ht,
@@ -131,13 +151,16 @@ def update_existing_joined_hts(
     version: str,
     genome_version: str,
 ):
-    destination_ht = hl.read_table(destination_path)
+    joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = (
-        destination_ht.drop(dataset)
-        .join(dataset_ht, 'outer')
-        .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in datasets]),
+    if 'coverage' in dataset:
+        joined_ht = (
+            joined_ht.drop(dataset)
+            .join(dataset_ht, 'outer')
+            .filter(
+                hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
+            )
         )
-    )
-    return update_joined_ht_globals(destination_ht, dataset, version, genome_version)
+    else:
+        joined_ht.annotate(dataset=dataset_ht[dataset_ht.locus][dataset])
+    return update_joined_ht_globals(joined_ht, dataset, version, genome_version)

@@ -9,7 +9,13 @@ from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
+<<<<<<< HEAD
 INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.{version}ht'
+=======
+INTERVAL_REFERENCE_HT_PATH = (
+    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
+)
+>>>>>>> fe14fff1488508cf02c05c82015b11757ae62627
 VERSION = '1.0.0'
 
 
@@ -19,6 +25,10 @@ def run(environment: str, dataset: str):
         GCS_PREFIXES[environment],
         INTERVAL_REFERENCE_HT_PATH,
     ).format(
+<<<<<<< HEAD
+=======
+        environment=environment,
+>>>>>>> fe14fff1488508cf02c05c82015b11757ae62627
         genome_version=genome_version,
         version=VERSION,
     )

@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest import mock
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.combine import (
     get_enum_select_fields,
@@ -142,7 +143,16 @@ class ReferenceDataCombineTest(unittest.TestCase):
 
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     def test_update_joined_ht_globals(self, mock_datetime):
-        mock_datetime.now.return_value = datetime(2023, 4, 19, 16, 43, 39, 361110)
+        mock_datetime.now.return_value = datetime(
+            2023,
+            4,
+            19,
+            16,
+            43,
+            39,
+            361110,
+            tzinfo=pytz.timezone('US/Eastern'),
+        )
         ht = hl.Table.parallelize(
             [
                 {'a': ['1', '2'], 'b': 2},
@@ -159,7 +169,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertEqual(
             ht.globals.collect()[0],
             hl.Struct(
-                date='2023-04-19T16:43:39.361110',
+                date='2023-04-19T16:43:39.361110-04:56',
                 datasets={
                     'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
                     'gnomad_exome_coverage': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
