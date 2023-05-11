@@ -197,10 +197,6 @@ class SeqrSchema(BaseSeqrSchema):
         return self._selected_ref_data.exac
 
     @row_annotation()
-    def g1k(self):
-        return self._selected_ref_data.tgp
-
-    @row_annotation()
     def mpc(self):
         return self._selected_ref_data.mpc
 

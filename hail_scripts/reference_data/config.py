@@ -69,26 +69,6 @@ Format:
     },
 """
 CONFIG = {
-    'tgp': {  # tgp
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-        },
-    },
     'cadd': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
