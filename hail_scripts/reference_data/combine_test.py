@@ -169,7 +169,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertEqual(
             ht.globals.collect()[0],
             hl.Struct(
-                date='2023-04-19T16:43:39.361110',
+                date='2023-04-19T16:43:39.361110-04:56',
                 datasets={
                     'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
                     'gnomad_exome_coverage': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
