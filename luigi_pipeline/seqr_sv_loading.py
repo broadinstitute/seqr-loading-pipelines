@@ -37,6 +37,14 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
     # NB: electing not to override import_vcf here eventhough the inherited args are slightly different
     # than from the old pipeline.
 
+    def import_dataset(self):
+        mt = self.import_vcf()
+        return mt.key_rows_by('rsid')
+
+    # NB: `split_multi_hts` is a no-op for SVs.
+    def annotate_old_and_split_multi_hts(self, mt):
+        return mt
+
     def get_schema_class_kwargs(self):
         return {
             "gene_id_mapping" : hl.literal(load_gencode(self.gencode_release, self.gencode_path))
