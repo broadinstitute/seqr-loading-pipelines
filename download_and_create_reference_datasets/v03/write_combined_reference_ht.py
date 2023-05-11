@@ -32,7 +32,8 @@ VERSION = '1.0.0'
 
 def run(environment: str, genome_version: str, dataset: str):
     destination_path = os.path.join(
-        GCS_PREFIXES[environment], COMBINED_REFERENCE_HT_PATH,
+        GCS_PREFIXES[environment],
+        COMBINED_REFERENCE_HT_PATH,
     ).format(
         environment=environment,
         genome_version=genome_version,
@@ -40,7 +41,11 @@ def run(environment: str, genome_version: str, dataset: str):
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
-            destination_path, dataset, DATASETS, VERSION, genome_version,
+            destination_path,
+            dataset,
+            DATASETS,
+            VERSION,
+            genome_version,
         )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)

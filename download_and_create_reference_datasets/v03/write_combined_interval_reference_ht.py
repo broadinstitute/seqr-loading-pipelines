@@ -14,31 +14,6 @@ INTERVAL_REFERENCE_HT_PATH = (
 )
 VERSION = '1.0.0'
 
-<<<<<<< HEAD
-=======
-
-def update_existing(destination_path: str, dataset: str, genome_version: str):
-    destination_ht = hl.read_table(destination_path)
-    dataset_ht = get_ht(dataset, genome_version)
-    destination_ht = (
-        destination_ht.drop(dataset)
-        .join(dataset_ht, 'outer')
-        .filter(
-            hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS]),
-        )
-    )
-    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
-
-
-def create_new(genome_version: str):
-    return join_hts(
-        DATASETS,
-        VERSION,
-        reference_genome=genome_version,
-    )
-
-
->>>>>>> 4b6c63d5a9466a9b3af8b053707f5db01f96d228
 def run(environment: str, dataset: str):
     genome_version = '38'
     destination_path = os.path.join(
@@ -55,7 +30,6 @@ def run(environment: str, dataset: str):
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
-<<<<<<< HEAD
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -63,12 +37,6 @@ if __name__ == '__main__':
         default='dev',
         choices=['dev', 'prod'],
     )
-=======
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--environment', default='dev', choices=['dev', 'prod'])
->>>>>>> 4b6c63d5a9466a9b3af8b053707f5db01f96d228
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
