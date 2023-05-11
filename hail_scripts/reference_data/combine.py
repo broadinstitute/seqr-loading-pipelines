@@ -41,8 +41,7 @@ def get_select_fields(selects, base_ht):
             for attr in val.split('.'):
                 # Select from multi-allelic list.
                 if attr.endswith('#'):
-                    attr = attr[:-1]
-                    ht = ht[attr][base_ht.a_index - 1]
+                    ht = ht[attr[:-1]][base_ht.a_index - 1]
                 else:
                     ht = ht[attr]
             select_fields[key] = ht
@@ -67,7 +66,7 @@ def get_enum_select_fields(enum_selects, ht):
             and ht[field_name].dtype.element_type == hl.tstr
         ):
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
-                lambda x: lookup[x],
+                lambda x: lookup[x],  # noqa: B023
             )
         else:
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
