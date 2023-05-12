@@ -775,9 +775,7 @@ class SeqrSVLoadingTest(unittest.TestCase):
         genotypes_mt = hl.read_matrix_table(self._genotypes_mt_file)
         key = genotypes_mt.rows().key
         self.assertEqual(genotypes_mt.count(), (11, 5))
-        key_dropped_genotypes_mt = (
-            genotypes_mt.rows().flatten().drop(*key)
-        )
+        key_dropped_genotypes_mt = genotypes_mt.rows().flatten().drop(*key)
         self.assertCountEqual(
             [
                 key
@@ -789,11 +787,6 @@ class SeqrSVLoadingTest(unittest.TestCase):
 
         # Now mimic the join in BaseMTToESOptimizedTask
         genotypes_mt = genotypes_mt.drop(*list(genotypes_mt.globals.keys()))
-        row_ht = (
-            genotypes_mt.rows()
-            .join(variant_mt.rows())
-            .flatten()
-            .drop(*key)
-        )
+        row_ht = genotypes_mt.rows().join(variant_mt.rows()).flatten().drop(*key)
         data = row_ht.order_by(row_ht.start).tail(8).take(3)
         self.assertListEqual(data, EXPECTED_DATA_GENOTYPES)

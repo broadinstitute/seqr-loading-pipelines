@@ -14,6 +14,15 @@ class DatasetType(Enum):
     SNV = 'snv'
     SV = 'sv'
 
+    @property
+    def sample_types(self) -> set[SampleType]:
+        return {
+            DatasetType.GCNV: {SampleType.WES},
+            DatasetType.MITO: {SampleType.WGS},
+            DatasetType.SNV: {SampleType.WES, SampleType.WGS},
+            DatasetType.SV: {SampleType.WGS},
+        }[self]
+
 
 class DataRoot(Enum):
     LOCAL_DATASETS = '/var/seqr-datasets'
@@ -24,10 +33,12 @@ class DataRoot(Enum):
     SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
     SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
 
+
 class Env(Enum):
     DEV = 'dev'
     LOCAL = 'local'
     PROD = 'prod'
+
 
 class PipelineVersion(Enum):
     V02 = 'v02'
@@ -63,6 +74,12 @@ class ReferenceDataset(Enum):
     HMTVAR = 'hmtvar'
     MITOMAP = 'mitomap'
     MITIMPACT = 'mitimpact'
+
+    @property
+    def reference_dataset_collections(self) -> set[ReferenceDatasetCollection]:
+        return {
+            rdc for rdc in ReferenceDatasetCollection if self in rdc.reference_datasets
+        }
 
 
 class ReferenceDatasetCollection(Enum):

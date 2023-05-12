@@ -14,7 +14,9 @@ from v03_pipeline.core.definitions import (
 )
 
 BASE_PROJECTS = 'base/projects'
+PEDIGREE_SUFFIX = '_pedigree.tsv'
 REMAP_SUFFIX = '_remap.tsv'
+SUBSET_SUFFIX = '_ids.txt'
 
 
 def _v02_dag_name(sample_source: SampleSource, sample_type: SampleType) -> str:
@@ -109,7 +111,7 @@ def project_pedigree_path(
         ),
         BASE_PROJECTS,
         project_guid,
-        f'{project_guid}_pedigree.tsv',
+        f'{project_guid}{PEDIGREE_SUFFIX}',
     )
 
 
@@ -145,7 +147,7 @@ def project_subset_path(
         ),
         BASE_PROJECTS,
         project_guid,
-        f'{project_guid}_ids.txt',
+        f'{project_guid}{SUBSET_SUFFIX}',
     )
 
 

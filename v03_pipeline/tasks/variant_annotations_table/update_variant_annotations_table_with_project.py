@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hail as hl
 import luigi
 
@@ -8,11 +10,18 @@ from v03_pipeline.tasks.variant_annotations_table.base_variant_annotations_table
 )
 
 
-class UpdateVariantAnnotationsTableWithNewProject(BaseVariantAnnotationsTable):
+class UpdateVariantAnnotationsTableWithProject(BaseVariantAnnotationsTable):
     project_guid = luigi.Parameter('Project GUID')
     vcf_file = luigi.Parameter(
         description='Path to the vcf containing the new samples.',
     )
+
+    @property
+    def _completion_token(self) -> tuple[str, str]:
+        return (
+            self.project_guid,
+            self.vcf_file,
+        )
 
     def requires(self) -> luigi.Task:
         return [
@@ -38,9 +47,10 @@ class UpdateVariantAnnotationsTableWithNewProject(BaseVariantAnnotationsTable):
     def complete(self) -> bool:
         return super().complete() and hl.eval(
             hl.read_table(
-                self.variant_annotations_table_path,
-            ).globals.sample_vcfs.contains(self.vcf_file),
+                self._variant_annotations_table_path,
+            ).globals.projects.contains(self.vcf_file),
         )
 
     def run(self) -> None:
+        super().run()
         print('Running UpdateVariantAnnotationsTableWithNewSamples')

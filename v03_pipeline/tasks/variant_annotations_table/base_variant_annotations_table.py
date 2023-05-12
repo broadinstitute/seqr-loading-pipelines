@@ -2,26 +2,14 @@ import os
 
 import luigi
 
-from v03_pipeline.core.definitions import (
-    DatasetType,
-    Env,
-    ReferenceGenome,
-    SampleSource,
-    SampleType,
-)
 from v03_pipeline.core.paths import variant_annotations_table_path
+from v03_pipeline.tasks.base_pipeline_task import BasePipelineTask
 from v03_pipeline.tasks.files import GCSorLocalTarget
 
 
-class BaseVariantAnnotationsTable(luigi.Task):
-    env = luigi.EnumParameter(enum=Env, default=Env.LOCAL)
-    reference_genome = luigi.EnumParameter(enum=ReferenceGenome, default=ReferenceGenome.GRCh38)
-    dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    sample_source = luigi.EnumParameter(enum=SampleSource, default=SampleSource.LOCAL)
-
+class BaseVariantAnnotationsTable(BasePipelineTask):
     @property
-    def variant_annotations_table_path(self) -> str:
+    def _variant_annotations_table_path(self) -> str:
         return variant_annotations_table_path(
             self.env,
             self.reference_genome,
@@ -29,12 +17,9 @@ class BaseVariantAnnotationsTable(luigi.Task):
         )
 
     def output(self) -> luigi.Target:
-        return GCSorLocalTarget(self.variant_annotations_table_path)
+        return GCSorLocalTarget(self._variant_annotations_table_path)
 
     def complete(self) -> bool:
         return GCSorLocalTarget(
-            os.path.join(self.variant_annotations_table_path, '_SUCCESS'),
+            os.path.join(self._variant_annotations_table_path, '_SUCCESS'),
         ).exists()
-
-    def run(self) -> None:
-        raise NotImplementedError
