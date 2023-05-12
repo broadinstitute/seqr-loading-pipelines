@@ -32,6 +32,12 @@ skip_glob = [
     'kubernetes/*'
 ]
 
+[tool.mypy]
+packages = 'v03_pipeline'
+python_version = "3.8"
+ignore_missing_imports = true
+strict = true
+
 [tool.ruff]
 extend-exclude = [
     'download_and_create_reference_datasets/v02/*',
