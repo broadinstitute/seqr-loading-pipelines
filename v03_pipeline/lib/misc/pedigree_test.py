@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.pedigree import (
     import_pedigree,
-    families_missing_samples,
+    families_to_exclude,
     families_to_include,
     samples_to_include,
 )
@@ -41,7 +41,7 @@ class DownloadUtilsTest(unittest.TestCase):
         )
 
         self.assertCountEqual(
-            [f.family_id for f in families_missing_samples(pedigree_ht, samples_ht).collect()],
+            [f.family_id for f in families_to_exclude(pedigree_ht, samples_ht).collect()],
             ['BBL_HT-007-5195'],
         ) 
         self.assertCountEqual(

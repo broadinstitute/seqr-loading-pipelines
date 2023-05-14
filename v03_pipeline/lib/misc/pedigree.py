@@ -19,7 +19,7 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
     )
     return ht.key_by(ht.family_id)
 
-def families_missing_samples(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table:
+def families_to_exclude(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table:
     ht = pedigree_ht.key_by(pedigree_ht.s).anti_join(samples_ht)
     ht = ht.key_by(ht.family_id)
     ht = ht.distinct()
@@ -27,7 +27,7 @@ def families_missing_samples(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.
 
 def families_to_include(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table:
     ht = pedigree_ht.anti_join(
-        families_missing_samples(pedigree_ht, samples_ht)
+        families_to_exclude(pedigree_ht, samples_ht)
     )
     ht = ht.distinct()
     return ht.select()
