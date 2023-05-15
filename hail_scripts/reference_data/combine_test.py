@@ -8,6 +8,7 @@ import pytz
 from hail_scripts.reference_data.combine import (
     get_enum_select_fields,
     get_ht,
+    update_existing_joined_hts,
     update_joined_ht_globals,
 )
 from hail_scripts.reference_data.config import dbnsfp_custom_select
@@ -191,4 +192,159 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     },
                 },
             ),
+        )
+
+    @mock.patch.dict(
+        'hail_scripts.reference_data.combine.CONFIG',
+        {
+            'a': {
+                '38': {
+                    'path': '',
+                    'select': [
+                        'd',
+                    ],
+                },
+            },
+            'b': {
+                '38': {
+                    'path': '',
+                    'select': [
+                        'e',
+                    ],
+                },
+            },
+            'c_coverage': {
+                '38': {
+                    'path': '',
+                    'select': [
+                        'f',
+                    ],
+                },
+            },
+        },
+    )
+    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    @mock.patch('hail_scripts.reference_data.combine.get_ht')
+    def test_update_existing_joined_hts(self, mock_get_ht, mock_read_table):
+        mock_read_table.return_value = hl.Table.parallelize(
+            [
+                {
+                    'locus': 0,
+                    'alleles': 10,
+                    'a': hl.Struct(d=1),
+                    'b': hl.Struct(e=2),
+                    'c_coverage': hl.Struct(f=9),
+                },
+                {
+                    'locus': 1,
+                    'alleles': 10,
+                    'a': hl.Struct(d=3),
+                    'b': hl.Struct(e=4),
+                    'c_coverage': None,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tint32,
+                alleles=hl.tint32,
+                a=hl.tstruct(d=hl.tint32),
+                b=hl.tstruct(e=hl.tint32),
+                c_coverage=hl.tstruct(f=hl.tint32),
+            ),
+            key=['locus', 'alleles'],
+        )
+        mock_get_ht.side_effect = [
+            hl.Table.parallelize(
+                [
+                    {
+                        'locus': 0,
+                        'alleles': 10,
+                        'b': hl.Struct(e=5),
+                    },
+                    {
+                        'locus': 2,
+                        'alleles': 10,
+                        'b': hl.Struct(e=7),
+                    },
+                ],
+                hl.tstruct(
+                    locus=hl.tint32,
+                    alleles=hl.tint32,
+                    b=hl.tstruct(e=hl.tint32),
+                ),
+                key=['locus', 'alleles'],
+            ),
+            hl.Table.parallelize(
+                [
+                    {
+                        'locus': 0,
+                        'c_coverage': hl.Struct(f=12),
+                    },
+                    {
+                        'locus': 1,
+                        'c_coverage': hl.Struct(f=13),
+                    },
+                    {
+                        'locus': 2,
+                        'c_coverage': hl.Struct(f=14),
+                    },
+                ],
+                hl.tstruct(
+                    locus=hl.tint32,
+                    c_coverage=hl.tstruct(f=hl.tint32),
+                ),
+                key=['locus'],
+            ),
+        ]
+        ht = update_existing_joined_hts(
+            'destination',
+            'b',
+            ['a', 'b', 'c_coverage'],
+            '1.0.0',
+            '38',
+        )
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    locus=0,
+                    alleles=10,
+                    a=hl.Struct(d=1),
+                    b=hl.Struct(e=5),
+                    c_coverage=hl.Struct(f=9),
+                ),
+                hl.Struct(
+                    locus=1,
+                    alleles=10,
+                    a=hl.Struct(d=3),
+                    b=None,
+                    c_coverage=None,
+                ),
+                hl.Struct(locus=2, alleles=10, a=None, b=hl.Struct(e=7), c_coverage=None),
+            ],
+        )
+        ht = update_existing_joined_hts(
+            'destination',
+            'c_coverage',
+            ['a', 'b', 'c_coverage'],
+            '1.0.0',
+            '38',
+        )
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    locus=0,
+                    alleles=10,
+                    a=hl.Struct(d=1),
+                    b=hl.Struct(e=2),
+                    c_coverage=hl.Struct(f=12),
+                ),
+                hl.Struct(
+                    locus=1,
+                    alleles=10,
+                    a=hl.Struct(d=3),
+                    b=hl.Struct(e=4),
+                    c_coverage=hl.Struct(f=13),
+                ),
+            ],
         )

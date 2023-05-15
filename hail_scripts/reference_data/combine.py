@@ -104,9 +104,11 @@ def update_joined_ht_globals(
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
         date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
-        datasets=hl.dict(included_dataset),
+        datasets=included_dataset,
         version=version,
-        enum_definitions=hl.dict(enum_definitions),
+        enum_definitions=hl.dict(enum_definitions)
+        if len(enum_definitions) > 0
+        else hl.missing(hl.tdict('str', hl.tdict('str', hl.tarray('str')))),
     )
 
 
@@ -123,7 +125,7 @@ def join_hts(datasets, version, reference_genome='37'):
     )
 
     # NB: coverage datasets are keyed by locus rather than locus
-    # and alleles, so we cannot join.  Instead we annotate w/ locus as
+    # and alleles, so we cannot join.  Instead we annotate w/ locus
     # as the key.
     coverage_hts = [
         (dataset, get_ht(dataset, reference_genome))
@@ -131,7 +133,7 @@ def join_hts(datasets, version, reference_genome='37'):
         if 'coverage' in dataset
     ]
     for dataset, coverage_ht in coverage_hts:
-        joined_ht.annotate(**{dataset: coverage_ht[coverage_ht.locus][dataset]})
+        joined_ht.annotate(**{dataset: coverage_ht[joined_ht.locus][dataset]})
 
     joined_ht = update_joined_ht_globals(
         joined_ht,
@@ -153,13 +155,13 @@ def update_existing_joined_hts(
     joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
     if 'coverage' not in dataset:
-        joined_ht = (
-            joined_ht.drop(dataset)
-            .join(dataset_ht, 'outer')
-            .filter(
-                hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
-            )
+        joined_ht = joined_ht.drop(dataset)
+        joined_ht = joined_ht.join(dataset_ht, 'outer')
+        joined_ht = joined_ht.filter(
+            hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
         )
     else:
-        joined_ht.annotate(**{dataset: dataset_ht[dataset_ht.locus][dataset]})
+        joined_ht = joined_ht.annotate(
+            **{dataset: dataset_ht[joined_ht.locus][dataset]}
+        )
     return update_joined_ht_globals(joined_ht, dataset, version, genome_version)
