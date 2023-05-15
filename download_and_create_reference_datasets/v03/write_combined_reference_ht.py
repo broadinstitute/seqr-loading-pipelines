@@ -12,7 +12,6 @@ COMBINED_REFERENCE_HT_PATH = (
     'combined_reference/combined_reference.GRCh{genome_version}.{version}.ht'
 )
 DATASETS = [
-    'tgp',
     'cadd',
     'dbnsfp',
     'eigen',
