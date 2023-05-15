@@ -3,9 +3,9 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.pedigree import (
-    import_pedigree,
     families_to_exclude,
     families_to_include,
+    import_pedigree,
     samples_to_include,
 )
 
