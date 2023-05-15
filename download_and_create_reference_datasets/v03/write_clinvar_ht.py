@@ -16,7 +16,7 @@ from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
     parsed_clnsigconf,
 )
-from hail_scripts.reference_data.constants import GCS_PREFIXES
+from hail_scripts.reference_data.config import GCS_PREFIXES
 from hail_scripts.utils.hail_utils import write_ht
 
 CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'

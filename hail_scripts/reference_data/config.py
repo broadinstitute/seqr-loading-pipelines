@@ -65,6 +65,7 @@ Format:
             using the a_index.>',
         'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
+        'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
     },
 """
 CONFIG = {
@@ -275,6 +276,18 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
             'select': {'region_type': 'target'},
+            'enum_select': {
+                'region_type': [
+                    'CTCF-bound',
+                    'CTCF-only',
+                    'DNase-H3K4me3',
+                    'PLS',
+                    'dELS',
+                    'pELS',
+                    'DNase-only',
+                    'low-DNase',
+                ],
+            },
         },
     },
     'geno2mp': {
@@ -335,3 +348,8 @@ CONFIG = {
 
 CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
+
+GCS_PREFIXES = {
+    'dev': 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    'prod': 'gs://seqr-reference-data/GRCh{genome_version}/v03',
+}
