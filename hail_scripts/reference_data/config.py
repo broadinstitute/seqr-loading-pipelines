@@ -119,6 +119,7 @@ CONFIG = {
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'FATHMM_pred': ['D', 'T'],
+                'MetaSVM_pred': ['D', 'T'],
             },
         },
         '38': {
@@ -138,6 +139,7 @@ CONFIG = {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'FATHMM_pred': ['D', 'T'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
+                'MetaSVM_pred': ['D', 'T'],
             },
         },
     },
