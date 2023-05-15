@@ -3,12 +3,15 @@ from enum import Enum
 
 import hail as hl
 
+
 class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
 
+
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
+
 
 def dbnsfp_custom_select(ht):
     selects = {}
@@ -18,6 +21,7 @@ def dbnsfp_custom_select(ht):
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
+
 
 def custom_gnomad_select_v2(ht):
     """

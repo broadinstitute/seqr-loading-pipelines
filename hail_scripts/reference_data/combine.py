@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
@@ -40,6 +41,7 @@ def get_custom_select_fields(custom_select, ht):
     if custom_select is None:
         return {}
     return custom_select(ht)
+
 
 def get_enum_select_fields(enum_selects, ht):
     enum_select_fields = {}
