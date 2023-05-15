@@ -74,7 +74,6 @@ def get_ht(dataset: str, reference_genome: str):
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
 
-
 def update_joined_ht_globals(
     joined_ht,
     datasets,

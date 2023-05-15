@@ -9,7 +9,7 @@ from hail_scripts.reference_data.combine import (
     join_hts,
     update_joined_ht_globals,
 )
-from hail_scripts.reference_data.config import GCS_PREFIXES
+from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
@@ -42,12 +42,14 @@ def create_new(genome_version: str):
 
 def run(environment: str, dataset: str):
     genome_version = '38'
-    destination_path = os.path.join(
-        GCS_PREFIXES[environment],
-        INTERVAL_REFERENCE_HT_PATH,
-    ).format(
-        environment=environment,
-        genome_version=genome_version,
+    destination_path = (
+        os.path.join(
+            GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
+            INTERVAL_REFERENCE_HT_PATH,
+        )
+        .format(
+            genome_version=genome_version,
+        )
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing(destination_path, dataset, genome_version)
