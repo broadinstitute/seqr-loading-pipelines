@@ -9,7 +9,7 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES
+from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 AF_THRESHOLD = 0.9
@@ -58,7 +58,7 @@ def read_gnomad_subset(genome_version: str):
 def run(environment: str, genome_version: str):
     ht = read_gnomad_subset(genome_version)
     destination_path = os.path.join(
-        GCS_PREFIXES[environment],
+        GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         SAMPLE_TYPE_VALIDATION_HT_PATH,
     ).format(
         genome_version=genome_version,
