@@ -1,11 +1,14 @@
 from copy import deepcopy
+from enum import Enum
 
 import hail as hl
 
+class AccessControl(Enum):
+    PUBLIC = 'public'
+    PRIVATE = 'private'
 
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
-
 
 def dbnsfp_custom_select(ht):
     selects = {}
@@ -15,7 +18,6 @@ def dbnsfp_custom_select(ht):
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
-
 
 def custom_gnomad_select_v2(ht):
     """
@@ -89,26 +91,6 @@ Format:
     },
 """
 CONFIG = {
-    'tgp': {  # tgp
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-        },
-    },
     'cadd': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
@@ -163,6 +145,36 @@ CONFIG = {
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
             'select': {'Eigen_phred': 'info.Eigen-phred'},
+        },
+    },
+    'hgmd': {
+        '37': {
+            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
+            'select': {'accession': 'rsid', 'class': 'info.CLASS'},
+            'enum_select': {
+                'class': [
+                    'DFP',
+                    'DM',
+                    'DM?',
+                    'DP',
+                    'FP',
+                    'R',
+                ],
+            },
+        },
+        '38': {
+            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
+            'select': {'accession': 'rsid', 'class': 'info.CLASS'},
+            'enum_select': {
+                'class': [
+                    'DFP',
+                    'DM',
+                    'DM?',
+                    'DP',
+                    'FP',
+                    'R',
+                ],
+            },
         },
     },
     'mpc': {
@@ -391,6 +403,11 @@ CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 GCS_PREFIXES = {
-    'dev': 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    'prod': 'gs://seqr-reference-data/GRCh{genome_version}/v03',
+    ('dev', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('dev', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('prod', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
+    (
+        'prod',
+        AccessControl.PRIVATE,
+    ): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
 }
