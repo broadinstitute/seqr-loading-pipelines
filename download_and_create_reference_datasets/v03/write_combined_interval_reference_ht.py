@@ -52,6 +52,9 @@ def run(environment: str, dataset: str):
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         INTERVAL_REFERENCE_HT_PATH,
     ).format(
+        GCS_PREFIXES[environment],
+        INTERVAL_REFERENCE_HT_PATH,
+    ).format(
         genome_version=genome_version,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
