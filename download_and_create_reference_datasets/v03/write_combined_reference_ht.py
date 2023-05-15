@@ -12,7 +12,6 @@ COMBINED_REFERENCE_HT_PATH = (
     'combined_reference/combined_reference.GRCh{genome_version}-{version}.ht'
 )
 DATASETS = [
-    'tgp',
     'cadd',
     'dbnsfp',
     'eigen',
@@ -35,7 +34,6 @@ def run(environment: str, genome_version: str, dataset: str):
         GCS_PREFIXES[environment],
         COMBINED_REFERENCE_HT_PATH,
     ).format(
-        environment=environment,
         genome_version=genome_version,
         version=VERSION,
     )

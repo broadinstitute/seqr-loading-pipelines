@@ -23,7 +23,6 @@ def run(environment: str, genome_version: str):
         GCS_PREFIXES[(environment, AccessControl.PRIVATE)],
         HGMD_HT_PATH,
     ).format(
-        environment=environment,
         genome_version=genome_version,
     )
     mt = import_vcf(

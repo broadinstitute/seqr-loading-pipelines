@@ -21,7 +21,6 @@ def run(environment: str, dataset: str):
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         INTERVAL_REFERENCE_HT_PATH,
     ).format(
-        environment=environment,
         genome_version=genome_version,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
