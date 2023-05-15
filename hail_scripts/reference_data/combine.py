@@ -162,6 +162,6 @@ def update_existing_joined_hts(
         )
     else:
         joined_ht = joined_ht.annotate(
-            **{dataset: dataset_ht[joined_ht.locus][dataset]}
+            **{dataset: dataset_ht[joined_ht.locus][dataset]},
         )
     return update_joined_ht_globals(joined_ht, dataset, version, genome_version)

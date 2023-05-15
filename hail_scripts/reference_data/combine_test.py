@@ -319,7 +319,13 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     b=None,
                     c_coverage=None,
                 ),
-                hl.Struct(locus=2, alleles=10, a=None, b=hl.Struct(e=7), c_coverage=None),
+                hl.Struct(
+                    locus=2,
+                    alleles=10,
+                    a=None,
+                    b=hl.Struct(e=7),
+                    c_coverage=None,
+                ),
             ],
         )
         ht = update_existing_joined_hts(
