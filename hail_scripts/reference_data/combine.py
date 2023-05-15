@@ -6,19 +6,6 @@ import hail as hl
 from hail_scripts.reference_data.config import CONFIG
 
 
-def annotate_coverages(ht, coverage_dataset, reference_genome):
-    """
-    Annotates the hail table with the coverage dataset.
-        '<coverage_dataset>': <over_10 field of the locus in the coverage dataset.>
-    :param ht: hail table
-    :param coverage_dataset: coverage dataset e.g. gnomad genomes or exomes coverage
-    :param reference_genome: '37' or '38'
-    :return: hail table with proper annotation
-    """
-    coverage_ht = hl.read_table(CONFIG[coverage_dataset][reference_genome]['path'])
-    return ht.annotate(**{coverage_dataset: coverage_ht[ht.locus].over_10})
-
-
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -92,19 +79,16 @@ def update_joined_ht_globals(
     joined_ht,
     datasets,
     version,
-    coverage_datasets,
     reference_genome,
 ):
     # Track the dataset we've added as well as the source path.
     included_dataset = {
-        k: v[reference_genome]['path']
-        for k, v in CONFIG.items()
-        if k in datasets + coverage_datasets
+        k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets
     }
     enum_definitions = {
         k: {enum_field_name: enum_values}
         for k, v in CONFIG.items()
-        if k in datasets + coverage_datasets
+        if k in datasets
         if 'enum_select' in v[reference_genome]
         for enum_field_name, enum_values in v[reference_genome]['enum_select'].items()
     }
@@ -117,26 +101,33 @@ def update_joined_ht_globals(
     )
 
 
-def join_hts(datasets, version, coverage_datasets=None, reference_genome='37'):
-    if coverage_datasets is None:
-        coverage_datasets = []
-
+def join_hts(datasets, version, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
+    hts = [
+        get_ht(dataset, reference_genome)
+        for dataset in datasets
+        if 'coverage' not in dataset
+    ]
     joined_ht = functools.reduce(
         (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
         hts,
     )
 
-    # Annotate coverages.
-    for coverage_dataset in coverage_datasets:
-        joined_ht = annotate_coverages(joined_ht, coverage_dataset, reference_genome)
+    # NB: coverage datasets are keyed by locus rather than locus
+    # and alleles, so we cannot join.  Instead we annotate w/ locus as
+    # as the key.
+    coverage_hts = [
+        (dataset, get_ht(dataset, reference_genome))
+        for dataset in datasets
+        if 'coverage' in dataset
+    ]
+    for dataset, coverage_ht in coverage_hts:
+        joined_ht.annotate(dataset=coverage_ht[coverage_ht.locus][dataset])
 
     joined_ht = update_joined_ht_globals(
         joined_ht,
         datasets,
         version,
-        coverage_datasets,
         reference_genome,
     )
     joined_ht.describe()

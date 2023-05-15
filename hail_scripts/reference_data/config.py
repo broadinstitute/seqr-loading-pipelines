@@ -75,28 +75,6 @@ Format:
     },
 """
 CONFIG = {
-    '1kg': {  # tgp
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/1kg/1kg.wgs.phase3.20130502.GRCh37_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-            'field_name': 'g1k',
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/1kg/1kg.wgs.phase3.20170504.GRCh38_sites.ht',
-            'select': {
-                'AC': 'info.AC#',
-                'AF': 'info.AF#',
-                'AN': 'info.AN',
-                'POPMAX_AF': 'POPMAX_AF',
-            },
-            'field_name': 'g1k',
-        },
-    },
     'cadd': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
@@ -239,7 +217,7 @@ CONFIG = {
     'gnomad_exome_coverage': {
         '37': {
             'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
-            'select': {'x10': '10'},
+            'select': {'x10': 'over_10'},
         },
         '38': {
             'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
@@ -249,7 +227,7 @@ CONFIG = {
     'gnomad_genome_coverage': {
         '37': {
             'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
-            'select': {'x10': '10'},
+            'select': {'x10': 'over_10'},
         },
         '38': {
             'path': 'gs://gcp-public-data--gnomad/release/3.0/coverage/genomes/gnomad.genomes.r3.0.coverage.ht/',

@@ -29,13 +29,7 @@ def update_existing(destination_path: str, dataset: str, genome_version: str):
             hl.any([~hl.is_missing(destination_ht[dataset]) for dataset in DATASETS]),
         )
     )
-    return update_joined_ht_globals(
-        destination_ht,
-        DATASETS,
-        VERSION,
-        [],
-        genome_version,
-    )
+    return update_joined_ht_globals(destination_ht, DATASETS, VERSION, genome_version)
 
 
 def create_new(genome_version: str):
@@ -48,18 +42,11 @@ def create_new(genome_version: str):
 
 def run(environment: str, dataset: str):
     genome_version = '38'
-    destination_path = (
-        os.path.join(
-            GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
-            INTERVAL_REFERENCE_HT_PATH,
-        )
-        .format(
-            GCS_PREFIXES[environment],
-            INTERVAL_REFERENCE_HT_PATH,
-        )
-        .format(
-            genome_version=genome_version,
-        )
+    destination_path = os.path.join(
+        GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
+        INTERVAL_REFERENCE_HT_PATH,
+    ).format(
+        genome_version=genome_version,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing(destination_path, dataset, genome_version)
