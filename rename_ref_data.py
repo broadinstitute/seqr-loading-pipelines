@@ -17,4 +17,5 @@ ht.transmute(
     gnomad_exome_coverage=hl.Struct(x10=ht.gnomad_exome_coverage),
 )
 ht.annotate_globals(datasets={k: v for k, v in ht.datasets.collect()[0].items() if k!='1kg'})
+ht.annotate_globals(version='2.0.5')
 ht.write('gs://seqr-reference-data/GRCh38/all_reference_data/combined_reference_data_grch38.ht', overwrite=True)
