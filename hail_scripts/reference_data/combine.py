@@ -133,17 +133,14 @@ def join_hts(datasets, version, reference_genome='37'):
         if 'coverage' in dataset
     ]
     for dataset, coverage_ht in coverage_hts:
-        joined_ht.annotate(**{dataset: coverage_ht[joined_ht.locus][dataset]})
+        joined_ht = joined_ht.annotate(**{dataset: coverage_ht[joined_ht.locus][dataset]})
 
-    joined_ht = update_joined_ht_globals(
+    return update_joined_ht_globals(
         joined_ht,
         datasets,
         version,
         reference_genome,
     )
-    joined_ht.describe()
-    return joined_ht
-
 
 def update_existing_joined_hts(
     destination_path: str,
