@@ -2,17 +2,7 @@ import hail as hl
 
 
 def import_pedigree(pedigree_path: str) -> hl.Table:
-    ht = hl.import_table(
-        pedigree_path,
-        types={
-            'Project_GUID': hl.tstr,
-            'Family_ID': hl.tstr,
-            'Individual_ID': hl.tstr,
-            'Paternal_ID': hl.tstr,
-            'Maternal_ID': hl.tstr,
-            'Sex': hl.tstr,
-        },
-    )
+    ht = hl.import_table(pedigree_path)
     ht = ht.select(
         family_id=ht.Family_ID,
         s=ht.Individual_ID,
