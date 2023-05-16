@@ -14,16 +14,6 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    @property
-    def sample_types(self) -> set[SampleType]:
-        return {
-            DatasetType.GCNV: {SampleType.WES},
-            DatasetType.MITO: {SampleType.WGS},  # is this right?
-            DatasetType.SNV: {SampleType.WES, SampleType.WGS},
-            DatasetType.SV: {SampleType.WGS},
-        }[self]
-
-
 class DataRoot(Enum):
     LOCAL_DATASETS = '/seqr-datasets'
     LOCAL_REFERENCE_DATA = '/seqr-reference-data'
