@@ -144,7 +144,6 @@ def join_hts(datasets, version, reference_genome='37'):
         version,
     )
 
-
 def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
