@@ -8,6 +8,20 @@ import pytz
 from hail_scripts.reference_data.config import CONFIG
 
 
+def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
+    annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
+    config_version = config.get('version', hl.missing(hl.tstr))
+    return (
+        hl.case()
+        .when(hl.is_missing(config_version), annotated_version)
+        .when(hl.is_missing(annotated_version), config_version)
+        .when(annotated_version == config_version, config_version)
+        .or_error(
+            f'found mismatching versions',
+        )
+    )
+
+
 def annotate_coverage(joined_ht: hl.Table, dataset_ht: hl.Table, dataset: str):
     joined_ht = joined_ht.annotate(
         **{dataset: dataset_ht[joined_ht.locus][dataset]},
@@ -93,11 +107,8 @@ def get_ht(dataset: str, reference_genome: str):
         **{
             f'{dataset}_globals': hl.struct(
                 path=config['path'],
-                version=ht.globals.get(
-                    'version',
-                    config.get('version', hl.missing(hl.tstr)),
-                ),
-                enum_definitions=config.get(
+                version=parse_version(ht, config),
+                enums=config.get(
                     'enum_select',
                     hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
                 ),

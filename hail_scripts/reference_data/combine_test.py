@@ -146,6 +146,74 @@ class ReferenceDataCombineTest(unittest.TestCase):
         {
             'a': {
                 '38': {
+                    'path': 'gs://a.com',
+                    'select': ['b'],
+                    'version': '2.2.2',
+                },
+            },
+        },
+    )
+    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    def test_parse_version(self, mock_read_table):
+        ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'b': 1,
+                },
+                {
+                    'id': 1,
+                    'b': 2,
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                b=hl.tint32,
+            ),
+            key=['id'],
+            globals=hl.Struct(
+                version='2.2.2',
+            ),
+        )
+        mock_read_table.return_value = ht
+        gotten_ht = get_ht('a', '38')
+        self.assertCountEqual(
+            gotten_ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(
+                        path='gs://a.com',
+                        version='2.2.2',
+                        enums=None,
+                    ),
+                ),
+            ],
+        )
+
+        mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
+        gotten_ht = get_ht('a', '38')
+        self.assertCountEqual(
+            gotten_ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(
+                        path='gs://a.com',
+                        version='2.2.2',
+                        enums=None,
+                    ),
+                ),
+            ],
+        )
+
+        mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
+        gotten_ht = get_ht('a', '38')
+        self.assertRaises(Exception, gotten_ht.globals.collect)
+
+    @mock.patch.dict(
+        'hail_scripts.reference_data.combine.CONFIG',
+        {
+            'a': {
+                '38': {
                     'path': '',
                     'select': [
                         'd',
