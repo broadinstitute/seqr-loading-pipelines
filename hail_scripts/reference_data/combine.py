@@ -17,7 +17,7 @@ def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
         .when(hl.is_missing(annotated_version), config_version)
         .when(annotated_version == config_version, config_version)
         .or_error(
-            f'found mismatching versions',
+            'found mismatching versions',
         )
     )
 
