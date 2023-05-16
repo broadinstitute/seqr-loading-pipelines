@@ -8,6 +8,15 @@ import pytz
 from hail_scripts.reference_data.config import CONFIG
 
 
+def annotate_coverage(joined_ht: hl.Table, dataset_ht: hl.Table, dataset: str):
+    joined_ht = joined_ht.annotate(
+        **{dataset: dataset_ht[joined_ht.locus][dataset]},
+    )
+    return joined_ht.annotate_globals(
+        **{f'{dataset}_globals': dataset_ht.index_globals()[f'{dataset}_globals']},
+    )
+
+
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -71,7 +80,6 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
-    field_name = config.get('field_name') or dataset
     ht = hl.read_table(config['path'])
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
@@ -81,34 +89,31 @@ def get_ht(dataset: str, reference_genome: str):
         },
     )
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
-    return ht.select(**{field_name: ht.row.drop(*ht.key)}).distinct()
+    ht = ht.select_globals(
+        **{
+            f'{dataset}_globals': hl.struct(
+                path=config['path'],
+                version=ht.globals.get(
+                    'version',
+                    config.get('version', hl.missing(hl.tstr)),
+                ),
+                enum_definitions=config.get(
+                    'enum_select',
+                    hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
+                ),
+            ),
+        },
+    )
+    return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
 def update_joined_ht_globals(
     joined_ht,
-    datasets,
     version,
-    reference_genome,
 ):
-    # Track the dataset we've added as well as the source path.
-    included_dataset = {
-        k: v[reference_genome]['path'] for k, v in CONFIG.items() if k in datasets
-    }
-    enum_definitions = {
-        k: {enum_field_name: enum_values}
-        for k, v in CONFIG.items()
-        if k in datasets
-        if 'enum_select' in v[reference_genome]
-        for enum_field_name, enum_values in v[reference_genome]['enum_select'].items()
-    }
-    # Add metadata, but also removes previous globals.
-    return joined_ht.select_globals(
+    return joined_ht.annotate_globals(
         date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
-        datasets=included_dataset,
         version=version,
-        enum_definitions=hl.dict(enum_definitions)
-        if len(enum_definitions) > 0
-        else hl.missing(hl.tdict('str', hl.tdict('str', hl.tarray('str')))),
     )
 
 
@@ -133,16 +138,11 @@ def join_hts(datasets, version, reference_genome='37'):
         if 'coverage' in dataset
     ]
     for dataset, coverage_ht in coverage_hts:
-        joined_ht.annotate(**{dataset: coverage_ht[joined_ht.locus][dataset]})
-
-    joined_ht = update_joined_ht_globals(
+        joined_ht = annotate_coverage(joined_ht, coverage_ht, dataset)
+    return update_joined_ht_globals(
         joined_ht,
-        datasets,
         version,
-        reference_genome,
     )
-    joined_ht.describe()
-    return joined_ht
 
 
 def update_existing_joined_hts(
@@ -156,12 +156,13 @@ def update_existing_joined_hts(
     dataset_ht = get_ht(dataset, genome_version)
     if 'coverage' not in dataset:
         joined_ht = joined_ht.drop(dataset)
+        joined_ht = joined_ht.select_globals(
+            **joined_ht.globals.drop(f'{dataset}_globals'),
+        )
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = joined_ht.filter(
             hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
         )
     else:
-        joined_ht = joined_ht.annotate(
-            **{dataset: dataset_ht[joined_ht.locus][dataset]},
-        )
-    return update_joined_ht_globals(joined_ht, dataset, version, genome_version)
+        joined_ht = annotate_coverage(joined_ht, dataset_ht, dataset)
+    return update_joined_ht_globals(joined_ht, version)
