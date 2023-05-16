@@ -16,7 +16,7 @@ from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
     parsed_clnsigconf,
 )
-from hail_scripts.reference_data.constants import GCS_PREFIXES
+from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 CLINVAR_HT_PATH = 'clinvar/clinvar.GRCh{genome_version}.{timestamp}.ht'
@@ -62,10 +62,9 @@ def run(environment: str):
                 )
             )
             destination_path = os.path.join(
-                GCS_PREFIXES[environment],
+                GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
                 CLINVAR_HT_PATH,
             ).format(
-                environment=environment,
                 genome_version=genome_version,
                 timestamp=timestamp,
             )

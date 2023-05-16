@@ -12,10 +12,9 @@ OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \
 
 def run(args):
     hl._set_flags(no_whole_stage_codegen='1')  # hail 0.2.78 hits an error on the join, this flag gets around it
-    joined_ht = join_hts(['cadd', '1kg', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
-              'gnomad_genomes', 'gnomad_exomes', 'geno2mp'],
+    joined_ht = join_hts(['cadd', 'mpc', 'eigen', 'dbnsfp', 'topmed', 'primate_ai', 'splice_ai', 'exac',
+              'gnomad_genomes', 'gnomad_exomes', 'geno2mp', 'gnomad_genome_coverage', 'gnomad_exome_coverage'],
               VERSION,
-             ['gnomad_genome_coverage', 'gnomad_exome_coverage'],
              args.build,)
     output_path = os.path.join(OUTPUT_TEMPLATE.format(genome_version=args.build, version=VERSION))
     print('Writing to %s' % output_path)
