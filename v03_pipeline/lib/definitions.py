@@ -16,13 +16,13 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    def variant_annotations_table_key(self, reference_genome: ReferenceGenome):
+    def variant_annotations_table_key(self, reference_genome: ReferenceGenome) -> hl.tstruct:
         default_key = hl.tstruct(
             locus=hl.tlocus(reference_genome.value),
             alleles=hl.tarray(hl.tstr),
         )
         return {
-            DatasetType.GCNV: hl.tstruct(rsid=hl.tstr),
+            DatasetType.GCNV: hl.tstruct(variant_name=hl.tstr, svtype=hl.tstr),
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
 
