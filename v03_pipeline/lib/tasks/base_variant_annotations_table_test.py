@@ -43,4 +43,4 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
 
         mt = hl.read_matrix_table(vat_task.output().path)
         self.assertEqual(mt.count(), (0, 0))
-        self.assertEqual(mt.row_key.collect(), ('locus', 'alleles'))
+        self.assertEqual(list(mt.row_key.keys()), ['locus', 'alleles'])
