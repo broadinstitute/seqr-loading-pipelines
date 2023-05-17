@@ -33,6 +33,7 @@ def run(environment: str, dataset: str):
         )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+    ht.describe()
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
