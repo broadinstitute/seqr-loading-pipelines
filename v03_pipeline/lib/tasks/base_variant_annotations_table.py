@@ -23,25 +23,24 @@ def empty_variant_annotations_table(
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
-    @property
-    def _variant_annotations_table_path(self) -> str:
-        return variant_annotations_table_path(
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(variant_annotations_table_path(
             self.env,
             self.reference_genome,
             self.dataset_type,
-        )
-
-    def output(self) -> luigi.Target:
-        return GCSorLocalTarget(self._variant_annotations_table_path)
+        ))
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self._variant_annotations_table_path).exists()
+        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def run(self) -> None:
         if not self.output().exists():
-            mt = empty_variant_annotations_table(self.dataset_type, self.reference_genome)
+            mt = empty_variant_annotations_table(
+                self.dataset_type,
+                self.reference_genome,
+            )
         mt = self.update(mt)
-        mt.write(self.output().path, overwrite=True)
+        mt.write(self.output().path, stage_locally=True, overwrite=True)
 
     def update(self, mt: hl.MatrixTable) -> hl.MatrixTable:
         return mt

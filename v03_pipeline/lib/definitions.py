@@ -16,7 +16,10 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    def variant_annotations_table_key_type(self, reference_genome: ReferenceGenome) -> hl.tstruct:
+    def variant_annotations_table_key_type(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> hl.tstruct:
         default_key = hl.tstruct(
             locus=hl.tlocus(reference_genome.value),
             alleles=hl.tarray(hl.tstr),
@@ -27,9 +30,10 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
 
+
 class DataRoot(Enum):
-    LOCAL_DATASETS = '/seqr-datasets'
-    LOCAL_REFERENCE_DATA = '/seqr-reference-data'
+    LOCAL_DATASETS = 'seqr-datasets'
+    LOCAL_REFERENCE_DATA = 'seqr-reference-data'
     SEQR_DATASETS = 'gs://seqr-datasets'
     SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
     SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
@@ -41,6 +45,7 @@ class Env(Enum):
     DEV = 'dev'
     LOCAL = 'local'
     PROD = 'prod'
+    TEST = 'test'
 
 
 class PipelineVersion(Enum):

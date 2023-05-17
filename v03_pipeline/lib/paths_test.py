@@ -12,7 +12,7 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.LOCAL, '/seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
+            (Env.LOCAL, 'seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
             (
                 Env.DEV,
                 'gs://seqr-scratch-temp/GRCh37/v03/SNV/families/franklin/samples.ht',
@@ -60,5 +60,5 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            '/seqr-datasets/GRCh37/v03/SV/lookup.ht',
+            'seqr-datasets/GRCh37/v03/SV/lookup.ht',
         )

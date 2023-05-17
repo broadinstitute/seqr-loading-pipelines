@@ -1,6 +1,6 @@
 import luigi
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 
 class BasePipelineTask(luigi.Task):
@@ -10,4 +10,3 @@ class BasePipelineTask(luigi.Task):
         default=ReferenceGenome.GRCh38,
     )
     dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
