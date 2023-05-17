@@ -63,3 +63,7 @@ class ReferenceGenome(Enum):
 class SampleType(Enum):
     WES = 'WES'
     WGS = 'WGS'
+
+class Storage(Enum):
+    CHECKPOINT = 'checkpoint'
+    PERMANENT = 'permanent'
