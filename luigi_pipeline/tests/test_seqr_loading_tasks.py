@@ -8,7 +8,7 @@ from luigi_pipeline.seqr_loading import SeqrValidationError, SeqrVCFToMTTask
 TEST_DATA_MT_1KG = 'tests/data/1kg_30variants.vcf.bgz'
 
 
-@patch('seqr_loading.SeqrVCFToMTTask.contig_check', return_value={})
+@patch('luigi_pipeline.seqr_loading.SeqrVCFToMTTask.contig_check', return_value={})
 class TestSeqrLoadingTasks(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory
@@ -36,7 +36,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             },
         }
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_non_mt(
         self,
         mock_sample_type_stats,
@@ -65,7 +65,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             None,
         )
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_match_none(
         self,
         mock_sample_type_stats,
@@ -88,7 +88,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             None,
         )
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_match_both(
         self,
         mock_sample_type_stats,
@@ -105,7 +105,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
         self.assertTrue(SeqrVCFToMTTask.validate_mt(self.test_mt, '37', 'WGS'))
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_match_coding_only(
         self,
         mock_sample_type_stats,
@@ -122,7 +122,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         )
         self.assertTrue(SeqrVCFToMTTask.validate_mt(self.test_mt, '37', 'WES'))
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_match_noncoding_only(
         self,
         mock_sample_type_stats,
@@ -145,7 +145,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             None,
         )
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_wes_mismatch(
         self,
         mock_sample_type_stats,
@@ -169,7 +169,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             'WGS',
         )
 
-    @patch('lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
+    @patch('luigi_pipeline.lib.hail_tasks.HailMatrixTableTask.sample_type_stats')
     def test_seqr_loading_validate_wgs_mismatch(
         self,
         mock_sample_type_stats,
@@ -190,5 +190,5 @@ class TestSeqrLoadingTasks(unittest.TestCase):
             SeqrVCFToMTTask.validate_mt,
             self.test_mt,
             '37',
-            'WGS',
+            'WES',
         )
