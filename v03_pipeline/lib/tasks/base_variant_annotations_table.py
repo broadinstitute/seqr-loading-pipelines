@@ -1,10 +1,10 @@
-import luigi
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.definitions import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import variant_annotations_table_path
 from v03_pipeline.lib.tasks.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, GCSorLocalFolderTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 
 
 def empty_variant_annotations_mt(

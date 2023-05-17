@@ -4,6 +4,7 @@ from enum import Enum
 
 import hail as hl
 
+
 class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
