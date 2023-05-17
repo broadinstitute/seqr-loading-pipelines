@@ -297,6 +297,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         ]
         ht = update_existing_joined_hts(
             'destination',
+            '/tmp/checkpoint1.ht',
             'b',
             ['a', 'b', 'c_coverage'],
             '1.0.0',
@@ -330,6 +331,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         ht = update_existing_joined_hts(
             'destination',
+            '/tmp/checkpoint2.ht',
             'c_coverage',
             ['a', 'b', 'c_coverage'],
             '1.0.0',

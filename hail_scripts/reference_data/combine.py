@@ -147,6 +147,7 @@ def join_hts(datasets, version, reference_genome='37'):
 
 def update_existing_joined_hts(
     destination_path: str,
+    checkpoint_path: str,
     dataset: str,
     datasets: List[str],
     version: str,
@@ -164,4 +165,5 @@ def update_existing_joined_hts(
         joined_ht = joined_ht.annotate(
             **{dataset: dataset_ht[joined_ht.locus][dataset]},
         )
-    return update_joined_ht_globals(joined_ht, dataset, version, genome_version)
+    joined_ht = update_joined_ht_globals(joined_ht, dataset, version, genome_version)
+    return joined_ht.checkpoint(checkpoint_path, overwrite=True, stage_locally=True)

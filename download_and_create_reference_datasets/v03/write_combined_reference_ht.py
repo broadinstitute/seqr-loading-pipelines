@@ -30,6 +30,13 @@ VERSION = '1.0.0'
 
 
 def run(environment: str, genome_version: str, dataset: str):
+    checkpoint_path = os.path.join(
+        GCS_PREFIXES[('dev', AccessControl.PUBLIC)],
+        COMBINED_REFERENCE_HT_PATH,
+        '_checkpoint.ht',
+    ).format(
+        genome_version=genome_version,
+    )
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
@@ -39,6 +46,7 @@ def run(environment: str, genome_version: str, dataset: str):
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
             destination_path,
+            checkpoint_path,
             dataset,
             DATASETS,
             VERSION,
