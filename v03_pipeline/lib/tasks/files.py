@@ -36,4 +36,4 @@ class VCFFile(RawFile):
 
 class HailTable(RawFile):
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.pathname, '_SUCCESS').exists()
+        return GCSorLocalFolderTarget(self.pathname).exists()
