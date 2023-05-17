@@ -16,8 +16,10 @@ class DatasetType(Enum):
 
 
 class DataRoot(Enum):
-    LOCAL_DATASETS = '/seqr-datasets'
-    LOCAL_REFERENCE_DATA = '/seqr-reference-data'
+    TEST_DATASETS = 'test-datasets'
+    TEST_REFERENCE_DATA = 'test-reference-data'
+    LOCAL_DATASETS = 'seqr-datasets'
+    LOCAL_REFERENCE_DATA = 'seqr-reference-data'
     SEQR_DATASETS = 'gs://seqr-datasets'
     SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
     SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
@@ -29,6 +31,7 @@ class Env(Enum):
     DEV = 'dev'
     LOCAL = 'local'
     PROD = 'prod'
+    TEST = 'test'
 
 
 class PipelineVersion(Enum):

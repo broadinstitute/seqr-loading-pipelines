@@ -1,6 +1,6 @@
 import os
 
-from v03_pipeline.core.definitions import (
+from v03_pipeline.lib.definitions import (
     DataRoot,
     DatasetType,
     Env,
