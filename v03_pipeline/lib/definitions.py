@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
+import hail as hl
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -13,6 +14,16 @@ class DatasetType(Enum):
     MITO = 'MITO'
     SNV = 'SNV'
     SV = 'SV'
+
+    def variant_annotations_table_key(self, reference_genome: ReferenceGenome):
+        default_key = hl.tstruct(
+            locus=hl.tlocus(reference_genome.value),
+            alleles=hl.tarray(hl.tstr),
+        )
+        return {
+            DatasetType.GCNV: hl.tstruct(rsid=hl.tstr),
+            DatasetType.SV: hl.tstruct(rsid=hl.tstr),
+        }.get(self, default_key)
 
 
 class DataRoot(Enum):

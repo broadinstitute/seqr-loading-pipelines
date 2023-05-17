@@ -2,10 +2,10 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import (
     families_to_exclude,
     families_to_include,
-    import_pedigree,
     samples_to_include,
 )
 
