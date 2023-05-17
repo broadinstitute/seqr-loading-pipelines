@@ -15,6 +15,8 @@ def _v03_pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
+    if env == Env.TEST:
+        root = DataRoot.TEST_DATASETS
     if env == Env.LOCAL:
         root = DataRoot.LOCAL_DATASETS
     if env == Env.DEV:
