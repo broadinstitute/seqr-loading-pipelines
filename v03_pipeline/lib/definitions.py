@@ -16,7 +16,7 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    def variant_annotations_table_key(self, reference_genome: ReferenceGenome) -> hl.tstruct:
+    def variant_annotations_table_key_type(self, reference_genome: ReferenceGenome) -> hl.tstruct:
         default_key = hl.tstruct(
             locus=hl.tlocus(reference_genome.value),
             alleles=hl.tarray(hl.tstr),

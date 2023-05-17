@@ -11,9 +11,11 @@ def empty_variant_annotations_table(
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
 ) -> hl.MatrixTable:
+    key_type = dataset_type.variant_annotations_table_key_type(reference_genome)
     ht = hl.Table.parallelize(
         [],
-        key=dataset_type.variant_annotations_table_key(reference_genome),
+        key_type,
+        key=key_type.fields,
     )
     # Danger! `from_rows_table` is experimental... but it was by far the
     # cleanest way to accomplish this.
@@ -39,7 +41,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
         if not self.output().exists():
             mt = empty_variant_annotations_table(self.dataset_type, self.reference_genome)
         mt = self.update(mt)
-        mt.write(self.output().path)
+        mt.write(self.output().path, overwrite=True)
 
     def update(self, mt: hl.MatrixTable) -> hl.MatrixTable:
-        pass
+        return mt

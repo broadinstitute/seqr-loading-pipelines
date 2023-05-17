@@ -1,6 +1,6 @@
 import luigi
 
-from v03_pipeline.definitions import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
 
 
 class BasePipelineTask(luigi.Task):
