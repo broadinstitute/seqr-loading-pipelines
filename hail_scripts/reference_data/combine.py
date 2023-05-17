@@ -145,7 +145,7 @@ def join_hts(datasets, version, reference_genome='37'):
     )
 
 
-def update_existing_joined_hts(
+def update_existing_joined_hts(  # noqa: PLR0913
     destination_path: str,
     checkpoint_path: str,
     dataset: str,
