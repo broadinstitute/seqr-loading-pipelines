@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from v03_pipeline.lib.definitions import (
     DataRoot,
@@ -8,6 +9,11 @@ from v03_pipeline.lib.definitions import (
     ReferenceGenome,
 )
 
+def new_checkpoint_path() -> str:
+    return os.path.join(
+        DataRoot.SEQR_SCRATCH_TEMP,
+        f'{uuid.uuid4()}.ht',
+    )
 
 def _v03_pipeline_prefix(
     env: Env,
