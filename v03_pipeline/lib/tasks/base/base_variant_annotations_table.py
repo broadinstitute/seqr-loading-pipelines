@@ -24,12 +24,14 @@ def empty_variant_annotations_table(
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def output(self) -> luigi.Target:
-        return GCSorLocalTarget(variant_annotations_table_path(
-            self.env,
-            Storage.PERMANENT,
-            self.reference_genome,
-            self.dataset_type,
-        ))
+        return GCSorLocalTarget(
+            variant_annotations_table_path(
+                self.env,
+                Storage.PERMANENT,
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
 
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists()

@@ -1,6 +1,5 @@
 import unittest
 
-
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, Storage
 from v03_pipeline.lib.paths import (
     family_table_path,

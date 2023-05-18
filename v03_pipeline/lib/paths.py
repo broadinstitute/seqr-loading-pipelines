@@ -9,6 +9,7 @@ from v03_pipeline.lib.definitions import (
     Storage,
 )
 
+
 def _v03_pipeline_prefix(
     env: Env,
     storage: Storage,

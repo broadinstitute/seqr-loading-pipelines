@@ -30,7 +30,6 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
 
-
 class DataRoot(Enum):
     TEST_DATASETS = 'test-datasets'
     TEST_REFERENCE_DATA = 'test-reference-data'
@@ -63,6 +62,7 @@ class ReferenceGenome(Enum):
 class SampleType(Enum):
     WES = 'WES'
     WGS = 'WGS'
+
 
 class Storage(Enum):
     CHECKPOINT = 'checkpoint'

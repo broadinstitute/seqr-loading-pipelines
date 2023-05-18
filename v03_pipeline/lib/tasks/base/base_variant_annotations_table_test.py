@@ -16,7 +16,6 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class BaseVariantAnnotationsTableTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self._temp_dir = tempfile.TemporaryDirectory().name
 
@@ -31,7 +30,9 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
         )
-        self.assertEqual(vat_task.output().path, f'{self._temp_dir}/GRCh38/v03/SNV/annotations.ht')
+        self.assertEqual(
+            vat_task.output().path, f'{self._temp_dir}/GRCh38/v03/SNV/annotations.ht',
+        )
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())
 
