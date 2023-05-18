@@ -1,5 +1,3 @@
-import shutil
-import tempfile
 import unittest
 from datetime import datetime
 from unittest import mock
@@ -17,14 +15,6 @@ from hail_scripts.reference_data.config import dbnsfp_custom_select
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self._tmp_dir = tempfile.TemporaryDirectory().name
-
-    @classmethod
-    def tearDownClass(self):
-        shutil.rmtree(self._tmp_dir)
-
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
             [
@@ -307,7 +297,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         ]
         ht = update_existing_joined_hts(
             'destination',
-            f'{self._tmp_dir}/checkpoint1.ht',
             'b',
             ['a', 'b', 'c_coverage'],
             '1.0.0',
@@ -341,7 +330,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         ht = update_existing_joined_hts(
             'destination',
-            f'{self._tmp_dir}/checkpoint1.ht',
             'c_coverage',
             ['a', 'b', 'c_coverage'],
             '1.0.0',

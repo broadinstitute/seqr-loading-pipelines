@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import uuid
 
 import hail as hl
 
@@ -30,13 +31,6 @@ VERSION = '1.0.0'
 
 
 def run(environment: str, genome_version: str, dataset: str):
-    checkpoint_path = os.path.join(
-        GCS_PREFIXES[('dev', AccessControl.PUBLIC)],
-        COMBINED_REFERENCE_HT_PATH,
-        '_checkpoint.ht',
-    ).format(
-        genome_version=genome_version,
-    )
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
@@ -46,7 +40,6 @@ def run(environment: str, genome_version: str, dataset: str):
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
             destination_path,
-            checkpoint_path,
             dataset,
             DATASETS,
             VERSION,
@@ -55,6 +48,9 @@ def run(environment: str, genome_version: str, dataset: str):
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
     ht.describe()
+    checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
+    print(f'Checkpointing ht to {checkpoint_path}')
+    ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
