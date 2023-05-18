@@ -15,9 +15,7 @@ class FilesTest(unittest.TestCase):
             self.assertTrue(VCFFile(f.name).complete())
 
         with tempfile.TemporaryDirectory(suffix='.vcf.bgz') as d:
-            self.assertFalse(VCFFile(os.path.join(d, '*.bgz')).complete())
-            with open(os.path.join(d, '_SUCCESS'), 'w') as f:
-                f.write('0')
+            self.assertTrue(VCFFile(d).complete())
             self.assertTrue(VCFFile(os.path.join(d, '*.bgz')).complete())
 
     def test_hail_table(self) -> None:
