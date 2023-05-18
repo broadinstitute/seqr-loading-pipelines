@@ -2,13 +2,13 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.tasks.base_variant_annotations_table import (
+from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
@@ -17,14 +17,14 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 @patch('v03_pipeline.lib.paths.DataRoot')
 class BaseVariantAnnotationsTableTest(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         self._temp_dir = tempfile.TemporaryDirectory().name
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         if os.path.isdir(self._temp_dir):
             shutil.rmtree(self._temp_dir)
 
-    def test_base_variant_annotations_table(self, mock_dataroot) -> None:
+    def test_base_variant_annotations_table(self, mock_dataroot: Mock) -> None:
         mock_dataroot.TEST_DATASETS.value = self._temp_dir
         vat_task = BaseVariantAnnotationsTableTask(
             env=Env.TEST,
