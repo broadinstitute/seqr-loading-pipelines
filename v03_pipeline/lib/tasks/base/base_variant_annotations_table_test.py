@@ -31,7 +31,8 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             dataset_type=DatasetType.SNV,
         )
         self.assertEqual(
-            vat_task.output().path, f'{self._temp_dir}/GRCh38/v03/SNV/annotations.ht',
+            vat_task.output().path,
+            f'{self._temp_dir}/GRCh38/v03/SNV/annotations.ht',
         )
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())
