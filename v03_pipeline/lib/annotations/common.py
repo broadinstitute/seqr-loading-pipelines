@@ -21,12 +21,6 @@ def add_37_coordinates(mt: hl.MatrixTable, reference_genome: ReferenceGenome, li
     rg38.add_liftover(liftover_ref_path, rg37)
     return mt.annotate_rows(rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value))
 
-def generate_callstats(mt: hl.MatrixTable):
-    """
-    Generate call statistics for all variants in the dataset.
-    """
-    return mt.annotate_rows(gt_stats=hl.agg.call_stats(mt.GT, mt.alleles))
-
 def annotate_old_and_split_multi_hts(mt: hl.MatrixTable):
     """
     Saves the old allele and locus because while split_multi does this, split_multi_hts drops this. Will see if
