@@ -58,6 +58,10 @@ class ReferenceGenome(Enum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
 
+    @property
+    def v02_value(self):
+        return self.value[-2:]
+
 
 class SampleType(Enum):
     WES = 'WES'
