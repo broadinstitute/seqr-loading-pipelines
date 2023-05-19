@@ -21,9 +21,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     project_pedigree_path = luigi.Parameter()
 
     dont_validate = luigi.BoolParameter(
+        default=False,
         description='Disable checking whether the dataset matches the specified sample type and genome version',
     )
-    ignore_missing_samples = luigi.BoolParameter()
+    ignore_missing_samples = luigi.BoolParameter(default=False)
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
