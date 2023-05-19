@@ -9,8 +9,8 @@ from v03_pipeline.lib.misc.pedigree import (
     samples_to_include,
 )
 
-TEST_PEDIGREE_1 = 'v03_pipeline/var/test/test_pedigree_1.tsv'
-TEST_PEDIGREE_2 = 'v03_pipeline/var/test/test_pedigree_2.tsv'
+TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
+TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
 
 
 class DownloadUtilsTest(unittest.TestCase):

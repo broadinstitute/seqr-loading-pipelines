@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hail as hl
 import luigi
 
@@ -38,7 +40,6 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         return [
             VCFFile(self.vcf_path),
             HailTable(self.project_remap_path),
-            HailTable(self.project_subset_path),
             HailTable(self.project_pedigree_path),
         ]
 
@@ -46,7 +47,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def update(self, existing_mt: hl.MatrixTable) -> hl.MatrixTable:
-        vcf_mt = import_vcf(self.vcf_path)
+        vcf_mt = import_vcf(self.vcf_path, self.reference_genome)
         project_remap_ht = hl.import_table(self.project_remap_path)
         vcf_mt = remap_sample_ids(vcf_mt, project_remap_ht)
 

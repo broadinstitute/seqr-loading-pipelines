@@ -7,7 +7,7 @@ def subset_samples_and_variants(
     mt: hl.MatrixTable,
     sample_subset_ht: hl.Table,
     ignore_missing_samples: bool,
-):
+) -> hl.MatrixTable:
     """
     Subset the MatrixTable to the provided list of samples and to variants present in those samples
     :param mt: MatrixTable from VCF

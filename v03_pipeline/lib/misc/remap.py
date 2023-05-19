@@ -5,12 +5,12 @@ import hail as hl
 from v03_pipeline.lib.misc.errors import MatrixTableSampleSetError
 
 
-def vcf_remap(mt: hl.MatrixTable):
+def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
     # TODO: add logic from Mike to remap vcf samples delivered from Broad WGS
     pass
 
 
-def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table):
+def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.MatrixTable:
     """
     Remap the MatrixTable's sample ID, 's', field to the sample ID used within seqr, 'seqr_id'
     If the sample 's' does not have a 'seqr_id' in the remap file, 's' becomes 'seqr_id'
