@@ -23,7 +23,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         if os.path.isdir(self._temp_dir):
             shutil.rmtree(self._temp_dir)
 
-    def test_base_variant_annotations_table(self, mock_dataroot: Mock) -> None:
+    def test_should_create_empty_vat(self, mock_dataroot: Mock) -> None:
         mock_dataroot.TEST_DATASETS.value = self._temp_dir
         vat_task = BaseVariantAnnotationsTableTask(
             env=Env.TEST,
@@ -43,6 +43,8 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         self.assertTrue(GCSorLocalFolderTarget(vat_task.output().path).exists())
         self.assertTrue(vat_task.complete())
 
-        mt = hl.read_matrix_table(vat_task.output().path)
-        self.assertEqual(mt.count(), (0, 0))
-        self.assertEqual(list(mt.row_key.keys()), ['locus', 'alleles'])
+        ht = hl.read_table(vat_task.output().path)
+        self.assertEqual(ht.count(), 0)
+        self.assertEqual(list(ht.key.keys()), ['locus', 'alleles'])
+
+        

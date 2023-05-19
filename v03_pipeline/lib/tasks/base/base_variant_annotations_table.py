@@ -2,7 +2,8 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.definitions import DatasetType, ReferenceGenome
-from v03_pipeline.lib.paths import new_checkpoint_path, variant_annotations_table_path
+from v03_pipeline.lib.misc.io import write_ht
+from v03_pipeline.lib.paths import variant_annotations_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 
@@ -10,16 +11,13 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarge
 def empty_variant_annotations_table(
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
-) -> hl.MatrixTable:
+) -> hl.Table:
     key_type = dataset_type.variant_annotations_table_key_type(reference_genome)
-    ht = hl.Table.parallelize(
+    return hl.Table.parallelize(
         [],
         key_type,
         key=key_type.fields,
     )
-    # Danger! `from_rows_table` is experimental... but it was by far the
-    # cleanest way to accomplish this.
-    return hl.MatrixTable.from_rows_table(ht)
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -38,15 +36,12 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def run(self) -> None:
         super().run()
         if not self.output().exists():
-            mt = empty_variant_annotations_table(
+            ht = empty_variant_annotations_table(
                 self.dataset_type,
                 self.reference_genome,
             )
-        mt = self.update(mt)
-        mt = mt.checkpoint(
-            new_checkpoint_path(self.env), stage_locally=True, overwrite=True,
-        )
-        mt.write(self.output().path, stage_locally=True, overwrite=True)
+        ht = self.update(ht)
+        write_ht(self.env, ht, self.output().path)
 
-    def update(self, mt: hl.MatrixTable) -> hl.MatrixTable:
+    def update(self, mt: hl.Table) -> hl.Table:
         return mt
