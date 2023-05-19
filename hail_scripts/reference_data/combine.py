@@ -167,9 +167,7 @@ def update_existing_joined_hts(
     dataset_ht = get_ht(dataset, genome_version)
     if 'coverage' not in dataset:
         joined_ht = joined_ht.drop(dataset)
-        joined_ht = joined_ht.select_globals(
-            **joined_ht.globals.drop(f'{dataset}_globals'),
-        )
+        joined_ht = joined_ht.drop(f'{dataset}_globals')
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = joined_ht.filter(
             hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
