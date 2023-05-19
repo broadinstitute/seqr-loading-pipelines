@@ -3,7 +3,7 @@ import os
 import luigi
 from luigi.contrib import gcs
 
-BGZ_GLOB_SUFFIX = '/*.bgz'
+GLOB = '*'
 
 
 def GCSorLocalTarget(pathname: str) -> luigi.Target:  # noqa: N802
@@ -28,9 +28,8 @@ class RawFile(luigi.Task):
 class VCFFile(RawFile):
     def complete(self) -> bool:
         # NB: hail supports reading glob bgz files.
-        if self.pathname.endswith(BGZ_GLOB_SUFFIX):
-            glob_stripped = self.pathname.replace(BGZ_GLOB_SUFFIX, '/')
-            return GCSorLocalFolderTarget(glob_stripped).exists()
+        if GLOB in self.pathname:
+            return GCSorLocalTarget(os.path.dirname(self.pathname)).exists()
         return GCSorLocalTarget(self.pathname).exists()
 
 
