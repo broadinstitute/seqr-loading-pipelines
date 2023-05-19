@@ -19,7 +19,10 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 
 
 def write_ht(
-    env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = True,
+    env: Env,
+    ht: hl.Table,
+    destination_path: str,
+    checkpoint: bool = True,
 ) -> hl.Table:
     if checkpoint and (env == Env.LOCAL or env == Env.TEST):
         with tempfile.TemporaryDirectory() as d:
