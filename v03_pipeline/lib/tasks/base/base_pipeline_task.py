@@ -14,6 +14,11 @@ def empty_table(
         [],
         key_type,
         key=key_type.fields,
+        globals=hl.struct(
+            updates=hl.empty_set(
+                hl.ttuple(hl.tstr, hl.tstr),
+            ),
+        ),
     )
 
 

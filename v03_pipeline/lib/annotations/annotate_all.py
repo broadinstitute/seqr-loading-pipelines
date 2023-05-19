@@ -6,12 +6,12 @@ and HailMatrixTableTask from `hail_tasks.py` from the v02 pipeline.
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.definitions import Env, ReferenceGenome
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 
 def run_vep(
-    env: Env,
     mt: hl.MatrixTable,
+    env: Env,
     reference_genome: ReferenceGenome,
     vep_config_json_path: str,
 ):
@@ -27,11 +27,8 @@ def run_vep(
 
 def add_37_coordinates(
     mt: hl.MatrixTable,
-    reference_genome: ReferenceGenome,
     liftover_ref_path: str,
 ):
-    if reference_genome == ReferenceGenome.GRCh38:
-        return mt
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
     rg38.add_liftover(liftover_ref_path, rg37)
@@ -50,3 +47,23 @@ def annotate_old_and_split_multi_hts(mt: hl.MatrixTable):
     return hl.split_multi_hts(
         mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
     )
+
+
+def annotate_all(
+    mt: hl.MatrixTable,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    liftover_ref_path: str,
+    vep_config_json_path: str,
+):
+    mt = mt.annotate_old_and_split_multi_hts(mt)
+    if reference_genome == ReferenceGenome.GRCh38:
+        mt = mt.add_37_coordinates(mt, reference_genome, liftover_ref_path)
+    if dataset_type.should_run_vep:
+        mt = mt.run_vep(mt, env, reference_genome, vep_config_json_path)
+
+    # TODO, add the reset of the dataset_type specific annotations
+    mt = mt.select('vep', 'filters', 'rsid')
+
+    return mt

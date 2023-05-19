@@ -83,3 +83,6 @@ inline-quotes = "single"
     'ARG002', # allow unused arguments
     'SLF001', # allow private access
 ]
+
+[tool.ruff.pylint]
+max-args = 6

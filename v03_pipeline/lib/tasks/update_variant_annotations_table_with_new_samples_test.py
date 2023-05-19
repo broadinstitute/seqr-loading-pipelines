@@ -57,4 +57,4 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
         worker.run()
-        self.assertFalse(uvatwns_task.complete())
+        self.assertTrue(uvatwns_task.complete())
