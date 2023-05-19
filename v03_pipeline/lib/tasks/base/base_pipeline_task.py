@@ -29,6 +29,9 @@ class BasePipelineTask(luigi.Task):
         description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',
     )
 
+    def output(self) -> luigi.Target:
+        raise NotImplementedError
+
     def run(self) -> None:
         if self.hail_temp_dir:
             # Need to use the GCP bucket as temp storage for very large callset joins
