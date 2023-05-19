@@ -16,7 +16,7 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    def variant_annotations_table_key_type(
+    def table_key_type(
         self,
         reference_genome: ReferenceGenome,
     ) -> hl.tstruct:

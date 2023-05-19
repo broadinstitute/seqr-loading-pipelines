@@ -1,7 +1,20 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+
+
+def empty_table(
+    dataset_type: DatasetType,
+    reference_genome: ReferenceGenome,
+) -> hl.Table:
+    key_type = dataset_type.table_key_type(reference_genome)
+    return hl.Table.parallelize(
+        [],
+        key_type,
+        key=key_type.fields,
+    )
 
 
 class BasePipelineTask(luigi.Task):
@@ -23,3 +36,12 @@ class BasePipelineTask(luigi.Task):
 
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1')  # noqa: SLF001
+
+        if not self.output().exists():
+            ht = empty_table(
+                self.dataset_type,
+                self.reference_genome,
+            )
+
+        ht = self.update(ht)
+        write_ht(self.env, ht, self.output().path)

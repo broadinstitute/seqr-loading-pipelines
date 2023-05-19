@@ -8,6 +8,7 @@ import hail as hl
 
 from v03_pipeline.lib.definitions import DataRoot, Env, ReferenceGenome
 
+
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
     ht = ht.select(
@@ -16,6 +17,7 @@ def import_remap(remap_path: str) -> hl.Table:
     )
     return ht.key_by(ht.s)
 
+
 def import_pedigree(pedigree_path: str) -> hl.Table:
     ht = hl.import_table(pedigree_path)
     ht = ht.select(
@@ -23,6 +25,7 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
         s=ht.Individual_ID,
     )
     return ht.key_by(ht.family_id)
+
 
 def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
@@ -40,8 +43,12 @@ def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTab
         min_partitions=500,
     )
 
+
 def write_ht(
-    env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = True,
+    env: Env,
+    ht: hl.Table,
+    destination_path: str,
+    checkpoint: bool = True,
 ) -> hl.Table:
     if checkpoint and (env == Env.LOCAL or env == Env.TEST):
         with tempfile.TemporaryDirectory() as d:

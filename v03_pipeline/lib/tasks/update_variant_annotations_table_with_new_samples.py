@@ -4,14 +4,14 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.definitions import SampleType
-from v03_pipeline.lib.misc.io import import_remap, import_pedigree, import_vcf
+from v03_pipeline.lib.misc.io import import_pedigree, import_remap, import_vcf
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.remap import remap_sample_ids
 from v03_pipeline.lib.misc.subset import subset_samples_and_variants
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, RawFile, VCFFile
+from v03_pipeline.lib.tasks.files import RawFile, VCFFile
 
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTask):
@@ -44,7 +44,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     def complete(self) -> bool:
         return super().complete() and (
             hl.read_table(self.output().path).globals.updates.contains(
-                (self.vcf_path, self.project_remap_path)
+                (self.vcf_path, self.project_remap_path),
             )
         )
 
@@ -52,7 +52,6 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         vcf_mt = import_vcf(self.vcf_path, self.reference_genome)
         project_remap_ht = import_remap(self.project_remap_path)
         vcf_mt = remap_sample_ids(vcf_mt, project_remap_ht)
-
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         sample_subset_ht = samples_to_include(pedigree_ht, vcf_mt.cols())
         vcf_mt = subset_samples_and_variants(

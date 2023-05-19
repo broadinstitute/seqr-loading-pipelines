@@ -8,12 +8,6 @@ def subset_samples_and_variants(
     sample_subset_ht: hl.Table,
     ignore_missing_samples: bool,
 ) -> hl.MatrixTable:
-    """
-    Subset the MatrixTable to the provided list of samples and to variants present in those samples
-    :param mt: MatrixTable from VCF
-    :param subset_path: Path to a file with a single column 's'
-    :return: MatrixTable subsetted to list of samples
-    """
     subset_count = sample_subset_ht.count()
     anti_join_ht = sample_subset_ht.anti_join(mt.cols())
     anti_join_ht_count = anti_join_ht.count()

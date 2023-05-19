@@ -7,7 +7,7 @@ from v03_pipeline.lib.misc.errors import MatrixTableSampleSetError
 
 def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
     # TODO: add logic from Mike to remap vcf samples delivered from Broad WGS
-    pass
+    return mt
 
 
 def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.MatrixTable:
