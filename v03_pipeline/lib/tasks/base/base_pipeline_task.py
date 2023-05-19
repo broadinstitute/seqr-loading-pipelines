@@ -13,7 +13,7 @@ class BasePipelineTask(luigi.Task):
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     hail_temp_dir = luigi.OptionalParameter(
         default=None,
-        description="Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path."
+        description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',
     )
 
     def run(self) -> None:
@@ -22,4 +22,4 @@ class BasePipelineTask(luigi.Task):
             hl.init(tmp_dir=self.hail_temp_dir)
 
         # Interval ref data join causes shuffle death, this prevents it
-        hl._set_flags(use_new_shuffle='1')
+        hl._set_flags(use_new_shuffle='1') # noqa: SLF001

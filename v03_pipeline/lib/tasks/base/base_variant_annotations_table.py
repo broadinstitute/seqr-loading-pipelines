@@ -43,7 +43,9 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                 self.reference_genome,
             )
         mt = self.update(mt)
-        mt = mt.checkpoint(new_checkpoint_path(self.env), stage_locally=True, overwrite=True)
+        mt = mt.checkpoint(
+            new_checkpoint_path(self.env), stage_locally=True, overwrite=True,
+        )
         mt.write(self.output().path, stage_locally=True, overwrite=True)
 
     def update(self, mt: hl.MatrixTable) -> hl.MatrixTable:
