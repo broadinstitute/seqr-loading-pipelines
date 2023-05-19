@@ -48,7 +48,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             )
         )
 
-    def update(self, existing_mt: hl.MatrixTable) -> hl.MatrixTable:
+    def update(self, existing_ht: hl.Table) -> hl.Table:
         vcf_mt = import_vcf(self.vcf_path, self.reference_genome)
         project_remap_ht = import_remap(self.project_remap_path)
         vcf_mt = remap_sample_ids(vcf_mt, project_remap_ht)

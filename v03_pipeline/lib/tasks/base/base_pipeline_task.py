@@ -1,8 +1,8 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.misc.io import write_ht
 
 
 def empty_table(
