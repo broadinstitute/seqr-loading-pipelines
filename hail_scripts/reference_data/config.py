@@ -108,6 +108,7 @@ CONFIG = {
     },
     'dbnsfp': {
         '37': {
+            'version': '2.9.3',
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
                 'MetaSVM_pred',
@@ -124,6 +125,7 @@ CONFIG = {
             },
         },
         '38': {
+            'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
                 'MetaSVM_pred',
