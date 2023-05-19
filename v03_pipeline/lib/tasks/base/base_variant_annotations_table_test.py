@@ -46,5 +46,3 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         ht = hl.read_table(vat_task.output().path)
         self.assertEqual(ht.count(), 0)
         self.assertEqual(list(ht.key.keys()), ['locus', 'alleles'])
-
-        

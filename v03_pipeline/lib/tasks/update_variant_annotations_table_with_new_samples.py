@@ -11,11 +11,7 @@ from v03_pipeline.lib.misc.subset import subset_samples_and_variants
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import (
-    GCSorLocalFolderTarget,
-    HailTable,
-    VCFFile,
-)
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, HailTable, VCFFile
 
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTask):
@@ -29,7 +25,8 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     )
     ignore_missing_samples = luigi.BoolParameter()
     vep_config_json_path = luigi.OptionalParameter(
-        default=None, description='Path of hail vep config .json file',
+        default=None,
+        description='Path of hail vep config .json file',
     )
     grch38_to_grch37_ref_chain = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
@@ -54,5 +51,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         sample_subset_ht = samples_to_include(pedigree_ht, vcf_mt.cols())
         vcf_mt = subset_samples_and_variants(
-            vcf_mt, sample_subset_ht, self.ignore_missing_samples,
+            vcf_mt,
+            sample_subset_ht,
+            self.ignore_missing_samples,
         )

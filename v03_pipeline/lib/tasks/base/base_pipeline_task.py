@@ -22,4 +22,4 @@ class BasePipelineTask(luigi.Task):
             hl.init(tmp_dir=self.hail_temp_dir)
 
         # Interval ref data join causes shuffle death, this prevents it
-        hl._set_flags(use_new_shuffle='1') # noqa: SLF001
+        hl._set_flags(use_new_shuffle='1')  # noqa: SLF001

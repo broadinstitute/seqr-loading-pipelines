@@ -19,12 +19,16 @@ def run_vep(
         vep_runners.HailVEPRunner if env != Env.TEST else vep_runners.HailVEPDummyRunner
     )
     return vep_runner.run(
-        mt, reference_genome.v02_value, vep_config_json_path=vep_config_json_path,
+        mt,
+        reference_genome.v02_value,
+        vep_config_json_path=vep_config_json_path,
     )
 
 
 def add_37_coordinates(
-    mt: hl.MatrixTable, reference_genome: ReferenceGenome, liftover_ref_path: str,
+    mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
+    liftover_ref_path: str,
 ):
     if reference_genome == ReferenceGenome.GRCh38:
         return mt
