@@ -8,6 +8,21 @@ import hail as hl
 
 from v03_pipeline.lib.definitions import DataRoot, Env, ReferenceGenome
 
+def import_remap(remap_path: str) -> hl.Table:
+    ht = hl.import_table(remap_path)
+    ht = ht.select(
+        s=ht.s,
+        seqr_id=ht.seqr_id,
+    )
+    return ht.key_by(ht.s)
+
+def import_pedigree(pedigree_path: str) -> hl.Table:
+    ht = hl.import_table(pedigree_path)
+    ht = ht.select(
+        family_id=ht.Family_ID,
+        s=ht.Individual_ID,
+    )
+    return ht.key_by(ht.family_id)
 
 def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
@@ -24,16 +39,6 @@ def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTab
         force_bgz=True,
         min_partitions=500,
     )
-
-
-def import_pedigree(pedigree_path: str) -> hl.Table:
-    ht = hl.import_table(pedigree_path)
-    ht = ht.select(
-        family_id=ht.Family_ID,
-        s=ht.Individual_ID,
-    )
-    return ht.key_by(ht.family_id)
-
 
 def write_ht(
     env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = True,

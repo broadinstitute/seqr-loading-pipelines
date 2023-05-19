@@ -11,9 +11,9 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamples,
 )
 
-TEST_VCF = 'var/test/vcfs/1kg_30variants.vcf.bgz'
-TEST_REMAP = 'var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE = 'var/test/remaps/test_pedigree_3.tsv'
+TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
+TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
+TEST_PEDIGREE = 'v03_pipeline/var/test/remaps/test_pedigree_3.tsv'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
@@ -40,3 +40,4 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
         worker.run()
+        self.assertFalse(uvatwns_task.complete())
