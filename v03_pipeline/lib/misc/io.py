@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 import tempfile
 import uuid
@@ -16,14 +17,17 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
     )
     return ht.key_by(ht.family_id)
 
-def write_ht(env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = True) -> hl.Table:
+
+def write_ht(
+    env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = True,
+) -> hl.Table:
     if checkpoint and (env == Env.LOCAL or env == Env.TEST):
         with tempfile.TemporaryDirectory() as d:
             ht = ht.checkpoint(
                 os.path.join(
                     d,
                     f'{uuid.uuid4()}.ht',
-                )
+                ),
             )
             return ht.write(destination_path, overwrite=True, stage_locally=True)
     elif checkpoint:
@@ -31,6 +35,6 @@ def write_ht(env: Env, ht: hl.Table, destination_path: str, checkpoint: bool = T
             os.path.join(
                 DataRoot.SEQR_SCRATCH_TEMP,
                 f'{uuid.uuid4()}.ht',
-            )
+            ),
         )
     return ht.write(destination_path, overwrite=True, stage_locally=True)
