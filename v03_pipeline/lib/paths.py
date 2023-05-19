@@ -1,4 +1,5 @@
 import os
+import tempfile
 import uuid
 
 from v03_pipeline.lib.definitions import (
@@ -10,10 +11,10 @@ from v03_pipeline.lib.definitions import (
 )
 
 
-def new_checkpoint_path(env: Env, tempdir_path: str) -> str:
+def new_checkpoint_path(env: Env) -> str:
     if env == Env.LOCAL or env == Env.TEST:
         return os.path.join(
-            tempdir_path,
+            tempfile.TemporaryDirectory().name,
             f'{uuid.uuid4()}.ht',
         )
     return os.path.join(
