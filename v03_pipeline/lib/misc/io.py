@@ -1,5 +1,7 @@
 import hail as hl
 
+from v03_pipeline.lib.definitions import ReferenceGenome
+
 def import_vcf(path: str, reference_genome: ReferenceGenome):
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
     recode = {}
