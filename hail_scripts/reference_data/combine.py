@@ -74,8 +74,8 @@ def get_enum_select_fields(enum_selects, ht):
         lookup = hl.dict(
             hl.enumerate(values, index_first=False).extend(
                 # NB: adding missing values here allows us to
-                # hard fail if a mapped key is present but an unexpected value
-                # but also propagate missing values.
+                # hard fail if a mapped key is present and has an unexpected value
+                # but propagate missing values.
                 [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
             ),
         )

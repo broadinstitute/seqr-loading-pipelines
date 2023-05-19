@@ -59,7 +59,7 @@ def get_expr_for_vep_consequence_terms_set(vep_transcript_consequences_root):
     vep_consequence_terms_set = hl.set(vep_transcript_consequences_root.flatmap(lambda c: c.consequence_terms))
     any_canonical_and_non_coding_transcript_exon_variant = hl.any(
         vep_transcript_consequences_root.map(
-            lambda c: hl.or_else(c.canonical, 0) == 1 & c.consequence_terms.contains(NON_CODING_TRANSCRIPT_EXON_VARIANT)
+            lambda c: (hl.or_else(c.canonical, 0) == 1) & c.consequence_terms.contains(NON_CODING_TRANSCRIPT_EXON_VARIANT)
         )
     )
     return hl.if_else(

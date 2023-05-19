@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import uuid
 
 import hail as hl
 
@@ -9,7 +10,7 @@ from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 COMBINED_REFERENCE_HT_PATH = (
-    'combined_reference/combined_reference.GRCh{genome_version}-{version}.ht'
+    'combined_reference/combined_reference.GRCh{genome_version}.ht'
 )
 DATASETS = [
     'cadd',
@@ -35,7 +36,6 @@ def run(environment: str, genome_version: str, dataset: str):
         COMBINED_REFERENCE_HT_PATH,
     ).format(
         genome_version=genome_version,
-        version=VERSION,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
@@ -47,6 +47,10 @@ def run(environment: str, genome_version: str, dataset: str):
         )
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+    ht.describe()
+    checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
+    print(f'Checkpointing ht to {checkpoint_path}')
+    ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
