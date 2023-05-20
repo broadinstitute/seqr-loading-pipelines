@@ -57,13 +57,11 @@ def annotate_all(
     liftover_ref_path: str,
     vep_config_json_path: str,
 ):
-    mt = mt.annotate_old_and_split_multi_hts(mt)
+    mt = annotate_old_and_split_multi_hts(mt)
     if reference_genome == ReferenceGenome.GRCh38:
-        mt = mt.add_37_coordinates(mt, reference_genome, liftover_ref_path)
+        mt = add_37_coordinates(mt, reference_genome, liftover_ref_path)
     if dataset_type.should_run_vep:
-        mt = mt.run_vep(mt, env, reference_genome, vep_config_json_path)
+        mt = run_vep(mt, env, reference_genome, vep_config_json_path)
 
-    # TODO, add the reset of the dataset_type specific annotations
-    mt = mt.select('vep', 'filters', 'rsid')
-
-    return mt
+    # TODO, add the rest of the dataset_type specific annotations
+    return mt.select('vep', 'filters', 'rsid')
