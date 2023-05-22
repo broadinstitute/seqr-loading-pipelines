@@ -29,7 +29,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             shutil.rmtree(self._temp_dir)
 
     def test_missing_pedigree(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.TEST_DATASETS.value = self._temp_dir
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_dir
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamples(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
@@ -46,7 +46,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         self.assertFalse(uvatwns_task.complete())
 
     def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.TEST_DATASETS.value = self._temp_dir
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_dir
         worker = luigi.worker.Worker()
 
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamples(
