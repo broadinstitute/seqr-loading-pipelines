@@ -17,6 +17,10 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
+    def should_split_multi_hts(self) -> bool:
+        return self == DatasetType.SNV or self == DatasetType.MITO
+
+    @property
     def should_run_vep(self) -> bool:
         return self == DatasetType.SNV
 

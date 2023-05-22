@@ -60,7 +60,8 @@ def annotate_all(
     liftover_ref_path: str,
     vep_config_json_path: str,
 ):
-    mt = annotate_old_and_split_multi_hts(mt)
+    if dataset_type.should_split_multi_hts:
+        mt = annotate_old_and_split_multi_hts(mt)
     if reference_genome == ReferenceGenome.GRCh38 and dataset_type.should_add_liftover:
         mt = add_37_coordinates(mt, liftover_ref_path)
     if dataset_type.should_run_vep:
