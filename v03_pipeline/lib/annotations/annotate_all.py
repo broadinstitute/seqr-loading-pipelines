@@ -33,7 +33,8 @@ def add_37_coordinates(
 ):
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    rg38.add_liftover(liftover_ref_path, rg37)
+    if not rg38.has_liftover(rg37):
+        rg38.add_liftover(liftover_ref_path, rg37)
     return mt.annotate_rows(
         rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value),
     )
