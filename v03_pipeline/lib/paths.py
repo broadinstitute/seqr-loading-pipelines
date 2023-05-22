@@ -15,9 +15,7 @@ def _v03_pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if env == Env.TEST:
-        root = DataRoot.TEST_DATASETS
-    if env == Env.LOCAL:
+    if env == Env.LOCAL or env == Env.TEST:
         root = DataRoot.LOCAL_DATASETS
     if env == Env.DEV:
         root = DataRoot.SEQR_SCRATCH_TEMP
