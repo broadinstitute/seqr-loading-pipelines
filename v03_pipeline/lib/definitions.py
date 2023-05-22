@@ -17,8 +17,12 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
-    def should_run_vep(self):
+    def should_run_vep(self) -> bool:
         return self == DatasetType.SNV
+
+    @property
+    def should_add_liftover(self):
+        return self != DatasetType.GCNV
 
     def table_key_type(
         self,
