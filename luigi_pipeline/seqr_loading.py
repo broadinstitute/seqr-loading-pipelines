@@ -71,6 +71,8 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         
         # first validate paths
         for source_path in self.source_paths:
+            if '*' in source_path:
+                continue
             check_if_path_exists(source_path, "source_path")
         if self.dataset_type in set(['VARIANTS', 'MITO']):
             check_if_path_exists(self.reference_ht_path, "reference_ht_path")
