@@ -31,8 +31,6 @@ class DatasetType(Enum):
 
 
 class DataRoot(Enum):
-    TEST_DATASETS = 'test-datasets'
-    TEST_REFERENCE_DATA = 'test-reference-data'
     LOCAL_DATASETS = 'seqr-datasets'
     LOCAL_REFERENCE_DATA = 'seqr-reference-data'
     SEQR_DATASETS = 'gs://seqr-datasets'

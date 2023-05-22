@@ -12,7 +12,7 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.TEST, 'test-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
+            (Env.TEST, 'seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
             (Env.LOCAL, 'seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
             (
                 Env.DEV,
