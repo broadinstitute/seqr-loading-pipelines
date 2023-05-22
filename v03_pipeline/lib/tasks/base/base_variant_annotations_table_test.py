@@ -24,7 +24,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             shutil.rmtree(self._temp_dir)
 
     def test_should_create_empty_table(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.TEST_DATASETS.value = self._temp_dir
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_dir
         vat_task = BaseVariantAnnotationsTableTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
