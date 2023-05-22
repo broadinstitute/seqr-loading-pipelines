@@ -7,8 +7,10 @@ from v03_pipeline.lib.annotations.annotate_all import annotate_all
 from v03_pipeline.lib.definitions import SampleType
 from v03_pipeline.lib.misc.io import import_pedigree, import_remap, import_vcf
 from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.remap import remap_sample_ids
-from v03_pipeline.lib.misc.subset import subset_samples_and_variants
+from v03_pipeline.lib.misc.sample_ids import (
+    remap_sample_ids,
+    subset_samples_and_variants,
+)
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -75,5 +77,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.liftover_ref_path,
             self.vep_config_json_path,
         )
-        new_ht = existing_ht.union(new_variants_mt.rows())
-        return new_ht.globals.updates.add((self.vcf_path, self.project_remap_path))
+        new_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
+        return new_ht.annotate_globals(
+            updates = new_ht.updates.add((self.vcf_path, self.project_remap_path))
+        )

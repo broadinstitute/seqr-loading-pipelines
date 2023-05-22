@@ -16,7 +16,7 @@ def run_vep(
     vep_config_json_path: str,
 ):
     vep_runner = (
-        vep_runners.HailVEPRunner if env != Env.TEST else vep_runners.HailVEPDummyRunner
+        vep_runners.HailVEPRunner() if env != Env.TEST else vep_runners.HailVEPDummyRunner()
     )
     return vep_runner.run(
         mt,
@@ -59,9 +59,9 @@ def annotate_all(
 ):
     mt = annotate_old_and_split_multi_hts(mt)
     if reference_genome == ReferenceGenome.GRCh38:
-        mt = add_37_coordinates(mt, reference_genome, liftover_ref_path)
+        mt = add_37_coordinates(mt, liftover_ref_path)
     if dataset_type.should_run_vep:
         mt = run_vep(mt, env, reference_genome, vep_config_json_path)
 
     # TODO, add the rest of the dataset_type specific annotations
-    return mt.select('vep', 'filters', 'rsid')
+    return mt.select_rows('vep', 'filters', 'rsid')

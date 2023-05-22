@@ -23,7 +23,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         if os.path.isdir(self._temp_dir):
             shutil.rmtree(self._temp_dir)
 
-    def test_should_create_empty_vat(self, mock_dataroot: Mock) -> None:
+    def test_should_create_empty_table(self, mock_dataroot: Mock) -> None:
         mock_dataroot.TEST_DATASETS.value = self._temp_dir
         vat_task = BaseVariantAnnotationsTableTask(
             env=Env.TEST,
