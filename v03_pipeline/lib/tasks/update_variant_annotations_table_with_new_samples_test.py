@@ -18,6 +18,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
+
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -97,6 +98,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.add(uvatwns_task_5)
         worker.run()
         self.assertTrue(uvatwns_task_5.complete())
+        self.assertEqual(
+            hl.read_table(uvatwns_task_5.output().path).count(),
+            30,
+        )
         self.assertEqual(
             hl.read_table(uvatwns_task_5.output().path).count(),
             30,
