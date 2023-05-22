@@ -8,6 +8,7 @@ class MatrixTableSampleSetError(Exception):
         super().__init__(message)
         self.missing_samples = missing_samples
 
+
 def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
     # TODO: add logic from Mike to remap vcf samples delivered from Broad WGS
     return mt
@@ -47,6 +48,7 @@ def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.Matri
     mt = mt.key_cols_by(s=mt.seqr_id)
     print(f'Remapped {remap_count} sample ids...')
     return mt
+
 
 def subset_samples_and_variants(
     mt: hl.MatrixTable,

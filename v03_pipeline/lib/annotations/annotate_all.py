@@ -16,7 +16,9 @@ def run_vep(
     vep_config_json_path: str,
 ):
     vep_runner = (
-        vep_runners.HailVEPRunner() if env != Env.TEST else vep_runners.HailVEPDummyRunner()
+        vep_runners.HailVEPRunner()
+        if env != Env.TEST
+        else vep_runners.HailVEPDummyRunner()
     )
     return vep_runner.run(
         mt,

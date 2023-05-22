@@ -45,10 +45,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         ]
 
     def complete(self) -> bool:
-        return super().complete() and (
+        return super().complete() and hl.eval(
             hl.read_table(self.output().path).globals.updates.contains(
                 (self.vcf_path, self.project_remap_path),
-            )
+            ),
         )
 
     def update(self, existing_ht: hl.Table) -> hl.Table:
@@ -79,5 +79,5 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
         new_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return new_ht.annotate_globals(
-            updates = new_ht.updates.add((self.vcf_path, self.project_remap_path))
+            updates=new_ht.updates.add((self.vcf_path, self.project_remap_path)),
         )

@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
+import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
@@ -13,7 +14,8 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
@@ -42,19 +44,40 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_update_vat(self, mock_dataroot: Mock) -> None:
+    def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
         mock_dataroot.TEST_DATASETS.value = self._temp_dir
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamples(
+        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamples(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             sample_type=SampleType.WGS,
             vcf_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE,
+            project_pedigree_path=TEST_PEDIGREE_3,
         )
 
         worker = luigi.worker.Worker()
-        worker.add(uvatwns_task)
+        worker.add(uvatwns_task_3)
         worker.run()
-        self.assertTrue(uvatwns_task.complete())
+        self.assertTrue(uvatwns_task_3.complete())
+        self.assertEqual(
+            hl.read_table(uvatwns_task_3.output().path).count(),
+            16,
+        )
+
+        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamples(
+            env=Env.TEST,
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV,
+            sample_type=SampleType.WGS,
+            vcf_path=TEST_VCF,
+            project_remap_path=TEST_REMAP,
+            project_pedigree_path=TEST_PEDIGREE_4,
+        )
+        worker.add(uvatwns_task_4)
+        worker.run()
+        self.assertTrue(uvatwns_task_4.complete())
+        self.assertEqual(
+            hl.read_table(uvatwns_task_4.output().path).count(),
+            17,
+        )
