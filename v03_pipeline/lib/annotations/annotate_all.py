@@ -45,8 +45,8 @@ SCHEMA = {
         [
             gcnv.pos,
             gcnv.sorted_transcript_consequences,
-            gcnv.xpos,
             gcnv.variant_id,
+            gcnv.xpos,
         ],
     ],
 }
