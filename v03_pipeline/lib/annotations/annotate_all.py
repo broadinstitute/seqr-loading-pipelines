@@ -1,12 +1,77 @@
-"""
-These are copies of the identical functions present on SeqrVCFToMTTask in `seqr_loading.py`
-and HailMatrixTableTask from `hail_tasks.py` from the v02 pipeline.
-"""
+from typing import Callable
 
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
+from v03_pipeline.annotations import gcnv, shared
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+
+SCHEMA = {
+    DatasetType.SNV: [
+        [
+            shared.pos,
+            shared.xpos,
+            shared.rg37_locus,
+            shared.sorted_transcript_consequences,
+        ],
+    ],
+    DatasetType.MITO: [
+        [
+            shared.pos,
+            shared.xpos,
+            shared.rg37_locus,
+            shared.sorted_transcript_consequences,
+        ],
+    ],
+    DatasetType.SV: [
+        [
+            shared.pos,
+            shared.xpos,
+            shared.rg37_locus,
+            # sv.sorted_transcript_consequences
+        ],
+    ],
+    DatasetType.GCNV: [
+        [
+            gcnv.start,
+            gcnv.contig,
+        ],
+        [
+            gcnv.pos,
+            gcnv.xpos,
+            # gcnv.sorted_transcript_consequences
+        ],
+    ],
+}
+
+
+def annotate_old_and_split_multi_hts(
+    mt: hl.MatrixTable,
+    dataset_type: DatasetType,
+    **kwargs,
+) -> hl.MatrixTable:
+    if not (dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO):
+        return mt
+    return hl.split_multi_hts(
+        mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
+    )
+
+
+def rg37_locus(
+    mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
+    liftover_ref_path: str,
+    **kwargs,
+) -> hl.MatrixTable:
+    if reference_genome == ReferenceGenome.GRCh37:
+        return mt
+    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    if not rg38.has_liftover(rg37):
+        rg38.add_liftover(liftover_ref_path, rg37)
+    return mt.annotate_rows(
+        rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value),
+    )
 
 
 def run_vep(
@@ -14,7 +79,8 @@ def run_vep(
     env: Env,
     reference_genome: ReferenceGenome,
     vep_config_json_path: str,
-):
+    **kwargs,
+) -> hl.MatrixTable:
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
@@ -27,45 +93,33 @@ def run_vep(
     )
 
 
-def add_37_coordinates(
+def get_annotation_fields(
+    annotation_round: list[Callable],
     mt: hl.MatrixTable,
-    liftover_ref_path: str,
-):
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
-    return mt.annotate_rows(
-        rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value),
-    )
-
-
-def annotate_old_and_split_multi_hts(mt: hl.MatrixTable):
-    """
-    Saves the old allele and locus because while split_multi does this, split_multi_hts drops this. Will see if
-    we can add this to split_multi_hts and then this will be deprecated.
-    :return: mt that has pre-annotations
-    """
-    # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
-    return hl.split_multi_hts(
-        mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
-    )
+    **kwargs,
+) -> dict[str, hl.Expression]:
+    return {
+        annotation_fn.__name__: annotation_fn(mt, **kwargs)
+        for annotation_fn in annotation_round
+        if annotation_fn(mt, **kwargs) is not None
+    }
 
 
 def annotate_all(
     mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    liftover_ref_path: str,
-    vep_config_json_path: str,
+    **kwargs,
 ):
-    if dataset_type.should_split_multi_hts:
-        mt = annotate_old_and_split_multi_hts(mt)
-    if reference_genome == ReferenceGenome.GRCh38 and dataset_type.should_add_liftover:
-        mt = add_37_coordinates(mt, liftover_ref_path)
-    if dataset_type.should_run_vep:
-        mt = run_vep(mt, env, reference_genome, vep_config_json_path)
+    # Special cases that require hail function calls.
+    mt = annotate_old_and_split_multi_hts(mt, **kwargs)
+    mt = rg37_locus(mt, **kwargs)
+    mt = run_vep(mt, **kwargs)
 
-    # TODO, add the rest of the dataset_type specific annotations
-    return mt.select_rows('vep', 'filters', 'rsid')
+    dataset_type = kwargs['dataset_type']
+    for annotation_round in SCHEMA[dataset_type][:-1]:
+        mt = mt.annotate_rows(
+            **get_annotation_fields(annotation_round, mt, **kwargs),
+        )
+    SCHEMA[dataset_type][-1]
+    return mt.select_rows(
+        **get_annotation_fields(annotation_round, mt, **kwargs),
+    )

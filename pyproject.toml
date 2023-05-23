@@ -80,8 +80,11 @@ inline-quotes = "single"
 
 [tool.ruff.per-file-ignores]
 '*test*' = [
-    'ARG002', # allow unused arguments
+    'ARG002', # allow unused method arguments
     'SLF001', # allow private access
+]
+'*annotations*' = [
+    'ARG001', # allow unused function arguments
 ]
 
 [tool.ruff.pylint]

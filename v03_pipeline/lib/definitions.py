@@ -16,18 +16,6 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    @property
-    def should_split_multi_hts(self) -> bool:
-        return self == DatasetType.SNV or self == DatasetType.MITO
-
-    @property
-    def should_run_vep(self) -> bool:
-        return self == DatasetType.SNV
-
-    @property
-    def should_add_liftover(self):
-        return self != DatasetType.GCNV
-
     def table_key_type(
         self,
         reference_genome: ReferenceGenome,
