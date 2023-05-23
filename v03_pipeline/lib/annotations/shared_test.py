@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.custom import run_vep
 from v03_pipeline.lib.annotations.shared import sorted_transcript_consequences
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import Env, ReferenceGenome
 
 
 class SharedAnnotationsTest(unittest.TestCase):
