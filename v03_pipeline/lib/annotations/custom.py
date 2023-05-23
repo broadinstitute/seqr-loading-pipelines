@@ -1,13 +1,16 @@
+from __future__ import annotations
+
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import Env, ReferenceGenome
 
 
 def annotate_old_and_split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     return hl.split_multi_hts(
         mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
     )
+
 
 def rg37_locus(
     mt: hl.MatrixTable,

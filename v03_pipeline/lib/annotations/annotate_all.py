@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from v03_pipeline.lib.annotations import custom, gcnv, shared, snv, sv
-from v03_pipeline.lib.definitions import DatasetType
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 if TYPE_CHECKING:
     import hail as hl
@@ -41,9 +41,10 @@ SCHEMA = {
 
 
 def get_select_fields(
-    annotation_fns: list[Callable],
     mt: hl.MatrixTable,
+    dataset_type: DatasetType,
 ) -> dict[str, hl.Expression]:
+    annotation_fns = SCHEMA[dataset_type]
     return {
         annotation_fn.__name__: annotation_fn(mt)
         for annotation_fn in annotation_fns
@@ -61,12 +62,10 @@ def annotate_all(
     **kwargs,
 ):
     # Special cases that require hail function calls.
-    if (dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO):
-        mt = custom.annotate_old_and_split_multi_hts(mt, )
+    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
+        mt = custom.annotate_old_and_split_multi_hts(mt)
     if dataset_type != DatasetType.GCNV:
         mt = custom.rg37_locus(mt, reference_genome, liftover_ref_path)
-    if (dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO):
+    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
         mt = custom.run_vep(mt, env, reference_genome, vep_config_json_path)
-    return mt.select_rows(
-        **get_select_fields(SCHEMA[dataset_type][-1], mt),
-    )
+    return mt.select_rows(**get_select_fields(mt, dataset_type))

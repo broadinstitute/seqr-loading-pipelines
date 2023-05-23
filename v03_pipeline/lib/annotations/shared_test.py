@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.annotate_all import run_vep
+from v03_pipeline.lib.annotations.custom import run_vep
 from v03_pipeline.lib.annotations.shared import sorted_transcript_consequences
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
@@ -27,7 +27,7 @@ class SharedAnnotationsTest(unittest.TestCase):
             key=['locus', 'alleles'],
         )
         mt = hl.MatrixTable.from_rows_table(ht)
-        mt = run_vep(mt, Env.TEST, DatasetType.SNV, ReferenceGenome.GRCh38, None)
+        mt = run_vep(mt, Env.TEST, ReferenceGenome.GRCh38, None)
         mt = mt.annotate_rows(
             sorted_transcript_consequences=sorted_transcript_consequences(mt),
         )
