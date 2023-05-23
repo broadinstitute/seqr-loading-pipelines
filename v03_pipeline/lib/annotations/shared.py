@@ -85,6 +85,11 @@ def xpos(
 ):
     return variant_id.get_expr_for_xpos(mt.locus)
 
+def variant_id(
+    mt: hl.MatrixTable,
+    **kwargs,
+):
+    return variant_id.get_expr_for_variant_id(mt)
 
 def rg37_locus(
     mt: hl.MatrixTable,

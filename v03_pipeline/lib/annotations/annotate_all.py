@@ -5,7 +5,7 @@ from typing import Callable
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.annotations import gcnv, shared
+from v03_pipeline.lib.annotations import gcnv, shared, sv
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 SCHEMA = {
@@ -15,6 +15,7 @@ SCHEMA = {
             shared.xpos,
             shared.rg37_locus,
             shared.sorted_transcript_consequences,
+            shared.variant_id,
         ],
     ],
     DatasetType.MITO: [
@@ -23,6 +24,7 @@ SCHEMA = {
             shared.xpos,
             shared.rg37_locus,
             shared.sorted_transcript_consequences,
+            shared.variant_id,
         ],
     ],
     DatasetType.SV: [
@@ -30,7 +32,8 @@ SCHEMA = {
             shared.pos,
             shared.xpos,
             shared.rg37_locus,
-            # sv.sorted_transcript_consequences
+            sv.variant_id,
+            sv.sorted_transcript_consequences,
         ],
     ],
     DatasetType.GCNV: [
@@ -41,7 +44,8 @@ SCHEMA = {
         [
             gcnv.pos,
             gcnv.xpos,
-            # gcnv.sorted_transcript_consequences
+            gcnv.variant_id,
+            gcnv.sorted_transcript_consequences,
         ],
     ],
 }
