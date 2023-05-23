@@ -8,8 +8,6 @@ from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 
 class SharedAnnotationsTest(unittest.TestCase):
-    maxDiff = None
-
     def test_sorted_transcript_consequences(self):
         ht = hl.Table.parallelize(
             [

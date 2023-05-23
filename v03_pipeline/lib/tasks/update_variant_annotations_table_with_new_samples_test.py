@@ -21,8 +21,6 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self._temp_dir = tempfile.TemporaryDirectory().name
 
