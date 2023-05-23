@@ -67,10 +67,11 @@ def annotate_old_and_split_multi_hts(
 def rg37_locus(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     liftover_ref_path: str,
     **kwargs,
 ) -> hl.MatrixTable:
-    if reference_genome == ReferenceGenome.GRCh37:
+    if reference_genome == ReferenceGenome.GRCh37 or dataset_type == DatasetType.GCNV:
         return mt
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
@@ -84,10 +85,13 @@ def rg37_locus(
 def run_vep(
     mt: hl.MatrixTable,
     env: Env,
+    dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
     vep_config_json_path: str,
     **kwargs,
 ) -> hl.MatrixTable:
+    if dataset_type != DatasetType.SNV:
+        return mt
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
@@ -103,12 +107,11 @@ def run_vep(
 def get_annotation_fields(
     annotation_round: list[Callable],
     mt: hl.MatrixTable,
-    **kwargs,
 ) -> dict[str, hl.Expression]:
     return {
-        annotation_fn.__name__: annotation_fn(mt, **kwargs)
+        annotation_fn.__name__: annotation_fn(mt)
         for annotation_fn in annotation_round
-        if annotation_fn(mt, **kwargs) is not None
+        if annotation_fn(mt) is not None
     }
 
 
@@ -116,6 +119,7 @@ def annotate_all(
     mt: hl.MatrixTable,
     **kwargs,
 ):
+
     # Special cases that require hail function calls.
     mt = annotate_old_and_split_multi_hts(mt, **kwargs)
     mt = rg37_locus(mt, **kwargs)
@@ -124,8 +128,8 @@ def annotate_all(
     dataset_type = kwargs['dataset_type']
     for annotation_round in SCHEMA[dataset_type][:-1]:
         mt = mt.annotate_rows(
-            **get_annotation_fields(annotation_round, mt, **kwargs),
+            **get_annotation_fields(annotation_round, mt),
         )
     return mt.select_rows(
-        **get_annotation_fields(SCHEMA[dataset_type][-1], mt, **kwargs),
+        **get_annotation_fields(SCHEMA[dataset_type][-1], mt),
     )

@@ -71,40 +71,21 @@ SELECTED_ANNOTATIONS = [
     'transcript_id',
 ]
 
-
-def pos(
-    mt: hl.MatrixTable,
-    **kwargs,
-):
+def pos(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_start_pos(mt)
 
-
-def xpos(
-    mt: hl.MatrixTable,
-    **kwargs,
-):
+def xpos(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_xpos(mt.locus)
 
-def variant_id(
-    mt: hl.MatrixTable,
-    **kwargs,
-):
+def variant_id(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_variant_id(mt)
 
-def rg37_locus(
-    mt: hl.MatrixTable,
-    reference_genome: ReferenceGenome,
-    **kwargs,
-):
-    if reference_genome == ReferenceGenome.GRCh37:
+def rg37_locus(mt: hl.MatrixTable):
+    if mt.locus.dtype.reference_genome.name != ReferenceGenome.GRCh38.value:
         return None
     return mt.rg37_locus
 
-
-def sorted_transcript_consequences(
-    mt: hl.MatrixTable,
-    **kwargs,
-):
+def sorted_transcript_consequences(mt: hl.MatrixTable):
     result = hl.sorted(
         mt.vep.transcript_consequences.map(
             lambda c: c.select(
