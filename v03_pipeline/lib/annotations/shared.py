@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id
+from hail_scripts.computed_fields import variant_id as expression_helpers
 
 from v03_pipeline.lib.definitions import ReferenceGenome
 
@@ -76,20 +76,20 @@ def pos(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-    return variant_id.get_expr_for_start_pos(mt)
+    return expression_helpers.get_expr_for_start_pos(mt)
 
 
 def xpos(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-    return variant_id.get_expr_for_xpos(mt.locus)
+    return expression_helpers.get_expr_for_xpos(mt.locus)
 
 def variant_id(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-    return variant_id.get_expr_for_variant_id(mt)
+    return expression_helpers.get_expr_for_variant_id(mt)
 
 def rg37_locus(
     mt: hl.MatrixTable,

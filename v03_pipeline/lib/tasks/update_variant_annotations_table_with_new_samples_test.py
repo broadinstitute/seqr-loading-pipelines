@@ -21,6 +21,8 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         self._temp_dir = tempfile.TemporaryDirectory().name
 
@@ -98,11 +100,40 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.add(uvatwns_task_5)
         worker.run()
         self.assertTrue(uvatwns_task_5.complete())
-        self.assertEqual(
-            hl.read_table(uvatwns_task_5.output().path).count(),
-            30,
-        )
-        self.assertEqual(
-            hl.read_table(uvatwns_task_5.output().path).count(),
-            30,
+        ht = hl.read_table(uvatwns_task_5.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertCountEqual(
+            ht.select('variant_id', 'pos', 'original_alt_alleles').collect(),
+            [
+                hl.Struct(locus=hl.Locus(contig='chr1', position=871269, reference_genome='GRCh38'), alleles=['A', 'C'], variant_id='1-871269-A-C', pos=871269, original_alt_alleles=['chr1-871269-A-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=874734, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-874734-C-T', pos=874734, original_alt_alleles=['chr1-874734-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=876499, reference_genome='GRCh38'), alleles=['A', 'G'], variant_id='1-876499-A-G', pos=876499, original_alt_alleles=['chr1-876499-A-G']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=878314, reference_genome='GRCh38'), alleles=['G', 'C'], variant_id='1-878314-G-C', pos=878314, original_alt_alleles=['chr1-878314-G-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=878809, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-878809-C-T', pos=878809, original_alt_alleles=['chr1-878809-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=879576, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-879576-C-T', pos=879576, original_alt_alleles=['chr1-879576-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=881070, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-881070-G-A', pos=881070, original_alt_alleles=['chr1-881070-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=881627, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-881627-G-A', pos=881627, original_alt_alleles=['chr1-881627-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=881918, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-881918-G-A', pos=881918, original_alt_alleles=['chr1-881918-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=883485, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-883485-C-T', pos=883485, original_alt_alleles=['chr1-883485-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=883625, reference_genome='GRCh38'), alleles=['A', 'G'], variant_id='1-883625-A-G', pos=883625, original_alt_alleles=['chr1-883625-A-G']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=883918, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-883918-G-A', pos=883918, original_alt_alleles=['chr1-883918-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=887560, reference_genome='GRCh38'), alleles=['A', 'C'], variant_id='1-887560-A-C', pos=887560, original_alt_alleles=['chr1-887560-A-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=887801, reference_genome='GRCh38'), alleles=['A', 'G'], variant_id='1-887801-A-G', pos=887801, original_alt_alleles=['chr1-887801-A-G']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=888529, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-888529-G-A', pos=888529, original_alt_alleles=['chr1-888529-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=888659, reference_genome='GRCh38'), alleles=['T', 'C'], variant_id='1-888659-T-C', pos=888659, original_alt_alleles=['chr1-888659-T-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=889158, reference_genome='GRCh38'), alleles=['G', 'C'], variant_id='1-889158-G-C', pos=889158, original_alt_alleles=['chr1-889158-G-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=889159, reference_genome='GRCh38'), alleles=['A', 'C'], variant_id='1-889159-A-C', pos=889159, original_alt_alleles=['chr1-889159-A-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=889238, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-889238-G-A', pos=889238, original_alt_alleles=['chr1-889238-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=894573, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-894573-G-A', pos=894573, original_alt_alleles=['chr1-894573-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=896922, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-896922-C-T', pos=896922, original_alt_alleles=['chr1-896922-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=897325, reference_genome='GRCh38'), alleles=['G', 'C'], variant_id='1-897325-G-C', pos=897325, original_alt_alleles=['chr1-897325-G-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=898313, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-898313-C-T', pos=898313, original_alt_alleles=['chr1-898313-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=898323, reference_genome='GRCh38'), alleles=['T', 'C'], variant_id='1-898323-T-C', pos=898323, original_alt_alleles=['chr1-898323-T-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=898467, reference_genome='GRCh38'), alleles=['C', 'T'], variant_id='1-898467-C-T', pos=898467, original_alt_alleles=['chr1-898467-C-T']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=899959, reference_genome='GRCh38'), alleles=['G', 'GC'], variant_id='1-899959-G-GC', pos=899959, original_alt_alleles=['chr1-899959-G-GC']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=900505, reference_genome='GRCh38'), alleles=['G', 'C'], variant_id='1-900505-G-C', pos=900505, original_alt_alleles=['chr1-900505-G-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=902024, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-902024-G-A', pos=902024, original_alt_alleles=['chr1-902024-G-A']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=902069, reference_genome='GRCh38'), alleles=['T', 'C'], variant_id='1-902069-T-C', pos=902069, original_alt_alleles=['chr1-902069-T-C']),
+                hl.Struct(locus=hl.Locus(contig='chr1', position=902088, reference_genome='GRCh38'), alleles=['G', 'A'], variant_id='1-902088-G-A', pos=902088, original_alt_alleles=['chr1-902088-G-A']),
+            ]
         )

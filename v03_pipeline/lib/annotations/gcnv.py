@@ -3,7 +3,7 @@ import datetime
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id
+from hail_scripts.computed_fields import variant_id as expression_helpers
 
 
 def start(
@@ -17,7 +17,7 @@ def contig(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-    return variant_id.replace_chr_prefix(mt.chr)
+    return expression_helpers.replace_chr_prefix(mt.chr)
 
 
 def pos(
@@ -28,7 +28,7 @@ def pos(
 
 
 def xpos(mt: hl.MatrixTable, **kwargs):
-    return variant_id.get_expr_for_xpos(hl.locus(mt.contig, mt.pos))
+    return expression_helpers.get_expr_for_xpos(hl.locus(mt.contig, mt.pos))
 
 def variant_id(mt: hl.MatrixTable, **kwargs):
     return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", mt.variant_name, mt.svtype)

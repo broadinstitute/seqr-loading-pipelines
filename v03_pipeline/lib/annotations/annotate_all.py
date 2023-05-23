@@ -5,35 +5,36 @@ from typing import Callable
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.annotations import gcnv, shared, sv
+from v03_pipeline.lib.annotations import gcnv, shared, snv, sv
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 SCHEMA = {
     DatasetType.SNV: [
         [
+            snv.original_alt_alleles,
             shared.pos,
-            shared.xpos,
             shared.rg37_locus,
             shared.sorted_transcript_consequences,
             shared.variant_id,
+            shared.xpos,
         ],
     ],
     DatasetType.MITO: [
         [
             shared.pos,
-            shared.xpos,
             shared.rg37_locus,
             shared.sorted_transcript_consequences,
             shared.variant_id,
+            shared.xpos,
         ],
     ],
     DatasetType.SV: [
         [
             shared.pos,
-            shared.xpos,
             shared.rg37_locus,
-            sv.variant_id,
             sv.sorted_transcript_consequences,
+            sv.variant_id,
+            shared.xpos,
         ],
     ],
     DatasetType.GCNV: [
@@ -43,9 +44,9 @@ SCHEMA = {
         ],
         [
             gcnv.pos,
+            gcnv.sorted_transcript_consequences,
             gcnv.xpos,
             gcnv.variant_id,
-            gcnv.sorted_transcript_consequences,
         ],
     ],
 }
