@@ -14,6 +14,7 @@ COMBINED_REFERENCE_HT_PATH = (
 )
 DATASETS = [
     'cadd',
+    'clinvar',
     'dbnsfp',
     'eigen',
     'exac',
@@ -27,7 +28,6 @@ DATASETS = [
     'gnomad_genome_coverage',
     'gnomad_exome_coverage',
 ]
-VERSION = '1.0.0'
 
 
 def run(environment: str, genome_version: str, dataset: str):
@@ -42,11 +42,10 @@ def run(environment: str, genome_version: str, dataset: str):
             destination_path,
             dataset,
             DATASETS,
-            VERSION,
             genome_version,
         )
     else:
-        ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+        ht = join_hts(DATASETS, reference_genome=genome_version)
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')

@@ -94,7 +94,11 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
-    ht = hl.read_table(config['path'])
+    ht = (
+        config['custom_import'](config['path'], reference_genome)
+        if 'custom_import' in config
+        else hl.read_table(config['path'])
+    )
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
         **{
@@ -120,15 +124,13 @@ def get_ht(dataset: str, reference_genome: str):
 
 def update_joined_ht_globals(
     joined_ht,
-    version,
 ):
     return joined_ht.annotate_globals(
         date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
-        version=version,
     )
 
 
-def join_hts(datasets, version, reference_genome='37'):
+def join_hts(datasets, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
     hts = [
         get_ht(dataset, reference_genome)
@@ -150,17 +152,13 @@ def join_hts(datasets, version, reference_genome='37'):
     ]
     for dataset, coverage_ht in coverage_hts:
         joined_ht = annotate_coverage(joined_ht, coverage_ht, dataset)
-    return update_joined_ht_globals(
-        joined_ht,
-        version,
-    )
+    return update_joined_ht_globals(joined_ht)
 
 
 def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
     datasets: List[str],
-    version: str,
     genome_version: str,
 ):
     joined_ht = hl.read_table(destination_path)
@@ -174,4 +172,4 @@ def update_existing_joined_hts(
         )
     else:
         joined_ht = annotate_coverage(joined_ht, dataset_ht, dataset)
-    return update_joined_ht_globals(joined_ht, version)
+    return update_joined_ht_globals(joined_ht)

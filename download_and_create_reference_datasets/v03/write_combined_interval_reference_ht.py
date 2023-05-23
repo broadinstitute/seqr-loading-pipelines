@@ -13,7 +13,6 @@ DATASETS = ['gnomad_non_coding_constraint', 'screen']
 INTERVAL_REFERENCE_HT_PATH = (
     'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
 )
-VERSION = '1.0.0'
 
 
 def run(environment: str, dataset: str):
@@ -29,11 +28,10 @@ def run(environment: str, dataset: str):
             destination_path,
             dataset,
             DATASETS,
-            VERSION,
             genome_version,
         )
     else:
-        ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+        ht = join_hts(DATASETS, reference_genome=genome_version)
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')

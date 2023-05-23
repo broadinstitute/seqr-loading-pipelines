@@ -23,7 +23,6 @@ CLINVAR_ASSERTIONS = [
     'protective',
     'risk_factor',
 ]
-CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         'no_interpretation_for_the_single_variant': 0,
@@ -106,9 +105,9 @@ def parsed_clnsigconf(ht: hl.Table):
 
 
 def download_and_import_latest_clinvar_vcf(
+    clinvar_url: str,
     genome_version: str,
-    tmp_file: str,
-) -> hl.MatrixTable:
+) -> hl.Table:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
     Args:
@@ -117,19 +116,19 @@ def download_and_import_latest_clinvar_vcf(
 
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
-    clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-    clinvar_release_date = _parse_clinvar_release_date(tmp_file.name)
+    local_filename, _ = urllib.request.urlretrieve(clinvar_url)
+    clinvar_release_date = _parse_clinvar_release_date(local_filename)
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     mt = import_vcf(
-        tmp_file.name,
+        local_filename,
         genome_version,
         drop_samples=True,
         min_partitions=2000,
         skip_invalid_loci=True,
         more_contig_recoding=mt_contig_recoding,
     )
-    return mt.annotate_globals(version=clinvar_release_date)
+    mt = mt.annotate_globals(version=clinvar_release_date)
+    return mt.rows()
 
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:

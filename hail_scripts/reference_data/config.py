@@ -3,6 +3,16 @@ from enum import Enum
 
 import hail as hl
 
+from hail_scripts.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    CLINVAR_GOLD_STARS_LOOKUP,
+    CLINVAR_PATHOGENICITIES,
+    download_and_import_latest_clinvar_vcf,
+    parsed_clnsig,
+    parsed_clnsigconf,
+)
+
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -11,6 +21,24 @@ class AccessControl(Enum):
 
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
+
+
+def clinvar_custom_select(ht):
+    selects = {}
+    clnsigs = parsed_clnsig(ht)
+    selects['pathogenicity'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES.contains(clnsigs[0]),
+        clnsigs[0],
+        CLINVAR_DEFAULT_PATHOGENICITY,
+    )
+    selects['assertion'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES.contains(clnsigs[0]),
+        clnsigs[1:],
+        clnsigs,
+    )
+    selects['conflictingPathogenicities'] = parsed_clnsigconf(ht)
+    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
+    return selects
 
 
 def dbnsfp_custom_select(ht):
@@ -104,6 +132,28 @@ CONFIG = {
             'version': 'v1.6',
             'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
+        },
+    },
+    'clinvar': {
+        '37': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+        },
+        '38': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
         },
     },
     'dbnsfp': {
