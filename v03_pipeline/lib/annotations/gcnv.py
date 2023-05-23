@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import datetime
 
 import hail as hl
+import pytz
 
 from hail_scripts.computed_fields import variant_id as expression_helpers
 
@@ -21,8 +23,14 @@ def pos(mt: hl.MatrixTable):
 def xpos(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_xpos(hl.locus(mt.contig, mt.pos))
 
+
 def variant_id(mt: hl.MatrixTable):
-    return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", mt.variant_name, mt.svtype)
+    return hl.format(
+        f'%s_%s_{datetime.datetime.now(tz=pytz.timezone("US/Eastern")).date():%m%d%Y}',
+        mt.variant_name,
+        mt.svtype,
+    )
+
 
 def sorted_transcript_consequences(mt: hl.MatrixTable):
     # TODO: implement me

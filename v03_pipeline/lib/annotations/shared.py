@@ -71,19 +71,24 @@ SELECTED_ANNOTATIONS = [
     'transcript_id',
 ]
 
+
 def pos(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_start_pos(mt)
+
 
 def xpos(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_xpos(mt.locus)
 
+
 def variant_id(mt: hl.MatrixTable):
     return expression_helpers.get_expr_for_variant_id(mt)
+
 
 def rg37_locus(mt: hl.MatrixTable):
     if mt.locus.dtype.reference_genome.name != ReferenceGenome.GRCh38.value:
         return None
     return mt.rg37_locus
+
 
 def sorted_transcript_consequences(mt: hl.MatrixTable):
     result = hl.sorted(
@@ -123,5 +128,7 @@ def sorted_transcript_consequences(mt: hl.MatrixTable):
         ),
     )
     return hl.zip_with_index(result).map(
-        lambda csq_with_index: csq_with_index[1].annotate(transcript_rank=csq_with_index[0])
+        lambda csq_with_index: csq_with_index[1].annotate(
+            transcript_rank=csq_with_index[0],
+        ),
     )

@@ -119,7 +119,6 @@ def annotate_all(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-
     # Special cases that require hail function calls.
     mt = annotate_old_and_split_multi_hts(mt, **kwargs)
     mt = rg37_locus(mt, **kwargs)
