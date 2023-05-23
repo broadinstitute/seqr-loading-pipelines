@@ -4,26 +4,17 @@ import luigi_pipeline.lib.hail_vep_runners as vep_runners
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 
-def annotate_old_and_split_multi_hts(
-    mt: hl.MatrixTable,
-    dataset_type: DatasetType,
-    **kwargs,
-) -> hl.MatrixTable:
-    if not (dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO):
-        return mt
+def annotate_old_and_split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     return hl.split_multi_hts(
         mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
     )
 
-
 def rg37_locus(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
     liftover_ref_path: str,
-    **kwargs,
 ) -> hl.MatrixTable:
-    if reference_genome == ReferenceGenome.GRCh37 or dataset_type == DatasetType.GCNV:
+    if reference_genome == ReferenceGenome.GRCh37:
         return mt
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
@@ -37,13 +28,9 @@ def rg37_locus(
 def run_vep(
     mt: hl.MatrixTable,
     env: Env,
-    dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
-    vep_config_json_path: str,
-    **kwargs,
+    vep_config_json_path: str | None,
 ) -> hl.MatrixTable:
-    if dataset_type != DatasetType.SNV:
-        return mt
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
