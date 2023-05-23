@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 from typing import Callable
 
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.annotations import gcnv, shared
+from v03_pipeline.lib.annotations import gcnv, shared
 from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 
 SCHEMA = {
@@ -119,7 +121,6 @@ def annotate_all(
         mt = mt.annotate_rows(
             **get_annotation_fields(annotation_round, mt, **kwargs),
         )
-    SCHEMA[dataset_type][-1]
     return mt.select_rows(
-        **get_annotation_fields(annotation_round, mt, **kwargs),
+        **get_annotation_fields(SCHEMA[dataset_type][-1], mt, **kwargs),
     )

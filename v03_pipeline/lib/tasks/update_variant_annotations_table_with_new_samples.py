@@ -69,7 +69,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
         new_variants_mt = vcf_mt.anti_join_rows(existing_ht)
-        new_variants_mt = annotate_all(new_variants_mt, self.param_kwargs)
+        new_variants_mt = annotate_all(new_variants_mt, **self.param_kwargs)
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(
             updates=unioned_ht.updates.add((self.vcf_path, self.project_pedigree_path)),

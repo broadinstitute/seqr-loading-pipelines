@@ -69,7 +69,6 @@ SELECTED_ANNOTATIONS = [
     'lof_flags',
     'lof_info',
     'transcript_id',
-    'transcript_rank',
 ]
 
 
@@ -101,7 +100,7 @@ def sorted_transcript_consequences(
     mt: hl.MatrixTable,
     **kwargs,
 ):
-    return hl.sorted(
+    result = hl.sorted(
         mt.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
@@ -136,4 +135,7 @@ def sorted_transcript_consequences(
                 hl.or_else(c.canonical, 0) == 1,
             )
         ),
+    )
+    return hl.zip_with_index(result).map(
+        lambda csq_with_index: csq_with_index[1].annotate(transcript_rank=csq_with_index[0])
     )
