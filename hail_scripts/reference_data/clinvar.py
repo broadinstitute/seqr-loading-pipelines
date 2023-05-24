@@ -1,16 +1,12 @@
 import gzip
-import urllib.request
+import io
 
 import hail as hl
+import requests
 
 from hail_scripts.utils.hail_utils import import_vcf
 
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
-CLINVAR_FTP_PATH = (
-    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
-)
-CLINVAR_HT_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
-
 CLINVAR_ASSERTIONS = [
     'Affects',
     'association',
@@ -84,7 +80,7 @@ def parse_to_count(entry: str):
     )
 
 
-def parsed_clnsigconf(ht: hl.Table):
+def parsed_and_mapped_clnsigconf(ht: hl.Table):
     return (
         hl.delimit(ht.info.CLNSIGCONF)
         .replace(',_low_penetrance', '')
@@ -116,32 +112,32 @@ def download_and_import_latest_clinvar_vcf(
 
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
-    local_filename, _ = urllib.request.urlretrieve(clinvar_url)
-    clinvar_release_date = _parse_clinvar_release_date(local_filename)
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     mt = import_vcf(
-        local_filename,
+        clinvar_url,
         genome_version,
         drop_samples=True,
         min_partitions=2000,
         skip_invalid_loci=True,
         more_contig_recoding=mt_contig_recoding,
     )
-    mt = mt.annotate_globals(version=clinvar_release_date)
+    mt = mt.annotate_globals(version=_parse_clinvar_release_date(clinvar_url))
     return mt.rows()
 
 
-def _parse_clinvar_release_date(local_vcf_path: str) -> str:
+def _parse_clinvar_release_date(clinvar_url: str) -> str:
     """Parse clinvar release date from the VCF header.
 
     Args:
-        local_vcf_path (str): clinvar vcf path on the local file system.
+        clinvar_url (str): remote clinvar vcf path
 
     Returns:
         str: return VCF release date as string, or None if release date not found in header.
     """
-    with gzip.open(local_vcf_path, 'rt') as f:
+    r = requests.get(clinvar_url, stream=True)
+    with gzip.GzipFile(fileobj=r.raw) as f:
         for line in f:
+            line = line.decode('utf8')
             if line.startswith('##fileDate='):
                 clinvar_release_date = line.split('=')[-1].strip()
                 return clinvar_release_date

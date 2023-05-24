@@ -10,7 +10,7 @@ from hail_scripts.reference_data.clinvar import (
     CLINVAR_PATHOGENICITIES,
     download_and_import_latest_clinvar_vcf,
     parsed_clnsig,
-    parsed_clnsigconf,
+    parsed_and_mapped_clnsigconf,
 )
 
 
@@ -36,7 +36,9 @@ def clinvar_custom_select(ht):
         clnsigs[1:],
         clnsigs,
     )
-    selects['conflictingPathogenicities'] = parsed_clnsigconf(ht)
+    # NB: the `enum_select` does not support mapping a list of tuples
+    # so there's a hidden enum-mapping inside this clinvar function.
+    selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
     selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
     return selects
 
