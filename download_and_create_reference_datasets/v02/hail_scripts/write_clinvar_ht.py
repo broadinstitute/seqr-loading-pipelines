@@ -7,7 +7,7 @@ from hail_scripts.reference_data.clinvar import (
 )
 from hail_scripts.utils.hail_utils import write_ht
 
-CLINVAR_PATH = 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
+CLINVAR_PATH = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
 CLINVAR_HT_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
 
 for genome_version in ["37", "38"]:
