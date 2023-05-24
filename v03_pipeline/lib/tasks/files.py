@@ -25,7 +25,7 @@ class RawFileTask(luigi.Task):
         return GCSorLocalTarget(self.pathname)
 
 
-class VCFFileTask(RawFile):
+class VCFFileTask(RawFileTask):
     def complete(self) -> bool:
         # NB: hail supports reading glob bgz files.
         if GLOB in self.pathname:
@@ -33,6 +33,6 @@ class VCFFileTask(RawFile):
         return GCSorLocalTarget(self.pathname).exists()
 
 
-class HailTableTask(RawFile):
+class HailTableTask(RawFileTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.pathname).exists()
