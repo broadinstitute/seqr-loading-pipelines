@@ -16,11 +16,9 @@ class DatasetType(Enum):
 
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
-            DatasetType.GCNV: None,
             DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
-            DatasetType.SV: None,
-        }[self]
+        }.get(self)
 
 
 class DataRoot(Enum):
