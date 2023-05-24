@@ -29,17 +29,14 @@ class DatasetType(Enum):
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
 
-    def reference_dataset_collections(self) -> list[ReferenceDatasetCollection]:
+    def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
-            DatasetType.GCNV: [],
-            DatasetType.MITO: [ReferenceDatasetCollection.COMBINED_MITO],
-            DatasetType.SNV: [],
-            DatasetType.SV: [
-                ReferenceDatasetCollection.COMBINED,
-                ReferenceDatasetCollection.HGMD,
-                ReferenceDatasetCollection.INTERVAL_REFERENCE,
-            ],
-        }
+            DatasetType.GCNV: None,
+            DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
+            DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
+            DatasetType.SV: None,
+        }[self]
+
 
 class DataRoot(Enum):
     LOCAL_DATASETS = 'seqr-datasets'
