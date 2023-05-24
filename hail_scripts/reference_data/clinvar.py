@@ -1,7 +1,8 @@
 import gzip
+import tempfile
+import urllib
 
 import hail as hl
-import requests
 
 from hail_scripts.utils.hail_utils import import_vcf
 
@@ -52,7 +53,6 @@ CLINVAR_PATHOGENICITIES = [
 CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
-
 
 def parsed_clnsig(ht: hl.Table):
     return (
@@ -112,31 +112,31 @@ def download_and_import_latest_clinvar_vcf(
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
-    mt = import_vcf(
-        clinvar_url,
-        genome_version,
-        drop_samples=True,
-        min_partitions=2000,
-        skip_invalid_loci=True,
-        more_contig_recoding=mt_contig_recoding,
-    )
-    mt = mt.annotate_globals(version=_parse_clinvar_release_date(clinvar_url))
-    return mt.rows()
+    with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
+        urllib.request.urlretrieve(clinvar_url, tmp_file.name) # noqa: S310
+        mt = import_vcf(
+            tmp_file.name,
+            genome_version,
+            drop_samples=True,
+            min_partitions=2000,
+            skip_invalid_loci=True,
+            more_contig_recoding=mt_contig_recoding,
+        )
+        mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
+        return mt.rows()
 
 
-def _parse_clinvar_release_date(clinvar_url: str) -> str:
+def _parse_clinvar_release_date(local_vcf_path: str) -> str:
     """Parse clinvar release date from the VCF header.
 
     Args:
-        clinvar_url (str): remote clinvar vcf path
+        local_vcf_path (str): clinvar vcf path on the local file system.
 
     Returns:
         str: return VCF release date as string, or None if release date not found in header.
     """
-    r = requests.get(clinvar_url, stream=True, timeout=30)
-    with gzip.GzipFile(fileobj=r.raw) as f:
-        for line_bytes in f:
-            line = line_bytes.decode('utf8')
+    with gzip.open(local_vcf_path, 'rt') as f:
+        for line in f:
             if line.startswith('##fileDate='):
                 clinvar_release_date = line.split('=')[-1].strip()
                 return clinvar_release_date

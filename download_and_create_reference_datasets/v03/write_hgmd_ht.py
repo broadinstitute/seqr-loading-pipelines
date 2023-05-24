@@ -12,7 +12,6 @@ PARTITIONS = 100
 
 def run(environment: str, genome_version: str):
     dataset = 'hgmd'
-    CONFIG[dataset][genome_version]['path']
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PRIVATE)],
         HGMD_HT_PATH,
