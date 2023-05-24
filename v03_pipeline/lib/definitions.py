@@ -29,6 +29,7 @@ class DatasetType(Enum):
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
 
+    @property
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
             DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
