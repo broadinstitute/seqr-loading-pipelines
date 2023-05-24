@@ -6,7 +6,7 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTable
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -20,7 +20,18 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
+        return HailTable(self.output().path).exists()
+
+    def requires(self) -> luigi.Task | None:
+        if self.dataset_type.base_reference_dataset_collection is None:
+            return None
+        return HailTable(
+            reference_dataset_collection_path(
+                self.env,
+                self.reference_genome,
+                self.dataset_type.base_reference_dataset_collection,
+            ),
+        )
 
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:

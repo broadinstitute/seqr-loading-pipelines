@@ -41,14 +41,14 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
                     cadd=hl.tint32,
                     clinvar=hl.tint32,
                 ),
-                ['locus', 'alleles']
+                ['locus', 'alleles'],
             ),
             destination_path=os.path.join(
-                f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht'
+                f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
             ),
             checkpoint=False,
         )
-        
+
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):
             shutil.rmtree(self._temp_local_datasets)
