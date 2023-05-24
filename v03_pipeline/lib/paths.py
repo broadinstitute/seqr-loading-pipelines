@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from v03_pipeline.lib.definitions import (
@@ -87,11 +89,16 @@ def reference_dataset_collection_path(
     env: Env,
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
-) -> str:
+) -> str | None:
+    if (
+        env == Env.LOCAL
+        and reference_dataset_collection.access_control == AccessControl.PRIVATE
+    ):
+        return None
     root = (
-        DataRoot.SEQR_REFERENCE_DATA
-        if reference_dataset_collection.access_control == AccessControl.PUBLIC
-        else DataRoot.SEQR_REFERENCE_DATA_PRIVATE
+        DataRoot.SEQR_REFERENCE_DATA_PRIVATE
+        if reference_dataset_collection.access_control == AccessControl.PRIVATE
+        else DataRoot.SEQR_REFERENCE_DATA
     )
     return os.path.join(
         _v03_reference_data_prefix(

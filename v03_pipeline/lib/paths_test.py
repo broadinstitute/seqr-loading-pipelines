@@ -73,7 +73,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 ReferenceDatasetCollection.HGMD,
             ),
-            'seqr-reference-data/GRCh37/v03/hgmd.ht',
+            None,
         )
 
     def test_variant_annotations_table_path(self) -> None:
