@@ -1,13 +1,21 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import hail as hl
-import luigi
 
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, GCSorLocalFolderTarget, HailTableTask
+from v03_pipeline.lib.tasks.files import (
+    GCSorLocalFolderTarget,
+    GCSorLocalTarget,
+    HailTableTask,
+)
+
+if TYPE_CHECKING:
+    import luigi
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
