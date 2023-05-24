@@ -3,7 +3,7 @@ import argparse
 import os
 
 from hail_scripts.reference_data.combine import get_ht
-from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES, AccessControl
+from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 HGMD_HT_PATH = 'hgmd/hgmd.GRCh{genome_version}.ht'

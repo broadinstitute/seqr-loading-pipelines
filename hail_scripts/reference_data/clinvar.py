@@ -54,6 +54,7 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
 
+
 def parsed_clnsig(ht: hl.Table):
     return (
         hl.delimit(ht.info.CLNSIG)
@@ -113,7 +114,7 @@ def download_and_import_latest_clinvar_vcf(
         raise ValueError('Invalid genome_version: ' + str(genome_version))
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
-        urllib.request.urlretrieve(clinvar_url, tmp_file.name) # noqa: S310
+        urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         mt = import_vcf(
             tmp_file.name,
             genome_version,
