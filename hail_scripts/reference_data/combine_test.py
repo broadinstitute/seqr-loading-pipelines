@@ -341,7 +341,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
             'destination',
             'b',
             ['a', 'b', 'c_coverage'],
-            '1.0.0',
             '38',
         )
         self.assertCountEqual(
@@ -378,7 +377,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     b_globals=hl.Struct(b=100),
                     c_coverage_globals=hl.Struct(c=10),
                     date='2023-04-19T16:43:39.361110-04:56',
-                    version='1.0.0',
                 ),
             ],
         )
@@ -386,7 +384,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
             'destination',
             'c_coverage',
             ['a', 'b', 'c_coverage'],
-            '1.0.0',
             '38',
         )
         self.assertCountEqual(
@@ -416,7 +413,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     b_globals=hl.Struct(b=10),
                     c_coverage_globals=hl.Struct(c=300),
                     date='2023-04-19T16:43:39.361110-04:56',
-                    version='1.0.0',
                 ),
             ],
         )
