@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
@@ -63,6 +63,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
+            sample_type=SampleType.WES,
         )
         self.assertEqual(
             vat_task.output().path,
