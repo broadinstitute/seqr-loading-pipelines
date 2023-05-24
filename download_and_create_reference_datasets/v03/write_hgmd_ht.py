@@ -4,7 +4,7 @@ import os
 
 from hail_scripts.reference_data.combine import get_ht
 from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES, AccessControl
-from hail_scripts.utils.hail_utils import import_vcf, write_ht
+from hail_scripts.utils.hail_utils import write_ht
 
 HGMD_HT_PATH = 'hgmd/hgmd.GRCh{genome_version}.ht'
 PARTITIONS = 100
@@ -12,14 +12,14 @@ PARTITIONS = 100
 
 def run(environment: str, genome_version: str):
     dataset = 'hgmd'
-    source_path = CONFIG[dataset][genome_version]['path']
+    CONFIG[dataset][genome_version]['path']
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PRIVATE)],
         HGMD_HT_PATH,
     ).format(
         genome_version=genome_version,
     )
-    ht = get_ht(DATASETS, genome_version)
+    ht = get_ht(dataset, genome_version)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 

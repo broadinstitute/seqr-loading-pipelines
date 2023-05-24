@@ -1,5 +1,4 @@
 import gzip
-import io
 
 import hail as hl
 import requests
@@ -134,10 +133,10 @@ def _parse_clinvar_release_date(clinvar_url: str) -> str:
     Returns:
         str: return VCF release date as string, or None if release date not found in header.
     """
-    r = requests.get(clinvar_url, stream=True)
+    r = requests.get(clinvar_url, stream=True, timeout=30)
     with gzip.GzipFile(fileobj=r.raw) as f:
-        for line in f:
-            line = line.decode('utf8')
+        for line_bytes in f:
+            line = line_bytes.decode('utf8')
             if line.startswith('##fileDate='):
                 clinvar_release_date = line.split('=')[-1].strip()
                 return clinvar_release_date

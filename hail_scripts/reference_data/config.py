@@ -8,9 +8,10 @@ from hail_scripts.reference_data.clinvar import (
     CLINVAR_DEFAULT_PATHOGENICITY,
     CLINVAR_GOLD_STARS_LOOKUP,
     CLINVAR_PATHOGENICITIES,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
     download_and_import_latest_clinvar_vcf,
-    parsed_clnsig,
     parsed_and_mapped_clnsigconf,
+    parsed_clnsig,
 )
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
 
@@ -28,12 +29,12 @@ def clinvar_custom_select(ht):
     selects = {}
     clnsigs = parsed_clnsig(ht)
     selects['pathogenicity'] = hl.if_else(
-        CLINVAR_PATHOGENICITIES.contains(clnsigs[0]),
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
         clnsigs[0],
         CLINVAR_DEFAULT_PATHOGENICITY,
     )
     selects['assertion'] = hl.if_else(
-        CLINVAR_PATHOGENICITIES.contains(clnsigs[0]),
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
         clnsigs[1:],
         clnsigs,
     )
