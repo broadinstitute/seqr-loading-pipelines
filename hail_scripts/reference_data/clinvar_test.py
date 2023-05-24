@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from hail_scripts.reference_data.clinvar import parsed_clnsig, parsed_clnsigconf
+from hail_scripts.reference_data.clinvar import parsed_clnsig, parsed_and_mapped_clnsigconf
 
 
 class ClinvarTest(unittest.TestCase):
@@ -42,7 +42,7 @@ class ClinvarTest(unittest.TestCase):
             ],
         )
 
-    def test_parsed_clnsigconf(self):
+    def test_parsed_and_mapped_clnsigconf(self):
         ht = hl.Table.parallelize(
             [
                 {'info': hl.Struct(CLNSIGCONF=hl.missing(hl.tarray(hl.tstr)))},
@@ -58,7 +58,7 @@ class ClinvarTest(unittest.TestCase):
             hl.tstruct(info=hl.tstruct(CLNSIGCONF=hl.tarray(hl.tstr))),
         )
         self.assertListEqual(
-            parsed_clnsigconf(ht).collect(),
+            parsed_and_mapped_clnsigconf(ht).collect(),
             [
                 None,
                 [

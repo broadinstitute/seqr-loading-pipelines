@@ -2,11 +2,7 @@
 import argparse
 import os
 
-from hail_scripts.reference_data.combine import (
-    get_enum_select_fields,
-    get_select_fields,
-    update_joined_ht_globals,
-)
+from hail_scripts.reference_data.combine import get_ht
 from hail_scripts.reference_data.config import CONFIG, GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import import_vcf, write_ht
 
@@ -23,20 +19,7 @@ def run(environment: str, genome_version: str):
     ).format(
         genome_version=genome_version,
     )
-    mt = import_vcf(
-        source_path,
-        genome_version=genome_version,
-        force=True,
-        min_partitions=PARTITIONS,
-        skip_invalid_loci=True,
-    )
-    ht = mt.rows()
-    select_fields = {
-        **get_select_fields(CONFIG[dataset][genome_version]['select'], ht),
-        **get_enum_select_fields(CONFIG[dataset][genome_version]['enum_selects'], ht),
-    }
-    ht = ht.select(**select_fields)
-    ht = update_joined_ht_globals(ht)
+    ht = get_ht(DATASETS, genome_version)
     print(f'Uploading ht to {destination_path}')
     write_ht(ht, destination_path)
 
