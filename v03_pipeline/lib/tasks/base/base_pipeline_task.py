@@ -39,12 +39,7 @@ class BasePipelineTask(luigi.Task):
         write_ht(self.env, ht, self.output().path)
 
     def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            key_type,
-            key=key_type.fields,
-        )
+        raise NotImplementedError
 
     def update(self, mt: hl.Table) -> hl.Table:
         raise NotImplementedError

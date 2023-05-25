@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import hail as hl
@@ -44,7 +45,12 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
 
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:
-            return super().initialize_table()
+            key_type = self.dataset_type.table_key_type(self.reference_genome)
+            return hl.Table.parallelize(
+                [],
+                key_type,
+                key=key_type.fields,
+            )
         return hl.read_table(
             reference_dataset_collection_path(
                 self.env,
