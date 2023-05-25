@@ -46,7 +46,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.read_table(self.output().path).globals.updates.contains(
+            hl.read_table(self.output().path).updates.contains(
                 (self.vcf_path, self.project_pedigree_path),
             ),
         )

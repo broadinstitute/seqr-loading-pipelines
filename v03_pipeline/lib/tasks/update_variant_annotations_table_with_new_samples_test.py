@@ -99,7 +99,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         self.assertTrue(uvatwns_task_3.complete())
         self.assertEqual(
             hl.read_table(uvatwns_task_3.output().path).count(),
-            16,
+            17,
         )
 
         # Ensure that new variants are added correctly to the table.
