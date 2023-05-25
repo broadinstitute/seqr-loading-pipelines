@@ -228,7 +228,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': download_and_import_hgmd_vcf,
-            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
+            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
