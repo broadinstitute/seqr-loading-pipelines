@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.annotate_all import annotate_all
 from v03_pipeline.lib.definitions import SampleType
-from v03_pipeline.lib.misc.io import import_pedigree, import_remap, import_vcf
+from v03_pipeline.lib.misc.io import import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
     remap_sample_ids,
@@ -19,7 +19,7 @@ from v03_pipeline.lib.tasks.files import RawFileTask, VCFFileTask
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTask):
     sample_type = luigi.EnumParameter(enum=SampleType)
-    vcf_path = luigi.Parameter()
+    callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
 
@@ -39,7 +39,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def requires(self) -> list[luigi.Task]:
         return [
-            VCFFileTask(self.vcf_path),
+            VCFFileTask(self.callset_path) if self.dataset_type != DatasetType.GCNV else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
@@ -53,22 +53,27 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def update(self, existing_ht: hl.Table) -> hl.Table:
         # Import required files.
-        vcf_mt = import_vcf(self.vcf_path, self.reference_genome)
+        callset_mt = self.dataset_type.import_fn(self.callset_path, self.reference_genome)
         project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
 
         # Remap, then subset to samples & variants of interest.
-        vcf_mt = remap_sample_ids(vcf_mt, project_remap_ht)
-        sample_subset_ht = samples_to_include(pedigree_ht, vcf_mt.cols())
-        vcf_mt = subset_samples_and_variants(
-            vcf_mt,
+        callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
+        callset_mt = subset_samples_and_variants(
+            callset_mt,
             sample_subset_ht,
             self.ignore_missing_samples,
         )
 
+        # Split multi alleles
+        callset_mt = hl.split_multi_hts(
+            callset_mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
+        )
+
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
-        new_variants_mt = vcf_mt.anti_join_rows(existing_ht)
+        new_variants_mt = callset_mt.anti_join_rows(existing_ht)
         new_variants_mt = annotate_all(
             new_variants_mt,
             self.env,

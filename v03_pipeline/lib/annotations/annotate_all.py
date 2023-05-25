@@ -42,19 +42,6 @@ def rg37_locus(
         rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value),
     )
 
-
-def annotate_old_and_split_multi_hts(mt: hl.MatrixTable):
-    """
-    Saves the old allele and locus because while split_multi does this, split_multi_hts drops this. Will see if
-    we can add this to split_multi_hts and then this will be deprecated.
-    :return: mt that has pre-annotations
-    """
-    # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
-    return hl.split_multi_hts(
-        mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
-    )
-
-
 def annotate_all(
     mt: hl.MatrixTable,
     env: Env,

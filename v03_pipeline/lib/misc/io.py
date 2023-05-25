@@ -8,6 +8,11 @@ import hail as hl
 
 from v03_pipeline.lib.definitions import DataRoot, Env, ReferenceGenome
 
+def import_bed_file(callset_path: str):
+    # TODO implement me.
+    return hl.import_table(
+        callset_path
+    )
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
@@ -27,7 +32,7 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
     return ht.key_by(ht.family_id)
 
 
-def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
+def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
     recode = {}
     if reference_genome == ReferenceGenome.GRCh38:
@@ -35,7 +40,7 @@ def import_vcf(vcf_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTab
     else:
         recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
     return hl.import_vcf(
-        vcf_path,
+        callset_path,
         reference_genome=reference_genome.value,
         skip_invalid_loci=True,
         contig_recoding=recode,

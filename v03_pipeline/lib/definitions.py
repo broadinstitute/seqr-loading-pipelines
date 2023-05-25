@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Callable
 
 import hail as hl
 
+from v03_pipeline.lib.misc.io import import_bed_file, import_vcf
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -15,6 +17,11 @@ class DatasetType(Enum):
     MITO = 'MITO'
     SNV = 'SNV'
     SV = 'SV'
+
+    def import_fn(self, reference_genome: ReferenceGenome) | Callable:
+        return {
+            DatasetType.GCNV: import_bed_file,
+        }.get(self, import_vcf)
 
     def table_key_type(
         self,
