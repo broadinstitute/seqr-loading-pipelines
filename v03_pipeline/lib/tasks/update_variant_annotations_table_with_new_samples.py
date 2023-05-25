@@ -56,7 +56,8 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     def update(self, existing_ht: hl.Table) -> hl.Table:
         # Import required files.
         callset_mt = self.dataset_type.import_fn(
-            self.callset_path, self.reference_genome,
+            self.callset_path,
+            self.reference_genome,
         )
         project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
@@ -72,7 +73,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
         # Split multi alleles
         callset_mt = hl.split_multi_hts(
-            callset_mt.annotate_rows(locus_old=callset_mt.locus, alleles_old=callset_mt.alleles),
+            callset_mt.annotate_rows(
+                locus_old=callset_mt.locus,
+                alleles_old=callset_mt.alleles,
+            ),
         )
 
         # Get new rows, annotate them, then stack onto the existing
