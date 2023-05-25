@@ -1,10 +1,22 @@
-import hail as hl
-import luigi
+from __future__ import annotations
 
-from v03_pipeline.lib.definitions import DatasetType, ReferenceGenome
-from v03_pipeline.lib.paths import variant_annotations_table_path
+from typing import TYPE_CHECKING
+
+import hail as hl
+
+from v03_pipeline.lib.paths import (
+    reference_dataset_collection_path,
+    variant_annotations_table_path,
+)
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import (
+    GCSorLocalFolderTarget,
+    GCSorLocalTarget,
+    HailTableTask,
+)
+
+if TYPE_CHECKING:
+    import luigi
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -20,20 +32,30 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists()
 
-    def empty_table(
-        self,
-        dataset_type: DatasetType,
-        reference_genome: ReferenceGenome,
-    ) -> hl.Table:
-        key_type = dataset_type.table_key_type(reference_genome)
-        return hl.Table.parallelize(
-            [],
-            key_type,
-            key=key_type.fields,
-            globals=hl.struct(
-                updates=hl.empty_set(
-                    hl.ttuple(hl.tstr, hl.tstr),
-                ),
+    def requires(self) -> luigi.Task | None:
+        if self.dataset_type.base_reference_dataset_collection is None:
+            return None
+        return HailTableTask(
+            reference_dataset_collection_path(
+                self.env,
+                self.reference_genome,
+                self.dataset_type.base_reference_dataset_collection,
+            ),
+        )
+
+    def initialize_table(self) -> hl.Table:
+        if self.dataset_type.base_reference_dataset_collection is None:
+            key_type = self.dataset_type.table_key_type(self.reference_genome)
+            return hl.Table.parallelize(
+                [],
+                key_type,
+                key=key_type.fields,
+            )
+        return hl.read_table(
+            reference_dataset_collection_path(
+                self.env,
+                self.reference_genome,
+                self.dataset_type.base_reference_dataset_collection,
             ),
         )
 

@@ -2,25 +2,25 @@ import os
 import tempfile
 import unittest
 
-from v03_pipeline.lib.tasks.files import HailTable, RawFile, VCFFile
+from v03_pipeline.lib.tasks.files import HailTableTask, RawFileTask, VCFFileTask
 
 
 class FilesTest(unittest.TestCase):
     def test_raw_file(self) -> None:
         with tempfile.NamedTemporaryFile(suffix='.txt') as f:
-            self.assertTrue(RawFile(f.name).complete())
+            self.assertTrue(RawFileTask(f.name).complete())
 
     def test_vcf_file(self) -> None:
         with tempfile.NamedTemporaryFile(suffix='.vcf.bgz') as f:
-            self.assertTrue(VCFFile(f.name).complete())
+            self.assertTrue(VCFFileTask(f.name).complete())
 
         with tempfile.TemporaryDirectory(suffix='.vcf.bgz') as d:
-            self.assertTrue(VCFFile(d).complete())
-            self.assertTrue(VCFFile(os.path.join(d, '*.bgz')).complete())
+            self.assertTrue(VCFFileTask(d).complete())
+            self.assertTrue(VCFFileTask(os.path.join(d, '*.bgz')).complete())
 
     def test_hail_table(self) -> None:
         with tempfile.TemporaryDirectory(suffix='.ht') as d:
-            self.assertFalse(HailTable(d).complete())
+            self.assertFalse(HailTableTask(d).complete())
             with open(os.path.join(d, '_SUCCESS'), 'w') as f:
                 f.write('0')
-            self.assertTrue(HailTable(d).complete())
+            self.assertTrue(HailTableTask(d).complete())

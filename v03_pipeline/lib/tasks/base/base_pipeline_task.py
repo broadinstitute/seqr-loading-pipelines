@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.misc.io import write_ht
 
 
@@ -12,6 +12,7 @@ class BasePipelineTask(luigi.Task):
         default=ReferenceGenome.GRCh38,
     )
     dataset_type = luigi.EnumParameter(enum=DatasetType)
+    sample_type = luigi.EnumParameter(enum=SampleType)
     hail_temp_dir = luigi.OptionalParameter(
         default=None,
         description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',
@@ -33,20 +34,13 @@ class BasePipelineTask(luigi.Task):
         hl._set_flags(use_new_shuffle='1')  # noqa: SLF001
 
         if not self.output().exists():
-            ht = self.empty_table(
-                self.dataset_type,
-                self.reference_genome,
-            )
+            ht = self.initialize_table()
         else:
             ht = hl.read_table(self.output().path)
         ht = self.update(ht)
         write_ht(self.env, ht, self.output().path)
 
-    def empty_table(
-        self,
-        dataset_type: DatasetType,
-        reference_genome: ReferenceGenome,
-    ) -> hl.Table:
+    def initialize_table(self) -> hl.Table:
         raise NotImplementedError
 
     def update(self, mt: hl.Table) -> hl.Table:
