@@ -33,20 +33,13 @@ class BasePipelineTask(luigi.Task):
         hl._set_flags(use_new_shuffle='1')  # noqa: SLF001
 
         if not self.output().exists():
-            ht = self.empty_table(
-                self.dataset_type,
-                self.reference_genome,
-            )
+            ht = self.initialize_table()
         else:
             ht = hl.read_table(self.output().path)
         ht = self.update(ht)
         write_ht(self.env, ht, self.output().path)
 
-    def empty_table(
-        self,
-        dataset_type: DatasetType,
-        reference_genome: ReferenceGenome,
-    ) -> hl.Table:
+    def initialize_table(self) -> hl.Table:
         raise NotImplementedError
 
     def update(self, mt: hl.Table) -> hl.Table:

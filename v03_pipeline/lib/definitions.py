@@ -29,10 +29,15 @@ class DatasetType(Enum):
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
 
+    @property
+    def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
+        return {
+            DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
+            DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
+        }.get(self)
+
 
 class DataRoot(Enum):
-    TEST_DATASETS = 'test-datasets'
-    TEST_REFERENCE_DATA = 'test-reference-data'
     LOCAL_DATASETS = 'seqr-datasets'
     LOCAL_REFERENCE_DATA = 'seqr-reference-data'
     SEQR_DATASETS = 'gs://seqr-datasets'
@@ -52,6 +57,54 @@ class Env(Enum):
 class PipelineVersion(Enum):
     V02 = 'v02'
     V03 = 'v03'
+
+
+class ReferenceDatasetCollection(Enum):
+    COMBINED = 'combined'
+    COMBINED_MITO = 'combined_mito'
+    HGMD = 'hgmd'
+    INTERVAL_REFERENCE = 'interval_reference'
+
+    @property
+    def access_control(self) -> AccessControl:
+        if self == ReferenceDatasetCollection.HGMD:
+            return AccessControl.PRIVATE
+        return AccessControl.PUBLIC
+
+    @property
+    def reference_datasets(self) -> list[str]:
+        return {
+            ReferenceDatasetCollection.COMBINED: [
+                'cadd',
+                'clinvar',
+                'dbnsfp',
+                'eigen',
+                'exac',
+                'geno2mp',
+                'gnomad_exome_coverage',
+                'gnomad_exomes',
+                'gnomad_genome_coverage',
+                'gnomad_genomes',
+                'mpc',
+                'primate_ai',
+                'splice_ai',
+                'topmed',
+            ],
+            ReferenceDatasetCollection.COMBINED_MITO: [
+                'clinvar',
+                'dbnsfp_mito',
+                'gnomad_mito',
+                'helix_mito',
+                'hmtvar',
+                'mitomap',
+                'mitimpact',
+            ],
+            ReferenceDatasetCollection.HGMD: ['hgmd'],
+            ReferenceDatasetCollection.INTERVAL_REFERENCE: [
+                'gnomad_non_coding_constraint',
+                'screen',
+            ],
+        }[self]
 
 
 class ReferenceGenome(Enum):
