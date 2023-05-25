@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.annotate_all import annotate_all
-from v03_pipeline.lib.definitions import SampleType
+from v03_pipeline.lib.definitions import DatasetType, SampleType
 from v03_pipeline.lib.misc.io import import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
@@ -39,7 +39,9 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def requires(self) -> list[luigi.Task]:
         return [
-            VCFFileTask(self.callset_path) if self.dataset_type != DatasetType.GCNV else RawFileTask(self.callset_path),
+            VCFFileTask(self.callset_path)
+            if self.dataset_type != DatasetType.GCNV
+            else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
@@ -53,7 +55,9 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def update(self, existing_ht: hl.Table) -> hl.Table:
         # Import required files.
-        callset_mt = self.dataset_type.import_fn(self.callset_path, self.reference_genome)
+        callset_mt = self.dataset_type.import_fn(
+            self.callset_path, self.reference_genome,
+        )
         project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
 
@@ -68,7 +72,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
         # Split multi alleles
         callset_mt = hl.split_multi_hts(
-            callset_mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles),
+            callset_mt.annotate_rows(locus_old=callset_mt.locus, alleles_old=callset_mt.alleles),
         )
 
         # Get new rows, annotate them, then stack onto the existing

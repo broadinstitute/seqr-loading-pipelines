@@ -7,6 +7,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.io import import_bed_file, import_vcf
 
+
 class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
@@ -18,7 +19,15 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    def import_fn(self, reference_genome: ReferenceGenome) | Callable:
+    @property
+    def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
+        return {
+            DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
+            DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
+        }.get(self)
+
+    @property
+    def import_fn(self) -> Callable:
         return {
             DatasetType.GCNV: import_bed_file,
         }.get(self, import_vcf)
@@ -35,13 +44,6 @@ class DatasetType(Enum):
             DatasetType.GCNV: hl.tstruct(variant_name=hl.tstr, svtype=hl.tstr),
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
-
-    @property
-    def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
-        return {
-            DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
-            DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
-        }.get(self)
 
 
 class DataRoot(Enum):

@@ -42,6 +42,7 @@ def rg37_locus(
         rg37_locus=hl.liftover(mt.locus, ReferenceGenome.GRCh37.value),
     )
 
+
 def annotate_all(
     mt: hl.MatrixTable,
     env: Env,
@@ -51,8 +52,6 @@ def annotate_all(
     vep_config_json_path: str,
 ):
     # Special cases that require hail function calls.
-    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
-        mt = annotate_old_and_split_multi_hts(mt)
     if dataset_type != DatasetType.GCNV:
         mt = rg37_locus(mt, reference_genome, liftover_ref_path)
     if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:

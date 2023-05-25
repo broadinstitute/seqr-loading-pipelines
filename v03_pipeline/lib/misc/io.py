@@ -8,11 +8,11 @@ import hail as hl
 
 from v03_pipeline.lib.definitions import DataRoot, Env, ReferenceGenome
 
+
 def import_bed_file(callset_path: str):
     # TODO implement me.
-    return hl.import_table(
-        callset_path
-    )
+    return hl.import_table(callset_path)
+
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
