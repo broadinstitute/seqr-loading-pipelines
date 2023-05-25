@@ -45,17 +45,21 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:
             key_type = self.dataset_type.table_key_type(self.reference_genome)
-            return hl.Table.parallelize(
+            ht = hl.Table.parallelize(
                 [],
                 key_type,
                 key=key_type.fields,
             )
-        return hl.read_table(
-            reference_dataset_collection_path(
-                self.env,
-                self.reference_genome,
-                self.dataset_type.base_reference_dataset_collection,
-            ),
+        else:
+            ht = hl.read_table(
+                reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type.base_reference_dataset_collection,
+                ),
+            )
+        return ht.annotate_globals(
+            updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )
 
     def update(self, mt: hl.Table) -> hl.Table:
