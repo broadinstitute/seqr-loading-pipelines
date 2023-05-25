@@ -14,7 +14,7 @@ from v03_pipeline.lib.misc.sample_ids import (
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import RawFile, VCFFile
+from v03_pipeline.lib.tasks.files import RawFileTask, VCFFileTask
 
 
 class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTask):
@@ -39,9 +39,9 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
     def requires(self) -> list[luigi.Task]:
         return [
-            VCFFile(self.vcf_path),
-            RawFile(self.project_remap_path),
-            RawFile(self.project_pedigree_path),
+            VCFFileTask(self.vcf_path),
+            RawFileTask(self.project_remap_path),
+            RawFileTask(self.project_pedigree_path),
         ]
 
     def complete(self) -> bool:

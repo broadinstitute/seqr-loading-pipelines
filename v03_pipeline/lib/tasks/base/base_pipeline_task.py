@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.misc.io import write_ht
 
 
@@ -12,7 +12,6 @@ class BasePipelineTask(luigi.Task):
         default=ReferenceGenome.GRCh38,
     )
     dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
     hail_temp_dir = luigi.OptionalParameter(
         default=None,
         description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',

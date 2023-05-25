@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import hail as hl
+import luigi
 
+from v03_pipeline.lib.definitions import SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -15,11 +15,10 @@ from v03_pipeline.lib.tasks.files import (
     HailTableTask,
 )
 
-if TYPE_CHECKING:
-    import luigi
-
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
