@@ -16,10 +16,6 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
-    @property
-    def should_run_vep(self):
-        return self == DatasetType.SNV
-
     def table_key_type(
         self,
         reference_genome: ReferenceGenome,

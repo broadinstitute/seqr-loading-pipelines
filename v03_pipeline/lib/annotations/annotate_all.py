@@ -27,10 +27,13 @@ def run_vep(
     )
 
 
-def add_37_coordinates(
+def rg37_locus(
     mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
     liftover_ref_path: str,
 ):
+    if reference_genome == ReferenceGenome.GRCh37:
+        return mt
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
     if not rg38.has_liftover(rg37):
@@ -60,10 +63,12 @@ def annotate_all(
     liftover_ref_path: str,
     vep_config_json_path: str,
 ):
-    mt = annotate_old_and_split_multi_hts(mt)
-    if reference_genome == ReferenceGenome.GRCh38:
-        mt = add_37_coordinates(mt, liftover_ref_path)
-    if dataset_type.should_run_vep:
+    # Special cases that require hail function calls.
+    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
+        mt = annotate_old_and_split_multi_hts(mt)
+    if dataset_type != DatasetType.GCNV:
+        mt = rg37_locus(mt, reference_genome, liftover_ref_path)
+    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
         mt = run_vep(mt, env, reference_genome, vep_config_json_path)
 
     # TODO, add the rest of the dataset_type specific annotations
