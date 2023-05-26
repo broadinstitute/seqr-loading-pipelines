@@ -41,6 +41,10 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
 
+    @property
+    def should_run_vep(self) -> bool:
+        return self == DatasetType.SNV or self == DatasetType.MITO
+
 class DataRoot(Enum):
     LOCAL_DATASETS = 'seqr-datasets'
     LOCAL_REFERENCE_DATA = 'seqr-reference-data'
