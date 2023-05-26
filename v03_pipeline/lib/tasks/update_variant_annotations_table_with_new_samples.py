@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.annotate_all import annotate_all
-from v03_pipeline.lib.definitions import DatasetType, SampleType
+from v03_pipeline.lib.definitions import DatasetType, SampleType, SampleFileType
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
@@ -40,7 +40,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     def requires(self) -> list[luigi.Task]:
         return [
             VCFFileTask(self.callset_path)
-            if self.dataset_type != DatasetType.GCNV
+            if self.dataset_type.sample_file_type == SampleFileType.VCF
             else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),

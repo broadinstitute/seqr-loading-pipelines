@@ -37,6 +37,12 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
     @property
+    def sample_file_type(self) -> SampleFileType:
+        if self == DatasetType.GCNV:
+            return SampleFileType.BED
+        return SampleFileType.VCF
+
+    @property
     def should_run_vep(self) -> bool:
         return self == DatasetType.SNV or self == DatasetType.MITO
 
@@ -119,6 +125,9 @@ class ReferenceGenome(Enum):
     def v02_value(self):
         return self.value[-2:]
 
+class SampleFileType(Enum):
+    BED = 'BED'
+    VCF = 'VCF'
 
 class SampleType(Enum):
     WES = 'WES'
