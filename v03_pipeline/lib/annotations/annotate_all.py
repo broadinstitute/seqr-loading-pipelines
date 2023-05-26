@@ -13,8 +13,11 @@ def run_vep(
     mt: hl.MatrixTable,
     env: Env,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     vep_config_json_path: str,
 ):
+    if not dataset_type.should_run_vep:
+        return mt
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
@@ -30,9 +33,10 @@ def run_vep(
 def rg37_locus(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     liftover_ref_path: str,
 ):
-    if reference_genome == ReferenceGenome.GRCh37:
+    if reference_genome == ReferenceGenome.GRCh37 or dataset_type == DatasetType.GCNV:
         return mt
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
@@ -52,10 +56,8 @@ def annotate_all(
     vep_config_json_path: str,
 ):
     # Special cases that require hail function calls.
-    if dataset_type != DatasetType.GCNV:
-        mt = rg37_locus(mt, reference_genome, liftover_ref_path)
-    if dataset_type == DatasetType.SNV or dataset_type == DatasetType.MITO:
-        mt = run_vep(mt, env, reference_genome, vep_config_json_path)
+    mt = rg37_locus(mt, reference_genome, dataset_type, liftover_ref_path)
+    mt = run_vep(mt, env, reference_genome, dataset_type, vep_config_json_path)
 
     # TODO, add the rest of the dataset_type specific annotations
     return mt.select_rows('vep', 'filters', 'rsid')

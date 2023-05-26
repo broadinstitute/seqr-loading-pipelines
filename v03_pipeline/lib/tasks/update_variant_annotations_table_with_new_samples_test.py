@@ -69,7 +69,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             sample_type=SampleType.WGS,
-            vcf_path=TEST_VCF,
+            callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path='bad_pedigree',
         )
@@ -89,7 +89,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             sample_type=SampleType.WGS,
-            vcf_path=TEST_VCF,
+            callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
         )
@@ -108,7 +108,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             sample_type=SampleType.WGS,
-            vcf_path=TEST_VCF,
+            callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_4,
         )
@@ -126,7 +126,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             sample_type=SampleType.WGS,
-            vcf_path=TEST_VCF,
+            callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_5,
         )

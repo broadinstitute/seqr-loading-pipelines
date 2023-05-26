@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.annotate_all import annotate_all
 from v03_pipeline.lib.definitions import DatasetType, SampleType
-from v03_pipeline.lib.misc.io import import_pedigree, import_remap
+from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
     remap_sample_ids,
@@ -49,15 +49,16 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     def complete(self) -> bool:
         return super().complete() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
-                (self.vcf_path, self.project_pedigree_path),
+                (self.callset_path, self.project_pedigree_path),
             ),
         )
 
     def update(self, existing_ht: hl.Table) -> hl.Table:
         # Import required files.
-        callset_mt = self.dataset_type.import_fn(
+        callset_mt = import_callset(
             self.callset_path,
             self.reference_genome,
+            self.dataset_type,
         )
         project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
@@ -92,5 +93,5 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(
-            updates=unioned_ht.updates.add((self.vcf_path, self.project_pedigree_path)),
+            updates=unioned_ht.updates.add((self.callset_path, self.project_pedigree_path)),
         )

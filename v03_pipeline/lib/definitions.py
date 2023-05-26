@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Callable
 
 import hail as hl
-
-from v03_pipeline.lib.misc.io import import_bed_file, import_vcf
 
 
 class AccessControl(Enum):
@@ -20,17 +17,15 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
+    def should_run_vep(self) -> bool:
+        return self == DatasetType.SNV or self == DatasetType.MITO
+
+    @property
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
             DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
         }.get(self)
-
-    @property
-    def import_fn(self) -> Callable:
-        return {
-            DatasetType.GCNV: import_bed_file,
-        }.get(self, import_vcf)
 
     def table_key_type(
         self,

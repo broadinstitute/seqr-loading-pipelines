@@ -6,12 +6,37 @@ import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.definitions import DataRoot, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import DataRoot, DatasetType, Env, ReferenceGenome
 
 
-def import_bed_file(callset_path: str):
+def _import_bed_file(callset_path: str) -> hl.MatrixTable:
     # TODO implement me.
     return hl.import_table(callset_path)
+
+
+def _import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
+    # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
+    recode = {}
+    if reference_genome == ReferenceGenome.GRCh38:
+        recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
+    else:
+        recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
+    return hl.import_vcf(
+        callset_path,
+        reference_genome=reference_genome.value,
+        skip_invalid_loci=True,
+        contig_recoding=recode,
+        force_bgz=True,
+        min_partitions=500,
+    )
+
+
+def import_callset(
+    callset_path: str, reference_genome: ReferenceGenome, dataset_type: DatasetType,
+) -> hl.MatrixTable:
+    if dataset_type == DatasetType.GCNV:
+        return _import_bed_file(callset_path)
+    return _import_vcf(callset_path, reference_genome)
 
 
 def import_remap(remap_path: str) -> hl.Table:
@@ -30,23 +55,6 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
         s=ht.Individual_ID,
     )
     return ht.key_by(ht.family_id)
-
-
-def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
-    # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
-    recode = {}
-    if reference_genome == ReferenceGenome.GRCh38:
-        recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
-    else:
-        recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
-    return hl.import_vcf(
-        callset_path,
-        reference_genome=reference_genome.value,
-        skip_invalid_loci=True,
-        contig_recoding=recode,
-        force_bgz=True,
-        min_partitions=500,
-    )
 
 
 def write_ht(
