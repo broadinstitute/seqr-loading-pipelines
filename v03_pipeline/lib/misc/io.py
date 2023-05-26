@@ -32,7 +32,9 @@ def _import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.Matr
 
 
 def import_callset(
-    callset_path: str, reference_genome: ReferenceGenome, dataset_type: DatasetType,
+    callset_path: str,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         return _import_bed_file(callset_path)

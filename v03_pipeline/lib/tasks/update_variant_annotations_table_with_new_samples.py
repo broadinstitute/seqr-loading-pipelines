@@ -93,5 +93,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(
-            updates=unioned_ht.updates.add((self.callset_path, self.project_pedigree_path)),
+            updates=unioned_ht.updates.add(
+                (self.callset_path, self.project_pedigree_path),
+            ),
         )
