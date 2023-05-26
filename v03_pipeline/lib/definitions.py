@@ -42,6 +42,7 @@ class DatasetType(Enum):
             return SampleFileType.BED
         return SampleFileType.VCF
 
+
 class DataRoot(Enum):
     LOCAL_DATASETS = 'seqr-datasets'
     LOCAL_REFERENCE_DATA = 'seqr-reference-data'
