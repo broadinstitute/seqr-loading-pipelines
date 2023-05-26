@@ -16,7 +16,7 @@ def run_vep(
     dataset_type: DatasetType,
     vep_config_json_path: str,
 ):
-    if not dataset_type.should_run_vep:
+    if dataset_type == DatasetType.GCNV or dataset_type == DatasetType.SV:
         return mt
     vep_runner = (
         vep_runners.HailVEPRunner()
