@@ -35,7 +35,7 @@ def _v03_reference_data_prefix(
     env: Env,
     root: DataRoot,
     reference_genome: ReferenceGenome,
-):
+) -> str:
     if env == Env.LOCAL or env == Env.TEST:
         root = DataRoot.LOCAL_REFERENCE_DATA
     if env == Env.DEV:

@@ -151,7 +151,7 @@ class ReferenceGenome(Enum):
     GRCh38 = 'GRCh38'
 
     @property
-    def v02_value(self):
+    def v02_value(self) -> str:
         return self.value[-2:]
 
 

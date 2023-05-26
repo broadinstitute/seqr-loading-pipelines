@@ -83,7 +83,7 @@ def write_ht(
     elif checkpoint:
         ht = ht.checkpoint(
             os.path.join(
-                DataRoot.SEQR_SCRATCH_TEMP,
+                DataRoot.SEQR_SCRATCH_TEMP.value,
                 f'{uuid.uuid4()}.ht',
             ),
         )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any
 from typing import TYPE_CHECKING
 
 import hail as hl
@@ -20,7 +21,7 @@ def hgmd(
     ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
-    **kwargs,
+    **kwargs: Any,
 ) -> hl.Table:
     if env == Env.LOCAL:
         return ht
@@ -38,7 +39,7 @@ def interval_reference(
     ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
-    **kwargs,
+    **kwargs: Any,
 ) -> hl.Table:
     interval_reference_ht = hl.read_table(
         reference_dataset_collection_path(
@@ -71,8 +72,8 @@ def rg37_locus(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     liftover_ref_path: str,
-    **kwargs,
-) -> hl.MatrixTable:
+    **kwargs: Any,
+) -> hl.Table:
     if reference_genome == ReferenceGenome.GRCh37:
         return ht
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
@@ -89,8 +90,8 @@ def vep(
     env: Env,
     reference_genome: ReferenceGenome,
     vep_config_json_path: str,
-    **kwargs,
-):
+    **kwargs: Any,
+) -> hl.Table:
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
@@ -106,8 +107,8 @@ def vep(
 def annotate_all(
     ht: hl.Table,
     dataset_type: DatasetType,
-    **kwargs,
-):
+    **kwargs: Any,
+) -> hl.Table:
     for annotation in dataset_type.annotations:
         ht = annotation(ht)
     return ht
