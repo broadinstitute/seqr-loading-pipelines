@@ -111,6 +111,12 @@ class ReferenceDatasetCollection(Enum):
             ],
         }[self]
 
+    @property
+    def sample_file_type(self) -> SampleFileType:
+        if self == DatasetType.GCNV:
+            return SampleFileType.BED
+        return SampleFileType.VCF
+
 
 class ReferenceGenome(Enum):
     GRCh37 = 'GRCh37'
