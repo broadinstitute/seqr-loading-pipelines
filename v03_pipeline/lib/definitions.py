@@ -14,12 +14,17 @@ class DatasetType(Enum):
     SNV = 'SNV'
     SV = 'SV'
 
+    @property
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
             DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
         }.get(self)
 
+
+    @property
+    def should_run_vep(self) -> bool:
+        return self == DatasetType.SNV or self == DatasetType.MITO
 
 class DataRoot(Enum):
     LOCAL_DATASETS = 'seqr-datasets'
