@@ -11,7 +11,7 @@ from v03_pipeline.lib.annotations import (
     rg37_locus,
     vep,
 )
-from v03_pipeline.lib.definitions import (
+from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
     ReferenceGenome,
     SampleFileType,

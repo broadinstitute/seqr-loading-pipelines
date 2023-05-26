@@ -1,7 +1,8 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import Env, ReferenceGenome
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.misc.io import write_ht
 
 

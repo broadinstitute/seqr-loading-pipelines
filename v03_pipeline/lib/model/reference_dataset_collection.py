@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 
 from v03_pipeline.lib.annotations import Annotation, rg37_locus, vep
-from v03_pipeline.lib.definitions import AccessControl
+from v03_pipeline.lib.model import AccessControl
 
 
 class ReferenceDatasetCollection(Enum):

@@ -5,7 +5,7 @@ from typing import Any, Callable
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.definitions import (
+from v03_pipeline.lib.model.definitions import (
     Env,
     ReferenceDatasetCollection,
     ReferenceGenome,

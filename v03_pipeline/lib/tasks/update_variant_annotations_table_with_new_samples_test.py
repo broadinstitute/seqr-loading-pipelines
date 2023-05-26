@@ -7,7 +7,8 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.definitions import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamples,

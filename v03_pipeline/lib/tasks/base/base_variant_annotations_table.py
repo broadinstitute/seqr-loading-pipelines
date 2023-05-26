@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations import annotate_all
-from v03_pipeline.lib.definitions import AccessControl, Env, SampleType
+from v03_pipeline.lib.model import AccessControl, Env, SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
