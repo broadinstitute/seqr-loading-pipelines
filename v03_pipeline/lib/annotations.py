@@ -16,42 +16,6 @@ if TYPE_CHECKING:
     import DatasetType
 
 
-def vep(
-    ht: hl.Table,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    vep_config_json_path: str,
-    **kwargs,
-):
-    vep_runner = (
-        vep_runners.HailVEPRunner()
-        if env != Env.TEST
-        else vep_runners.HailVEPDummyRunner()
-    )
-    return vep_runner.run(
-        ht,
-        reference_genome.v02_value,
-        vep_config_json_path=vep_config_json_path,
-    )
-
-
-def rg37_locus(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    liftover_ref_path: str,
-    **kwargs,
-) -> hl.MatrixTable:
-    if reference_genome == ReferenceGenome.GRCh37:
-        return ht
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
-    return ht.annotate(
-        rg37_locus=hl.liftover(ht.locus, ReferenceGenome.GRCh37.value),
-    )
-
-
 def hgmd(
     ht: hl.Table,
     env: Env,
@@ -100,6 +64,42 @@ def interval_reference(
                 )
             ),
         ),
+    )
+
+
+def rg37_locus(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    liftover_ref_path: str,
+    **kwargs,
+) -> hl.MatrixTable:
+    if reference_genome == ReferenceGenome.GRCh37:
+        return ht
+    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    if not rg38.has_liftover(rg37):
+        rg38.add_liftover(liftover_ref_path, rg37)
+    return ht.annotate(
+        rg37_locus=hl.liftover(ht.locus, ReferenceGenome.GRCh37.value),
+    )
+
+
+def vep(
+    ht: hl.Table,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    vep_config_json_path: str,
+    **kwargs,
+):
+    vep_runner = (
+        vep_runners.HailVEPRunner()
+        if env != Env.TEST
+        else vep_runners.HailVEPDummyRunner()
+    )
+    return vep_runner.run(
+        ht,
+        reference_genome.v02_value,
+        vep_config_json_path=vep_config_json_path,
     )
 
 

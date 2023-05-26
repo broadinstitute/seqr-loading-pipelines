@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Callable
 
 import hail as hl
+
+from v03_pipeline.lib.annotations import hgmd, interval_reference, rg37_locus, vep
 
 
 class AccessControl(Enum):
@@ -15,6 +18,25 @@ class DatasetType(Enum):
     MITO = 'MITO'
     SNV = 'SNV'
     SV = 'SV'
+
+    @property
+    def annotations(self) -> list[Callable[..., hl.Table]]:
+        return {
+            DatasetType.GCNV: [],
+            DatasetType.MITO: [
+                rg37_locus,
+                vep,
+            ],
+            DatasetType.SV: [
+                rg37_locus,
+            ],
+            DatasetType.SNV: [
+                hgmd,
+                interval_reference,
+                rg37_locus,
+                vep,
+            ],
+        }[self]
 
     @property
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
@@ -122,12 +144,6 @@ class ReferenceDatasetCollection(Enum):
                 'screen',
             ],
         }[self]
-
-    @property
-    def sample_file_type(self) -> SampleFileType:
-        if self == DatasetType.GCNV:
-            return SampleFileType.BED
-        return SampleFileType.VCF
 
 
 class ReferenceGenome(Enum):

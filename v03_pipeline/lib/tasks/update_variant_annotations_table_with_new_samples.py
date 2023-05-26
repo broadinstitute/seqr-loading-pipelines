@@ -73,12 +73,13 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
 
         # Split multi alleles
-        callset_mt = hl.split_multi_hts(
-            callset_mt.annotate_rows(
-                locus_old=callset_mt.locus,
-                alleles_old=callset_mt.alleles,
-            ),
-        )
+        if callset_mt.key.dtype.fields == ('locus', 'alleles'):
+            callset_mt = hl.split_multi_hts(
+                callset_mt.annotate_rows(
+                    locus_old=callset_mt.locus,
+                    alleles_old=callset_mt.alleles,
+                ),
+            )
 
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
