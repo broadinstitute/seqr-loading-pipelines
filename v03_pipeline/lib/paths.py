@@ -36,7 +36,7 @@ def _v03_reference_data_prefix(
     root: DataRoot,
     reference_genome: ReferenceGenome,
 ):
-    if env == Env.TEST:
+    if env == Env.LOCAL or env == Env.TEST:
         root = DataRoot.LOCAL_REFERENCE_DATA
     if env == Env.DEV:
         root = DataRoot.SEQR_SCRATCH_TEMP
