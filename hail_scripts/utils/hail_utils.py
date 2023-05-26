@@ -1,3 +1,4 @@
+from __future__ import annotations
 import hail as hl
 import logging
 

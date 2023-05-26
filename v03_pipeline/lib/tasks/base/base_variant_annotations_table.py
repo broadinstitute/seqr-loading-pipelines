@@ -74,7 +74,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-        ht = annotate_all(ht, **self.param_kwargs)
+        ht = annotate_all(ht, ht.dataset_type.annotations, **self.param_kwargs)
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

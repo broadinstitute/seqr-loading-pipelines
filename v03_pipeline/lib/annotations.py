@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
-from typing import TYPE_CHECKING
+from typing import Any, Callable
 
 import hail as hl
 
@@ -13,8 +12,7 @@ from v03_pipeline.lib.definitions import (
 )
 from v03_pipeline.lib.paths import reference_dataset_collection_path
 
-if TYPE_CHECKING:
-    import DatasetType
+Annotation = Callable[..., hl.Table]
 
 
 def hgmd(
@@ -43,8 +41,7 @@ def interval_reference(
 ) -> hl.Table:
     if all(
         hasattr(ht, rd)
-        for rd
-        in ReferenceDatasetCollection.INTERVAL_REFERENCE.reference_datasets
+        for rd in ReferenceDatasetCollection.INTERVAL_REFERENCE.reference_datasets
     ):
         return ht
     interval_reference_ht = hl.read_table(
@@ -114,9 +111,9 @@ def vep(
 
 def annotate_all(
     ht: hl.Table,
-    dataset_type: DatasetType,
+    annotations: list[Annotation],
     **kwargs: Any,
 ) -> hl.Table:
-    for annotation in dataset_type.annotations:
+    for annotation in annotations:
         ht = annotation(ht)
     return ht

@@ -84,7 +84,11 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
         new_variants_ht = callset_mt.anti_join_rows(existing_ht).rows()
-        new_variants_ht = annotate_all(new_variants_ht, **self.param_kwargs)
+        new_variants_ht = annotate_all(
+            new_variants_ht,
+            self.dataset_type.annotations,
+            **self.param_kwargs,
+        )
         unioned_ht = existing_ht.union(new_variants_ht, unify=True)
         return unioned_ht.annotate_globals(
             updates=unioned_ht.updates.add(
