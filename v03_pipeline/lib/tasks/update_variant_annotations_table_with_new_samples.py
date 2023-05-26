@@ -81,6 +81,13 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
                 ),
             )
 
+        # Add liftover
+        if self.reference_genome == ReferenceGenome.GRCh38:
+            rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
+            rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+            if not rg38.has_liftover(rg37):
+                rg38.add_liftover(liftover_ref_path, rg37)
+
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
         new_variants_ht = callset_mt.anti_join_rows(existing_ht).rows()

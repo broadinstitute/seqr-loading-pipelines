@@ -2,16 +2,14 @@ from __future__ import annotations
 
 import os
 
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import (
+from v03_pipeline.lib.model import (
     AccessControl,
     DataRoot,
+    DatasetType,
     Env,
     PipelineVersion,
-    ReferenceGenome,
-)
-from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
+    ReferenceGenome,
 )
 
 

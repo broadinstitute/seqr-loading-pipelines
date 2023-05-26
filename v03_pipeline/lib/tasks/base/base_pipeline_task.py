@@ -2,8 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import write_ht
-from v03_pipeline.lib.model import Env, ReferenceGenome
-from v03_pipeline.lib.model.dataset_type import DatasetType
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 
 class BasePipelineTask(luigi.Task):

@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from v03_pipeline.lib.annotations import Annotation, rg37_locus, vep
-from v03_pipeline.lib.model import AccessControl
+from v03_pipeline.lib.model.definitions import AccessControl
 
 
 class ReferenceDatasetCollection(Enum):
@@ -17,19 +16,6 @@ class ReferenceDatasetCollection(Enum):
         if self == ReferenceDatasetCollection.HGMD:
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
-
-    @property
-    def annotations(self) -> list[Annotation]:
-        return {
-            ReferenceDatasetCollection.COMBINED: [
-                rg37_locus,
-                vep,
-            ],
-            ReferenceDatasetCollection.COMBINED_MITO: [
-                rg37_locus,
-                vep,
-            ],
-        }.get(self, [])
 
     @property
     def reference_datasets(self) -> list[str]:

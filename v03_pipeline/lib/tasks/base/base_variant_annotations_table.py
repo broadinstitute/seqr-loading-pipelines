@@ -44,7 +44,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     ),
                 ),
             )
-        for rdc in self.dataset_type.supplemental_reference_dataset_collections:
+        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
             if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
                 continue
             requirements.append(

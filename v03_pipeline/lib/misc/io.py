@@ -6,8 +6,13 @@ import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.model import DataRoot, Env, ReferenceGenome, SampleFileType
-from v03_pipeline.lib.model.dataset_type import DatasetType
+from v03_pipeline.lib.model import (
+    DataRoot,
+    DatasetType,
+    Env,
+    ReferenceGenome,
+    SampleFileType,
+)
 
 
 def _import_bed_file(callset_path: str) -> hl.MatrixTable:

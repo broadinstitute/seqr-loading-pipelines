@@ -4,17 +4,9 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import (
-    Annotation,
-    hgmd,
-    interval_reference,
-    rg37_locus,
-    vep,
-)
-from v03_pipeline.lib.model import (
+from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleFileType
+from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
-    ReferenceGenome,
-    SampleFileType,
 )
 
 
@@ -25,25 +17,6 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
-    def annotations(self) -> list[Annotation]:
-        return {
-            DatasetType.GCNV: [],
-            DatasetType.MITO: [
-                rg37_locus,
-                vep,
-            ],
-            DatasetType.SV: [
-                rg37_locus,
-            ],
-            DatasetType.SNV: [
-                hgmd,
-                interval_reference,
-                rg37_locus,
-                vep,
-            ],
-        }[self]
-
-    @property
     def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
         return {
             DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
@@ -51,7 +24,7 @@ class DatasetType(Enum):
         }.get(self)
 
     @property
-    def supplemental_reference_dataset_collections(
+    def annotatable_reference_dataset_collections(
         self,
     ) -> list[ReferenceDatasetCollection]:
         return {
