@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.annotate_all import annotate_all
-from v03_pipeline.lib.definitions import DatasetType, SampleType, SampleFileType
+from v03_pipeline.lib.definitions import SampleFileType, SampleType
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (

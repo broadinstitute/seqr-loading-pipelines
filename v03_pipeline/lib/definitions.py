@@ -125,9 +125,11 @@ class ReferenceGenome(Enum):
     def v02_value(self):
         return self.value[-2:]
 
+
 class SampleFileType(Enum):
     BED = 'BED'
     VCF = 'VCF'
+
 
 class SampleType(Enum):
     WES = 'WES'

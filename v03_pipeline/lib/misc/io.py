@@ -6,7 +6,13 @@ import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.definitions import DataRoot, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.definitions import (
+    DataRoot,
+    DatasetType,
+    Env,
+    ReferenceGenome,
+    SampleFileType,
+)
 
 
 def _import_bed_file(callset_path: str) -> hl.MatrixTable:
@@ -36,7 +42,7 @@ def import_callset(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
-    if dataset_type.sample_file_type == SampleFileType.BED
+    if dataset_type.sample_file_type == SampleFileType.BED:
         return _import_bed_file(callset_path)
     return _import_vcf(callset_path, reference_genome)
 
