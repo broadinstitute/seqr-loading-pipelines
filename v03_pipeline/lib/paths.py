@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
     DataRoot,
@@ -9,8 +10,9 @@ from v03_pipeline.lib.model.definitions import (
     PipelineVersion,
     ReferenceGenome,
 )
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.reference_dataset_collection import ReferenceDatasetCollection
+from v03_pipeline.lib.model.reference_dataset_collection import (
+    ReferenceDatasetCollection,
+)
 
 
 def _v03_pipeline_prefix(

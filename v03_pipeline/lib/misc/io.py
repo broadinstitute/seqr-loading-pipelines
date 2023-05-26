@@ -6,12 +6,7 @@ import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.model import (
-    DataRoot,
-    Env,
-    ReferenceGenome,
-    SampleFileType,
-)
+from v03_pipeline.lib.model import DataRoot, Env, ReferenceGenome, SampleFileType
 from v03_pipeline.lib.model.dataset_type import DatasetType
 
 

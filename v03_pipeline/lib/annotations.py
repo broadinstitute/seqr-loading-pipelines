@@ -5,11 +5,11 @@ from typing import Any, Callable
 import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.model.definitions import (
+from v03_pipeline.lib.model import (
     Env,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
+from v03_pipeline.lib.model.reference_dataset_collection import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import reference_dataset_collection_path
 
 Annotation = Callable[..., hl.Table]

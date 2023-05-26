@@ -1,11 +1,10 @@
 import unittest
 
-from v03_pipeline.lib.model import (
-    Env,
-    ReferenceGenome,
-)
+from v03_pipeline.lib.model import Env, ReferenceGenome
 from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.reference_dataset_collection import ReferenceDatasetCollection
+from v03_pipeline.lib.model.reference_dataset_collection import (
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.paths import (
     family_table_path,
     project_table_path,
