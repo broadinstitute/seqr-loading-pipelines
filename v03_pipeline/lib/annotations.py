@@ -23,7 +23,7 @@ def hgmd(
     reference_genome: ReferenceGenome,
     **kwargs: Any,
 ) -> hl.Table:
-    if env == Env.LOCAL:
+    if env == Env.LOCAL or hasattr(ht, 'hgmd'):
         return ht
     hgmd_ht = hl.read_table(
         reference_dataset_collection_path(
@@ -41,6 +41,12 @@ def interval_reference(
     reference_genome: ReferenceGenome,
     **kwargs: Any,
 ) -> hl.Table:
+    if all(
+        hasattr(ht, rd)
+        for rd
+        in ReferenceDatasetCollection.INTERVAL_REFERENCE.reference_datasets
+    ):
+        return ht
     interval_reference_ht = hl.read_table(
         reference_dataset_collection_path(
             env,
@@ -61,7 +67,7 @@ def interval_reference(
         screen=hl.Struct(
             region_type_id=(
                 interval_reference_ht.index(ht.locus, all_matches=True).flatmap(
-                    lambda x: x.screen['region_type'],
+                    lambda x: x.screen['region_type_id'],
                 )
             ),
         ),
@@ -74,7 +80,7 @@ def rg37_locus(
     liftover_ref_path: str,
     **kwargs: Any,
 ) -> hl.Table:
-    if reference_genome == ReferenceGenome.GRCh37:
+    if reference_genome == ReferenceGenome.GRCh37 or hasattr(ht, 'rg37_locus'):
         return ht
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
@@ -92,6 +98,8 @@ def vep(
     vep_config_json_path: str,
     **kwargs: Any,
 ) -> hl.Table:
+    if hasattr(ht, 'vep'):
+        return ht
     vep_runner = (
         vep_runners.HailVEPRunner()
         if env != Env.TEST
