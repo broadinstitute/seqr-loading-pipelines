@@ -111,11 +111,11 @@ write_ht = write_mt  # alias
 
 
 def run_vep(
-        mt: hl.MatrixTable,
+        mt: hl.MatrixTable | hl.Table,
         genome_version: str,
         name: str = 'vep',
         block_size: int = 1000,
-        vep_config_json_path = None) -> hl.MatrixTable:
+        vep_config_json_path = None) -> hl.MatrixTable | hl.Table:
     """Runs VEP.
 
     :param MatrixTable mt: MT to annotate with VEP

@@ -3,7 +3,8 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.definitions import SampleType
+from v03_pipeline.lib.annotations import annotate_all
+from v03_pipeline.lib.definitions import AccessControl, Env, SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -31,16 +32,31 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists()
 
-    def requires(self) -> luigi.Task | None:
-        if self.dataset_type.base_reference_dataset_collection is None:
-            return None
-        return HailTableTask(
-            reference_dataset_collection_path(
-                self.env,
-                self.reference_genome,
-                self.dataset_type.base_reference_dataset_collection,
-            ),
-        )
+    def requires(self) -> list[luigi.Task]:
+        requirements = []
+        if self.dataset_type.base_reference_dataset_collection:
+            requirements.append(
+                HailTableTask(
+                    reference_dataset_collection_path(
+                        self.env,
+                        self.reference_genome,
+                        self.dataset_type.base_reference_dataset_collection,
+                    ),
+                ),
+            )
+        for rdc in self.dataset_type.supplemental_reference_dataset_collections:
+            if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
+                continue
+            requirements.append(
+                HailTableTask(
+                    reference_dataset_collection_path(
+                        self.env,
+                        self.reference_genome,
+                        rdc,
+                    ),
+                ),
+            )
+        return requirements
 
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:
@@ -58,6 +74,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
+            ht = annotate_all(ht, **self.param_kwargs)
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

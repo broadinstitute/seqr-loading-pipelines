@@ -3,7 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.annotate_all import annotate_all
+from v03_pipeline.lib.annotations import annotate_all
 from v03_pipeline.lib.definitions import SampleFileType, SampleType
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
@@ -82,16 +82,9 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
 
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
-        new_variants_mt = callset_mt.anti_join_rows(existing_ht)
-        new_variants_mt = annotate_all(
-            new_variants_mt,
-            self.env,
-            self.reference_genome,
-            self.dataset_type,
-            self.liftover_ref_path,
-            self.vep_config_json_path,
-        )
-        unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
+        new_variants_ht = callset_mt.anti_join_rows(existing_ht).rows()
+        new_variants_ht = annotate_all(new_variants_ht, **self.param_kwargs)
+        unioned_ht = existing_ht.union(new_variants_ht, unify=True)
         return unioned_ht.annotate_globals(
             updates=unioned_ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),

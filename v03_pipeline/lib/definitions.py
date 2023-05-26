@@ -23,6 +23,17 @@ class DatasetType(Enum):
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
         }.get(self)
 
+    @property
+    def supplemental_reference_dataset_collections(
+        self,
+    ) -> list[ReferenceDatasetCollection]:
+        return {
+            DatasetType.SNV: [
+                ReferenceDatasetCollection.HGMD,
+                ReferenceDatasetCollection.INTERVAL_REFERENCE,
+            ],
+        }.get(self, [])
+
     def table_key_type(
         self,
         reference_genome: ReferenceGenome,

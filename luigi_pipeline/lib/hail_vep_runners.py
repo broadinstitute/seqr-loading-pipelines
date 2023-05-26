@@ -560,4 +560,6 @@ class HailVEPDummyRunner(HailVEPRunnerBase):
 
 
     def run(self, mt, genome_version, vep_config_json_path=None):
+        if isinstance(mt, hl.Table):
+            return mt.annotate(vep=self.MOCK_VEP_DATA)
         return mt.annotate_rows(vep=self.MOCK_VEP_DATA)
