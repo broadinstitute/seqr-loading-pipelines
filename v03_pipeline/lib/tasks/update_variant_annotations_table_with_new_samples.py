@@ -3,7 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations import annotate_all
+from v03_pipeline.lib.annotations import annotate_with_reference_dataset_collections
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
@@ -91,10 +91,11 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         # Get new rows, annotate them, then stack onto the existing
         # variant annotations table.
         new_variants_ht = callset_mt.anti_join_rows(existing_ht).rows()
-        new_variants_ht = annotate_all(
+        new_variants_ht = annotate_with_reference_dataset_collections(
             new_variants_ht,
-            self.dataset_type.annotations,
-            **self.param_kwargs,
+            self.env,
+            self.reference_genome,
+            self.dataset_type.annotatable_reference_dataset_collections,
         )
         unioned_ht = existing_ht.union(new_variants_ht, unify=True)
         return unioned_ht.annotate_globals(

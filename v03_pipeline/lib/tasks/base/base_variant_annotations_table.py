@@ -3,7 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations import annotate_all
+from v03_pipeline.lib.annotations import annotate_with_reference_dataset_collections
 from v03_pipeline.lib.model import AccessControl, Env, SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
@@ -74,7 +74,13 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-        ht = annotate_all(ht, ht.dataset_type.annotations, **self.param_kwargs)
+        ht = annotate_with_reference_dataset_collections(
+            ht,
+            self.env,
+            self.reference_genome,
+            self.dataset_type.annotatable_reference_dataset_collections,
+        )
+
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

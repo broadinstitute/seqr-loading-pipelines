@@ -52,3 +52,7 @@ class DatasetType(Enum):
         if self == DatasetType.GCNV:
             return SampleFileType.BED
         return SampleFileType.VCF
+
+    @property
+    def veppable(self) -> bool:
+        return self == DatasetType.SNV or self == DatasetType.MITO
