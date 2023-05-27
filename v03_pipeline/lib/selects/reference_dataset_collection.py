@@ -35,12 +35,12 @@ def screen(
     **_,
 ) -> hl.Expression:
     return hl.Struct(
-        region_type_id=(
+        region_type_ids=(
             interval_reference_ht.index(
                 mt.locus,
                 all_matches=True,
             ).flatmap(
-                lambda x: x.screen['region_type_id'],
+                lambda x: x.screen['region_type_ids'],
             )
         ),
     )
