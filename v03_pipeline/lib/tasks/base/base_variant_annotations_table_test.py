@@ -14,6 +14,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
+TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_REFERENCE_1 = (
     'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
 )
@@ -27,6 +28,10 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         shutil.copytree(
             TEST_COMBINED_1,
             f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
+        )
+        shutil.copytree(
+            TEST_HGMD_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_REFERENCE_1,

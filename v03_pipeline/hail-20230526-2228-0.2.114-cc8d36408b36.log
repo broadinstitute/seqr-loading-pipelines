@@ -1,0 +1,16 @@
+2023-05-26 22:28:10.999 Hail: WARN: This Hail JAR was compiled for Spark 3.3.0, running with Spark 3.3.2.
+  Compatibility is not guaranteed.
+2023-05-26 22:28:12.107 Hail: INFO: SparkUI: http://192.168.4.22:4040
+2023-05-26 22:28:12.246 Hail: INFO: Running Hail version 0.2.114-cc8d36408b36
+2023-05-26 22:28:16.208 : INFO: RegionPool: initialized for thread 14: Thread-4
+2023-05-26 22:28:18.267 : INFO: RegionPool: initialized for thread 14: Thread-4
+2023-05-26 22:28:18.270 : INFO: TaskReport: stage=0, partition=0, attempt=0, peakBytes=0, peakBytesReadable=0.00 B, chunks requested=0, cache hits=0
+2023-05-26 22:28:18.274 : INFO: RegionPool: FREE: 0 allocated (0 blocks / 0 chunks), regions.size = 0, 0 current java objects, thread 14: Thread-4
+2023-05-26 22:28:18.275 : INFO: RegionPool: FREE: 64.0K allocated (64.0K blocks / 0 chunks), regions.size = 1, 0 current java objects, thread 14: Thread-4
+2023-05-26 22:28:18.276 : INFO: timing SparkBackend.parse_table_ir total 2.075s self 2.075s children 0.000ms %children 0.00%
+2023-05-26 22:28:28.900 : INFO: RegionPool: initialized for thread 14: Thread-4
+2023-05-26 22:28:30.083 : INFO: RegionPool: initialized for thread 14: Thread-4
+2023-05-26 22:28:30.084 : INFO: TaskReport: stage=0, partition=0, attempt=0, peakBytes=0, peakBytesReadable=0.00 B, chunks requested=0, cache hits=0
+2023-05-26 22:28:30.084 : INFO: RegionPool: FREE: 0 allocated (0 blocks / 0 chunks), regions.size = 0, 0 current java objects, thread 14: Thread-4
+2023-05-26 22:28:30.084 : INFO: RegionPool: FREE: 64.0K allocated (64.0K blocks / 0 chunks), regions.size = 1, 0 current java objects, thread 14: Thread-4
+2023-05-26 22:28:30.084 : INFO: timing SparkBackend.parse_table_ir total 1.185s self 1.185s children 0.000ms %children 0.00%
