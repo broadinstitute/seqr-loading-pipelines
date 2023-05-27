@@ -11,3 +11,15 @@ from v03_pipeline.lib.model.definitions import (
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
+
+__all__ = [
+    'AccessControl',
+    'DatasetType',
+    'DataRoot',
+    'Env',
+    'PipelineVersion',
+    'ReferenceDatasetCollection',
+    'ReferenceGenome',
+    'SampleFileType',
+    'SampleType',
+]

@@ -3,7 +3,6 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations import annotate_with_reference_dataset_collections
 from v03_pipeline.lib.model import AccessControl, Env, SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
@@ -44,7 +43,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     ),
                 ),
             )
-        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
+        for rdc in self.dataset_type.selectable_reference_dataset_collections:
             if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
                 continue
             requirements.append(
@@ -74,13 +73,6 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-        ht = annotate_with_reference_dataset_collections(
-            ht,
-            self.env,
-            self.reference_genome,
-            self.dataset_type.annotatable_reference_dataset_collections,
-        )
-
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

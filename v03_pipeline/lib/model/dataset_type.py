@@ -24,7 +24,7 @@ class DatasetType(Enum):
         }.get(self)
 
     @property
-    def annotatable_reference_dataset_collections(
+    def selectable_reference_dataset_collections(
         self,
     ) -> list[ReferenceDatasetCollection]:
         return {
