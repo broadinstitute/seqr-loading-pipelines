@@ -14,8 +14,8 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
-TEST_COMBINED_1 = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_INTERVAL_REFERENCE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
+TEST_INTERVAL_REFERENCE_1 = 'v03_pipeline/var/test/pedigrees/test_interval_reference_1.ht'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
