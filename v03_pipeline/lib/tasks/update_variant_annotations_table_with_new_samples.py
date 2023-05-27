@@ -46,9 +46,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
-        for rdc in self.dataset_type.selectable_reference_dataset_collections:
-            if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
-                continue
+        for rdc in self.dataset_type.selectable_reference_dataset_collections(self.env):
             requirements.append(
                 HailTableTask(
                     reference_dataset_collection_path(
@@ -95,8 +93,8 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
                 ),
             )
 
-        # Get new rows, annotate them, then stack onto the existing
-        # variant annotations table.
+        # Get new rows, annotate them with vep, transform with selects,
+        # then stack onto the existing variant annotations table.
         new_variants_mt = callset_mt.anti_join_rows(existing_ht)
         new_variants_mt = run_vep(
             new_variants_mt,

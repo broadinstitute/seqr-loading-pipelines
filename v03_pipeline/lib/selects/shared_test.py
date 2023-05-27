@@ -8,7 +8,7 @@ from v03_pipeline.lib.vep import run_vep
 
 
 class SharedAnnotationsTest(unittest.TestCase):
-    def test_sorted_transcript_consequences(self):
+    def test_sorted_transcript_consequences(self) -> None:
         ht = hl.Table.parallelize(
             [
                 {

@@ -1,6 +1,8 @@
+from typing import Any
+
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType
 from v03_pipeline.lib.selects import gcnv, reference_dataset_collection, shared, snv, sv
 
 SCHEMA = {
@@ -38,12 +40,17 @@ SCHEMA = {
 
 def get_select_fields(
     mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    liftover_ref_path: str,
+    **kwargs: Any,
 ) -> dict[str, hl.Expression]:
-    {
+    # NB: destructuring inside the function rather than in the
+    # arguments so that kwargs can be passed wholesale to the
+    # selection functions.
+    env, reference_genome = dataset_type = (
+        kwargs['env'],
+        kwargs['reference_genome'],
+        kwargs['dataset_type'],
+    )
+    rdc_hts = {
         f'{rdc.value}_ht': hl.read_table(
             reference_dataset_collection_path(
                 env,
@@ -51,14 +58,14 @@ def get_select_fields(
                 rdc,
             ),
         )
-        for rdc in dataset_type.selectable_reference_dataset_collections
+        for rdc in dataset_type.selectable_reference_dataset_collections(env)
     }
     return {
-        annotation_fn.__name__: select(mt)
-        for annotation_fn in annotation_fns
-        if select(mt) is not None
+        annotation_fn.__name__: select(mt, **kwargs, **rdc_hts)
+        for annotation_fn in SCHEMA[dataset_type]
+        if select(mt, **kwargs, **rdc_hts) is not None
     }
 
 
-def select_all(mt: hl.MatrixTable, **kwargs) -> hl.MatrixTable:
+def select_all(mt: hl.MatrixTable, **kwargs: Any) -> hl.MatrixTable:
     return mt.select_rows(**get_select_fields(mt, **kwargs))

@@ -1,22 +1,26 @@
+from __future__ import annotations
+
 import hail as hl
 
 
 def hgmd(
     mt: hl.MatrixTable,
-    reference_dataset_collection_ht: hl.Table,
+    hgmd_ht: hl.Table | None,
     **_,
-) -> hl.MatrixTable:
-    return reference_dataset_collection_ht[mt.row_key].hgmd
+) -> hl.Expression | None:
+    if not hgmd_ht:
+        return None
+    return hgmd_ht[mt.row_key].hgmd
 
 
 def gnomad_non_coding_constraint(
     mt: hl.MatrixTable,
-    reference_dataset_collection_ht: hl.Table,
+    interval_reference_ht: hl.Table,
     **_,
-) -> hl.MatrixTable:
+) -> hl.Expression:
     return hl.Struct(
         z_score=(
-            reference_dataset_collection_ht.index(mt.locus, all_matches=True)
+            interval_reference_ht.index(mt.locus, all_matches=True)
             .filter(
                 lambda x: hl.is_defined(x.gnomad_non_coding_constraint['z_score']),
             )
@@ -27,12 +31,12 @@ def gnomad_non_coding_constraint(
 
 def screen(
     mt: hl.MatrixTable,
-    reference_dataset_collection_ht: hl.Table,
+    interval_reference_ht: hl.Table,
     **_,
-) -> hl.MatrixTable:
+) -> hl.Expression:
     return hl.Struct(
         region_type_id=(
-            reference_dataset_collection_ht.index(
+            interval_reference_ht.index(
                 mt.locus,
                 all_matches=True,
             ).flatmap(

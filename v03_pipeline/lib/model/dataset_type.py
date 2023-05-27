@@ -4,7 +4,7 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleFileType
+from v03_pipeline.lib.model.definitions import Env, ReferenceGenome, SampleFileType
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
@@ -23,16 +23,19 @@ class DatasetType(Enum):
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
         }.get(self)
 
-    @property
     def selectable_reference_dataset_collections(
         self,
+        env: Env,
     ) -> list[ReferenceDatasetCollection]:
-        return {
+        rdcs = {
             DatasetType.SNV: [
                 ReferenceDatasetCollection.HGMD,
                 ReferenceDatasetCollection.INTERVAL_REFERENCE,
             ],
         }.get(self, [])
+        if env == Env.LOCAL:
+            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
+        return rdcs
 
     def table_key_type(
         self,

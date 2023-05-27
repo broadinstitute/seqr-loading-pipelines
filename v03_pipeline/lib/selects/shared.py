@@ -77,8 +77,11 @@ def pos(mt: hl.MatrixTable, **_):
 
 
 def rg37_locus(
-    ht: hl.Table, reference_genome: ReferenceGenome, liftover_ref_path: str, **_,
-):
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    liftover_ref_path: str,
+    **_,
+) -> hl.Expression | None:
     # Add liftover
     if reference_genome == ReferenceGenome.GRCh37:
         return None
@@ -89,15 +92,15 @@ def rg37_locus(
     return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
 
-def xpos(mt: hl.MatrixTable, **_):
+def xpos(mt: hl.MatrixTable, **_) -> hl.Expression:
     return expression_helpers.get_expr_for_xpos(mt.locus)
 
 
-def variant_id(mt: hl.MatrixTable, **_):
+def variant_id(mt: hl.MatrixTable, **_) -> hl.Expression:
     return expression_helpers.get_expr_for_variant_id(mt)
 
 
-def sorted_transcript_consequences(mt: hl.MatrixTable, **_):
+def sorted_transcript_consequences(mt: hl.MatrixTable, **_) -> hl.Expression:
     result = hl.sorted(
         mt.vep.transcript_consequences.map(
             lambda c: c.select(
