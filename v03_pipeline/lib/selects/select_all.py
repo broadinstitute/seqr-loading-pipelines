@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any
 
 import hail as hl
@@ -46,7 +47,7 @@ def get_select_fields(
     # NB: destructuring inside the function rather than in the
     # arguments so that kwargs can be passed wholesale to the
     # selection functions.
-    env, reference_genome = dataset_type = (
+    env, reference_genome, dataset_type = (
         kwargs['env'],
         kwargs['reference_genome'],
         kwargs['dataset_type'],

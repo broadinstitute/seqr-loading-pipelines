@@ -86,7 +86,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
 
         # Split multi alleles
-        if callset_mt.key.dtype.fields == ('locus', 'alleles'):
+        if callset_mt.row_key.dtype.fields == ('locus', 'alleles'):
             callset_mt = hl.split_multi_hts(
                 callset_mt.annotate_rows(
                     locus_old=callset_mt.locus,
@@ -104,13 +104,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.dataset_type,
             self.vep_config_json_path,
         )
-        new_variants_mt = select_all(
-            new_variants_mt,
-            self.env,
-            self.reference_genome,
-            self.dataset_type,
-            self.liftover_ref_path,
-        )
+        new_variants_mt = select_all(new_variants_mt, **self.param_kwargs)
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(
             updates=unioned_ht.updates.add(

@@ -37,10 +37,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             TEST_HGMD_1,
             f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
         )
-        shutil.copytree(
-            TEST_INTERVAL_REFERENCE_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
-        )
+
 
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):
@@ -67,7 +64,29 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
+    def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamples(
+            env=Env.TEST,
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_remap_path=TEST_REMAP,
+            project_pedigree_path=TEST_PEDIGREE_3,
+        )
+
+        worker = luigi.worker.Worker()
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertFalse(uvatwns_task.complete())
+
     def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
+        shutil.copytree(
+            TEST_INTERVAL_REFERENCE_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
+        )
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         worker = luigi.worker.Worker()
@@ -81,7 +100,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
         )
-
         worker.add(uvatwns_task_3)
         worker.run()
         self.assertTrue(uvatwns_task_3.complete())
