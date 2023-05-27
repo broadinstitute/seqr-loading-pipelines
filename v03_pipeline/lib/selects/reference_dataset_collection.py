@@ -1,7 +1,6 @@
 import hail as hl
 
 
-
 def hgmd(
     mt: hl.MatrixTable,
     reference_dataset_collection_ht: hl.Table,

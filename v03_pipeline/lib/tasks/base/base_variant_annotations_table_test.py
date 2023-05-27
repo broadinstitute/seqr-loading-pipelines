@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
@@ -15,7 +14,9 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
-TEST_INTERVAL_REFERENCE_1 = 'v03_pipeline/var/test/pedigrees/test_interval_reference_1.ht'
+TEST_INTERVAL_REFERENCE_1 = (
+    'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
+)
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
@@ -31,7 +32,6 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             TEST_INTERVAL_REFERENCE_1,
             f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
         )
-        
 
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):

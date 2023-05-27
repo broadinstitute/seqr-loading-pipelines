@@ -4,6 +4,7 @@ from enum import Enum
 
 from v03_pipeline.lib.model.definitions import AccessControl
 
+
 class ReferenceDatasetCollection(Enum):
     COMBINED = 'combined'
     COMBINED_MITO = 'combined_mito'
