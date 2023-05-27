@@ -3,7 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.model import AccessControl, Env, SampleType
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -32,30 +32,13 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
-        requirements = []
-        if self.dataset_type.base_reference_dataset_collection:
-            requirements.append(
-                HailTableTask(
-                    reference_dataset_collection_path(
-                        self.env,
-                        self.reference_genome,
-                        self.dataset_type.base_reference_dataset_collection,
-                    ),
-                ),
-            )
-        for rdc in self.dataset_type.selectable_reference_dataset_collections:
-            if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
-                continue
-            requirements.append(
-                HailTableTask(
-                    reference_dataset_collection_path(
-                        self.env,
-                        self.reference_genome,
-                        rdc,
-                    ),
-                ),
-            )
-        return requirements
+        return HailTableTask(
+            reference_dataset_collection_path(
+                self.env,
+                self.reference_genome,
+                self.dataset_type.base_reference_dataset_collection,
+            ),
+        )
 
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:

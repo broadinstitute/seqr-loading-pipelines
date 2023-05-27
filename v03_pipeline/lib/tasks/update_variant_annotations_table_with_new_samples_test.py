@@ -7,7 +7,6 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.misc.io import write_ht
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamples,
@@ -18,6 +17,11 @@ TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
+TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
+TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
+TEST_INTERVAL_REFERENCE_1 = (
+    'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
+)
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
@@ -25,33 +29,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
-        write_ht(
-            env=Env.LOCAL,
-            ht=hl.Table.parallelize(
-                [
-                    {
-                        'locus': hl.Locus(
-                            contig='chr1',
-                            position=871269,
-                            reference_genome='GRCh38',
-                        ),
-                        'alleles': ['A', 'C'],
-                        'cadd': 1,
-                        'clinvar': 2,
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
-                    cadd=hl.tint32,
-                    clinvar=hl.tint32,
-                ),
-                ['locus', 'alleles'],
-            ),
-            destination_path=os.path.join(
-                f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
-            ),
-            checkpoint=False,
+        shutil.copytree(
+            TEST_COMBINED_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
+        )
+        shutil.copytree(
+            TEST_HGMD_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
+        )
+        shutil.copytree(
+            TEST_INTERVAL_REFERENCE_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
         )
 
     def tearDown(self) -> None:

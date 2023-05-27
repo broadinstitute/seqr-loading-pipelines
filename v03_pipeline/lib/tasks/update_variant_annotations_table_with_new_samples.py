@@ -39,13 +39,26 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     )
 
     def requires(self) -> list[luigi.Task]:
-        return [
+        requirements = [
             VCFFileTask(self.callset_path)
             if self.dataset_type.sample_file_type == SampleFileType.VCF
             else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
+        for rdc in self.dataset_type.selectable_reference_dataset_collections:
+            if self.env == Env.LOCAL and rdc.access_control == AccessControl.PRIVATE:
+                continue
+            requirements.append(
+                HailTableTask(
+                    reference_dataset_collection_path(
+                        self.env,
+                        self.reference_genome,
+                        rdc,
+                    ),
+                ),
+            )
+        return requirements
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(

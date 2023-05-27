@@ -4,6 +4,7 @@ import hail as hl
 def hgmd(
     mt: hl.MatrixTable,
     reference_dataset_collection_ht: hl.Table,
+    **_,
 ) -> hl.MatrixTable:
     return reference_dataset_collection_ht[mt.row_key].hgmd
 
@@ -11,6 +12,7 @@ def hgmd(
 def gnomad_non_coding_constraint(
     mt: hl.MatrixTable,
     reference_dataset_collection_ht: hl.Table,
+    **_,
 ) -> hl.MatrixTable:
     return hl.Struct(
         z_score=(
@@ -26,6 +28,7 @@ def gnomad_non_coding_constraint(
 def screen(
     mt: hl.MatrixTable,
     reference_dataset_collection_ht: hl.Table,
+    **_,
 ) -> hl.MatrixTable:
     return hl.Struct(
         region_type_id=(

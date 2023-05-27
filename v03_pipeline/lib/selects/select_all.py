@@ -43,21 +43,22 @@ def get_select_fields(
     dataset_type: DatasetType,
     liftover_ref_path: str,
 ) -> dict[str, hl.Expression]:
-    annotation_fns = SCHEMA[dataset_type]
+    {
+        f'{rdc.value}_ht': hl.read_table(
+            reference_dataset_collection_path(
+                env,
+                reference_genome,
+                rdc,
+            ),
+        )
+        for rdc in dataset_type.selectable_reference_dataset_collections
+    }
     return {
-        annotation_fn.__name__: annotation_fn(mt)
+        annotation_fn.__name__: select(mt)
         for annotation_fn in annotation_fns
-        if annotation_fn(mt) is not None
+        if select(mt) is not None
     }
 
 
-def select_all(
-    mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    liftover_ref_path: str,
-) -> hl.MatrixTable:
-    return mt.select_rows(
-        **get_select_fields(mt, env, reference_genome, dataset_type, liftover_ref_path),
-    )
+def select_all(mt: hl.MatrixTable, **kwargs) -> hl.MatrixTable:
+    return mt.select_rows(**get_select_fields(mt, **kwargs))
