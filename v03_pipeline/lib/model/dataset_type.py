@@ -4,7 +4,12 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import Env, ReferenceGenome, SampleFileType
+from v03_pipeline.lib.model.definitions import (
+    AccessControl,
+    Env,
+    ReferenceGenome,
+    SampleFileType,
+)
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )

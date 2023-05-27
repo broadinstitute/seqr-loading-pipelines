@@ -3,9 +3,10 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.paths import reference_dataset_collection_path
 from v03_pipeline.lib.selects import gcnv, reference_dataset_collection, shared, snv, sv
 
-SCHEMA = {
+SELECTORS = {
     DatasetType.SNV: [
         reference_dataset_collection.hgmd,
         reference_dataset_collection.gnomad_non_coding_constraint,
@@ -61,9 +62,9 @@ def get_select_fields(
         for rdc in dataset_type.selectable_reference_dataset_collections(env)
     }
     return {
-        annotation_fn.__name__: select(mt, **kwargs, **rdc_hts)
-        for annotation_fn in SCHEMA[dataset_type]
-        if select(mt, **kwargs, **rdc_hts) is not None
+        selector.__name__: selector(mt, **kwargs, **rdc_hts)
+        for selector in SELECTORS[dataset_type]
+        if selector(mt, **kwargs, **rdc_hts) is not None
     }
 
 

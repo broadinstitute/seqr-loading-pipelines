@@ -10,11 +10,12 @@ from v03_pipeline.lib.misc.sample_ids import (
     subset_samples_and_variants,
 )
 from v03_pipeline.lib.model import SampleFileType, SampleType
+from v03_pipeline.lib.paths import reference_dataset_collection_path
 from v03_pipeline.lib.selects.select_all import select_all
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import RawFileTask, VCFFileTask
+from v03_pipeline.lib.tasks.files import HailTableTask, RawFileTask, VCFFileTask
 from v03_pipeline.lib.vep import run_vep
 
 
