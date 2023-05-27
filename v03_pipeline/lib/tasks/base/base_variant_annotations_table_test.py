@@ -14,40 +14,24 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
+TEST_COMBINED_1 = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
+TEST_INTERVAL_REFERENCE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class BaseVariantAnnotationsTableTest(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
-        write_ht(
-            env=Env.LOCAL,
-            ht=hl.Table.parallelize(
-                [
-                    {
-                        'locus': hl.Locus(
-                            contig='chr1',
-                            position=871269,
-                            reference_genome='GRCh38',
-                        ),
-                        'alleles': ['A', 'C'],
-                        'cadd': 1,
-                        'clinvar': 2,
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
-                    cadd=hl.tint32,
-                    clinvar=hl.tint32,
-                ),
-                ['locus', 'alleles'],
-            ),
-            destination_path=os.path.join(
-                f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
-            ),
-            checkpoint=False,
+        shutil.copytree(
+            TEST_COMBINED_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
         )
+        shutil.copytree(
+            TEST_INTERVAL_REFERENCE_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
+        )
+        
 
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):
