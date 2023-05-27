@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from v03_pipeline.lib.model.definitions import AccessControl, DatasetType
-
+from v03_pipeline.lib.model.definitions import AccessControl
 
 class ReferenceDatasetCollection(Enum):
     COMBINED = 'combined'
@@ -16,15 +15,6 @@ class ReferenceDatasetCollection(Enum):
         if self == ReferenceDatasetCollection.HGMD:
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
-
-    @property
-    def dataset_type(self) -> DatasetType:
-        return {
-            ReferenceDatasetCollection.COMBINED: DatasetType.SNV,
-            ReferenceDatasetCollection.COMBINED_MITO: DatasetType.MITO,
-            ReferenceDatasetCollection.HGMD: DatasetType.SNV,
-            ReferenceDatasetCollection.INTERVAL_REFERENCE: DatasetType.SNV,
-        }[self]
 
     @property
     def reference_datasets(self) -> list[str]:

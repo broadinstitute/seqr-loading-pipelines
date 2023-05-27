@@ -1,10 +1,13 @@
 import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.selects import gcnv, shared, snv, sv
+from v03_pipeline.lib.selects import gcnv, reference_dataset_collection, shared, snv, sv
 
 SCHEMA = {
     DatasetType.SNV: [
+        reference_dataset_collection.hgmd,
+        reference_dataset_collection.gnomad_non_coding_constraint,
+        reference_dataset_collection.screen,
         snv.original_alt_alleles,
         shared.pos,
         shared.rg37_locus,
@@ -35,7 +38,10 @@ SCHEMA = {
 
 def get_select_fields(
     mt: hl.MatrixTable,
+    env: Env,
+    reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    liftover_ref_path: str,
 ) -> dict[str, hl.Expression]:
     annotation_fns = SCHEMA[dataset_type]
     return {
@@ -52,4 +58,6 @@ def select_all(
     dataset_type: DatasetType,
     liftover_ref_path: str,
 ) -> hl.MatrixTable:
-    return mt.select_rows(**get_select_fields(mt, dataset_type))
+    return mt.select_rows(
+        **get_select_fields(mt, env, reference_genome, dataset_type, liftover_ref_path),
+    )
