@@ -3,6 +3,10 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.fields import (
+    get_reference_dataset_collection_fields,
+    get_variant_fields,
+)
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
@@ -10,7 +14,6 @@ from v03_pipeline.lib.misc.sample_ids import (
     subset_samples_and_variants,
 )
 from v03_pipeline.lib.model import SampleFileType, SampleType
-from v03_pipeline.lib.selects.fields import get_field_expressions
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -93,7 +96,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.vep_config_json_path,
         )
         new_variants_mt = new_variants_mt.select_rows(
-            **get_field_expressions(new_variants_mt, **self.param_kwargs),
+            **get_reference_dataset_collection_fields(
+                new_variants_mt, **self.param_kwargs,
+            ),
+            **get_variant_fields(new_variants_mt, **self.param_kwargs),
         )
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(

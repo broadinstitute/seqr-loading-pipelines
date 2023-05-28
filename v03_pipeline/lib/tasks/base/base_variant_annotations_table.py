@@ -3,11 +3,14 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.fields import (
+    get_reference_dataset_collection_fields,
+    get_variant_fields,
+)
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.selects.fields import get_field_expressions
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import (
     GCSorLocalFolderTarget,
@@ -44,7 +47,9 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                 ),
             ),
         ]
-        for rdc in self.dataset_type.selectable_reference_dataset_collections(self.env):
+        for rdc in self.dataset_type.annotatable_reference_dataset_collections(
+            self.env,
+        ):
             requirements.append(
                 HailTableTask(
                     reference_dataset_collection_path(
@@ -72,7 +77,13 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-            ht = ht.annotate(**get_field_expressions(ht, **self.param_kwargs))
+            ht = ht.annotate(
+                **get_reference_dataset_collection_fields(ht, **self.param_kwargs),
+                # NB: We will endeavor to remove the below line by calling this
+                # function over the base reference dataset collection itself when
+                # it is created.
+                **get_variant_fields(ht, **self.param_kwargs),
+            )
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

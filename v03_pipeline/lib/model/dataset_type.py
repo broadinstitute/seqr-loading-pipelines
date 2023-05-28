@@ -28,7 +28,7 @@ class DatasetType(Enum):
             DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
         }.get(self)
 
-    def selectable_reference_dataset_collections(
+    def annotatable_reference_dataset_collections(
         self,
         env: Env,
     ) -> list[ReferenceDatasetCollection]:

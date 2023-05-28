@@ -2,8 +2,8 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.annotations.shared import sorted_transcript_consequences
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.selects.shared import sorted_transcript_consequences
 from v03_pipeline.lib.vep import run_vep
 
 
