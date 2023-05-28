@@ -97,7 +97,8 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         )
         new_variants_mt = new_variants_mt.select_rows(
             **get_reference_dataset_collection_fields(
-                new_variants_mt, **self.param_kwargs,
+                new_variants_mt,
+                **self.param_kwargs,
             ),
             **get_variant_fields(new_variants_mt, **self.param_kwargs),
         )
