@@ -9,8 +9,8 @@ from v03_pipeline.lib.misc.sample_ids import (
     remap_sample_ids,
     subset_samples_and_variants,
 )
-from v03_pipeline.lib.model import ReferenceGenome, SampleFileType, SampleType
-from v03_pipeline.lib.selects.fields import get_fields
+from v03_pipeline.lib.model import SampleFileType, SampleType
+from v03_pipeline.lib.selects.fields import get_field_expressions
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -29,10 +29,6 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         description='Disable checking whether the dataset matches the specified sample type and genome version',
     )
     ignore_missing_samples = luigi.BoolParameter(default=False)
-    liftover_ref_path = luigi.OptionalParameter(
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-        description='Path to GRCh38 to GRCh37 coordinates file',
-    )
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
@@ -86,8 +82,8 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         # Get new rows, annotate them with vep, transform with selects,
         # then stack onto the existing variant annotations table.
         # NB: the `unify=True` on the `union` here gives us the remainder
-        # of the fields defined on the existing table but not over the new rows 
-        # (most importantly, the reference dataset fields).  
+        # of the fields defined on the existing table but not over the new rows
+        # (most importantly, the reference dataset fields).
         new_variants_mt = callset_mt.anti_join_rows(existing_ht)
         new_variants_mt = run_vep(
             new_variants_mt,
@@ -97,7 +93,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.vep_config_json_path,
         )
         new_variants_mt = new_variants_mt.select_rows(
-            **get_field_expression(new_variants_mt, **self.param_kwargs)
+            **get_field_expressions(new_variants_mt, **self.param_kwargs),
         )
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(

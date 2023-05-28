@@ -3,7 +3,6 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -18,7 +17,10 @@ from v03_pipeline.lib.tasks.files import (
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
+    liftover_ref_path = luigi.OptionalParameter(
+        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
+        description='Path to GRCh38 to GRCh37 coordinates file',
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
