@@ -77,7 +77,11 @@ def pos(mt: hl.MatrixTable) -> hl.Expression:
 
 
 def rg37_locus(ht: hl.Table) -> hl.Expression:
-    return ht.rg37_locus
+    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    if rg38.has_liftover(rg37):
+        return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
+    return hl.missing(hl.tlocus(ReferenceGenome.GRCh37.value))
 
 
 def xpos(mt: hl.MatrixTable) -> hl.Expression:

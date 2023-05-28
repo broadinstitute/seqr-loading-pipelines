@@ -7,9 +7,7 @@ def hgmd(
     mt: hl.MatrixTable,
     hgmd_ht: hl.Table | None,
     **_,
-) -> hl.Expression | None:
-    if not hgmd_ht:
-        return None
+) -> hl.Expression:
     return hgmd_ht[mt.row_key].hgmd
 
 

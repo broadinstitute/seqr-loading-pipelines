@@ -8,13 +8,13 @@ from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
 )
+from v03_pipeline.lib.selects.fields import get_field_expressions
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import (
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
     HailTableTask,
 )
-from v03_pipeline.lib.selects.fields import get_fields
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -40,7 +40,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.reference_genome,
                     self.dataset_type.base_reference_dataset_collection,
                 ),
-            )
+            ),
         ]
         for rdc in self.dataset_type.selectable_reference_dataset_collections(self.env):
             requirements.append(
@@ -70,7 +70,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-            ht = ht.annotate(**get_fields(ht))
+            ht = ht.annotate(**get_field_expressions(ht, **self.param_kwargs))
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )
