@@ -45,7 +45,7 @@ def get_field_expressions(
     mt: hl.MatrixTable,
     **kwargs: Any,
 ) -> dict[str, hl.Expression]:
-    dataset_type = (kwargs['dataset_type'],)
+    dataset_type = kwargs['dataset_type']
     fields = {
         field_expression.__name__: field_expression(mt, **kwargs)
         for field_expression in SCHEMA[dataset_type]
