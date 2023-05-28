@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.sample_ids import (
 )
 from v03_pipeline.lib.model import SampleFileType, SampleType
 from v03_pipeline.lib.paths import reference_dataset_collection_path
-from v03_pipeline.lib.selects.select_all import select_all
+from v03_pipeline.lib.selects.fields import get_fields
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -30,34 +30,20 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         description='Disable checking whether the dataset matches the specified sample type and genome version',
     )
     ignore_missing_samples = luigi.BoolParameter(default=False)
-    liftover_ref_path = luigi.OptionalParameter(
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-        description='Path to GRCh38 to GRCh37 coordinates file',
-    )
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
     )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = [
+        return [
+            *super().requires(),
             VCFFileTask(self.callset_path)
             if self.dataset_type.sample_file_type == SampleFileType.VCF
             else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
-        for rdc in self.dataset_type.selectable_reference_dataset_collections(self.env):
-            requirements.append(
-                HailTableTask(
-                    reference_dataset_collection_path(
-                        self.env,
-                        self.reference_genome,
-                        rdc,
-                    ),
-                ),
-            )
-        return requirements
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
@@ -104,7 +90,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.dataset_type,
             self.vep_config_json_path,
         )
-        new_variants_mt = select_all(new_variants_mt, **self.param_kwargs)
+        new_variants_mt = new_variants_mt.select_rows(**get_fields(new_variants_mt))
         unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
         return unioned_ht.annotate_globals(
             updates=unioned_ht.updates.add(

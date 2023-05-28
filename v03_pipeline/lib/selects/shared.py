@@ -72,35 +72,23 @@ SELECTED_ANNOTATIONS = [
 ]
 
 
-def pos(mt: hl.MatrixTable, **_):
+def pos(mt: hl.MatrixTable) -> hl.Expression:
     return expression_helpers.get_expr_for_start_pos(mt)
 
 
-def rg37_locus(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    liftover_ref_path: str,
-    **_,
-) -> hl.Expression | None:
-    # Add liftover
-    if reference_genome == ReferenceGenome.GRCh37:
-        return None
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
-    return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
+def rg37_locus(ht: hl.Table) -> hl.Expression:
+    return ht.rg37_locus
 
 
-def xpos(mt: hl.MatrixTable, **_) -> hl.Expression:
+def xpos(mt: hl.MatrixTable) -> hl.Expression:
     return expression_helpers.get_expr_for_xpos(mt.locus)
 
 
-def variant_id(mt: hl.MatrixTable, **_) -> hl.Expression:
+def variant_id(mt: hl.MatrixTable) -> hl.Expression:
     return expression_helpers.get_expr_for_variant_id(mt)
 
 
-def sorted_transcript_consequences(mt: hl.MatrixTable, **_) -> hl.Expression:
+def sorted_transcript_consequences(mt: hl.MatrixTable) -> hl.Expression:
     result = hl.sorted(
         mt.vep.transcript_consequences.map(
             lambda c: c.select(

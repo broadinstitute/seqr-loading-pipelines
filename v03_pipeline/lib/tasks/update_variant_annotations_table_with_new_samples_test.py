@@ -26,6 +26,8 @@ TEST_INTERVAL_REFERENCE_1 = (
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -37,7 +39,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
             TEST_HGMD_1,
             f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
         )
-
 
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):
@@ -139,11 +140,93 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.add(uvatwns_task_5)
         worker.run()
         self.assertTrue(uvatwns_task_5.complete())
-        self.assertEqual(
-            hl.read_table(uvatwns_task_5.output().path).count(),
-            30,
-        )
-        self.assertEqual(
-            hl.read_table(uvatwns_task_5.output().path).count(),
-            30,
+        ht = hl.read_table(uvatwns_task_5.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertCountEqual(
+            [
+                x
+                for x in ht.select(
+                    'cadd',
+                    'clinvar',
+                    'hgmd',
+                    'variant_id',
+                    'pos',
+                    'original_alt_alleles',
+                ).collect()
+            ],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    cadd=1,
+                    clinvar=2,
+                    hgmd=hl.Struct(
+                        accession='abcdefg',
+                        class_id=3,
+                    ),
+                    variant_id='1-871269-A-C',
+                    pos=871269,
+                    original_alt_alleles=['chr1-871269-A-C'],
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=874734,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['C', 'T'],
+                    cadd=None,
+                    clinvar=None,
+                    hgmd=None,
+                    variant_id='1-874734-C-T',
+                    pos=874734,
+                    original_alt_alleles=['chr1-874734-C-T'],
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    cadd=None,
+                    clinvar=None,
+                    hgmd=None,
+                    variant_id='1-876499-A-G',
+                    pos=876499,
+                    original_alt_alleles=['chr1-876499-A-G'],
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=878314,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    cadd=None,
+                    clinvar=None,
+                    hgmd=None,
+                    variant_id='1-878314-G-C',
+                    pos=878314,
+                    original_alt_alleles=['chr1-878314-G-C'],
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=878809,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['C', 'T'],
+                    cadd=None,
+                    clinvar=None,
+                    hgmd=None,
+                    variant_id='1-878809-C-T',
+                    pos=878809,
+                    original_alt_alleles=['chr1-878809-C-T'],
+                ),
+            ],
         )

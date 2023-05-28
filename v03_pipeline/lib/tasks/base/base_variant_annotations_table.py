@@ -14,6 +14,7 @@ from v03_pipeline.lib.tasks.files import (
     GCSorLocalTarget,
     HailTableTask,
 )
+from v03_pipeline.lib.selects.fields import get_fields
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -32,13 +33,26 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
-        return HailTableTask(
-            reference_dataset_collection_path(
-                self.env,
-                self.reference_genome,
-                self.dataset_type.base_reference_dataset_collection,
-            ),
-        )
+        requirements = [
+            HailTableTask(
+                reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type.base_reference_dataset_collection,
+                ),
+            )
+        ]
+        for rdc in self.dataset_type.selectable_reference_dataset_collections(self.env):
+            requirements.append(
+                HailTableTask(
+                    reference_dataset_collection_path(
+                        self.env,
+                        self.reference_genome,
+                        rdc,
+                    ),
+                ),
+            )
+        return requirements
 
     def initialize_table(self) -> hl.Table:
         if self.dataset_type.base_reference_dataset_collection is None:
@@ -56,6 +70,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
+            ht = ht.annotate(**get_fields(ht))
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

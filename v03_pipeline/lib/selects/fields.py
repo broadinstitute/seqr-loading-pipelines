@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Any
 
 import hail as hl
@@ -7,7 +8,7 @@ from v03_pipeline.lib.model import DatasetType
 from v03_pipeline.lib.paths import reference_dataset_collection_path
 from v03_pipeline.lib.selects import gcnv, reference_dataset_collection, shared, snv, sv
 
-SELECTORS = {
+FIELD_EXPRESSIONS = {
     DatasetType.SNV: [
         reference_dataset_collection.hgmd,
         reference_dataset_collection.gnomad_non_coding_constraint,
@@ -40,7 +41,7 @@ SELECTORS = {
 }
 
 
-def get_select_fields(
+def get_fields(
     mt: hl.MatrixTable,
     **kwargs: Any,
 ) -> dict[str, hl.Expression]:
@@ -63,11 +64,7 @@ def get_select_fields(
         for rdc in dataset_type.selectable_reference_dataset_collections(env)
     }
     return {
-        selector.__name__: selector(mt, **kwargs, **rdc_hts)
-        for selector in SELECTORS[dataset_type]
-        if selector(mt, **kwargs, **rdc_hts) is not None
+        field_expression.__name__: field_expression(mt, **kwargs, **rdc_hts)
+        for field_expression in FIELD_EXPRESSIONS[dataset_type]
+        if field_expression(mt, **kwargs, **rdc_hts) is not None
     }
-
-
-def select_all(mt: hl.MatrixTable, **kwargs: Any) -> hl.MatrixTable:
-    return mt.select_rows(**get_select_fields(mt, **kwargs))
