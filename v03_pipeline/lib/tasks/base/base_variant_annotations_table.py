@@ -77,13 +77,18 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-            ht = ht.annotate(
-                **get_reference_dataset_collection_fields(ht, **self.param_kwargs),
+            # Do a little matrix table conversion dance just because
+            # the annotations expect a MatrixTable.  We can easily tweak
+            # the few annotations that break if we pass a Table though...
+            mt = hl.MatrixTable.from_rows_table(ht)
+            mt = mt.annotate(
+                **get_reference_dataset_collection_fields(mt, **self.param_kwargs),
                 # NB: We will endeavor to remove the below line by calling this
                 # function over the base reference dataset collection itself when
                 # it is created.
-                **get_variant_fields(ht, **self.param_kwargs),
+                **get_variant_fields(mt, **self.param_kwargs),
             )
+            ht = mt.rows()
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )
