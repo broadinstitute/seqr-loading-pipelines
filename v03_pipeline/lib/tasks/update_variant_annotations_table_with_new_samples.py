@@ -48,6 +48,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
             UpdateSampleLookupTableTask(
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.hail_temp_dir,
                 self.sample_type,
                 self.callset_path,
                 self.project_remap_path,
@@ -64,7 +68,7 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             ),
         )
 
-    def update(self, existing_ht: hl.Table) -> hl.Table:
+    def update(self, ht: hl.Table) -> hl.Table:
         # Import required files.
         callset_mt = import_callset(
             self.callset_path,
@@ -83,21 +87,12 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.ignore_missing_samples,
         )
 
-        # Split multi alleles
-        if callset_mt.row_key.dtype.fields == ('locus', 'alleles'):
-            callset_mt = hl.split_multi_hts(
-                callset_mt.annotate_rows(
-                    locus_old=callset_mt.locus,
-                    alleles_old=callset_mt.alleles,
-                ),
-            )
-
         # Get new rows, annotate them with vep, transform with selects,
         # then stack onto the existing variant annotations table.
         # NB: the `unify=True` on the `union` here gives us the remainder
         # of the fields defined on the existing table but not over the new rows
         # (most importantly, the reference dataset fields).
-        new_variants_mt = callset_mt.anti_join_rows(existing_ht)
+        new_variants_mt = callset_mt.anti_join_rows(ht)
         new_variants_mt = run_vep(
             new_variants_mt,
             self.env,
@@ -112,9 +107,9 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             ),
             **get_variant_fields(new_variants_mt, **self.param_kwargs),
         )
-        unioned_ht = existing_ht.union(new_variants_mt.rows(), unify=True)
-        return unioned_ht.annotate_globals(
-            updates=unioned_ht.updates.add(
+        ht = ht.union(new_variants_mt.rows(), unify=True)
+        return ht.annotate_globals(
+            updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),
             ),
         )

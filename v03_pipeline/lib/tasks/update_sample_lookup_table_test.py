@@ -48,7 +48,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_reference_data):
             shutil.rmtree(self._temp_local_reference_data)
 
-    def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
+    def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         worker = luigi.worker.Worker()

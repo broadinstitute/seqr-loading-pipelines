@@ -3,6 +3,12 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
+from v03_pipeline.lib.misc.pedigree import samples_to_include
+from v03_pipeline.lib.misc.sample_ids import (
+    remap_sample_ids,
+    subset_samples_and_variants,
+)
 from v03_pipeline.lib.model import SampleFileType, SampleType
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
@@ -62,6 +68,24 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
+        # Import required files.
+        #callset_mt = import_callset(
+        #    self.callset_path,
+        #    self.reference_genome,
+        #    self.dataset_type,
+        #)
+        #project_remap_ht = import_remap(self.project_remap_path)
+        #pedigree_ht = import_pedigree(self.project_pedigree_path)
+#
+        ## Remap, then subset to samples & variants of interest.
+        #callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+        #sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
+        #callset_mt = subset_samples_and_variants(
+        #    callset_mt,
+        #    sample_subset_ht,
+        #    self.ignore_missing_samples,
+        #)
+        #callset_mt.anti_join_rows(ht)
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),
