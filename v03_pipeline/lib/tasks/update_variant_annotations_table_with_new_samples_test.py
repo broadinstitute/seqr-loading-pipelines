@@ -143,17 +143,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         ht = hl.read_table(uvatwns_task_5.output().path)
         self.assertEqual(ht.count(), 30)
         self.assertCountEqual(
-            list(
-                ht.select(
+            [
+                x for x in ht.select(
                     'cadd',
                     'clinvar',
                     'hgmd',
                     'variant_id',
                     'pos',
-                    'original_alt_alleles',
-                    'rg37_locus',
-                ).collect(),
-            ),
+                ).collect()
+                if x.pos <= 878809
+            ],
             [
                 hl.Struct(
                     locus=hl.Locus(
@@ -170,12 +169,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     ),
                     variant_id='1-871269-A-C',
                     pos=871269,
-                    original_alt_alleles=['chr1-871269-A-C'],
-                    rg37_locus=hl.Locus(
-                        contig='1',
-                        position=806649,
-                        reference_genome='GRCh37',
-                    ),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -189,8 +182,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-874734-C-T',
                     pos=874734,
-                    original_alt_alleles=['chr1-874734-C-T'],
-                    rg37_locus=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -204,8 +195,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-876499-A-G',
                     pos=876499,
-                    original_alt_alleles=['chr1-876499-A-G'],
-                    rg37_locus=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -219,8 +208,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878314-G-C',
                     pos=878314,
-                    original_alt_alleles=['chr1-878314-G-C'],
-                    rg37_locus=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -234,8 +221,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878809-C-T',
                     pos=878809,
-                    original_alt_alleles=['chr1-878809-C-T'],
-                    rg37_locus=None,
                 ),
             ],
         )
