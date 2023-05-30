@@ -22,6 +22,8 @@ TEST_INTERVAL_REFERENCE_1 = (
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class BaseVariantAnnotationsTableTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -69,9 +71,21 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         ht = hl.read_table(vat_task.output().path)
         self.assertEqual(ht.count(), 1)
         self.assertEqual(list(ht.key.keys()), ['locus', 'alleles'])
-        self.assertEqual(
-            ht.collect(),
+        self.assertListEqual(
+            ht.drop('vep', 'sorted_transcript_consequences').collect(),
             [
-                hl.Struct(ben=2),
+                hl.Struct(
+                    alleles=['A', 'C'],
+                    cadd=1,
+                    clinvar=2,
+                    gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
+                    hgmd=hl.Struct(accession='abcdefg', class_id=3),
+                    locus=hl.Locus(contig='chr1', position=871269, reference_genome='GRCh38'),
+                    pos=871269,
+                    rg37_locus=hl.Locus(contig=1, position=806649, reference_genome='GRCh37'),
+                    screen=hl.Struct(region_type_ids=[1]),
+                    variant_id='1-871269-A-C',
+                    xpos=1000871269,
+                ),
             ],
         )

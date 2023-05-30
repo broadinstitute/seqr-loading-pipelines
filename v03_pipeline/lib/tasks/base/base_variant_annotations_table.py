@@ -81,7 +81,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
             # the annotations expect a MatrixTable.  We can easily tweak
             # the few annotations that break if we pass a Table though...
             mt = hl.MatrixTable.from_rows_table(ht)
-            mt = mt.annotate(
+            mt = mt.annotate_rows(
                 **get_reference_dataset_collection_fields(mt, **self.param_kwargs),
                 # NB: We will endeavor to remove the below line by calling this
                 # function over the base reference dataset collection itself when

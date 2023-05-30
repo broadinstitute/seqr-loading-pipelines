@@ -6,7 +6,10 @@ from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.fields import get_reference_dataset_collection_fields, get_variant_fields
+from v03_pipeline.lib.annotations.fields import (
+    get_reference_dataset_collection_fields,
+    get_variant_fields,
+)
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
@@ -48,7 +51,7 @@ class FieldsTest(unittest.TestCase):
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
-                ).keys()
+                ).keys(),
             ),
             ['hgmd', 'gnomad_non_coding_constraint', 'screen'],
         )
@@ -59,7 +62,7 @@ class FieldsTest(unittest.TestCase):
                     env=Env.LOCAL,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
-                ).keys()
+                ).keys(),
             ),
             ['gnomad_non_coding_constraint', 'screen'],
         )
@@ -70,7 +73,7 @@ class FieldsTest(unittest.TestCase):
                     env=Env.TEST,
                     dataset_type=DatasetType.MITO,
                     reference_genome=ReferenceGenome.GRCh38,
-                ).keys()
+                ).keys(),
             ),
             [],
         )
@@ -86,7 +89,7 @@ class FieldsTest(unittest.TestCase):
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
                     liftover_ref_path=LIFTOVER,
-                ).keys()
+                ).keys(),
             ),
             [
                 'rg37_locus',
@@ -104,7 +107,7 @@ class FieldsTest(unittest.TestCase):
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh37,
                     liftover_ref_path=LIFTOVER,
-                ).keys()
+                ).keys(),
             ),
             [
                 'pos',
