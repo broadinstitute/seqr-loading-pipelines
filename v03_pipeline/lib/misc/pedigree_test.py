@@ -13,7 +13,7 @@ TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
 TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
 
 
-class DownloadUtilsTest(unittest.TestCase):
+class PedigreesTest(unittest.TestCase):
     def test_empty_pedigree(self) -> None:
         with self.assertRaises(ValueError):
             _ = import_pedigree(TEST_PEDIGREE_1)

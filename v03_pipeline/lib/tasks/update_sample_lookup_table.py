@@ -3,6 +3,11 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.genotypes import (
+    compute_callset_genotypes,
+    remove_existing_calls,
+    union_genotypes_hts,
+)
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
@@ -69,23 +74,24 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def update(self, ht: hl.Table) -> hl.Table:
         # Import required files.
-        #callset_mt = import_callset(
-        #    self.callset_path,
-        #    self.reference_genome,
-        #    self.dataset_type,
-        #)
-        #project_remap_ht = import_remap(self.project_remap_path)
-        #pedigree_ht = import_pedigree(self.project_pedigree_path)
-#
-        ## Remap, then subset to samples & variants of interest.
-        #callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
-        #sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
-        #callset_mt = subset_samples_and_variants(
-        #    callset_mt,
-        #    sample_subset_ht,
-        #    self.ignore_missing_samples,
-        #)
-        #callset_mt.anti_join_rows(ht)
+        callset_mt = import_callset(
+            self.callset_path,
+            self.reference_genome,
+            self.dataset_type,
+        )
+        project_remap_ht = import_remap(self.project_remap_path)
+        pedigree_ht = import_pedigree(self.project_pedigree_path)
+
+        # Remap, then subset to samples & variants of interest.
+        callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
+        callset_mt = subset_samples_and_variants(
+            callset_mt,
+            sample_subset_ht,
+            self.ignore_missing_samples,
+        )
+        ht = remove_existing_calls(ht, sample_subset_ht)
+        ht = union_genotypes_hts(ht, compute_callset_genotypes(callset_mt))
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),
