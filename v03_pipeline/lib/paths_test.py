@@ -10,8 +10,8 @@ from v03_pipeline.lib.paths import (
     family_table_path,
     project_table_path,
     reference_dataset_collection_path,
+    sample_lookup_table_path,
     variant_annotations_table_path,
-    variant_lookup_table_path,
 )
 
 
@@ -76,6 +76,16 @@ class TestPaths(unittest.TestCase):
             None,
         )
 
+    def test_sample_lookup_table_path(self) -> None:
+        self.assertEqual(
+            sample_lookup_table_path(
+                Env.LOCAL,
+                ReferenceGenome.GRCh37,
+                DatasetType.SV,
+            ),
+            'seqr-datasets/GRCh37/v03/SV/lookup.ht',
+        )
+
     def test_variant_annotations_table_path(self) -> None:
         self.assertEqual(
             variant_annotations_table_path(
@@ -84,14 +94,4 @@ class TestPaths(unittest.TestCase):
                 DatasetType.GCNV,
             ),
             'gs://seqr-scratch-temp/GRCh38/v03/GCNV/annotations.ht',
-        )
-
-    def test_variant_lookup_table_path(self) -> None:
-        self.assertEqual(
-            variant_lookup_table_path(
-                Env.LOCAL,
-                ReferenceGenome.GRCh37,
-                DatasetType.SV,
-            ),
-            'seqr-datasets/GRCh37/v03/SV/lookup.ht',
         )

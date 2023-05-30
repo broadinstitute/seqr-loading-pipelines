@@ -110,6 +110,22 @@ def reference_dataset_collection_path(
     )
 
 
+def sample_lookup_table_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            DataRoot.SEQR_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        'lookup.ht',
+    )
+
+
 def variant_annotations_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -123,20 +139,4 @@ def variant_annotations_table_path(
             dataset_type,
         ),
         'annotations.ht',
-    )
-
-
-def variant_lookup_table_path(
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    return os.path.join(
-        _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
-            reference_genome,
-            dataset_type,
-        ),
-        'lookup.ht',
     )

@@ -18,6 +18,9 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import RawFileTask, VCFFileTask
+from v03_pipeline.lib.tasks.update_sample_lookup_table import (
+    UpdateSampleLookupTableTask,
+)
 from v03_pipeline.lib.vep import run_vep
 
 
@@ -26,7 +29,6 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-
     dont_validate = luigi.BoolParameter(
         default=False,
         description='Disable checking whether the dataset matches the specified sample type and genome version',
@@ -45,6 +47,14 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             else RawFileTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
+            UpdateSampleLookupTableTask(
+                self.sample_type,
+                self.callset_path,
+                self.project_remap_path,
+                self.project_pedigree_path,
+                self.dont_validate,
+                self.ignore_missing_samples,
+            ),
         ]
 
     def complete(self) -> bool:

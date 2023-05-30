@@ -26,8 +26,6 @@ TEST_INTERVAL_REFERENCE_1 = (
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -144,14 +142,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         self.assertEqual(ht.count(), 30)
         self.assertCountEqual(
             [
-                x for x in ht.select(
+                x
+                for x in ht.select(
                     'cadd',
                     'clinvar',
                     'hgmd',
                     'variant_id',
                     'pos',
                 ).collect()
-                if x.pos <= 878809
+                if x.pos <= 878809  # noqa: PLR2004
             ],
             [
                 hl.Struct(
