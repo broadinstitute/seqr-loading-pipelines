@@ -2,12 +2,14 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.genotypes import remove_existing_calls, union_genotypes_hts
+from v03_pipeline.lib.misc.genotypes import (
+    remove_callset_sample_ids,
+    union_sample_lookup_hts,
+)
 
 
 class GenotypesTest(unittest.TestCase):
-    maxDiff = None
-    def test_remove_existing_genotypes(self):
+    def test_remove_callset_sample_ids(self):
         genotypes_ht = hl.Table.parallelize(
             [
                 {
@@ -45,7 +47,7 @@ class GenotypesTest(unittest.TestCase):
             ),
             key='s',
         )
-        genotypes_ht = remove_existing_calls(
+        genotypes_ht = remove_callset_sample_ids(
             genotypes_ht,
             samples_ht,
         )
@@ -69,7 +71,7 @@ class GenotypesTest(unittest.TestCase):
             ],
         )
 
-    def test_join_new_samples(self):
+    def test_union_sample_lookup_hts(self):
         genotypes_ht = hl.Table.parallelize(
             [
                 {
@@ -122,7 +124,7 @@ class GenotypesTest(unittest.TestCase):
             ),
             key='id',
         )
-        genotypes_ht = union_genotypes_hts(genotypes_ht, callset_genotypes_ht)
+        genotypes_ht = union_sample_lookup_hts(genotypes_ht, callset_genotypes_ht)
         self.assertCountEqual(
             genotypes_ht.collect(),
             [

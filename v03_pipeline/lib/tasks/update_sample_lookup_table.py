@@ -4,9 +4,9 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.genotypes import (
-    compute_callset_genotypes,
-    remove_existing_calls,
-    union_genotypes_hts,
+    compute_sample_lookup_ht,
+    remove_callset_sample_ids,
+    union_sample_lookup_hts,
 )
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
@@ -65,7 +65,13 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         key_type = self.dataset_type.table_key_type(self.reference_genome)
         ht = hl.Table.parallelize(
             [],
-            key_type,
+            hl.tstruct(
+                **key_type,
+                no_call_samples=hl.tset(hl.tstr),
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
+            ),
             key=key_type.fields,
         )
         return ht.annotate_globals(
@@ -90,8 +96,8 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             sample_subset_ht,
             self.ignore_missing_samples,
         )
-        ht = remove_existing_calls(ht, sample_subset_ht)
-        ht = union_genotypes_hts(ht, compute_callset_genotypes(callset_mt))
+        ht = remove_callset_sample_ids(ht, sample_subset_ht)
+        ht = union_sample_lookup_hts(ht, compute_sample_lookup_ht(callset_mt))
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),

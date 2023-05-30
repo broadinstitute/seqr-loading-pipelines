@@ -16,41 +16,19 @@ TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
-TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
-TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
-TEST_INTERVAL_REFERENCE_1 = (
-    'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
-)
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateSampleLookupTableTest(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
-        self._temp_local_reference_data = tempfile.TemporaryDirectory().name
-        shutil.copytree(
-            TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
-        )
-        shutil.copytree(
-            TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
-        )
-        shutil.copytree(
-            TEST_INTERVAL_REFERENCE_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
-        )
 
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_datasets):
             shutil.rmtree(self._temp_local_datasets)
 
-        if os.path.isdir(self._temp_local_reference_data):
-            shutil.rmtree(self._temp_local_reference_data)
-
     def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
         uslt_task = UpdateSampleLookupTableTask(
@@ -70,7 +48,169 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         )
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
-        self.assertEqual(
-            hl.read_table(uslt_task.output().path).count(),
-            0,
+        ht = hl.read_table(uslt_task.output().path)
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=876499, reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=878314, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00732_1'},
+                    het_samples={'HG00731_1', 'HG00733_1'},
+                    hom_samples=set(),
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=879576, reference_genome='GRCh38',
+                    ),
+                    alleles=['C', 'T'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00731_1', 'HG00733_1'},
+                    het_samples={'HG00732_1'},
+                    hom_samples=set(),
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=881627, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'A'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00732_1'},
+                    het_samples={'HG00733_1'},
+                    hom_samples={'HG00731_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=883625, reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=887560, reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=887801, reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=888659, reference_genome='GRCh38',
+                    ),
+                    alleles=['T', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=889158, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=889159, reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=894573, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'A'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples={'HG00732_1'},
+                    hom_samples={'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=897325, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=898323, reference_genome='GRCh38',
+                    ),
+                    alleles=['T', 'C'],
+                    no_call_samples=set(),
+                    ref_samples=set(),
+                    het_samples=set(),
+                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=900505, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'C'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00731_1'},
+                    het_samples={'HG00732_1', 'HG00733_1'},
+                    hom_samples=set(),
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=902069, reference_genome='GRCh38',
+                    ),
+                    alleles=['T', 'C'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00731_1', 'HG00733_1'},
+                    het_samples={'HG00732_1'},
+                    hom_samples=set(),
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1', position=902088, reference_genome='GRCh38',
+                    ),
+                    alleles=['G', 'A'],
+                    no_call_samples=set(),
+                    ref_samples={'HG00732_1', 'HG00733_1'},
+                    het_samples={'HG00731_1'},
+                    hom_samples=set(),
+                ),
+            ],
         )
