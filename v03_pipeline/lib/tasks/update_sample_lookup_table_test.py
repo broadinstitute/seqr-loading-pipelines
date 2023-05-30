@@ -64,6 +64,11 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         )
         worker.add(uslt_task)
         worker.run()
+        self.assertEqual(
+            uslt_task.output().path,
+            f'{self._temp_local_datasets}/GRCh38/v03/SNV/lookup.ht',
+        )
+        self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
         self.assertEqual(
             hl.read_table(uslt_task.output().path).count(),

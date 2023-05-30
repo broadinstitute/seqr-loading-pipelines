@@ -93,5 +93,5 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )
 
-    def update(self, mt: hl.Table) -> hl.Table:
-        return mt
+    def update(self, ht: hl.Table) -> hl.Table:
+        return ht

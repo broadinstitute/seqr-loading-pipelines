@@ -42,5 +42,5 @@ class BasePipelineTask(luigi.Task):
     def initialize_table(self) -> hl.Table:
         raise NotImplementedError
 
-    def update(self, mt: hl.Table) -> hl.Table:
+    def update(self, ht: hl.Table) -> hl.Table:
         raise NotImplementedError

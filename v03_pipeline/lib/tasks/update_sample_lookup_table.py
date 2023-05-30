@@ -6,7 +6,12 @@ import luigi
 from v03_pipeline.lib.model import SampleFileType, SampleType
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, GCSorLocalFolderTarget, RawFileTask, VCFFileTask
+from v03_pipeline.lib.tasks.files import (
+    GCSorLocalFolderTarget,
+    GCSorLocalTarget,
+    RawFileTask,
+    VCFFileTask,
+)
 
 
 class UpdateSampleLookupTableTask(BasePipelineTask):
@@ -56,5 +61,9 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )
 
-    def update(self, mt: hl.Table) -> hl.Table:
-        return mt
+    def update(self, ht: hl.Table) -> hl.Table:
+        return ht.annotate_globals(
+            updates=ht.updates.add(
+                (self.callset_path, self.project_pedigree_path),
+            ),
+        )
