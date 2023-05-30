@@ -14,14 +14,12 @@ class GenotypesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'no_call_samples': {'a', 'b', 'c'},
                     'ref_samples': set(),
                     'het_samples': {'b', 'd', 'f'},
                     'hom_samples': {'e', 'f'},
                 },
                 {
                     'id': 1,
-                    'no_call_samples': set(),
                     'ref_samples': {'f'},
                     'het_samples': {'a'},
                     'hom_samples': set(),
@@ -29,7 +27,6 @@ class GenotypesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
-                no_call_samples=hl.tset(hl.tstr),
                 ref_samples=hl.tset(hl.tstr),
                 het_samples=hl.tset(hl.tstr),
                 hom_samples=hl.tset(hl.tstr),
@@ -56,14 +53,12 @@ class GenotypesTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    no_call_samples={'a', 'b', 'c'},
                     ref_samples=set(),
                     het_samples={'b'},
                     hom_samples=set(),
                 ),
                 hl.Struct(
                     id=1,
-                    no_call_samples=set(),
                     ref_samples=set(),
                     het_samples={'a'},
                     hom_samples=set(),
@@ -76,14 +71,12 @@ class GenotypesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'no_call_samples': {'a', 'b', 'c'},
                     'ref_samples': set(),
                     'het_samples': {'b', 'd', 'f'},
                     'hom_samples': {'e', 'f'},
                 },
                 {
                     'id': 1,
-                    'no_call_samples': set(),
                     'ref_samples': {'f'},
                     'het_samples': {'a'},
                     'hom_samples': set(),
@@ -91,7 +84,6 @@ class GenotypesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
-                no_call_samples=hl.tset(hl.tstr),
                 ref_samples=hl.tset(hl.tstr),
                 het_samples=hl.tset(hl.tstr),
                 hom_samples=hl.tset(hl.tstr),
@@ -102,14 +94,12 @@ class GenotypesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'no_call_samples': {'d'},
                     'ref_samples': {'e'},
-                    'het_samples': {'f'},
+                    'het_samples': {'f', 'g'},
                     'hom_samples': set(),
                 },
                 {
                     'id': 2,
-                    'no_call_samples': set(),
                     'ref_samples': {'c'},
                     'het_samples': {'d'},
                     'hom_samples': set(),
@@ -117,7 +107,6 @@ class GenotypesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
-                no_call_samples=hl.tset(hl.tstr),
                 ref_samples=hl.tset(hl.tstr),
                 het_samples=hl.tset(hl.tstr),
                 hom_samples=hl.tset(hl.tstr),
@@ -130,21 +119,18 @@ class GenotypesTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    no_call_samples={'a', 'b', 'c', 'd'},
                     ref_samples={'e'},
                     het_samples={'b', 'd', 'f'},
-                    hom_samples={'e', 'f'},
+                    hom_samples={'e', 'f', 'g'},
                 ),
                 hl.Struct(
                     id=1,
-                    no_call_samples=set(),
                     ref_samples={'f'},
                     het_samples={'a'},
                     hom_samples=set(),
                 ),
                 hl.Struct(
                     id=2,
-                    no_call_samples=set(),
                     ref_samples={'c'},
                     het_samples={'d'},
                     hom_samples=set(),
