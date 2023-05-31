@@ -20,14 +20,12 @@ REFERENCE_DATASET_COLLECTION_ANNOTATIONS = {
 
 VARIANT_ANNOTATIONS = {
     DatasetType.SNV: [
-        # shared.rsid,
         shared.rg37_locus,
         shared.sorted_transcript_consequences,
         shared.variant_id,
         shared.xpos,
     ],
     DatasetType.MITO: [
-        # shared.rsid,
         shared.rg37_locus,
         shared.sorted_transcript_consequences,
         shared.variant_id,

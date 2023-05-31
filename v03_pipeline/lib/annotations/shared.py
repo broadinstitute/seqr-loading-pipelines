@@ -88,8 +88,6 @@ def rg37_locus(
         rg38.add_liftover(liftover_ref_path, rg37)
     return hl.liftover(mt.locus, ReferenceGenome.GRCh37.value)
 
-def rsid(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return mt.rsid
 
 def xpos(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return expression_helpers.get_expr_for_xpos(mt.locus)
