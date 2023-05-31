@@ -29,9 +29,6 @@ VARIANT_ANNOTATIONS = {
         shared.xpos,
     ],
     DatasetType.MITO: [
-        shared.AC,
-        shared.AF,
-        shared.AN,
         shared.rg37_locus,
         shared.sorted_transcript_consequences,
         shared.variant_id,
