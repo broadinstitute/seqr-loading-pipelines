@@ -9,70 +9,60 @@ from v03_pipeline.lib.annotations import (
     shared,
     sv,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceDatasetCollection
+from v03_pipeline.lib.model import AnnotationType, DatasetType
 
 if TYPE_CHECKING:
     import hail as hl
 
-REFERENCE_DATASET_COLLECTION_ANNOTATIONS = {
-    ReferenceDatasetCollection.HGMD: [
-        reference_dataset_collection.hgmd,
+
+ANNOTATION_CONFIG = {
+    (DatasetType.SNV, AnnotationType.FORMATTING): [
+        shared.rg37_locus,
+        shared.sorted_transcript_consequences,
+        shared.variant_id,
+        shared.xpos,
     ],
-    ReferenceDatasetCollection.INTERVAL_REFERENCE: [
+    (DatasetType.SNV, AnnotationType.REFERENCE_DATASET_COLLECTION): [
+        reference_dataset_collection.hgmd,
         reference_dataset_collection.gnomad_non_coding_constraint,
         reference_dataset_collection.screen,
     ],
-}
-
-VARIANT_ANNOTATIONS = {
-    DatasetType.SNV: [
+    (DatasetType.SNV, AnnotationType.SAMPLE_LOOKUP_TABLE): [
         sample_lookup_table.AC,
         sample_lookup_table.AF,
         sample_lookup_table.AN,
+    ],
+    (DatasetType.MITO, AnnotationType.FORMATTING): [
         shared.rg37_locus,
         shared.sorted_transcript_consequences,
         shared.variant_id,
         shared.xpos,
     ],
-    DatasetType.MITO: [
-        shared.rg37_locus,
-        shared.sorted_transcript_consequences,
-        shared.variant_id,
-        shared.xpos,
+    (DatasetType.MITO, AnnotationType.SAMPLE_LOOKUP_TABLE): [
+        sample_lookup_table.AC,
+        sample_lookup_table.AF,
+        sample_lookup_table.AN,
     ],
-    DatasetType.SV: [
+    (DatasetType.SV, AnnotationType.FORMATTING): [
         shared.rg37_locus,
         sv.variant_id,
         shared.xpos,
     ],
-    DatasetType.GCNV: [
+    (DatasetType.GCNV, AnnotationType.FORMATTING): [
         gcnv.variant_id,
         gcnv.xpos,
     ],
 }
 
 
-def get_reference_dataset_collection_fields(
-    mt: hl.MatrixTable,
-    **kwargs: Any,
-) -> dict[str, hl.Expression]:
-    env = kwargs['env']
-    dataset_type = kwargs['dataset_type']
-    fields = {
-        field_expression.__name__: field_expression(mt, **kwargs)
-        for rdc in dataset_type.annotatable_reference_dataset_collections(env)
-        for field_expression in REFERENCE_DATASET_COLLECTION_ANNOTATIONS[rdc]
-    }
-    return {k: v for k, v in fields.items() if v is not None}
-
-
-def get_variant_fields(
-    mt: hl.MatrixTable,
+def get_fields(
+    ht: hl.Table,
+    annotation_type: AnnotationType,
     **kwargs: Any,
 ) -> dict[str, hl.Expression]:
     dataset_type = kwargs['dataset_type']
     fields = {
-        field_expression.__name__: field_expression(mt, **kwargs)
-        for field_expression in VARIANT_ANNOTATIONS[dataset_type]
+        field_expression.__name__: field_expression(ht, **kwargs)
+        for field_expression in ANNOTATION_CONFIG.get((dataset_type, annotation_type), [])
     }
     return {k: v for k, v in fields.items() if v is not None}

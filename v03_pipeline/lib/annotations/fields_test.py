@@ -6,11 +6,8 @@ from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.fields import (
-    get_reference_dataset_collection_fields,
-    get_variant_fields,
-)
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
@@ -41,13 +38,14 @@ class FieldsTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_reference_data):
             shutil.rmtree(self._temp_local_reference_data)
 
-    def test_get_reference_dataset_collection_fields(self, mock_dataroot: Mock) -> None:
+    def test_get_rdc_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        mt = hl.MatrixTable.from_rows_table(hl.read_table(TEST_COMBINED_1))
+        ht = hl.read_table(TEST_COMBINED_1)
         self.assertCountEqual(
             list(
-                get_reference_dataset_collection_fields(
-                    mt,
+                get_fields(
+                    ht,
+                    AnnotationType.REFERENCE_DATASET_COLLECTION,
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -57,8 +55,9 @@ class FieldsTest(unittest.TestCase):
         )
         self.assertCountEqual(
             list(
-                get_reference_dataset_collection_fields(
-                    mt,
+                get_fields(
+                    ht,
+                    AnnotationType.REFERENCE_DATASET_COLLECTION,
                     env=Env.LOCAL,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -68,8 +67,9 @@ class FieldsTest(unittest.TestCase):
         )
         self.assertCountEqual(
             list(
-                get_reference_dataset_collection_fields(
-                    mt,
+                get_fields(
+                    ht,
+                    AnnotationType.REFERENCE_DATASET_COLLECTION,
                     env=Env.TEST,
                     dataset_type=DatasetType.MITO,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -78,13 +78,14 @@ class FieldsTest(unittest.TestCase):
             [],
         )
 
-    def test_get_variant_fields(self, mock_dataroot: Mock) -> None:
+    def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        mt = hl.MatrixTable.from_rows_table(hl.read_table(TEST_COMBINED_1))
+        ht = hl.read_table(TEST_COMBINED_1)
         self.assertCountEqual(
             list(
-                get_variant_fields(
-                    mt,
+                get_fields(
+                    ht,
+                    AnnotationType.FORMATTING,
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -93,7 +94,6 @@ class FieldsTest(unittest.TestCase):
             ),
             [
                 'rg37_locus',
-                'pos',
                 'sorted_transcript_consequences',
                 'variant_id',
                 'xpos',
@@ -101,8 +101,9 @@ class FieldsTest(unittest.TestCase):
         )
         self.assertCountEqual(
             list(
-                get_variant_fields(
-                    mt,
+                get_fields(
+                    ht,
+                    AnnotationType.FORMATTING,
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh37,
@@ -110,7 +111,6 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
-                'pos',
                 'sorted_transcript_consequences',
                 'variant_id',
                 'xpos',

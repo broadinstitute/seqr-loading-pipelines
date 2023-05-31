@@ -7,5 +7,5 @@ if TYPE_CHECKING:
     import hail as hl
 
 
-def variant_id(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return mt.rsid
+def variant_id(ht: hl.Table, **_: Any) -> hl.Expression:
+    return ht.rsid

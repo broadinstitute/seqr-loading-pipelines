@@ -75,7 +75,7 @@ SELECTED_ANNOTATIONS = [
 
 
 def rg37_locus(
-    mt: hl.MatrixTable,
+    ht: hl.Table,
     reference_genome: ReferenceGenome,
     liftover_ref_path: str,
     **_: Any,
@@ -86,20 +86,20 @@ def rg37_locus(
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
     if not rg38.has_liftover(rg37):
         rg38.add_liftover(liftover_ref_path, rg37)
-    return hl.liftover(mt.locus, ReferenceGenome.GRCh37.value)
+    return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
 
-def xpos(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return expression_helpers.get_expr_for_xpos(mt.locus)
+def xpos(ht: hl.Table, **_: Any) -> hl.Expression:
+    return expression_helpers.get_expr_for_xpos(ht.locus)
 
 
-def variant_id(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return expression_helpers.get_expr_for_variant_id(mt)
+def variant_id(ht: hl.Table, **_: Any) -> hl.Expression:
+    return expression_helpers.get_expr_for_variant_id(ht)
 
 
-def sorted_transcript_consequences(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
     result = hl.sorted(
-        mt.vep.transcript_consequences.map(
+        ht.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
                 consequence_term_ids=(
@@ -128,7 +128,7 @@ def sorted_transcript_consequences(mt: hl.MatrixTable, **_: Any) -> hl.Expressio
                 ),
                 hl.or_else(c.biotype, '') == 'protein_coding',
                 hl.set(c.consequence_term_ids).contains(
-                    CONSEQUENCE_TERMS_LOOKUP[mt.vep.most_severe_consequence],
+                    CONSEQUENCE_TERMS_LOOKUP[ht.vep.most_severe_consequence],
                 ),
                 hl.or_else(c.canonical, 0) == 1,
             )

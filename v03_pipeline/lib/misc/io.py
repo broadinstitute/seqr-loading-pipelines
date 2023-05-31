@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     # TODO implement me.
+    # also remember to annotate pos = hl.agg.min(mt.sample_start)
     return hl.import_table(callset_path)
 
 

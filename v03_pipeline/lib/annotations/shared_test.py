@@ -26,13 +26,12 @@ class SharedAnnotationsTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
         )
-        mt = hl.MatrixTable.from_rows_table(ht)
-        mt = run_vep(mt, Env.TEST, ReferenceGenome.GRCh38, DatasetType.SNV, None)
-        mt = mt.select_rows(
-            sorted_transcript_consequences=sorted_transcript_consequences(mt),
+        ht = run_vep(ht, Env.TEST, ReferenceGenome.GRCh38, DatasetType.SNV, None)
+        ht = ht.select(
+            sorted_transcript_consequences=sorted_transcript_consequences(ht),
         )
         self.assertCountEqual(
-            mt.sorted_transcript_consequences.collect(),
+            ht.sorted_transcript_consequences.collect(),
             [
                 [
                     hl.Struct(

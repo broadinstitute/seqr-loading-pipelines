@@ -31,15 +31,15 @@ class DatasetType(Enum):
     def annotatable_reference_dataset_collections(
         self,
         env: Env,
-    ) -> list[ReferenceDatasetCollection]:
+    ) -> set[ReferenceDatasetCollection]:
         rdcs = {
-            DatasetType.SNV: [
+            DatasetType.SNV: {
                 ReferenceDatasetCollection.HGMD,
                 ReferenceDatasetCollection.INTERVAL_REFERENCE,
-            ],
-        }.get(self, [])
+            },
+        }.get(self, set())
         if env == Env.LOCAL:
-            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
+            return {rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC}
         return rdcs
 
     def table_key_type(

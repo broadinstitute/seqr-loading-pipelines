@@ -3,17 +3,14 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.fields import (
-    get_reference_dataset_collection_fields,
-    get_variant_fields,
-)
+from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import (
     remap_sample_ids,
     subset_samples_and_variants,
 )
-from v03_pipeline.lib.model import SampleFileType, SampleType
+from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -88,27 +85,40 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
             self.ignore_missing_samples,
         )
 
-        # Get new rows, annotate them with vep, transform with selects,
+        # Get new rows, annotate them with vep, format and annotate them,
         # then stack onto the existing variant annotations table.
+        # We then re-annotate the entire table with the allele statistics.
         # NB: the `unify=True` on the `union` here gives us the remainder
         # of the fields defined on the existing table but not over the new rows
         # (most importantly, the reference dataset fields).
-        new_variants_mt = callset_mt.anti_join_rows(ht)
-        new_variants_mt = run_vep(
-            new_variants_mt,
+        new_variants_ht = callset_mt.anti_join_rows(ht).rows()
+        new_variants_ht = run_vep(
+            new_variants_ht,
             self.env,
             self.reference_genome,
             self.dataset_type,
             self.vep_config_json_path,
         )
-        new_variants_mt = new_variants_mt.select_rows(
-            **get_reference_dataset_collection_fields(
-                new_variants_mt,
+        new_variants_ht = new_variants_ht.select(
+            **get_fields(
+                new_variants_ht,
+                AnnotationType.FORMATTING,
                 **self.param_kwargs,
             ),
-            **get_variant_fields(new_variants_mt, **self.param_kwargs),
+            **get_fields(
+                new_variants_ht,
+                AnnotationType.REFERENCE_DATASET_COLLECTION,
+                **self.param_kwargs,
+            ),
         )
-        ht = ht.union(new_variants_mt.rows(), unify=True)
+        ht = ht.union(new_variants_ht, unify=True)
+        ht = ht.annotate(
+            **get_fields(
+                ht,
+                AnnotationType.SAMPLE_LOOKUP_TABLE,
+                **self.param_kwargs,
+            ),
+        )
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),

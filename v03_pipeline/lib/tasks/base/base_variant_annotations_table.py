@@ -3,10 +3,8 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.fields import (
-    get_reference_dataset_collection_fields,
-    get_variant_fields,
-)
+from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
     reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -77,18 +75,17 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-            # Do a little matrix table conversion dance just because
-            # the annotations expect a MatrixTable.  We can easily tweak
-            # the few annotations that break if we pass a Table though...
-            mt = hl.MatrixTable.from_rows_table(ht)
-            mt = mt.annotate_rows(
-                **get_reference_dataset_collection_fields(mt, **self.param_kwargs),
-                # NB: We will endeavor to remove the below line by calling this
-                # function over the base reference dataset collection itself when
-                # it is created.
-                **get_variant_fields(mt, **self.param_kwargs),
+            ht = ht.annotate(
+                **get_fields(
+                    ht,
+                    AnnotationType.REFERENCE_DATASET_COLLECTION,
+                    **self.param_kwargs,
+                ),
+                # NB: We will endeavor to remove the below line by calling running
+                # the formatting annotations over the base reference dataset collection
+                # itself when it is created.
+                **get_fields(ht, AnnotationType.FORMATTING, **self.param_kwargs),
             )
-            ht = mt.rows()
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
         )

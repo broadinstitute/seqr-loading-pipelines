@@ -8,6 +8,12 @@ class AccessControl(Enum):
     PRIVATE = 'private'
 
 
+class AnnotationType(Enum):
+    FORMATTING = 'FORMATTING'
+    REFERENCE_DATASET_COLLECTION = 'REFERENCE_DATASET_COLLECTION'
+    SAMPLE_LOOKUP_TABLE = 'SAMPLE_LOOKUP_TABLE'
+
+
 class DataRoot(Enum):
     LOCAL_DATASETS = 'seqr-datasets'
     LOCAL_REFERENCE_DATA = 'seqr-reference-data'

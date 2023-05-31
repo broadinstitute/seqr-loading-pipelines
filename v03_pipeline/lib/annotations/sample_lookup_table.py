@@ -8,7 +8,7 @@ from v03_pipeline.lib.paths import sample_lookup_table_path
 
 
 def AC(  # noqa: N802
-    mt: hl.MatrixTable,
+    ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -21,11 +21,11 @@ def AC(  # noqa: N802
             dataset_type,
         ),
     )
-    return genotypes.AC(sample_lookup_ht[mt.row_key])
+    return genotypes.AC(sample_lookup_ht[ht.key])
 
 
 def AN(  # noqa: N802
-    mt: hl.MatrixTable,
+    ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -38,11 +38,11 @@ def AN(  # noqa: N802
             dataset_type,
         ),
     )
-    return genotypes.AN(sample_lookup_ht[mt.row_key])
+    return genotypes.AN(sample_lookup_ht[ht.key])
 
 
 def AF(  # noqa: N802
-    mt: hl.MatrixTable,
+    ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -55,4 +55,4 @@ def AF(  # noqa: N802
             dataset_type,
         ),
     )
-    return genotypes.AF(sample_lookup_ht[mt.row_key])
+    return genotypes.AF(sample_lookup_ht[ht.key])
