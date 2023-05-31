@@ -85,7 +85,6 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
                         position=871269,
                         reference_genome='GRCh38',
                     ),
-                    pos=871269,
                     rg37_locus=hl.Locus(
                         contig=1,
                         position=806649,

@@ -147,7 +147,8 @@ class GenotypesTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = union_sample_lookup_hts(
-            sample_lookup_ht, callset_sample_lookup_ht,
+            sample_lookup_ht,
+            callset_sample_lookup_ht,
         )
         self.assertCountEqual(
             sample_lookup_ht.collect(),

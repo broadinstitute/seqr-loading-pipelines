@@ -5,7 +5,7 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
-def AC(sample_lookup_ht) -> hl.Table:  # noqa: N802
+def AC(sample_lookup_ht) -> hl.Int32Expression:  # noqa: N802
     return (
         sample_lookup_ht.ref_samples.length() * N_ALT_REF
         + sample_lookup_ht.het_samples.length() * N_ALT_HET
@@ -13,7 +13,7 @@ def AC(sample_lookup_ht) -> hl.Table:  # noqa: N802
     )
 
 
-def AN(sample_lookup_ht) -> hl.Table:  # noqa: N802
+def AN(sample_lookup_ht) -> hl.Int32Expression:  # noqa: N802
     return (
         sample_lookup_ht.ref_samples.length()
         + sample_lookup_ht.het_samples.length()
@@ -21,7 +21,7 @@ def AN(sample_lookup_ht) -> hl.Table:  # noqa: N802
     ) * 2
 
 
-def AF(sample_lookup_ht) -> hl.Table:  # noqa: N802
+def AF(sample_lookup_ht) -> hl.Float64Expression:  # noqa: N802
     return AC(sample_lookup_ht) / AN(sample_lookup_ht)
 
 

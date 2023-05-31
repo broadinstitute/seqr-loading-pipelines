@@ -6,9 +6,7 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id as expression_helpers
 
-from v03_pipeline.lib.misc import genotypes
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.paths import sample_lookup_table_path
+from v03_pipeline.lib.model import ReferenceGenome
 
 CONSEQUENCE_TERMS = [
     'transcript_ablation',
@@ -74,60 +72,6 @@ SELECTED_ANNOTATIONS = [
     'lof_info',
     'transcript_id',
 ]
-
-
-def AC(  # noqa: N802
-    mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    **_: Any,
-) -> hl.Expression:
-    return genotypes.AC(
-        hl.read_table(
-            sample_lookup_table_path(
-                env,
-                reference_genome,
-                dataset_type,
-            ),
-        ),
-    )
-
-
-def AN(  # noqa: N802
-    mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    **_: Any,
-) -> hl.Expression:
-    return genotypes.AN(
-        hl.read_table(
-            sample_lookup_table_path(
-                env,
-                reference_genome,
-                dataset_type,
-            ),
-        ),
-    )
-
-
-def AF(  # noqa: N802
-    mt: hl.MatrixTable,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    **_: Any,
-) -> hl.Expression:
-    return genotypes.AF(
-        hl.read_table(
-            sample_lookup_table_path(
-                env,
-                reference_genome,
-                dataset_type,
-            ),
-        ),
-    )
 
 
 def rg37_locus(

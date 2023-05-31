@@ -67,7 +67,6 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             [],
             hl.tstruct(
                 **key_type,
-                no_call_samples=hl.tset(hl.tstr),
                 ref_samples=hl.tset(hl.tstr),
                 het_samples=hl.tset(hl.tstr),
                 hom_samples=hl.tset(hl.tstr),

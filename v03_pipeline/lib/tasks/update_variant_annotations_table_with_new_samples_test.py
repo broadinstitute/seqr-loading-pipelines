@@ -151,6 +151,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     'hgmd',
                     'variant_id',
                     'xpos',
+                    'AC',
+                    'AN',
                 ).collect()
                 if x.xpos <= 1000878809  # noqa: PLR2004
             ],
@@ -170,6 +172,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     ),
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
+                    AC=None,
+                    AN=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -183,6 +187,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
+                    AC=1,
+                    AN=26,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -196,6 +202,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
+                    AC=6,
+                    AN=6,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -209,6 +217,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
+                    AC=2,
+                    AN=6,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -222,6 +232,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
+                    AC=1,
+                    AN=26,
                 ),
             ],
         )

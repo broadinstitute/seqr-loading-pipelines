@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from v03_pipeline.lib.annotations import gcnv, reference_dataset_collection, shared, sv
+from v03_pipeline.lib.annotations import (
+    gcnv,
+    reference_dataset_collection,
+    sample_lookup_table,
+    shared,
+    sv,
+)
 from v03_pipeline.lib.model import DatasetType, ReferenceDatasetCollection
 
 if TYPE_CHECKING:
@@ -20,9 +26,9 @@ REFERENCE_DATASET_COLLECTION_ANNOTATIONS = {
 
 VARIANT_ANNOTATIONS = {
     DatasetType.SNV: [
-        shared.AC,
-        shared.AF,
-        shared.AN,
+        sample_lookup_table.AC,
+        sample_lookup_table.AF,
+        sample_lookup_table.AN,
         shared.rg37_locus,
         shared.sorted_transcript_consequences,
         shared.variant_id,
