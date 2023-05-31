@@ -5,6 +5,26 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
+def AC(sample_lookup_ht) -> hl.Table:  # noqa: N802
+    return (
+        sample_lookup_ht.ref_samples.length() * N_ALT_REF
+        + sample_lookup_ht.het_samples.length() * N_ALT_HET
+        + sample_lookup_ht.hom_samples.length() * N_ALT_HOM
+    )
+
+
+def AN(sample_lookup_ht) -> hl.Table:  # noqa: N802
+    return (
+        sample_lookup_ht.ref_samples.length()
+        + sample_lookup_ht.het_samples.length()
+        + sample_lookup_ht.hom_samples.length()
+    ) * 2
+
+
+def AF(sample_lookup_ht) -> hl.Table:  # noqa: N802
+    return AC(sample_lookup_ht) / AN(sample_lookup_ht)
+
+
 def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     sample_ids = hl.agg.collect_as_set(mt.s)
     return mt.select_rows(
@@ -17,12 +37,15 @@ def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     ).rows()
 
 
-def remove_callset_sample_ids(genotypes_ht: hl.Table, samples_ht: hl.Table) -> hl.Table:
+def remove_callset_sample_ids(
+    sample_lookup_ht: hl.Table,
+    samples_ht: hl.Table,
+) -> hl.Table:
     sample_ids = samples_ht.aggregate(hl.agg.collect_as_set(samples_ht.s))
-    return genotypes_ht.select(
-        ref_samples=genotypes_ht.ref_samples.difference(sample_ids),
-        het_samples=genotypes_ht.het_samples.difference(sample_ids),
-        hom_samples=genotypes_ht.hom_samples.difference(sample_ids),
+    return sample_lookup_ht.select(
+        ref_samples=sample_lookup_ht.ref_samples.difference(sample_ids),
+        het_samples=sample_lookup_ht.het_samples.difference(sample_ids),
+        hom_samples=sample_lookup_ht.hom_samples.difference(sample_ids),
     )
 
 

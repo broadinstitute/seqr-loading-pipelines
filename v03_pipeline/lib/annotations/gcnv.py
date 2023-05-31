@@ -13,7 +13,7 @@ def xpos(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return expression_helpers.get_expr_for_xpos(
         hl.locus(
             expression_helpers.replace_chr_prefix(mt.chr),
-            hl.agg.min(mt.sample_start)
+            hl.agg.min(mt.sample_start),
         ),
     )
 

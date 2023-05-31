@@ -3,14 +3,47 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.genotypes import (
+    AC,
+    AF,
+    AN,
     remove_callset_sample_ids,
     union_sample_lookup_hts,
 )
 
 
 class GenotypesTest(unittest.TestCase):
-    def test_remove_callset_sample_ids(self):
-        genotypes_ht = hl.Table.parallelize(
+    def test_allele_count_helpers(self) -> None:
+        sample_lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'ref_samples': {'a', 'c'},
+                    'het_samples': {'b', 'd'},
+                    'hom_samples': {'e', 'f'},
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
+            ),
+            key='id',
+        )
+        sample_lookup_ht = sample_lookup_ht.select(
+            AC=AC(sample_lookup_ht),
+            AF=AF(sample_lookup_ht),
+            AN=AN(sample_lookup_ht),
+        )
+        self.assertCountEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(id=0, AC=6, AF=0.5, AN=12),
+            ],
+        )
+
+    def test_remove_callset_sample_ids(self) -> None:
+        sample_lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
@@ -44,12 +77,12 @@ class GenotypesTest(unittest.TestCase):
             ),
             key='s',
         )
-        genotypes_ht = remove_callset_sample_ids(
-            genotypes_ht,
+        sample_lookup_ht = remove_callset_sample_ids(
+            sample_lookup_ht,
             samples_ht,
         )
         self.assertListEqual(
-            genotypes_ht.collect(),
+            sample_lookup_ht.collect(),
             [
                 hl.Struct(
                     id=0,
@@ -66,8 +99,8 @@ class GenotypesTest(unittest.TestCase):
             ],
         )
 
-    def test_union_sample_lookup_hts(self):
-        genotypes_ht = hl.Table.parallelize(
+    def test_union_sample_lookup_hts(self) -> None:
+        sample_lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
@@ -90,7 +123,7 @@ class GenotypesTest(unittest.TestCase):
             ),
             key='id',
         )
-        callset_genotypes_ht = hl.Table.parallelize(
+        callset_sample_lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
@@ -113,15 +146,17 @@ class GenotypesTest(unittest.TestCase):
             ),
             key='id',
         )
-        genotypes_ht = union_sample_lookup_hts(genotypes_ht, callset_genotypes_ht)
+        sample_lookup_ht = union_sample_lookup_hts(
+            sample_lookup_ht, callset_sample_lookup_ht,
+        )
         self.assertCountEqual(
-            genotypes_ht.collect(),
+            sample_lookup_ht.collect(),
             [
                 hl.Struct(
                     id=0,
                     ref_samples={'e'},
-                    het_samples={'b', 'd', 'f'},
-                    hom_samples={'e', 'f', 'g'},
+                    het_samples={'b', 'd', 'f', 'g'},
+                    hom_samples={'e', 'f'},
                 ),
                 hl.Struct(
                     id=1,

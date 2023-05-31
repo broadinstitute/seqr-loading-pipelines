@@ -50,11 +50,13 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         self.assertTrue(uslt_task.complete())
         ht = hl.read_table(uslt_task.output().path)
         self.assertCountEqual(
-            [x for x in ht.collect() if x.locus.position <= 883625],
+            [x for x in ht.collect() if x.locus.position <= 883625],  # noqa: PLR2004
             [
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=876499, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
                     ref_samples=set(),
@@ -63,7 +65,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=878314, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=878314,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
                     ref_samples={'HG00732_1'},
@@ -72,7 +76,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=879576, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=879576,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
                     ref_samples={'HG00731_1', 'HG00733_1'},
@@ -81,7 +87,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=881627, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=881627,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
                     ref_samples={'HG00732_1'},
@@ -90,12 +98,14 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=883625, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=883625,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
                     ref_samples=set(),
                     het_samples=set(),
                     hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
-                )
+                ),
             ],
         )
