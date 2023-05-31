@@ -45,7 +45,7 @@ def import_callset(
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         return import_gcnv_bed_file(callset_path)
-    mt = import_vcf(callset_path, reference_genome)
+    mt = import_vcf(callset_path, env, reference_genome)
     key_type = dataset_type.table_key_type(reference_genome)
     return mt.key_rows_by(*key_type.fields)
 
