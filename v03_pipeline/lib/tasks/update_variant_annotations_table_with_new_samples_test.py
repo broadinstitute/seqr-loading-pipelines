@@ -151,7 +151,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     'variant_id',
                     'xpos',
                 ).collect()
-                if x.xpos <= 878809  # noqa: PLR2004
+                if x.xpos <= 1000878809  # noqa: PLR2004
             ],
             [
                 hl.Struct(
@@ -168,7 +168,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                         class_id=3,
                     ),
                     variant_id='1-871269-A-C',
-                    xpos=871269,
+                    xpos=1000871269,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -181,7 +181,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-874734-C-T',
-                    xpos=874734,
+                    xpos=1000874734,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -194,7 +194,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-876499-A-G',
-                    xpos=876499,
+                    xpos=1000876499,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -207,7 +207,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-878314-G-C',
-                    xpos=878314,
+                    xpos=1000878314,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -220,7 +220,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-878809-C-T',
-                    xpos=878809,
+                    xpos=1000878809,
                 ),
             ],
         )
