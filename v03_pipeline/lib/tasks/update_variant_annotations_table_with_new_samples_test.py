@@ -26,6 +26,7 @@ TEST_INTERVAL_REFERENCE_1 = (
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
+    maxDiff = None
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -148,9 +149,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     'clinvar',
                     'hgmd',
                     'variant_id',
-                    'pos',
+                    'xpos',
                 ).collect()
-                if x.pos <= 878809  # noqa: PLR2004
+                if x.xpos <= 878809  # noqa: PLR2004
             ],
             [
                 hl.Struct(
@@ -167,7 +168,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                         class_id=3,
                     ),
                     variant_id='1-871269-A-C',
-                    pos=871269,
+                    xpos=871269,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -180,7 +181,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-874734-C-T',
-                    pos=874734,
+                    xpos=874734,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -193,7 +194,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-876499-A-G',
-                    pos=876499,
+                    xpos=876499,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -206,7 +207,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-878314-G-C',
-                    pos=878314,
+                    xpos=878314,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -219,7 +220,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     clinvar=None,
                     hgmd=None,
                     variant_id='1-878809-C-T',
-                    pos=878809,
+                    xpos=878809,
                 ),
             ],
         )
