@@ -9,12 +9,12 @@ import hail as hl
 from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 
 
-def _import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
+def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     # TODO implement me.
     return hl.import_table(callset_path)
 
 
-def _import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
+def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
     recode = {}
     if reference_genome == ReferenceGenome.GRCh38:
@@ -43,8 +43,8 @@ def import_callset(
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
-        return _import_gcnv_bed_file(callset_path)
-    mt = _import_vcf(callset_path, reference_genome)
+        return import_gcnv_bed_file(callset_path)
+    mt = import_vcf(callset_path, reference_genome)
     key_type = dataset_type.table_key_type(reference_genome)
     return mt.key_rows_by(*key_type.fields)
 
