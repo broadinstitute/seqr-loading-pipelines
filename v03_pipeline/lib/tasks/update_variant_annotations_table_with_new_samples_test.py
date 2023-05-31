@@ -16,7 +16,6 @@ TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
-TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_REFERENCE_1 = (
@@ -104,9 +103,27 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.add(uvatwns_task_3)
         worker.run()
         self.assertTrue(uvatwns_task_3.complete())
+        ht = hl.read_table(uvatwns_task_3.output().path)
+        self.assertEqual(ht.count(), 30)
         self.assertEqual(
-            hl.read_table(uvatwns_task_3.output().path).count(),
-            17,
+            [
+                x
+                for x in ht.select(
+                    'AC',
+                    'AN',
+                ).collect()
+                if x.locus.position <= 871269  # noqa: PLR2004
+            ][0],
+            hl.Struct(
+                locus=hl.Locus(
+                    contig='chr1',
+                    position=871269,
+                    reference_genome='GRCh38',
+                ),
+                alleles=['A', 'C'],
+                AC=0,
+                AN=6,
+            ),
         )
 
         # Ensure that new variants are added correctly to the table.
@@ -122,26 +139,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         worker.add(uvatwns_task_4)
         worker.run()
         self.assertTrue(uvatwns_task_4.complete())
-        self.assertEqual(
-            hl.read_table(uvatwns_task_4.output().path).count(),
-            30,
-        )
-
-        # If there are no new variants, ensure nothing happens.
-        uvatwns_task_5 = UpdateVariantAnnotationsTableWithNewSamples(
-            env=Env.TEST,
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_VCF,
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_5,
-        )
-        worker.add(uvatwns_task_5)
-        worker.run()
-        self.assertTrue(uvatwns_task_5.complete())
-        ht = hl.read_table(uvatwns_task_5.output().path)
-        self.assertEqual(ht.count(), 30)
+        ht = hl.read_table(uvatwns_task_4.output().path)
         self.assertCountEqual(
             [
                 x
@@ -154,7 +152,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     'AC',
                     'AN',
                 ).collect()
-                if x.xpos <= 1000878809  # noqa: PLR2004
+                if x.locus.position <= 878809  # noqa: PLR2004
             ],
             [
                 hl.Struct(
@@ -173,7 +171,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
                     AC=1,
-                    AN=26,
+                    AN=32,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -188,7 +186,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
                     AC=1,
-                    AN=26,
+                    AN=32,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -233,7 +231,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
                     AC=1,
-                    AN=26,
+                    AN=32,
                 ),
             ],
         )

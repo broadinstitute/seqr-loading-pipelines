@@ -15,13 +15,6 @@ def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
 
 
 def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.MatrixTable:
-    """
-    Remap the MatrixTable's sample ID, 's', field to the sample ID used within seqr, 'seqr_id'
-    If the sample 's' does not have a 'seqr_id' in the remap file, 's' becomes 'seqr_id'
-    :param mt: MatrixTable from VCF
-    :param remap_path: Path to a file with two columns 's' and 'seqr_id'
-    :return: MatrixTable remapped and keyed to use seqr_id
-    """
     mt = vcf_remap(mt)
     s_dups = [k for k, v in Counter(project_remap_ht.s.collect()).items() if v > 1]
     seqr_dups = [
@@ -73,8 +66,6 @@ def subset_samples_and_variants(
             raise MatrixTableSampleSetError(message, missing_samples)
 
     mt = mt.semi_join_cols(sample_subset_ht)
-    mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
-
     print(
         f'Finished subsetting samples. Kept {subset_count} '
         f'out of {mt.count()} samples in vds',

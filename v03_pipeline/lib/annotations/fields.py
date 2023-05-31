@@ -63,6 +63,8 @@ def get_fields(
     dataset_type = kwargs['dataset_type']
     fields = {
         field_expression.__name__: field_expression(ht, **kwargs)
-        for field_expression in ANNOTATION_CONFIG.get((dataset_type, annotation_type), [])
+        for field_expression in ANNOTATION_CONFIG.get(
+            (dataset_type, annotation_type), [],
+        )
     }
     return {k: v for k, v in fields.items() if v is not None}
