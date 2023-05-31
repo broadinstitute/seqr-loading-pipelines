@@ -14,7 +14,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     return hl.import_table(callset_path)
 
 
-def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.MatrixTable:
+def import_vcf(callset_path: str, env: Env, reference_genome: ReferenceGenome) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
     recode = {}
     if reference_genome == ReferenceGenome.GRCh38:
@@ -27,7 +27,7 @@ def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.Matri
         skip_invalid_loci=True,
         contig_recoding=recode,
         force_bgz=True,
-        min_partitions=500,
+        min_partitions=env.min_vcf_partitions,
     )
     return hl.split_multi_hts(
         mt.annotate_rows(
@@ -39,6 +39,7 @@ def import_vcf(callset_path: str, reference_genome: ReferenceGenome) -> hl.Matri
 
 def import_callset(
     callset_path: str,
+    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:

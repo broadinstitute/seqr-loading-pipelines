@@ -6,11 +6,8 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 
 class BasePipelineTask(luigi.Task):
-    env = luigi.EnumParameter(enum=Env, default=Env.LOCAL)
-    reference_genome = luigi.EnumParameter(
-        enum=ReferenceGenome,
-        default=ReferenceGenome.GRCh38,
-    )
+    env = luigi.EnumParameter(enum=Env)
+    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     hail_temp_dir = luigi.OptionalParameter(
         default=None,

@@ -82,6 +82,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         # Import required files.
         callset_mt = import_callset(
             self.callset_path,
+            self.env,
             self.reference_genome,
             self.dataset_type,
         )
