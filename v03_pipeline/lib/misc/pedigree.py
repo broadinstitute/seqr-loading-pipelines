@@ -1,4 +1,8 @@
-import hail as hl
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import hail as hl
 
 
 def families_to_exclude(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table:
@@ -17,7 +21,7 @@ def families_to_include(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table
 def samples_to_include(
     pedigree_ht: hl.Table,
     samples_ht: hl.Table,
-    family_guid: str = None,
+    family_guid: str | None = None,
 ) -> hl.Table:
     ht = pedigree_ht.join(families_to_include(pedigree_ht, samples_ht))
     if family_guid:

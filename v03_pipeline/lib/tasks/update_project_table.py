@@ -56,7 +56,9 @@ class UpdateProjectTableTask(BasePipelineTask):
         key_type = self.dataset_type.table_key_type(self.reference_genome)
         ht = hl.Table.parallelize(
             [],
-            hl.tstruct(**key_type, entries=hl.tarray(hl.tstruct())),
+            hl.tstruct(
+                **key_type, entries=hl.tarray(self.dataset_type.genotype_entries_type),
+            ),
             key=key_type.fields,
         )
         return ht.annotate_globals(
@@ -82,7 +84,9 @@ class UpdateProjectTableTask(BasePipelineTask):
         )
 
         # Filter out the samples that we're now loading from the current ht.
-        callset_sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
+        callset_sample_ids = sample_subset_ht.aggregate(
+            hl.agg.collect_as_set(sample_subset_ht.s),
+        )
         ht = ht.annotate(
             entries=(
                 hl.zip_with_index(ht.entries)
@@ -105,9 +109,15 @@ class UpdateProjectTableTask(BasePipelineTask):
                 ),
             ),
         ).rows()
-        ht = ht.annotate(
+        ht = ht.join(callset_ht, 'outer')
+        ht = ht.select(
             entries=hl.sorted(
-                ht.entries.extend(callset_ht.entries),
+                (
+                    hl.case()
+                    .when(hl.is_missing(ht.entries), ht.entries_1)
+                    .when(hl.is_missing(ht.entries_1), ht.entries)
+                    .default(ht.entries.extend(ht.entries_1))
+                ),
                 key=lambda e: e.sample_id,
             ),
         )
@@ -117,6 +127,8 @@ class UpdateProjectTableTask(BasePipelineTask):
             sample_ids=[
                 e.sample_id for e in ht.aggregate(hl.agg.take(ht.entries, 1))[0]
             ],
-            updates={(self.callset_path, self.project_pedigree_path)},
+            updates=ht.updates.add(
+                (self.callset_path, self.project_pedigree_path),
+            ),
         )
         return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
