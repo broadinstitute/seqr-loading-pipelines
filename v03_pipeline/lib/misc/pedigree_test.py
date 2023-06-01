@@ -69,7 +69,9 @@ class PedigreesTest(unittest.TestCase):
             [
                 s.s
                 for s in samples_to_include(
-                    pedigree_ht, samples_ht, 'BBL_SDS1-000178',
+                    pedigree_ht,
+                    samples_ht,
+                    'BBL_SDS1-000178',
                 ).collect()
             ],
             [
@@ -80,7 +82,9 @@ class PedigreesTest(unittest.TestCase):
             [
                 s.s
                 for s in samples_to_include(
-                    pedigree_ht, samples_ht, 'BBL_HT-007-5195',
+                    pedigree_ht,
+                    samples_ht,
+                    'BBL_HT-007-5195',
                 ).collect()
             ],
             [],

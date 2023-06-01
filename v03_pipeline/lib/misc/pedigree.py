@@ -15,7 +15,9 @@ def families_to_include(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table
 
 
 def samples_to_include(
-    pedigree_ht: hl.Table, samples_ht: hl.Table, family_guid: str = None,
+    pedigree_ht: hl.Table,
+    samples_ht: hl.Table,
+    family_guid: str = None,
 ) -> hl.Table:
     ht = pedigree_ht.join(families_to_include(pedigree_ht, samples_ht))
     if family_guid:
