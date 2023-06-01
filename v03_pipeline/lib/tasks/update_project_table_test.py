@@ -59,18 +59,22 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
             ht.collect()[:2],
             [
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=871269, reference_genome='GRCh38'), 
+                    locus=hl.Locus(
+                        contig='chr1', position=871269, reference_genome='GRCh38',
+                    ),
                     alleles=['A', 'C'],
-                    entries = [
+                    entries=[
                         hl.Struct(gq=99, ab=0.0, dp=34),
                         hl.Struct(gq=99, ab=0.0, dp=34),
                         hl.Struct(gq=99, ab=0.0, dp=37),
                     ],
                 ),
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=874734, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=874734, reference_genome='GRCh38',
+                    ),
                     alleles=['C', 'T'],
-                    entries = [
+                    entries=[
                         hl.Struct(gq=99, ab=0.0, dp=37),
                         hl.Struct(gq=66, ab=0.0, dp=24),
                         hl.Struct(gq=96, ab=0.0, dp=32),

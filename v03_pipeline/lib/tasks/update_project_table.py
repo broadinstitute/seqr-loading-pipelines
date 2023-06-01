@@ -57,7 +57,8 @@ class UpdateProjectTableTask(BasePipelineTask):
         ht = hl.Table.parallelize(
             [],
             hl.tstruct(
-                **key_type, entries=hl.tarray(self.dataset_type.genotype_entries_type),
+                **key_type,
+                entries=hl.tarray(self.dataset_type.genotype_entries_type),
             ),
             key=key_type.fields,
         )
