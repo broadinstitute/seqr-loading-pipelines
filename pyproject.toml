@@ -83,9 +83,6 @@ inline-quotes = "single"
     'ARG002', # allow unused method arguments
     'SLF001', # allow private access
 ]
-'*annotations*' = [
-    'ARG001', # allow unused function arguments
-]
 
 [tool.ruff.pylint]
 max-args = 6
