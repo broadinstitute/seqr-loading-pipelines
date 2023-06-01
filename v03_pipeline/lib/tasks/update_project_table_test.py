@@ -68,7 +68,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                     ],
                 ),
                 hl.Struct(
-                    locus=hl.Locus(contig=chr1, position=874734, reference_genome='GRCh38'),
+                    locus=hl.Locus(contig='chr1', position=874734, reference_genome='GRCh38'),
                     alleles=['C', 'T'],
                     entries = [
                         hl.Struct(gq=99, ab=0.0, dp=37),
