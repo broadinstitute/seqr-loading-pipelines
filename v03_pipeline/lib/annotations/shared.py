@@ -74,6 +74,10 @@ SELECTED_ANNOTATIONS = [
 ]
 
 
+def sample_id(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return mt.s
+
+
 def rg37_locus(
     ht: hl.Table,
     reference_genome: ReferenceGenome,

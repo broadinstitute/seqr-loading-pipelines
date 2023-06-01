@@ -43,7 +43,7 @@ def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.Matri
     return mt
 
 
-def subset_samples_and_variants(
+def subset_samples(
     mt: hl.MatrixTable,
     sample_subset_ht: hl.Table,
     ignore_missing_samples: bool,

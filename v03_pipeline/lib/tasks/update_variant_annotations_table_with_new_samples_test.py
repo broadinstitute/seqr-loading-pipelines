@@ -9,7 +9,7 @@ import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
-    UpdateVariantAnnotationsTableWithNewSamples,
+    UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
@@ -24,7 +24,7 @@ TEST_INTERVAL_REFERENCE_1 = (
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
-class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
+class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
     maxDiff = None
 
     def setUp(self) -> None:
@@ -49,7 +49,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
     def test_missing_pedigree(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamples(
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -67,7 +67,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
     def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamples(
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -91,7 +91,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
-        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamples(
+        uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -127,7 +127,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTest(unittest.TestCase):
         )
 
         # Ensure that new variants are added correctly to the table.
-        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamples(
+        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,

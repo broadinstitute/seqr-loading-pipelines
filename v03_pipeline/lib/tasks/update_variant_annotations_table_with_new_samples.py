@@ -6,10 +6,7 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.sample_ids import (
-    remap_sample_ids,
-    subset_samples_and_variants,
-)
+from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
@@ -21,15 +18,11 @@ from v03_pipeline.lib.tasks.update_sample_lookup_table import (
 from v03_pipeline.lib.vep import run_vep
 
 
-class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTask):
+class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    dont_validate = luigi.BoolParameter(
-        default=False,
-        description='Disable checking whether the dataset matches the specified sample type and genome version',
-    )
     ignore_missing_samples = luigi.BoolParameter(default=False)
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
@@ -53,7 +46,6 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
                 self.callset_path,
                 self.project_remap_path,
                 self.project_pedigree_path,
-                self.dont_validate,
                 self.ignore_missing_samples,
             ),
         ]
@@ -76,10 +68,10 @@ class UpdateVariantAnnotationsTableWithNewSamples(BaseVariantAnnotationsTableTas
         project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
 
-        # Remap, then subset to samples & variants of interest.
+        # Remap, then subset to samples of interest.
         callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
         sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
-        callset_mt = subset_samples_and_variants(
+        callset_mt = subset_samples(
             callset_mt,
             sample_subset_ht,
             self.ignore_missing_samples,

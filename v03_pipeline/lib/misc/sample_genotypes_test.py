@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.genotypes import (
+from v03_pipeline.lib.misc.sample_genotypes import (
     AC,
     AF,
     AN,
