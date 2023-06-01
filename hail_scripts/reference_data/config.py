@@ -9,6 +9,20 @@ class AccessControl(Enum):
     PRIVATE = 'private'
 
 
+def predictor_parse(field: hl.StringExpression):
+    return field.split(';').find(lambda p: p != '.')
+
+
+def dbnsfp_custom_select(ht):
+    selects = {}
+    selects['REVEL_score'] = hl.parse_float(ht.REVEL_score)
+    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
+    selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
+    selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
+    selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
+    return selects
+
+
 def custom_gnomad_select_v2(ht):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
@@ -60,6 +74,12 @@ def custom_gnomad_select_v3(ht):
     return selects
 
 
+def custom_mpc_select(ht):
+    selects = {}
+    selects['MPC'] = hl.parse_float(ht.info.MPC)
+    return selects
+
+
 """
 Configurations of dataset to combine.
 Format:
@@ -89,31 +109,38 @@ CONFIG = {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
-                'SIFT_pred',
-                'Polyphen2_HVAR_pred',
-                'MutationTaster_pred',
-                'FATHMM_pred',
                 'MetaSVM_pred',
-                'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
             ],
+            'custom_select': dbnsfp_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                'FATHMM_pred': ['D', 'T'],
+                'MetaSVM_pred': ['D', 'T'],
+            },
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
-                'SIFT_pred',
-                'Polyphen2_HVAR_pred',
-                'MutationTaster_pred',
-                'FATHMM_pred',
                 'MetaSVM_pred',
-                'REVEL_score',
                 'GERP_RS',
                 'phastCons100way_vertebrate',
                 'VEST4_score',
-                'fathmm_MKL_coding_pred',
                 'MutPred_score',
+                'fathmm_MKL_coding_pred',
             ],
+            'custom_select': dbnsfp_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                'FATHMM_pred': ['D', 'T'],
+                'fathmm_MKL_coding_pred': ['D', 'N'],
+                'MetaSVM_pred': ['D', 'T'],
+            },
         },
     },
     'eigen': {
@@ -159,11 +186,11 @@ CONFIG = {
     'mpc': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
-            'select': {'MPC': 'info.MPC'},
+            'custom_select': custom_mpc_select,
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/MPC/fordist_constraint_official_mpc_values.liftover.GRCh38.ht',
-            'select': {'MPC': 'info.MPC'},
+            'custom_select': custom_mpc_select,
         },
     },
     'primate_ai': {
@@ -183,12 +210,30 @@ CONFIG = {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
             },
+            'enum_select': {
+                'splice_consequence': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
+            },
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.ht',
             'select': {
                 'delta_score': 'info.max_DS',
                 'splice_consequence': 'info.splice_consequence',
+            },
+            'enum_select': {
+                'splice_consequence': [
+                    'Acceptor gain',
+                    'Acceptor loss',
+                    'Donor gain',
+                    'Donor loss',
+                    'No consequence',
+                ],
             },
         },
     },
