@@ -21,6 +21,7 @@ def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
         )
     )
 
+
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -122,10 +123,7 @@ def update_joined_ht_globals(
 
 def join_hts(datasets, reference_genome='37'):
     # Get a list of hail tables and combine into an outer join.
-    hts = [
-        get_ht(dataset, reference_genome)
-        for dataset in datasets
-    ]
+    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce(
         (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
         hts,
