@@ -17,8 +17,6 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateProjectTableTaskTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 
