@@ -168,25 +168,13 @@ class SeqrSchema(BaseSeqrSchema):
     def cadd(self):
         return self._selected_ref_data.cadd
 
-    @row_annotation(disable_index=True)
-    def geno2mp(self):
-        return self._selected_ref_data.geno2mp
-
     @row_annotation()
     def gnomad_exomes(self):
         return self._selected_ref_data.gnomad_exomes
 
-    @row_annotation(disable_index=True)
-    def gnomad_exome_coverage(self):
-        return self._selected_ref_data.gnomad_exome_coverage
-
     @row_annotation()
     def gnomad_genomes(self):
         return self._selected_ref_data.gnomad_genomes
-
-    @row_annotation(disable_index=True)
-    def gnomad_genome_coverage(self):
-        return self._selected_ref_data.gnomad_genome_coverage
 
     @row_annotation()
     def eigen(self):
