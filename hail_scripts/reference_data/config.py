@@ -3,6 +3,18 @@ from enum import Enum
 
 import hail as hl
 
+from hail_scripts.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    CLINVAR_GOLD_STARS_LOOKUP,
+    CLINVAR_PATHOGENICITIES,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    download_and_import_latest_clinvar_vcf,
+    parsed_and_mapped_clnsigconf,
+    parsed_clnsig,
+)
+from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
+
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -11,6 +23,26 @@ class AccessControl(Enum):
 
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
+
+
+def clinvar_custom_select(ht):
+    selects = {}
+    clnsigs = parsed_clnsig(ht)
+    selects['pathogenicity'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
+        clnsigs[0],
+        CLINVAR_DEFAULT_PATHOGENICITY,
+    )
+    selects['assertion'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
+        clnsigs[1:],
+        clnsigs,
+    )
+    # NB: the `enum_select` does not support mapping a list of tuples
+    # so there's a hidden enum-mapping inside this clinvar function.
+    selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
+    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
+    return selects
 
 
 def dbnsfp_custom_select(ht):
@@ -106,6 +138,28 @@ CONFIG = {
             'select': ['PHRED'],
         },
     },
+    'clinvar': {
+        '37': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+        },
+        '38': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+        },
+    },
     'dbnsfp': {
         '37': {
             'version': '2.9.3',
@@ -158,7 +212,8 @@ CONFIG = {
     },
     'hgmd': {
         '37': {
-            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
+            'custom_import': download_and_import_hgmd_vcf,
+            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
@@ -172,7 +227,8 @@ CONFIG = {
             },
         },
         '38': {
-            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
+            'custom_import': download_and_import_hgmd_vcf,
+            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [

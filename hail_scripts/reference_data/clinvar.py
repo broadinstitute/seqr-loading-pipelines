@@ -1,16 +1,12 @@
 import gzip
-import urllib.request
+import tempfile
+import urllib
 
 import hail as hl
 
 from hail_scripts.utils.hail_utils import import_vcf
 
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
-CLINVAR_FTP_PATH = (
-    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
-)
-CLINVAR_HT_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
-
 CLINVAR_ASSERTIONS = [
     'Affects',
     'association',
@@ -23,7 +19,6 @@ CLINVAR_ASSERTIONS = [
     'protective',
     'risk_factor',
 ]
-CLINVAR_ASSERTIONS_LOOKUP = hl.dict(hl.enumerate(CLINVAR_ASSERTIONS, index_first=False))
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
         'no_interpretation_for_the_single_variant': 0,
@@ -85,7 +80,7 @@ def parse_to_count(entry: str):
     )
 
 
-def parsed_clnsigconf(ht: hl.Table):
+def parsed_and_mapped_clnsigconf(ht: hl.Table):
     return (
         hl.delimit(ht.info.CLNSIGCONF)
         .replace(',_low_penetrance', '')
@@ -106,9 +101,9 @@ def parsed_clnsigconf(ht: hl.Table):
 
 
 def download_and_import_latest_clinvar_vcf(
+    clinvar_url: str,
     genome_version: str,
-    tmp_file: str,
-) -> hl.MatrixTable:
+) -> hl.Table:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
 
     Args:
@@ -117,19 +112,19 @@ def download_and_import_latest_clinvar_vcf(
 
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
-    clinvar_url = CLINVAR_FTP_PATH.format(genome_version=genome_version)
-    urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-    clinvar_release_date = _parse_clinvar_release_date(tmp_file.name)
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
-    mt = import_vcf(
-        tmp_file.name,
-        genome_version,
-        drop_samples=True,
-        min_partitions=2000,
-        skip_invalid_loci=True,
-        more_contig_recoding=mt_contig_recoding,
-    )
-    return mt.annotate_globals(version=clinvar_release_date)
+    with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
+        urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
+        mt = import_vcf(
+            tmp_file.name,
+            genome_version,
+            drop_samples=True,
+            min_partitions=2000,
+            skip_invalid_loci=True,
+            more_contig_recoding=mt_contig_recoding,
+        )
+        mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
+        return mt.rows()
 
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:
