@@ -21,16 +21,6 @@ def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
         )
     )
 
-
-def annotate_coverage(joined_ht: hl.Table, dataset_ht: hl.Table, dataset: str):
-    joined_ht = joined_ht.annotate(
-        **{dataset: dataset_ht[joined_ht.locus][dataset]},
-    )
-    return joined_ht.annotate_globals(
-        **{f'{dataset}_globals': dataset_ht.index_globals()[f'{dataset}_globals']},
-    )
-
-
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
@@ -135,23 +125,11 @@ def join_hts(datasets, reference_genome='37'):
     hts = [
         get_ht(dataset, reference_genome)
         for dataset in datasets
-        if 'coverage' not in dataset
     ]
     joined_ht = functools.reduce(
         (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
         hts,
     )
-
-    # NB: coverage datasets are keyed by locus rather than locus
-    # and alleles, so we cannot join.  Instead we annotate w/ locus
-    # as the key.
-    coverage_hts = [
-        (dataset, get_ht(dataset, reference_genome))
-        for dataset in datasets
-        if 'coverage' in dataset
-    ]
-    for dataset, coverage_ht in coverage_hts:
-        joined_ht = annotate_coverage(joined_ht, coverage_ht, dataset)
     return update_joined_ht_globals(joined_ht)
 
 
@@ -163,13 +141,9 @@ def update_existing_joined_hts(
 ):
     joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, genome_version)
-    if 'coverage' not in dataset:
-        joined_ht = joined_ht.drop(dataset)
-        joined_ht = joined_ht.drop(f'{dataset}_globals')
-        joined_ht = joined_ht.join(dataset_ht, 'outer')
-        joined_ht = joined_ht.filter(
-            hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
-        )
-    else:
-        joined_ht = annotate_coverage(joined_ht, dataset_ht, dataset)
+    joined_ht = joined_ht.drop(dataset, f'{dataset}_globals')
+    joined_ht = joined_ht.join(dataset_ht, 'outer')
+    joined_ht = joined_ht.filter(
+        hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
+    )
     return update_joined_ht_globals(joined_ht)

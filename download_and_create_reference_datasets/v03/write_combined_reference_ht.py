@@ -18,15 +18,12 @@ DATASETS = [
     'dbnsfp',
     'eigen',
     'exac',
-    'geno2mp',
     'gnomad_genomes',
     'gnomad_exomes',
     'mpc',
     'primate_ai',
     'splice_ai',
     'topmed',
-    'gnomad_genome_coverage',
-    'gnomad_exome_coverage',
 ]
 
 

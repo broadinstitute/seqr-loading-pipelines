@@ -320,30 +320,6 @@ CONFIG = {
             },
         },
     },
-    'gnomad_exome_coverage': {
-        '37': {
-            'version': 'r2.1',
-            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
-            'select': {'x10': 'over_10'},
-        },
-        '38': {
-            'version': 'r2.1',
-            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
-            'select': {'x10': 'over_10'},
-        },
-    },
-    'gnomad_genome_coverage': {
-        '37': {
-            'version': 'r2.1',
-            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
-            'select': {'x10': 'over_10'},
-        },
-        '38': {
-            'version': 'r3.0',
-            'path': 'gs://gcp-public-data--gnomad/release/3.0/coverage/genomes/gnomad.genomes.r3.0.coverage.ht/',
-            'select': {'x10': 'over_10'},
-        },
-    },
     'gnomad_exomes': {
         '37': {
             'version': 'r2.1.1',
@@ -416,16 +392,6 @@ CONFIG = {
                     'low-DNase',
                 ],
             },
-        },
-    },
-    'geno2mp': {
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
-            'select': {'HPO_Count': 'info.HPO_CT'},
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
-            'select': {'HPO_Count': 'info.HPO_CT'},
         },
     },
     'gnomad_mito': {
