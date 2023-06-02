@@ -6,6 +6,7 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
+from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
 from v03_pipeline.lib.paths import family_table_path
@@ -38,9 +39,7 @@ class WriteFamilyTableTask(BasePipelineTask):
 
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
-            ),
+            hl.read_table(self.output().path).updates.contains(self.callset_path),
         )
 
     def requires(self) -> list[luigi.Task]:
@@ -94,10 +93,7 @@ class WriteFamilyTableTask(BasePipelineTask):
                 key=lambda e: e.sample_id,
             ),
         ).rows()
-        ht = ht.annotate_globals(
-            sample_ids=[
-                e.sample_id for e in ht.aggregate(hl.agg.take(ht.entries, 1))[0]
-            ],
-            updates={(self.callset_path, self.project_pedigree_path)},
+        ht = globalize_sample_ids(ht)
+        return ht.annotate_globals(
+            updates={self.callset_path},
         )
-        return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))

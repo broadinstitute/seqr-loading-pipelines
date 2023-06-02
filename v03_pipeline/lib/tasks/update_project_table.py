@@ -6,6 +6,11 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
+from v03_pipeline.lib.misc.sample_entries import (
+    deglobalize_sample_ids,
+    globalize_sample_ids,
+    union_entries_hts,
+)
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
 from v03_pipeline.lib.paths import project_table_path
@@ -39,7 +44,7 @@ class UpdateProjectTableTask(BasePipelineTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
+                self.callset_path,
             ),
         )
 
@@ -64,7 +69,7 @@ class UpdateProjectTableTask(BasePipelineTask):
         )
         return ht.annotate_globals(
             sample_ids=hl.empty_array(hl.tstr),
-            updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
+            updates=hl.empty_set(hl.tstr),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
@@ -85,16 +90,13 @@ class UpdateProjectTableTask(BasePipelineTask):
         )
 
         # Filter out the samples that we're now loading from the current ht.
-        callset_sample_ids = sample_subset_ht.aggregate(
+        ht = deglobalize_sample_ids(ht)
+        sample_ids = sample_subset_ht.aggregate(
             hl.agg.collect_as_set(sample_subset_ht.s),
         )
         ht = ht.annotate(
             entries=(
-                hl.zip_with_index(ht.entries)
-                .starmap(
-                    lambda i, e: hl.Struct(**e, sample_id=ht.sample_ids[i]),
-                )
-                .filter(lambda e: ~hl.set(callset_sample_ids).contains(e.sample_id))
+                ht.entries.filter(lambda e: ~hl.set(sample_ids).contains(e.sample_id))
             ),
         )
 
@@ -110,26 +112,8 @@ class UpdateProjectTableTask(BasePipelineTask):
                 ),
             ),
         ).rows()
-        ht = ht.join(callset_ht, 'outer')
-        ht = ht.select(
-            entries=hl.sorted(
-                (
-                    hl.case()
-                    .when(hl.is_missing(ht.entries), ht.entries_1)
-                    .when(hl.is_missing(ht.entries_1), ht.entries)
-                    .default(ht.entries.extend(ht.entries_1))
-                ),
-                key=lambda e: e.sample_id,
-            ),
+        ht = union_entries_hts(ht, callset_ht)
+        ht = globalize_sample_ids(ht)
+        return ht.annotate_globals(
+            updates=ht.updates.add(self.callset_path),
         )
-
-        # Reannotate
-        ht = ht.annotate_globals(
-            sample_ids=[
-                e.sample_id for e in ht.aggregate(hl.agg.take(ht.entries, 1))[0]
-            ],
-            updates=ht.updates.add(
-                (self.callset_path, self.project_pedigree_path),
-            ),
-        )
-        return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
