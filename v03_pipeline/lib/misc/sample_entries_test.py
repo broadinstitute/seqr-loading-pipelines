@@ -84,8 +84,7 @@ class SampleEntriesTest(unittest.TestCase):
 
     def test_union_entries_hts_empty_current_table(self) -> None:
         entries_ht = hl.Table.parallelize(
-            [
-            ],
+            [],
             hl.tstruct(
                 id=hl.tint32,
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
