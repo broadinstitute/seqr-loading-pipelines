@@ -25,6 +25,10 @@ def AF(sample_lookup_ht) -> hl.Float64Expression:  # noqa: N802
     return AC(sample_lookup_ht) / AN(sample_lookup_ht)
 
 
+def homozygote_count(sample_lookup_ht) -> hl.Int32Expression:
+    return sample_lookup_ht.hom_samples.length()
+
+
 def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     sample_ids = hl.agg.collect_as_set(mt.s)
     return mt.select_rows(

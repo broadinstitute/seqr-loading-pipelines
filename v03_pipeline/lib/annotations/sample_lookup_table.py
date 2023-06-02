@@ -56,3 +56,20 @@ def AF(  # noqa: N802
         ),
     )
     return sample_lookup.AF(sample_lookup_ht[ht.key])
+
+
+def homozygote_count(
+    ht: hl.Table,
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    **_: Any,
+) -> hl.Expression:
+    sample_lookup_ht = hl.read_table(
+        sample_lookup_table_path(
+            env,
+            reference_genome,
+            dataset_type,
+        ),
+    )
+    return sample_lookup.homozygote_count(sample_lookup_ht[ht.key])

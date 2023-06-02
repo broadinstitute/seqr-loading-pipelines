@@ -6,6 +6,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
     AC,
     AF,
     AN,
+    homozygote_count,
     remove_callset_sample_ids,
     union_sample_lookup_hts,
 )
@@ -34,11 +35,12 @@ class SampleLookupTest(unittest.TestCase):
             AC=AC(sample_lookup_ht),
             AF=AF(sample_lookup_ht),
             AN=AN(sample_lookup_ht),
+            homozygote_count=homozygote_count(sample_lookup_ht),
         )
         self.assertCountEqual(
             sample_lookup_ht.collect(),
             [
-                hl.Struct(id=0, AC=6, AF=0.5, AN=12),
+                hl.Struct(id=0, AC=6, AF=0.5, AN=12, homozygote_count=2),
             ],
         )
 
