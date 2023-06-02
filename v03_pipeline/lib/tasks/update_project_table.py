@@ -39,7 +39,7 @@ class UpdateProjectTableTask(BasePipelineTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
+                self.callset_path,
             ),
         )
 
@@ -64,7 +64,7 @@ class UpdateProjectTableTask(BasePipelineTask):
         )
         return ht.annotate_globals(
             sample_ids=hl.empty_array(hl.tstr),
-            updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
+            updates=hl.empty_set(hl.tstr),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
@@ -128,8 +128,6 @@ class UpdateProjectTableTask(BasePipelineTask):
             sample_ids=[
                 e.sample_id for e in ht.aggregate(hl.agg.take(ht.entries, 1))[0]
             ],
-            updates=ht.updates.add(
-                (self.callset_path, self.project_pedigree_path),
-            ),
+            updates=ht.updates.add(self.callset_path),
         )
         return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))

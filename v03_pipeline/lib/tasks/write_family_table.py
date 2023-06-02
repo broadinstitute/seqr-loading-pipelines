@@ -39,7 +39,7 @@ class WriteFamilyTableTask(BasePipelineTask):
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
+                self.callset_path
             ),
         )
 
@@ -98,6 +98,6 @@ class WriteFamilyTableTask(BasePipelineTask):
             sample_ids=[
                 e.sample_id for e in ht.aggregate(hl.agg.take(ht.entries, 1))[0]
             ],
-            updates={(self.callset_path, self.project_pedigree_path)},
+            updates={self.callset_path},
         )
         return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
