@@ -2,8 +2,8 @@ import hail as hl
 
 
 def _empty_entries(ht: hl.Table) -> hl.StructExpression:
-    first_entries_row = ht.aggregate(hl.agg.take(ht.entries, 1))
-    if not len(first_entries_row):
+    first_sample_ids_row = ht.aggregate(hl.agg.take(ht.entries.sample_id, 1))
+    if not len(first_sample_ids_row):
         return hl.empty_array(ht.entries.dtype.element_type)
     return [
         hl.Struct(
@@ -12,16 +12,15 @@ def _empty_entries(ht: hl.Table) -> hl.StructExpression:
                 for k, v in ht.entries.dtype.element_type.items()
                 if k != 'sample_id'
             },
-            sample_id=e.sample_id,
+            sample_id=sample_id,
         )
-        for e in first_entries_row[0]
+        for sample_id in first_sample_ids_row[0]
     ]
 
 
 def globalize_sample_ids(ht: hl.Table) -> hl.Table:
-    first_entries_row = ht.aggregate(hl.agg.take(ht.entries, 1))
     ht = ht.annotate_globals(
-        sample_ids=[e.sample_id for e in first_entries_row[0]],
+        sample_ids=ht.aggregate(hl.agg.take(ht.entries.sample_id, 1)[0])
     )
     return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
 
