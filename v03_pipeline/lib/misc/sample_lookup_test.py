@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.sample_genotypes import (
+from v03_pipeline.lib.misc.sample_lookup import (
     AC,
     AF,
     AN,
@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.sample_genotypes import (
 )
 
 
-class GenotypesTest(unittest.TestCase):
+class SampleLookupTest(unittest.TestCase):
     def test_allele_count_helpers(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
             [

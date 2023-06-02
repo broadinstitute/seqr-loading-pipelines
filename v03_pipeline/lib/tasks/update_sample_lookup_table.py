@@ -5,12 +5,12 @@ import luigi
 
 from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.sample_genotypes import (
+from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.misc.sample_lookup import (
     compute_sample_lookup_ht,
     remove_callset_sample_ids,
     union_sample_lookup_hts,
 )
-from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import SampleFileType, SampleType
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask

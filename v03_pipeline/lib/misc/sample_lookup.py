@@ -39,9 +39,9 @@ def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
 
 def remove_callset_sample_ids(
     sample_lookup_ht: hl.Table,
-    samples_ht: hl.Table,
+    sample_subset_ht: hl.Table,
 ) -> hl.Table:
-    sample_ids = samples_ht.aggregate(hl.agg.collect_as_set(samples_ht.s))
+    sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
     return sample_lookup_ht.select(
         ref_samples=sample_lookup_ht.ref_samples.difference(sample_ids),
         het_samples=sample_lookup_ht.het_samples.difference(sample_ids),
