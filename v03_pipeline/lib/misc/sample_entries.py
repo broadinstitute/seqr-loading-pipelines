@@ -20,7 +20,7 @@ def _empty_entries(ht: hl.Table) -> hl.StructExpression:
 
 def globalize_sample_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate_globals(
-        sample_ids=ht.aggregate(hl.agg.take(ht.entries.sample_id, 1)[0])
+        sample_ids=ht.aggregate(hl.agg.take(ht.entries.sample_id, 1)[0]),
     )
     return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
 
