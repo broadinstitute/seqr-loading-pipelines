@@ -16,7 +16,6 @@ from v03_pipeline.lib.model import (
     AnnotationType,
     DatasetType,
     Env,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
