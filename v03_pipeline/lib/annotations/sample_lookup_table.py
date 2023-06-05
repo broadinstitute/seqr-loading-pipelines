@@ -2,74 +2,46 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.misc import sample_lookup
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.paths import sample_lookup_table_path
+N_ALT_REF = 0
+N_ALT_HET = 1
+N_ALT_HOM = 2
 
 
 def AC(  # noqa: N802
     ht: hl.Table,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
+    sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    sample_lookup_ht = hl.read_table(
-        sample_lookup_table_path(
-            env,
-            reference_genome,
-            dataset_type,
-        ),
+    return (
+        sample_lookup_ht[ht.key].ref_samples.length() * N_ALT_REF
+        + sample_lookup_ht[ht.key].het_samples.length() * N_ALT_HET
+        + sample_lookup_ht[ht.key].hom_samples.length() * N_ALT_HOM
     )
-    return sample_lookup.AC(sample_lookup_ht[ht.key])
 
 
 def AN(  # noqa: N802
     ht: hl.Table,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
+    sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    sample_lookup_ht = hl.read_table(
-        sample_lookup_table_path(
-            env,
-            reference_genome,
-            dataset_type,
-        ),
+    return 2 * (
+        sample_lookup_ht[ht.key].ref_samples.length()
+        + sample_lookup_ht[ht.key].het_samples.length()
+        + sample_lookup_ht[ht.key].hom_samples.length()
     )
-    return sample_lookup.AN(sample_lookup_ht[ht.key])
 
 
 def AF(  # noqa: N802
     ht: hl.Table,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
+    sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    sample_lookup_ht = hl.read_table(
-        sample_lookup_table_path(
-            env,
-            reference_genome,
-            dataset_type,
-        ),
-    )
-    return sample_lookup.AF(sample_lookup_ht[ht.key])
+    return AC(ht, sample_lookup_ht) / AN(ht, sample_lookup_ht)
 
 
 def hom(
     ht: hl.Table,
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
+    sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    sample_lookup_ht = hl.read_table(
-        sample_lookup_table_path(
-            env,
-            reference_genome,
-            dataset_type,
-        ),
-    )
-    return sample_lookup.homozygote_count(sample_lookup_ht[ht.key])
+    return sample_lookup_ht[ht.key].hom_samples.length()

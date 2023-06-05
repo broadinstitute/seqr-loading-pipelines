@@ -13,7 +13,10 @@ from v03_pipeline.lib.annotations import (
     sv,
 )
 from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.paths import (
+    sample_lookup_table_path,
+    valid_reference_dataset_collection_path,
+)
 
 ANNOTATION_CONFIG = {
     (DatasetType.SNV, AnnotationType.FORMATTING): [
@@ -62,24 +65,34 @@ ANNOTATION_CONFIG = {
 }
 
 
-def reference_dataset_collection_tables(
+def hail_table_dependencies(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     annotation_type: AnnotationType,
 ) -> dict[str, hl.Table]:
-    if annotation_type != AnnotationType.REFERENCE_DATASET_COLLECTION:
-        return {}
-    return {
-        f'{rdc.value}_ht': hl.read_table(
-            valid_reference_dataset_collection_path(
-                env,
-                reference_genome,
-                rdc,
+    if annotation_type == AnnotationType.REFERENCE_DATASET_COLLECTION:
+        return {
+            f'{rdc.value}_ht': hl.read_table(
+                valid_reference_dataset_collection_path(
+                    env,
+                    reference_genome,
+                    rdc,
+                ),
+            )
+            for rdc in dataset_type.annotatable_reference_dataset_collections(env)
+        }
+    if annotation_type == AnnotationType.SAMPLE_LOOKUP_TABLE:
+        return {
+            'sample_lookup_ht': hl.read_table(
+                sample_lookup_table_path(
+                    env,
+                    reference_genome,
+                    dataset_type,
+                ),
             ),
-        )
-        for rdc in dataset_type.annotatable_reference_dataset_collections(env)
-    }
+        }
+    return {}
 
 
 def get_fields(
@@ -88,14 +101,14 @@ def get_fields(
     **kwargs: Any,
 ) -> dict[str, hl.Expression]:
     dataset_type = kwargs['dataset_type']
-    rdc_hts = reference_dataset_collection_tables(
+    hts = hail_table_dependencies(
         kwargs['env'],
         kwargs['reference_genome'],
         dataset_type,
         annotation_type,
     )
     fields = {
-        field_expression.__name__: field_expression(t, **kwargs, **rdc_hts)
+        field_expression.__name__: field_expression(t, **kwargs, **hts)
         for field_expression in ANNOTATION_CONFIG.get(
             (dataset_type, annotation_type),
             [],

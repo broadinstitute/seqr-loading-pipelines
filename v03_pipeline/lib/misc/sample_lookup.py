@@ -1,33 +1,5 @@
 import hail as hl
 
-N_ALT_REF = 0
-N_ALT_HET = 1
-N_ALT_HOM = 2
-
-
-def AC(sample_lookup_ht) -> hl.Int32Expression:  # noqa: N802
-    return (
-        sample_lookup_ht.ref_samples.length() * N_ALT_REF
-        + sample_lookup_ht.het_samples.length() * N_ALT_HET
-        + sample_lookup_ht.hom_samples.length() * N_ALT_HOM
-    )
-
-
-def AN(sample_lookup_ht) -> hl.Int32Expression:  # noqa: N802
-    return (
-        sample_lookup_ht.ref_samples.length()
-        + sample_lookup_ht.het_samples.length()
-        + sample_lookup_ht.hom_samples.length()
-    ) * 2
-
-
-def AF(sample_lookup_ht) -> hl.Float64Expression:  # noqa: N802
-    return AC(sample_lookup_ht) / AN(sample_lookup_ht)
-
-
-def homozygote_count(sample_lookup_ht) -> hl.Int32Expression:
-    return sample_lookup_ht.hom_samples.length()
-
 
 def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     sample_ids = hl.agg.collect_as_set(mt.s)
