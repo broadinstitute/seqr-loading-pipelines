@@ -9,8 +9,8 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     family_table_path,
     project_table_path,
-    valid_reference_dataset_collection_path,
     sample_lookup_table_path,
+    valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
 
