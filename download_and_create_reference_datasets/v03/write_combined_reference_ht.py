@@ -33,12 +33,17 @@ DATASETS = [
 VERSION = '1.0.0'
 
 
-def run(environment: Env, reference_genome: ReferenceGenome, dataset: str, vep_config_json_path: str | None):
+def run(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset: str,
+    vep_config_json_path: str | None,
+):
     destination_path = os.path.join(
-        GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
+        GCS_PREFIXES[(env, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
     ).format(
-        genome_version=genome_version,
+        genome_version=reference_genome.v02_value,
     )
     if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
         ht = update_existing_joined_hts(
@@ -48,16 +53,25 @@ def run(environment: Env, reference_genome: ReferenceGenome, dataset: str, vep_c
             VERSION,
             reference_genome.v02_value,
         )
+        rows_for_vep_ht = ht.filter(~hl.is_defined(ht.vep))
+        rows_for_vep_ht = run_vep(
+            rows_for_vep_ht,
+            env,
+            reference_genome,
+            DatasetType.SNV,
+            vep_config_json_path,
+        )
+        ht = ht.union(rows_for_vep_ht, unify=True)
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=reference_genome.v02_value)
-    
-    new_variants_ht = run_vep(
-        new_variants_ht,
-        env,
-        reference_genome,
-        DatasetType.SNV,
-        vep_config_json_path,
-    )
+        run_vep(
+            ht,
+            env,
+            reference_genome,
+            DatasetType.SNV,
+            vep_config_json_path,
+        )
+
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
@@ -70,13 +84,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--env',
-        type=Env, 
+        type=Env,
         choices=list(Env),
         default=Env.DEV,
     )
     parser.add_argument(
         '--reference-genome',
-        type=ReferenceGenome, 
+        type=ReferenceGenome,
         choices=list(ReferenceGenome),
         default=ReferenceGenome.GRCh38,
     )
@@ -86,8 +100,10 @@ if __name__ == '__main__':
         required=True,
     )
     parser.add_argument(
-        '--vep-config-json-path'
-        default=None
+        '--vep-config-json-path',
+        default=None,
     )
     args, _ = parser.parse_known_args()
-    run(args.environment, args.reference_genome, args.dataset, args.vep_config_json_path)
+    run(
+        args.env, args.reference_genome, args.dataset, args.vep_config_json_path,
+    )
