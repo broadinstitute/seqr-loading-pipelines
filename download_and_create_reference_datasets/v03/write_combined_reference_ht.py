@@ -53,15 +53,15 @@ def run(
             VERSION,
             reference_genome.v02_value,
         )
-        rows_for_vep_ht = ht.filter(~hl.is_defined(ht.vep))
-        rows_for_vep_ht = run_vep(
-            rows_for_vep_ht,
+        unannotated_rows_ht = ht.filter(~hl.is_defined(ht.vep))
+        unannotated_rows_ht = run_vep(
+            unannotated_rows_ht,
             env,
             reference_genome,
             DatasetType.SNV,
             vep_config_json_path,
         )
-        ht = ht.union(rows_for_vep_ht, unify=True)
+        ht = ht.union(unannotated_rows_ht)
     else:
         ht = join_hts(DATASETS, VERSION, reference_genome=reference_genome.v02_value)
         run_vep(
