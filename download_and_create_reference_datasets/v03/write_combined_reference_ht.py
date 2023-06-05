@@ -9,18 +9,31 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
-DATASETS = ['gnomad_non_coding_constraint', 'screen']
-INTERVAL_REFERENCE_HT_PATH = (
-    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
+COMBINED_REFERENCE_HT_PATH = (
+    'combined_reference/combined_reference.GRCh{genome_version}.ht'
 )
+DATASETS = [
+    'cadd',
+    'dbnsfp',
+    'eigen',
+    'exac',
+    'geno2mp',
+    'gnomad_genomes',
+    'gnomad_exomes',
+    'mpc',
+    'primate_ai',
+    'splice_ai',
+    'topmed',
+    'gnomad_genome_coverage',
+    'gnomad_exome_coverage',
+]
 VERSION = '1.0.0'
 
 
-def run(environment: str, dataset: str):
-    genome_version = '38'
+def run(environment: str, genome_version: str, dataset: str):
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
-        INTERVAL_REFERENCE_HT_PATH,
+        COMBINED_REFERENCE_HT_PATH,
     ).format(
         genome_version=genome_version,
     )
@@ -50,9 +63,15 @@ if __name__ == '__main__':
         choices=['dev', 'prod'],
     )
     parser.add_argument(
+        '--genome-version',
+        help='Reference build, 37 or 38',
+        choices=['37', '38'],
+        default='38',
+    )
+    parser.add_argument(
         '--dataset',
         choices=DATASETS,
         required=True,
     )
     args, _ = parser.parse_known_args()
-    run(args.environment, args.dataset)
+    run(args.environment, args.genome_version)

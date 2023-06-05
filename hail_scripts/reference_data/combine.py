@@ -1,7 +1,9 @@
-import datetime
 import functools
+from datetime import datetime
+from typing import List
 
 import hail as hl
+import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
@@ -46,7 +48,14 @@ def get_enum_select_fields(enum_selects, ht):
     if enum_selects is None:
         return enum_select_fields
     for field_name, values in enum_selects.items():
-        lookup = hl.dict(hl.enumerate(values, index_first=False))
+        lookup = hl.dict(
+            hl.enumerate(values, index_first=False).extend(
+                # NB: adding missing values here allows us to
+                # hard fail if a mapped key is present and has an unexpected value
+                # but propagate missing values.
+                [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
+            ),
+        )
         # NB: this conditioning on type is "outside" the hail expression context.
         if (
             isinstance(ht[field_name].dtype, (hl.tarray, hl.tset))
@@ -94,10 +103,12 @@ def update_joined_ht_globals(
     }
     # Add metadata, but also removes previous globals.
     return joined_ht.select_globals(
-        date=datetime.now().isoformat(),
-        datasets=hl.dict(included_dataset),
+        date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
+        datasets=included_dataset,
         version=version,
-        enum_definitions=hl.dict(enum_definitions),
+        enum_definitions=hl.dict(enum_definitions)
+        if len(enum_definitions) > 0
+        else hl.missing(hl.tdict('str', hl.tdict('str', hl.tarray('str')))),
     )
 
 
@@ -114,7 +125,7 @@ def join_hts(datasets, version, reference_genome='37'):
     )
 
     # NB: coverage datasets are keyed by locus rather than locus
-    # and alleles, so we cannot join.  Instead we annotate w/ locus as
+    # and alleles, so we cannot join.  Instead we annotate w/ locus
     # as the key.
     coverage_hts = [
         (dataset, get_ht(dataset, reference_genome))
@@ -122,13 +133,35 @@ def join_hts(datasets, version, reference_genome='37'):
         if 'coverage' in dataset
     ]
     for dataset, coverage_ht in coverage_hts:
-        joined_ht.annotate(dataset=coverage_ht[coverage_ht.locus][dataset])
+        joined_ht = joined_ht.annotate(
+            **{dataset: coverage_ht[joined_ht.locus][dataset]},
+        )
 
-    joined_ht = update_joined_ht_globals(
+    return update_joined_ht_globals(
         joined_ht,
         datasets,
         version,
         reference_genome,
     )
-    joined_ht.describe()
-    return joined_ht
+
+
+def update_existing_joined_hts(
+    destination_path: str,
+    dataset: str,
+    datasets: List[str],
+    version: str,
+    genome_version: str,
+):
+    joined_ht = hl.read_table(destination_path)
+    dataset_ht = get_ht(dataset, genome_version)
+    if 'coverage' not in dataset:
+        joined_ht = joined_ht.drop(dataset)
+        joined_ht = joined_ht.join(dataset_ht, 'outer')
+        joined_ht = joined_ht.filter(
+            hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
+        )
+    else:
+        joined_ht = joined_ht.annotate(
+            **{dataset: dataset_ht[joined_ht.locus][dataset]},
+        )
+    return update_joined_ht_globals(joined_ht, dataset, version, genome_version)
