@@ -32,12 +32,9 @@ def homozygote_count(sample_lookup_ht) -> hl.Int32Expression:
 def compute_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     sample_ids = hl.agg.collect_as_set(mt.s)
     return mt.select_rows(
-        ref_samples=hl.agg.filter(mt.GT.n_alt_alleles() == N_ALT_REF, sample_ids),
-        het_samples=hl.agg.filter(mt.GT.n_alt_alleles() == N_ALT_HET, sample_ids),
-        hom_samples=hl.agg.filter(
-            mt.GT.n_alt_alleles() == N_ALT_HOM,
-            sample_ids,
-        ),
+        ref_samples=hl.agg.filter(mt.GT.is_hom_ref(), sample_ids),
+        het_samples=hl.agg.filter(mt.GT.is_het(), sample_ids),
+        hom_samples=hl.agg.filter(mt.GT.is_hom_var(), sample_ids),
     ).rows()
 
 
