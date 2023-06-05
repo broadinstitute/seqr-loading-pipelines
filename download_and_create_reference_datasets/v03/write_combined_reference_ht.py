@@ -9,6 +9,9 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.vep import run_vep
+
 COMBINED_REFERENCE_HT_PATH = (
     'combined_reference/combined_reference.GRCh{genome_version}.ht'
 )
@@ -30,7 +33,7 @@ DATASETS = [
 VERSION = '1.0.0'
 
 
-def run(environment: str, genome_version: str, dataset: str):
+def run(environment: Env, reference_genome: ReferenceGenome, dataset: str, vep_config_json_path: str | None):
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
@@ -43,10 +46,18 @@ def run(environment: str, genome_version: str, dataset: str):
             dataset,
             DATASETS,
             VERSION,
-            genome_version,
+            reference_genome.v02_value,
         )
     else:
-        ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+        ht = join_hts(DATASETS, VERSION, reference_genome=reference_genome.v02_value)
+    
+    new_variants_ht = run_vep(
+        new_variants_ht,
+        env,
+        reference_genome,
+        DatasetType.SNV,
+        vep_config_json_path,
+    )
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
@@ -58,20 +69,25 @@ def run(environment: str, genome_version: str, dataset: str):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--environment',
-        default='dev',
-        choices=['dev', 'prod'],
+        '--env',
+        type=Env, 
+        choices=list(Env),
+        default=Env.DEV,
     )
     parser.add_argument(
-        '--genome-version',
-        help='Reference build, 37 or 38',
-        choices=['37', '38'],
-        default='38',
+        '--reference-genome',
+        type=ReferenceGenome, 
+        choices=list(ReferenceGenome),
+        default=ReferenceGenome.GRCh38,
     )
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
         required=True,
     )
+    parser.add_argument(
+        '--vep-config-json-path'
+        default=None
+    )
     args, _ = parser.parse_known_args()
-    run(args.environment, args.genome_version)
+    run(args.environment, args.reference_genome, args.dataset, args.vep_config_json_path)
