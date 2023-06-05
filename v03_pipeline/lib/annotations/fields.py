@@ -31,7 +31,7 @@ ANNOTATION_CONFIG = {
         sample_lookup_table.AC,
         sample_lookup_table.AF,
         sample_lookup_table.AN,
-        sample_lookup_table.homozygote_count,
+        sample_lookup_table.hom,
     ],
     (DatasetType.SNV, AnnotationType.GENOTYPE_ENTRIES): [
         snv.gq,

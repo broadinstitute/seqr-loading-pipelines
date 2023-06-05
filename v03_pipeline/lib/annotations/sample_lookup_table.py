@@ -58,7 +58,7 @@ def AF(  # noqa: N802
     return sample_lookup.AF(sample_lookup_ht[ht.key])
 
 
-def homozygote_count(
+def hom(
     ht: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
