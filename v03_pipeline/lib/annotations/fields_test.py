@@ -122,7 +122,9 @@ class FieldsTest(unittest.TestCase):
 
     @patch('v03_pipeline.lib.annotations.fields.hl.read_table')
     def test_get_sample_lookup_table_fields(
-        self, mock_dataroot: Mock, mock_read_table: Mock,
+        self,
+        mock_dataroot: Mock,
+        mock_read_table: Mock,
     ) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         mock_read_table.return_value = hl.Table.parallelize(

@@ -105,5 +105,8 @@ if __name__ == '__main__':
     )
     args, _ = parser.parse_known_args()
     run(
-        args.env, args.reference_genome, args.dataset, args.vep_config_json_path,
+        args.env,
+        args.reference_genome,
+        args.dataset,
+        args.vep_config_json_path,
     )
