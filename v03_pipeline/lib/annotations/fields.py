@@ -12,12 +12,7 @@ from v03_pipeline.lib.annotations import (
     snv,
     sv,
 )
-from v03_pipeline.lib.model import (
-    AnnotationType,
-    DatasetType,
-    Env,
-    ReferenceGenome,
-)
+from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 ANNOTATION_CONFIG = {
