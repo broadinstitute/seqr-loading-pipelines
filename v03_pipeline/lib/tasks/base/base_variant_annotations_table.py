@@ -6,7 +6,7 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
-    reference_dataset_collection_path,
+    valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
@@ -38,7 +38,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [
             HailTableTask(
-                reference_dataset_collection_path(
+                valid_reference_dataset_collection_path(
                     self.env,
                     self.reference_genome,
                     self.dataset_type.base_reference_dataset_collection,
@@ -50,7 +50,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
         ):
             requirements.append(
                 HailTableTask(
-                    reference_dataset_collection_path(
+                    valid_reference_dataset_collection_path(
                         self.env,
                         self.reference_genome,
                         rdc,
@@ -69,7 +69,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
             )
         else:
             ht = hl.read_table(
-                reference_dataset_collection_path(
+                valid_reference_dataset_collection_path(
                     self.env,
                     self.reference_genome,
                     self.dataset_type.base_reference_dataset_collection,

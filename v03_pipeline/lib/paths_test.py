@@ -9,7 +9,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     family_table_path,
     project_table_path,
-    reference_dataset_collection_path,
+    valid_reference_dataset_collection_path,
     sample_lookup_table_path,
     variant_annotations_table_path,
 )
@@ -50,9 +50,9 @@ class TestPaths(unittest.TestCase):
             'gs://seqr-datasets/GRCh38/v03/MITO/projects/R0652_pipeline_test/samples.ht',
         )
 
-    def test_reference_dataset_collection_path(self) -> None:
+    def test_valid_reference_dataset_collection_path(self) -> None:
         self.assertEqual(
-            reference_dataset_collection_path(
+            valid_reference_dataset_collection_path(
                 Env.PROD,
                 ReferenceGenome.GRCh38,
                 ReferenceDatasetCollection.HGMD,
@@ -60,7 +60,7 @@ class TestPaths(unittest.TestCase):
             'gs://seqr-reference-data-private/GRCh38/v03/hgmd.ht',
         )
         self.assertEqual(
-            reference_dataset_collection_path(
+            valid_reference_dataset_collection_path(
                 Env.DEV,
                 ReferenceGenome.GRCh37,
                 ReferenceDatasetCollection.COMBINED,
@@ -68,7 +68,7 @@ class TestPaths(unittest.TestCase):
             'gs://seqr-scratch-temp/GRCh37/v03/combined.ht',
         )
         self.assertEqual(
-            reference_dataset_collection_path(
+            valid_reference_dataset_collection_path(
                 Env.LOCAL,
                 ReferenceGenome.GRCh37,
                 ReferenceDatasetCollection.HGMD,

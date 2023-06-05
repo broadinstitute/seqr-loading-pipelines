@@ -10,7 +10,7 @@ from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import reference_dataset_collection_path
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 
 def hgmd(
@@ -20,19 +20,14 @@ def hgmd(
     dataset_type: DatasetType,
     **_: Any,
 ) -> hl.Expression:
-    if (
-        ReferenceDatasetCollection.HGMD
-        not in dataset_type.annotatable_reference_dataset_collections(env)
-    ):
-        return None
-    hgmd_ht = hl.read_table(
-        reference_dataset_collection_path(
-            env,
-            reference_genome,
-            ReferenceDatasetCollection.HGMD,
-        ),
+    rdc_ht = valid_reference_dataset_collection_path(
+        env,
+        reference_genome,
+        ReferenceDatasetCollection.HGMD,
     )
-    return hgmd_ht[ht.key].hgmd
+    if not rdc_ht:
+        return None
+    return rdc_ht[ht.key].hgmd
 
 
 def gnomad_non_coding_constraint(
@@ -42,13 +37,8 @@ def gnomad_non_coding_constraint(
     dataset_type: DatasetType,
     **_: Any,
 ) -> hl.Expression:
-    if (
-        ReferenceDatasetCollection.INTERVAL_REFERENCE
-        not in dataset_type.annotatable_reference_dataset_collections(env)
-    ):
-        return None
-    interval_reference_ht = hl.read_table(
-        reference_dataset_collection_path(
+    rdc_ht = hl.read_table(
+        valid_reference_dataset_collection_path(
             env,
             reference_genome,
             ReferenceDatasetCollection.INTERVAL_REFERENCE,
@@ -56,7 +46,7 @@ def gnomad_non_coding_constraint(
     )
     return hl.Struct(
         z_score=(
-            interval_reference_ht.index(ht.locus, all_matches=True)
+            rdc_ht.index(ht.locus, all_matches=True)
             .filter(
                 lambda x: hl.is_defined(x.gnomad_non_coding_constraint['z_score']),
             )
@@ -72,13 +62,8 @@ def screen(
     dataset_type: DatasetType,
     **_: Any,
 ) -> hl.Expression:
-    if (
-        ReferenceDatasetCollection.INTERVAL_REFERENCE
-        not in dataset_type.annotatable_reference_dataset_collections(env)
-    ):
-        return None
-    interval_reference_ht = hl.read_table(
-        reference_dataset_collection_path(
+    rdc_ht = hl.read_table(
+        valid_reference_dataset_collection_path(
             env,
             reference_genome,
             ReferenceDatasetCollection.INTERVAL_REFERENCE,
@@ -86,7 +71,7 @@ def screen(
     )
     return hl.Struct(
         region_type_ids=(
-            interval_reference_ht.index(
+            rdc_ht.index(
                 ht.locus,
                 all_matches=True,
             ).flatmap(

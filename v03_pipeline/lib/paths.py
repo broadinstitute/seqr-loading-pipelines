@@ -85,7 +85,7 @@ def project_table_path(
     )
 
 
-def reference_dataset_collection_path(
+def valid_reference_dataset_collection_path(
     env: Env,
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
