@@ -4,22 +4,21 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
-from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
+from v03_pipeline.lib.model import AnnotationType
+from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import RawFileTask, VCFFileTask
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
+)
+from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallset,
 )
 from v03_pipeline.lib.vep import run_vep
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
@@ -32,17 +31,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
-            VCFFileTask(self.callset_path)
-            if self.dataset_type.sample_file_type == SampleFileType.VCF
-            else RawFileTask(self.callset_path),
-            RawFileTask(self.project_remap_path),
-            RawFileTask(self.project_pedigree_path),
+            WriteRemappedAndSubsettedCallset(
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.hail_temp_dir,
+                self.callset_path,
+                self.project_remap_path,
+                self.project_pedigree_path,
+                self.ignore_missing_samples,
+            ),
             UpdateSampleLookupTableTask(
                 self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.hail_temp_dir,
-                self.sample_type,
                 self.callset_path,
                 self.project_remap_path,
                 self.project_pedigree_path,
@@ -58,23 +61,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
-        # Import required files.
-        callset_mt = import_callset(
-            self.callset_path,
-            self.env,
-            self.reference_genome,
-            self.dataset_type,
-        )
-        project_remap_ht = import_remap(self.project_remap_path)
-        pedigree_ht = import_pedigree(self.project_pedigree_path)
-
-        # Remap, then subset to samples of interest.
-        callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
-        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
-        callset_mt = subset_samples(
-            callset_mt,
-            sample_subset_ht,
-            self.ignore_missing_samples,
+        callset_mt = hl.read_matrix_table(
+            remapped_and_subsetted_callset_path(
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_path,
+            ),
         )
 
         # Get new rows, annotate them with vep, format and annotate them,

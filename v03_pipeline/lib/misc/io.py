@@ -73,26 +73,27 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
     return ht.key_by(ht.family_id)
 
 
-def write_ht(
+def write(
     env: Env,
-    ht: hl.Table,
+    t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
-) -> hl.Table:
+) -> hl.Table | hl.MatrixTable:
+    suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     if checkpoint and (env == Env.LOCAL or env == Env.TEST):
         with tempfile.TemporaryDirectory() as d:
-            ht = ht.checkpoint(
+            t = t.checkpoint(
                 os.path.join(
                     d,
-                    f'{uuid.uuid4()}.ht',
+                    f'{uuid.uuid4()}.{suffix}',
                 ),
             )
-            return ht.write(destination_path, overwrite=True, stage_locally=True)
+            return t.write(destination_path, overwrite=True, stage_locally=True)
     elif checkpoint:
-        ht = ht.checkpoint(
+        t = t.checkpoint(
             os.path.join(
                 DataRoot.SEQR_SCRATCH_TEMP.value,
-                f'{uuid.uuid4()}.ht',
+                f'{uuid.uuid4()}.{suffix}',
             ),
         )
-    return ht.write(destination_path, overwrite=True, stage_locally=True)
+    return t.write(destination_path, overwrite=True, stage_locally=True)

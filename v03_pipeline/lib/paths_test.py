@@ -9,6 +9,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     family_table_path,
     project_table_path,
+    remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -94,4 +95,24 @@ class TestPaths(unittest.TestCase):
                 DatasetType.GCNV,
             ),
             'gs://seqr-scratch-temp/GRCh38/v03/GCNV/annotations.ht',
+        )
+
+    def test_remapped_and_subsetted_callset_path(self) -> None:
+        self.assertEqual(
+            remapped_and_subsetted_callset_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                'gs://abc.efg/callset.vcf.gz',
+            ),
+            'gs://seqr-loading-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+        )
+        self.assertEqual(
+            remapped_and_subsetted_callset_path(
+                Env.DEV,
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                'gs://abc.efg/callset/*.vcf.gz',
+            ),
+            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/bce53ccdb49a5ed2513044e1d0c6224e3ffcc323f770dc807d9175fd3c70a050.mt',
         )

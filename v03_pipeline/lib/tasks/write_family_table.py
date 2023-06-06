@@ -4,23 +4,20 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.io import import_callset, import_pedigree, import_remap
+from v03_pipeline.lib.misc.io import import_pedigree, write
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
-from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
+from v03_pipeline.lib.misc.sample_ids import subset_samples
+from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import (
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    RawFileTask,
-    VCFFileTask,
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallset,
 )
 
 
 class WriteFamilyTableTask(BasePipelineTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
@@ -42,30 +39,22 @@ class WriteFamilyTableTask(BasePipelineTask):
             hl.read_table(self.output().path).updates.contains(self.callset_path),
         )
 
-    def requires(self) -> list[luigi.Task]:
-        return [
-            VCFFileTask(self.callset_path)
-            if self.dataset_type.sample_file_type == SampleFileType.VCF
-            else RawFileTask(self.callset_path),
-            RawFileTask(self.project_remap_path),
-            RawFileTask(self.project_pedigree_path),
-        ]
-
-    def initialize_table(self) -> hl.Table:
-        pass
-
-    def update(self, _: hl.Table) -> hl.Table:
-        # Family Tables are initialized to empty even if they already exist
-        # because the entire family should be contained in the callset.
-        callset_mt = import_callset(
-            self.callset_path,
+    def requires(self) -> luigi.Task:
+        return WriteRemappedAndSubsettedCallset(
             self.env,
             self.reference_genome,
             self.dataset_type,
+            self.hail_temp_dir,
+            self.callset_path,
+            self.project_remap_path,
+            self.project_pedigree_path,
+            self.ignore_missing_samples,
         )
-        project_remap_ht = import_remap(self.project_remap_path)
+
+    def run(self) -> None:
+        self.init_hail()
+        callset_mt = hl.read_matrix_table(self.input().path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
-        callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
         sample_subset_ht = samples_to_include(
             pedigree_ht,
             callset_mt.cols(),
@@ -94,6 +83,7 @@ class WriteFamilyTableTask(BasePipelineTask):
             ),
         ).rows()
         ht = globalize_sample_ids(ht)
-        return ht.annotate_globals(
+        ht = ht.annotate_globals(
             updates={self.callset_path},
         )
+        write(self.env, ht, self.output().path)
