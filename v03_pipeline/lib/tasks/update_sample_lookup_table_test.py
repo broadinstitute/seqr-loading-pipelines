@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
@@ -35,7 +35,6 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
-            sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,

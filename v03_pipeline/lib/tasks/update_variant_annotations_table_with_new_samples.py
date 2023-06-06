@@ -41,7 +41,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 self.reference_genome,
                 self.dataset_type,
                 self.hail_temp_dir,
-                self.sample_type,
                 self.callset_path,
                 self.project_remap_path,
                 self.project_pedigree_path,
