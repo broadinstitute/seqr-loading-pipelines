@@ -12,7 +12,7 @@ from v03_pipeline.lib.misc.sample_entries import (
     union_entries_hts,
 )
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import AnnotationType, SampleFileType, SampleType
+from v03_pipeline.lib.model import AnnotationType, SampleFileType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import (
@@ -24,7 +24,6 @@ from v03_pipeline.lib.tasks.files import (
 
 
 class UpdateProjectTableTask(BasePipelineTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()

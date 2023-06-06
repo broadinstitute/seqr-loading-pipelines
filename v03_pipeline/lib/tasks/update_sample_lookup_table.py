@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
     remove_callset_sample_ids,
     union_sample_lookup_hts,
 )
-from v03_pipeline.lib.model import SampleFileType, SampleType
+from v03_pipeline.lib.model import SampleFileType
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import (
@@ -23,7 +23,6 @@ from v03_pipeline.lib.tasks.files import (
 
 
 class UpdateSampleLookupTableTask(BasePipelineTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
