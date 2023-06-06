@@ -104,8 +104,9 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
                 'gs://abc.efg/callset.vcf.gz',
+                'gs://abc.efg/projects/R0111_tgg_bblanken_wes/pedigree.tsv',
             ),
-            'gs://seqr-loading-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+            'gs://seqr-loading-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/1fb4a23aa1e331454e4d3055b77c4639bbb36d1dce462960cb542dec0ee51e87.mt',
         )
         self.assertEqual(
             remapped_and_subsetted_callset_path(
@@ -113,6 +114,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
                 'gs://abc.efg/callset/*.vcf.gz',
+                'gs://abc.efg/projects/R0111_tgg_bblanken_wes/pedigree.tsv',
             ),
-            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/bce53ccdb49a5ed2513044e1d0c6224e3ffcc323f770dc807d9175fd3c70a050.mt',
+            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/333b20b1661de1f475c6b9d13f86fa08bcc6ac7ec637fe5212bca99dd6f6a25c.mt',
         )
