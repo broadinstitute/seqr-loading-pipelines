@@ -10,12 +10,12 @@ if TYPE_CHECKING:
 
 
 def run_vep(
-    mt: hl.Table | hl.MatrixTable,  # TODO: use a TypeVar
+    mt: hl.Table,
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     vep_config_json_path: str | None,
-) -> hl.Table | hl.MatrixTable:
+) -> hl.Table:
     if hasattr(mt, 'vep') or not dataset_type.veppable:
         return mt
     vep_runner = (
