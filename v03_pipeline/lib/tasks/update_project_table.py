@@ -73,7 +73,7 @@ class UpdateProjectTableTask(BasePipelineTask):
         # Filter out the samples that we're now loading from the current ht.
         callset_mt = hl.read_matrix_table(self.input().path)
         ht = deglobalize_sample_ids(ht)
-        sample_ids = callset_mt.cols().aggregate(
+        sample_ids = callset_mt.aggregate_cols(
             hl.agg.collect_as_set(callset_mt.s),
         )
         ht = ht.annotate(
