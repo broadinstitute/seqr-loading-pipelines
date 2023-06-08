@@ -1,4 +1,5 @@
 import gzip
+import subprocess
 import tempfile
 import urllib
 
@@ -53,6 +54,12 @@ CLINVAR_PATHOGENICITIES = [
 CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
+
+def safely_move_to_hdfs(tmp_file_name):
+    try:
+        subprocess.run(["hdfs", "dfs", "-copyFromLocal", "-f", f"file://{tmp_file_name}", tmp_file_name])
+    except:
+        pass
 
 
 def parsed_clnsig(ht: hl.Table):
@@ -115,6 +122,7 @@ def download_and_import_latest_clinvar_vcf(
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
+        safely_move_to_hdfs(tmp_file.name)
         mt = import_vcf(
             tmp_file.name,
             genome_version,
