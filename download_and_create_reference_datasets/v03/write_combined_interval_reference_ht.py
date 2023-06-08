@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import argparse
 import os
 import uuid
@@ -15,7 +16,7 @@ INTERVAL_REFERENCE_HT_PATH = (
 )
 
 
-def run(environment: str, dataset: str):
+def run(environment: str, dataset: str | None):
     genome_version = '38'
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
@@ -23,7 +24,7 @@ def run(environment: str, dataset: str):
     ).format(
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
+    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')) and dataset is not None:
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
@@ -50,7 +51,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
-        required=True,
+        default=None
     )
     args, _ = parser.parse_known_args()
     run(args.environment, args.dataset)
