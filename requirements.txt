@@ -51,7 +51,7 @@ charset-normalizer==3.1.0
     #   requests
 commonmark==0.9.1
     # via rich
-cryptography==40.0.2
+cryptography==41.0.0
     # via
     #   azure-identity
     #   azure-storage-blob
@@ -245,7 +245,6 @@ typing-extensions==4.5.0
     #   azure-core
     #   azure-storage-blob
     #   janus
-    #   rich
 tzdata==2023.3
     # via pandas
 uritemplate==4.1.1
