@@ -29,6 +29,7 @@ DATASETS = [
 
 
 def run(environment: str, genome_version: str, dataset: str | None):
+    hl._set_flags(no_whole_stage_codegen='1')  # hail 0.2.78 hits an error on the join, this flag gets around it
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
