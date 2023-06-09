@@ -11,9 +11,7 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
-COMBINED_REFERENCE_HT_PATH = (
-    'combined_reference/combined_reference.GRCh{genome_version}.ht'
-)
+COMBINED_REFERENCE_HT_PATH = 'combined_reference.ht'
 DATASETS = [
     'cadd',
     'clinvar',
@@ -30,7 +28,7 @@ DATASETS = [
 
 
 def run(environment: str, genome_version: str, dataset: str | None):
-    hl._set_flags( # noqa: SLF001
+    hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
     destination_path = os.path.join(

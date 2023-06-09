@@ -12,9 +12,7 @@ from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
-INTERVAL_REFERENCE_HT_PATH = (
-    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
-)
+INTERVAL_REFERENCE_HT_PATH = 'combined_interval_reference.ht'
 
 
 def run(environment: str, dataset: str | None):
