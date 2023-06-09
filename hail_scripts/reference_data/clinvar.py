@@ -55,10 +55,20 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
 
+
 def safely_move_to_hdfs(tmp_file_name):
     try:
-        subprocess.run(["hdfs", "dfs", "-copyFromLocal", "-f", f"file://{tmp_file_name}", tmp_file_name])
-    except Exception as e:
+        subprocess.run(
+            [
+                'hdfs',
+                'dfs',
+                '-copyFromLocal',
+                '-f',
+                f'file://{tmp_file_name}',
+                tmp_file_name,
+            ],
+        )
+    except subprocess.CalledProcessError as e:
         print(e)
 
 

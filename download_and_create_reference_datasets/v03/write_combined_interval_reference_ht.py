@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import argparse
 import os
 import uuid
@@ -24,7 +25,10 @@ def run(environment: str, dataset: str | None):
     ).format(
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')) and dataset is not None:
+    if (
+        hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
+        and dataset is not None
+    ):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
@@ -48,10 +52,6 @@ if __name__ == '__main__':
         default='dev',
         choices=['dev', 'prod'],
     )
-    parser.add_argument(
-        '--dataset',
-        choices=DATASETS,
-        default=None
-    )
+    parser.add_argument('--dataset', choices=DATASETS, default=None)
     args, _ = parser.parse_known_args()
     run(args.environment, args.dataset)

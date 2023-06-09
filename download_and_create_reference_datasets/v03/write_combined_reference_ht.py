@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+
 import argparse
 import os
 import uuid
@@ -29,14 +30,19 @@ DATASETS = [
 
 
 def run(environment: str, genome_version: str, dataset: str | None):
-    hl._set_flags(no_whole_stage_codegen='1')  # hail 0.2.78 hits an error on the join, this flag gets around it
+    hl._set_flags( # noqa: SLF001
+        no_whole_stage_codegen='1',
+    )  # hail 0.2.78 hits an error on the join, this flag gets around it
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
     ).format(
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')) and dataset is not None:
+    if (
+        hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
+        and dataset is not None
+    ):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
@@ -66,10 +72,6 @@ if __name__ == '__main__':
         choices=['37', '38'],
         default='38',
     )
-    parser.add_argument(
-        '--dataset',
-        choices=DATASETS,
-        default=None
-    )
+    parser.add_argument('--dataset', choices=DATASETS, default=None)
     args, _ = parser.parse_known_args()
     run(args.environment, args.genome_version, args.dataset)
