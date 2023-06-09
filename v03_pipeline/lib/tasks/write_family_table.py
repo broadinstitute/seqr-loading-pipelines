@@ -21,7 +21,7 @@ class WriteFamilyTableTask(BasePipelineTask):
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    ignore_missing_samples = luigi.BoolParameter(default=False)
+    ignore_missing_samples = luigi.BoolParameter(default=False, parsing=luigi.BoolParameter.EXPLICIT_PARSING)
     family_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:

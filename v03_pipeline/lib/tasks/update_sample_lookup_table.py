@@ -20,7 +20,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    ignore_missing_samples = luigi.BoolParameter(default=False)
+    ignore_missing_samples = luigi.BoolParameter(default=False, parsing=luigi.BoolParameter.EXPLICIT_PARSING)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
