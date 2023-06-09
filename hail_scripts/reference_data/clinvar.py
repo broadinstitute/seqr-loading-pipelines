@@ -58,8 +58,8 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
 def safely_move_to_hdfs(tmp_file_name):
     try:
         subprocess.run(["hdfs", "dfs", "-copyFromLocal", "-f", f"file://{tmp_file_name}", tmp_file_name])
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
 
 def parsed_clnsig(ht: hl.Table):
