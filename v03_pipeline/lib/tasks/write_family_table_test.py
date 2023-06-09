@@ -35,7 +35,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
-            family_guid='abc',
+            family_id='abc',
         )
         worker.add(wft_task)
         worker.run()

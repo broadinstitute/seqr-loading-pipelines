@@ -22,7 +22,7 @@ class WriteFamilyTableTask(BasePipelineTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     ignore_missing_samples = luigi.BoolParameter(default=False)
-    family_guid = luigi.Parameter()
+    family_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -30,7 +30,7 @@ class WriteFamilyTableTask(BasePipelineTask):
                 self.env,
                 self.reference_genome,
                 self.dataset_type,
-                self.family_guid,
+                self.family_id,
             ),
         )
 
@@ -58,10 +58,10 @@ class WriteFamilyTableTask(BasePipelineTask):
         sample_subset_ht = samples_to_include(
             pedigree_ht,
             callset_mt.cols(),
-            self.family_guid,
+            self.family_id,
         )
         if sample_subset_ht.count() == 0:
-            msg = f'Family {self.family_guid} is invalid.'
+            msg = f'Family {self.family_id} is invalid.'
             raise RuntimeError(msg)
         callset_mt = subset_samples(
             callset_mt,
