@@ -56,16 +56,14 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
 )
 
 
-def safely_move_to_hdfs(tmp_file_name):
+def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
     try:
         subprocess.run(
             [
-                'hdfs',
-                'dfs',
-                '-copyFromLocal',
-                '-f',
-                f'file://{tmp_file_name}',
+                'gsutil',
+                'cp',
                 tmp_file_name,
+                gcs_tmp_file_name,
             ],
         )
     except subprocess.CalledProcessError as e:
@@ -132,9 +130,10 @@ def download_and_import_latest_clinvar_vcf(
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        safely_move_to_hdfs(tmp_file.name)
+        gcs_tmp_file_name = 'gs://seqr-scratch-temp/{tmp_file.name}'
+        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = import_vcf(
-            tmp_file.name,
+            gcs_tmp_file_name,
             genome_version,
             drop_samples=True,
             min_partitions=2000,
