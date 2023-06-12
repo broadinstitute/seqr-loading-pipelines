@@ -76,13 +76,6 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
-            ht = run_vep(
-                ht,
-                self.env,
-                self.reference_genome,
-                self.dataset_type,
-                self.vep_config_json_path,
-            )
             ht = ht.annotate(
                 **get_fields(
                     ht,
