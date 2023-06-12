@@ -11,9 +11,7 @@ from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGe
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
-TEST_INTERVAL_1 = (
-    'v03_pipeline/var/test/reference_data/test_interval_1.ht'
-)
+TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 
 

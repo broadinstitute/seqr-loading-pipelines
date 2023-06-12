@@ -18,9 +18,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
-TEST_INTERVAL_1 = (
-    'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
-)
+TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
