@@ -58,7 +58,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 ReferenceDatasetCollection.HGMD,
             ),
-            'gs://seqr-reference-data-private/GRCh38/v03/hgmd.ht',
+            'gs://seqr-reference-data-private/GRCh38/v03/reference_datasets/hgmd.ht',
         )
         self.assertEqual(
             valid_reference_dataset_collection_path(
@@ -66,7 +66,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 ReferenceDatasetCollection.COMBINED,
             ),
-            'gs://seqr-scratch-temp/GRCh37/v03/combined.ht',
+            'gs://seqr-scratch-temp/GRCh37/v03/reference_datasets/combined.ht',
         )
         self.assertEqual(
             valid_reference_dataset_collection_path(

@@ -9,7 +9,7 @@ class ReferenceDatasetCollection(Enum):
     COMBINED = 'combined'
     COMBINED_MITO = 'combined_mito'
     HGMD = 'hgmd'
-    INTERVAL_REFERENCE = 'interval_reference'
+    INTERVAL = 'interval'
 
     @property
     def access_control(self) -> AccessControl:
@@ -46,7 +46,7 @@ class ReferenceDatasetCollection(Enum):
                 'mitimpact',
             ],
             ReferenceDatasetCollection.HGMD: ['hgmd'],
-            ReferenceDatasetCollection.INTERVAL_REFERENCE: [
+            ReferenceDatasetCollection.INTERVAL: [
                 'gnomad_non_coding_constraint',
                 'screen',
             ],

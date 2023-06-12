@@ -35,7 +35,7 @@ class DatasetType(Enum):
         rdcs = {
             DatasetType.SNV: {
                 ReferenceDatasetCollection.HGMD,
-                ReferenceDatasetCollection.INTERVAL_REFERENCE,
+                ReferenceDatasetCollection.INTERVAL,
             },
         }.get(self, set())
         if env == Env.LOCAL:

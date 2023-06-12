@@ -11,9 +11,7 @@ from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGe
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
-TEST_INTERVAL_REFERENCE_1 = (
-    'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
-)
+TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 
 
@@ -23,11 +21,11 @@ class FieldsTest(unittest.TestCase):
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
+            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
-            TEST_INTERVAL_REFERENCE_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
+            TEST_INTERVAL_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/interval.ht',
         )
 
     def tearDown(self) -> None:
