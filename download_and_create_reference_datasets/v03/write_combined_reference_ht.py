@@ -92,7 +92,7 @@ def run(
         )
 
     ht.describe()
-    checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
+    checkpoint_path = f"{GCS_PREFIXES[('DEV', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
     ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
