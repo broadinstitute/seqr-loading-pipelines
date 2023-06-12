@@ -23,7 +23,8 @@ class UpdateProjectTableTask(BasePipelineTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     ignore_missing_samples = luigi.BoolParameter(
-        default=False, parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     project_guid = luigi.Parameter()
 
