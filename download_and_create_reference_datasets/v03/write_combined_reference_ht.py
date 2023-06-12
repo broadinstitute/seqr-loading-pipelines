@@ -11,7 +11,7 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
-COMBINED_REFERENCE_HT_PATH = 'combined_reference.ht'
+COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
 DATASETS = [
     'cadd',
     'clinvar',
