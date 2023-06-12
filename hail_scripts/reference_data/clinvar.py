@@ -130,7 +130,7 @@ def download_and_import_latest_clinvar_vcf(
     mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        gcs_tmp_file_name = 'gs://seqr-scratch-temp/{tmp_file.name}'
+        gcs_tmp_file_name = 'gs://seqr-scratch-temp{tmp_file.name}'
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = import_vcf(
             gcs_tmp_file_name,
