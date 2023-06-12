@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import os
 import uuid
@@ -12,31 +14,27 @@ from hail_scripts.utils.hail_utils import write_ht
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
 
-COMBINED_REFERENCE_HT_PATH = (
-    'combined_reference/combined_reference.GRCh{genome_version}.ht'
-)
+
+COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
 DATASETS = [
     'cadd',
+    'clinvar',
     'dbnsfp',
     'eigen',
     'exac',
-    'geno2mp',
     'gnomad_genomes',
     'gnomad_exomes',
     'mpc',
     'primate_ai',
     'splice_ai',
     'topmed',
-    'gnomad_genome_coverage',
-    'gnomad_exome_coverage',
 ]
-VERSION = '1.0.0'
 
 
 def run(
     env: Env,
     reference_genome: ReferenceGenome,
-    dataset: str,
+    dataset: str | None,
     vep_config_json_path: str | None,
 ):
     destination_path = os.path.join(
@@ -45,7 +43,10 @@ def run(
     ).format(
         genome_version=reference_genome.v02_value,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
+    if (
+        hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
+        and dataset is not None
+    ):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,

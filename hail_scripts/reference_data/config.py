@@ -3,6 +3,18 @@ from enum import Enum
 
 import hail as hl
 
+from hail_scripts.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    CLINVAR_GOLD_STARS_LOOKUP,
+    CLINVAR_PATHOGENICITIES,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    download_and_import_latest_clinvar_vcf,
+    parsed_and_mapped_clnsigconf,
+    parsed_clnsig,
+)
+from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
+
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -11,6 +23,26 @@ class AccessControl(Enum):
 
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
+
+
+def clinvar_custom_select(ht):
+    selects = {}
+    clnsigs = parsed_clnsig(ht)
+    selects['pathogenicity'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
+        clnsigs[0],
+        CLINVAR_DEFAULT_PATHOGENICITY,
+    )
+    selects['assertion'] = hl.if_else(
+        CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
+        clnsigs[1:],
+        clnsigs,
+    )
+    # NB: the `enum_select` does not support mapping a list of tuples
+    # so there's a hidden enum-mapping inside this clinvar function.
+    selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
+    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
+    return selects
 
 
 def dbnsfp_custom_select(ht):
@@ -89,7 +121,6 @@ Format:
         'select': '<Optional list of fields to select or dict of new field name to location of old field
             in the reference dataset. If '#' is at the end, we know to select the appropriate biallelic
             using the a_index.>',
-        'field_name': '<Optional name of root annotation in combined dataset, defaults to name of dataset.>',
         'custom_select': '<Optional function of custom select function>',
         'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
     },
@@ -97,16 +128,41 @@ Format:
 CONFIG = {
     'cadd': {
         '37': {
+            'version': 'v1.6',
             'path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
         '38': {
+            'version': 'v1.6',
             'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
         },
     },
+    'clinvar': {
+        '37': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+        },
+        '38': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+        },
+    },
     'dbnsfp': {
         '37': {
+            'version': '2.9.3',
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
                 'MetaSVM_pred',
@@ -123,6 +179,7 @@ CONFIG = {
             },
         },
         '38': {
+            'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
                 'MetaSVM_pred',
@@ -155,7 +212,8 @@ CONFIG = {
     },
     'hgmd': {
         '37': {
-            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2022.4_hg19.vcf.gz',
+            'custom_import': download_and_import_hgmd_vcf,
+            'path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
@@ -169,7 +227,8 @@ CONFIG = {
             },
         },
         '38': {
-            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2022.4_hg38.vcf.gz',
+            'custom_import': download_and_import_hgmd_vcf,
+            'path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
@@ -195,10 +254,12 @@ CONFIG = {
     },
     'primate_ai': {
         '37': {
+            'version': 'v0.2',
             'path': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
             'select': {'score': 'info.score'},
         },
         '38': {
+            'version': 'v0.2',
             'path': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
             'select': {'score': 'info.score'},
         },
@@ -259,42 +320,26 @@ CONFIG = {
             },
         },
     },
-    'gnomad_exome_coverage': {
-        '37': {
-            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/exomes/gnomad.exomes.r2.1.coverage.ht',
-            'select': {'x10': 'over_10'},
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
-            'select': {'x10': 'over_10'},
-        },
-    },
-    'gnomad_genome_coverage': {
-        '37': {
-            'path': 'gs://gcp-public-data--gnomad/release/2.1/coverage/genomes/gnomad.genomes.r2.1.coverage.ht',
-            'select': {'x10': 'over_10'},
-        },
-        '38': {
-            'path': 'gs://gcp-public-data--gnomad/release/3.0/coverage/genomes/gnomad.genomes.r3.0.coverage.ht/',
-            'select': {'x10': 'over_10'},
-        },
-    },
     'gnomad_exomes': {
         '37': {
+            'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
+            'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
             'custom_select': custom_gnomad_select_v2,
         },
     },
     'gnomad_genomes': {
         '37': {
+            'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
+            'version': 'v3.1.2',
             'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
             'custom_select': custom_gnomad_select_v3,
         },
@@ -349,18 +394,9 @@ CONFIG = {
             },
         },
     },
-    'geno2mp': {
-        '37': {
-            'path': 'gs://seqr-reference-data/GRCh37/geno2mp/Geno2MP.variants.ht',
-            'select': {'HPO_Count': 'info.HPO_CT'},
-        },
-        '38': {
-            'path': 'gs://seqr-reference-data/GRCh38/geno2mp/Geno2MP.variants.liftover_38.ht',
-            'select': {'HPO_Count': 'info.HPO_CT'},
-        },
-    },
     'gnomad_mito': {
         '38': {
+            'version': 'v3.1',
             'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
             'select': {
                 'AN': 'AN',
@@ -374,24 +410,28 @@ CONFIG = {
     },
     'mitomap': {
         '38': {
+            'version': 'Feb. 04 2022',
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/Mitomap Confirmed Mutations Feb. 04 2022.ht',
             'select': ['pathogenic'],
         },
     },
     'mitimpact': {
         '38': {
+            'version': '3.0.7',
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
             'select': {'score': 'APOGEE_score'},
         },
     },
     'hmtvar': {
         '38': {
+            'version': 'Jan. 10 2022',
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
             'select': {'score': 'disease_score'},
         },
     },
     'helix_mito': {
         '38': {
+            'version': '20200327',
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
             'select': {
                 'AC': 'counts_hom',
