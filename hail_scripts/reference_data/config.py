@@ -449,11 +449,11 @@ CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
 
 GCS_PREFIXES = {
-    ('dev', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('dev', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('prod', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
+    ('DEV', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('DEV', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
+    ('PROD', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
     (
-        'prod',
+        'PROD',
         AccessControl.PRIVATE,
     ): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
 }
