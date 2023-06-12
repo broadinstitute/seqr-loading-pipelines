@@ -68,6 +68,8 @@ ignore = [
     "PTH",   # pathlib is preferred, but we're not using it yet
     "PD",    # pandas specific
     "NPY",   # numpy specific
+    "TD",    # todos
+    "FIX",   # fixmes
 ]
 line-length = 88
 select = [
