@@ -18,7 +18,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
-TEST_INTERVAL_REFERENCE_1 = (
+TEST_INTERVAL_1 = (
     'v03_pipeline/var/test/reference_data/test_interval_reference_1.ht'
 )
 
@@ -30,11 +30,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/combined.ht',
+            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/hgmd.ht',
+            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/hgmd.ht',
         )
 
     def tearDown(self) -> None:
@@ -80,8 +80,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
     def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
         shutil.copytree(
-            TEST_INTERVAL_REFERENCE_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/interval_reference.ht',
+            TEST_INTERVAL_1,
+            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/interval.ht',
         )
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
