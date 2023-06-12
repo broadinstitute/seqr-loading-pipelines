@@ -15,6 +15,7 @@ from v03_pipeline.lib.tasks.files import (
     GCSorLocalTarget,
     HailTableTask,
 )
+from v03_pipeline.lib.vep import run_vep
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -75,12 +76,24 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     self.dataset_type.base_reference_dataset_collection,
                 ),
             )
+            ht = run_vep(
+                ht,
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.vep_config_json_path,
+            )
             ht = ht.annotate(
+                **get_fields(
+                    ht,
+                    AnnotationType.FORMATTING,
+                    **self.param_kwargs,
+                ),
                 **get_fields(
                     ht,
                     AnnotationType.REFERENCE_DATASET_COLLECTION,
                     **self.param_kwargs,
-                )
+                ),
             )
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
