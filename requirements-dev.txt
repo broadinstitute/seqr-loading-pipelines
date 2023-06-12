@@ -55,7 +55,7 @@ requests==2.29.0
     #   responses
 responses==0.23.1
     # via -r requirements-dev.in
-ruff==0.0.264
+ruff==0.0.272
     # via -r requirements-dev.in
 tomli==2.0.1
     # via
