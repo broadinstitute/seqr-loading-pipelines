@@ -106,6 +106,7 @@ def valid_reference_dataset_collection_path(
             root,
             reference_genome,
         ),
+        'reference_datasets',
         f'{reference_dataset_collection.value}.ht',
     )
 
