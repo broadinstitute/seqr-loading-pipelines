@@ -59,7 +59,7 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
 def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
     try:
         subprocess.run(
-            [ # noqa: S603, S607
+            [  # noqa: S603, S607
                 'gsutil',
                 'cp',
                 tmp_file_name,
