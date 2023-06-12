@@ -26,10 +26,10 @@ class DataRoot(Enum):
 
 
 class Env(Enum):
-    DEV = 'dev'
-    LOCAL = 'local'
-    PROD = 'prod'
-    TEST = 'test'
+    DEV = 'DEV'
+    LOCAL = 'LOCAL'
+    PROD = 'PROD'
+    TEST = 'TEST'
 
     @property
     def min_vcf_partitions(self):
