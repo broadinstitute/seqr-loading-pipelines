@@ -38,6 +38,7 @@ def run(
     vep_config_json_path: str | None,
     liftover_ref_path: str,
 ):
+    hl.init(tmp_dir='gs://seqr-scratch-temp')
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
