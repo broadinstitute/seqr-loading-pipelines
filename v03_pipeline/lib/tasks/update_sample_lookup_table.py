@@ -24,6 +24,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -59,9 +60,9 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             [],
             hl.tstruct(
                 **key_type,
-                ref_samples=hl.tset(hl.tstr),
-                het_samples=hl.tset(hl.tstr),
-                hom_samples=hl.tset(hl.tstr),
+                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key=key_type.fields,
         )
@@ -71,8 +72,8 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def update(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = remove_callset_sample_ids(ht, callset_mt.cols())
-        ht = union_sample_lookup_hts(ht, compute_sample_lookup_ht(callset_mt))
+        ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)
+        ht = union_sample_lookup_hts(ht, compute_sample_lookup_ht(callset_mt, project_guid), project_guid)
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),

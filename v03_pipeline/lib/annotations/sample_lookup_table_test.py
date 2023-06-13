@@ -22,24 +22,24 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'ref_samples': {'a', 'c'},
-                    'het_samples': {'b', 'd'},
-                    'hom_samples': {'e', 'f'},
+                    'ref_samples': {'project_1': {'a', 'c'}},
+                    'het_samples': {'project_1': {'b', 'd'}},
+                    'hom_samples': {'project_1': {'e', 'f'}},
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tset(hl.tstr),
-                het_samples=hl.tset(hl.tstr),
-                hom_samples=hl.tset(hl.tstr),
+                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
         )
         ht = ht.select(
-            AC=AC(ht, sample_lookup_ht),
-            AF=AF(ht, sample_lookup_ht),
-            AN=AN(ht, sample_lookup_ht),
-            hom=hom(ht, sample_lookup_ht),
+            AC=AC(ht, sample_lookup_ht, 'project_1'),
+            AF=AF(ht, sample_lookup_ht, 'project_1'),
+            AN=AN(ht, sample_lookup_ht, 'project_1'),
+            hom=hom(ht, sample_lookup_ht, 'project_1'),
         )
         self.assertCountEqual(
             ht.collect(),

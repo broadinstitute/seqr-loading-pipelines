@@ -26,6 +26,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    project_guid = luigi.Parameter()
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
@@ -53,6 +54,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 self.project_remap_path,
                 self.project_pedigree_path,
                 self.ignore_missing_samples,
+                self.project_guid,
             ),
         ]
 

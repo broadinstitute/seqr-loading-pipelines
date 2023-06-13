@@ -10,38 +10,42 @@ N_ALT_HOM = 2
 def AC(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
+    project_guid: str,
     **_: Any,
 ) -> hl.Expression:
     return (
-        sample_lookup_ht[ht.key].ref_samples.length() * N_ALT_REF
-        + sample_lookup_ht[ht.key].het_samples.length() * N_ALT_HET
-        + sample_lookup_ht[ht.key].hom_samples.length() * N_ALT_HOM
+        sample_lookup_ht[ht.key].ref_samples[project_guid].length() * N_ALT_REF
+        + sample_lookup_ht[ht.key].het_samples[project_guid].length() * N_ALT_HET
+        + sample_lookup_ht[ht.key].hom_samples[project_guid].length() * N_ALT_HOM
     )
 
 
 def AN(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
+    project_guid: str,
     **_: Any,
 ) -> hl.Expression:
     return 2 * (
-        sample_lookup_ht[ht.key].ref_samples.length()
-        + sample_lookup_ht[ht.key].het_samples.length()
-        + sample_lookup_ht[ht.key].hom_samples.length()
+        sample_lookup_ht[ht.key].ref_samples[project_guid].length()
+        + sample_lookup_ht[ht.key].het_samples[project_guid].length()
+        + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
     )
 
 
 def AF(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
+    project_guid: str,
     **_: Any,
 ) -> hl.Expression:
-    return AC(ht, sample_lookup_ht) / AN(ht, sample_lookup_ht)
+    return AC(ht, sample_lookup_ht, project_guid) / AN(ht, sample_lookup_ht, project_guid)
 
 
 def hom(
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
+    project_guid: str,
     **_: Any,
 ) -> hl.Expression:
-    return sample_lookup_ht[ht.key].hom_samples.length()
+    return sample_lookup_ht[ht.key].hom_samples[project_guid].length()
