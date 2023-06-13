@@ -21,7 +21,7 @@ def get_expr_for_contig_number(
             .when(contig == "X", 23)
             .when(contig == "Y", 24)
             .when(contig[0] == "M", 25)
-            .default(hl.int(contig))
+            .default(hl.parse_int32(contig))
         ),
         get_expr_for_contig(locus),
     )
