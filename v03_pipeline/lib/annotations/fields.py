@@ -21,6 +21,7 @@ from v03_pipeline.lib.paths import (
 ANNOTATION_CONFIG = {
     (DatasetType.SNV, AnnotationType.FORMATTING): [
         shared.rg37_locus,
+        shared.sorted_transcript_consequences,
         shared.variant_id,
         shared.xpos,
     ],
@@ -43,6 +44,7 @@ ANNOTATION_CONFIG = {
     ],
     (DatasetType.MITO, AnnotationType.FORMATTING): [
         shared.rg37_locus,
+        shared.sorted_transcript_consequences,
         shared.variant_id,
         shared.xpos,
     ],

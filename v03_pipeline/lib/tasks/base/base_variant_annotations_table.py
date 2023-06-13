@@ -15,7 +15,6 @@ from v03_pipeline.lib.tasks.files import (
     GCSorLocalTarget,
     HailTableTask,
 )
-from v03_pipeline.lib.vep import run_vep
 
 
 class BaseVariantAnnotationsTableTask(BasePipelineTask):
@@ -77,11 +76,6 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                 ),
             )
             ht = ht.annotate(
-                **get_fields(
-                    ht,
-                    AnnotationType.FORMATTING,
-                    **self.param_kwargs,
-                ),
                 **get_fields(
                     ht,
                     AnnotationType.REFERENCE_DATASET_COLLECTION,
