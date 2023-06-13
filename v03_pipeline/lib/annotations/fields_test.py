@@ -130,17 +130,17 @@ class FieldsTest(unittest.TestCase):
                 {
                     'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
                     'alleles': ['A', 'C'],
-                    'ref_samples': {'a', 'c'},
-                    'het_samples': {'b', 'd'},
-                    'hom_samples': {'e', 'f'},
+                    'ref_samples': {'project_1': {'a', 'c'}},
+                    'het_samples': {'project_1': {'b', 'd'}},
+                    'hom_samples': {'project_1': {'e', 'f'}},
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus(ReferenceGenome.GRCh38.value),
                 alleles=hl.tarray(hl.tstr),
-                ref_samples=hl.tset(hl.tstr),
-                het_samples=hl.tset(hl.tstr),
-                hom_samples=hl.tset(hl.tstr),
+                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key=('locus', 'alleles'),
         )
@@ -160,6 +160,7 @@ class FieldsTest(unittest.TestCase):
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
+                    project_guid='project_1',
                 ).keys(),
             ),
             [
