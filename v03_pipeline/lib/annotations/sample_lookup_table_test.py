@@ -34,7 +34,9 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
-            globals=hl.Struct(project_guids=['project_1']),
+            globals=hl.Struct(
+                updates=[hl.Struct(callset='abc', project_guid='project_1')]
+            ),
         )
         ht = ht.select(
             AC=AC(ht, sample_lookup_ht),

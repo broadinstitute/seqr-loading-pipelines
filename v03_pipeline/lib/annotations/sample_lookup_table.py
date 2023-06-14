@@ -13,12 +13,12 @@ def AC(  # noqa: N802
     **_: Any,
 ) -> hl.Expression:
     return hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key].ref_samples[project_guid].length() * N_ALT_REF
-                + sample_lookup_ht[ht.key].het_samples[project_guid].length()
+        sample_lookup_ht.index_globals().updates.map(
+            lambda update: (
+                sample_lookup_ht[ht.key].ref_samples[update.project_guid].length() * N_ALT_REF
+                + sample_lookup_ht[ht.key].het_samples[update.project_guid].length()
                 * N_ALT_HET
-                + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+                + sample_lookup_ht[ht.key].hom_samples[update.project_guid].length()
                 * N_ALT_HOM
             ),
         ),
@@ -31,11 +31,11 @@ def AN(  # noqa: N802
     **_: Any,
 ) -> hl.Expression:
     return 2 * hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key].ref_samples[project_guid].length()
-                + sample_lookup_ht[ht.key].het_samples[project_guid].length()
-                + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+        sample_lookup_ht.index_globals().updates.map(
+            lambda update: (
+                sample_lookup_ht[ht.key].ref_samples[update.project_guid].length()
+                + sample_lookup_ht[ht.key].het_samples[update.project_guid].length()
+                + sample_lookup_ht[ht.key].hom_samples[update.project_guid].length()
             ),
         ),
     )
@@ -55,9 +55,9 @@ def hom(
     **_: Any,
 ) -> hl.Expression:
     return hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+        sample_lookup_ht.index_globals().updates.map(
+            lambda update: (
+                sample_lookup_ht[ht.key].hom_samples[update.project_guid].length()
             ),
         ),
     )
