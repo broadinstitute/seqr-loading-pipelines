@@ -81,6 +81,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         )
         return ht.annotate_globals(
             updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
+            project_guids=hl.empty_array(hl.tstr),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
@@ -96,5 +97,6 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
                 updates=ht.updates.add(
                     (self.callset_path, project_guid),
                 ),
+                project_guids=ht.project_guids.append(self.project_guid),
             )
         return ht
