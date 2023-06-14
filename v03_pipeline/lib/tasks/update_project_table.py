@@ -52,6 +52,7 @@ class UpdateProjectTableTask(BasePipelineTask):
             self.dataset_type,
             self.hail_temp_dir,
             self.callset_path,
+            self.project_guid,
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples,
