@@ -6,7 +6,7 @@ from luigi.contrib import gcs
 GLOB = '*'
 
 
-def CallsetTask(pathname: str) -> luigi.Task: # noqa: N802
+def CallsetTask(pathname: str) -> luigi.Task:  # noqa: N802
     if 'vcf' in pathname:
         return VCFFileTask(pathname)
     if pathname.endswith('mt'):
