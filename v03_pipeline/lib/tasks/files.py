@@ -6,6 +6,14 @@ from luigi.contrib import gcs
 GLOB = '*'
 
 
+def CallsetTask(pathname: str) -> luigi.Task: # noqa: N802
+    if 'vcf' in pathname:
+        return VCFFileTask(pathname)
+    if pathname.endswith('mt'):
+        return HailTableTask(pathname)
+    return RawFileTask(pathname)
+
+
 def GCSorLocalTarget(pathname: str) -> luigi.Target:  # noqa: N802
     return (
         gcs.GCSTarget(pathname)

@@ -4,12 +4,7 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import (
-    AccessControl,
-    Env,
-    ReferenceGenome,
-    SampleFileType,
-)
+from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
@@ -62,12 +57,6 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: hl.tstruct(gq=hl.tint32, ab=hl.tfloat64, dp=hl.tint32),
         }[self]
-
-    @property
-    def sample_file_type(self) -> SampleFileType:
-        if self == DatasetType.GCNV:
-            return SampleFileType.BED
-        return SampleFileType.VCF
 
     @property
     def veppable(self) -> bool:

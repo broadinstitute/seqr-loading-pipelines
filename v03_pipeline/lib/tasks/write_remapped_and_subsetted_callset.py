@@ -10,14 +10,13 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import SampleFileType
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import (
+    CallsetTask,
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
     RawFileTask,
-    VCFFileTask,
 )
 
 
@@ -43,9 +42,7 @@ class WriteRemappedAndSubsettedCallset(BasePipelineTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            VCFFileTask(self.callset_path)
-            if self.dataset_type.sample_file_type == SampleFileType.VCF
-            else RawFileTask(self.callset_path),
+            CallsetTask(self.callset_path),
             RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]

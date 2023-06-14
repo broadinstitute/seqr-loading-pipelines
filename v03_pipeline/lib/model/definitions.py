@@ -50,11 +50,6 @@ class ReferenceGenome(Enum):
         return self.value[-2:]
 
 
-class SampleFileType(Enum):
-    BED = 'BED'
-    VCF = 'VCF'
-
-
 class SampleType(Enum):
     WES = 'WES'
     WGS = 'WGS'
