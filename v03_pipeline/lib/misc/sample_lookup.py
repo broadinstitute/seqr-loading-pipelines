@@ -63,21 +63,21 @@ def union_sample_lookup_hts(
         ref_samples=_annotate_dict_expression(
             sample_lookup_ht.ref_samples,
             project_guid_expression,
-            sample_lookup_ht.ref_samples[project_guid].union(
+            sample_lookup_ht.ref_samples.get(project_guid).union(
                 sample_lookup_ht.ref_samples_1[project_guid],
             ),
         ),
         het_samples=_annotate_dict_expression(
             sample_lookup_ht.het_samples,
             project_guid_expression,
-            sample_lookup_ht.het_samples[project_guid].union(
+            sample_lookup_ht.het_samples.get(project_guid).union(
                 sample_lookup_ht.het_samples_1[project_guid],
             ),
         ),
         hom_samples=_annotate_dict_expression(
             sample_lookup_ht.hom_samples,
             project_guid_expression,
-            sample_lookup_ht.hom_samples[project_guid].union(
+            sample_lookup_ht.hom_samples.get(project_guid).union(
                 sample_lookup_ht.hom_samples_1[project_guid],
             ),
         ),
