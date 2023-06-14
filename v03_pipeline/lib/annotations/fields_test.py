@@ -144,7 +144,7 @@ class FieldsTest(unittest.TestCase):
             ),
             key=('locus', 'alleles'),
             globals=hl.Struct(
-                updates=hl.Set(hl.Struct(callset='abc', project_guid='project_1')),
+                updates=hl.set([hl.Struct(callset='abc', project_guid='project_1')]),
             ),
         )
         ht = hl.Table.parallelize(
