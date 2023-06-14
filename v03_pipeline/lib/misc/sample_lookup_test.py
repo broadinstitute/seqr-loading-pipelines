@@ -32,6 +32,7 @@ class SampleLookupTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
+            globals=hl.Struct(project_guids=['project_1']),
         )
         samples_ht = hl.Table.parallelize(
             [
@@ -85,15 +86,15 @@ class SampleLookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    ref_samples={'project_1': set(), 'project_2': set()},
-                    het_samples={'project_1': {'b'}, 'project_2': set()},
-                    hom_samples={'project_1': set(), 'project_2': set()},
+                    ref_samples={'project_1': set()},
+                    het_samples={'project_1': {'b'}},
+                    hom_samples={'project_1': set()},
                 ),
                 hl.Struct(
                     id=1,
-                    ref_samples={'project_1': set(), 'project_2': set()},
-                    het_samples={'project_1': {'a'}, 'project_2': set()},
-                    hom_samples={'project_1': set(), 'project_2': set()},
+                    ref_samples={'project_1': set()},
+                    het_samples={'project_1': {'a'}},
+                    hom_samples={'project_1': set()},
                 ),
             ],
         )
