@@ -58,9 +58,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -69,9 +69,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -80,9 +80,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    ref_samples=set(),
-                    het_samples=set(),
-                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                    ref_samples={'R0113_test_project': set()},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -91,9 +91,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
-                    ref_samples={'HG00732_1'},
-                    het_samples={'HG00731_1', 'HG00733_1'},
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00732_1'}},
+                    het_samples={'R0113_test_project': {'HG00731_1', 'HG00733_1'}},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -102,9 +102,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -113,9 +113,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    ref_samples={'HG00731_1', 'HG00733_1'},
-                    het_samples={'HG00732_1'},
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00731_1', 'HG00733_1'}},
+                    het_samples={'R0113_test_project': {'HG00732_1'}},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -124,9 +124,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    ref_samples={'HG00732_1'},
-                    het_samples={'HG00733_1'},
-                    hom_samples={'HG00731_1'},
+                    ref_samples={'R0113_test_project': {'HG00732_1'}},
+                    het_samples={'R0113_test_project': {'HG00733_1'}},
+                    hom_samples={'R0113_test_project': {'HG00731_1'}},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -135,9 +135,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -146,9 +146,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -157,9 +157,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    ref_samples={'HG00733_1', 'HG00732_1', 'HG00731_1'},
-                    het_samples=set(),
-                    hom_samples=set(),
+                    ref_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': set()},
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -168,9 +168,9 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    ref_samples=set(),
-                    het_samples=set(),
-                    hom_samples={'HG00732_1', 'HG00731_1', 'HG00733_1'},
+                    ref_samples={'R0113_test_project': set()},
+                    het_samples={'R0113_test_project': set()},
+                    hom_samples={'R0113_test_project': {'HG00733_1', 'HG00732_1', 'HG00731_1'}},
                 ),
             ],
         )

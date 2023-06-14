@@ -20,7 +20,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.Parameter()
+    project_pedigree_paths = luigi.ListParameter()
     ignore_missing_samples = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
