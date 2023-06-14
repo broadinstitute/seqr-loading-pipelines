@@ -142,6 +142,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 hl.Struct(
                     callset=TEST_VCF,
                     project_guid='R0113_test_project',
+                ),
+                hl.Struct(
+                    callset=TEST_VCF,
+                    project_guid='R0114_project4',
                 )
             ))
         )
