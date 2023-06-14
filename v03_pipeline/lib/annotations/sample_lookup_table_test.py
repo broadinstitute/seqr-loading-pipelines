@@ -35,7 +35,7 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                updates=[hl.Struct(callset='abc', project_guid='project_1')],
+                updates=hl.set(hl.Struct(callset='abc', project_guid='project_1')),
             ),
         )
         ht = ht.select(
