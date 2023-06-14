@@ -39,7 +39,9 @@ def AF(  # noqa: N802
     project_guid: str,
     **_: Any,
 ) -> hl.Expression:
-    return AC(ht, sample_lookup_ht, project_guid) / AN(ht, sample_lookup_ht, project_guid)
+    return AC(ht, sample_lookup_ht, project_guid) / AN(
+        ht, sample_lookup_ht, project_guid,
+    )
 
 
 def hom(

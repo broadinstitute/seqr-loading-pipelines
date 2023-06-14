@@ -11,7 +11,8 @@ def _annotate_dict_expression(
         dict_expression.items().filter(lambda item: item[0] != key),
         hl.empty_array(hl.ttuple(key.dtype, value.dtype)),
     )
-    return hl.dict(items.append((key, value)))    
+    return hl.dict(items.append((key, value)))
+
 
 def compute_sample_lookup_ht(mt: hl.MatrixTable, project_guid: str) -> hl.Table:
     sample_ids = hl.agg.collect_as_set(mt.s)
@@ -33,19 +34,20 @@ def remove_callset_sample_ids(
         ref_samples=_annotate_dict_expression(
             sample_lookup_ht.ref_samples,
             project_guid_expression,
-            sample_lookup_ht.ref_samples[project_guid].difference(sample_ids)
+            sample_lookup_ht.ref_samples[project_guid].difference(sample_ids),
         ),
         het_samples=_annotate_dict_expression(
             sample_lookup_ht.het_samples,
             project_guid_expression,
-            sample_lookup_ht.het_samples[project_guid].difference(sample_ids)
+            sample_lookup_ht.het_samples[project_guid].difference(sample_ids),
         ),
         hom_samples=_annotate_dict_expression(
             sample_lookup_ht.hom_samples,
             project_guid_expression,
-            sample_lookup_ht.hom_samples[project_guid].difference(sample_ids)
+            sample_lookup_ht.hom_samples[project_guid].difference(sample_ids),
         ),
     )
+
 
 def union_sample_lookup_hts(
     sample_lookup_ht: hl.Table,
@@ -58,16 +60,22 @@ def union_sample_lookup_hts(
         ref_samples=_annotate_dict_expression(
             sample_lookup_ht.ref_samples,
             project_guid_expression,
-            sample_lookup_ht.ref_samples[project_guid].union(sample_lookup_ht.ref_samples_1[project_guid])
+            sample_lookup_ht.ref_samples[project_guid].union(
+                sample_lookup_ht.ref_samples_1[project_guid],
+            ),
         ),
         het_samples=_annotate_dict_expression(
             sample_lookup_ht.het_samples,
             project_guid_expression,
-            sample_lookup_ht.het_samples[project_guid].union(sample_lookup_ht.het_samples_1[project_guid])
+            sample_lookup_ht.het_samples[project_guid].union(
+                sample_lookup_ht.het_samples_1[project_guid],
+            ),
         ),
         hom_samples=_annotate_dict_expression(
             sample_lookup_ht.hom_samples,
             project_guid_expression,
-            sample_lookup_ht.hom_samples[project_guid].union(sample_lookup_ht.hom_samples_1[project_guid])
+            sample_lookup_ht.hom_samples[project_guid].union(
+                sample_lookup_ht.hom_samples_1[project_guid],
+            ),
         ),
     )

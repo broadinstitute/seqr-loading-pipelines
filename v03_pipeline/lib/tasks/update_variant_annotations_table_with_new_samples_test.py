@@ -54,7 +54,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path='bad_pedigree',
-            project_guid='R0113_test_project'
+            project_guid='R0113_test_project',
         )
 
         worker = luigi.worker.Worker()
@@ -72,7 +72,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             callset_path=TEST_VCF,
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
-            project_guid='R0113_test_project'
+            project_guid='R0113_test_project',
         )
 
         worker = luigi.worker.Worker()
