@@ -34,12 +34,13 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
+            globals=hl.Struct(project_guids=['project_1']),
         )
         ht = ht.select(
-            AC=AC(ht, sample_lookup_ht, 'project_1'),
-            AF=AF(ht, sample_lookup_ht, 'project_1'),
-            AN=AN(ht, sample_lookup_ht, 'project_1'),
-            hom=hom(ht, sample_lookup_ht, 'project_1'),
+            AC=AC(ht, sample_lookup_ht),
+            AF=AF(ht, sample_lookup_ht),
+            AN=AN(ht, sample_lookup_ht),
+            hom=hom(ht, sample_lookup_ht),
         )
         self.assertCountEqual(
             ht.collect(),
