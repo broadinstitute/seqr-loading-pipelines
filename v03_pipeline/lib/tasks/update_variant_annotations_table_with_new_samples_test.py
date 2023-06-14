@@ -128,14 +128,23 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
-            project_guids=['R0113_test_project'],
+            project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_4],
         )
         worker.add(uvatwns_task_4)
         worker.run()
         self.assertTrue(uvatwns_task_4.complete())
         ht = hl.read_table(uvatwns_task_4.output().path)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            hl.Struct(updates=set(
+                hl.Struct(
+                    callset=TEST_VCF,
+                    project_guid='R0113_test_project',
+                )
+            ))
+        )
         self.assertCountEqual(
             [
                 x
