@@ -30,21 +30,22 @@ def remove_callset_sample_ids(
 ) -> hl.Table:
     sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
     project_guid_expression = hl.literal(project_guid)
+    # NB, this will annotate the empty set for the project if it has not been annotated.
     return sample_lookup_ht.select(
         ref_samples=_annotate_dict_expression(
             sample_lookup_ht.ref_samples,
             project_guid_expression,
-            sample_lookup_ht.ref_samples[project_guid].difference(sample_ids),
+            sample_lookup_ht.ref_samples.get(project_guid, hl.empty_set(hl.tstr)).difference(sample_ids),
         ),
         het_samples=_annotate_dict_expression(
             sample_lookup_ht.het_samples,
             project_guid_expression,
-            sample_lookup_ht.het_samples[project_guid].difference(sample_ids),
+            sample_lookup_ht.het_samples.get(project_guid, hl.empty_set(hl.tstr)).difference(sample_ids),
         ),
         hom_samples=_annotate_dict_expression(
             sample_lookup_ht.hom_samples,
             project_guid_expression,
-            sample_lookup_ht.hom_samples[project_guid].difference(sample_ids),
+            sample_lookup_ht.hom_samples.get(project_guid, hl.empty_set(hl.tstr)).difference(sample_ids),
         ),
     )
 

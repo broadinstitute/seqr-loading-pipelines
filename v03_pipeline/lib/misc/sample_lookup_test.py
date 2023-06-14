@@ -66,6 +66,37 @@ class SampleLookupTest(unittest.TestCase):
                 ),
             ],
         )
+        samples_ht = hl.Table.parallelize(
+            [
+                {'s': 'b'},
+            ],
+            hl.tstruct(
+                s=hl.dtype('str'),
+            ),
+            key='s',
+        )
+        sample_lookup_ht = remove_callset_sample_ids(
+            sample_lookup_ht,
+            samples_ht,
+            'project_2',
+        )
+        self.assertListEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    ref_samples={'project_1': set(), 'project_2': set()},
+                    het_samples={'project_1': {'b'}, 'project_2': set()},
+                    hom_samples={'project_1': set(), 'project_2': set()},
+                ),
+                hl.Struct(
+                    id=1,
+                    ref_samples={'project_1': set(), 'project_2': set()},
+                    het_samples={'project_1': {'a'}, 'project_2': set()},
+                    hom_samples={'project_1': set(), 'project_2': set()},
+                ),
+            ],
+        )
 
     def test_union_sample_lookup_hts(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
