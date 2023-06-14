@@ -143,6 +143,7 @@ class FieldsTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key=('locus', 'alleles'),
+            globals=hl.Struct(project_guids=['project_1']),
         )
         ht = hl.Table.parallelize(
             [],
@@ -160,7 +161,6 @@ class FieldsTest(unittest.TestCase):
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
-                    project_guid='project_1',
                 ).keys(),
             ),
             [
