@@ -87,7 +87,7 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                 **get_fields(ht, AnnotationType.FORMATTING, **self.param_kwargs),
             )
         return ht.annotate_globals(
-            updates=hl.empty_set(hl.ttuple(hl.tstr, hl.tstr)),
+            updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:

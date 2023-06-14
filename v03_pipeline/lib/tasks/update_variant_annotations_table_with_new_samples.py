@@ -52,7 +52,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             hl.all(
                 [
                     hl.read_table(self.output().path).updates.contains(
-                        (self.callset_path, project_guid),
+                        hl.Struct(callset=self.callset_path, project_guid=project_guid),
                     )
                     for project_guid in self.project_guids
                 ],
@@ -112,7 +112,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
         return ht.annotate_globals(
-            updates=ht.updates.add(
-                (self.callset_path, self.project_pedigree_path),
+            updates=ht.updates.union(
+                {
+                    hl.Struct(callset=self.callset_path, project_guid=project_guid)
+                    for project_guid in self.project_guids
+                },
             ),
         )
