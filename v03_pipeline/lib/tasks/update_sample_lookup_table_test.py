@@ -15,7 +15,6 @@ from v03_pipeline.lib.tasks.update_sample_lookup_table import (
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
