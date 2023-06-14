@@ -72,8 +72,8 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def update(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)
-        ht = union_sample_lookup_hts(ht, compute_sample_lookup_ht(callset_mt, project_guid), project_guid)
+        ht = remove_callset_sample_ids(ht, callset_mt.cols(), self.project_guid)
+        ht = union_sample_lookup_hts(ht, compute_sample_lookup_ht(callset_mt, self.project_guid), self.project_guid)
         return ht.annotate_globals(
             updates=ht.updates.add(
                 (self.callset_path, self.project_pedigree_path),

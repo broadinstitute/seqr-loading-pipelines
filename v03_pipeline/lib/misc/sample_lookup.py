@@ -53,6 +53,7 @@ def union_sample_lookup_hts(
     project_guid: str,
 ) -> hl.Table:
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
+    project_guid_expression = hl.literal(project_guid)
     return sample_lookup_ht.select(
         ref_samples=_annotate_dict_expression(
             sample_lookup_ht.ref_samples,
