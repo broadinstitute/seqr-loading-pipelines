@@ -32,6 +32,7 @@ class SampleLookupTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
+            globals=hl.Struct(project_guids=['project_1']),
         )
         samples_ht = hl.Table.parallelize(
             [
@@ -48,6 +49,37 @@ class SampleLookupTest(unittest.TestCase):
             sample_lookup_ht,
             samples_ht,
             'project_1',
+        )
+        self.assertListEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    ref_samples={'project_1': set()},
+                    het_samples={'project_1': {'b'}},
+                    hom_samples={'project_1': set()},
+                ),
+                hl.Struct(
+                    id=1,
+                    ref_samples={'project_1': set()},
+                    het_samples={'project_1': {'a'}},
+                    hom_samples={'project_1': set()},
+                ),
+            ],
+        )
+        samples_ht = hl.Table.parallelize(
+            [
+                {'s': 'b'},
+            ],
+            hl.tstruct(
+                s=hl.dtype('str'),
+            ),
+            key='s',
+        )
+        sample_lookup_ht = remove_callset_sample_ids(
+            sample_lookup_ht,
+            samples_ht,
+            'project_2',
         )
         self.assertListEqual(
             sample_lookup_ht.collect(),
