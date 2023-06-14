@@ -33,6 +33,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
+            project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             family_id='abc',

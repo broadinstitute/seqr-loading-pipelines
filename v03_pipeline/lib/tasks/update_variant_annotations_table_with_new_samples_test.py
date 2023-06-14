@@ -23,8 +23,6 @@ TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -52,9 +50,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path='bad_pedigree',
-            project_guid='R0113_test_project',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=['bad_pedigree'],
         )
 
         worker = luigi.worker.Worker()
@@ -70,9 +68,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_3,
-            project_guid='R0113_test_project',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
         )
 
         worker = luigi.worker.Worker()
@@ -94,9 +92,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_3,
-            project_guid='R0113_test_project',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
         )
         worker.add(uvatwns_task_3)
         worker.run()
@@ -130,9 +128,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_4,
-            project_guid='R0113_test_project',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
         )
         worker.add(uvatwns_task_4)
         worker.run()

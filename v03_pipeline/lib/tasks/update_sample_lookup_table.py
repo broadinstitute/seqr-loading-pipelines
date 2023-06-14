@@ -18,13 +18,13 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 class UpdateSampleLookupTableTask(BasePipelineTask):
     callset_path = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_guids = luigi.ListParameter()
+    project_remap_paths = luigi.ListParameter()
+    project_pedigree_paths = luigi.Parameter()
     ignore_missing_samples = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -37,22 +37,35 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
+            hl.all(
+                [
+                    hl.read_table(self.output().path).updates.contains(
+                        (self.callset_path, project_guid),
+                    )
+                    for project_guid in self.project_guids
+                ],
             ),
         )
 
     def requires(self) -> luigi.Task:
-        return WriteRemappedAndSubsettedCallset(
-            self.env,
-            self.reference_genome,
-            self.dataset_type,
-            self.hail_temp_dir,
-            self.callset_path,
-            self.project_remap_path,
-            self.project_pedigree_path,
-            self.ignore_missing_samples,
-        )
+        return [
+            WriteRemappedAndSubsettedCallset(
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.hail_temp_dir,
+                self.callset_path,
+                project_guid,
+                project_remap_path,
+                project_pedigree_path,
+                self.ignore_missing_samples,
+            )
+            for (project_guid, project_remap_path, project_pedigree_path) in zip(
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+            )
+        ]
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
@@ -71,15 +84,17 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
-        callset_mt = hl.read_matrix_table(self.input().path)
-        ht = remove_callset_sample_ids(ht, callset_mt.cols(), self.project_guid)
-        ht = union_sample_lookup_hts(
-            ht,
-            compute_sample_lookup_ht(callset_mt, self.project_guid),
-            self.project_guid,
-        )
-        return ht.annotate_globals(
-            updates=ht.updates.add(
-                (self.callset_path, self.project_pedigree_path),
-            ),
-        )
+        for i, project_guid in enumerate(self.project_guids):
+            callset_mt = hl.read_matrix_table(self.input()[i].path)
+            ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)
+            ht = union_sample_lookup_hts(
+                ht,
+                compute_sample_lookup_ht(callset_mt, project_guid),
+                project_guid,
+            )
+            ht = ht.annotate_globals(
+                updates=ht.updates.add(
+                    (self.callset_path, project_guid),
+                ),
+            )
+        return ht

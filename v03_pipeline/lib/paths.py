@@ -72,7 +72,7 @@ def remapped_and_subsetted_callset_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     callset_path: str,
-    pedigree_path: str,
+    project_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
@@ -82,7 +82,7 @@ def remapped_and_subsetted_callset_path(
             dataset_type,
         ),
         'remapped_and_subsetted_callsets',
-        f'{hashlib.sha256((callset_path + pedigree_path).encode("utf8")).hexdigest()}.mt',
+        f'{hashlib.sha256((callset_path + project_guid).encode("utf8")).hexdigest()}.mt',
     )
 
 
