@@ -138,16 +138,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         ht = hl.read_table(uvatwns_task_4.output().path)
         self.assertCountEqual(
             ht.globals.collect(),
-            hl.Struct(updates=set(
-                hl.Struct(
-                    callset=TEST_VCF,
-                    project_guid='R0113_test_project',
+            hl.Struct(
+                updates=set(
+                    hl.Struct(
+                        callset=TEST_VCF,
+                        project_guid='R0113_test_project',
+                    ),
+                    hl.Struct(
+                        callset=TEST_VCF,
+                        project_guid='R0114_project4',
+                    ),
                 ),
-                hl.Struct(
-                    callset=TEST_VCF,
-                    project_guid='R0114_project4',
-                )
-            ))
+            ),
         )
         self.assertCountEqual(
             [

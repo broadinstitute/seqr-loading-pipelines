@@ -33,22 +33,22 @@ def remove_callset_sample_ids(
         return sample_lookup_ht
     project_guid_expression = hl.literal(project_guid)
     return sample_lookup_ht.select(
-         ref_samples=_annotate_dict_expression(
-             sample_lookup_ht.ref_samples,
-             project_guid_expression,
-             sample_lookup_ht.ref_samples[project_guid].difference(sample_ids),
-         ),
-         het_samples=_annotate_dict_expression(
-             sample_lookup_ht.het_samples,
-             project_guid_expression,
-             sample_lookup_ht.het_samples[project_guid].difference(sample_ids),
-         ),
-         hom_samples=_annotate_dict_expression(
-             sample_lookup_ht.hom_samples,
-             project_guid_expression,
-             sample_lookup_ht.hom_samples[project_guid].difference(sample_ids),
-         ),
-     )
+        ref_samples=_annotate_dict_expression(
+            sample_lookup_ht.ref_samples,
+            project_guid_expression,
+            sample_lookup_ht.ref_samples[project_guid].difference(sample_ids),
+        ),
+        het_samples=_annotate_dict_expression(
+            sample_lookup_ht.het_samples,
+            project_guid_expression,
+            sample_lookup_ht.het_samples[project_guid].difference(sample_ids),
+        ),
+        hom_samples=_annotate_dict_expression(
+            sample_lookup_ht.hom_samples,
+            project_guid_expression,
+            sample_lookup_ht.hom_samples[project_guid].difference(sample_ids),
+        ),
+    )
 
 
 def union_sample_lookup_hts(
