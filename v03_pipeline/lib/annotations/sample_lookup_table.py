@@ -16,11 +16,14 @@ def AC(  # noqa: N802
         sample_lookup_ht.index_globals().project_guids.map(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].ref_samples[project_guid].length() * N_ALT_REF
-                + sample_lookup_ht[ht.key].het_samples[project_guid].length() * N_ALT_HET
-                + sample_lookup_ht[ht.key].hom_samples[project_guid].length() * N_ALT_HOM
-            )
-        )
+                + sample_lookup_ht[ht.key].het_samples[project_guid].length()
+                * N_ALT_HET
+                + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+                * N_ALT_HOM
+            ),
+        ),
     )
+
 
 def AN(  # noqa: N802
     ht: hl.Table,
@@ -33,8 +36,8 @@ def AN(  # noqa: N802
                 sample_lookup_ht[ht.key].ref_samples[project_guid].length()
                 + sample_lookup_ht[ht.key].het_samples[project_guid].length()
                 + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
-            )
-        )
+            ),
+        ),
     )
 
 
@@ -55,6 +58,6 @@ def hom(
         sample_lookup_ht.index_globals().project_guids.map(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].hom_samples[project_guid].length()
-            )
-        )
+            ),
+        ),
     )
