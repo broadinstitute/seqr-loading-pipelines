@@ -49,7 +49,8 @@ class HailMatrixTableTask(luigi.Task):
     genome_version = luigi.Parameter(description='Reference Genome Version (37 or 38)')
     vep_runner = luigi.ChoiceParameter(choices=['VEP', 'DUMMY'], default='VEP', description='Choice of which vep runner'
                                                                                             'to annotate vep.')
-    ignore_missing_samples = luigi.BoolParameter(default=False, description='Allow missing samples in the callset.')
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(default=False, description='Allow missing samples in the callset when remapping ids')
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(default=False, description='Allow missing samples in the callset when subsetting to a selection of ids')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,7 +144,7 @@ class HailMatrixTableTask(luigi.Task):
                       f'subsetting-table IDs matched IDs in the variant callset.\n' \
                       f'IDs that aren\'t in the callset: {missing_samples}\n' \
                       f'All callset sample IDs:{mt.s.collect()}'
-            if (subset_count > anti_join_ht_count) and self.ignore_missing_samples:
+            if (subset_count > anti_join_ht_count) and self.ignore_missing_samples_when_subsetting:
                 logger.warning(message)
             else:
                 raise MatrixTableSampleSetError(message, missing_samples)
@@ -176,12 +177,14 @@ class HailMatrixTableTask(luigi.Task):
         remap_count = len(collected_remap)
 
         if len(missing_samples) != 0:
-            raise MatrixTableSampleSetError(
-                f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
-                'remap IDs matched IDs in the variant callset.\n'
-                f'IDs that aren\'t in the callset: {missing_samples}\n'
-                f'All callset sample IDs:{mt.s.collect()}', missing_samples
-            )
+            message = f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
+                    'remap IDs matched IDs in the variant callset.\n'
+                    f'IDs that aren\'t in the callset: {missing_samples}\n'
+                    f'All callset sample IDs:{mt.s.collect()}'
+            if self.ignore_missing_samples_when_remapping:
+                logger.warning(message)
+            else:
+                raise MatrixTableSampleSetError(message, missing_samples)
 
         mt = mt.annotate_cols(**remap_ht[mt.s])
         remap_expr = hl.cond(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
