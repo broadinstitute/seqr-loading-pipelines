@@ -156,8 +156,7 @@ class HailMatrixTableTask(luigi.Task):
                     f'out of {mt.count()} samples in vds')
         return mt
 
-    @staticmethod
-    def remap_sample_ids(mt, remap_path):
+    def remap_sample_ids(self, mt, remap_path):
         """
         Remap the MatrixTable's sample ID, 's', field to the sample ID used within seqr, 'seqr_id'
         If the sample 's' does not have a 'seqr_id' in the remap file, 's' becomes 'seqr_id'
