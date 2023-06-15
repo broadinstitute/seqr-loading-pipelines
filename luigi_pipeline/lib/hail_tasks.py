@@ -177,10 +177,10 @@ class HailMatrixTableTask(luigi.Task):
         remap_count = len(collected_remap)
 
         if len(missing_samples) != 0:
-            message = f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
-                    'remap IDs matched IDs in the variant callset.\n'
-                    f'IDs that aren\'t in the callset: {missing_samples}\n'
-                    f'All callset sample IDs:{mt.s.collect()}'
+            message = f'Only {remap_ht.semi_join(mt.cols()).count()} out of {remap_count} ' \
+                      'remap IDs matched IDs in the variant callset.\n' \
+                      f'IDs that aren\'t in the callset: {missing_samples}\n' \
+                      f'All callset sample IDs:{mt.s.collect()}'
             if self.ignore_missing_samples_when_remapping:
                 logger.warning(message)
             else:
