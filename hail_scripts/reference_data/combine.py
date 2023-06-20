@@ -8,7 +8,7 @@ import pytz
 from hail_scripts.reference_data.config import CONFIG
 
 
-def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
+def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
     annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
     config_version = config.get('version', hl.missing(hl.tstr))
     return (
@@ -17,7 +17,7 @@ def parse_version(ht: hl.Table, config: dict) -> hl.StringExpression:
         .when(hl.is_missing(annotated_version), config_version)
         .when(annotated_version == config_version, config_version)
         .or_error(
-            'found mismatching versions',
+            f'found mismatching versions for dataset {dataset}, {config_version}, {hl.eval(annotated_version)}',
         )
     )
 
@@ -111,7 +111,7 @@ def get_ht(dataset: str, reference_genome: str):
         **{
             f'{dataset}_globals': hl.struct(
                 path=config['path'],
-                version=parse_version(ht, config),
+                version=parse_version(ht, dataset, config),
                 enums=config.get(
                     'enum_select',
                     hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
