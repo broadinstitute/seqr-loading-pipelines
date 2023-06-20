@@ -95,7 +95,7 @@ def get_enum_select_fields(enum_selects, ht):
 def get_ht(dataset: str, reference_genome: str):
     config = CONFIG[dataset][reference_genome]
     ht = (
-        config['custom_import'](config['path'], reference_genome)
+        config['custom_import'](config['source_path'], reference_genome)
         if 'custom_import' in config
         else hl.read_table(config['path'])
     )
