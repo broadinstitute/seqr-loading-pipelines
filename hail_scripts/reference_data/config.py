@@ -47,11 +47,19 @@ def clinvar_custom_select(ht):
 
 def dbnsfp_custom_select(ht):
     selects = {}
-    selects['REVEL_score'] = hl.parse_float(ht.REVEL_score)
+    selects['REVEL_score'] = hl.parse_float32(ht.REVEL_score)
+    selects['GERP_RS'] = hl.parse_float32(ht.GERP_RS)
+    selects['phastCons100way_vertebrate'] = hl.parse_float32(ht.phastCons100way_vertebrate)
     selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
+    return selects
+
+def dbnsfp_custom_select_38(ht):
+    selects = dbnsfp_custom_select(ht)
+    selects['VEST4_score'] = hl.parse_float32(predictor_parse(ht.VEST4_score))
+    selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
     return selects
 
 
@@ -166,8 +174,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'select': [
                 'MetaSVM_pred',
-                'GERP_RS',
-                'phastCons100way_vertebrate',
             ],
             'custom_select': dbnsfp_custom_select,
             'enum_select': {
@@ -183,13 +189,9 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
                 'MetaSVM_pred',
-                'GERP_RS',
-                'phastCons100way_vertebrate',
-                'VEST4_score',
-                'MutPred_score',
                 'fathmm_MKL_coding_pred',
             ],
-            'custom_select': dbnsfp_custom_select,
+            'custom_select': dbnsfp_custom_select_38,
             'enum_select': {
                 'SIFT_pred': ['D', 'T'],
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
