@@ -47,6 +47,9 @@ def get_select_fields(selects, base_ht):
                     expression = expression[attr[:-1]][base_ht.a_index - 1]
                 else:
                     expression = expression[attr]
+            # Parse float64s into float32s to save space!
+            if expression.dtype == hl.tfloat64:
+                expression = hl.float32(expression)
             select_fields[key] = expression
     return select_fields
 
