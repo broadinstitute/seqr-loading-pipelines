@@ -116,7 +116,7 @@ def custom_gnomad_select_v3(ht):
 
 def custom_mpc_select(ht):
     selects = {}
-    selects['MPC'] = hl.parse_float(ht.info.MPC)
+    selects['MPC'] = hl.parse_float32(ht.info.MPC)
     return selects
 
 
