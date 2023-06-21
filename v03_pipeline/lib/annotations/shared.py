@@ -45,8 +45,7 @@ BIOTYPES = [
     'TR_J_gene',
     'TR_V_gene',
     'TR_D_gene',
-    'IG_pseudogene'
-    'IG_C_pseudogene',
+    'IG_pseudogene' 'IG_C_pseudogene',
     'IG_J_pseudogene',
     'IG_V_pseudogene',
     'TR_V_pseudogene',
@@ -204,7 +203,9 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
         ht.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
-                amino_acid_ids=c.amino_acids.split('/').map(lambda a: AMINO_ACIDS_LOOKUP[a]),
+                amino_acid_ids=c.amino_acids.split('/').map(
+                    lambda a: AMINO_ACIDS_LOOKUP[a]
+                ),
                 biotype_id=BIOTYPE_LOOKUP[c.biotype],
                 consequence_term_ids=(
                     c.consequence_terms.filter(
