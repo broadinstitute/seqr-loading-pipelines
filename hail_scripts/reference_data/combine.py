@@ -104,7 +104,7 @@ def get_ht(dataset: str, reference_genome: str):
     ht = ht.select_globals(
         **{
             f'{dataset}_globals': hl.struct(
-                path=config['path'],
+                path=config.get('source_path', config['path']),
                 version=parse_version(ht, dataset, config),
                 enums=config.get(
                     'enum_select',
