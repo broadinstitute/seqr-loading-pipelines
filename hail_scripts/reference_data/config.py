@@ -49,12 +49,15 @@ def dbnsfp_custom_select(ht):
     selects = {}
     selects['REVEL_score'] = hl.parse_float32(ht.REVEL_score)
     selects['GERP_RS'] = hl.parse_float32(ht.GERP_RS)
-    selects['phastCons100way_vertebrate'] = hl.parse_float32(ht.phastCons100way_vertebrate)
+    selects['phastCons100way_vertebrate'] = hl.parse_float32(
+        ht.phastCons100way_vertebrate,
+    )
     selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
+
 
 def dbnsfp_custom_select_38(ht):
     selects = dbnsfp_custom_select(ht)
