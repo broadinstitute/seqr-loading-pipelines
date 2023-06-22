@@ -31,10 +31,7 @@ ANNOTATION_CONFIG = {
         reference_dataset_collection.screen,
     ],
     (DatasetType.SNV, AnnotationType.SAMPLE_LOOKUP_TABLE): [
-        sample_lookup_table.AC,
-        sample_lookup_table.AF,
-        sample_lookup_table.AN,
-        sample_lookup_table.hom,
+        sample_lookup_table.gt_stats,
     ],
     (DatasetType.SNV, AnnotationType.GENOTYPE_ENTRIES): [
         snv.gq,
@@ -49,9 +46,7 @@ ANNOTATION_CONFIG = {
         shared.xpos,
     ],
     (DatasetType.MITO, AnnotationType.SAMPLE_LOOKUP_TABLE): [
-        sample_lookup_table.AC,
-        sample_lookup_table.AF,
-        sample_lookup_table.AN,
+        sample_lookup_table.gt_stats,
     ],
     (DatasetType.SV, AnnotationType.FORMATTING): [
         shared.rg37_locus,

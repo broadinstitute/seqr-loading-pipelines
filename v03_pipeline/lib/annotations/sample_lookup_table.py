@@ -7,7 +7,7 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
-def AC(  # noqa: N802
+def _AC(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
     **_: Any,
@@ -19,7 +19,7 @@ def AC(  # noqa: N802
     )
 
 
-def AN(  # noqa: N802
+def _AN(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
     **_: Any,
@@ -31,17 +31,29 @@ def AN(  # noqa: N802
     )
 
 
-def AF(  # noqa: N802
+def _AF(  # noqa: N802
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    return AC(ht, sample_lookup_ht) / AN(ht, sample_lookup_ht)
+    return _AC(ht, sample_lookup_ht) / _AN(ht, sample_lookup_ht)
 
 
-def hom(
+def _hom(
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
     return sample_lookup_ht[ht.key].hom_samples.length()
+
+def gt_stats(
+    ht: hl.Table,
+    sample_lookup_ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    return hl.Struct(
+        AC=_AC(ht, sample_lookup_ht),
+        AN=_AN(ht, sample_lookup_ht),
+        AF=_AF(ht, sample_lookup_ht),
+        hom=_hom(ht, sample_lookup_ht),
+    )
