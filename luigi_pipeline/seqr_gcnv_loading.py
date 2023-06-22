@@ -25,8 +25,8 @@ FIELD_TYPES = {
     "CN": hl.tint32,
     "QS": hl.tint32, 
     "defragmented": hl.tbool, 
-    "vaf": hl.tfloat64, 
-    "vac": hl.tint32,
+    "sf": hl.tfloat64, 
+    "sc": hl.tint32,
     "genes_any_overlap_totalExons": hl.tint32,
     "genes_strict_overlap_totalExons": hl.tint32,
     "no_ovl": hl.tbool, 
@@ -61,7 +61,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
-            row_fields=['chr', 'vac', 'vaf', 'strvctvre_score'],
+            row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
         )
 
         # rename the sample id column before the sample subset happens

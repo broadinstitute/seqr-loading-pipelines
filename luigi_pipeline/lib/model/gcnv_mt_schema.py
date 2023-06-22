@@ -36,17 +36,17 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
 
     @row_annotation()
     def sc(self):
-        return self.mt.vac
+        return self.mt.sc
 
     @row_annotation()
     def sf(self):
-        return self.mt.vaf
+        return self.mt.sf
 
     @row_annotation()
     def sn(self):
         return hl.or_missing(
-            hl.is_defined(self.mt.vaf),
-            hl.int(self.mt.vac / self.mt.vaf),
+            hl.is_defined(self.mt.sf),
+            hl.int(self.mt.sc / self.mt.sf),
         )
 
     @row_annotation(name='svType')
