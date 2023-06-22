@@ -121,8 +121,8 @@ class FieldsTest(unittest.TestCase):
     @patch('v03_pipeline.lib.annotations.fields.hl.read_table')
     def test_get_sample_lookup_table_fields(
         self,
-        mock_dataroot: Mock,
         mock_read_table: Mock,
+        mock_dataroot: Mock,
     ) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         mock_read_table.return_value = hl.Table.parallelize(
@@ -130,19 +130,20 @@ class FieldsTest(unittest.TestCase):
                 {
                     'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
                     'alleles': ['A', 'C'],
-                    'ref_samples': {'a', 'c'},
-                    'het_samples': {'b', 'd'},
-                    'hom_samples': {'e', 'f'},
+                    'ref_samples': {'project_1': {'a', 'c'}},
+                    'het_samples': {'project_1': {'b', 'd'}},
+                    'hom_samples': {'project_1': {'e', 'f'}},
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus(ReferenceGenome.GRCh38.value),
                 alleles=hl.tarray(hl.tstr),
-                ref_samples=hl.tset(hl.tstr),
-                het_samples=hl.tset(hl.tstr),
-                hom_samples=hl.tset(hl.tstr),
+                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key=('locus', 'alleles'),
+            globals=hl.Struct(project_guids=['project_1']),
         )
         ht = hl.Table.parallelize(
             [],
