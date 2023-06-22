@@ -338,3 +338,14 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 ),
             ],
         )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(a=10),
+                    b_globals=hl.Struct(b=10),
+                    c_coverage_globals=hl.Struct(c=300),
+                    date='2023-04-19T16:43:39.361110-04:56',
+                ),
+            ],
+        )
