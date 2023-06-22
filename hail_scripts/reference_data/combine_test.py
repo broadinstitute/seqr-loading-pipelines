@@ -9,7 +9,6 @@ from hail_scripts.reference_data.combine import (
     get_enum_select_fields,
     get_ht,
     update_existing_joined_hts,
-    update_joined_ht_globals,
 )
 from hail_scripts.reference_data.config import dbnsfp_custom_select
 
@@ -142,57 +141,73 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ],
         )
 
-    @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
-    def test_update_joined_ht_globals(self, mock_datetime):
-        mock_datetime.now.return_value = datetime(
-            2023,
-            4,
-            19,
-            16,
-            43,
-            39,
-            361110,
-            tzinfo=pytz.timezone('US/Eastern'),
-        )
+    @mock.patch.dict(
+        'hail_scripts.reference_data.combine.CONFIG',
+        {
+            'a': {
+                '38': {
+                    'path': 'gs://a.com',
+                    'select': ['b'],
+                    'version': '2.2.2',
+                },
+            },
+        },
+    )
+    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    def test_parse_version(self, mock_read_table):
         ht = hl.Table.parallelize(
             [
-                {'a': ['1', '2'], 'b': 2},
-                {'a': ['1', '4'], 'b': 3},
+                {
+                    'id': 0,
+                    'b': 1,
+                },
+                {
+                    'id': 1,
+                    'b': 2,
+                },
             ],
-            hl.tstruct(a=hl.tarray('str'), b=hl.tint32),
-        )
-        ht = update_joined_ht_globals(
-            ht,
-            ['cadd', 'screen', 'gnomad_exome_coverage'],
-            '1.2.3',
-            '38',
-        )
-        self.assertEqual(
-            ht.globals.collect()[0],
-            hl.Struct(
-                date='2023-04-19T16:43:39.361110-04:56',
-                datasets={
-                    'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-                    'gnomad_exome_coverage': 'gs://seqr-reference-data/gnomad_coverage/GRCh38/exomes/gnomad.exomes.r2.1.coverage.liftover_grch38.ht',
-                    'screen': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-                },
-                version='1.2.3',
-                enum_definitions={
-                    'screen': {
-                        'region_type': [
-                            'CTCF-bound',
-                            'CTCF-only',
-                            'DNase-H3K4me3',
-                            'PLS',
-                            'dELS',
-                            'pELS',
-                            'DNase-only',
-                            'low-DNase',
-                        ],
-                    },
-                },
+            hl.tstruct(
+                id=hl.tint32,
+                b=hl.tint32,
+            ),
+            key=['id'],
+            globals=hl.Struct(
+                version='2.2.2',
             ),
         )
+        mock_read_table.return_value = ht
+        gotten_ht = get_ht('a', '38')
+        self.assertCountEqual(
+            gotten_ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(
+                        path='gs://a.com',
+                        version='2.2.2',
+                        enums=None,
+                    ),
+                ),
+            ],
+        )
+
+        mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
+        gotten_ht = get_ht('a', '38')
+        self.assertCountEqual(
+            gotten_ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(
+                        path='gs://a.com',
+                        version='2.2.2',
+                        enums=None,
+                    ),
+                ),
+            ],
+        )
+
+        mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
+        gotten_ht = get_ht('a', '38')
+        self.assertRaises(Exception, gotten_ht.globals.collect)
 
     @mock.patch.dict(
         'hail_scripts.reference_data.combine.CONFIG',
@@ -225,7 +240,23 @@ class ReferenceDataCombineTest(unittest.TestCase):
     )
     @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
     @mock.patch('hail_scripts.reference_data.combine.get_ht')
-    def test_update_existing_joined_hts(self, mock_get_ht, mock_read_table):
+    @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
+    def test_update_existing_joined_hts(
+        self,
+        mock_datetime,
+        mock_get_ht,
+        mock_read_table,
+    ):
+        mock_datetime.now.return_value = datetime(
+            2023,
+            4,
+            19,
+            16,
+            43,
+            39,
+            361110,
+            tzinfo=pytz.timezone('US/Eastern'),
+        )
         mock_read_table.return_value = hl.Table.parallelize(
             [
                 {
@@ -251,6 +282,11 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 c_coverage=hl.tstruct(f=hl.tint32),
             ),
             key=['locus', 'alleles'],
+            globals=hl.Struct(
+                a_globals=hl.Struct(a=10),
+                b_globals=hl.Struct(b=10),
+                c_coverage_globals=hl.Struct(c=10),
+            ),
         )
         mock_get_ht.side_effect = [
             hl.Table.parallelize(
@@ -272,6 +308,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     b=hl.tstruct(e=hl.tint32),
                 ),
                 key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    b_globals=hl.Struct(b=100),
+                ),
             ),
             hl.Table.parallelize(
                 [
@@ -293,13 +332,15 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     c_coverage=hl.tstruct(f=hl.tint32),
                 ),
                 key=['locus'],
+                globals=hl.Struct(
+                    c_coverage_globals=hl.Struct(c=300),
+                ),
             ),
         ]
         ht = update_existing_joined_hts(
             'destination',
             'b',
             ['a', 'b', 'c_coverage'],
-            '1.0.0',
             '38',
         )
         self.assertCountEqual(
@@ -328,11 +369,21 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 ),
             ],
         )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(a=10),
+                    b_globals=hl.Struct(b=100),
+                    c_coverage_globals=hl.Struct(c=10),
+                    date='2023-04-19T16:43:39.361110-04:56',
+                ),
+            ],
+        )
         ht = update_existing_joined_hts(
             'destination',
             'c_coverage',
             ['a', 'b', 'c_coverage'],
-            '1.0.0',
             '38',
         )
         self.assertCountEqual(
@@ -351,6 +402,17 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     a=hl.Struct(d=3),
                     b=hl.Struct(e=4),
                     c_coverage=hl.Struct(f=13),
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    a_globals=hl.Struct(a=10),
+                    b_globals=hl.Struct(b=10),
+                    c_coverage_globals=hl.Struct(c=300),
+                    date='2023-04-19T16:43:39.361110-04:56',
                 ),
             ],
         )
