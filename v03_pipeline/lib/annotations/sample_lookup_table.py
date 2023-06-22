@@ -36,7 +36,7 @@ def _AF(  # noqa: N802
     sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    return _AC(ht, sample_lookup_ht) / _AN(ht, sample_lookup_ht)
+    return hl.float32(_AC(ht, sample_lookup_ht) / _AN(ht, sample_lookup_ht))
 
 
 def _hom(
