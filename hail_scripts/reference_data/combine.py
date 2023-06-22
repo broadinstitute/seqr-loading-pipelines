@@ -40,14 +40,17 @@ def get_select_fields(selects, base_ht):
     elif isinstance(selects, dict):
         for key, val in selects.items():
             # Grab the field and continually select it from the hail table.
-            ht = base_ht
+            expression = base_ht
             for attr in val.split('.'):
                 # Select from multi-allelic list.
                 if attr.endswith('#'):
-                    ht = ht[attr[:-1]][base_ht.a_index - 1]
+                    expression = expression[attr[:-1]][base_ht.a_index - 1]
                 else:
-                    ht = ht[attr]
-            select_fields[key] = ht
+                    expression = expression[attr]
+            # Parse float64s into float32s to save space!
+            if expression.dtype == hl.tfloat64:
+                expression = hl.float32(expression)
+            select_fields[key] = expression
     return select_fields
 
 
