@@ -164,9 +164,6 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
-                'AC',
-                'AF',
-                'AN',
-                'hom',
+                'gt_stats'
             ],
         )
