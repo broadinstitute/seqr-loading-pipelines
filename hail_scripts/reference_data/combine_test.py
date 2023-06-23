@@ -12,6 +12,8 @@ from hail_scripts.reference_data.combine import (
 )
 from hail_scripts.reference_data.config import dbnsfp_custom_select
 
+from v03_pipeline.lib.model import ReferenceGenome
+
 
 class ReferenceDataCombineTest(unittest.TestCase):
     def test_get_enum_select_fields(self):
@@ -83,7 +85,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = hl.Table.parallelize(
             [
                 {
-                    'id': 0,
+                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     'REVEL_score': hl.missing(hl.tstr),
                     'SIFT_pred': '.;.;T',
                     'Polyphen2_HVAR_pred': '.;.;P',
@@ -94,7 +96,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'phastCons100way_vertebrate': '0.008000',
                 },
                 {
-                    'id': 1,
+                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
                     'REVEL_score': '0.052',
                     'SIFT_pred': '.;.',
                     'Polyphen2_HVAR_pred': 'B',
@@ -106,7 +108,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 },
             ],
             hl.tstruct(
-                id=hl.tint32,
+                locus=hl.tlocus('GRCh38'),
                 REVEL_score=hl.tstr,
                 SIFT_pred=hl.tstr,
                 Polyphen2_HVAR_pred=hl.tstr,
@@ -116,14 +118,14 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 GERP_RS=hl.tstr,
                 phastCons100way_vertebrate=hl.tstr,
             ),
-            key='id',
+            key='locus',
         )
-        ht = get_ht('mock_dbnsfp', '38')
+        ht = get_ht('mock_dbnsfp', ReferenceGenome.GRCh38)
         self.assertCountEqual(
             ht.collect(),
             [
                 hl.Struct(
-                    id=0,
+                    locus=hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=None,
                         SIFT_pred_id=1,
@@ -136,7 +138,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ),
                 ),
                 hl.Struct(
-                    id=1,
+                    locus=hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
@@ -168,25 +170,25 @@ class ReferenceDataCombineTest(unittest.TestCase):
         ht = hl.Table.parallelize(
             [
                 {
-                    'id': 0,
+                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     'b': 1,
                 },
                 {
-                    'id': 1,
+                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
                     'b': 2,
                 },
             ],
             hl.tstruct(
-                id=hl.tint32,
+                locus=hl.tlocus('GRCh38'),
                 b=hl.tint32,
             ),
-            key=['id'],
+            key=['locus'],
             globals=hl.Struct(
                 version='2.2.2',
             ),
         )
         mock_read_table.return_value = ht
-        gotten_ht = get_ht('a', '38')
+        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
             gotten_ht.globals.collect(),
             [
@@ -201,7 +203,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
-        gotten_ht = get_ht('a', '38')
+        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
             gotten_ht.globals.collect(),
             [
@@ -216,7 +218,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
-        gotten_ht = get_ht('a', '38')
+        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertRaises(Exception, gotten_ht.globals.collect)
 
     @mock.patch.dict(
@@ -262,20 +264,20 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = hl.Table.parallelize(
             [
                 {
-                    'locus': 0,
+                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     'alleles': 10,
                     'a': hl.Struct(d=1),
                     'b': hl.Struct(e=2),
                 },
                 {
-                    'locus': 1,
+                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
                     'alleles': 10,
                     'a': hl.Struct(d=3),
                     'b': hl.Struct(e=4),
                 },
             ],
             hl.tstruct(
-                locus=hl.tint32,
+                locus=hl.tlocus('GRCh38'),
                 alleles=hl.tint32,
                 a=hl.tstruct(d=hl.tint32),
                 b=hl.tstruct(e=hl.tint32),
@@ -289,18 +291,18 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_get_ht.return_value = hl.Table.parallelize(
             [
                 {
-                    'locus': 0,
+                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     'alleles': 10,
                     'b': hl.Struct(e=5),
                 },
                 {
-                    'locus': 2,
+                    'locus': hl.Locus(contig='chr1', position=2, reference_genome='GRCh38'),
                     'alleles': 10,
                     'b': hl.Struct(e=7),
                 },
             ],
             hl.tstruct(
-                locus=hl.tint32,
+                locus=hl.tlocus('GRCh38'),
                 alleles=hl.tint32,
                 b=hl.tstruct(e=hl.tint32),
             ),
@@ -319,19 +321,19 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ht.collect(),
             [
                 hl.Struct(
-                    locus=0,
+                    locus=hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
                     alleles=10,
                     a=hl.Struct(d=1),
                     b=hl.Struct(e=5),
                 ),
                 hl.Struct(
-                    locus=1,
+                    locus=hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
                     alleles=10,
                     a=hl.Struct(d=3),
                     b=None,
                 ),
                 hl.Struct(
-                    locus=2,
+                    locus=hl.Locus(contig='chr1', position=2, reference_genome='GRCh38'),
                     alleles=10,
                     a=None,
                     b=hl.Struct(e=7),

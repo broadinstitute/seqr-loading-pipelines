@@ -7,6 +7,8 @@ import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
+from v03_pipeline.lib.model import ReferenceGenome
+
 
 def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
     annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
@@ -86,12 +88,15 @@ def get_enum_select_fields(enum_selects, ht):
     return enum_select_fields
 
 
-def get_ht(dataset: str, reference_genome: str):
-    config = CONFIG[dataset][reference_genome]
+def get_ht(dataset: str, reference_genome: ReferenceGenome):
+    config = CONFIG[dataset][reference_genome.v02_value]
     ht = (
-        config['custom_import'](config['source_path'], reference_genome)
+        config['custom_import'](config['source_path'], reference_genome.v02_value)
         if 'custom_import' in config
         else hl.read_table(config['path'])
+    )
+    ht.filter(
+        hl.set(reference_genome.standard_contigs).contains(ht.locus.contig)
     )
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
@@ -124,7 +129,7 @@ def update_joined_ht_globals(
     )
 
 
-def join_hts(datasets, reference_genome='37'):
+def join_hts(datasets: List[str], reference_genome: ReferenceGenome):
     # Get a list of hail tables and combine into an outer join.
     hts = [get_ht(dataset, reference_genome) for dataset in datasets]
     joined_ht = functools.reduce(
@@ -138,10 +143,10 @@ def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
     datasets: List[str],
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ):
     joined_ht = hl.read_table(destination_path)
-    dataset_ht = get_ht(dataset, genome_version)
+    dataset_ht = get_ht(dataset, reference_genome)
     joined_ht = joined_ht.drop(dataset, f'{dataset}_globals')
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(

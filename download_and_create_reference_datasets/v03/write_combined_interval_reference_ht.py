@@ -33,10 +33,10 @@ def run(env: Env, dataset: str | None):
             destination_path,
             dataset,
             DATASETS,
-            reference_genome.v02_value,
+            reference_genome,
         )
     else:
-        ht = join_hts(DATASETS, reference_genome=reference_genome.v02_value)
+        ht = join_hts(DATASETS, reference_genome)
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('DEV', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
