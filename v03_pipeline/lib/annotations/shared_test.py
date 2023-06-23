@@ -8,6 +8,7 @@ from v03_pipeline.lib.vep import run_vep
 
 
 class SharedAnnotationsTest(unittest.TestCase):
+    maxDiff = None
     def test_sorted_transcript_consequences(self) -> None:
         ht = hl.Table.parallelize(
             [
@@ -42,10 +43,8 @@ class SharedAnnotationsTest(unittest.TestCase):
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000327044.6:c.1667C>T',
                         hgvsp='ENSP00000317992.6:p.Ser556Leu',
-                        lof=None,
-                        lof_filter=None,
-                        lof_flags=None,
-                        lof_info='INTRON_END:881781,EXON_END:881925,EXON_START:881782,DE_NOVO_DONOR_MES:-7.36719797135343,DE_NOVO_DONOR_PROB:0.261170618766552,DE_NOVO_DONOR_POS:-138,INTRON_START:881667,DE_NOVO_DONOR_MES_POS:-138,MUTANT_DONOR_MES:4.93863747168278',
+                        is_lof_nagnag=None,
+                        lof_filters=None,
                         transcript_id='ENST00000327044',
                         consequence_term_ids=[11],
                         transcript_rank=0,
@@ -58,10 +57,8 @@ class SharedAnnotationsTest(unittest.TestCase):
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000477976.1:n.3114C>T',
                         hgvsp=None,
-                        lof=None,
-                        lof_filter=None,
-                        lof_flags=None,
-                        lof_info=None,
+                        is_lof_nagnag=None,
+                        lof_filters=None,
                         transcript_id='ENST00000477976',
                         consequence_term_ids=[22, 26],
                         transcript_rank=1,
@@ -74,10 +71,8 @@ class SharedAnnotationsTest(unittest.TestCase):
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000483767.1:n.523C>T',
                         hgvsp=None,
-                        lof=None,
-                        lof_filter=None,
-                        lof_flags=None,
-                        lof_info=None,
+                        is_lof_nagnag=None,
+                        lof_filters=None,
                         transcript_id='ENST00000483767',
                         consequence_term_ids=[22, 26],
                         transcript_rank=2,

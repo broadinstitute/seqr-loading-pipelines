@@ -164,10 +164,6 @@ SELECTED_ANNOTATIONS = [
     'gene_id',
     'hgvsc',
     'hgvsp',
-    'lof',
-    'lof_filter',
-    'lof_flags',
-    'lof_info',
     'transcript_id',
 ]
 
@@ -213,6 +209,11 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
                         lambda t: ~OMIT_CONSEQUENCE_TERMS.contains(t),
                     ).map(lambda t: CONSEQUENCE_TERMS_LOOKUP[t])
                 ),
+                is_lof_nagnag=c.lof_flags == 'NAGNAG_SITE',
+                lof_filters=hl.or_missing(
+                    (c.lof == 'LC') & hl.is_defined(c.lof_filter),
+                    c.lof_filter.split('&|,'),
+                )
             ),
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         lambda c: (
