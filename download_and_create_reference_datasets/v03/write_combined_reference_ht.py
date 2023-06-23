@@ -58,6 +58,9 @@ def run(
             DATASETS,
             reference_genome.v02_value,
         )
+        ht = ht.filter(
+            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig)
+        )
         unannotated_rows_ht = ht.filter(~hl.is_defined(ht.vep))
         unannotated_rows_ht = run_vep(
             unannotated_rows_ht,
@@ -78,6 +81,9 @@ def run(
         ht = ht.union(unannotated_rows_ht)
     else:
         ht = join_hts(DATASETS, reference_genome=reference_genome.v02_value)
+        ht = ht.filter(
+            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig)
+        )
         run_vep(
             ht,
             env,
