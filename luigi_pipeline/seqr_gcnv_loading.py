@@ -30,7 +30,6 @@ FIELD_TYPES = {
     "genes_any_overlap_totalExons": hl.tint32,
     "genes_strict_overlap_totalExons": hl.tint32,
     "no_ovl": hl.tbool, 
-    "strvctvre_score": hl.tfloat64,
     "is_latest": hl.tbool
 }
 
@@ -65,7 +64,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         )
 
         # rename the sample id column before the sample subset happens
-        mt = mt.transmute_cols(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
+        mt = mt.key_cols_by(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
 
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
@@ -80,6 +79,9 @@ class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     GenotypesSchema = SeqrGCNVGenotypesSchema
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
+
+    def relevant_variant_filter_fn(self, mt):
+        return hl.is_defined(mt.GT)
 
     def get_schema_class_kwargs(self):
         return {
