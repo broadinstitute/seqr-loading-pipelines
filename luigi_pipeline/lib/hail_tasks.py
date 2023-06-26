@@ -51,6 +51,7 @@ class HailMatrixTableTask(luigi.Task):
                                                                                             'to annotate vep.')
     ignore_missing_samples_when_remapping = luigi.BoolParameter(default=False, description='Allow missing samples in the callset when remapping ids')
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(default=False, description='Allow missing samples in the callset when subsetting to a selection of ids')
+    ignore_genotype_when_subsetting = luigi.BoolParameter(default=False, description='Do not filter for non-ref variants when subsetting')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,7 +151,8 @@ class HailMatrixTableTask(luigi.Task):
                 raise MatrixTableSampleSetError(message, missing_samples)
 
         mt = mt.semi_join_cols(subset_ht)
-        mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
+        if not self.ignore_genotype_when_subsetting:
+            mt = mt.filter_rows(hl.agg.any(mt.GT.is_non_ref()))
 
         logger.info(f'Finished subsetting samples. Kept {subset_count} '
                     f'out of {mt.count()} samples in vds')
