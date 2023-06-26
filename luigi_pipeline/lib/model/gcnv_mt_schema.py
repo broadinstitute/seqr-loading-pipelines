@@ -121,11 +121,16 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
     def xstart(self):
         return self.mt.xpos
 
-    @row_annotation(fn_require=[end])
+    @row_annotation(fn_require=end)
     def xstop(self):
         return variant_id.get_expr_for_xpos(
             hl.locus(self.mt.chr, self.mt.end, reference_genome='GRCh38')
         )
+
+    # NB: This is the "elasticsearch_mapping_id" used inside of export_table_to_elasticsearch.
+    @row_annotation(name='docId', fn_require=variantId, disable_index=True)
+    def doc_id(self, max_length=512):
+        return self.mt.variantId
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 

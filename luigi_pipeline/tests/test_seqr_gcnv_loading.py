@@ -201,7 +201,7 @@ MERGED_EXPECTED_VARIANT_DATA = [
         sortedTranscriptConsequences=[
             hl.Struct(gene_id='ENSG00000117620', major_consequence='LOF'),
             hl.Struct(gene_id='ENSG00000283761', major_consequence='LOF'),
-            hl.Struct(gene_id='ENSG22222222222'),
+            hl.Struct(gene_id='ENSG22222222222', major_consequence=None),
         ],
         transcriptConsequenceTerms=['LOF', 'gCNV_DEL'],
         xpos=1100017585,
