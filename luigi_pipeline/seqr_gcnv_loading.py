@@ -41,7 +41,6 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     genome_version = "38"
     dont_validate = True
     dataset_type = "SV"
-    ignore_genotype_when_subsetting = True
 
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
@@ -78,6 +77,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
 class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     VariantTask = SeqrGCNVVariantMTTask
     GenotypesSchema = SeqrGCNVGenotypesSchema
+    ignore_genotype_when_subsetting = True
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
