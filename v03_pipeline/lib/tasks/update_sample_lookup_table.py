@@ -12,7 +12,7 @@ from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallset,
+    WriteRemappedAndSubsettedCallsetTask,
 )
 
 
@@ -49,7 +49,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def requires(self) -> luigi.Task:
         return [
-            WriteRemappedAndSubsettedCallset(
+            WriteRemappedAndSubsettedCallsetTask(
                 self.env,
                 self.reference_genome,
                 self.dataset_type,

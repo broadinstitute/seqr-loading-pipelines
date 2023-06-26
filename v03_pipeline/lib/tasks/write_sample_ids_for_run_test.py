@@ -1,0 +1,47 @@
+import os
+import shutil
+import tempfile
+import unittest
+from unittest.mock import Mock, patch
+
+import hail as hl
+import luigi.worker
+
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.tasks.write_sample_ids_for_run import WriteSampleIdsForRunTask
+
+TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
+TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
+TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+
+@patch('v03_pipeline.lib.paths.DataRoot')
+class WriteSampleIdsForRunTaskTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._temp_local_datasets = tempfile.TemporaryDirectory().name
+
+    def tearDown(self) -> None:
+        if os.path.isdir(self._temp_local_datasets):
+            shutil.rmtree(self._temp_local_datasets)
+
+    def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        worker = luigi.worker.Worker()
+
+        write_sample_ids_for_run_task = WriteSampleIdsForRunTask(
+            env=Env.TEST,
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV,
+            callset_path=TEST_VCF,
+            project_guids=['R0113_test_project', 'R0114_project4'],
+            project_remap_paths=[TEST_REMAP, TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
+            run_id='run_123456',
+        )
+        worker.add(write_sample_ids_for_run_task)
+        worker.run()
+        self.assertEqual(
+            write_sample_ids_for_run_task.output().path,
+            f'{self._temp_local_datasets}/GRCh38/v03/SNV/run_123456/sample_ids.txt',
+        )
+        self.assertTrue(write_sample_ids_for_run_task.complete())

@@ -124,7 +124,7 @@ def sample_ids_for_run_path(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    dag_run_id: str,
+    run_id: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
@@ -133,7 +133,7 @@ def sample_ids_for_run_path(
             reference_genome,
             dataset_type,
         ),
-        dag_run_id,
+        run_id,
         'sample_ids.txt',
     )
 
