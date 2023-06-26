@@ -55,7 +55,7 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
-       return self.mt.strvctvre_score
+       return hl.parse_float(self.mt.strvctvre_score)
 
     @row_annotation(name='variantId', disable_index=True)
     def variant_id(self):
@@ -115,20 +115,20 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
     def pos(self):
         return self.mt.start
 
-    @row_annotation(fn_require=[contig, pos])
+    @row_annotation(fn_require=pos)
     def xpos(self):
         return variant_id.get_expr_for_xpos(
-            hl.locus(self.mt.contig, self.mt.pos)
+            hl.locus(self.mt.chr, self.mt.pos, reference_genome='GRCh38')
         )
 
     @row_annotation(disable_index=True, fn_require=xpos)
     def xstart(self):
         return self.mt.xpos
 
-    @row_annotation(fn_require=[contig, end])
+    @row_annotation(fn_require=[end])
     def xstop(self):
         return variant_id.get_expr_for_xpos(
-            hl.locus(self.mt.contig, self.mt.end)
+            hl.locus(self.mt.chr, self.mt.end, reference_genome='GRCh38')
         )
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
