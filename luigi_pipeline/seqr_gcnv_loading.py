@@ -80,7 +80,7 @@ class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
 
-    def genotype_filter_fn(self, mt):
+    def relevant_variant_filter_fn(self, mt):
         return hl.is_defined(mt.GT)
 
     def get_schema_class_kwargs(self):

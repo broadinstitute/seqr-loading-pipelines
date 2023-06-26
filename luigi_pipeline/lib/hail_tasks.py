@@ -126,7 +126,7 @@ class HailMatrixTableTask(luigi.Task):
 
         return runners[runner]().run(mt, genome_version, vep_config_json_path=vep_config_json_path)
 
-    def genotype_filter_fn(self, mt):
+    def relevant_variant_filter_fn(self, mt):
         return mt.GT.is_non_ref()
 
     def subset_samples_and_variants(self, mt, subset_path):
@@ -153,7 +153,7 @@ class HailMatrixTableTask(luigi.Task):
                 raise MatrixTableSampleSetError(message, missing_samples)
 
         mt = mt.semi_join_cols(subset_ht)
-        mt = mt.filter_rows(hl.agg.any(self.genotype_filter_fn(mt)))
+        mt = mt.filter_rows(hl.agg.any(self.relevant_variant_filter_fn(mt)))
 
         logger.info(f'Finished subsetting samples. Kept {subset_count} '
                     f'out of {mt.count()} samples in vds')
