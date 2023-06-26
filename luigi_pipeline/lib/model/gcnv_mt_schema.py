@@ -12,9 +12,6 @@ from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
 )
 
-GENE_ID = "gene_id"
-MAJOR_CONSEQUENCE = "major_consequence"
-
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
@@ -83,17 +80,16 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         copy_gain_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))
         major_consequence_genes = lof_genes | copy_gain_genes
         return hl.map(
-            lambda gene: hl.if_else(
-                major_consequence_genes.contains(gene),
-                {
-                    GENE_ID: gene,
-                    MAJOR_CONSEQUENCE: hl.if_else(
+            lambda gene: hl.Struct(
+                gene_id=gene,
+                major_consequence=hl.or_missing(
+                    major_consequence_genes.contains(gene),
+                    hl.if_else(
                         lof_genes.contains(gene),
                         "LOF",
                         "COPY_GAIN",
-                    )
-                },
-                {GENE_ID: gene},
+                    ),
+                ),
             ),
             self.mt.geneIds,
         )
@@ -106,8 +102,8 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         default_consequences = [hl.format('gCNV_%s', self.mt.svType)]
         gene_major_consequences = hl.array(hl.set(
             self.mt.sortedTranscriptConsequences
-            .filter(lambda x: x.contains(MAJOR_CONSEQUENCE))
-            .map(lambda x: x[MAJOR_CONSEQUENCE])
+            .filter(lambda x: hl.is_defined(x.major_consequence))
+            .map(lambda x: x.major_consequence)
         ))
         return gene_major_consequences.extend(default_consequences)
 
