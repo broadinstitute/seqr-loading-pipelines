@@ -128,7 +128,7 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         )
 
     # NB: This is the "elasticsearch_mapping_id" used inside of export_table_to_elasticsearch.
-    @row_annotation(name='docId', fn_require=variantId, disable_index=True)
+    @row_annotation(name='docId', fn_require=variant_id, disable_index=True)
     def doc_id(self, max_length=512):
         return self.mt.variantId
 
