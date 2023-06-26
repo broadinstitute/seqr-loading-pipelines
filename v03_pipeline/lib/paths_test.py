@@ -11,6 +11,7 @@ from v03_pipeline.lib.paths import (
     project_table_path,
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
+    sample_ids_for_run_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
@@ -85,6 +86,17 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SV,
             ),
             'seqr-datasets/GRCh37/v03/SV/lookup.ht',
+        )
+
+    def test_sample_ids_for_run_path(self) -> None:
+        self.assertEqual(
+            sample_ids_for_run_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV,
+                'manual__2023-06-26T18:30:09.349671+00:00',
+            ),
+            'gs://seqr-datasets/GRCh38/v03/SNV/manual__2023-06-26T18:30:09.349671+00:00/sample_ids.txt',
         )
 
     def test_variant_annotations_table_path(self) -> None:
