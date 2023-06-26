@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hail as hl
 import luigi
 
 from v03_pipeline.lib.paths import sample_ids_for_run_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
-from v03_pipeline.lib.tasks.write_sample_ids_for_run import WriteRemappedAndSubsettedCallsetTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, GCSorLocalFolderTarget
+from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallsetTask,
+)
 
 
 class WriteSampleIdsForRunTask(BasePipelineTask):
@@ -30,7 +33,7 @@ class WriteSampleIdsForRunTask(BasePipelineTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
+        return GCSorLocalTarget(self.output().path).exists()
 
     def requires(self) -> luigi.Task:
         return [

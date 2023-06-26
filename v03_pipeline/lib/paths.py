@@ -120,6 +120,7 @@ def sample_lookup_table_path(
         'lookup.ht',
     )
 
+
 def sample_ids_for_run_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -136,6 +137,7 @@ def sample_ids_for_run_path(
         run_id,
         'sample_ids.txt',
     )
+
 
 def valid_reference_dataset_collection_path(
     env: Env,

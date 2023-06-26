@@ -4,7 +4,6 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
@@ -14,6 +13,7 @@ TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class WriteSampleIdsForRunTaskTest(unittest.TestCase):
@@ -45,3 +45,25 @@ class WriteSampleIdsForRunTaskTest(unittest.TestCase):
             f'{self._temp_local_datasets}/GRCh38/v03/SNV/run_123456/sample_ids.txt',
         )
         self.assertTrue(write_sample_ids_for_run_task.complete())
+        with write_sample_ids_for_run_task.output().open('r') as f:
+            self.assertEqual(
+                f.read().strip().split('\n'),
+                [
+                    'HG00731_1',
+                    'HG00732_1',
+                    'HG00733_1',
+                    'NA19675_1',
+                    'NA19678_1',
+                    'NA19679_1',
+                    'NA20870_1',
+                    'NA20872_1',
+                    'NA20874_1',
+                    'NA20875_1',
+                    'NA20876_1',
+                    'NA20877_1',
+                    'NA20878_1',
+                    'NA20881_1',
+                    'NA20885_1',
+                    'NA20888_1',
+                ],
+            )
