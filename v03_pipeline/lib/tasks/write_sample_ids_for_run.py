@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.paths import sample_ids_for_run_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, GCSorLocalFolderTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
