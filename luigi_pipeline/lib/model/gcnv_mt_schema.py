@@ -12,6 +12,7 @@ from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
 )
 
+
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
     Convert a string-ified gene list to a set()
@@ -54,7 +55,7 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
     def strvctvre(self):
        return hl.parse_float(self.mt.strvctvre_score)
 
-    @row_annotation(name='variantId', disable_index=True)
+    @row_annotation(name='variantId')
     def variant_id(self):
         return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 

@@ -26,6 +26,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
         svType='DEL',
         StrVCTVRE_score=0.583,
         variantId='suffix_16453_DEL_12022022',
+        docId='suffix_16453_DEL_12022022',
         start=100006937,
         end=100007881,
         num_exon=2,
@@ -48,6 +49,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
         svType='DEL',
         StrVCTVRE_score=0.507,
         variantId='suffix_16456_DEL_12022022',
+        docId='suffix_16456_DEL_12022022',
         start=100017585,
         end=100023213,
         num_exon=3,
@@ -70,6 +72,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA = [
         svType='DEL',
         StrVCTVRE_score=0.502,
         variantId='suffix_16457_DEL_12022022',
+        docId='suffix_16457_DEL_12022022',
         start=100022289,
         end=100023213,
         geneIds=['ENSG00000117620'],
@@ -170,6 +173,7 @@ MERGED_EXPECTED_VARIANT_DATA = [
         svType='DEL',
         StrVCTVRE_score=0.583,
         variantId='suffix_16453_DEL_12022022',
+        docId='suffix_16453_DEL_12022022',
         start=100006937,
         end=100007881,
         num_exon=2,
@@ -192,6 +196,7 @@ MERGED_EXPECTED_VARIANT_DATA = [
         svType='DEL',
         StrVCTVRE_score=0.507,
         variantId='suffix_16456_DEL_12022022',
+        docId='suffix_16456_DEL_12022022',
         start=100017585,
         end=100023213,
         num_exon=3,
@@ -279,7 +284,7 @@ MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     for (x, y) in zip(MERGED_EXPECTED_VARIANT_DATA, MERGED_EXPECTED_GENOTYPES_DATA)
 ]
 
-EXPECTED_DISABLED_INDEX_FIELDS = ['contig', 'genotypes', 'start', 'xstart', 'variantId']
+EXPECTED_DISABLED_INDEX_FIELDS = ['contig', 'genotypes', 'start', 'xstart', 'docId']
 
 
 def prune_empties(data):
@@ -398,7 +403,7 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         row_ht = prune_empties(row_ht)
         self.assertCountEqual(
             row_ht,
-            NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA,
+            prune_empties(NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA),
         )
         self.assertCountEqual(
             kwargs['disable_index_for_fields'],
@@ -442,7 +447,10 @@ class SeqrGCNVLoadingTest(unittest.TestCase):
         args, kwargs = export_task._es.export_table_to_elasticsearch.call_args
         row_ht = args[0].collect()
         row_ht = prune_empties(row_ht)
-        self.assertCountEqual(row_ht, MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA)
+        self.assertCountEqual(
+            row_ht,
+            prune_empties(MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA),
+        )
         self.assertCountEqual(
             kwargs['disable_index_for_fields'],
             EXPECTED_DISABLED_INDEX_FIELDS,
