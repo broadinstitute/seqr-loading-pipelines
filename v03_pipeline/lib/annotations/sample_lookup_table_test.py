@@ -36,9 +36,7 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             key='id',
             globals=hl.Struct(project_guids=['project_1']),
         )
-        ht = ht.select(
-            gt_stats=gt_stats(ht, sample_lookup_ht)
-        )
+        ht = ht.select(gt_stats=gt_stats(ht, sample_lookup_ht))
         self.assertCountEqual(
             ht.collect(),
             [
