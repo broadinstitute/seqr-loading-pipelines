@@ -109,7 +109,9 @@ def get_ht(dataset: str, reference_genome: ReferenceGenome):
     ht = ht.select_globals(
         **{
             f'{dataset}_globals': hl.struct(
-                path=config['source_path'] if 'custom_import' in config else config['path'],
+                path=config['source_path']
+                if 'custom_import' in config
+                else config['path'],
                 version=parse_version(ht, dataset, config),
                 enums=config.get(
                     'enum_select',

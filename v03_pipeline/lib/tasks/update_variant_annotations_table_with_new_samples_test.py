@@ -118,9 +118,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'C'],
-                gt_stats=hl.Struct(
-                    AC=0, AN=6, AF=0.0, hom=0
-                )
+                gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
             ),
         )
 
@@ -142,12 +140,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             [
                 x
                 for x in ht.select(
-                    'cadd',
-                    'clinvar',
-                    'hgmd',
-                    'variant_id',
-                    'xpos',
-                    'gt_stats'
+                    'cadd', 'clinvar', 'hgmd', 'variant_id', 'xpos', 'gt_stats',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
