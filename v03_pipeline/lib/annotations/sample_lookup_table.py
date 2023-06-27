@@ -46,6 +46,7 @@ def _hom(
 ) -> hl.Expression:
     return sample_lookup_ht[ht.key].hom_samples.length()
 
+
 def gt_stats(
     ht: hl.Table,
     sample_lookup_ht: hl.Table,

@@ -162,7 +162,5 @@ class FieldsTest(unittest.TestCase):
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
             ),
-            [
-                'gt_stats'
-            ],
+            ['gt_stats'],
         )
