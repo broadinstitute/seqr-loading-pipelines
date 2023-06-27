@@ -62,6 +62,7 @@ def _hom(
         ),
     )
 
+
 def gt_stats(
     ht: hl.Table,
     sample_lookup_ht: hl.Table,
