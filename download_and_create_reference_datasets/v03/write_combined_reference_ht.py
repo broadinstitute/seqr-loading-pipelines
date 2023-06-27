@@ -70,6 +70,11 @@ if __name__ == '__main__':
         choices=['37', '38'],
         default='38',
     )
-    parser.add_argument('--dataset', choices=DATASETS, default=None, help='When passed, update the single dataset, otherwise update all datasets.')
+    parser.add_argument(
+        '--dataset',
+        choices=DATASETS,
+        default=None,
+        help='When passed, update the single dataset, otherwise update all datasets.',
+    )
     args, _ = parser.parse_known_args()
     run(args.environment, args.genome_version, args.dataset)
