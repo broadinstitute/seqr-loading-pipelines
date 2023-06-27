@@ -17,6 +17,7 @@ COMBINED_REFERENCE_HT_PATH = (
 )
 DATASETS = [
     'cadd',
+    'clinvar',
     'dbnsfp',
     'eigen',
     'exac',
@@ -30,7 +31,6 @@ DATASETS = [
     'gnomad_genome_coverage',
     'gnomad_exome_coverage',
 ]
-VERSION = '1.0.0'
 
 
 def run(
@@ -50,7 +50,6 @@ def run(
             destination_path,
             dataset,
             DATASETS,
-            VERSION,
             reference_genome.v02_value,
         )
         unannotated_rows_ht = ht.filter(~hl.is_defined(ht.vep))
@@ -63,15 +62,7 @@ def run(
         )
         ht = ht.union(unannotated_rows_ht)
     else:
-        ht = join_hts(DATASETS, VERSION, reference_genome=reference_genome.v02_value)
-        run_vep(
-            ht,
-            env,
-            reference_genome,
-            DatasetType.SNV,
-            vep_config_json_path,
-        )
-
+        ht = join_hts(DATASETS, reference_genome.v02_value)
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
@@ -98,10 +89,6 @@ if __name__ == '__main__':
         '--dataset',
         choices=DATASETS,
         required=True,
-    )
-    parser.add_argument(
-        '--vep-config-json-path',
-        default=None,
     )
     args, _ = parser.parse_known_args()
     run(
