@@ -15,18 +15,19 @@ from v03_pipeline.lib.model import (
 
 def _v03_pipeline_prefix(
     env: Env,
-    root: DataRoot,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
     if env == Env.LOCAL or env == Env.TEST:
         root = DataRoot.LOCAL_DATASETS
-    if env == Env.DEV:
+    elif env == Env.PROD:
+        root = DataRoot.SEQR_DATASETS
+    else:
         root = DataRoot.SEQR_SCRATCH_TEMP
     return os.path.join(
         root.value,
-        reference_genome.value,
         PipelineVersion.V03.value,
+        reference_genome.value,
         dataset_type.value,
     )
 
@@ -42,8 +43,8 @@ def _v03_reference_data_prefix(
         root = DataRoot.SEQR_SCRATCH_TEMP
     return os.path.join(
         root.value,
-        reference_genome.value,
         PipelineVersion.V03.value,
+        reference_genome.value,
     )
 
 
@@ -56,7 +57,6 @@ def family_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            DataRoot.SEQR_LOADING_TEMP,
             reference_genome,
             dataset_type,
         ),
@@ -75,7 +75,6 @@ def project_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            DataRoot.SEQR_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -119,7 +118,6 @@ def sample_lookup_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            DataRoot.SEQR_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -135,7 +133,6 @@ def variant_annotations_table_path(
     return os.path.join(
         _v03_pipeline_prefix(
             env,
-            DataRoot.SEQR_DATASETS,
             reference_genome,
             dataset_type,
         ),

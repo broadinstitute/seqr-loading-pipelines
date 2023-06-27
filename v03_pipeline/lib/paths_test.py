@@ -18,15 +18,15 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.TEST, 'seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
-            (Env.LOCAL, 'seqr-datasets/GRCh37/v03/SNV/families/franklin/samples.ht'),
+            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
+            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
             (
                 Env.DEV,
-                'gs://seqr-scratch-temp/GRCh37/v03/SNV/families/franklin/samples.ht',
+                'gs://seqr-scratch-temp/v03/GRCh37/SNV/families/franklin/samples.ht',
             ),
             (
                 Env.PROD,
-                'gs://seqr-loading-temp/GRCh37/v03/SNV/families/franklin/samples.ht',
+                'gs://seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht',
             ),
         ]:
             self.assertEqual(
@@ -47,7 +47,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.MITO,
                 'R0652_pipeline_test',
             ),
-            'gs://seqr-datasets/GRCh38/v03/MITO/projects/R0652_pipeline_test/samples.ht',
+            'gs://seqr-datasets/v03/GRCh38/MITO/projects/R0652_pipeline_test/samples.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -57,7 +57,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 ReferenceDatasetCollection.HGMD,
             ),
-            'gs://seqr-reference-data-private/GRCh38/v03/reference_datasets/hgmd.ht',
+            'gs://seqr-reference-data-private/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         self.assertEqual(
             valid_reference_dataset_collection_path(
@@ -65,7 +65,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 ReferenceDatasetCollection.COMBINED,
             ),
-            'gs://seqr-scratch-temp/GRCh37/v03/reference_datasets/combined.ht',
+            'gs://seqr-scratch-temp/v03/GRCh37/reference_datasets/combined.ht',
         )
         self.assertEqual(
             valid_reference_dataset_collection_path(
@@ -83,7 +83,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            'seqr-datasets/GRCh37/v03/SV/lookup.ht',
+            'seqr-datasets/v03/GRCh37/SV/lookup.ht',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -93,5 +93,5 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/annotations.ht',
+            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/annotations.ht',
         )
