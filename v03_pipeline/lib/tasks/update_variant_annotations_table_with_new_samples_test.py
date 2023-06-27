@@ -140,7 +140,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             [
                 x
                 for x in ht.select(
-                    'cadd', 'clinvar', 'hgmd', 'variant_id', 'xpos', 'gt_stats',
+                    'cadd',
+                    'clinvar',
+                    'hgmd',
+                    'variant_id',
+                    'xpos',
+                    'gt_stats',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],

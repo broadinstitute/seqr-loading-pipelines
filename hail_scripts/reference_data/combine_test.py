@@ -85,7 +85,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = hl.Table.parallelize(
             [
                 {
-                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     'REVEL_score': hl.missing(hl.tstr),
                     'SIFT_pred': '.;.;T',
                     'Polyphen2_HVAR_pred': '.;.;P',
@@ -96,7 +98,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'phastCons100way_vertebrate': '0.008000',
                 },
                 {
-                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=1, reference_genome='GRCh38',
+                    ),
                     'REVEL_score': '0.052',
                     'SIFT_pred': '.;.',
                     'Polyphen2_HVAR_pred': 'B',
@@ -125,7 +129,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ht.collect(),
             [
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=None,
                         SIFT_pred_id=1,
@@ -138,7 +144,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ),
                 ),
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=1, reference_genome='GRCh38',
+                    ),
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
@@ -170,11 +178,15 @@ class ReferenceDataCombineTest(unittest.TestCase):
         ht = hl.Table.parallelize(
             [
                 {
-                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     'b': 1,
                 },
                 {
-                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=1, reference_genome='GRCh38',
+                    ),
                     'b': 2,
                 },
             ],
@@ -264,13 +276,17 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = hl.Table.parallelize(
             [
                 {
-                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     'alleles': 10,
                     'a': hl.Struct(d=1),
                     'b': hl.Struct(e=2),
                 },
                 {
-                    'locus': hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=1, reference_genome='GRCh38',
+                    ),
                     'alleles': 10,
                     'a': hl.Struct(d=3),
                     'b': hl.Struct(e=4),
@@ -291,12 +307,16 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_get_ht.return_value = hl.Table.parallelize(
             [
                 {
-                    'locus': hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     'alleles': 10,
                     'b': hl.Struct(e=5),
                 },
                 {
-                    'locus': hl.Locus(contig='chr1', position=2, reference_genome='GRCh38'),
+                    'locus': hl.Locus(
+                        contig='chr1', position=2, reference_genome='GRCh38',
+                    ),
                     'alleles': 10,
                     'b': hl.Struct(e=7),
                 },
@@ -321,19 +341,25 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ht.collect(),
             [
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=0, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=0, reference_genome='GRCh38',
+                    ),
                     alleles=10,
                     a=hl.Struct(d=1),
                     b=hl.Struct(e=5),
                 ),
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=1, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=1, reference_genome='GRCh38',
+                    ),
                     alleles=10,
                     a=hl.Struct(d=3),
                     b=None,
                 ),
                 hl.Struct(
-                    locus=hl.Locus(contig='chr1', position=2, reference_genome='GRCh38'),
+                    locus=hl.Locus(
+                        contig='chr1', position=2, reference_genome='GRCh38',
+                    ),
                     alleles=10,
                     a=None,
                     b=hl.Struct(e=7),
