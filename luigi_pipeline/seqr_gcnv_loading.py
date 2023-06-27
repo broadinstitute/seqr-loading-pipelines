@@ -25,12 +25,11 @@ FIELD_TYPES = {
     "CN": hl.tint32,
     "QS": hl.tint32, 
     "defragmented": hl.tbool, 
-    "vaf": hl.tfloat64, 
-    "vac": hl.tint32,
+    "sf": hl.tfloat64, 
+    "sc": hl.tint32,
     "genes_any_overlap_totalExons": hl.tint32,
     "genes_strict_overlap_totalExons": hl.tint32,
     "no_ovl": hl.tbool, 
-    "strvctvre_score": hl.tfloat64,
     "is_latest": hl.tbool
 }
 
@@ -61,11 +60,11 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         mt = ht.to_matrix_table(
             row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
-            row_fields=['chr', 'vac', 'vaf', 'strvctvre_score'],
+            row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
         )
 
         # rename the sample id column before the sample subset happens
-        mt = mt.transmute_cols(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
+        mt = mt.key_cols_by(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
 
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
@@ -80,6 +79,9 @@ class SeqrGCNVGenotypesMTTask(BaseVCFToGenotypesMTTask):
     GenotypesSchema = SeqrGCNVGenotypesSchema
 
     is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
+
+    def relevant_variant_filter_fn(self, mt):
+        return hl.is_defined(mt.GT)
 
     def get_schema_class_kwargs(self):
         return {
