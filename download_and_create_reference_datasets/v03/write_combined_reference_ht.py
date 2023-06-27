@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import os
 import uuid
@@ -9,43 +11,36 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.vep import run_vep
-
-COMBINED_REFERENCE_HT_PATH = (
-    'combined_reference/combined_reference.GRCh{genome_version}.ht'
-)
+COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
 DATASETS = [
     'cadd',
     'clinvar',
     'dbnsfp',
     'eigen',
     'exac',
-    'geno2mp',
     'gnomad_genomes',
     'gnomad_exomes',
     'mpc',
     'primate_ai',
     'splice_ai',
     'topmed',
-    'gnomad_genome_coverage',
-    'gnomad_exome_coverage',
 ]
 
 
-def run(
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset: str,
-    vep_config_json_path: str | None,
-):
+def run(environment: str, genome_version: str, dataset: str | None):
+    hl._set_flags(  # noqa: SLF001
+        no_whole_stage_codegen='1',
+    )  # hail 0.2.78 hits an error on the join, this flag gets around it
     destination_path = os.path.join(
         GCS_PREFIXES[(env, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
     ).format(
         genome_version=reference_genome.v02_value,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
+    if (
+        hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
+        and dataset is not None
+    ):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
@@ -88,12 +83,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
-        required=True,
+        default=None,
+        help='When passed, update the single dataset, otherwise update all datasets.',
     )
     args, _ = parser.parse_known_args()
-    run(
-        args.env,
-        args.reference_genome,
-        args.dataset,
-        args.vep_config_json_path,
-    )
+    run(args.environment, args.genome_version, args.dataset)

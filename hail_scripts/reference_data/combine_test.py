@@ -90,6 +90,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'MutationTaster_pred': 'P',
                     'FATHMM_pred': '.;.;T',
                     'fathmm_MKL_coding_pred': 'N',
+                    'GERP_RS': '2.73',
+                    'phastCons100way_vertebrate': '0.008000',
                 },
                 {
                     'id': 1,
@@ -99,6 +101,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'MutationTaster_pred': 'P',
                     'FATHMM_pred': '.;.;D',
                     'fathmm_MKL_coding_pred': 'D',
+                    'GERP_RS': '2.73',
+                    'phastCons100way_vertebrate': '0.008000',
                 },
             ],
             hl.tstruct(
@@ -109,6 +113,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 MutationTaster_pred=hl.tstr,
                 FATHMM_pred=hl.tstr,
                 fathmm_MKL_coding_pred=hl.tstr,
+                GERP_RS=hl.tstr,
+                phastCons100way_vertebrate=hl.tstr,
             ),
             key='id',
         )
@@ -125,17 +131,21 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         MutationTaster_pred_id=3,
                         FATHMM_pred_id=1,
                         fathmm_MKL_coding_pred_id=1,
+                        GERP_RS=hl.eval(hl.float32(2.73)),
+                        phastCons100way_vertebrate=hl.eval(hl.float32(0.008)),
                     ),
                 ),
                 hl.Struct(
                     id=1,
                     mock_dbnsfp=hl.Struct(
-                        REVEL_score=0.052,
+                        REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
                         Polyphen2_HVAR_pred_id=2,
                         MutationTaster_pred_id=3,
                         FATHMM_pred_id=0,
                         fathmm_MKL_coding_pred_id=0,
+                        GERP_RS=hl.eval(hl.float32(2.73)),
+                        phastCons100way_vertebrate=hl.eval(hl.float32(0.008)),
                     ),
                 ),
             ],
@@ -228,14 +238,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ],
                 },
             },
-            'c_coverage': {
-                '38': {
-                    'path': '',
-                    'select': [
-                        'f',
-                    ],
-                },
-            },
         },
     )
     @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
@@ -264,14 +266,12 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'alleles': 10,
                     'a': hl.Struct(d=1),
                     'b': hl.Struct(e=2),
-                    'c_coverage': hl.Struct(f=9),
                 },
                 {
                     'locus': 1,
                     'alleles': 10,
                     'a': hl.Struct(d=3),
                     'b': hl.Struct(e=4),
-                    'c_coverage': None,
                 },
             ],
             hl.tstruct(
@@ -279,68 +279,40 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 alleles=hl.tint32,
                 a=hl.tstruct(d=hl.tint32),
                 b=hl.tstruct(e=hl.tint32),
-                c_coverage=hl.tstruct(f=hl.tint32),
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
                 a_globals=hl.Struct(a=10),
                 b_globals=hl.Struct(b=10),
-                c_coverage_globals=hl.Struct(c=10),
             ),
         )
-        mock_get_ht.side_effect = [
-            hl.Table.parallelize(
-                [
-                    {
-                        'locus': 0,
-                        'alleles': 10,
-                        'b': hl.Struct(e=5),
-                    },
-                    {
-                        'locus': 2,
-                        'alleles': 10,
-                        'b': hl.Struct(e=7),
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tint32,
-                    alleles=hl.tint32,
-                    b=hl.tstruct(e=hl.tint32),
-                ),
-                key=['locus', 'alleles'],
-                globals=hl.Struct(
-                    b_globals=hl.Struct(b=100),
-                ),
+        mock_get_ht.return_value = hl.Table.parallelize(
+            [
+                {
+                    'locus': 0,
+                    'alleles': 10,
+                    'b': hl.Struct(e=5),
+                },
+                {
+                    'locus': 2,
+                    'alleles': 10,
+                    'b': hl.Struct(e=7),
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tint32,
+                alleles=hl.tint32,
+                b=hl.tstruct(e=hl.tint32),
             ),
-            hl.Table.parallelize(
-                [
-                    {
-                        'locus': 0,
-                        'c_coverage': hl.Struct(f=12),
-                    },
-                    {
-                        'locus': 1,
-                        'c_coverage': hl.Struct(f=13),
-                    },
-                    {
-                        'locus': 2,
-                        'c_coverage': hl.Struct(f=14),
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tint32,
-                    c_coverage=hl.tstruct(f=hl.tint32),
-                ),
-                key=['locus'],
-                globals=hl.Struct(
-                    c_coverage_globals=hl.Struct(c=300),
-                ),
+            key=['locus', 'alleles'],
+            globals=hl.Struct(
+                b_globals=hl.Struct(b=100),
             ),
-        ]
+        )
         ht = update_existing_joined_hts(
             'destination',
             'b',
-            ['a', 'b', 'c_coverage'],
+            ['a', 'b'],
             '38',
         )
         self.assertCountEqual(
@@ -351,21 +323,18 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     alleles=10,
                     a=hl.Struct(d=1),
                     b=hl.Struct(e=5),
-                    c_coverage=hl.Struct(f=9),
                 ),
                 hl.Struct(
                     locus=1,
                     alleles=10,
                     a=hl.Struct(d=3),
                     b=None,
-                    c_coverage=None,
                 ),
                 hl.Struct(
                     locus=2,
                     alleles=10,
                     a=None,
                     b=hl.Struct(e=7),
-                    c_coverage=None,
                 ),
             ],
         )
@@ -375,33 +344,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     a_globals=hl.Struct(a=10),
                     b_globals=hl.Struct(b=100),
-                    c_coverage_globals=hl.Struct(c=10),
                     date='2023-04-19T16:43:39.361110-04:56',
-                ),
-            ],
-        )
-        ht = update_existing_joined_hts(
-            'destination',
-            'c_coverage',
-            ['a', 'b', 'c_coverage'],
-            '38',
-        )
-        self.assertCountEqual(
-            ht.collect(),
-            [
-                hl.Struct(
-                    locus=0,
-                    alleles=10,
-                    a=hl.Struct(d=1),
-                    b=hl.Struct(e=2),
-                    c_coverage=hl.Struct(f=12),
-                ),
-                hl.Struct(
-                    locus=1,
-                    alleles=10,
-                    a=hl.Struct(d=3),
-                    b=hl.Struct(e=4),
-                    c_coverage=hl.Struct(f=13),
                 ),
             ],
         )
