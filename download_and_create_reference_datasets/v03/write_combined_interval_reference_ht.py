@@ -55,6 +55,5 @@ if __name__ == '__main__':
         default=None,
         help='When used, update the passed dataset, otherwise run all datasets.',
     )
-    parser.add_argument('--dataset', choices=DATASETS, default=None)
     args, _ = parser.parse_known_args()
     run(args.env, args.dataset)
