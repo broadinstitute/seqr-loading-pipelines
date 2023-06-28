@@ -66,6 +66,7 @@ def family_table_path(
         'samples.ht',
     )
 
+
 def project_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -83,6 +84,7 @@ def project_table_path(
         project_guid,
         'samples.ht',
     )
+
 
 def remapped_and_subsetted_callset_path(
     env: Env,
