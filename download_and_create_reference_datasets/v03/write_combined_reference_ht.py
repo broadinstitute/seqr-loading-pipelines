@@ -11,7 +11,7 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
-from v03_pipeline.lib.defintions import Env, ReferenceGenome
+from v03_pipeline.lib.model import Env, ReferenceGenome
 
 COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
 DATASETS = [
@@ -30,11 +30,12 @@ DATASETS = [
 
 
 def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
+    hl.init(tmp_dir='gs://seqr-scratch-temp')
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
     destination_path = os.path.join(
-        GCS_PREFIXES[(env, AccessControl.PUBLIC)],
+        GCS_PREFIXES[(env.value, AccessControl.PUBLIC)],
         COMBINED_REFERENCE_HT_PATH,
     ).format(
         genome_version=reference_genome.v02_value,
@@ -52,7 +53,7 @@ def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
     else:
         ht = join_hts(DATASETS, reference_genome.v02_value)
     ht.describe()
-    checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
+    checkpoint_path = f"{GCS_PREFIXES[('DEV', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
     ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
@@ -80,4 +81,8 @@ if __name__ == '__main__':
         help='When passed, update the single dataset, otherwise update all datasets.',
     )
     args, _ = parser.parse_known_args()
-    run(args.environment, args.genome_version, args.dataset)
+    run(
+        args.env,
+        args.reference_genome,
+        args.dataset,
+    )

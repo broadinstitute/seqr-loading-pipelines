@@ -11,17 +11,19 @@ from hail_scripts.reference_data.combine import join_hts, update_existing_joined
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
+from v03_pipeline.lib.model import Env, ReferenceGenome
+
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
 INTERVAL_REFERENCE_HT_PATH = 'reference_datasets/interval.ht'
 
 
-def run(environment: str, dataset: str | None):
-    genome_version = '38'
+def run(env: Env, dataset: str | None):
+    reference_genome = ReferenceGenome.GRCh38
     destination_path = os.path.join(
-        GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
+        GCS_PREFIXES[(env.value, AccessControl.PUBLIC)],
         INTERVAL_REFERENCE_HT_PATH,
     ).format(
-        genome_version=genome_version,
+        genome_version=reference_genome.v02_value,
     )
     if (
         hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
@@ -31,12 +33,13 @@ def run(environment: str, dataset: str | None):
             destination_path,
             dataset,
             DATASETS,
-            genome_version,
+            reference_genome.v02_value,
         )
     else:
-        ht = join_hts(DATASETS, reference_genome=genome_version)
+        ht = join_hts(DATASETS, reference_genome=reference_genome.v02_value)
+
     ht.describe()
-    checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
+    checkpoint_path = f"{GCS_PREFIXES[('DEV', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
     ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
@@ -46,9 +49,10 @@ def run(environment: str, dataset: str | None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--environment',
-        default='dev',
-        choices=['dev', 'prod'],
+        '--env',
+        type=Env,
+        choices=list(Env),
+        default=Env.DEV,
     )
     parser.add_argument(
         '--dataset',
@@ -56,5 +60,6 @@ if __name__ == '__main__':
         default=None,
         help='When used, update the passed dataset, otherwise run all datasets.',
     )
+    parser.add_argument('--dataset', choices=DATASETS, default=None)
     args, _ = parser.parse_known_args()
-    run(args.environment, args.dataset)
+    run(args.env, args.dataset)
