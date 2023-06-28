@@ -1,5 +1,4 @@
 from copy import deepcopy
-from enum import Enum
 
 import hail as hl
 
@@ -14,11 +13,6 @@ from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
 )
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
-
-
-class AccessControl(Enum):
-    PUBLIC = 'public'
-    PRIVATE = 'private'
 
 
 def predictor_parse(field: hl.StringExpression):
@@ -452,13 +446,3 @@ CONFIG = {
 
 CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
 CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
-
-GCS_PREFIXES = {
-    ('dev', AccessControl.PUBLIC): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('dev', AccessControl.PRIVATE): 'gs://seqr-scratch-temp/GRCh{genome_version}/v03',
-    ('prod', AccessControl.PUBLIC): 'gs://seqr-reference-data/GRCh{genome_version}/v03',
-    (
-        'prod',
-        AccessControl.PRIVATE,
-    ): 'gs://seqr-reference-data-private/GRCh{genome_version}/v03',
-}

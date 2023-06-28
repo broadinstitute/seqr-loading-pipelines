@@ -18,7 +18,7 @@ class ReferenceDatasetCollection(Enum):
         return AccessControl.PUBLIC
 
     @property
-    def reference_datasets(self) -> list[str]:
+    def datasets(self) -> list[str]:
         return {
             ReferenceDatasetCollection.COMBINED: [
                 'cadd',
