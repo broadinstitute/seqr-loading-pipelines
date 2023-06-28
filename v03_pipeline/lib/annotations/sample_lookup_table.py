@@ -13,7 +13,7 @@ def _AC(  # noqa: N802
     **_: Any,
 ) -> hl.Expression:
     return hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
+        sample_lookup_ht.index_globals().updates.project_guid.map(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].ref_samples[project_guid].length() * N_ALT_REF
                 + sample_lookup_ht[ht.key].het_samples[project_guid].length()
@@ -31,7 +31,7 @@ def _AN(  # noqa: N802
     **_: Any,
 ) -> hl.Expression:
     return 2 * hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
+        sample_lookup_ht.index_globals().updates.project_guid.map(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].ref_samples[project_guid].length()
                 + sample_lookup_ht[ht.key].het_samples[project_guid].length()
@@ -55,7 +55,7 @@ def _hom(
     **_: Any,
 ) -> hl.Expression:
     return hl.sum(
-        sample_lookup_ht.index_globals().project_guids.map(
+        sample_lookup_ht.index_globals().updates.project_guid.map(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].hom_samples[project_guid].length()
             ),

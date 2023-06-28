@@ -19,6 +19,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 class WriteFamilyTableTask(BasePipelineTask):
     callset_path = luigi.Parameter()
+    project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     ignore_missing_samples = luigi.BoolParameter(
@@ -49,6 +50,7 @@ class WriteFamilyTableTask(BasePipelineTask):
             self.dataset_type,
             self.hail_temp_dir,
             self.callset_path,
+            self.project_guid,
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples,

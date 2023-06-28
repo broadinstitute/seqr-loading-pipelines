@@ -3,51 +3,31 @@ from __future__ import annotations
 
 import argparse
 import os
-import uuid
 
 import hail as hl
 
 from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
-from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
-from hail_scripts.utils.hail_utils import write_ht
 
-from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.vep import run_vep
-
-COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
-DATASETS = [
-    'cadd',
-    'clinvar',
-    'dbnsfp',
-    'eigen',
-    'exac',
-    'gnomad_genomes',
-    'gnomad_exomes',
-    'mpc',
-    'primate_ai',
-    'splice_ai',
-    'topmed',
-]
+from v03_pipeline.lib.misc.io import write
+from v03_pipeline.lib.model import (
+    DataRoot,
+    Env,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 
-def run(
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset: str | None,
-    vep_config_json_path: str | None,
-    liftover_ref_path: str,
-):
-    hl.init(tmp_dir='gs://seqr-scratch-temp')
+def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
+    destination_path = valid_reference_dataset_collection_path(
+        env,
+        reference_genome,
+        ReferenceDatasetCollection.COMBINED,
+    )
+    hl.init(tmp_dir=DataRoot.SEQR_SCRATCH_TEMP)
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
-    destination_path = os.path.join(
-        GCS_PREFIXES[(env.value, AccessControl.PUBLIC)],
-        COMBINED_REFERENCE_HT_PATH,
-    ).format(
-        genome_version=reference_genome.v02_value,
-    )
     if (
         hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
         and dataset is not None
@@ -55,51 +35,17 @@ def run(
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
-            DATASETS,
-            reference_genome,
+            ReferenceDatasetCollection.COMBINED.datasets,
+            reference_genome.v02_value,
         )
-        unannotated_rows_ht = ht.filter(~hl.is_defined(ht.vep))
-        unannotated_rows_ht = run_vep(
-            unannotated_rows_ht,
-            env,
-            reference_genome,
-            DatasetType.SNV,
-            vep_config_json_path,
-        )
-        unannotated_rows_ht = unannotated_rows_ht.annotate(
-            **get_fields(
-                unannotated_rows_ht,
-                AnnotationType.FORMATTING,
-                env,
-                reference_genome,
-                liftover_ref_path,
-            ),
-        )
-        ht = ht.union(unannotated_rows_ht)
     else:
-        ht = join_hts(DATASETS, reference_genome)
-        run_vep(
-            ht,
-            env,
-            reference_genome,
-            DatasetType.SNV,
-            vep_config_json_path,
-        )
-        ht = ht.annotate(
-            **get_fields(
-                ht,
-                AnnotationType.FORMATTING,
-                env,
-                reference_genome,
-                liftover_ref_path,
-            ),
+        ht = join_hts(
+            ReferenceDatasetCollection.COMBINED.datasets,
+            reference_genome.v02_value,
         )
     ht.describe()
-    checkpoint_path = f"{GCS_PREFIXES[('DEV', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
-    print(f'Checkpointing ht to {checkpoint_path}')
-    ht = ht.checkpoint(checkpoint_path, stage_locally=True)
     print(f'Uploading ht to {destination_path}')
-    write_ht(ht, destination_path)
+    write(env, ht, destination_path)
 
 
 if __name__ == '__main__':
@@ -107,7 +53,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         type=Env,
-        choices=list(Env),
+        choices=[Env.PROD, Env.DEV],
         default=Env.DEV,
     )
     parser.add_argument(
@@ -118,12 +64,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--dataset',
-        choices=DATASETS,
+        choices=ReferenceDatasetCollection.COMBINED.datasets,
         default=None,
-    )
-    parser.add_argument(
-        '--vep-config-json-path',
-        default=None,
+        help='When passed, update the single dataset, otherwise update all datasets.',
     )
     parser.add_argument(
         '--liftover-ref-path',
@@ -134,6 +77,4 @@ if __name__ == '__main__':
         args.env,
         args.reference_genome,
         args.dataset,
-        args.vep_config_json_path,
-        args.liftover_ref_path,
     )

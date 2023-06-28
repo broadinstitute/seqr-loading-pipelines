@@ -32,7 +32,9 @@ class SampleLookupTest(unittest.TestCase):
                 hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
             ),
             key='id',
-            globals=hl.Struct(project_guids=['project_1']),
+            globals=hl.Struct(
+                updates=hl.set([hl.Struct(callset='abc', project_guid='project_1')]),
+            ),
         )
         samples_ht = hl.Table.parallelize(
             [

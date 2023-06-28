@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 import argparse
-import os
 
 from hail_scripts.reference_data.combine import get_ht
-from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
-from hail_scripts.utils.hail_utils import write_ht
 
-from v03_pipeline.lib.model import Env, ReferenceGenome
-
-HGMD_HT_PATH = 'reference_datasets/hgmd.ht'
-PARTITIONS = 100
+from v03_pipeline.lib.misc.io import write
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection, ReferenceGenome
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 
 def run(env: Env, reference_genome: ReferenceGenome):
-    dataset = 'hgmd'
-    destination_path = os.path.join(
-        GCS_PREFIXES[(env.value, AccessControl.PRIVATE)],
-        HGMD_HT_PATH,
-    ).format(
-        genome_version=reference_genome.v02_value,
-    )
+    dataset = ReferenceDatasetCollection.HGMD.datasets[0]
     ht = get_ht(dataset, reference_genome.v02_value)
+    destination_path = valid_reference_dataset_collection_path(
+        env,
+        reference_genome,
+        ReferenceDatasetCollection.HGMD,
+    )
     print(f'Uploading ht to {destination_path}')
-    write_ht(ht, destination_path)
+    write(env, ht, destination_path)
 
 
 if __name__ == '__main__':
@@ -30,7 +25,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--env',
         type=Env,
-        choices=list(Env),
+        choices=[Env.PROD, Env.DEV],
         default=Env.DEV,
     )
     parser.add_argument(

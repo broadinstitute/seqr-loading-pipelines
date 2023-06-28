@@ -23,7 +23,6 @@ class BasePipelineTask(luigi.Task):
     def init_hail(self):
         if self.hail_temp_dir:
             # Need to use the GCP bucket as temp storage for very large callset joins
-            # `idempotent` makes this a no-op if already called.
             hl.init(tmp_dir=self.hail_temp_dir, idempotent=True)
 
         # Interval ref data join causes shuffle death, this prevents it
