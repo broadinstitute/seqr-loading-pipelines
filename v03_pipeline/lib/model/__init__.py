@@ -6,7 +6,6 @@ from v03_pipeline.lib.model.definitions import (
     Env,
     PipelineVersion,
     ReferenceGenome,
-    SampleFileType,
     SampleType,
 )
 from v03_pipeline.lib.model.reference_dataset_collection import (
@@ -22,6 +21,5 @@ __all__ = [
     'PipelineVersion',
     'ReferenceDatasetCollection',
     'ReferenceGenome',
-    'SampleFileType',
     'SampleType',
 ]

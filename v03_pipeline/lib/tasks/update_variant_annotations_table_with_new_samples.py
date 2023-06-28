@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import functools
+
 import hail as hl
 import luigi
 
@@ -12,21 +14,18 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallset,
-)
 from v03_pipeline.lib.vep import run_vep
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
     callset_path = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_guids = luigi.ListParameter()
+    project_remap_paths = luigi.ListParameter()
+    project_pedigree_paths = luigi.ListParameter()
     ignore_missing_samples = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    project_guid = luigi.Parameter()
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
@@ -35,45 +34,47 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
-            WriteRemappedAndSubsettedCallset(
-                self.env,
-                self.reference_genome,
-                self.dataset_type,
-                self.hail_temp_dir,
-                self.callset_path,
-                self.project_remap_path,
-                self.project_pedigree_path,
-                self.ignore_missing_samples,
-            ),
             UpdateSampleLookupTableTask(
                 self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.hail_temp_dir,
                 self.callset_path,
-                self.project_remap_path,
-                self.project_pedigree_path,
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
                 self.ignore_missing_samples,
-                self.project_guid,
             ),
         ]
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(
-                (self.callset_path, self.project_pedigree_path),
+            hl.all(
+                [
+                    hl.read_table(self.output().path).updates.contains(
+                        hl.Struct(callset=self.callset_path, project_guid=project_guid),
+                    )
+                    for project_guid in self.project_guids
+                ],
             ),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
-        callset_mt = hl.read_matrix_table(
-            remapped_and_subsetted_callset_path(
-                self.env,
-                self.reference_genome,
-                self.dataset_type,
-                self.callset_path,
-                self.project_pedigree_path,
-            ),
+        callset_hts = [
+            hl.read_matrix_table(
+                remapped_and_subsetted_callset_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                    project_guid,
+                ),
+            ).rows()
+            for project_guid in self.project_guids
+        ]
+        callset_ht = functools.reduce(
+            (lambda ht1, ht2: ht1.union(ht2, unify=True)),
+            callset_hts,
         )
 
         # Get new rows, annotate them with vep, format and annotate them,
@@ -82,7 +83,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # NB: the `unify=True` on the `union` here gives us the remainder
         # of the fields defined on the existing table but not over the new rows
         # (most importantly, the reference dataset fields).
-        new_variants_ht = callset_mt.anti_join_rows(ht).rows()
+        new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
             self.env,
@@ -111,7 +112,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
         return ht.annotate_globals(
-            updates=ht.updates.add(
-                (self.callset_path, self.project_pedigree_path),
+            updates=ht.updates.union(
+                {
+                    hl.Struct(callset=self.callset_path, project_guid=project_guid)
+                    for project_guid in self.project_guids
+                },
             ),
         )

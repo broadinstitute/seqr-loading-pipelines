@@ -109,11 +109,6 @@ class ReferenceGenome(Enum):
         }[self]
 
 
-class SampleFileType(Enum):
-    BED = 'BED'
-    VCF = 'VCF'
-
-
 class SampleType(Enum):
     WES = 'WES'
     WGS = 'WGS'
