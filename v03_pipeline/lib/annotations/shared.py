@@ -8,6 +8,104 @@ from hail_scripts.computed_fields import variant_id as expression_helpers
 
 from v03_pipeline.lib.model import ReferenceGenome
 
+AMINO_ACIDS = [
+    'A',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'K',
+    'L',
+    'M',
+    'N',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'V',
+    'W',
+    'Y',
+    'X',
+    '*',
+    'U',
+]
+AMINO_ACIDS_LOOKUP = hl.dict(hl.enumerate(AMINO_ACIDS, index_first=False))
+
+BIOTYPES = [
+    'IG_C_gene',
+    'IG_D_gene',
+    'IG_J_gene',
+    'IG_LV_gene',
+    'IG_V_gene',
+    'TR_C_gene',
+    'TR_J_gene',
+    'TR_V_gene',
+    'TR_D_gene',
+    'IG_pseudogene',
+    'IG_C_pseudogene',
+    'IG_J_pseudogene',
+    'IG_V_pseudogene',
+    'TR_V_pseudogene',
+    'TR_J_pseudogene',
+    'Mt_rRNA',
+    'Mt_tRNA',
+    'miRNA',
+    'misc_RNA',
+    'rRNA',
+    'scRNA',
+    'snRNA',
+    'snoRNA',
+    'ribozyme',
+    'sRNA',
+    'scaRNA',
+    'lncRNA',
+    'Mt_tRNA_pseudogene',
+    'tRNA_pseudogene',
+    'snoRNA_pseudogene',
+    'snRNA_pseudogene',
+    'scRNA_pseudogene',
+    'rRNA_pseudogene',
+    'misc_RNA_pseudogene',
+    'miRNA_pseudogene',
+    'TEC',
+    'nonsense_mediated_decay',
+    'non_stop_decay',
+    'retained_intron',
+    'protein_coding',
+    'protein_coding_LoF',
+    'protein_coding_CDS_not_defined',
+    'processed_transcript',
+    'non_coding',
+    'ambiguous_orf',
+    'sense_intronic',
+    'sense_overlapping',
+    'antisense/antisense_RNA',
+    'known_ncrna',
+    'pseudogene',
+    'processed_pseudogene',
+    'polymorphic_pseudogene',
+    'retrotransposed',
+    'transcribed_processed_pseudogene',
+    'transcribed_unprocessed_pseudogene',
+    'transcribed_unitary_pseudogene',
+    'translated_processed_pseudogene',
+    'translated_unprocessed_pseudogene',
+    'unitary_pseudogene',
+    'unprocessed_pseudogene',
+    'artifact',
+    'lincRNA',
+    'macro_lncRNA',
+    '3prime_overlapping_ncRNA',
+    'disrupted_domain',
+    'vaultRNA/vault_RNA',
+    'bidirectional_promoter_lncRNA',
+]
+BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
+
 CONSEQUENCE_TERMS = [
     'transcript_ablation',
     'splice_acceptor_variant',
@@ -51,6 +149,8 @@ CONSEQUENCE_TERMS = [
 ]
 CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))
 
+PROTEIN_CODING_ID = BIOTYPE_LOOKUP['protein_coding']
+
 OMIT_CONSEQUENCE_TERMS = hl.set(
     [
         'upstream_gene_variant',
@@ -59,8 +159,6 @@ OMIT_CONSEQUENCE_TERMS = hl.set(
 )
 
 SELECTED_ANNOTATIONS = [
-    'amino_acids',
-    'biotype',
     'canonical',
     'codons',
     'gene_id',
@@ -106,6 +204,10 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
         ht.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
+                amino_acid_ids=c.amino_acids.split('/').map(
+                    lambda a: AMINO_ACIDS_LOOKUP[a],
+                ),
+                biotype_id=BIOTYPE_LOOKUP[c.biotype],
                 consequence_term_ids=(
                     c.consequence_terms.filter(
                         lambda t: ~OMIT_CONSEQUENCE_TERMS.contains(t),
@@ -130,7 +232,7 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
                         ),
                     )
                 ),
-                hl.or_else(c.biotype, '') == 'protein_coding',
+                c.biotype_id == PROTEIN_CODING_ID,
                 hl.set(c.consequence_term_ids).contains(
                     CONSEQUENCE_TERMS_LOOKUP[ht.vep.most_severe_consequence],
                 ),

@@ -107,8 +107,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             [
                 x
                 for x in ht.select(
-                    'AC',
-                    'AN',
+                    'gt_stats',
                 ).collect()
                 if x.locus.position <= 871269  # noqa: PLR2004
             ][0],
@@ -119,8 +118,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     reference_genome='GRCh38',
                 ),
                 alleles=['A', 'C'],
-                AC=0,
-                AN=6,
+                gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
             ),
         )
 
@@ -147,8 +145,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     'hgmd',
                     'variant_id',
                     'xpos',
-                    'AC',
-                    'AN',
+                    'gt_stats',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -168,8 +165,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
-                    AC=1,
-                    AN=32,
+                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -183,8 +179,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
-                    AC=1,
-                    AN=32,
+                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -198,8 +193,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
-                    AC=31,
-                    AN=32,
+                    gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -213,8 +207,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
-                    AC=3,
-                    AN=32,
+                    gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -228,8 +221,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hgmd=None,
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
-                    AC=1,
-                    AN=32,
+                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                 ),
             ],
         )

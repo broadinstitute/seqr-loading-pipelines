@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.sample_lookup_table import AC, AF, AN, hom
+from v03_pipeline.lib.annotations.sample_lookup_table import gt_stats
 
 
 class SampleLookupTableAnnotationsTest(unittest.TestCase):
@@ -36,15 +36,10 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             key='id',
             globals=hl.Struct(project_guids=['project_1']),
         )
-        ht = ht.select(
-            AC=AC(ht, sample_lookup_ht),
-            AF=AF(ht, sample_lookup_ht),
-            AN=AN(ht, sample_lookup_ht),
-            hom=hom(ht, sample_lookup_ht),
-        )
+        ht = ht.select(gt_stats=gt_stats(ht, sample_lookup_ht))
         self.assertCountEqual(
             ht.collect(),
             [
-                hl.Struct(id=0, AC=6, AF=0.5, AN=12, hom=2),
+                hl.Struct(id=0, gt_stats=hl.Struct(AC=6, AF=0.5, AN=12, hom=2)),
             ],
         )
