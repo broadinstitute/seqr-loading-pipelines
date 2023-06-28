@@ -24,20 +24,6 @@ def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpressi
     )
 
 
-def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
-    annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
-    config_version = config.get('version', hl.missing(hl.tstr))
-    return (
-        hl.case()
-        .when(hl.is_missing(config_version), annotated_version)
-        .when(hl.is_missing(annotated_version), config_version)
-        .when(annotated_version == config_version, config_version)
-        .or_error(
-            f'found mismatching versions for dataset {dataset}, {config_version}, {hl.eval(annotated_version)}',
-        )
-    )
-
-
 def get_select_fields(selects, base_ht):
     """
     Generic function that takes in a select config and base_ht and generates a
