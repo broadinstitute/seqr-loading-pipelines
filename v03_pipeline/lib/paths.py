@@ -66,6 +66,23 @@ def family_table_path(
         'samples.ht',
     )
 
+def project_table_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            DataRoot.SEQR_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        'projects',
+        project_guid,
+        'samples.ht',
+    )
 
 def remapped_and_subsetted_callset_path(
     env: Env,
@@ -83,25 +100,6 @@ def remapped_and_subsetted_callset_path(
         ),
         'remapped_and_subsetted_callsets',
         f'{hashlib.sha256((callset_path + pedigree_path).encode("utf8")).hexdigest()}.mt',
-    )
-
-
-def project_table_path(
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    project_guid: str,
-) -> str:
-    return os.path.join(
-        _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
-            reference_genome,
-            dataset_type,
-        ),
-        'projects',
-        project_guid,
-        'samples.ht',
     )
 
 
