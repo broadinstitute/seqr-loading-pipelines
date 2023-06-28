@@ -12,8 +12,6 @@ from luigi_pipeline.lib.model.seqr_mt_schema import (
     SeqrVariantsAndGenotypesSchema,
 )
 
-GENE_ID = "gene_id"
-MAJOR_CONSEQUENCE = "major_consequence"
 
 def parse_genes(gene_col: hl.expr.StringExpression) -> hl.expr.SetExpression:
     """
@@ -36,17 +34,17 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
 
     @row_annotation()
     def sc(self):
-        return self.mt.vac
+        return self.mt.sc
 
     @row_annotation()
     def sf(self):
-        return self.mt.vaf
+        return self.mt.sf
 
     @row_annotation()
     def sn(self):
         return hl.or_missing(
-            hl.is_defined(self.mt.vaf),
-            hl.int(self.mt.vac / self.mt.vaf),
+            hl.is_defined(self.mt.sf),
+            hl.int(self.mt.sc / self.mt.sf),
         )
 
     @row_annotation(name='svType')
@@ -55,9 +53,9 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
 
     @row_annotation(name='StrVCTVRE_score')
     def strvctvre(self):
-       return self.mt.strvctvre_score
+       return hl.parse_float(self.mt.strvctvre_score)
 
-    @row_annotation(name='variantId', disable_index=True)
+    @row_annotation(name='variantId')
     def variant_id(self):
         return hl.format(f"%s_%s_{datetime.date.today():%m%d%Y}", self.mt.variant_name, self.mt.svtype)
 
@@ -83,17 +81,16 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         copy_gain_genes = hl_agg_collect_set_union(parse_genes(self.mt.genes_CG_Ensemble_ID))
         major_consequence_genes = lof_genes | copy_gain_genes
         return hl.map(
-            lambda gene: hl.if_else(
-                major_consequence_genes.contains(gene),
-                {
-                    GENE_ID: gene,
-                    MAJOR_CONSEQUENCE: hl.if_else(
+            lambda gene: hl.Struct(
+                gene_id=gene,
+                major_consequence=hl.or_missing(
+                    major_consequence_genes.contains(gene),
+                    hl.if_else(
                         lof_genes.contains(gene),
                         "LOF",
                         "COPY_GAIN",
-                    )
-                },
-                {GENE_ID: gene},
+                    ),
+                ),
             ),
             self.mt.geneIds,
         )
@@ -106,8 +103,8 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
         default_consequences = [hl.format('gCNV_%s', self.mt.svType)]
         gene_major_consequences = hl.array(hl.set(
             self.mt.sortedTranscriptConsequences
-            .filter(lambda x: x.contains(MAJOR_CONSEQUENCE))
-            .map(lambda x: x[MAJOR_CONSEQUENCE])
+            .filter(lambda x: hl.is_defined(x.major_consequence))
+            .map(lambda x: x.major_consequence)
         ))
         return gene_major_consequences.extend(default_consequences)
 
@@ -115,21 +112,26 @@ class SeqrGCNVVariantSchema(BaseVariantSchema):
     def pos(self):
         return self.mt.start
 
-    @row_annotation(fn_require=[contig, pos])
+    @row_annotation(fn_require=pos)
     def xpos(self):
         return variant_id.get_expr_for_xpos(
-            hl.locus(self.mt.contig, self.mt.pos)
+            hl.locus(self.mt.chr, self.mt.pos, reference_genome='GRCh38')
         )
 
     @row_annotation(disable_index=True, fn_require=xpos)
     def xstart(self):
         return self.mt.xpos
 
-    @row_annotation(fn_require=[contig, end])
+    @row_annotation(fn_require=end)
     def xstop(self):
         return variant_id.get_expr_for_xpos(
-            hl.locus(self.mt.contig, self.mt.end)
+            hl.locus(self.mt.chr, self.mt.end, reference_genome='GRCh38')
         )
+
+    # NB: This is the "elasticsearch_mapping_id" used inside of export_table_to_elasticsearch.
+    @row_annotation(name='docId', fn_require=variant_id, disable_index=True)
+    def doc_id(self, max_length=512):
+        return self.mt.variantId
 
 class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
 
@@ -163,7 +165,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             f'{i}_to_{i + step}': self._genotype_filter_samples(lambda g: ((g.qs >= i) & (g.qs < i+step)))
             for i in range(start, end, step)
         }, **{
-            "samples_qs_gt_1000": self._genotype_filter_samples(lambda g: g.qs >= 1000)
+            "gt_1000": self._genotype_filter_samples(lambda g: g.qs >= 1000)
         })
 
     @row_annotation(name="samples_cn", fn_require=SeqrGenotypesSchema.genotypes)
@@ -172,7 +174,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
             f'{i}': self._genotype_filter_samples(lambda g: g.cn == i)
             for i in range(start, end, step)
         }, **{
-            "samples_cn_gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
+            "gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
         })
 
     def _genotype_filter_samples(self, filter):
