@@ -10,6 +10,7 @@ import hail as hl
 from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
+from v03_pipeline.lib.defintions import Env, ReferenceGenome
 
 COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
 DATASETS = [
@@ -27,7 +28,7 @@ DATASETS = [
 ]
 
 
-def run(environment: str, genome_version: str, dataset: str | None):
+def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
@@ -47,15 +48,6 @@ def run(environment: str, genome_version: str, dataset: str | None):
             DATASETS,
             reference_genome.v02_value,
         )
-        unannotated_rows_ht = ht.filter(~hl.is_defined(ht.vep))
-        unannotated_rows_ht = run_vep(
-            unannotated_rows_ht,
-            env,
-            reference_genome,
-            DatasetType.SNV,
-            vep_config_json_path,
-        )
-        ht = ht.union(unannotated_rows_ht)
     else:
         ht = join_hts(DATASETS, reference_genome.v02_value)
     ht.describe()
