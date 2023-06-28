@@ -213,7 +213,7 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
                 lof_filters=hl.or_missing(
                     (c.lof == 'LC') & hl.is_defined(c.lof_filter),
                     c.lof_filter.split('&|,'),
-                )
+                ),
             ),
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         lambda c: (
