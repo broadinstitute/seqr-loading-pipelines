@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import argparse
 import os
 import uuid
@@ -10,13 +12,10 @@ from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
 
 DATASETS = ['gnomad_non_coding_constraint', 'screen']
-INTERVAL_REFERENCE_HT_PATH = (
-    'combined_interval_reference/combined_interval_reference.GRCh{genome_version}.ht'
-)
-VERSION = '1.0.0'
+INTERVAL_REFERENCE_HT_PATH = 'reference_datasets/interval.ht'
 
 
-def run(environment: str, dataset: str):
+def run(environment: str, dataset: str | None):
     genome_version = '38'
     destination_path = os.path.join(
         GCS_PREFIXES[(environment, AccessControl.PUBLIC)],
@@ -24,16 +23,18 @@ def run(environment: str, dataset: str):
     ).format(
         genome_version=genome_version,
     )
-    if hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS')):
+    if (
+        hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
+        and dataset is not None
+    ):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
             DATASETS,
-            VERSION,
             genome_version,
         )
     else:
-        ht = join_hts(DATASETS, VERSION, reference_genome=genome_version)
+        ht = join_hts(DATASETS, reference_genome=genome_version)
     ht.describe()
     checkpoint_path = f"{GCS_PREFIXES[('dev', AccessControl.PUBLIC)]}/{uuid.uuid4()}.ht"
     print(f'Checkpointing ht to {checkpoint_path}')
@@ -52,7 +53,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '--dataset',
         choices=DATASETS,
-        required=True,
+        default=None,
+        help='When used, update the passed dataset, otherwise run all datasets.',
     )
     args, _ = parser.parse_known_args()
     run(args.environment, args.dataset)
