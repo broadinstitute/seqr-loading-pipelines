@@ -59,7 +59,7 @@ def _hom(
             lambda project_guid: (
                 sample_lookup_ht[ht.key].hom_samples[project_guid].length()
             ),
-        )
+        ),
     )
 
 
