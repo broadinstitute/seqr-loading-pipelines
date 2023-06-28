@@ -68,10 +68,6 @@ if __name__ == '__main__':
         default=None,
         help='When passed, update the single dataset, otherwise update all datasets.',
     )
-    parser.add_argument(
-        '--liftover-ref-path',
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-    )
     args, _ = parser.parse_known_args()
     run(
         args.env,
