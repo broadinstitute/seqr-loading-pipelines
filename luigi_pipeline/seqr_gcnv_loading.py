@@ -64,7 +64,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         )
 
         # rename the sample id column before the sample subset happens
-        mt.key_cols_by(
+        mt = mt.key_cols_by(
             s = hl.or_else(
                 mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0],
                 mt.sample_fix,
