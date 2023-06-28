@@ -10,6 +10,7 @@ import hail as hl
 from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
 from hail_scripts.reference_data.config import GCS_PREFIXES, AccessControl
 from hail_scripts.utils.hail_utils import write_ht
+
 from v03_pipeline.lib.defintions import Env, ReferenceGenome
 
 COMBINED_REFERENCE_HT_PATH = 'reference_datasets/combined.ht'
