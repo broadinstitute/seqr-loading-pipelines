@@ -35,8 +35,8 @@ class SharedAnnotationsTest(unittest.TestCase):
             [
                 [
                     hl.Struct(
-                        amino_acids='S/L',
-                        biotype='protein_coding',
+                        amino_acid_ids=[15, 9],
+                        biotype_id=39,
                         canonical=1,
                         codons='tCg/tTg',
                         gene_id='ENSG00000188976',
@@ -51,8 +51,8 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=0,
                     ),
                     hl.Struct(
-                        amino_acids=None,
-                        biotype='retained_intron',
+                        amino_acid_ids=None,
+                        biotype_id=38,
                         canonical=None,
                         codons=None,
                         gene_id='ENSG00000188976',
@@ -67,8 +67,8 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=1,
                     ),
                     hl.Struct(
-                        amino_acids=None,
-                        biotype='retained_intron',
+                        amino_acid_ids=None,
+                        biotype_id=38,
                         canonical=None,
                         codons=None,
                         gene_id='ENSG00000188976',
