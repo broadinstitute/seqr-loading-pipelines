@@ -64,7 +64,12 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         )
 
         # rename the sample id column before the sample subset happens
-        mt = mt.key_cols_by(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
+        mt.key_cols_by(
+            s = hl.or_else(
+                mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0],
+                mt.sample_fix,
+            )
+        )
 
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
