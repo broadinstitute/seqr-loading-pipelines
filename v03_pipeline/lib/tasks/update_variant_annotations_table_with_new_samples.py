@@ -106,7 +106,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
 
-        # 3) Join against the reference dataset collection
+        # 3) Join against the reference dataset collections
         for rdc in self.dataset_type.joinable_reference_dataset_collections(self.env):
             rdc_ht = hl.read_table(
                 valid_reference_dataset_collection_path(
