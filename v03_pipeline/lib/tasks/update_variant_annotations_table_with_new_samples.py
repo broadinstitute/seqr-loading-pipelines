@@ -77,12 +77,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             callset_hts,
         )
 
-        # Get new rows, annotate them with vep, format and annotate them,
-        # then stack onto the existing variant annotations table.
-        # We then re-annotate the entire table with the allele statistics.
-        # NB: the `unify=True` on the `union` here gives us the remainder
-        # of the fields defined on the existing table but not over the new rows
-        # (most importantly, the reference dataset fields).
+        # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
@@ -91,6 +86,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.dataset_type,
             self.vep_config_json_path,
         )
+
+        # 2) select down to the formatting annotations fields and
+        # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
@@ -103,6 +101,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **self.param_kwargs,
             ),
         )
+
+        # 3) Join against the reference dataset collection
+        for rdc in dataset_type.joinable_reference_dataset_collections(self.env):
+            rdc_ht = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+
+
+        # 4) Union with the existing variant annotations table
+        # and annotate the genotype frequencies.
         ht = ht.union(new_variants_ht, unify=True)
         ht = ht.annotate(
             **get_fields(
@@ -111,6 +124,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **self.param_kwargs,
             ),
         )
+
+        # 5) Mark the table as updated with these callset/projects pairs.
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {
