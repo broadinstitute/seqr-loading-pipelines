@@ -26,7 +26,6 @@ ANNOTATION_CONFIG = {
         shared.xpos,
     ],
     (DatasetType.SNV, AnnotationType.REFERENCE_DATASET_COLLECTION): [
-        reference_dataset_collection.hgmd,
         reference_dataset_collection.gnomad_non_coding_constraint,
         reference_dataset_collection.screen,
     ],
@@ -75,7 +74,7 @@ def hail_table_dependencies(
                     rdc,
                 ),
             )
-            for rdc in dataset_type.annotatable_reference_dataset_collections(env)
+            for rdc in dataset_type.annotatable_reference_dataset_collections
         }
     if annotation_type == AnnotationType.SAMPLE_LOOKUP_TABLE:
         return {

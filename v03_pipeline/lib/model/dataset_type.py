@@ -17,24 +17,30 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
-    def base_reference_dataset_collection(self) -> ReferenceDatasetCollection | None:
+    def annotable_reference_dataset_collections(
+        self,
+    ) -> list[ReferenceDatasetCollection]:
         return {
-            DatasetType.MITO: ReferenceDatasetCollection.COMBINED_MITO,
-            DatasetType.SNV: ReferenceDatasetCollection.COMBINED,
-        }.get(self)
+            DatasetType.SNV: [
+                ReferenceDatasetCollection.INTERVAL,
+            ],
+        }.get(self, set())
 
-    def annotatable_reference_dataset_collections(
+    def joinable_reference_dataset_collections(
         self,
         env: Env,
-    ) -> set[ReferenceDatasetCollection]:
+    ) -> list[ReferenceDatasetCollection]:
         rdcs = {
-            DatasetType.SNV: {
+            DatasetType.SNV: [
+                ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
-                ReferenceDatasetCollection.INTERVAL,
-            },
+            ],
+            DatasetType.MITO: [
+                ReferenceDatasetCollection.COMBINED_MITO,
+            ],
         }.get(self, set())
         if env == Env.LOCAL:
-            return {rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC}
+            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs
 
     def table_key_type(

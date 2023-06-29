@@ -5,16 +5,6 @@ from typing import Any
 import hail as hl
 
 
-def hgmd(
-    ht: hl.Table,
-    hgmd_ht: hl.Table | None = None,
-    **_: Any,
-) -> hl.Expression | None:
-    if hgmd_ht is None:
-        return None
-    return hgmd_ht[ht.key].hgmd
-
-
 def gnomad_non_coding_constraint(
     ht: hl.Table,
     interval_ht: hl.Table,
