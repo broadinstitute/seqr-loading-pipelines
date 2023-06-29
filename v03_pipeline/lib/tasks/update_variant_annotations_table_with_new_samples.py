@@ -7,7 +7,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType
-from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
+from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path, valid_reference_dataset_collection_path
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -91,7 +91,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.vep_config_json_path,
         )
 
-        # 2) select down to the formatting annotations fields and
+        # 2) Select down to the formatting annotations fields and
         # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
             **get_fields(
@@ -128,7 +128,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
 
-        # 5) Mark the table as updated with these callset/projects pairs.
+        # 5) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {
