@@ -17,7 +17,7 @@ class DatasetType(Enum):
     SV = 'SV'
 
     @property
-    def annotable_reference_dataset_collections(
+    def annotatable_reference_dataset_collections(
         self,
     ) -> list[ReferenceDatasetCollection]:
         return {

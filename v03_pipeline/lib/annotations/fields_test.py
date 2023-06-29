@@ -21,11 +21,11 @@ class FieldsTest(unittest.TestCase):
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/hgmd.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/interval.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
     def tearDown(self) -> None:
@@ -52,7 +52,7 @@ class FieldsTest(unittest.TestCase):
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
             ),
-            ['hgmd', 'gnomad_non_coding_constraint', 'screen'],
+            ['gnomad_non_coding_constraint', 'screen'],
         )
         self.assertCountEqual(
             list(
