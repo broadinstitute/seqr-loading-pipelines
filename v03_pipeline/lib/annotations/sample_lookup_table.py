@@ -15,10 +15,10 @@ def _AC(  # noqa: N802
     return hl.sum(
         sample_lookup_ht.index_globals().project_guids.map(
             lambda project_guid: (
-                sample_lookup_ht[ht.key].ref_samples[project_guid].length() * N_ALT_REF
-                + sample_lookup_ht[ht.key].het_samples[project_guid].length()
+                sample_lookup_ht[ht.key].ref_samples.get(project_guid, hl.empty_set(hl.tstr)).length() * N_ALT_REF
+                + sample_lookup_ht[ht.key].het_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
                 * N_ALT_HET
-                + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+                + sample_lookup_ht[ht.key].hom_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
                 * N_ALT_HOM
             ),
         ),
@@ -33,9 +33,9 @@ def _AN(  # noqa: N802
     return 2 * hl.sum(
         sample_lookup_ht.index_globals().project_guids.map(
             lambda project_guid: (
-                sample_lookup_ht[ht.key].ref_samples[project_guid].length()
-                + sample_lookup_ht[ht.key].het_samples[project_guid].length()
-                + sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+                sample_lookup_ht[ht.key].ref_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
+                + sample_lookup_ht[ht.key].het_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
+                + sample_lookup_ht[ht.key].hom_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
             ),
         ),
     )
@@ -57,7 +57,7 @@ def _hom(
     return hl.sum(
         sample_lookup_ht.index_globals().project_guids.map(
             lambda project_guid: (
-                sample_lookup_ht[ht.key].hom_samples[project_guid].length()
+                sample_lookup_ht[ht.key].hom_samples.get(project_guid, hl.empty_set(hl.tstr)).length()
             ),
         ),
     )
