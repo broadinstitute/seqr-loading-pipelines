@@ -26,6 +26,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    liftover_ref_path = luigi.OptionalParameter(
+        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
+        description='Path to GRCh38 to GRCh37 coordinates file',
+    )
     vep_config_json_path = luigi.OptionalParameter(
         default=None,
         description='Path of hail vep config .json file',
@@ -103,7 +107,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 3) Join against the reference dataset collection
-        for rdc in dataset_type.joinable_reference_dataset_collections(self.env):
+        for rdc in self.dataset_type.joinable_reference_dataset_collections(self.env):
             rdc_ht = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.env,
@@ -112,7 +116,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
-
 
         # 4) Union with the existing variant annotations table
         # and annotate the genotype frequencies.

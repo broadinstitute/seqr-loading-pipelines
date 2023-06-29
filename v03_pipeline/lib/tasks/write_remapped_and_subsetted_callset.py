@@ -68,4 +68,4 @@ class WriteRemappedAndSubsettedCallset(BasePipelineTask):
             sample_subset_ht,
             self.ignore_missing_samples,
         )
-        write(self.env, callset_mt, self.output().path)
+        write(self.env, callset_mt, self.output().path, False)

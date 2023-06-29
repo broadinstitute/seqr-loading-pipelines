@@ -91,4 +91,4 @@ class WriteFamilyTableTask(BasePipelineTask):
         ht = ht.annotate_globals(
             updates={self.callset_path},
         )
-        write(self.env, ht, self.output().path)
+        write(self.env, ht, self.output().path, False)
