@@ -25,15 +25,15 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/combined.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/hgmd.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/interval.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
     def tearDown(self) -> None:
@@ -53,7 +53,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         )
         self.assertEqual(
             vat_task.output().path,
-            f'{self._temp_local_datasets}/GRCh38/v03/SNV/annotations.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/annotations.ht',
         )
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())

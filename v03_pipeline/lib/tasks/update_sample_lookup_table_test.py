@@ -43,7 +43,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             uslt_task.output().path,
-            f'{self._temp_local_datasets}/GRCh38/v03/SNV/lookup.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/lookup.ht',
         )
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())

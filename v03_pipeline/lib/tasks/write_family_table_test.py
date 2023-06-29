@@ -42,7 +42,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             wft_task.output().path,
-            f'{self._temp_local_datasets}/GRCh38/v03/SNV/families/abc/samples.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc/samples.ht',
         )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)

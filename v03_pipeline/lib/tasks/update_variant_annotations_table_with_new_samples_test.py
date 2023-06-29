@@ -28,11 +28,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/combined.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/hgmd.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
 
     def tearDown(self) -> None:
@@ -81,7 +81,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
     def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/GRCh38/v03/reference_datasets/interval.ht',
+            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
