@@ -17,8 +17,10 @@ def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
 def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.MatrixTable:
     mt = vcf_remap(mt)
     collected_remap = project_remap_ht.collect()
-    s_dups = [k for k,v in Counter([r.s for r in collected_remap]).items() if v>1]
-    seqr_dups = [k for k,v in Counter([r.seqr_id for r in collected_remap]).items() if v>1]
+    s_dups = [k for k, v in Counter([r.s for r in collected_remap]).items() if v > 1]
+    seqr_dups = [
+        k for k, v in Counter([r.seqr_id for r in collected_remap]).items() if v > 1
+    ]
 
     if len(s_dups) > 0 or len(seqr_dups) > 0:
         msg = f'Duplicate s or seqr_id entries in remap file were found. Duplicate s:{s_dups}. Duplicate seqr_id:{seqr_dups}.'

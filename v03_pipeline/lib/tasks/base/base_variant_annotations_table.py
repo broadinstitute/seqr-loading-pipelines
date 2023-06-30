@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import hail as hl
 
 from v03_pipeline.lib.paths import (
@@ -12,7 +14,6 @@ from v03_pipeline.lib.tasks.files import (
     GCSorLocalTarget,
     HailTableTask,
 )
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import luigi

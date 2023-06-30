@@ -58,7 +58,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker.add(uvatwns_task)
         worker.run()
         self.assertFalse(uvatwns_task.complete())
-    
+
     def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data

@@ -7,7 +7,10 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType
-from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path, valid_reference_dataset_collection_path
+from v03_pipeline.lib.paths import (
+    remapped_and_subsetted_callset_path,
+    valid_reference_dataset_collection_path,
+)
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
