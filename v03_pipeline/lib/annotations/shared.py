@@ -149,6 +149,22 @@ CONSEQUENCE_TERMS = [
 ]
 CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))
 
+LOF_FILTERS = [
+    'END_TRUNC',
+    'INCOMPLETE_CDS',
+    'EXON_INTRON_UNDEF',
+    'SMALL_INTRON',
+    'ANC_ALLELE',
+    'NON_DONOR_DISRUPTING',
+    'NON_ACCEPTOR_DISRUPTING',
+    'RESCUE_DONOR',
+    'RESCUE_ACCEPTOR',
+    'GC_TO_GT_DONOR',
+    '5UTR_SPLICE',
+    '3UTR_SPLICE',
+]
+LOF_FILTERS_LOOKUP = hl.dict(hl.enumerate(LOF_FILTERS, index_first=False))
+
 PROTEIN_CODING_ID = BIOTYPE_LOOKUP['protein_coding']
 
 OMIT_CONSEQUENCE_TERMS = hl.set(
@@ -210,9 +226,9 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
                     ).map(lambda t: CONSEQUENCE_TERMS_LOOKUP[t])
                 ),
                 is_lof_nagnag=c.lof_flags == 'NAGNAG_SITE',
-                lof_filters=hl.or_missing(
+                lof_filter_ids=hl.or_missing(
                     (c.lof == 'LC') & hl.is_defined(c.lof_filter),
-                    c.lof_filter.split('&|,'),
+                    c.lof_filter.split('&|,').map(lambda f: LOF_FILTERS_LOOKUP[f]),
                 ),
             ),
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
