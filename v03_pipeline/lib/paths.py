@@ -121,6 +121,24 @@ def sample_lookup_table_path(
     )
 
 
+def sample_ids_for_run_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            DataRoot.SEQR_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'sample_ids.txt',
+    )
+
+
 def valid_reference_dataset_collection_path(
     env: Env,
     reference_genome: ReferenceGenome,
