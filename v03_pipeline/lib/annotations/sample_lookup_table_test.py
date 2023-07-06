@@ -12,6 +12,9 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
                 {
                     'id': 0,
                 },
+                {
+                    'id': 1,
+                },
             ],
             hl.tstruct(
                 id=hl.tint32,
@@ -25,6 +28,15 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
                     'ref_samples': {'project_1': {'a', 'c'}},
                     'het_samples': {'project_1': {'b', 'd'}},
                     'hom_samples': {'project_1': {'e', 'f'}},
+                },
+                {
+                    'id': 1,
+                    'ref_samples': {
+                        'project_1': {'a', 'b', 'c', 'd', 'e', 'f'},
+                        'project_2': {'x'},
+                    },
+                    'het_samples': {'project_1': set(), 'project_2': {'y'}},
+                    'hom_samples': {'project_1': set(), 'project_2': {'z'}},
                 },
             ],
             hl.tstruct(
@@ -43,5 +55,9 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             ht.collect(),
             [
                 hl.Struct(id=0, gt_stats=hl.Struct(AC=6, AF=0.5, AN=12, hom=2)),
+                hl.Struct(
+                    id=1,
+                    gt_stats=hl.Struct(AC=3, AN=18, AF=0.1666666716337204, hom=1),
+                ),
             ],
         )
