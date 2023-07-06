@@ -81,6 +81,10 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
                     AnnotationType.REFERENCE_DATASET_COLLECTION,
                     **self.param_kwargs,
                 ),
+                # NB: We will endeavor to remove the below line by calling running
+                # the formatting annotations over the base reference dataset collection
+                # itself when it is created.
+                **get_fields(ht, AnnotationType.FORMATTING, **self.param_kwargs),
             )
         return ht.annotate_globals(
             updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
