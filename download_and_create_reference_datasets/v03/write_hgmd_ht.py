@@ -10,7 +10,7 @@ from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 def run(env: Env, reference_genome: ReferenceGenome):
     dataset = ReferenceDatasetCollection.HGMD.datasets[0]
-    ht = get_ht(dataset, reference_genome.v02_value)
+    ht = get_ht(dataset, reference_genome)
     destination_path = valid_reference_dataset_collection_path(
         env,
         reference_genome,

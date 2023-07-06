@@ -28,12 +28,12 @@ def run(env: Env, dataset: str | None):
             destination_path,
             dataset,
             ReferenceDatasetCollection.INTERVAL.datasets,
-            reference_genome.v02_value,
+            reference_genome,
         )
     else:
         ht = join_hts(
             ReferenceDatasetCollection.INTERVAL.datasets,
-            reference_genome=reference_genome.v02_value,
+            reference_genome,
         )
 
     ht.describe()
