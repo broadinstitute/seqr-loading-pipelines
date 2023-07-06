@@ -24,7 +24,7 @@ def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
         reference_genome,
         ReferenceDatasetCollection.COMBINED,
     )
-    hl.init(tmp_dir=DataRoot.SEQR_SCRATCH_TEMP)
+    hl.init(tmp_dir=DataRoot.SEQR_SCRATCH_TEMP.value)
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
@@ -36,12 +36,12 @@ def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
             destination_path,
             dataset,
             ReferenceDatasetCollection.COMBINED.datasets,
-            reference_genome.v02_value,
+            reference_genome,
         )
     else:
         ht = join_hts(
             ReferenceDatasetCollection.COMBINED.datasets,
-            reference_genome.v02_value,
+            reference_genome,
         )
     ht.describe()
     print(f'Uploading ht to {destination_path}')
