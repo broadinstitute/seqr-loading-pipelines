@@ -32,6 +32,7 @@ AMINO_ACIDS = [
     'X',
     '*',
     'U',
+    'PPX',
 ]
 AMINO_ACIDS_LOOKUP = hl.dict(hl.enumerate(AMINO_ACIDS, index_first=False))
 
