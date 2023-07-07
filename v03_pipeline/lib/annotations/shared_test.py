@@ -35,7 +35,7 @@ class SharedAnnotationsTest(unittest.TestCase):
             [
                 [
                     hl.Struct(
-                        amino_acid_ids=[15, 9],
+                        amino_acids='S/L',
                         biotype_id=39,
                         canonical=1,
                         codons='tCg/tTg',
@@ -49,7 +49,7 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=0,
                     ),
                     hl.Struct(
-                        amino_acid_ids=None,
+                        amino_acids=None,
                         biotype_id=38,
                         canonical=None,
                         codons=None,
@@ -63,7 +63,7 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=1,
                     ),
                     hl.Struct(
-                        amino_acid_ids=None,
+                        amino_acids=None,
                         biotype_id=38,
                         canonical=None,
                         codons=None,
