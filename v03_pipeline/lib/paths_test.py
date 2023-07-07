@@ -20,15 +20,15 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht'),
-            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht'),
+            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
+            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
             (
                 Env.DEV,
-                'gs://seqr-scratch-temp/v03/GRCh37/SNV/db/families/franklin/samples.ht',
+                'gs://seqr-scratch-temp/v03/GRCh37/SNV/families/franklin/samples.ht',
             ),
             (
                 Env.PROD,
-                'gs://seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht',
+                'gs://seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht',
             ),
         ]:
             self.assertEqual(
@@ -49,7 +49,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.MITO,
                 'R0652_pipeline_test',
             ),
-            'gs://seqr-datasets/v03/GRCh38/MITO/db/projects/R0652_pipeline_test/samples.ht',
+            'gs://seqr-datasets/v03/GRCh38/MITO/projects/R0652_pipeline_test/samples.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -106,7 +106,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/db/annotations.ht',
+            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
