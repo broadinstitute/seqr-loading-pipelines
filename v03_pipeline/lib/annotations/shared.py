@@ -103,6 +103,7 @@ BIOTYPES = [
     'disrupted_domain',
     'vaultRNA/vault_RNA',
     'bidirectional_promoter_lncRNA',
+    'antisense',
 ]
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 
