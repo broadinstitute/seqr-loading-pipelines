@@ -8,34 +8,6 @@ from hail_scripts.computed_fields import variant_id as expression_helpers
 
 from v03_pipeline.lib.model import ReferenceGenome
 
-AMINO_ACIDS = [
-    'A',
-    'C',
-    'D',
-    'E',
-    'F',
-    'G',
-    'H',
-    'I',
-    'K',
-    'L',
-    'M',
-    'N',
-    'P',
-    'Q',
-    'R',
-    'S',
-    'T',
-    'V',
-    'W',
-    'Y',
-    'X',
-    '*',
-    'U',
-    'PPX',
-]
-AMINO_ACIDS_LOOKUP = hl.dict(hl.enumerate(AMINO_ACIDS, index_first=False))
-
 BIOTYPES = [
     'IG_C_gene',
     'IG_D_gene',
@@ -177,6 +149,7 @@ OMIT_CONSEQUENCE_TERMS = hl.set(
 )
 
 SELECTED_ANNOTATIONS = [
+    'amino_acids',
     'canonical',
     'codons',
     'gene_id',
@@ -218,9 +191,6 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
         ht.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
-                amino_acid_ids=c.amino_acids.split('/').filter(lambda a: a != '-').map(
-                    lambda a: AMINO_ACIDS_LOOKUP[a],
-                ),
                 biotype_id=BIOTYPE_LOOKUP[c.biotype],
                 consequence_term_ids=(
                     c.consequence_terms.filter(
