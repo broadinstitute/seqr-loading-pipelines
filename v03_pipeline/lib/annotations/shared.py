@@ -217,7 +217,7 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
         ht.vep.transcript_consequences.map(
             lambda c: c.select(
                 *SELECTED_ANNOTATIONS,
-                amino_acid_ids=c.amino_acids.split('/').map(
+                amino_acid_ids=c.amino_acids.split('/').filter(lambda a: a != '-').map(
                     lambda a: AMINO_ACIDS_LOOKUP[a],
                 ),
                 biotype_id=BIOTYPE_LOOKUP[c.biotype],
