@@ -74,10 +74,12 @@ def custom_gnomad_select_v2(ht):
     selects['AC'] = ht.freq[global_idx].AC
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
-    selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(hl.or_else(
-        ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF,
-        ht.freq[global_idx].AF,
-    ))
+    selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
+        hl.or_else(
+            ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF,
+            ht.freq[global_idx].AF,
+        ),
+    )
     selects['FAF_AF'] = hl.float32(ht.faf[ht.globals.popmax_index_dict['gnomad']].faf95)
     selects['Hemi'] = hl.if_else(
         ht.locus.in_autosome_or_par(),
@@ -101,7 +103,9 @@ def custom_gnomad_select_v3(ht):
     selects['AC'] = ht.freq[global_idx].AC
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
-    selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF))
+    selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
+        hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF),
+    )
     selects['FAF_AF'] = hl.float32(ht.faf[ht.globals.faf_index_dict['adj']].faf95)
     selects['Hemi'] = hl.if_else(
         ht.locus.in_autosome_or_par(),
