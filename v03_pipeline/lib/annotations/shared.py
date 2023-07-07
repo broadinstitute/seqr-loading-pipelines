@@ -77,6 +77,7 @@ BIOTYPES = [
     'vaultRNA/vault_RNA',
     'bidirectional_promoter_lncRNA',
     'antisense',
+    'lincrna',
 ]
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 
