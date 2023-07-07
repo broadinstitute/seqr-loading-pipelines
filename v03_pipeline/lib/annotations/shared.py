@@ -57,6 +57,7 @@ BIOTYPES = [
     'sense_intronic',
     'sense_overlapping',
     'antisense/antisense_RNA',
+    'antisense',
     'known_ncrna',
     'pseudogene',
     'processed_pseudogene',
@@ -71,13 +72,13 @@ BIOTYPES = [
     'unprocessed_pseudogene',
     'artifact',
     'lincRNA',
+    'lincrna',
     'macro_lncRNA',
     '3prime_overlapping_ncRNA',
     'disrupted_domain',
     'vaultRNA/vault_RNA',
+    'vaultRNA',
     'bidirectional_promoter_lncRNA',
-    'antisense',
-    'lincrna',
 ]
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 

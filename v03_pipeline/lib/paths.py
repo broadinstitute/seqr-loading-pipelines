@@ -134,6 +134,7 @@ def sample_ids_for_run_path(
             reference_genome,
             dataset_type,
         ),
+        'runs',
         run_id,
         'sample_ids.txt',
     )

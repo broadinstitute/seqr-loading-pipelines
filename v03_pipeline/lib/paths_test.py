@@ -96,7 +96,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            'gs://seqr-datasets/GRCh38/v03/SNV/manual__2023-06-26T18:30:09.349671+00:00/sample_ids.txt',
+            'gs://seqr-datasets/GRCh38/v03/SNV/runs/manual__2023-06-26T18:30:09.349671+00:00/sample_ids.txt',
         )
 
     def test_variant_annotations_table_path(self) -> None:
