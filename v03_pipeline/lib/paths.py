@@ -61,6 +61,7 @@ def family_table_path(
             reference_genome,
             dataset_type,
         ),
+        'db',
         'families',
         family_id,
         'samples.ht',
@@ -80,6 +81,7 @@ def project_table_path(
             reference_genome,
             dataset_type,
         ),
+        'db',
         'projects',
         project_guid,
         'samples.ht',
@@ -178,5 +180,6 @@ def variant_annotations_table_path(
             reference_genome,
             dataset_type,
         ),
+        'db',
         'annotations.ht',
     )

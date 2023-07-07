@@ -20,15 +20,15 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
-            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht'),
+            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht'),
+            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht'),
             (
                 Env.DEV,
-                'gs://seqr-scratch-temp/v03/GRCh37/SNV/families/franklin/samples.ht',
+                'gs://seqr-scratch-temp/v03/GRCh37/SNV/db/families/franklin/samples.ht',
             ),
             (
                 Env.PROD,
-                'gs://seqr-datasets/v03/GRCh37/SNV/families/franklin/samples.ht',
+                'gs://seqr-datasets/v03/GRCh37/SNV/db/families/franklin/samples.ht',
             ),
         ]:
             self.assertEqual(
@@ -49,7 +49,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.MITO,
                 'R0652_pipeline_test',
             ),
-            'gs://seqr-datasets/v03/GRCh38/MITO/projects/R0652_pipeline_test/samples.ht',
+            'gs://seqr-datasets/v03/GRCh38/MITO/db/projects/R0652_pipeline_test/samples.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -96,7 +96,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            'gs://seqr-datasets/GRCh38/v03/SNV/runs/manual__2023-06-26T18:30:09.349671+00:00/sample_ids.txt',
+            'gs://seqr-datasets/v03/GRCh38/SNV/runs/manual__2023-06-26T18:30:09.349671+00:00/sample_ids.txt',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -106,7 +106,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/annotations.ht',
+            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/db/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
@@ -118,7 +118,7 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            'gs://seqr-loading-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/902071e8f57f05930caa3e6c6c88010b6fbc9fe45de8dd17045133a269a2ee51.mt',
+            'gs://seqr-loading-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/902071e8f57f05930caa3e6c6c88010b6fbc9fe45de8dd17045133a269a2ee51.mt',
         )
         self.assertEqual(
             remapped_and_subsetted_callset_path(
@@ -128,5 +128,5 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset/*.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            'gs://seqr-scratch-temp/GRCh38/v03/GCNV/remapped_and_subsetted_callsets/920f18219b92beb5c4506fbb6d4b6457770c2a756af691e277545b86990af457.mt',
+            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/920f18219b92beb5c4506fbb6d4b6457770c2a756af691e277545b86990af457.mt',
         )
