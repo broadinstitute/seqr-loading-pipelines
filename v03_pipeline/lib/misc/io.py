@@ -9,6 +9,12 @@ import hail as hl
 from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 
 
+def does_file_exist(path: str) -> bool:
+    if path.startswith('gs://'):
+        return hl.hadoop_exists(path)
+    return os.path.exists(path)
+
+
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     # TODO implement me.
     # also remember to annotate pos = hl.agg.min(mt.sample_start)

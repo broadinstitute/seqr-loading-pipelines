@@ -3,6 +3,7 @@ from __future__ import annotations
 import luigi
 
 from v03_pipeline.lib.misc.io import (
+    does_file_exist,
     import_callset,
     import_pedigree,
     import_remap,
@@ -47,7 +48,6 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
     def requires(self) -> list[luigi.Task]:
         return [
             CallsetTask(self.callset_path),
-            RawFileTask(self.project_remap_path),
             RawFileTask(self.project_pedigree_path),
         ]
 
@@ -60,11 +60,13 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
             self.reference_genome,
             self.dataset_type,
         )
-        project_remap_ht = import_remap(self.project_remap_path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
 
-        # Remap, then subset to samples of interest.
-        callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+        # Remap, but only if the remap file is present!
+        if does_file_exist(self.project_remap_path):
+            project_remap_ht = import_remap(self.project_remap_path)
+            callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+
         sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
         callset_mt = subset_samples(
             callset_mt,
