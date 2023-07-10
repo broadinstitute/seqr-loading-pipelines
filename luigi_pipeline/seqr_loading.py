@@ -150,10 +150,10 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         """
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
         bi = mt.filter_rows(hl.len(mt.alleles) == 2)
-        bi = bi.annotate_rows(was_split=False, locus_old=mt.locus, alleles_old=mt.alleles)
+        bi = bi.annotate_rows(was_split=False)
         multi = mt.filter_rows(hl.len(mt.alleles) > 2)
-        split = hl.split_multi_hts(multi.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
-        return mt = split.union_rows(bi)
+        split = hl.split_multi_hts(multi)
+        return split.union_rows(bi)
 
     @staticmethod
     def contig_check(mt, standard_contigs, threshold):
