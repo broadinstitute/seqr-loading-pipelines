@@ -53,20 +53,19 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
 
     def run(self) -> None:
         self.init_hail()
-        # Import required files.
         callset_mt = import_callset(
             self.callset_path,
             self.env,
             self.reference_genome,
             self.dataset_type,
         )
-        pedigree_ht = import_pedigree(self.project_pedigree_path)
 
         # Remap, but only if the remap file is present!
         if does_file_exist(self.project_remap_path):
-            project_remap_ht = import_remap(self.project_remap_path)
+            project_remap_ht = import_remap(self.project_remap_path, self.env)
             callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
 
+        pedigree_ht = import_pedigree(self.project_pedigree_path, self.env)
         sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
         callset_mt = subset_samples(
             callset_mt,

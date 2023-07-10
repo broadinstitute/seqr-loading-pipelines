@@ -53,7 +53,10 @@ def subset_samples(
     anti_join_ht = sample_subset_ht.anti_join(mt.cols())
     anti_join_ht_count = anti_join_ht.count()
 
-    print(f'Subset count: {subset_count}, AntiJoinCount: {anti_join_ht_count}')
+    mt_count = mt.count()
+    print(
+        f'Mt count: {mt_count} Subset count: {subset_count}, AntiJoinCount: {anti_join_ht_count}',
+    )
     if anti_join_ht_count != 0:
         missing_samples = anti_join_ht.s.collect()
         message = (
@@ -69,6 +72,7 @@ def subset_samples(
 
     mt = mt.semi_join_cols(sample_subset_ht)
     mt = mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))
+    print('defined the join')
     print(
         f'Finished subsetting samples. Kept {subset_count} '
         f'out of {mt.count()} samples in vds',
