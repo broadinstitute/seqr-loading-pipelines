@@ -153,7 +153,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         bi = bi.annotate_rows(was_split=False, locus_old=mt.locus, alleles_old=mt.alleles)
         multi = mt.filter_rows(hl.len(mt.alleles) > 2)
         split = hl.split_multi_hts(multi.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
-        return mt = split.union_rows(bi)
+        return split.union_rows(bi)
 
     @staticmethod
     def contig_check(mt, standard_contigs, threshold):
