@@ -138,12 +138,21 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
     def annotate_old_and_split_multi_hts(self, mt):
         """
-        Saves the old allele and locus because while split_multi does this, split_multi_hts drops this. Will see if
-        we can add this to split_multi_hts and then this will be deprecated.
+        Saves the old allele and locus because while split_multi saves the fields
+        split_multi_hts drops. Will see if we can add this to split_multi_hts and
+        then this will be deprecated.
+
+        Additional logic is added here to support VCFs which contain biallelic and
+        multiallelic rows.  We want to only run the split on the multiallelic rows
+        for performance reasons (avoiding a shuffle in exchange for a sorted merge join)
         :return: mt that has pre-annotations
         """
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
-        return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
+        bi = mt.filter_rows(hl.len(mt.alleles) == 2)
+        bi = bi.annotate_rows(was_split=False, locus_old=mt.locus, alleles_old=mt.alleles)
+        multi = mt.filter_rows(hl.len(mt.alleles) > 2)
+        split = hl.split_multi_hts(multi.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
+        return mt = split.union_rows(bi)
 
     @staticmethod
     def contig_check(mt, standard_contigs, threshold):
