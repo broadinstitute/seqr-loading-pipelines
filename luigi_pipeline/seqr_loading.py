@@ -143,8 +143,9 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         then this will be deprecated.
 
         Additional logic is added here to support VCFs which contain biallelic and
-        multiallelic rows.  We want to only run the split on the multiallelic rows
-        for performance reasons (avoiding a shuffle in exchange for a sorted merge join)
+        multiallelic rows.  The `split_multi_hts` function, by default, will fail if there are both 
+        split and unsplit loci.  We want to only run the split on the multiallelic rows
+        for performance reasons, rather than allowing a shuffle to happen.
         :return: mt that has pre-annotations
         """
         # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
