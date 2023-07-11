@@ -144,7 +144,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         for performance reasons, rather than allowing a shuffle to happen.
         """
         bi = mt.filter_rows(hl.len(mt.alleles) == 2)
-        bi = bi.annotate_rows(was_split=False)
+        bi = bi.annotate_rows(a_index=1, was_split=False)
         multi = mt.filter_rows(hl.len(mt.alleles) > 2)
         split = hl.split_multi_hts(multi)
         return split.union_rows(bi)
