@@ -152,7 +152,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         bi = mt.filter_rows(hl.len(mt.alleles) == 2)
         bi = bi.annotate_rows(was_split=False, locus_old=mt.locus, alleles_old=mt.alleles)
         multi = mt.filter_rows(hl.len(mt.alleles) > 2)
-        split = hl.split_multi_hts(multi.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
+        split = hl.split_multi_hts(multi.annotate_rows(locus_old=multi.locus, alleles_old=multi.alleles))
         return split.union_rows(bi)
 
     @staticmethod
