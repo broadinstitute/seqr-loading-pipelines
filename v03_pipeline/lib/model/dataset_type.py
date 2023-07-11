@@ -65,7 +65,7 @@ class DatasetType(Enum):
                 gq=hl.tint32,
                 ab=hl.tfloat64,
                 dp=hl.tint32,
-                gt=hl.Call,
+                gt=hl.tcall,
             ),
         }[self]
 
