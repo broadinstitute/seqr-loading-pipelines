@@ -66,7 +66,7 @@ def import_callset(
     key_type = dataset_type.table_key_type(reference_genome)
     mt = mt.key_rows_by(*key_type.fields)
     mt = mt.select_rows()
-    return mt.select_entries(dataset_type.entries_fields)
+    return mt.select_entries(*dataset_type.entries_fields)
 
 
 def import_remap(remap_path: str) -> hl.Table:
