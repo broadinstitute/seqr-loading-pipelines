@@ -8,6 +8,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.vep import run_vep
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
@@ -82,6 +83,13 @@ class FieldsTest(unittest.TestCase):
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         ht = hl.read_table(TEST_COMBINED_1)
+        ht = run_vep(
+            ht,
+            Env.TEST,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV,
+            None,
+        )
         self.assertCountEqual(
             list(
                 get_fields(

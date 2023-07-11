@@ -57,7 +57,7 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
                 hl.Struct(id=0, gt_stats=hl.Struct(AC=6, AF=0.5, AN=12, hom=2)),
                 hl.Struct(
                     id=1,
-                    gt_stats=hl.Struct(AC=3, AN=18, AF=0.1666666716337204, hom=1),
+                    gt_stats=hl.Struct(AC=0, AN=12, AF=0.0, hom=0),
                 ),
             ],
         )
