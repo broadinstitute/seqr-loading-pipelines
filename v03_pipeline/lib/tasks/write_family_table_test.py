@@ -17,7 +17,6 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class WriteFamilyTableTaskTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 
@@ -58,29 +57,104 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             ht.entries.collect()[:5],
             [
                 [
-                    hl.Struct(gq=99, ab=0.0, dp=34, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=99, ab=0.0, dp=34, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=99, ab=0.0, dp=37, gt=hl.Call(alleles=[0, 0], phased=False)),
+                    hl.Struct(
+                        gq=99,
+                        ab=0.0,
+                        dp=34,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=99,
+                        ab=0.0,
+                        dp=34,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=99,
+                        ab=0.0,
+                        dp=37,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
                 ],
                 [
-                    hl.Struct(gq=99, ab=0.0, dp=37, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=66, ab=0.0, dp=24, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=96, ab=0.0, dp=32, gt=hl.Call(alleles=[0, 0], phased=False)),
+                    hl.Struct(
+                        gq=99,
+                        ab=0.0,
+                        dp=37,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=66,
+                        ab=0.0,
+                        dp=24,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=96,
+                        ab=0.0,
+                        dp=32,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
                 ],
                 [
-                    hl.Struct(gq=21, ab=1.0, dp=7, gt=hl.Call(alleles=[1, 1], phased=False)),
-                    hl.Struct(gq=24, ab=1.0, dp=8, gt=hl.Call(alleles=[1, 1], phased=False)),
-                    hl.Struct(gq=12, ab=1.0, dp=4, gt=hl.Call(alleles=[1, 1], phased=False)),
+                    hl.Struct(
+                        gq=21,
+                        ab=1.0,
+                        dp=7,
+                        gt=hl.Call(alleles=[1, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=24,
+                        ab=1.0,
+                        dp=8,
+                        gt=hl.Call(alleles=[1, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=12,
+                        ab=1.0,
+                        dp=4,
+                        gt=hl.Call(alleles=[1, 1], phased=False),
+                    ),
                 ],
                 [
-                    hl.Struct(gq=30, ab=0.3333333333333333, dp=3, gt=hl.Call(alleles=[0, 1], phased=False)),
-                    hl.Struct(gq=6, ab=0.0, dp=2, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=61, ab=0.6, dp=5, gt=hl.Call(alleles=[0, 1], phased=False)),
+                    hl.Struct(
+                        gq=30,
+                        ab=0.3333333333333333,
+                        dp=3,
+                        gt=hl.Call(alleles=[0, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=6,
+                        ab=0.0,
+                        dp=2,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=61,
+                        ab=0.6,
+                        dp=5,
+                        gt=hl.Call(alleles=[0, 1], phased=False),
+                    ),
                 ],
                 [
-                    hl.Struct(gq=99, ab=0.0, dp=35, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=72, ab=0.0, dp=24, gt=hl.Call(alleles=[0, 0], phased=False)),
-                    hl.Struct(gq=93, ab=0.0, dp=31, gt=hl.Call(alleles=[0, 0], phased=False)),
+                    hl.Struct(
+                        gq=99,
+                        ab=0.0,
+                        dp=35,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=72,
+                        ab=0.0,
+                        dp=24,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                    hl.Struct(
+                        gq=93,
+                        ab=0.0,
+                        dp=31,
+                        gt=hl.Call(alleles=[0, 0], phased=False),
+                    ),
                 ],
             ],
         )

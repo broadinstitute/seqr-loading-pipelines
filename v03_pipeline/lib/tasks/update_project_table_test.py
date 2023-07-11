@@ -18,6 +18,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateProjectTableTaskTest(unittest.TestCase):
     maxDiff = None
+
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 
@@ -64,9 +65,24 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                     ),
                     alleles=['A', 'C'],
                     entries=[
-                        hl.Struct(gq=99, ab=0.0, dp=34, gt=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(gq=99, ab=0.0, dp=34, gt=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(gq=99, ab=0.0, dp=37, gt=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(
+                            gq=99,
+                            ab=0.0,
+                            dp=34,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
+                        hl.Struct(
+                            gq=99,
+                            ab=0.0,
+                            dp=34,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
+                        hl.Struct(
+                            gq=99,
+                            ab=0.0,
+                            dp=37,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
                     ],
                 ),
                 hl.Struct(
@@ -77,9 +93,24 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                     ),
                     alleles=['C', 'T'],
                     entries=[
-                        hl.Struct(gq=99, ab=0.0, dp=37, gt=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(gq=66, ab=0.0, dp=24, gt=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(gq=96, ab=0.0, dp=32, gt=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(
+                            gq=99,
+                            ab=0.0,
+                            dp=37,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
+                        hl.Struct(
+                            gq=66,
+                            ab=0.0,
+                            dp=24,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
+                        hl.Struct(
+                            gq=96,
+                            ab=0.0,
+                            dp=32,
+                            gt=hl.Call(alleles=[0, 0], phased=False),
+                        ),
                     ],
                 ),
             ],

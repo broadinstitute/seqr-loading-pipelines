@@ -162,11 +162,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ht.globals.cadd_globals.collect(),
             [
                 hl.Struct(
-                    path="gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht",
-                    version="v1.6",
+                    path='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+                    version='v1.6',
                     enums={},
-                )
-            ]
+                ),
+            ],
         )
         self.assertCountEqual(
             [
