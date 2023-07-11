@@ -33,7 +33,7 @@ class Env(Enum):
 
     @property
     def min_vcf_partitions(self):
-        return {Env.TEST: 1}.get(self, 500)
+        return {Env.TEST: 1}.get(self, 1500)
 
 
 class PipelineVersion(Enum):

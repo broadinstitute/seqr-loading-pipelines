@@ -61,8 +61,8 @@ def import_callset(
     return mt.key_rows_by(*key_type.fields)
 
 
-def import_remap(remap_path: str, env: Env) -> hl.Table:
-    ht = hl.import_table(remap_path, min_partitions=env.min_vcf_partitions)
+def import_remap(remap_path: str) -> hl.Table:
+    ht = hl.import_table(remap_path)
     ht = ht.select(
         s=ht.s,
         seqr_id=ht.seqr_id,
@@ -70,8 +70,8 @@ def import_remap(remap_path: str, env: Env) -> hl.Table:
     return ht.key_by(ht.s)
 
 
-def import_pedigree(pedigree_path: str, env: Env) -> hl.Table:
-    ht = hl.import_table(pedigree_path, min_partitions=env.min_vcf_partitions)
+def import_pedigree(pedigree_path: str) -> hl.Table:
+    ht = hl.import_table(pedigree_path)
     ht = ht.select(
         family_id=ht.Family_ID,
         s=ht.Individual_ID,
