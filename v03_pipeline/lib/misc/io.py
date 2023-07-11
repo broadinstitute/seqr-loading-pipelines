@@ -8,11 +8,21 @@ import hail as hl
 
 from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 
+BIALLELIC = 2
+
 
 def does_file_exist(path: str) -> bool:
     if path.startswith('gs://'):
         return hl.hadoop_exists(path)
     return os.path.exists(path)
+
+
+def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
+    bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
+    bi = bi.annotate_rows(was_split=False)
+    multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
+    split = hl.split_multi_hts(multi)
+    return split.union_rows(bi)
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
@@ -32,19 +42,13 @@ def import_vcf(
         recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
     else:
         recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
-    mt = hl.import_vcf(
+    return hl.import_vcf(
         callset_path,
         reference_genome=reference_genome.value,
         skip_invalid_loci=True,
         contig_recoding=recode,
         force_bgz=True,
         min_partitions=env.min_vcf_partitions,
-    )
-    return hl.split_multi_hts(
-        mt.annotate_rows(
-            locus_old=mt.locus,
-            alleles_old=mt.alleles,
-        ),
     )
 
 
@@ -57,6 +61,10 @@ def import_callset(
     if dataset_type == DatasetType.GCNV:
         return import_gcnv_bed_file(callset_path)
     mt = import_vcf(callset_path, env, reference_genome)
+    if dataset_type == DatasetType.SNV:
+        mt = split_multi_hts(mt)
+    mt = mt.select_rows()
+    mt = mt.select_entries(dataset_type.entry_fields)
     key_type = dataset_type.table_key_type(reference_genome)
     return mt.key_rows_by(*key_type.fields)
 

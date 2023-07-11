@@ -65,5 +65,11 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def entries_fields(
+        self,
+    ) -> list[str]:
+        return {DatasetType.SNV: ['GT', 'AD', 'GQ']}.get(self, [])
+
+    @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV or self == DatasetType.MITO
