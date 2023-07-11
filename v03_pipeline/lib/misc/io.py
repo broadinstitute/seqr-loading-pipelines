@@ -63,11 +63,10 @@ def import_callset(
     mt = import_vcf(callset_path, env, reference_genome)
     if dataset_type == DatasetType.SNV:
         mt = split_multi_hts(mt)
-    mt = mt.select_rows()
-    mt = mt.select_entries(dataset_type.entry_fields)
     key_type = dataset_type.table_key_type(reference_genome)
-    return mt.key_rows_by(*key_type.fields)
-
+    mt = mt.key_rows_by(*key_type.fields)
+    mt = mt.select_rows()
+    return mt.select_entries(dataset_type.entry_fields)
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
