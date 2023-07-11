@@ -70,10 +70,7 @@ def subset_samples(
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
 
-    sample_subset_set = hl.literal(set(sample_subset_ht.s.collect()))
-    mt = mt.filter_cols(sample_subset_set.contains(mt.s))
-    mt = mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))
-    print('defined the join')
+    mt = mt.semi_join_cols(sample_subset_ht)
     print(
         f'Finished subsetting samples. Kept {subset_count} '
         f'out of {mt.count()} samples in vds',
