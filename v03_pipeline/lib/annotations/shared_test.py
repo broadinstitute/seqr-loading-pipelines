@@ -8,6 +8,7 @@ from v03_pipeline.lib.vep import run_vep
 
 
 class SharedAnnotationsTest(unittest.TestCase):
+    maxDiff = None
     def test_sorted_transcript_consequences(self) -> None:
         ht = hl.Table.parallelize(
             [
@@ -35,7 +36,7 @@ class SharedAnnotationsTest(unittest.TestCase):
             [
                 [
                     hl.Struct(
-                        amino_acid_ids=[15, 9],
+                        amino_acids='S/L',
                         biotype_id=39,
                         canonical=1,
                         codons='tCg/tTg',
@@ -49,7 +50,7 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=0,
                     ),
                     hl.Struct(
-                        amino_acid_ids=None,
+                        amino_acids=None,
                         biotype_id=38,
                         canonical=None,
                         codons=None,
@@ -63,7 +64,7 @@ class SharedAnnotationsTest(unittest.TestCase):
                         transcript_rank=1,
                     ),
                     hl.Struct(
-                        amino_acid_ids=None,
+                        amino_acids=None,
                         biotype_id=38,
                         canonical=None,
                         codons=None,
