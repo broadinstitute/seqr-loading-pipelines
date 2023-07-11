@@ -161,6 +161,10 @@ SELECTED_ANNOTATIONS = [
 ]
 
 
+def gt(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return mt.GT
+
+
 def sample_id(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.s
 

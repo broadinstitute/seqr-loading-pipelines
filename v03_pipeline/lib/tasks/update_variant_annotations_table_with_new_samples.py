@@ -123,6 +123,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # 4) Union with the existing variant annotations table
         # and annotate the genotype frequencies.
         ht = ht.union(new_variants_ht, unify=True)
+        ht = ht.annotate_globals(**new_variants_ht.index_globals())
         ht = ht.annotate(
             **get_fields(
                 ht,

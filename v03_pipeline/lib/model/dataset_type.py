@@ -61,7 +61,9 @@ class DatasetType(Enum):
         self,
     ) -> hl.dtype:
         return {
-            DatasetType.SNV: hl.tstruct(gq=hl.tint32, ab=hl.tfloat64, dp=hl.tint32),
+            DatasetType.SNV: hl.tstruct(
+                gq=hl.tint32, ab=hl.tfloat64, dp=hl.tint32, gt=hl.Call,
+            ),
         }[self]
 
     @property

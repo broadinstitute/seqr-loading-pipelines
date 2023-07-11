@@ -36,6 +36,7 @@ ANNOTATION_CONFIG = {
         snv.gq,
         snv.ab,
         snv.dp,
+        shared.gt,
         shared.sample_id,
     ],
     (DatasetType.MITO, AnnotationType.FORMATTING): [
