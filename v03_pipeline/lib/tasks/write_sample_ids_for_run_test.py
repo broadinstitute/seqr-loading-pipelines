@@ -42,7 +42,7 @@ class WriteSampleIdsForRunTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             write_sample_ids_for_run_task.output().path,
-            f'{self._temp_local_datasets}/GRCh38/v03/SNV/run_123456/sample_ids.txt',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/runs/run_123456/sample_ids.txt',
         )
         self.assertTrue(write_sample_ids_for_run_task.complete())
         with write_sample_ids_for_run_task.output().open('r') as f:
