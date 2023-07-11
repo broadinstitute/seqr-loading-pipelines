@@ -70,9 +70,4 @@ def subset_samples(
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
 
-    mt = mt.semi_join_cols(sample_subset_ht)
-    print(
-        f'Finished subsetting samples. Kept {subset_count} '
-        f'out of {mt.count()} samples in vds',
-    )
-    return mt
+    return mt.semi_join_cols(sample_subset_ht)
