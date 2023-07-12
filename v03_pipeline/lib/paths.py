@@ -85,6 +85,25 @@ def imported_callset_path(
     )
 
 
+def metadata_for_run_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            DataRoot.SEQR_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        'runs',
+        run_id,
+        'metadata.json',
+    )
+
+
 def project_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
@@ -136,25 +155,6 @@ def sample_lookup_table_path(
             dataset_type,
         ),
         'lookup.ht',
-    )
-
-
-def sample_ids_for_run_path(
-    env: Env,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
-) -> str:
-    return os.path.join(
-        _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
-            reference_genome,
-            dataset_type,
-        ),
-        'runs',
-        run_id,
-        'sample_ids.txt',
     )
 
 

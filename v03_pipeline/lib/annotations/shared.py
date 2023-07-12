@@ -161,7 +161,7 @@ SELECTED_ANNOTATIONS = [
 ]
 
 
-def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.GT
 
 

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
+
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.paths import sample_ids_for_run_path
+from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
@@ -11,7 +13,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
-class WriteSampleIdsForRunTask(BasePipelineTask):
+class WriteMetadataForRunTask(BasePipelineTask):
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -24,7 +26,7 @@ class WriteSampleIdsForRunTask(BasePipelineTask):
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            sample_ids_for_run_path(
+            metadata_for_run_path(
                 self.env,
                 self.reference_genome,
                 self.dataset_type,
@@ -57,10 +59,12 @@ class WriteSampleIdsForRunTask(BasePipelineTask):
 
     def run(self) -> None:
         self.init_hail()
-        sample_ids = set()
-        for remapped_and_subsetted_callset in self.input():
+        metadata_json = {'projects': {}, 'callset': self.callset_path}
+        for project_guid, remapped_and_subsetted_callset in zip(
+            self.project_guids,
+            self.input(),
+        ):
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
-            sample_ids |= set(callset_mt.cols().s.collect())
+            metadata_json['projects'][project_guid] = callset_mt.cols().s.collect()
         with self.output().open('w') as f:
-            for sample_id in sorted(sample_ids):
-                f.write(f'{sample_id}\n')
+            json.dump(metadata_json, f)
