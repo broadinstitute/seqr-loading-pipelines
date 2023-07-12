@@ -158,12 +158,6 @@ class SeqrSchema(BaseSeqrSchema):
     def wasSplit(self):
         return self.mt.was_split
 
-    @row_annotation(disable_index=True)
-    def originalAltAlleles(self):
-        # TODO: This assumes we annotate `locus_old` in this code because `split_multi_hts` drops the proper `old_locus`.
-        # If we can get it to not drop it, we should revert this to `old_locus`
-        return variant_id.get_expr_for_variant_ids(self.mt.locus_old, self.mt.alleles_old)
-
     @row_annotation()
     def cadd(self):
         return self._selected_ref_data.cadd

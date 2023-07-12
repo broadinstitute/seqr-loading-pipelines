@@ -115,7 +115,7 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
-        mt = self.annotate_old_and_split_multi_hts(mt)
+        mt = self.split_multi_hts(mt)
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         if self.remap_path:
@@ -136,14 +136,18 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         mt.describe()
         mt.write(self.output().path, stage_locally=True, overwrite=True)
 
-    def annotate_old_and_split_multi_hts(self, mt):
+    def split_multi_hts(self, mt):
         """
-        Saves the old allele and locus because while split_multi does this, split_multi_hts drops this. Will see if
-        we can add this to split_multi_hts and then this will be deprecated.
-        :return: mt that has pre-annotations
+        Additional logic is added here to support VCFs which contain biallelic and
+        multiallelic rows.  The `split_multi_hts` function, by default, will fail if there are both 
+        split and unsplit loci.  We want to only run the split on the multiallelic rows
+        for performance reasons, rather than allowing a shuffle to happen.
         """
-        # Named `locus_old` instead of `old_locus` because split_multi_hts drops `old_locus`.
-        return hl.split_multi_hts(mt.annotate_rows(locus_old=mt.locus, alleles_old=mt.alleles))
+        bi = mt.filter_rows(hl.len(mt.alleles) == 2)
+        bi = bi.annotate_rows(a_index=1, was_split=False)
+        multi = mt.filter_rows(hl.len(mt.alleles) > 2)
+        split = hl.split_multi_hts(multi)
+        return split.union_rows(bi)
 
     @staticmethod
     def contig_check(mt, standard_contigs, threshold):
