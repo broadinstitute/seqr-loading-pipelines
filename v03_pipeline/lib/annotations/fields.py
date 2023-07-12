@@ -33,10 +33,10 @@ ANNOTATION_CONFIG = {
         sample_lookup_table.gt_stats,
     ],
     (DatasetType.SNV, AnnotationType.GENOTYPE_ENTRIES): [
-        snv.gq,
-        snv.ab,
-        snv.dp,
-        shared.gt,
+        snv.GQ,
+        snv.AB,
+        snv.DP,
+        shared.GT,
         shared.sample_id,
     ],
     (DatasetType.MITO, AnnotationType.FORMATTING): [

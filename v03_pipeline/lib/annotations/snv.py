@@ -3,12 +3,12 @@ from typing import Any
 import hail as hl
 
 
-def gq(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+def GQ(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     is_called = hl.is_defined(mt.GT)
     return hl.if_else(is_called, mt.GQ, 0)
 
 
-def ab(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     is_called = hl.is_defined(mt.GT)
     return hl.bind(
         lambda total: hl.if_else(
@@ -20,7 +20,7 @@ def ab(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     )
 
 
-def dp(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     is_called = hl.is_defined(mt.GT)
     return hl.if_else(
         is_called & hl.is_defined(mt.AD),
