@@ -96,9 +96,8 @@ def get_ht(dataset: str, reference_genome: ReferenceGenome):
         else hl.read_table(config['path'])
     )
     if hasattr(ht, 'locus'):
-        ht = ht.filter(
-            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
-        )
+        ht = ht.filter((hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig)))
+
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
         **{

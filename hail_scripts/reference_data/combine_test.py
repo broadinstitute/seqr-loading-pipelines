@@ -87,7 +87,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     'REVEL_score': hl.missing(hl.tstr),
@@ -102,7 +102,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=1,
+                        position=2,
                         reference_genome='GRCh38',
                     ),
                     'REVEL_score': '0.052',
@@ -135,7 +135,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     mock_dbnsfp=hl.Struct(
@@ -152,7 +152,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chr1',
-                        position=1,
+                        position=2,
                         reference_genome='GRCh38',
                     ),
                     mock_dbnsfp=hl.Struct(
@@ -188,7 +188,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     'b': 1,
@@ -196,7 +196,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=1,
+                        position=2,
                         reference_genome='GRCh38',
                     ),
                     'b': 2,
@@ -290,7 +290,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     'alleles': 10,
@@ -300,7 +300,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=1,
+                        position=2,
                         reference_genome='GRCh38',
                     ),
                     'alleles': 10,
@@ -325,7 +325,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     'alleles': 10,
@@ -334,7 +334,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=2,
+                        position=3,
                         reference_genome='GRCh38',
                     ),
                     'alleles': 10,
@@ -363,7 +363,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chr1',
-                        position=0,
+                        position=1,
                         reference_genome='GRCh38',
                     ),
                     alleles=10,
@@ -373,7 +373,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chr1',
-                        position=1,
+                        position=2,
                         reference_genome='GRCh38',
                     ),
                     alleles=10,
@@ -383,7 +383,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chr1',
-                        position=2,
+                        position=3,
                         reference_genome='GRCh38',
                     ),
                     alleles=10,
