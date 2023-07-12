@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import luigi
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.misc.io import (
     does_file_exist,
@@ -47,13 +47,19 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            WriteImportedCallsetTask(self.callset_path),
+            WriteImportedCallsetTask(
+                self.env,
+                self.reference_genome,
+                self.dataset_type,
+                self.hail_temp_dir,
+                self.callset_path,
+            ),
             RawFileTask(self.project_pedigree_path),
         ]
 
     def run(self) -> None:
         self.init_hail()
-        callset_mt = hl.read_matrix_table(self.input()[0])
+        callset_mt = hl.read_matrix_table(self.input()[0].path)
 
         # Remap, but only if the remap file is present!
         if does_file_exist(self.project_remap_path):
