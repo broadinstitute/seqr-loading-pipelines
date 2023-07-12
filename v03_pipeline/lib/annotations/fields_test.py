@@ -90,6 +90,7 @@ class FieldsTest(unittest.TestCase):
             DatasetType.SNV,
             None,
         )
+        ht = ht.annotate(rsid='abcd')
         self.assertCountEqual(
             list(
                 get_fields(
@@ -103,6 +104,7 @@ class FieldsTest(unittest.TestCase):
             ),
             [
                 'rg37_locus',
+                'rsid',
                 'sorted_transcript_consequences',
                 'variant_id',
                 'xpos',
@@ -120,6 +122,7 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
+                'rsid',
                 'sorted_transcript_consequences',
                 'variant_id',
                 'xpos',

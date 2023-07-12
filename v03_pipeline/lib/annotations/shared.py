@@ -165,6 +165,10 @@ def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.GT
 
 
+def rsid(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return mt.rsid
+
+
 def sample_id(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.s
 
