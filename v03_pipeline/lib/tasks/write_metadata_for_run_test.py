@@ -47,9 +47,10 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
         )
         self.assertTrue(write_metadata_for_run_task.complete())
         with write_metadata_for_run_task.output().open('r') as f:
-            self.assertEqual(
+            self.assertDictEqual(
                 json.load(f),
                 {
+                    'callset': TEST_VCF,
                     'projects': {
                         'R0113_test_project': [
                             'HG00731_1',
