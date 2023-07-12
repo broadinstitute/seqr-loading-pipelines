@@ -42,14 +42,9 @@ def clinvar_custom_select(ht):
 def dbnsfp_custom_select(ht):
     selects = {}
     selects['REVEL_score'] = hl.parse_float32(ht.REVEL_score)
-    selects['GERP_RS'] = hl.parse_float32(ht.GERP_RS)
-    selects['phastCons100way_vertebrate'] = hl.parse_float32(
-        ht.phastCons100way_vertebrate,
-    )
     selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
-    selects['FATHMM_pred'] = predictor_parse(ht.FATHMM_pred)
     return selects
 
 
@@ -173,23 +168,17 @@ CONFIG = {
         '37': {
             'version': '2.9.3',
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
-            'select': [
-                'MetaSVM_pred',
-            ],
             'custom_select': dbnsfp_custom_select,
             'enum_select': {
                 'SIFT_pred': ['D', 'T'],
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
-                'FATHMM_pred': ['D', 'T'],
-                'MetaSVM_pred': ['D', 'T'],
             },
         },
         '38': {
             'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
             'select': [
-                'MetaSVM_pred',
                 'fathmm_MKL_coding_pred',
             ],
             'custom_select': dbnsfp_custom_select_38,
@@ -197,9 +186,7 @@ CONFIG = {
                 'SIFT_pred': ['D', 'T'],
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
-                'FATHMM_pred': ['D', 'T'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
-                'MetaSVM_pred': ['D', 'T'],
             },
         },
     },
