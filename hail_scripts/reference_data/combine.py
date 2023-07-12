@@ -1,4 +1,3 @@
-import functools
 from datetime import datetime
 from typing import List
 
@@ -96,7 +95,9 @@ def get_ht(dataset: str, reference_genome: ReferenceGenome):
         else hl.read_table(config['path'])
     )
     if hasattr(ht, 'locus'):
-        ht = ht.filter((hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig)))
+        ht = ht.filter(
+            hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig),
+        )
 
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
@@ -107,40 +108,47 @@ def get_ht(dataset: str, reference_genome: ReferenceGenome):
     )
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     ht = ht.select_globals(
-        **{
-            f'{dataset}_globals': hl.struct(
-                path=(
-                    config['source_path']
-                    if 'custom_import' in config
-                    else config['path']
-                ),
-                version=parse_version(ht, dataset, config),
-                enums=config.get(
-                    'enum_select',
-                    hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
-                ),
-            ),
-        },
+        path=(config['source_path'] if 'custom_import' in config else config['path']),
+        version=parse_version(ht, dataset, config),
+        enums=config.get(
+            'enum_select',
+            hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
+        ),
     )
     return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
-def update_joined_ht_globals(
-    joined_ht,
-):
-    return joined_ht.annotate_globals(
+def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.Table):
+    return joined_ht.select_globals(
+        paths=joined_ht.paths.annotate(**{dataset: dataset_ht.index_globals().path}),
+        versions=joined_ht.versions.annotate(
+            **{dataset: dataset_ht.index_globals().version},
+        ),
+        enums=joined_ht.enums.annotate(**{dataset: dataset_ht.index_globals().enums}),
         date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
     )
 
 
 def join_hts(datasets: List[str], reference_genome: ReferenceGenome):
-    # Get a list of hail tables and combine into an outer join.
-    hts = [get_ht(dataset, reference_genome) for dataset in datasets]
-    joined_ht = functools.reduce(
-        (lambda joined_ht, ht: joined_ht.join(ht, 'outer')),
-        hts,
+    key_type = hl.tstruct(
+        locus=hl.tlocus(reference_genome.value),
+        alleles=hl.tarray(hl.tstr),
     )
-    return update_joined_ht_globals(joined_ht)
+    joined_ht = hl.Table.parallelize(
+        [],
+        key_type,
+        key=key_type.fields,
+        globals=hl.Struct(
+            paths=hl.Struct(),
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        ),
+    )
+    for dataset in datasets:
+        dataset_ht = get_ht(dataset, reference_genome)
+        joined_ht = joined_ht.join(dataset_ht, 'outer')
+        joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
+    return joined_ht
 
 
 def update_existing_joined_hts(
@@ -151,9 +159,9 @@ def update_existing_joined_hts(
 ):
     joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, reference_genome)
-    joined_ht = joined_ht.drop(dataset, f'{dataset}_globals')
+    joined_ht = joined_ht.drop(dataset)
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(
         hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
     )
-    return update_joined_ht_globals(joined_ht)
+    return annotate_dataset_globals(joined_ht, dataset, dataset_ht)

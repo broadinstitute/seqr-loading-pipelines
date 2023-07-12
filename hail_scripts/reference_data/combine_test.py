@@ -201,11 +201,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
             gotten_ht.globals.collect(),
             [
                 hl.Struct(
-                    a_globals=hl.Struct(
-                        path='gs://a.com',
-                        version='2.2.2',
-                        enums=None,
-                    ),
+                    path='gs://a.com',
+                    version='2.2.2',
+                    enums=None,
                 ),
             ],
         )
@@ -216,11 +214,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
             gotten_ht.globals.collect(),
             [
                 hl.Struct(
-                    a_globals=hl.Struct(
-                        path='gs://a.com',
-                        version='2.2.2',
-                        enums=None,
-                    ),
+                    path='gs://a.com',
+                    version='2.2.2',
+                    enums=None,
                 ),
             ],
         )
@@ -246,6 +242,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     'select': [
                         'e',
                     ],
+                    'enum_select': {},
                 },
             },
         },
@@ -300,8 +297,18 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
-                a_globals=hl.Struct(a=10),
-                b_globals=hl.Struct(b=10),
+                paths=hl.Struct(
+                    a='a_path',
+                    b='b_path',
+                ),
+                versions=hl.Struct(
+                    a='a_version',
+                    b='b_version',
+                ),
+                enums=hl.Struct(
+                    a=hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
+                    b=hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
+                ),
             ),
         )
         mock_get_ht.return_value = hl.Table.parallelize(
@@ -332,7 +339,14 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
-                b_globals=hl.Struct(b=100),
+                path='b_new_path',
+                version='b_new_version',
+                enums={
+                    'enum_1': [
+                        'D',
+                        'F',
+                    ],
+                },
             ),
         )
         ht = update_existing_joined_hts(
@@ -380,9 +394,24 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    a_globals=hl.Struct(a=10),
-                    b_globals=hl.Struct(b=100),
                     date='2023-04-19T16:43:39.361110-04:56',
+                    paths=hl.Struct(
+                        a='a_path',
+                        b='b_new_path',
+                    ),
+                    versions=hl.Struct(
+                        a='a_version',
+                        b='b_new_version',
+                    ),
+                    enums=hl.Struct(
+                        a=None,
+                        b={
+                            'enum_1': [
+                                'D',
+                                'F',
+                            ],
+                        },
+                    ),
                 ),
             ],
         )
