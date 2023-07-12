@@ -67,6 +67,24 @@ def family_table_path(
     )
 
 
+def imported_callset_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            env,
+            DataRoot.SEQR_LOADING_TEMP,
+            reference_genome,
+            dataset_type,
+        ),
+        'imported_callsets',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
+    )
+
+
 def project_table_path(
     env: Env,
     reference_genome: ReferenceGenome,

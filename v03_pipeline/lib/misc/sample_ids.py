@@ -52,11 +52,6 @@ def subset_samples(
     subset_count = sample_subset_ht.count()
     anti_join_ht = sample_subset_ht.anti_join(mt.cols())
     anti_join_ht_count = anti_join_ht.count()
-
-    mt_count = mt.count()
-    print(
-        f'Mt count: {mt_count} Subset count: {subset_count}, AntiJoinCount: {anti_join_ht_count}',
-    )
     if anti_join_ht_count != 0:
         missing_samples = anti_join_ht.s.collect()
         message = (
@@ -69,5 +64,5 @@ def subset_samples(
             print(message)
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
-
+    print('Subsetted to {subset_count} sample ids')
     return mt.semi_join_cols(sample_subset_ht)
