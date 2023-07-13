@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
-from v03_pipeline.lib.vep import run_vep
+from v03_pipeline.lib.vep import annotate_sorted_transcript_consequences_enums, run_vep
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -93,6 +93,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.dataset_type,
             self.vep_config_json_path,
         )
+        
 
         # 2) Select down to the formatting annotations fields and
         # any reference dataset collection annotations.
@@ -121,9 +122,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
-        # and annotate the genotype frequencies.
+        # and annotate the global variables from the new_var
         ht = ht.union(new_variants_ht, unify=True)
         ht = ht.annotate_globals(**new_variants_ht.index_globals())
+        ht = annotate_sorted_transcript_consequences_enums(ht)
         ht = ht.annotate(
             **get_fields(
                 ht,

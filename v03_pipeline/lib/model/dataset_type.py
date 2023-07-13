@@ -62,10 +62,10 @@ class DatasetType(Enum):
     ) -> hl.dtype:
         return {
             DatasetType.SNV: hl.tstruct(
-                gq=hl.tint32,
-                ab=hl.tfloat64,
-                dp=hl.tint32,
-                gt=hl.tcall,
+                GQ=hl.tint32,
+                AB=hl.tfloat64,
+                DP=hl.tint32,
+                GT=hl.tcall,
             ),
         }[self]
 
@@ -74,6 +74,12 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {DatasetType.SNV: ['GT', 'AD', 'GQ']}.get(self, [])
+
+    @property
+    def row_fields(
+        self,
+    ) -> list[str]:
+        return {DatasetType.SNV: ['rsid']}.get(self, [])
 
     @property
     def veppable(self) -> bool:

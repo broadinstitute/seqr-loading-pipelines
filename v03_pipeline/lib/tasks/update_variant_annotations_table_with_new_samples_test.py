@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
+from v03_pipeline.lib.vep import LOF_FILTERS
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -159,14 +160,36 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ],
         )
         self.assertCountEqual(
-            ht.globals.cadd_globals.collect(),
+            ht.globals.paths.collect(),
             [
                 hl.Struct(
-                    path='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-                    version='v1.6',
-                    enums={},
+                    cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+                    clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                 ),
             ],
+        )
+        self.assertCountEqual(
+            ht.globals.enums.clinvar.assertion.collect(),
+            [
+                [
+                    'Affects',
+                    'association',
+                    'association_not_found',
+                    'confers_sensitivity',
+                    'drug_response',
+                    'low_penetrance',
+                    'not_provided',
+                    'other',
+                    'protective',
+                    'risk_factor',
+                ],
+            ],
+        )
+        self.assertCountEqual(
+            ht.globals.enums.sorted_transcript_consequences.lof_filter.collect(),
+            [
+                LOF_FILTERS,
+            ]
         )
         self.assertCountEqual(
             [

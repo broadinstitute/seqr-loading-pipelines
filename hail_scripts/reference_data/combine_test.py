@@ -203,7 +203,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     path='gs://a.com',
                     version='2.2.2',
-                    enums=None,
+                    enums=hl.Struct(),
                 ),
             ],
         )
@@ -216,7 +216,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 hl.Struct(
                     path='gs://a.com',
                     version='2.2.2',
-                    enums=None,
+                    enums=hl.Struct(),
                 ),
             ],
         )
@@ -306,8 +306,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     b='b_version',
                 ),
                 enums=hl.Struct(
-                    a=hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
-                    b=hl.missing(hl.tdict(hl.tstr, hl.tarray(hl.tstr))),
+                    a=hl.Struct(),
+                    b=hl.Struct(),
                 ),
             ),
         )
@@ -341,12 +341,12 @@ class ReferenceDataCombineTest(unittest.TestCase):
             globals=hl.Struct(
                 path='b_new_path',
                 version='b_new_version',
-                enums={
-                    'enum_1': [
+                enums=hl.Struct(
+                    enum_1=[
                         'D',
                         'F',
                     ],
-                },
+                )
             ),
         )
         ht = update_existing_joined_hts(
@@ -404,13 +404,13 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         b='b_new_version',
                     ),
                     enums=hl.Struct(
-                        a=None,
-                        b={
-                            'enum_1': [
+                        a=hl.Struct(),
+                        b=hl.Struct(
+                            enum_1=[
                                 'D',
                                 'F',
                             ],
-                        },
+                        ),
                     ),
                 ),
             ],

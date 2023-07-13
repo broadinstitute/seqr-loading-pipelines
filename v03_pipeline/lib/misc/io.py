@@ -65,7 +65,7 @@ def import_callset(
         mt = split_multi_hts(mt)
     key_type = dataset_type.table_key_type(reference_genome)
     mt = mt.key_rows_by(*key_type.fields)
-    mt = mt.select_rows()
+    mt = mt.select_rows(*dataset_type.row_fields)
     return mt.select_entries(*dataset_type.entries_fields)
 
 
