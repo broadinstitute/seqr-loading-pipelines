@@ -346,7 +346,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         'D',
                         'F',
                     ],
-                )
+                ),
             ),
         )
         ht = update_existing_joined_hts(

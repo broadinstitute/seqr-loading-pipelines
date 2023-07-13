@@ -189,7 +189,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ht.globals.enums.sorted_transcript_consequences.lof_filter.collect(),
             [
                 LOF_FILTERS,
-            ]
+            ],
         )
         self.assertCountEqual(
             [

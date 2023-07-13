@@ -41,6 +41,7 @@ def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     callset_ht_empty_entries = _empty_entries(callset_ht)
     ht = ht.join(callset_ht, 'outer')
     return ht.select(
+        filters=hl.or_else(ht.filters_1, ht.filters),
         entries=hl.sorted(
             (
                 hl.case()

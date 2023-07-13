@@ -88,6 +88,7 @@ class UpdateProjectTableTask(BasePipelineTask):
 
         # Merge the callset entries with the current ht entries
         callset_ht = callset_mt.select_rows(
+            filters=callset_mt.filters,
             entries=hl.agg.collect(
                 hl.struct(
                     **get_fields(

@@ -15,6 +15,7 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
+                    'filters': {'HIGH_SR_BACKGROUND', 'UNRESOLVED'},
                     'entries': [
                         hl.Struct(a=1, sample_id='a'),
                         hl.Struct(a=2, sample_id='c'),
@@ -24,6 +25,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
                 {
                     'id': 1,
+                    'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
                         hl.Struct(a=2, sample_id='a'),
                         hl.Struct(a=3, sample_id='c'),
@@ -34,6 +36,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
             ),
             key='id',
@@ -87,6 +90,7 @@ class SampleEntriesTest(unittest.TestCase):
             [],
             hl.tstruct(
                 id=hl.tint32,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
             ),
             key='id',
@@ -95,6 +99,7 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
+                    'filters': {'HIGH_SR_BACKGROUND', 'UNRESOLVED'},
                     'entries': [
                         hl.Struct(a=9, sample_id='b'),
                         hl.Struct(a=10, sample_id='g'),
@@ -102,6 +107,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
                 {
                     'id': 2,
+                    'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
                         hl.Struct(a=11, sample_id='b'),
                         hl.Struct(a=12, sample_id='g'),
@@ -110,6 +116,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
             ),
             key='id',
@@ -134,6 +141,7 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
+                    'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
                         hl.Struct(a=1, sample_id='a'),
                         hl.Struct(a=2, sample_id='c'),
@@ -143,6 +151,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
                 {
                     'id': 1,
+                    'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
                         hl.Struct(a=2, sample_id='a'),
                         hl.Struct(a=3, sample_id='c'),
@@ -153,6 +162,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
             ),
             key='id',
@@ -161,6 +171,7 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 {
                     'id': 0,
+                    'filters': {'PASS'},
                     'entries': [
                         hl.Struct(a=9, sample_id='b'),
                         hl.Struct(a=10, sample_id='g'),
@@ -168,6 +179,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
                 {
                     'id': 2,
+                    'filters': {'HIGH_SR_BACKGROUND', 'PASS'},
                     'entries': [
                         hl.Struct(a=11, sample_id='b'),
                         hl.Struct(a=12, sample_id='g'),
@@ -176,37 +188,50 @@ class SampleEntriesTest(unittest.TestCase):
             ],
             hl.tstruct(
                 id=hl.tint32,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
             ),
             key='id',
         )
         ht = union_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
-            ht.entries.collect(),
+            ht.collect(),
             [
-                [
-                    hl.Struct(a=1, sample_id='a'),
-                    hl.Struct(a=9, sample_id='b'),
-                    hl.Struct(a=2, sample_id='c'),
-                    hl.Struct(a=1, sample_id='e'),
-                    hl.Struct(a=2, sample_id='f'),
-                    hl.Struct(a=10, sample_id='g'),
-                ],
-                [
-                    hl.Struct(a=2, sample_id='a'),
-                    hl.Struct(a=None, sample_id='b'),
-                    hl.Struct(a=3, sample_id='c'),
-                    hl.Struct(a=4, sample_id='e'),
-                    hl.Struct(a=5, sample_id='f'),
-                    hl.Struct(a=None, sample_id='g'),
-                ],
-                [
-                    hl.Struct(a=None, sample_id='a'),
-                    hl.Struct(a=11, sample_id='b'),
-                    hl.Struct(a=None, sample_id='c'),
-                    hl.Struct(a=None, sample_id='e'),
-                    hl.Struct(a=None, sample_id='f'),
-                    hl.Struct(a=12, sample_id='g'),
-                ],
+                hl.Struct(
+                    id=0,
+                    filters={'PASS'},
+                    entries=[
+                        hl.Struct(a=1, sample_id='a'),
+                        hl.Struct(a=9, sample_id='b'),
+                        hl.Struct(a=2, sample_id='c'),
+                        hl.Struct(a=1, sample_id='e'),
+                        hl.Struct(a=2, sample_id='f'),
+                        hl.Struct(a=10, sample_id='g'),
+                    ],
+                ),
+                hl.Struct(
+                    id=1,
+                    filters={'HIGH_SR_BACKGROUND'},
+                    entries=[
+                        hl.Struct(a=2, sample_id='a'),
+                        hl.Struct(a=None, sample_id='b'),
+                        hl.Struct(a=3, sample_id='c'),
+                        hl.Struct(a=4, sample_id='e'),
+                        hl.Struct(a=5, sample_id='f'),
+                        hl.Struct(a=None, sample_id='g'),
+                    ],
+                ),
+                hl.Struct(
+                    id=2,
+                    filters={'PASS', 'HIGH_SR_BACKGROUND'},
+                    entries=[
+                        hl.Struct(a=None, sample_id='a'),
+                        hl.Struct(a=11, sample_id='b'),
+                        hl.Struct(a=None, sample_id='c'),
+                        hl.Struct(a=None, sample_id='e'),
+                        hl.Struct(a=None, sample_id='f'),
+                        hl.Struct(a=12, sample_id='g'),
+                    ],
+                ),
             ],
         )

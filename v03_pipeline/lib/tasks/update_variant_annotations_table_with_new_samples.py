@@ -93,7 +93,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.dataset_type,
             self.vep_config_json_path,
         )
-        
 
         # 2) Select down to the formatting annotations fields and
         # any reference dataset collection annotations.
