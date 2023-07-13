@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from enum import Enum
 
-from v03_pipeline.lib.model.definitions import AccessControl
+import hail as hl
+
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 
 
 class ReferenceDatasetCollection(Enum):
@@ -48,3 +50,15 @@ class ReferenceDatasetCollection(Enum):
                 'screen',
             ],
         }[self]
+
+    def table_key_type(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> hl.tstruct:
+        default_key = hl.tstruct(
+            locus=hl.tlocus(reference_genome.value),
+            alleles=hl.tarray(hl.tstr),
+        )
+        return {
+            ReferenceDatasetCollection.INTERVAL: hl.tlocus(reference_genome.value),
+        }.get(self, default_key)

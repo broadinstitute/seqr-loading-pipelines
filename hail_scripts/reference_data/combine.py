@@ -6,7 +6,7 @@ import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
 
 
 def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
@@ -131,11 +131,8 @@ def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.T
     )
 
 
-def join_hts(datasets: List[str], reference_genome: ReferenceGenome):
-    key_type = hl.tstruct(
-        locus=hl.tlocus(reference_genome.value),
-        alleles=hl.tarray(hl.tstr),
-    )
+def join_hts(reference_dataset_collection: ReferenceDatasetCollection, reference_genome: ReferenceGenome):
+    key_type = reference_dataset_collection.table_key_type(reference_genome)
     joined_ht = hl.Table.parallelize(
         [],
         key_type,
@@ -146,7 +143,7 @@ def join_hts(datasets: List[str], reference_genome: ReferenceGenome):
             enums=hl.Struct(),
         ),
     )
-    for dataset in datasets:
+    for dataset in reference_dataset_collection.datasets:
         dataset_ht = get_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
@@ -156,7 +153,7 @@ def join_hts(datasets: List[str], reference_genome: ReferenceGenome):
 def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
-    datasets: List[str],
+    reference_dataset_collection: ReferenceDatasetCollection,
     reference_genome: ReferenceGenome,
 ):
     joined_ht = hl.read_table(destination_path)
@@ -164,6 +161,6 @@ def update_existing_joined_hts(
     joined_ht = joined_ht.drop(dataset)
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(
-        hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in datasets]),
+        hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in reference_dataset_collection.datasets]),
     )
     return annotate_dataset_globals(joined_ht, dataset, dataset_ht)

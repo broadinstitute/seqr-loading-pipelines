@@ -27,12 +27,12 @@ def run(env: Env, dataset: str | None):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
-            ReferenceDatasetCollection.INTERVAL.datasets,
+            ReferenceDatasetCollection.INTERVAL,
             reference_genome,
         )
     else:
         ht = join_hts(
-            ReferenceDatasetCollection.INTERVAL.datasets,
+            ReferenceDatasetCollection.INTERVAL,
             reference_genome,
         )
 

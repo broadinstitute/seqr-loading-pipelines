@@ -35,12 +35,12 @@ def run(env: Env, reference_genome: ReferenceGenome, dataset: str | None):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
-            ReferenceDatasetCollection.COMBINED.datasets,
+            ReferenceDatasetCollection.COMBINED,
             reference_genome,
         )
     else:
         ht = join_hts(
-            ReferenceDatasetCollection.COMBINED.datasets,
+            ReferenceDatasetCollection.COMBINED,
             reference_genome,
         )
     ht.describe()
