@@ -64,6 +64,7 @@ class UpdateProjectTableTask(BasePipelineTask):
             [],
             hl.tstruct(
                 **key_type,
+                filters=hl.tset(hl.tstr),
                 entries=hl.tarray(self.dataset_type.genotype_entries_type),
             ),
             key=key_type.fields,
