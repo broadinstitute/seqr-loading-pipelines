@@ -60,5 +60,7 @@ class ReferenceDatasetCollection(Enum):
             alleles=hl.tarray(hl.tstr),
         )
         return {
-            ReferenceDatasetCollection.INTERVAL: hl.tlocus(reference_genome.value),
+            ReferenceDatasetCollection.INTERVAL: hl.tstruct(
+                interval=hl.tinterval(hl.tlocus(reference_genome.value))
+            ),
         }.get(self, default_key)
