@@ -89,6 +89,7 @@ class WriteFamilyTableTask(BasePipelineTask):
             ),
         ).rows()
         ht = globalize_sample_ids(ht)
+        ht = ht.naive_coalesce(1)
         ht = ht.annotate_globals(
             updates={self.callset_path},
         )

@@ -102,6 +102,7 @@ class UpdateProjectTableTask(BasePipelineTask):
         ).rows()
         ht = union_entries_hts(ht, callset_ht)
         ht = globalize_sample_ids(ht)
+        ht = ht.naive_coalesce(1)
         return ht.annotate_globals(
             updates=ht.updates.add(self.callset_path),
         )
