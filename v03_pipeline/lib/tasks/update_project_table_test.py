@@ -62,6 +62,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
+                    filters=set(),
                     entries=[
                         hl.Struct(
                             GQ=99,
@@ -90,6 +91,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
+                    filters=set(),
                     entries=[
                         hl.Struct(
                             GQ=99,

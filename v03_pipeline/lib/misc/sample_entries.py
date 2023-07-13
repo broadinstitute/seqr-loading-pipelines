@@ -22,11 +22,11 @@ def globalize_sample_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate_globals(
         sample_ids=ht.aggregate(hl.agg.take(ht.entries.sample_id, 1)[0]),
     )
-    return ht.select(entries=ht.entries.map(lambda s: s.drop('sample_id')))
+    return ht.annotate(entries=ht.entries.map(lambda s: s.drop('sample_id')))
 
 
 def deglobalize_sample_ids(ht: hl.Table) -> hl.Table:
-    ht = ht.select(
+    ht = ht.annotate(
         entries=(
             hl.zip_with_index(ht.entries).starmap(
                 lambda i, e: hl.Struct(**e, sample_id=ht.sample_ids[i]),
