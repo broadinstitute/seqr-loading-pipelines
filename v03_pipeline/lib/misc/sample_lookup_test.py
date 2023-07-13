@@ -9,27 +9,29 @@ from v03_pipeline.lib.misc.sample_lookup import (
 
 
 class SampleLookupTest(unittest.TestCase):
+    maxDiff = None
+
     def test_remove_callset_sample_ids(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
-                    'ref_samples': {'project_1': set()},
-                    'het_samples': {'project_1': {'b', 'd', 'f'}},
-                    'hom_samples': {'project_1': {'e', 'f'}},
+                    'ref_samples': hl.Struct(project_1=set()),
+                    'het_samples': hl.Struct(project_1={'b', 'd', 'f'}),
+                    'hom_samples': hl.Struct(project_1={'e', 'f'}),
                 },
                 {
                     'id': 1,
-                    'ref_samples': {'project_1': {'f'}},
-                    'het_samples': {'project_1': {'a'}},
-                    'hom_samples': {'project_1': set()},
+                    'ref_samples': hl.Struct(project_1={'f'}),
+                    'het_samples': hl.Struct(project_1={'a'}),
+                    'hom_samples': hl.Struct(project_1=set()),
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
+                het_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
+                hom_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
             ),
             key='id',
             globals=hl.Struct(
@@ -57,15 +59,15 @@ class SampleLookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    ref_samples={'project_1': set()},
-                    het_samples={'project_1': {'b'}},
-                    hom_samples={'project_1': set()},
+                    ref_samples=hl.Struct(project_1=set()),
+                    het_samples=hl.Struct(project_1={'b'}),
+                    hom_samples=hl.Struct(project_1=set()),
                 ),
                 hl.Struct(
                     id=1,
-                    ref_samples={'project_1': set()},
-                    het_samples={'project_1': {'a'}},
-                    hom_samples={'project_1': set()},
+                    ref_samples=hl.Struct(project_1=set()),
+                    het_samples=hl.Struct(project_1={'a'}),
+                    hom_samples=hl.Struct(project_1=set()),
                 ),
             ],
         )
@@ -88,40 +90,27 @@ class SampleLookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    ref_samples={'project_1': set()},
-                    het_samples={'project_1': {'b'}},
-                    hom_samples={'project_1': set()},
+                    ref_samples=hl.Struct(project_1=set()),
+                    het_samples=hl.Struct(project_1={'b'}),
+                    hom_samples=hl.Struct(project_1=set()),
                 ),
                 hl.Struct(
                     id=1,
-                    ref_samples={'project_1': set()},
-                    het_samples={'project_1': {'a'}},
-                    hom_samples={'project_1': set()},
+                    ref_samples=hl.Struct(project_1=set()),
+                    het_samples=hl.Struct(project_1={'a'}),
+                    hom_samples=hl.Struct(project_1=set()),
                 ),
             ],
         )
 
     def test_union_sample_lookup_hts(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
-            [
-                {
-                    'id': 0,
-                    'ref_samples': {'project_1': set()},
-                    'het_samples': {'project_1': {'b', 'd', 'f'}},
-                    'hom_samples': {'project_1': {'e', 'f'}},
-                },
-                {
-                    'id': 1,
-                    'ref_samples': {'project_1': {'f'}, 'project_2': {'a'}},
-                    'het_samples': {'project_1': {'a'}, 'project_2': {'b'}},
-                    'hom_samples': {'project_1': set(), 'project_2': {'c'}},
-                },
-            ],
+            [],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tstruct(),
+                het_samples=hl.tstruct(),
+                hom_samples=hl.tstruct(),
             ),
             key='id',
         )
@@ -129,22 +118,22 @@ class SampleLookupTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'ref_samples': {'project_1': {'e'}},
-                    'het_samples': {'project_1': {'f', 'g'}},
-                    'hom_samples': {'project_1': set()},
+                    'ref_samples': {'a'},
+                    'het_samples': {'b', 'c'},
+                    'hom_samples': set(),
                 },
                 {
-                    'id': 2,
-                    'ref_samples': {'project_1': {'c'}},
-                    'het_samples': {'project_1': {'d'}},
-                    'hom_samples': {'project_1': set()},
+                    'id': 1,
+                    'ref_samples': set(),
+                    'het_samples': set(),
+                    'hom_samples': {'a', 'b', 'c'},
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
             ),
             key='id',
         )
@@ -158,21 +147,297 @@ class SampleLookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     id=0,
-                    ref_samples={'project_1': {'e'}},
-                    het_samples={'project_1': {'b', 'd', 'f', 'g'}},
-                    hom_samples={'project_1': {'e', 'f'}},
+                    ref_samples=hl.Struct(project_1={'a'}),
+                    het_samples=hl.Struct(project_1={'b', 'c'}),
+                    hom_samples=hl.Struct(project_1=set()),
                 ),
                 hl.Struct(
                     id=1,
-                    ref_samples={'project_1': {'f'}, 'project_2': {'a'}},
-                    het_samples={'project_1': {'a'}, 'project_2': {'b'}},
-                    hom_samples={'project_1': set(), 'project_2': {'c'}},
+                    ref_samples=hl.Struct(project_1=set()),
+                    het_samples=hl.Struct(project_1=set()),
+                    hom_samples=hl.Struct(project_1={'a', 'b', 'c'}),
+                ),
+            ],
+        )
+        callset_sample_lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'ref_samples': {'a'},
+                    'het_samples': {'b'},
+                    'hom_samples': set(),
+                },
+                {
+                    'id': 2,
+                    'ref_samples': set(),
+                    'het_samples': {'a'},
+                    'hom_samples': {'b'},
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
+            ),
+            key='id',
+        )
+        sample_lookup_ht = union_sample_lookup_hts(
+            sample_lookup_ht,
+            callset_sample_lookup_ht,
+            'project_2',
+        )
+        self.assertCountEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    ref_samples=hl.Struct(
+                        project_1={'a'},
+                        project_2={'a'},
+                    ),
+                    het_samples=hl.Struct(
+                        project_1={'b', 'c'},
+                        project_2={'b'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                    ),
+                ),
+                hl.Struct(
+                    id=1,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1={'a', 'b', 'c'},
+                        project_2=set(),
+                    ),
                 ),
                 hl.Struct(
                     id=2,
-                    ref_samples={'project_1': {'c'}},
-                    het_samples={'project_1': {'d'}},
-                    hom_samples={'project_1': set()},
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'a'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'b'},
+                    ),
+                ),
+            ],
+        )
+        callset_sample_lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'ref_samples': {'c'},
+                    'het_samples': {'d'},
+                    'hom_samples': {'e'},
+                },
+                {
+                    'id': 3,
+                    'ref_samples': set(),
+                    'het_samples': {'c'},
+                    'hom_samples': {'d', 'e'},
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
+            ),
+            key='id',
+        )
+        sample_lookup_ht = union_sample_lookup_hts(
+            sample_lookup_ht,
+            callset_sample_lookup_ht,
+            'project_3',
+        )
+        self.assertCountEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    ref_samples=hl.Struct(
+                        project_1={'a'},
+                        project_2={'a'},
+                        project_3={'c'},
+                    ),
+                    het_samples=hl.Struct(
+                        project_1={'b', 'c'},
+                        project_2={'b'},
+                        project_3={'d'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3={'e'},
+                    ),
+                ),
+                hl.Struct(
+                    id=1,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1={'a', 'b', 'c'},
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                ),
+                hl.Struct(
+                    id=2,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'a'},
+                        project_3=set(),
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'b'},
+                        project_3=set(),
+                    ),
+                ),
+                hl.Struct(
+                    id=3,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3={'c'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3={'d', 'e'},
+                    ),
+                ),
+            ],
+        )
+        callset_sample_lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'ref_samples': {'a', 'd'},
+                    'het_samples': {'b', 'f'},
+                    'hom_samples': {'c'},
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                ref_samples=hl.tset(hl.tstr),
+                het_samples=hl.tset(hl.tstr),
+                hom_samples=hl.tset(hl.tstr),
+            ),
+            key='id',
+        )
+        sample_lookup_ht = union_sample_lookup_hts(
+            sample_lookup_ht,
+            callset_sample_lookup_ht,
+            'project_2',
+        )
+        self.assertCountEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    ref_samples=hl.Struct(
+                        project_1={'a'},
+                        project_2={'a', 'd'},
+                        project_3={'c'},
+                    ),
+                    het_samples=hl.Struct(
+                        project_1={'b', 'c'},
+                        project_2={'b', 'f'},
+                        project_3={'d'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'c'},
+                        project_3={'e'},
+                    ),
+                ),
+                hl.Struct(
+                    id=1,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1={'a', 'b', 'c'},
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                ),
+                hl.Struct(
+                    id=2,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'a'},
+                        project_3=set(),
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2={'b'},
+                        project_3=set(),
+                    ),
+                ),
+                hl.Struct(
+                    id=3,
+                    ref_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3=set(),
+                    ),
+                    het_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3={'c'},
+                    ),
+                    hom_samples=hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        project_3={'d', 'e'},
+                    ),
                 ),
             ],
         )

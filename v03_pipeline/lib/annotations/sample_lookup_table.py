@@ -7,74 +7,39 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
-def _AC(  # noqa: N802
-    ht: hl.Table,
-    sample_lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.sum(
-        sample_lookup_ht.index_globals().updates.project_guid.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key]
-                .ref_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-                * N_ALT_REF
-                + sample_lookup_ht[ht.key]
-                .het_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-                * N_ALT_HET
-                + sample_lookup_ht[ht.key]
-                .hom_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-                * N_ALT_HOM
-            ),
-        ),
+def _AC(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
+    return sum(
+        [
+            (
+                row.ref_samples[project_guid].length() * N_ALT_REF
+                + row.het_samples[project_guid].length() * N_ALT_HET
+                + row.hom_samples[project_guid].length() * N_ALT_HOM
+            )
+            for project_guid in row.ref_samples
+        ],
     )
 
 
-def _AN(  # noqa: N802
-    ht: hl.Table,
-    sample_lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return 2 * hl.sum(
-        sample_lookup_ht.index_globals().updates.project_guid.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key]
-                .ref_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-                + sample_lookup_ht[ht.key]
-                .het_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-                + sample_lookup_ht[ht.key]
-                .hom_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-            ),
-        ),
+def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
+    return 2 * sum(
+        [
+            (
+                row.ref_samples[project_guid].length()
+                + row.het_samples[project_guid].length()
+                + row.hom_samples[project_guid].length()
+            )
+            for project_guid in row.ref_samples
+        ],
     )
 
 
-def _AF(  # noqa: N802
-    ht: hl.Table,
-    sample_lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.float32(_AC(ht, sample_lookup_ht) / _AN(ht, sample_lookup_ht))
+def _AF(row: hl.StructExpression) -> hl.Float32Expression:  # noqa: N802
+    return hl.float32(_AC(row) / _AN(row))
 
 
-def _hom(
-    ht: hl.Table,
-    sample_lookup_ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.sum(
-        sample_lookup_ht.index_globals().updates.project_guid.map(
-            lambda project_guid: (
-                sample_lookup_ht[ht.key]
-                .hom_samples.get(project_guid, hl.empty_set(hl.tstr))
-                .length()
-            ),
-        ),
+def _hom(row: hl.StructExpression) -> hl.Int32Expression:
+    return sum(
+        [row.hom_samples[project_guid].length() for project_guid in row.hom_samples],
     )
 
 
@@ -83,9 +48,10 @@ def gt_stats(
     sample_lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
+    row = sample_lookup_ht[ht.key]
     return hl.Struct(
-        AC=_AC(ht, sample_lookup_ht),
-        AN=_AN(ht, sample_lookup_ht),
-        AF=_AF(ht, sample_lookup_ht),
-        hom=_hom(ht, sample_lookup_ht),
+        AC=_AC(row),
+        AN=_AN(row),
+        AF=_AF(row),
+        hom=_hom(row),
     )

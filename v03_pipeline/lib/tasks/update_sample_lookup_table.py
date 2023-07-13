@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.sample_lookup import (
-    compute_sample_lookup_ht,
+    compute_callset_sample_lookup_ht,
     remove_callset_sample_ids,
     union_sample_lookup_hts,
 )
@@ -73,9 +73,9 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             [],
             hl.tstruct(
                 **key_type,
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tstruct(),
+                het_samples=hl.tstruct(),
+                hom_samples=hl.tstruct(),
             ),
             key=key_type.fields,
         )
@@ -89,7 +89,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
             ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)
             ht = union_sample_lookup_hts(
                 ht,
-                compute_sample_lookup_ht(callset_mt, project_guid),
+                compute_callset_sample_lookup_ht(callset_mt),
                 project_guid,
             )
             ht = ht.annotate_globals(

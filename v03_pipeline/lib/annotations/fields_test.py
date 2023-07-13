@@ -141,17 +141,17 @@ class FieldsTest(unittest.TestCase):
                 {
                     'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
                     'alleles': ['A', 'C'],
-                    'ref_samples': {'project_1': {'a', 'c'}},
-                    'het_samples': {'project_1': {'b', 'd'}},
-                    'hom_samples': {'project_1': {'e', 'f'}},
+                    'ref_samples': hl.Struct(project_1={'a', 'c'}),
+                    'het_samples': hl.Struct(project_1={'b', 'd'}),
+                    'hom_samples': hl.Struct(project_1={'e', 'f'}),
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus(ReferenceGenome.GRCh38.value),
                 alleles=hl.tarray(hl.tstr),
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
+                het_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
+                hom_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
             ),
             key=('locus', 'alleles'),
             globals=hl.Struct(

@@ -25,30 +25,36 @@ class SampleLookupTableAnnotationsTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'ref_samples': {'project_1': {'a', 'c'}},
-                    'het_samples': {'project_1': {'b', 'd'}},
-                    'hom_samples': {'project_1': {'e', 'f'}},
+                    'ref_samples': hl.Struct(project_1={'a', 'c'}, project_2=set()),
+                    'het_samples': hl.Struct(project_1={'b', 'd'}, project_2=set()),
+                    'hom_samples': hl.Struct(project_1={'e', 'f'}, project_2=set()),
                 },
                 {
                     'id': 1,
-                    'ref_samples': {
-                        'project_1': {'a', 'b', 'c', 'd', 'e', 'f'},
-                        'project_2': {'x'},
-                    },
-                    'het_samples': {'project_1': set(), 'project_2': {'y'}},
-                    'hom_samples': {'project_1': set(), 'project_2': {'z'}},
+                    'ref_samples': hl.Struct(
+                        project_1={'a', 'b', 'c', 'd', 'e', 'f'},
+                        project_2=set(),
+                    ),
+                    'het_samples': hl.Struct(project_1=set(), project_2=set()),
+                    'hom_samples': hl.Struct(project_1=set(), project_2=set()),
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                het_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
-                hom_samples=hl.tdict(hl.tstr, hl.tset(hl.tstr)),
+                ref_samples=hl.tstruct(
+                    project_1=hl.tset(hl.tstr),
+                    project_2=hl.tset(hl.tstr),
+                ),
+                het_samples=hl.tstruct(
+                    project_1=hl.tset(hl.tstr),
+                    project_2=hl.tset(hl.tstr),
+                ),
+                hom_samples=hl.tstruct(
+                    project_1=hl.tset(hl.tstr),
+                    project_2=hl.tset(hl.tstr),
+                ),
             ),
             key='id',
-            globals=hl.Struct(
-                updates=hl.set([hl.Struct(callset='abc', project_guid='project_1')]),
-            ),
         )
         ht = ht.select(gt_stats=gt_stats(ht, sample_lookup_ht))
         self.assertCountEqual(
