@@ -52,7 +52,7 @@ def union_sample_lookup_hts(
     for field in ['ref_samples', 'het_samples', 'hom_samples']:
         # If the row exists in the new callset but not the existing sample lookup table
         # we need to materialize the missing struct of projects w/ empty sets, else
-        # the "missing" propates and gobbles up the "union" below.
+        # the "missing" propagates and gobbles up the "union" below.
         sample_lookup_ht = sample_lookup_ht.annotate(
             **{
                 field: hl.or_else(
