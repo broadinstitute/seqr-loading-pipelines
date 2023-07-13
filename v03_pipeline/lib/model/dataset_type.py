@@ -79,7 +79,7 @@ class DatasetType(Enum):
     def row_fields(
         self,
     ) -> list[str]:
-        return {DatasetType.SNV: ['rsid']}.get(self, [])
+        return {DatasetType.SNV: ['rsid', 'filters']}.get(self, [])
 
     @property
     def veppable(self) -> bool:

@@ -74,6 +74,7 @@ class WriteFamilyTableTask(BasePipelineTask):
             self.ignore_missing_samples,
         )
         ht = callset_mt.select_rows(
+            filters=callset_mt.filters,
             entries=hl.sorted(
                 hl.agg.collect(
                     hl.struct(
