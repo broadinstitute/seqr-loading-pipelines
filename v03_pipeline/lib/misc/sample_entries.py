@@ -30,9 +30,9 @@ def remove_callset_sample_ids(
     )
 
 def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
-    ht_empty_entries = hl.empty_array(ht.entries.dtype.element_type)
-    callset_ht_empty_entries = _hl.empty_array(callset_ht.entries.dtype.element_type)
     ht = ht.join(callset_ht, 'outer')
+    ht_empty_entries = ht.sample_ids.map(lambda x: hl.missing(ht.entries.dtype.element_type))
+    callset_ht_empty_entries = ht.sample_ids_1.map(lambda x: hl.missing(ht.entries_1.dtype.element_type))
     return ht.select(
         filters=hl.or_else(ht.filters_1, ht.filters),
         entries=(

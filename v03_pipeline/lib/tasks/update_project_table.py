@@ -7,6 +7,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
     deglobalize_sample_ids,
     globalize_sample_ids,
+    remove_callset_sample_ids,
     union_entries_hts,
 )
 from v03_pipeline.lib.model import AnnotationType
@@ -75,12 +76,9 @@ class UpdateProjectTableTask(BasePipelineTask):
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
-        # Filter out the samples that we're now loading from the current ht.
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = deglobalize_sample_ids(ht)
-        ht = remove_callset_sample_ids(ht, callset_mt.cols())
-
-        # Merge the callset entries with the current ht entries
+        ht = remove_callset_sample_ids(deglobalize_sample_ids(ht), callset_mt.cols())
+        ht = globalize_sample_ids(ht)
         callset_ht = callset_mt.select_rows(
             filters=callset_mt.filters,
             entries=hl.agg.collect(
@@ -93,8 +91,8 @@ class UpdateProjectTableTask(BasePipelineTask):
                 ),
             ),
         ).rows()
+        callset_ht = globalize_sample_ids(callset_ht)
         ht = union_entries_hts(ht, callset_ht)
-        ht = globalize_sample_ids(ht)
         ht = ht.naive_coalesce(1)
         return ht.annotate_globals(
             updates=ht.updates.add(self.callset_path),

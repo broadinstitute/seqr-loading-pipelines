@@ -91,9 +91,10 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
+            globals=hl.Struct(sample_ids=hl.empty_array(hl.tstr))
         )
         callset_ht = hl.Table.parallelize(
             [
@@ -101,37 +102,38 @@ class SampleEntriesTest(unittest.TestCase):
                     'id': 0,
                     'filters': {'HIGH_SR_BACKGROUND', 'UNRESOLVED'},
                     'entries': [
-                        hl.Struct(a=9, sample_id='b'),
-                        hl.Struct(a=10, sample_id='g'),
+                        hl.Struct(a=9),
+                        hl.Struct(a=10),
                     ],
                 },
                 {
                     'id': 2,
                     'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
-                        hl.Struct(a=11, sample_id='b'),
-                        hl.Struct(a=12, sample_id='g'),
+                        hl.Struct(a=11),
+                        hl.Struct(a=12),
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
+            globals=hl.Struct(sample_ids=['b', 'g'])
         )
         ht = union_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
             ht.entries.collect(),
             [
                 [
-                    hl.Struct(a=9, sample_id='b'),
-                    hl.Struct(a=10, sample_id='g'),
+                    hl.Struct(a=9),
+                    hl.Struct(a=10),
                 ],
                 [
-                    hl.Struct(a=11, sample_id='b'),
-                    hl.Struct(a=12, sample_id='g'),
+                    hl.Struct(a=11),
+                    hl.Struct(a=12),
                 ],
             ],
         )
@@ -143,29 +145,30 @@ class SampleEntriesTest(unittest.TestCase):
                     'id': 0,
                     'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
-                        hl.Struct(a=1, sample_id='a'),
-                        hl.Struct(a=2, sample_id='c'),
-                        hl.Struct(a=1, sample_id='e'),
-                        hl.Struct(a=2, sample_id='f'),
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
                     ],
                 },
                 {
                     'id': 1,
                     'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
-                        hl.Struct(a=2, sample_id='a'),
-                        hl.Struct(a=3, sample_id='c'),
-                        hl.Struct(a=4, sample_id='e'),
-                        hl.Struct(a=5, sample_id='f'),
+                        hl.Struct(a=2),
+                        hl.Struct(a=3),
+                        hl.Struct(a=4),
+                        hl.Struct(a=5),
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
+            globals=hl.Struct(sample_ids=['a', 'c', 'e', 'f']),
         )
         callset_ht = hl.Table.parallelize(
             [
@@ -173,25 +176,26 @@ class SampleEntriesTest(unittest.TestCase):
                     'id': 0,
                     'filters': {'PASS'},
                     'entries': [
-                        hl.Struct(a=9, sample_id='b'),
-                        hl.Struct(a=10, sample_id='g'),
+                        hl.Struct(a=9),
+                        hl.Struct(a=10),
                     ],
                 },
                 {
                     'id': 2,
                     'filters': {'HIGH_SR_BACKGROUND', 'PASS'},
                     'entries': [
-                        hl.Struct(a=11, sample_id='b'),
-                        hl.Struct(a=12, sample_id='g'),
+                        hl.Struct(a=11),
+                        hl.Struct(a=12),
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
+            globals=hl.Struct(sample_ids=['b', 'g']),
         )
         ht = union_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
@@ -201,22 +205,22 @@ class SampleEntriesTest(unittest.TestCase):
                     id=0,
                     filters={'PASS'},
                     entries=[
-                        hl.Struct(a=1, sample_id='a'),
-                        hl.Struct(a=2, sample_id='c'),
-                        hl.Struct(a=1, sample_id='e'),
-                        hl.Struct(a=2, sample_id='f'),
-                        hl.Struct(a=9, sample_id='b'),
-                        hl.Struct(a=10, sample_id='g'),
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
+                        hl.Struct(a=9),
+                        hl.Struct(a=10),
                     ],
                 ),
                 hl.Struct(
                     id=1,
                     filters={'HIGH_SR_BACKGROUND'},
                     entries=[
-                        hl.Struct(a=2, sample_id='a'),
-                        hl.Struct(a=3, sample_id='c'),
-                        hl.Struct(a=4, sample_id='e'),
-                        hl.Struct(a=5, sample_id='f'),
+                        hl.Struct(a=2),
+                        hl.Struct(a=3),
+                        hl.Struct(a=4),
+                        hl.Struct(a=5),
                         None,
                         None,
                     ],
@@ -229,8 +233,8 @@ class SampleEntriesTest(unittest.TestCase):
                         None,
                         None,
                         None,
-                        hl.Struct(a=11, sample_id='b'),
-                        hl.Struct(a=12, sample_id='g'),
+                        hl.Struct(a=11),
+                        hl.Struct(a=12),
                     ],
                 ),
             ],
