@@ -68,16 +68,13 @@ class WriteFamilyTableTask(BasePipelineTask):
         if sample_subset_ht.count() == 0:
             msg = f'Family {self.family_id} is invalid.'
             raise RuntimeError(msg)
-        callset_mt = subset_samples(
-            callset_mt,
-            sample_subset_ht,
-            self.ignore_missing_samples,
-        )
+        callset_mt = subset_samples(callset_mt, sample_subset_ht, False)
         ht = callset_mt.select_rows(
             filters=callset_mt.filters,
             entries=hl.sorted(
                 hl.agg.collect(
                     hl.struct(
+                        s=callset_mt.s,
                         **get_fields(
                             callset_mt,
                             AnnotationType.GENOTYPE_ENTRIES,
@@ -85,7 +82,7 @@ class WriteFamilyTableTask(BasePipelineTask):
                         ),
                     ),
                 ),
-                key=lambda e: e.sample_id,
+                key=lambda e: e.s,
             ),
         ).rows()
         ht = globalize_sample_ids(ht)
