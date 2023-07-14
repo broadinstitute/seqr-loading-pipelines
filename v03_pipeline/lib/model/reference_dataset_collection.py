@@ -61,6 +61,6 @@ class ReferenceDatasetCollection(Enum):
         )
         return {
             ReferenceDatasetCollection.INTERVAL: hl.tstruct(
-                interval=hl.tinterval(hl.tlocus(reference_genome.value))
+                interval=hl.tinterval(hl.tlocus(reference_genome.value)),
             ),
         }.get(self, default_key)

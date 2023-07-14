@@ -5,7 +5,7 @@ import functools
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.fields import get_fields, hail_table_dependencies
+from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
@@ -132,10 +132,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 5) Fix up the globals.
-        for rdc in [
-            *self.dataset_type.joinable_reference_dataset_collections(self.env),
-            *self.dataset_type.annotatable_reference_dataset_collections
-        ]:
+        # NB: There's some duplication (of hl.read_table) here in order to
+        # ensure that all of the global annotating code happens within this
+        # code block.  It is possible (and maybe cleaner) to allow the joins
+        # agains the rdcs to manage the globals, but I opted to just do a second
+        # pass here to unify the logic.
+        ht = ht.drop('paths', 'versions', 'enums')
+        for rdc in (
+            self.dataset_type.joinable_reference_dataset_collections(self.env)
+            + self.dataset_type.annotatable_reference_dataset_collections
+        ):
             rdc_ht = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.env,
@@ -145,13 +151,19 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             )
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
-                paths=hl.Struct(**ht.globals.get('paths', hl.Struct), **rdc_globals.paths),
-                versions=hl.Struct(**ht.globals.get('versions', hl.Struct), **rdc_globals.versions),
-                enums=hl.Struct(**ht.globals.get('enums', hl.Struct), **rdc_globals.enums),
+                paths=hl.Struct(
+                    **ht.globals.get('paths', hl.Struct()), **rdc_globals.paths,
+                ),
+                versions=hl.Struct(
+                    **ht.globals.get('versions', hl.Struct()), **rdc_globals.versions,
+                ),
+                enums=hl.Struct(
+                    **ht.globals.get('enums', hl.Struct()), **rdc_globals.enums,
+                ),
             )
         ht = annotate_sorted_transcript_consequences_enums(ht)
 
-        # 5) Mark the table as updated with these callset/project pairs.
+        # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {

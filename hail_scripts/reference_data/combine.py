@@ -167,7 +167,7 @@ def update_existing_joined_hts(
             [
                 ~hl.is_missing(joined_ht[dataset])
                 for dataset in reference_dataset_collection.datasets
-            ]
+            ],
         ),
     )
     return annotate_dataset_globals(joined_ht, dataset, dataset_ht)

@@ -7,11 +7,16 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
+from hail_scripts.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
+)
+
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
-from v03_pipeline.lib.vep import LOF_FILTERS
+from v03_pipeline.lib.vep import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -177,7 +182,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=1,
+                    screen=hl.Struct(region_type_ids=[1]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -192,7 +197,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=None,
+                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -207,7 +212,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
                     gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
-                    screen=None,
+                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -222,7 +227,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
                     gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
-                    screen=None,
+                    screen=hl.Struct(region_type_ids=[]),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -237,58 +242,69 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=None,
+                    screen=hl.Struct(region_type_ids=[]),
                 ),
             ],
         )
 
-        print('BEN', ht.globals.collect())
-        self.assertTrue(False)
-
-        # self.assertCountEqual(
-        #    ht.globals.updates.collect(),
-        #    [
-        #        {
-        #            hl.Struct(
-        #                callset=TEST_VCF,
-        #                project_guid='R0113_test_project',
-        #            ),
-        #            hl.Struct(
-        #                callset=TEST_VCF,
-        #                project_guid='R0114_project4',
-        #            ),
-        #        },
-        #    ],
-        # )
-        # self.assertCountEqual(
-        #    ht.globals.paths.collect(),
-        #    [
-        #        hl.Struct(
-        #            cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-        #            clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-        #        ),
-        #    ],
-        # )
-        # self.assertCountEqual(
-        #    ht.globals.enums.clinvar.assertion.collect(),
-        #    [
-        #        [
-        #            'Affects',
-        #            'association',
-        #            'association_not_found',
-        #            'confers_sensitivity',
-        #            'drug_response',
-        #            'low_penetrance',
-        #            'not_provided',
-        #            'other',
-        #            'protective',
-        #            'risk_factor',
-        #        ],
-        #    ],
-        # )
-        # self.assertCountEqual(
-        #    ht.globals.enums.sorted_transcript_consequences.lof_filter.collect(),
-        #    [
-        #        LOF_FILTERS,
-        #    ],
-        # )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    updates={
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz',
+                            project_guid='R0113_test_project',
+                        ),
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz',
+                            project_guid='R0114_project4',
+                        ),
+                    },
+                    paths=hl.Struct(
+                        cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+                        hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
+                        gnomad_non_coding_constraint='gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+                        screen='gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+                        sorted_transcript_consequences=None,
+                    ),
+                    versions=hl.Struct(
+                        cadd='v1.6',
+                        clinvar='2023-07-02',
+                        hgmd=None,
+                        gnomad_non_coding_constraint=None,
+                        screen=None,
+                        sorted_transcript_consequences=None,
+                    ),
+                    enums=hl.Struct(
+                        cadd=hl.Struct(),
+                        clinvar=hl.Struct(
+                            assertion=CLINVAR_ASSERTIONS,
+                            pathogenicity=CLINVAR_PATHOGENICITIES,
+                        ),
+                        hgmd=hl.Struct(
+                            **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
+                        ),
+                        gnomad_non_coding_constraint=hl.Struct(),
+                        screen=hl.Struct(
+                            region_type=[
+                                'CTCF-bound',
+                                'CTCF-only',
+                                'DNase-H3K4me3',
+                                'PLS',
+                                'dELS',
+                                'pELS',
+                                'DNase-only',
+                                'low-DNase',
+                            ],
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
+                        ),
+                    ),
+                ),
+            ],
+        )

@@ -64,5 +64,5 @@ def subset_samples(
             print(message)
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
-    print('Subsetted to {subset_count} sample ids')
+    print(f'Subsetted to {subset_count} sample ids')
     return mt.semi_join_cols(sample_subset_ht)
