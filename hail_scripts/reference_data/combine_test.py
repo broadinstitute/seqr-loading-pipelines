@@ -12,7 +12,7 @@ from hail_scripts.reference_data.combine import (
 )
 from hail_scripts.reference_data.config import dbnsfp_custom_select
 
-from v03_pipeline.lib.model import ReferenceGenome, ReferenceDatasetCollection
+from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
@@ -252,7 +252,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
     # NB: mocking syntax is different here because we're mocking a property on an object that
     # is being passed IN to the update_existing_joined_hts function.
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets', new_callable=mock.PropertyMock)
+    @mock.patch.object(
+        ReferenceDatasetCollection, 'datasets', new_callable=mock.PropertyMock
+    )
     def test_update_existing_joined_hts(
         self,
         mock_reference_dataset_collection_datasets,

@@ -24,6 +24,8 @@ TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
@@ -145,53 +147,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         self.assertTrue(uvatwns_task_4.complete())
         ht = hl.read_table(uvatwns_task_4.output().path)
         self.assertCountEqual(
-            ht.globals.updates.collect(),
-            [
-                {
-                    hl.Struct(
-                        callset=TEST_VCF,
-                        project_guid='R0113_test_project',
-                    ),
-                    hl.Struct(
-                        callset=TEST_VCF,
-                        project_guid='R0114_project4',
-                    ),
-                },
-            ],
-        )
-        self.assertCountEqual(
-            ht.globals.paths.collect(),
-            [
-                hl.Struct(
-                    cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-                    clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                ),
-            ],
-        )
-        self.assertCountEqual(
-            ht.globals.enums.clinvar.assertion.collect(),
-            [
-                [
-                    'Affects',
-                    'association',
-                    'association_not_found',
-                    'confers_sensitivity',
-                    'drug_response',
-                    'low_penetrance',
-                    'not_provided',
-                    'other',
-                    'protective',
-                    'risk_factor',
-                ],
-            ],
-        )
-        self.assertCountEqual(
-            ht.globals.enums.sorted_transcript_consequences.lof_filter.collect(),
-            [
-                LOF_FILTERS,
-            ],
-        )
-        self.assertCountEqual(
             [
                 x
                 for x in ht.select(
@@ -201,6 +156,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     'variant_id',
                     'xpos',
                     'gt_stats',
+                    'screen',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -221,6 +177,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-871269-A-C',
                     xpos=1000871269,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+                    screen=1,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -235,6 +192,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-874734-C-T',
                     xpos=1000874734,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+                    screen=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -249,6 +207,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-876499-A-G',
                     xpos=1000876499,
                     gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
+                    screen=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -263,6 +222,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-878314-G-C',
                     xpos=1000878314,
                     gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
+                    screen=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -277,6 +237,58 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     variant_id='1-878809-C-T',
                     xpos=1000878809,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+                    screen=None,
                 ),
             ],
         )
+
+        print('BEN', ht.globals.collect())
+        self.assertTrue(False)
+
+        # self.assertCountEqual(
+        #    ht.globals.updates.collect(),
+        #    [
+        #        {
+        #            hl.Struct(
+        #                callset=TEST_VCF,
+        #                project_guid='R0113_test_project',
+        #            ),
+        #            hl.Struct(
+        #                callset=TEST_VCF,
+        #                project_guid='R0114_project4',
+        #            ),
+        #        },
+        #    ],
+        # )
+        # self.assertCountEqual(
+        #    ht.globals.paths.collect(),
+        #    [
+        #        hl.Struct(
+        #            cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+        #            clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+        #        ),
+        #    ],
+        # )
+        # self.assertCountEqual(
+        #    ht.globals.enums.clinvar.assertion.collect(),
+        #    [
+        #        [
+        #            'Affects',
+        #            'association',
+        #            'association_not_found',
+        #            'confers_sensitivity',
+        #            'drug_response',
+        #            'low_penetrance',
+        #            'not_provided',
+        #            'other',
+        #            'protective',
+        #            'risk_factor',
+        #        ],
+        #    ],
+        # )
+        # self.assertCountEqual(
+        #    ht.globals.enums.sorted_transcript_consequences.lof_filter.collect(),
+        #    [
+        #        LOF_FILTERS,
+        #    ],
+        # )

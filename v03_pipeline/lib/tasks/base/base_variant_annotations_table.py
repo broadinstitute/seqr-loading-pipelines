@@ -54,7 +54,10 @@ class BaseVariantAnnotationsTableTask(BasePipelineTask):
             [],
             key_type,
             key=key_type.fields,
-            globals=hl.struct(
+            globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 
 import hail as hl
 import pytz
@@ -131,7 +130,10 @@ def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.T
     )
 
 
-def join_hts(reference_dataset_collection: ReferenceDatasetCollection, reference_genome: ReferenceGenome):
+def join_hts(
+    reference_dataset_collection: ReferenceDatasetCollection,
+    reference_genome: ReferenceGenome,
+):
     key_type = reference_dataset_collection.table_key_type(reference_genome)
     joined_ht = hl.Table.parallelize(
         [],
@@ -161,6 +163,11 @@ def update_existing_joined_hts(
     joined_ht = joined_ht.drop(dataset)
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(
-        hl.any([~hl.is_missing(joined_ht[dataset]) for dataset in reference_dataset_collection.datasets]),
+        hl.any(
+            [
+                ~hl.is_missing(joined_ht[dataset])
+                for dataset in reference_dataset_collection.datasets
+            ]
+        ),
     )
     return annotate_dataset_globals(joined_ht, dataset, dataset_ht)

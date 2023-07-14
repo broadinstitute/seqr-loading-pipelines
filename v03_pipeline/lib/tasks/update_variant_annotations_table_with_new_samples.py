@@ -5,7 +5,7 @@ import functools
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.annotations.fields import get_fields, hail_table_dependencies
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
@@ -123,8 +123,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # 4) Union with the existing variant annotations table
         # and annotate the global variables from the new_var
         ht = ht.union(new_variants_ht, unify=True)
-        ht = ht.annotate_globals(**new_variants_ht.index_globals())
-        ht = annotate_sorted_transcript_consequences_enums(ht)
         ht = ht.annotate(
             **get_fields(
                 ht,
@@ -132,6 +130,26 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **self.param_kwargs,
             ),
         )
+
+        # 5) Fix up the globals.
+        for rdc in [
+            *self.dataset_type.joinable_reference_dataset_collections(self.env),
+            *self.dataset_type.annotatable_reference_dataset_collections
+        ]:
+            rdc_ht = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+            rdc_globals = rdc_ht.index_globals()
+            ht = ht.annotate_globals(
+                paths=hl.Struct(**ht.globals.get('paths', hl.Struct), **rdc_globals.paths),
+                versions=hl.Struct(**ht.globals.get('versions', hl.Struct), **rdc_globals.versions),
+                enums=hl.Struct(**ht.globals.get('enums', hl.Struct), **rdc_globals.enums),
+            )
+        ht = annotate_sorted_transcript_consequences_enums(ht)
 
         # 5) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

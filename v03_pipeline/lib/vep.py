@@ -138,7 +138,16 @@ LOF_FILTERS = [
 
 def annotate_sorted_transcript_consequences_enums(ht: hl.Table) -> hl.Table:
     return ht.annotate_globals(
-        enums=ht.globals.enums.annotate(
+        paths=hl.Struct(
+            **ht.paths,
+            sorted_transcript_consequences=hl.missing(hl.tstr),
+        ),
+        versions=hl.Struct(
+            **ht.versions,
+            sorted_transcript_consequences=hl.missing(hl.tstr),
+        ),
+        enums=hl.Struct(
+            **ht.enums,
             sorted_transcript_consequences=hl.Struct(
                 biotype=BIOTYPES,
                 consequence_term=CONSEQUENCE_TERMS,
