@@ -19,29 +19,29 @@ def deglobalize_sample_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('sample_ids')
 
 def remove_callset_sample_ids(
-    sample_lookup_ht: hl.Table,
+    sample_entries_ht: hl.Table,
     sample_subset_ht: hl.Table,
 ) -> hl.Table:
     sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
-    return ht.annotate(
+    return sample_entries_ht.annotate(
         entries=(
-            ht.entries.filter(lambda e: ~hl.set(sample_ids).contains(e.sample_id))
+            sample_entries_ht.entries.filter(lambda e: ~hl.set(sample_ids).contains(e.sample_id))
         ),
     )
 
-def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
-    ht = ht.join(callset_ht, 'outer')
-    ht_empty_entries = ht.sample_ids.map(lambda x: hl.missing(ht.entries.dtype.element_type))
-    callset_ht_empty_entries = ht.sample_ids_1.map(lambda x: hl.missing(ht.entries_1.dtype.element_type))
-    return ht.select(
-        filters=hl.or_else(ht.filters_1, ht.filters),
+def union_entries_hts(sample_entries_ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
+    sample_entries_ht = sample_entries_ht.join(callset_ht, 'outer')
+    ht_empty_entries = sample_entries_ht.sample_ids.map(lambda x: hl.missing(sample_entries_ht.entries.dtype.element_type))
+    callset_ht_empty_entries = sample_entries_ht.sample_ids_1.map(lambda x: hl.missing(sample_entries_ht.entries_1.dtype.element_type))
+    return sample_entries_ht.select(
+        filters=hl.or_else(sample_entries_ht.filters_1, sample_entries_ht.filters),
         entries=(
             hl.case()
-            .when(hl.is_missing(ht.entries), ht_empty_entries.extend(ht.entries_1))
+            .when(hl.is_missing(sample_entries_ht.entries), ht_empty_entries.extend(sample_entries_ht.entries_1))
             .when(
-                hl.is_missing(ht.entries_1),
-                ht.entries.extend(callset_ht_empty_entries),
+                hl.is_missing(sample_entries_ht.entries_1),
+                sample_entries_ht.entries.extend(callset_ht_empty_entries),
             )
-            .default(ht.entries.extend(ht.entries_1))
+            .default(sample_entries_ht.entries.extend(sample_entries_ht.entries_1))
         ),
     )
