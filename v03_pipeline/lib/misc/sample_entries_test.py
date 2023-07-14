@@ -12,32 +12,48 @@ from v03_pipeline.lib.misc.sample_entries import (
 class SampleEntriesTest(unittest.TestCase):
     def test_globalize_and_deglobalize(self) -> None:
         entries_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                id=hl.tint32,
+                filters=hl.tset(hl.tstr),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr)),
+            ),
+            key='id',
+        )
+        entries_ht = globalize_sample_ids(entries_ht)
+        self.assertCountEqual(
+            entries_ht.sample_ids.collect(),
+            [
+                [],
+            ],
+        )
+        entries_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
                     'filters': {'HIGH_SR_BACKGROUND', 'UNRESOLVED'},
                     'entries': [
-                        hl.Struct(a=1, sample_id='a'),
-                        hl.Struct(a=2, sample_id='c'),
-                        hl.Struct(a=1, sample_id='e'),
-                        hl.Struct(a=2, sample_id='f'),
+                        hl.Struct(a=1, s='a'),
+                        hl.Struct(a=2, s='c'),
+                        hl.Struct(a=1, s='e'),
+                        hl.Struct(a=2, s='f'),
                     ],
                 },
                 {
                     'id': 1,
                     'filters': {'HIGH_SR_BACKGROUND'},
                     'entries': [
-                        hl.Struct(a=2, sample_id='a'),
-                        hl.Struct(a=3, sample_id='c'),
-                        hl.Struct(a=4, sample_id='e'),
-                        hl.Struct(a=5, sample_id='f'),
+                        hl.Struct(a=2, s='a'),
+                        hl.Struct(a=3, s='c'),
+                        hl.Struct(a=4, s='e'),
+                        hl.Struct(a=5, s='f'),
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32, sample_id=hl.tstr)),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr)),
             ),
             key='id',
         )
@@ -71,16 +87,16 @@ class SampleEntriesTest(unittest.TestCase):
             entries_ht.entries.collect(),
             [
                 [
-                    hl.Struct(a=1, sample_id='a'),
-                    hl.Struct(a=2, sample_id='c'),
-                    hl.Struct(a=1, sample_id='e'),
-                    hl.Struct(a=2, sample_id='f'),
+                    hl.Struct(a=1, s='a'),
+                    hl.Struct(a=2, s='c'),
+                    hl.Struct(a=1, s='e'),
+                    hl.Struct(a=2, s='f'),
                 ],
                 [
-                    hl.Struct(a=2, sample_id='a'),
-                    hl.Struct(a=3, sample_id='c'),
-                    hl.Struct(a=4, sample_id='e'),
-                    hl.Struct(a=5, sample_id='f'),
+                    hl.Struct(a=2, s='a'),
+                    hl.Struct(a=3, s='c'),
+                    hl.Struct(a=4, s='e'),
+                    hl.Struct(a=5, s='f'),
                 ],
             ],
         )
@@ -94,7 +110,7 @@ class SampleEntriesTest(unittest.TestCase):
                 entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
-            globals=hl.Struct(sample_ids=hl.empty_array(hl.tstr))
+            globals=hl.Struct(sample_ids=hl.empty_array(hl.tstr)),
         )
         callset_ht = hl.Table.parallelize(
             [
@@ -121,7 +137,7 @@ class SampleEntriesTest(unittest.TestCase):
                 entries=hl.tarray(hl.tstruct(a=hl.tint32)),
             ),
             key='id',
-            globals=hl.Struct(sample_ids=['b', 'g'])
+            globals=hl.Struct(sample_ids=['b', 'g']),
         )
         ht = union_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
@@ -198,6 +214,12 @@ class SampleEntriesTest(unittest.TestCase):
             globals=hl.Struct(sample_ids=['b', 'g']),
         )
         ht = union_entries_hts(entries_ht, callset_ht)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(sample_ids=['a', 'c', 'e', 'f', 'b', 'g'])
+            ]
+        )
         self.assertCountEqual(
             ht.collect(),
             [

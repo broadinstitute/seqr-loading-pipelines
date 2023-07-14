@@ -6,8 +6,8 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
     deglobalize_sample_ids,
+    filter_callset_sample_ids,
     globalize_sample_ids,
-    remove_callset_sample_ids,
     union_entries_hts,
 )
 from v03_pipeline.lib.model import AnnotationType
@@ -66,7 +66,7 @@ class UpdateProjectTableTask(BasePipelineTask):
             hl.tstruct(
                 **key_type,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(self.dataset_type.genotype_entries_type),
+                entries=hl.tarray(self.dataset_type.sample_entries_type),
             ),
             key=key_type.fields,
         )
@@ -77,18 +77,23 @@ class UpdateProjectTableTask(BasePipelineTask):
 
     def update(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = remove_callset_sample_ids(deglobalize_sample_ids(ht), callset_mt.cols())
+        ht = deglobalize_sample_ids(ht)
+        ht = filter_callset_sample_ids(ht, callset_mt.cols())
         ht = globalize_sample_ids(ht)
         callset_ht = callset_mt.select_rows(
             filters=callset_mt.filters,
-            entries=hl.agg.collect(
-                hl.struct(
-                    **get_fields(
-                        callset_mt,
-                        AnnotationType.GENOTYPE_ENTRIES,
-                        **self.param_kwargs,
+            entries=hl.sorted(
+                hl.agg.collect(
+                    hl.struct(
+                        s=callset_mt.s,
+                        **get_fields(
+                            callset_mt,
+                            AnnotationType.GENOTYPE_ENTRIES,
+                            **self.param_kwargs,
+                        ),
                     ),
                 ),
+                key=lambda e: e.s,
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)

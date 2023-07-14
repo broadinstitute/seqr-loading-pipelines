@@ -38,7 +38,6 @@ ANNOTATION_CONFIG = {
         snv.AB,
         snv.DP,
         shared.GT,
-        shared.sample_id,
     ],
     (DatasetType.MITO, AnnotationType.FORMATTING): [
         shared.rg37_locus,

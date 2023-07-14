@@ -152,13 +152,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(
-                    **ht.globals.get('paths', hl.Struct()), **rdc_globals.paths
+                    **ht.globals.get('paths', hl.Struct()),
+                    **rdc_globals.paths,
                 ),
                 versions=hl.Struct(
-                    **ht.globals.get('versions', hl.Struct()), **rdc_globals.versions
+                    **ht.globals.get('versions', hl.Struct()),
+                    **rdc_globals.versions,
                 ),
                 enums=hl.Struct(
-                    **ht.globals.get('enums', hl.Struct()), **rdc_globals.enums
+                    **ht.globals.get('enums', hl.Struct()),
+                    **rdc_globals.enums,
                 ),
             )
         ht = annotate_sorted_transcript_consequences_enums(ht)

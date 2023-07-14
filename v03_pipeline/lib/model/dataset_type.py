@@ -57,7 +57,7 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
     @property
-    def genotype_entries_type(
+    def sample_entries_type(
         self,
     ) -> hl.dtype:
         return {
