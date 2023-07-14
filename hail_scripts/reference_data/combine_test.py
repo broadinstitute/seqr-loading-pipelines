@@ -253,7 +253,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
     # NB: mocking syntax is different here because we're mocking a property on an object that
     # is being passed IN to the update_existing_joined_hts function.
     @mock.patch.object(
-        ReferenceDatasetCollection, 'datasets', new_callable=mock.PropertyMock,
+        ReferenceDatasetCollection,
+        'datasets',
+        new_callable=mock.PropertyMock,
     )
     def test_update_existing_joined_hts(
         self,

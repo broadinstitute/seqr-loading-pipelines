@@ -1,23 +1,6 @@
 import hail as hl
 
 
-def _empty_entries(ht: hl.Table) -> hl.StructExpression:
-    first_sample_ids_row = ht.aggregate(hl.agg.take(ht.entries.sample_id, 1))
-    if not len(first_sample_ids_row):
-        return hl.empty_array(ht.entries.dtype.element_type)
-    return [
-        hl.Struct(
-            **{
-                k: hl.missing(v)
-                for k, v in ht.entries.dtype.element_type.items()
-                if k != 'sample_id'
-            },
-            sample_id=sample_id,
-        )
-        for sample_id in first_sample_ids_row[0]
-    ]
-
-
 def globalize_sample_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate_globals(
         sample_ids=ht.aggregate(hl.agg.take(ht.entries.sample_id, 1)[0]),
@@ -35,23 +18,30 @@ def deglobalize_sample_ids(ht: hl.Table) -> hl.Table:
     )
     return ht.drop('sample_ids')
 
+def remove_callset_sample_ids(
+    sample_lookup_ht: hl.Table,
+    sample_subset_ht: hl.Table,
+) -> hl.Table:
+    sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
+    return ht.annotate(
+        entries=(
+            ht.entries.filter(lambda e: ~hl.set(sample_ids).contains(e.sample_id))
+        ),
+    )
 
 def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
-    ht_empty_entries = _empty_entries(ht)
-    callset_ht_empty_entries = _empty_entries(callset_ht)
+    ht_empty_entries = hl.empty_array(ht.entries.dtype.element_type)
+    callset_ht_empty_entries = _hl.empty_array(callset_ht.entries.dtype.element_type)
     ht = ht.join(callset_ht, 'outer')
     return ht.select(
         filters=hl.or_else(ht.filters_1, ht.filters),
-        entries=hl.sorted(
-            (
-                hl.case()
-                .when(hl.is_missing(ht.entries), ht.entries_1.extend(ht_empty_entries))
-                .when(
-                    hl.is_missing(ht.entries_1),
-                    ht.entries.extend(callset_ht_empty_entries),
-                )
-                .default(ht.entries.extend(ht.entries_1))
-            ),
-            key=lambda e: e.sample_id,
+        entries=(
+            hl.case()
+            .when(hl.is_missing(ht.entries), ht_empty_entries.extend(ht.entries_1))
+            .when(
+                hl.is_missing(ht.entries_1),
+                ht.entries.extend(callset_ht_empty_entries),
+            )
+            .default(ht.entries.extend(ht.entries_1))
         ),
     )
