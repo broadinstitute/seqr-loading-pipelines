@@ -1,4 +1,4 @@
-Project_GUID	Family_ID	Individual_ID	Paternal_ID	Maternal_ID	Sex
-R0113_test_project	abc	HG00731_1			F
-R0113_test_project	abc	HG00732_1			M
-R0113_test_project	abc	HG00733_1	HG00732_1	HG00731_1	F
+Project_GUID	Family_GUID	Family_ID	Individual_ID	Paternal_ID	Maternal_ID	Sex
+R0113_test_project	abc_1	abc	HG00731_1			F
+R0113_test_project	abc_1	abc	HG00732_1			M
+R0113_test_project	abc_1	abc	HG00733_1	HG00732_1	HG00731_1	F

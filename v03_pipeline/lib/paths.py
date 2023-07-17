@@ -52,7 +52,7 @@ def family_table_path(
     env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    family_id: str,
+    family_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
@@ -62,7 +62,7 @@ def family_table_path(
             dataset_type,
         ),
         'families',
-        family_id,
+        family_guid,
         'samples.ht',
     )
 

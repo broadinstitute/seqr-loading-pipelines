@@ -41,19 +41,19 @@ class PedigreesTest(unittest.TestCase):
 
         self.assertCountEqual(
             [
-                f.family_id
+                f.family_guid
                 for f in families_to_exclude(pedigree_ht, samples_ht).collect()
             ],
-            ['BBL_HT-007-5195'],
+            ['BBL_HT-007-5195_1'],
         )
         self.assertCountEqual(
             [
-                f.family_id
+                f.family_guid
                 for f in families_to_include(pedigree_ht, samples_ht).collect()
             ],
             [
-                'BBL_SDS1-000178',
-                'BBL_BC1-000345',
+                'BBL_SDS1-000178_1',
+                'BBL_BC1-000345_1',
             ],
         )
         self.assertCountEqual(
