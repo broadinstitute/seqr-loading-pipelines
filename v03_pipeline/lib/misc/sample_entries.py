@@ -31,6 +31,7 @@ def filter_callset_sample_ids(
     ht: hl.Table,
     sample_subset_ht: hl.Table,
 ) -> hl.Table:
+    # Removes sample id calls that have been re-called.
     sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
     ht = deglobalize_sample_ids(ht)
     ht = ht.annotate(

@@ -313,16 +313,16 @@ class SampleEntriesTest(unittest.TestCase):
                     id=0,
                     filters={'HIGH_SR_BACKGROUND'},
                     entries=[
-                        hl.Struct(a=1),
                         hl.Struct(a=2),
+                        hl.Struct(a=1),
                     ],
                 ),
                 hl.Struct(
                     id=1,
                     filters={'HIGH_SR_BACKGROUND'},
                     entries=[
-                        hl.Struct(a=2),
-                        hl.Struct(a=5),
+                        hl.Struct(a=3),
+                        hl.Struct(a=4),
                     ],
                 ),
             ],
