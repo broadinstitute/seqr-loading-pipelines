@@ -36,7 +36,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
-            family_guid='abc',
+            family_guid='abc_1',
         )
         worker.add(wft_task)
         worker.run()
