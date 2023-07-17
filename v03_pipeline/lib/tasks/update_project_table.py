@@ -5,8 +5,8 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
-    deglobalize_sample_ids,
     filter_callset_sample_ids,
+    filter_hom_ref_rows,
     globalize_sample_ids,
     union_entries_hts,
 )
@@ -77,9 +77,8 @@ class UpdateProjectTableTask(BasePipelineTask):
 
     def update(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = deglobalize_sample_ids(ht)
+        ht = ht.repartition(500)
         ht = filter_callset_sample_ids(ht, callset_mt.cols())
-        ht = globalize_sample_ids(ht)
         callset_ht = callset_mt.select_rows(
             filters=callset_mt.filters,
             entries=hl.sorted(
@@ -98,6 +97,7 @@ class UpdateProjectTableTask(BasePipelineTask):
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
         ht = union_entries_hts(ht, callset_ht)
+        ht = filter_hom_ref_rows(ht)
         ht = ht.naive_coalesce(1)
         return ht.annotate_globals(
             updates=ht.updates.add(self.callset_path),

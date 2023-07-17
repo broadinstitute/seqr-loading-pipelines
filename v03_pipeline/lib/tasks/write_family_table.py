@@ -6,7 +6,10 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_pedigree, write
 from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
+from v03_pipeline.lib.misc.sample_entries import (
+    filter_hom_ref_rows,
+    globalize_sample_ids,
+)
 from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import family_table_path
@@ -86,6 +89,7 @@ class WriteFamilyTableTask(BasePipelineTask):
             ),
         ).rows()
         ht = globalize_sample_ids(ht)
+        ht = filter_hom_ref_rows(ht)
         ht = ht.naive_coalesce(1)
         ht = ht.annotate_globals(
             updates={self.callset_path},

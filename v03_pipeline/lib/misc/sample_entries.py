@@ -8,8 +8,10 @@ def globalize_sample_ids(ht: hl.Table) -> hl.Table:
             # NB: normal python expression here because the row is localized.
             # I had an easier time with this than hl.agg.take(1), which was an
             # alternative implementation.
-            [e.s for e in row[0].entries] if len(row) > 0 else hl.empty_array(hl.tstr)
-        )
+            [e.s for e in row[0].entries]
+            if len(row) > 0
+            else hl.empty_array(hl.tstr)
+        ),
     )
     return ht.annotate(entries=ht.entries.map(lambda s: s.drop('s')))
 
@@ -30,9 +32,17 @@ def filter_callset_sample_ids(
     sample_subset_ht: hl.Table,
 ) -> hl.Table:
     sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
-    return ht.annotate(
+    ht = deglobalize_sample_ids(ht)
+    ht = ht.annotate(
         entries=(ht.entries.filter(lambda e: ~hl.set(sample_ids).contains(e.s))),
     )
+    return globalize_sample_ids(ht)
+
+
+def filter_hom_ref_rows(
+    ht: hl.Table,
+) -> hl.Table:
+    return ht.filter(ht.entries.any(lambda e: (e.GT.is_het() | e.GT.is_hom_var())))
 
 
 def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
@@ -55,6 +65,4 @@ def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
             .default(ht.entries.extend(ht.entries_1))
         ),
     )
-    return ht.transmute_globals(
-        sample_ids = ht.sample_ids.extend(ht.sample_ids_1)
-    )
+    return ht.transmute_globals(sample_ids=ht.sample_ids.extend(ht.sample_ids_1))

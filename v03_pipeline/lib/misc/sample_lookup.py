@@ -50,9 +50,8 @@ def union_sample_lookup_hts(
 ) -> hl.Table:
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
     for field in ['ref_samples', 'het_samples', 'hom_samples']:
-        # If the row exists in the new callset but not the existing sample lookup table
-        # we need to materialize the missing struct of projects w/ empty sets, else
-        # the "missing" propagates and gobbles up the "union" below.
+        # For rows that are "missing" in the existing sample lookup table,
+        # initialize all projects as empty sets.
         sample_lookup_ht = sample_lookup_ht.annotate(
             **{
                 field: hl.or_else(
