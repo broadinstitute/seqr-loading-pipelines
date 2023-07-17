@@ -52,50 +52,13 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                 ['HG00731_1', 'HG00732_1', 'HG00733_1'],
             ],
         )
-
+        self.assertEqual(
+            ht.count(),
+            16,
+        )
         self.assertCountEqual(
             ht.entries.collect()[:5],
             [
-                [
-                    hl.Struct(
-                        GQ=99,
-                        AB=0.0,
-                        DP=34,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                    hl.Struct(
-                        GQ=99,
-                        AB=0.0,
-                        DP=34,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                    hl.Struct(
-                        GQ=99,
-                        AB=0.0,
-                        DP=37,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                ],
-                [
-                    hl.Struct(
-                        GQ=99,
-                        AB=0.0,
-                        DP=37,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                    hl.Struct(
-                        GQ=66,
-                        AB=0.0,
-                        DP=24,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                    hl.Struct(
-                        GQ=96,
-                        AB=0.0,
-                        DP=32,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
-                    ),
-                ],
                 [
                     hl.Struct(
                         GQ=21,
@@ -140,20 +103,60 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                     hl.Struct(
                         GQ=99,
                         AB=0.0,
-                        DP=35,
+                        DP=66,
                         GT=hl.Call(alleles=[0, 0], phased=False),
                     ),
                     hl.Struct(
-                        GQ=72,
+                        GQ=99,
+                        AB=0.5283018867924528,
+                        DP=53,
+                        GT=hl.Call(alleles=[0, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        GQ=99,
                         AB=0.0,
-                        DP=24,
+                        DP=55,
+                        GT=hl.Call(alleles=[0, 0], phased=False),
+                    ),
+                ],
+                [
+                    hl.Struct(
+                        GQ=99,
+                        AB=1.0,
+                        DP=39,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        GQ=99,
+                        AB=0.0,
+                        DP=61,
                         GT=hl.Call(alleles=[0, 0], phased=False),
                     ),
                     hl.Struct(
-                        GQ=93,
-                        AB=0.0,
-                        DP=31,
-                        GT=hl.Call(alleles=[0, 0], phased=False),
+                        GQ=99,
+                        AB=0.4146341463414634,
+                        DP=41,
+                        GT=hl.Call(alleles=[0, 1], phased=False),
+                    ),
+                ],
+                [
+                    hl.Struct(
+                        GQ=12,
+                        AB=1.0,
+                        DP=4,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        GQ=9,
+                        AB=1.0,
+                        DP=3,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                    ),
+                    hl.Struct(
+                        GQ=18,
+                        AB=1.0,
+                        DP=6,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
                     ),
                 ],
             ],
