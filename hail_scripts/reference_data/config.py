@@ -207,10 +207,10 @@ CONFIG = {
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
-                    'DFP',
                     'DM',
                     'DM?',
                     'DP',
+                    'DFP',
                     'FP',
                     'R',
                 ],
@@ -222,10 +222,10 @@ CONFIG = {
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
                 'class': [
-                    'DFP',
                     'DM',
                     'DM?',
                     'DP',
+                    'DFP',
                     'FP',
                     'R',
                 ],
