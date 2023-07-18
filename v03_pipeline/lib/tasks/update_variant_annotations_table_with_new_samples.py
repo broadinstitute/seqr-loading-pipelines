@@ -83,6 +83,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             (lambda ht1, ht2: ht1.union(ht2, unify=True)),
             callset_hts,
         )
+        callset_ht = callset_ht.distinct()
 
         # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
