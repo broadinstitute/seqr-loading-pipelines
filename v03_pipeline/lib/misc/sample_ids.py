@@ -52,6 +52,10 @@ def subset_samples(
     subset_count = sample_subset_ht.count()
     anti_join_ht = sample_subset_ht.anti_join(mt.cols())
     anti_join_ht_count = anti_join_ht.count()
+    if subset_count == 0:
+        message = '0 sample ids found the subset HT, something is probably wrong.'
+        raise MatrixTableSampleSetError(message, [])
+
     if anti_join_ht_count != 0:
         missing_samples = anti_join_ht.s.collect()
         message = (
