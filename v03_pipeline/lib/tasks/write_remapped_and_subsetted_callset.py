@@ -9,7 +9,7 @@ from v03_pipeline.lib.misc.io import (
     import_remap,
     write,
 )
-from v03_pipeline.lib.misc.pedigree import samples_to_include
+from v03_pipeline.lib.misc.pedigree import families_to_include, samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
@@ -67,10 +67,14 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
             callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
 
         pedigree_ht = import_pedigree(self.project_pedigree_path)
-        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
+        families_to_include_ht = families_to_include(pedigree_ht, callset_mt.cols())
+        sample_subset_ht = samples_to_include(pedigree_ht, families_to_include_ht)
         callset_mt = subset_samples(
             callset_mt,
             sample_subset_ht,
             self.ignore_missing_samples,
+        )
+        callset_mt = callset_mt.select_globals(
+            family_guids=sorted(families_to_include_ht.family_guid.collect()),
         )
         write(self.env, callset_mt, self.output().path, False)

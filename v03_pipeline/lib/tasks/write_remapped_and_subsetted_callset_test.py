@@ -48,3 +48,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)
         self.assertEqual(mt.count(), (30, 3))
+        self.assertEqual(
+            mt.globals.collect(),
+            [hl.Struct(family_guids=['abc_1'])],
+        )

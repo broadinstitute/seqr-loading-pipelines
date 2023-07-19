@@ -21,11 +21,8 @@ def families_to_include(pedigree_ht: hl.Table, samples_ht: hl.Table) -> hl.Table
 
 def samples_to_include(
     pedigree_ht: hl.Table,
-    samples_ht: hl.Table,
-    family_guid: str | None = None,
+    families_to_include_ht: hl.Table,
 ) -> hl.Table:
-    ht = pedigree_ht.join(families_to_include(pedigree_ht, samples_ht))
-    if family_guid:
-        ht = ht.filter(ht.family_guid == family_guid)
+    ht = pedigree_ht.join(families_to_include_ht)
     ht = ht.key_by(ht.s)
     return ht.select()

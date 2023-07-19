@@ -57,35 +57,17 @@ class PedigreesTest(unittest.TestCase):
             ],
         )
         self.assertCountEqual(
-            [s.s for s in samples_to_include(pedigree_ht, samples_ht).collect()],
+            [
+                s.s
+                for s in samples_to_include(
+                    pedigree_ht,
+                    families_to_include(pedigree_ht, samples_ht),
+                ).collect()
+            ],
             [
                 'BBL_SDS1-000178_01_D1',
                 'BBL_BC1-000345_01_D1',
                 'BBL_BC1-000345_02_D1',
                 'BBL_BC1-000345_03_D1',
             ],
-        )
-        self.assertCountEqual(
-            [
-                s.s
-                for s in samples_to_include(
-                    pedigree_ht,
-                    samples_ht,
-                    'BBL_SDS1-000178_1',
-                ).collect()
-            ],
-            [
-                'BBL_SDS1-000178_01_D1',
-            ],
-        )
-        self.assertCountEqual(
-            [
-                s.s
-                for s in samples_to_include(
-                    pedigree_ht,
-                    samples_ht,
-                    'BBL_HT-007-5195',
-                ).collect()
-            ],
-            [],
         )

@@ -57,7 +57,9 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
             [
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=876499, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
                     filters=set(),
@@ -84,7 +86,9 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=878314, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=878314,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
                     filters=set(),
@@ -96,7 +100,10 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
                             GT=hl.Call(alleles=[0, 1], phased=False),
                         ),
                         hl.Struct(
-                            GQ=6, AB=0.0, DP=2, GT=hl.Call(alleles=[0, 0], phased=False),
+                            GQ=6,
+                            AB=0.0,
+                            DP=2,
+                            GT=hl.Call(alleles=[0, 0], phased=False),
                         ),
                         hl.Struct(
                             GQ=61,
