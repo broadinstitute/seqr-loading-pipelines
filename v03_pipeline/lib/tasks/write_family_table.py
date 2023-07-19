@@ -4,22 +4,23 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_entries import (
-    filter_callset_entries,
     filter_hom_ref_rows,
     globalize_sample_ids,
-    join_entries_hts,
 )
+from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.model import AnnotationType
-from v03_pipeline.lib.paths import project_table_path
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
+from v03_pipeline.lib.paths import family_table_path
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateProjectTableTask(BaseUpdateTask):
+class WriteFamilyTableTask(BaseWriteTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -28,23 +29,22 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    family_guid = luigi.ListParameter()
     single_partition = True
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            project_table_path(
+            family_table_path(
                 self.env,
                 self.reference_genome,
                 self.dataset_type,
-                self.project_guid,
+                self.family_guid,
             ),
         )
 
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(
-                self.callset_path,
-            ),
+            hl.read_table(self.output().path).updates.contains(self.callset_path),
         )
 
     def requires(self) -> luigi.Task:
@@ -60,29 +60,31 @@ class UpdateProjectTableTask(BaseUpdateTask):
             self.ignore_missing_samples,
         )
 
-    def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                **key_type,
-                filters=hl.tset(hl.tstr),
-                entries=hl.tarray(self.dataset_type.sample_entries_type),
-            ),
-            key=key_type.fields,
-            globals=hl.Struct(
-                sample_ids=hl.empty_array(hl.tstr),
-                updates=hl.empty_set(hl.tstr),
+    def create_ht(self) -> None:
+        pedigree_ht = import_pedigree(self.project_pedigree_path)
+        callset_mt = hl.read_matrix_table(self.input().path)
+        callset_family_guids = set(callset_mt.family_guids.collect()[0])
+        if self.family_guid not in callset_family_guids:
+            msg = f'Family: {self.family_guid} was not complete in this callset'
+            raise ValueError(msg)
+        sample_subset_ht = samples_to_include(
+            pedigree_ht,
+            hl.Table.parallelize(
+                [
+                    {'family_guid': self.family_guid},
+                ],
+                hl.tstruct(
+                    family_guid=hl.dtype('str'),
+                ),
+                key='family_guid',
             ),
         )
-
-    def update_ht(self, ht: hl.Table) -> hl.Table:
-        callset_mt = hl.read_matrix_table(self.input().path)
-        callset_ht = callset_mt.select_rows(
+        callset_mt = subset_samples(callset_mt, sample_subset_ht, False)
+        ht = callset_mt.select_rows(
             filters=callset_mt.filters,
             entries=hl.sorted(
                 hl.agg.collect(
-                    hl.Struct(
+                    hl.struct(
                         s=callset_mt.s,
                         **get_fields(
                             callset_mt,
@@ -94,10 +96,8 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 key=lambda e: e.s,
             ),
         ).rows()
-        callset_ht = globalize_sample_ids(callset_ht)
-        callset_ht = filter_hom_ref_rows(callset_ht)
-        ht = filter_callset_entries(ht, callset_mt.cols())
-        ht = join_entries_hts(ht, callset_ht)
+        ht = globalize_sample_ids(ht)
+        ht = filter_hom_ref_rows(ht)
         return ht.annotate_globals(
-            updates=ht.updates.add(self.callset_path),
+            updates={self.callset_path},
         )

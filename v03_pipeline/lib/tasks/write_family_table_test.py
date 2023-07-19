@@ -8,7 +8,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.tasks.write_family_tables import WriteFamilyTablesTask
+from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -16,7 +16,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
-class WriteFamilyTablesTaskTest(unittest.TestCase):
+class WriteFamilyTableTaskTest(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 
@@ -24,11 +24,11 @@ class WriteFamilyTablesTaskTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_datasets):
             shutil.rmtree(self._temp_local_datasets)
 
-    def test_write_family_tables_task(self, mock_dataroot: Mock) -> None:
+    def test_write_family_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
-        wft_task = WriteFamilyTablesTask(
+        wft_task = WriteFamilyTableTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -36,7 +36,7 @@ class WriteFamilyTablesTaskTest(unittest.TestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
-            family_guids=['abc_1'],
+            family_guid='abc_1',
         )
         worker.add(wft_task)
         worker.run()

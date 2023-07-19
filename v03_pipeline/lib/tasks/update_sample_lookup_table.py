@@ -9,14 +9,14 @@ from v03_pipeline.lib.misc.sample_lookup import (
     union_sample_lookup_hts,
 )
 from v03_pipeline.lib.paths import sample_lookup_table_path
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateSampleLookupTableTask(BaseWriteTask):
+class UpdateSampleLookupTableTask(BaseUpdateTask):
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -83,7 +83,7 @@ class UpdateSampleLookupTableTask(BaseWriteTask):
             ),
         )
 
-    def update(self, ht: hl.Table) -> hl.Table:
+    def update_ht(self, ht: hl.Table) -> hl.Table:
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
             ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)

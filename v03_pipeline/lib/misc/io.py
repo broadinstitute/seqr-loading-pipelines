@@ -93,6 +93,7 @@ def write(
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
+    single_partition: bool = False,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     if checkpoint and (env == Env.LOCAL or env == Env.TEST):
@@ -111,4 +112,8 @@ def write(
                 f'{uuid.uuid4()}.{suffix}',
             ),
         )
+    # "naive_coalesce" will decrease parallelism of hail's pipelined operations
+    #, so we sneak this re-partitioning until after the checkpoint.
+    if single_partition:
+        t = t.naive_coalesce(1)
     return t.write(destination_path, overwrite=True, stage_locally=True)

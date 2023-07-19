@@ -62,5 +62,5 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
             ),
         )
 
-    def update(self, ht: hl.Table) -> hl.Table:
+    def update_ht(self, ht: hl.Table) -> hl.Table:
         return ht

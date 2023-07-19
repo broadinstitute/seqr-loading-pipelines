@@ -66,7 +66,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
 
-    def update(self, ht: hl.Table) -> hl.Table:
+    def update_ht(self, ht: hl.Table) -> hl.Table:
         callset_hts = [
             hl.read_matrix_table(
                 remapped_and_subsetted_callset_path(
