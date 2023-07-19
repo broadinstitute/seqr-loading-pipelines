@@ -19,7 +19,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
-class UpdateProjectTableTask(BasePipelineTask):
+class UpdateProjectTableTask(BaseUpdateTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
