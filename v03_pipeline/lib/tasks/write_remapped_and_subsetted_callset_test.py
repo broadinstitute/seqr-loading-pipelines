@@ -26,7 +26,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_datasets):
             shutil.rmtree(self._temp_local_datasets)
 
-    def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
+    def test_write_remapped_and_subsetted_callset_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
