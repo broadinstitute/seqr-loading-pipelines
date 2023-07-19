@@ -29,7 +29,7 @@ class WriteFamilyTableTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    family_guid = luigi.ListParameter()
+    family_guid = luigi.Parameter()
     single_partition = True
 
     def output(self) -> luigi.Target:
