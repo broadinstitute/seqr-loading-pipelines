@@ -69,7 +69,7 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
-        ht = hl.Table.parallelize(
+        return hl.Table.parallelize(
             [],
             hl.tstruct(
                 **key_type,
@@ -78,9 +78,9 @@ class UpdateSampleLookupTableTask(BasePipelineTask):
                 hom_samples=hl.tstruct(),
             ),
             key=key_type.fields,
-        )
-        return ht.annotate_globals(
-            updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+            globals=hl.Struct(
+                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+            ),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:

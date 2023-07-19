@@ -19,7 +19,7 @@ def globalize_sample_ids(ht: hl.Table) -> hl.Table:
 def deglobalize_sample_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate(
         entries=(
-            hl.zip_with_index(ht.entries).starmap(
+            hl.enumerate(ht.entries).starmap(
                 lambda i, e: hl.Struct(**e, s=ht.sample_ids[i]),
             )
         ),
@@ -46,7 +46,7 @@ def filter_hom_ref_rows(
     return ht.filter(ht.entries.any(lambda e: (e.GT.is_het() | e.GT.is_hom_var())))
 
 
-def union_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
+def join_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     ht = ht.join(callset_ht, 'outer')
     ht_empty_entries = ht.sample_ids.map(
         lambda _: hl.missing(ht.entries_1.dtype.element_type),

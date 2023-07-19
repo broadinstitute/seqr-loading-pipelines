@@ -29,30 +29,26 @@ class WriteFamilyTablesTask(BasePipelineTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    family_guids = luigi.ListParameter()
 
-    def output(self) -> list[tuple[str, luigi.Target]]:
-        callset_mt = hl.read_matrix_table(self.input().path)
-        family_guids = callset_mt.family_guids.collect()
+    def output(self) -> list[luigi.Target]:
         return [
-            (
-                family_guid,
-                GCSorLocalTarget(
-                    family_table_path(
-                        self.env,
-                        self.reference_genome,
-                        self.dataset_type,
-                        family_guid,
-                    ),
+            GCSorLocalTarget(
+                family_table_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    family_guid,
                 ),
             )
-            for family_guid in family_guids
+            for family_guid in self.family_guids
         ]
 
     def complete(self) -> bool:
         return all(
             GCSorLocalFolderTarget(output.path).exists()
             and hl.eval(hl.read_table(output.path).updates.contains(self.callset_path))
-            for _, output in self.output()
+            for output in self.output()
         )
 
     def requires(self) -> luigi.Task:
@@ -72,7 +68,11 @@ class WriteFamilyTablesTask(BasePipelineTask):
         self.init_hail()
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         callset_mt = hl.read_matrix_table(self.input().path)
-        for family_guid, target in self.output():
+        callset_family_guids = set(callset_mt.family_guids.collect()[0])
+        for family_guid, target in zip(self.family_guids, self.output()):
+            if family_guid not in callset_family_guids:
+                msg = f'Family: {family_guid} was not complete in this callset'
+                raise ValueError(msg)
             sample_subset_ht = samples_to_include(
                 pedigree_ht,
                 hl.Table.parallelize(

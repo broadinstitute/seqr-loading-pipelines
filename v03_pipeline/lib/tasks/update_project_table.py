@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.sample_entries import (
     filter_callset_sample_ids,
     filter_hom_ref_rows,
     globalize_sample_ids,
-    union_entries_hts,
+    join_entries_hts,
 )
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import project_table_path
@@ -61,7 +61,7 @@ class UpdateProjectTableTask(BasePipelineTask):
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
-        ht = hl.Table.parallelize(
+        return hl.Table.parallelize(
             [],
             hl.tstruct(
                 **key_type,
@@ -69,21 +69,19 @@ class UpdateProjectTableTask(BasePipelineTask):
                 entries=hl.tarray(self.dataset_type.sample_entries_type),
             ),
             key=key_type.fields,
-        )
-        return ht.annotate_globals(
-            sample_ids=hl.empty_array(hl.tstr),
-            updates=hl.empty_set(hl.tstr),
+            globals=hl.Struct(
+                sample_ids=hl.empty_array(hl.tstr),
+                updates=hl.empty_set(hl.tstr),
+            ),
         )
 
     def update(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = ht.repartition(500)
-        ht = filter_callset_sample_ids(ht, callset_mt.cols())
         callset_ht = callset_mt.select_rows(
             filters=callset_mt.filters,
             entries=hl.sorted(
                 hl.agg.collect(
-                    hl.struct(
+                    hl.Struct(
                         s=callset_mt.s,
                         **get_fields(
                             callset_mt,
@@ -96,7 +94,9 @@ class UpdateProjectTableTask(BasePipelineTask):
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
-        ht = union_entries_hts(ht, callset_ht)
+        ht = ht.repartition(500)
+        ht = filter_callset_sample_ids(ht, callset_mt.cols())
+        ht = join_entries_hts(ht, callset_ht)
         ht = filter_hom_ref_rows(ht)
         ht = ht.naive_coalesce(1)
         return ht.annotate_globals(

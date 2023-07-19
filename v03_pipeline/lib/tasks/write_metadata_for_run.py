@@ -66,5 +66,6 @@ class WriteMetadataForRunTask(BasePipelineTask):
         ):
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
             metadata_json['projects'][project_guid] = callset_mt.cols().s.collect()
+
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

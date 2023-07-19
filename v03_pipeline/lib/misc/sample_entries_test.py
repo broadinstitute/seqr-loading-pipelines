@@ -7,7 +7,7 @@ from v03_pipeline.lib.misc.sample_entries import (
     filter_callset_sample_ids,
     filter_hom_ref_rows,
     globalize_sample_ids,
-    union_entries_hts,
+    join_entries_hts,
 )
 
 
@@ -103,7 +103,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
         )
 
-    def test_union_entries_hts_empty_current_table(self) -> None:
+    def test_join_entries_hts_empty_current_table(self) -> None:
         entries_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -141,7 +141,7 @@ class SampleEntriesTest(unittest.TestCase):
             key='id',
             globals=hl.Struct(sample_ids=['b', 'g']),
         )
-        ht = union_entries_hts(entries_ht, callset_ht)
+        ht = join_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
             ht.entries.collect(),
             [
@@ -156,7 +156,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
         )
 
-    def test_union_entries_hts(self) -> None:
+    def test_join_entries_hts(self) -> None:
         entries_ht = hl.Table.parallelize(
             [
                 {
@@ -215,7 +215,7 @@ class SampleEntriesTest(unittest.TestCase):
             key='id',
             globals=hl.Struct(sample_ids=['b', 'g']),
         )
-        ht = union_entries_hts(entries_ht, callset_ht)
+        ht = join_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(sample_ids=['a', 'c', 'e', 'f', 'b', 'g'])],

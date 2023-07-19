@@ -36,15 +36,16 @@ class WriteFamilyTablesTaskTest(unittest.TestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
+            family_guids=['abc_1'],
         )
         worker.add(wft_task)
         worker.run()
         self.assertEqual(
-            wft_task.output().path,
+            wft_task.output()[0].path,
             f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc_1/samples.ht',
         )
         self.assertTrue(wft_task.complete())
-        ht = hl.read_table(wft_task.output().path)
+        ht = hl.read_table(wft_task.output()[0].path)
         self.assertCountEqual(
             ht.globals.sample_ids.collect(),
             [
