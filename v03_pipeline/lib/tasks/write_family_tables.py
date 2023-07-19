@@ -38,7 +38,10 @@ class WriteFamilyTablesTask(BasePipelineTask):
                 family_guid,
                 GCSorLocalTarget(
                     family_table_path(
-                        self.env, self.reference_genome, self.dataset_type, family_guid,
+                        self.env,
+                        self.reference_genome,
+                        self.dataset_type,
+                        family_guid,
                     ),
                 ),
             )
