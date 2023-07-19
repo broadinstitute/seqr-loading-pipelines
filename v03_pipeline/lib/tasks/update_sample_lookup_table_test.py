@@ -51,7 +51,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         self.assertEqual(
             ht.globals.collect(),
             [
-                hl.Struct(callset=TEST_VCF, project_guid='R0113_test_project'),
+                hl.Struct(updates={hl.Struct(callset=TEST_VCF, project_guid='R0113_test_project')}),
             ]
         )
         self.assertCountEqual(
