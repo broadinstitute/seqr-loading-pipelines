@@ -32,7 +32,13 @@ class BaseWriteTask(luigi.Task):
     def run(self) -> None:
         self.init_hail()
         ht = self.create_ht()
-        write(self.env, ht, self.output().path, checkpoint=False, single_partition=self.single_partition)
+        write(
+            self.env,
+            ht,
+            self.output().path,
+            checkpoint=False,
+            single_partition=self.single_partition,
+        )
 
     def create_ht(self) -> hl.Table:
         raise NotImplementedError
