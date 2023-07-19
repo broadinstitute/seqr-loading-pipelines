@@ -5,7 +5,7 @@ from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 
-class BasePipelineTask(luigi.Task):
+class BaseWriteTask(luigi.Task):
     env = luigi.EnumParameter(enum=Env)
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
@@ -30,15 +30,8 @@ class BasePipelineTask(luigi.Task):
 
     def run(self) -> None:
         self.init_hail()
-        if not self.output().exists():
-            ht = self.initialize_table()
-        else:
-            ht = hl.read_table(self.output().path)
-        ht = self.update(ht)
+        ht = self.create_ht()
         write(self.env, ht, self.output().path)
 
-    def initialize_table(self) -> hl.Table:
-        raise NotImplementedError
-
-    def update(self, ht: hl.Table) -> hl.Table:
+    def create_ht(self) -> hl.Table:
         raise NotImplementedError

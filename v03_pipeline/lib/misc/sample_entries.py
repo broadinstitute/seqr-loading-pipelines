@@ -27,7 +27,7 @@ def deglobalize_sample_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('sample_ids')
 
 
-def filter_callset_sample_ids(
+def filter_callset_entries(
     ht: hl.Table,
     sample_subset_ht: hl.Table,
 ) -> hl.Table:

@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
-    filter_callset_sample_ids,
+    filter_callset_entries,
     filter_hom_ref_rows,
     globalize_sample_ids,
     join_entries_hts,
@@ -94,11 +94,9 @@ class UpdateProjectTableTask(BasePipelineTask):
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
-        ht = ht.repartition(500)
-        ht = filter_callset_sample_ids(ht, callset_mt.cols())
+        callset_ht = filter_hom_ref_rows(callset_ht)
+        ht = filter_callset_entries(ht, callset_mt.cols())
         ht = join_entries_hts(ht, callset_ht)
-        ht = filter_hom_ref_rows(ht)
-        ht = ht.naive_coalesce(1)
         return ht.annotate_globals(
             updates=ht.updates.add(self.callset_path),
         )

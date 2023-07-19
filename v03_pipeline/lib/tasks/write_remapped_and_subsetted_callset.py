@@ -3,16 +3,11 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.io import (
-    does_file_exist,
-    import_pedigree,
-    import_remap,
-    write,
-)
+from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import families_to_include, samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
-from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import (
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
@@ -21,7 +16,7 @@ from v03_pipeline.lib.tasks.files import (
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 
 
-class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
+class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -57,8 +52,7 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
             RawFileTask(self.project_pedigree_path),
         ]
 
-    def run(self) -> None:
-        self.init_hail()
+    def create_ht(self) -> None:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
 
         # Remap, but only if the remap file is present!
@@ -74,7 +68,6 @@ class WriteRemappedAndSubsettedCallsetTask(BasePipelineTask):
             sample_subset_ht,
             self.ignore_missing_samples,
         )
-        callset_mt = callset_mt.select_globals(
+        return callset_mt.annotate_globals(
             family_guids=sorted(families_to_include_ht.family_guid.collect()),
         )
-        write(self.env, callset_mt, self.output().path, False)

@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.io import import_pedigree, write
+from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_entries import (
     filter_hom_ref_rows,
@@ -13,14 +13,14 @@ from v03_pipeline.lib.misc.sample_entries import (
 from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import family_table_path
-from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class WriteFamilyTablesTask(BasePipelineTask):
+class WriteFamilyTablesTask(BaseWriteTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -64,12 +64,11 @@ class WriteFamilyTablesTask(BasePipelineTask):
             self.ignore_missing_samples,
         )
 
-    def run(self) -> None:
-        self.init_hail()
+    def create_ht(self) -> None:
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         callset_mt = hl.read_matrix_table(self.input().path)
         callset_family_guids = set(callset_mt.family_guids.collect()[0])
-        for family_guid, target in zip(self.family_guids, self.output()):
+        for family_guid, _target in zip(self.family_guids, self.output()):
             if family_guid not in callset_family_guids:
                 msg = f'Family: {family_guid} was not complete in this callset'
                 raise ValueError(msg)
@@ -104,8 +103,7 @@ class WriteFamilyTablesTask(BasePipelineTask):
             ).rows()
             ht = globalize_sample_ids(ht)
             ht = filter_hom_ref_rows(ht)
-            ht = ht.naive_coalesce(1)
             ht = ht.annotate_globals(
                 updates={self.callset_path},
             )
-            write(self.env, ht, target.path, False)
+        return ht

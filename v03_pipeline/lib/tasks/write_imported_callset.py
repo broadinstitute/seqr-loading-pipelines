@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import luigi
 
-from v03_pipeline.lib.misc.io import import_callset, write
+from v03_pipeline.lib.misc.io import import_callset
 from v03_pipeline.lib.paths import imported_callset_path
-from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import (
     CallsetTask,
     GCSorLocalFolderTarget,
@@ -12,7 +12,7 @@ from v03_pipeline.lib.tasks.files import (
 )
 
 
-class WriteImportedCallsetTask(BasePipelineTask):
+class WriteImportedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
 
     def output(self) -> luigi.Target:
@@ -33,12 +33,10 @@ class WriteImportedCallsetTask(BasePipelineTask):
             CallsetTask(self.callset_path),
         ]
 
-    def run(self) -> None:
-        self.init_hail()
-        callset_mt = import_callset(
+    def create_ht(self) -> None:
+        return import_callset(
             self.callset_path,
             self.env,
             self.reference_genome,
             self.dataset_type,
         )
-        write(self.env, callset_mt, self.output().path, False)

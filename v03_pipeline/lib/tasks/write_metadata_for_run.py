@@ -6,14 +6,14 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.paths import metadata_for_run_path
-from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class WriteMetadataForRunTask(BasePipelineTask):
+class WriteMetadataForRunTask(BaseWriteTask):
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -58,7 +58,6 @@ class WriteMetadataForRunTask(BasePipelineTask):
         ]
 
     def run(self) -> None:
-        self.init_hail()
         metadata_json = {'projects': {}, 'callset': self.callset_path}
         for project_guid, remapped_and_subsetted_callset in zip(
             self.project_guids,

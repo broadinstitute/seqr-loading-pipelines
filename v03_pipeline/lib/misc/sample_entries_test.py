@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.sample_entries import (
     deglobalize_sample_ids,
-    filter_callset_sample_ids,
+    filter_callset_entries,
     filter_hom_ref_rows,
     globalize_sample_ids,
     join_entries_hts,
@@ -262,7 +262,7 @@ class SampleEntriesTest(unittest.TestCase):
             ],
         )
 
-    def test_filter_callset_sample_ids(self) -> None:
+    def test_filter_callset_entries(self) -> None:
         entries_ht = hl.Table.parallelize(
             [
                 {
@@ -301,7 +301,7 @@ class SampleEntriesTest(unittest.TestCase):
             ),
             key='s',
         )
-        ht = filter_callset_sample_ids(entries_ht, sample_subset_ht)
+        ht = filter_callset_entries(entries_ht, sample_subset_ht)
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(sample_ids=['c', 'e'])],
