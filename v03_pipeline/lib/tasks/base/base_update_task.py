@@ -13,7 +13,7 @@ class BaseUpdateTask(luigi.Task):
         default=None,
         description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',
     )
-    single_partition = luigi.BoolParameter(default=False)
+    single_partition = False
 
     def output(self) -> luigi.Target:
         raise NotImplementedError

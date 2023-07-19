@@ -13,7 +13,7 @@ class BaseWriteTask(luigi.Task):
         default=None,
         description='Networked temporary directory used by hail for temporary file storage. Must be a network-visible file path.',
     )
-    single_partition = luigi.BoolParameter(default=False)
+    single_partition = False
 
     def output(self) -> luigi.Target:
         raise NotImplementedError
@@ -32,7 +32,7 @@ class BaseWriteTask(luigi.Task):
     def run(self) -> None:
         self.init_hail()
         ht = self.create_ht()
-        write(self.env, ht, self.output().path, checkpoint=False, self.single_partition)
+        write(self.env, ht, self.output().path, checkpoint=False, single_partition=self.single_partition)
 
     def create_ht(self) -> hl.Table:
         raise NotImplementedError
