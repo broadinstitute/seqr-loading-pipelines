@@ -12,7 +12,7 @@ from v03_pipeline.lib.misc.sample_entries import (
 )
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import project_table_path
-from v03_pipeline.lib.tasks.base.base_pipeline_task import BasePipelineTask
+from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
