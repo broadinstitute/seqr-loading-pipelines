@@ -21,6 +21,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class WriteFamilyTableTask(BaseWriteTask):
+    n_partitions = 10
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -30,7 +31,6 @@ class WriteFamilyTableTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     family_guid = luigi.Parameter()
-    single_partition = True
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

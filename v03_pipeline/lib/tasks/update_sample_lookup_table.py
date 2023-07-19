@@ -17,6 +17,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class UpdateSampleLookupTableTask(BaseUpdateTask):
+    n_partitions = 100
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -92,7 +93,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
                 compute_callset_sample_lookup_ht(callset_mt),
                 project_guid,
             )
-            ht = ht.annotate_globals(
+            ht = ht.select_globals(
                 updates=ht.updates.add(
                     hl.Struct(callset=self.callset_path, project_guid=project_guid),
                 ),

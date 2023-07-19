@@ -20,6 +20,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class UpdateProjectTableTask(BaseUpdateTask):
+    n_partitions = 10
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -28,7 +29,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    single_partition = True
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

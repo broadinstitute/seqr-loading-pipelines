@@ -48,6 +48,12 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
         ht = hl.read_table(uslt_task.output().path)
+        self.assertEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(callset=TEST_VCF, project_guid='R0113_test_project'),
+            ]
+        )
         self.assertCountEqual(
             [x for x in ht.collect() if x.locus.position <= 883625],  # noqa: PLR2004
             [

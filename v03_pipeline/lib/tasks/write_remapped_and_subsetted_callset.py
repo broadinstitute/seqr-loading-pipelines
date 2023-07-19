@@ -17,6 +17,7 @@ from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTa
 
 
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
+    n_partitions = 100
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
