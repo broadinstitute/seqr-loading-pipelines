@@ -86,7 +86,11 @@ def get_enum_select_fields(enum_selects, ht):
     return enum_select_fields
 
 
-def get_ht(dataset: str, reference_dataset_collection: ReferenceDatasetCollection, reference_genome: ReferenceGenome):
+def get_ht(
+    dataset: str,
+    reference_dataset_collection: ReferenceDatasetCollection,
+    reference_genome: ReferenceGenome,
+):
     config = CONFIG[dataset][reference_genome.v02_value]
     ht = (
         config['custom_import'](config['source_path'], reference_genome.v02_value)
@@ -98,7 +102,11 @@ def get_ht(dataset: str, reference_dataset_collection: ReferenceDatasetCollectio
             hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig),
         )
 
-    ht = ht.filter(config['filter'](ht, reference_dataset_collection)) if 'filter' in config else ht
+    ht = (
+        ht.filter(config['filter'](ht, reference_dataset_collection))
+        if 'filter' in config
+        else ht
+    )
     ht = ht.select(
         **{
             **get_select_fields(config.get('select'), ht),

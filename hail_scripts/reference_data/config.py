@@ -56,8 +56,14 @@ def dbnsfp_custom_select_38(ht):
     selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
     return selects
 
-def dbnsfp_custom_filter(ht: hl.Table, reference_dataset_collection: ReferenceDatasetCollection) -> hl.BooleanExpression:
-    return (reference_dataset_collection != ReferenceDatasetCollection.COMBINED_MITO | (ht.locus.contig == 'chrM'))
+
+def dbnsfp_filter(
+    ht: hl.Table, reference_dataset_collection: ReferenceDatasetCollection
+) -> hl.BooleanExpression:
+    return (
+        reference_dataset_collection != ReferenceDatasetCollection.COMBINED_MITO
+    ) | (ht.locus.contig == 'chrM')
+
 
 def custom_gnomad_select_v2(ht):
     """
@@ -192,7 +198,7 @@ CONFIG = {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
             },
-            'filter': dbnsfp_custom_filter,
+            'filter': dbnsfp_filter,
         },
     },
     'eigen': {
