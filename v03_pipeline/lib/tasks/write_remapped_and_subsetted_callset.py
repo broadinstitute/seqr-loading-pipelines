@@ -53,7 +53,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             RawFileTask(self.project_pedigree_path),
         ]
 
-    def create_ht(self) -> None:
+    def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
 
         # Remap, but only if the remap file is present!

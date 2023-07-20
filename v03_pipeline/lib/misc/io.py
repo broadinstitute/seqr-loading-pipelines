@@ -33,7 +33,6 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
 
 def import_vcf(
     callset_path: str,
-    env: Env,
     reference_genome: ReferenceGenome,
 ) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
@@ -48,19 +47,18 @@ def import_vcf(
         skip_invalid_loci=True,
         contig_recoding=recode,
         force_bgz=True,
-        min_partitions=env.min_vcf_partitions,
+        min_partitions=500,
     )
 
 
 def import_callset(
     callset_path: str,
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         return import_gcnv_bed_file(callset_path)
-    mt = import_vcf(callset_path, env, reference_genome)
+    mt = import_vcf(callset_path, reference_genome)
     if dataset_type == DatasetType.SNV:
         mt = split_multi_hts(mt)
     key_type = dataset_type.table_key_type(reference_genome)

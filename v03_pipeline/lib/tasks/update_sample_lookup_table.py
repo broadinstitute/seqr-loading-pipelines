@@ -84,7 +84,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
             ),
         )
 
-    def update_ht(self, ht: hl.Table) -> hl.Table:
+    def update_table(self, ht: hl.Table) -> hl.Table:
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
             ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)

@@ -10,6 +10,10 @@ from v03_pipeline.lib.tasks.files import (
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
 )
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import hail as hl
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
@@ -33,10 +37,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
             CallsetTask(self.callset_path),
         ]
 
-    def create_ht(self) -> None:
+    def create_table(self) -> hl.MatrixTable:
         return import_callset(
             self.callset_path,
-            self.env,
             self.reference_genome,
             self.dataset_type,
         )

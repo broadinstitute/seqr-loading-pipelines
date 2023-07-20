@@ -35,7 +35,7 @@ class BaseUpdateTask(luigi.Task):
             ht = self.initialize_table()
         else:
             ht = hl.read_table(self.output().path)
-        ht = self.update_ht(ht)
+        ht = self.update_table(ht)
         write(
             self.env,
             ht,
@@ -47,5 +47,5 @@ class BaseUpdateTask(luigi.Task):
     def initialize_table(self) -> hl.Table:
         raise NotImplementedError
 
-    def update_ht(self, ht: hl.Table) -> hl.Table:
+    def update_table(self, ht: hl.Table) -> hl.Table:
         raise NotImplementedError

@@ -60,7 +60,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.ignore_missing_samples,
         )
 
-    def create_ht(self) -> None:
+    def create_table(self) -> hl.Table:
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         callset_mt = hl.read_matrix_table(self.input().path)
         callset_family_guids = set(callset_mt.family_guids.collect()[0])
