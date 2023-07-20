@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
+    n_partitions = 500
     callset_path = luigi.Parameter()
 
     def output(self) -> luigi.Target:
