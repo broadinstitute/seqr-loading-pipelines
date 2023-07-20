@@ -37,7 +37,7 @@ class ReferenceDatasetCollection(Enum):
             ],
             ReferenceDatasetCollection.COMBINED_MITO: [
                 'clinvar',
-                'dbnsfp_mito',
+                'dbnsfp',
                 'gnomad_mito',
                 'helix_mito',
                 'hmtvar',

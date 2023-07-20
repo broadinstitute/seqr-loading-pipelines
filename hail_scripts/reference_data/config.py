@@ -14,6 +14,8 @@ from hail_scripts.reference_data.clinvar import (
 )
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
 
+from v03_pipeline.lib.model import ReferenceDatasetCollection
+
 
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
@@ -54,6 +56,8 @@ def dbnsfp_custom_select_38(ht):
     selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
     return selects
 
+def dbnsfp_custom_filter(ht: hl.Table, reference_dataset_collection: ReferenceDatasetCollection) -> hl.BooleanExpression:
+    return (reference_dataset_collection != ReferenceDatasetCollection.COMBINED_MITO | (ht.locus.contig == 'chrM'))
 
 def custom_gnomad_select_v2(ht):
     """
@@ -188,6 +192,7 @@ CONFIG = {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
             },
+            'filter': dbnsfp_custom_filter,
         },
     },
     'eigen': {
@@ -434,6 +439,3 @@ CONFIG = {
         },
     },
 }
-
-CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
-CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'

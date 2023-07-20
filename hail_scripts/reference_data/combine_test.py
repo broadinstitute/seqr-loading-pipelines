@@ -118,7 +118,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
             key='locus',
         )
-        ht = get_ht('mock_dbnsfp', ReferenceGenome.GRCh38)
+        ht = get_ht('mock_dbnsfp', ReferenceDatasetCollection.COMBINED, ReferenceGenome.GRCh38)
         self.assertCountEqual(
             ht.collect(),
             [
@@ -196,7 +196,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
         )
         mock_read_table.return_value = ht
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
+        gotten_ht = get_ht('a', ReferenceDatasetCollection.COMBINED, ReferenceGenome.GRCh38)
         self.assertCountEqual(
             gotten_ht.globals.collect(),
             [
@@ -209,7 +209,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
+        gotten_ht = get_ht('a', ReferenceDatasetCollection.COMBINED, ReferenceGenome.GRCh38)
         self.assertCountEqual(
             gotten_ht.globals.collect(),
             [
@@ -222,7 +222,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
+        gotten_ht = get_ht('a', ReferenceDatasetCollection.COMBINED, ReferenceGenome.GRCh38)
         self.assertRaises(Exception, gotten_ht.globals.collect)
 
     @mock.patch.dict(
