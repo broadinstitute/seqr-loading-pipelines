@@ -38,11 +38,11 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     def import_dataset(self):
         return hl.read_matrix_table(self.source_paths[0])
 
-    def annotate_globals(self, mt):
+    def annotate_globals(self, mt, clinvar_data):
         # Remove all existing global fields and annotate a new 'datasetType' field
         mt = mt.select_globals(datasetType=self.dataset_type)
 
-        return super().annotate_globals(mt)
+        return super().annotate_globals(mt, clinvar_data)
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
