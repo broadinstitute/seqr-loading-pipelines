@@ -21,7 +21,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class WriteFamilyTableTask(BaseWriteTask):
-    n_partitions = 10
+    n_partitions = 2
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
