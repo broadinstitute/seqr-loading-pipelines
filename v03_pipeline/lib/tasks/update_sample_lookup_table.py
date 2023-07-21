@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.misc.sample_lookup import (
     compute_callset_sample_lookup_ht,
-    remove_callset_sample_ids,
+    filter_callset_sample_ids,
     union_sample_lookup_hts,
 )
 from v03_pipeline.lib.paths import sample_lookup_table_path
@@ -87,7 +87,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
-            ht = remove_callset_sample_ids(ht, callset_mt.cols(), project_guid)
+            ht = filter_callset_sample_ids(ht, callset_mt.cols(), project_guid)
             ht = union_sample_lookup_hts(
                 ht,
                 compute_callset_sample_lookup_ht(callset_mt),

@@ -57,29 +57,22 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
     @property
-    def sample_entries_type(
-        self,
-    ) -> hl.dtype:
-        return {
-            DatasetType.SNV: hl.tstruct(
-                GQ=hl.tint32,
-                AB=hl.tfloat64,
-                DP=hl.tint32,
-                GT=hl.tcall,
-            ),
-        }[self]
-
-    @property
     def entries_fields(
         self,
     ) -> list[str]:
-        return {DatasetType.SNV: ['GT', 'AD', 'GQ']}.get(self, [])
+        return {
+            DatasetType.SNV: ['GT', 'AD', 'GQ'],
+            DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL', 'mito_cn', 'contamination'],
+        }.get(self, [])
 
     @property
     def row_fields(
         self,
     ) -> list[str]:
-        return {DatasetType.SNV: ['rsid', 'filters']}.get(self, [])
+        return {
+            DatasetType.SNV: ['rsid', 'filters'],
+            DatasetType.MITO: ['rsid', 'filters'],
+        }[self]
 
     @property
     def veppable(self) -> bool:

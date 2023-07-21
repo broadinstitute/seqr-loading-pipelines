@@ -10,7 +10,7 @@ def compute_callset_sample_lookup_ht(mt: hl.MatrixTable) -> hl.Table:
     ).rows()
 
 
-def remove_callset_sample_ids(
+def filter_callset_sample_ids(
     sample_lookup_ht: hl.Table,
     sample_subset_ht: hl.Table,
     project_guid: str,
@@ -49,36 +49,38 @@ def union_sample_lookup_hts(
     project_guid: str,
 ) -> hl.Table:
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
-    for field in ['ref_samples', 'het_samples', 'hom_samples']:
-        # For rows that are "missing" in the existing sample lookup table,
-        # initialize all projects as empty sets.
-        sample_lookup_ht = sample_lookup_ht.annotate(
-            **{
-                field: hl.or_else(
-                    sample_lookup_ht[field],
-                    hl.Struct(
-                        **{
-                            existing_project_guid: hl.empty_set(hl.tstr)
-                            for existing_project_guid in sample_lookup_ht[
-                                field
-                            ].dtype.fields
-                        },
-                    ),
-                ),
-            },
-        )
-        sample_lookup_ht = sample_lookup_ht.annotate(
-            **{
-                field: sample_lookup_ht[field].annotate(
+    fields = ['ref_samples', 'het_samples', 'hom_samples']
+    # For rows that are "missing" in the existing sample lookup table,
+    # initialize all projects (except for this one) as empty sets.
+    # It was easier to reason about this as a separate annotation pass
+    # than combined as a single annotate call.
+    sample_lookup_ht = sample_lookup_ht.annotate(
+        **{
+            field: hl.or_else(
+                sample_lookup_ht[field],
+                hl.Struct(
                     **{
-                        project_guid: (
-                            sample_lookup_ht[field]
-                            .get(project_guid, hl.empty_set(hl.tstr))
-                            .union(sample_lookup_ht[f'{field}_1'])
-                        ),
+                        existing_project_guid: hl.empty_set(hl.tstr)
+                        for existing_project_guid in sample_lookup_ht[
+                            field
+                        ].dtype.fields
                     },
                 ),
-            },
-        )
-        sample_lookup_ht = sample_lookup_ht.drop(f'{field}_1')
-    return sample_lookup_ht
+            )
+            for field in fields
+        },
+    )
+    return sample_lookup_ht.select(
+        **{
+            field: sample_lookup_ht[field].annotate(
+                **{
+                    project_guid: (
+                        sample_lookup_ht[field]
+                        .get(project_guid, hl.empty_set(hl.tstr))
+                        .union(sample_lookup_ht[f'{field}_1'])
+                    ),
+                },
+            )
+            for field in fields
+        },
+    )

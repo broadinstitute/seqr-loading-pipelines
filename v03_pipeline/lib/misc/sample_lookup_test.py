@@ -3,15 +3,13 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.sample_lookup import (
-    remove_callset_sample_ids,
+    filter_callset_sample_ids,
     union_sample_lookup_hts,
 )
 
 
 class SampleLookupTest(unittest.TestCase):
-    maxDiff = None
-
-    def test_remove_callset_sample_ids(self) -> None:
+    def test_filter_callset_sample_ids(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
             [
                 {
@@ -49,7 +47,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='s',
         )
-        sample_lookup_ht = remove_callset_sample_ids(
+        sample_lookup_ht = filter_callset_sample_ids(
             sample_lookup_ht,
             samples_ht,
             'project_1',
@@ -80,7 +78,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='s',
         )
-        sample_lookup_ht = remove_callset_sample_ids(
+        sample_lookup_ht = filter_callset_sample_ids(
             sample_lookup_ht,
             samples_ht,
             'project_2',

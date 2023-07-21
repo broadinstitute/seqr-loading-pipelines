@@ -67,7 +67,8 @@ class UpdateProjectTableTask(BaseUpdateTask):
             hl.tstruct(
                 **key_type,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(self.dataset_type.sample_entries_type),
+                # NB: entries is missing here because it is untyped
+                # until we read the type off of the first callset aggregation.
             ),
             key=key_type.fields,
             globals=hl.Struct(
@@ -96,6 +97,12 @@ class UpdateProjectTableTask(BaseUpdateTask):
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
         callset_ht = filter_hom_ref_rows(callset_ht)
+        # HACK: steal the type from callset_ht when ht is empty.
+        # This was the least gross way
+        if 'entries' not in ht.row_value:
+            ht = ht.annotate(
+                entries=hl.empty_array(callset_ht.entries.dtype.element_type),
+            )
         ht = filter_callset_entries(ht, callset_mt.cols())
         ht = join_entries_hts(ht, callset_ht)
         return ht.annotate_globals(

@@ -138,7 +138,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # code block.  It is possible (and maybe cleaner) to allow the joins
         # agains the rdcs to manage the globals, but I opted to just do a second
         # pass here to unify the logic.
-        ht = ht.drop('paths', 'versions', 'enums')
+        ht = ht.annotate_globals(
+            paths=hl.Struct(),
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        )
         for rdc in (
             self.dataset_type.joinable_reference_dataset_collections(self.env)
             + self.dataset_type.annotatable_reference_dataset_collections
@@ -153,15 +157,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(
-                    **ht.globals.get('paths', hl.Struct()),
+                    **ht.globals.paths,
                     **rdc_globals.paths,
                 ),
                 versions=hl.Struct(
-                    **ht.globals.get('versions', hl.Struct()),
+                    **ht.globals.versions,
                     **rdc_globals.versions,
                 ),
                 enums=hl.Struct(
-                    **ht.globals.get('enums', hl.Struct()),
+                    **ht.globals.enums,
                     **rdc_globals.enums,
                 ),
             )
