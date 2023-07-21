@@ -18,7 +18,7 @@ def run(env: Env, dataset: str | None):
     destination_path = valid_reference_dataset_collection_path(
         env,
         reference_genome,
-        ReferenceDatasetCollection.COMBINED_MITO,
+        ReferenceDatasetCollection.INTERVAL_MITO,
     )
     if (
         hl.hadoop_exists(os.path.join(destination_path, '_SUCCESS'))
@@ -27,14 +27,15 @@ def run(env: Env, dataset: str | None):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
-            ReferenceDatasetCollection.COMBINED_MITO,
+            ReferenceDatasetCollection.INTERVAL_MITO,
             reference_genome,
         )
     else:
         ht = join_hts(
-            ReferenceDatasetCollection.COMBINED_MITO,
+            ReferenceDatasetCollection.INTERVAL_MITO,
             reference_genome,
         )
+
     ht.describe()
     print(f'Uploading ht to {destination_path}')
     write(env, ht, destination_path)
@@ -50,12 +51,9 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--dataset',
-        choices=ReferenceDatasetCollection.COMBINED_MITO.datasets,
+        choices=ReferenceDatasetCollection.INTERVAL_MITO.datasets,
         default=None,
-        help='When passed, update the single dataset, otherwise update all datasets.',
+        help='When used, update the passed dataset, otherwise run all datasets.',
     )
     args, _ = parser.parse_known_args()
-    run(
-        args.env,
-        args.dataset,
-    )
+    run(args.env, args.dataset)

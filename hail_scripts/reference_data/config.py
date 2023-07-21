@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import hail as hl
 
 from hail_scripts.reference_data.clinvar import (
@@ -15,6 +13,13 @@ from hail_scripts.reference_data.clinvar import (
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection
+
+
+def import_locus_intervals(
+    url: str,
+    genome_version: str,
+) -> hl.Table:
+    return hl.import_locus_intervals(url, f'GRCh{genome_version}')
 
 
 def predictor_parse(field: hl.StringExpression):
@@ -58,7 +63,8 @@ def dbnsfp_custom_select_38(ht):
 
 
 def dbnsfp_filter(
-    ht: hl.Table, reference_dataset_collection: ReferenceDatasetCollection
+    ht: hl.Table,
+    reference_dataset_collection: ReferenceDatasetCollection,
 ) -> hl.BooleanExpression:
     return (
         reference_dataset_collection != ReferenceDatasetCollection.COMBINED_MITO
@@ -442,6 +448,13 @@ CONFIG = {
                 'AN': 'AN',
                 'max_hl': 'max_ARF',
             },
+        },
+    },
+    'high_constraint_region_mito': {
+        '38': {
+            'version': 'Feb-15-2022',
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
+            'custom_import': import_locus_intervals,
         },
     },
 }

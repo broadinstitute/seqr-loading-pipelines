@@ -71,9 +71,18 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV: ['rsid', 'filters'],
-            DatasetType.MITO: ['rsid', 'filters'],
+            DatasetType.MITO: [
+                'rsid',
+                'filters',
+                'common_low_heteroplasmy',
+                'hap_defining_variant',
+                'AF_het',
+                'AC_het',
+                'AN',
+                'mitotip_trna_prediction',
+            ],
         }[self]
 
     @property
     def veppable(self) -> bool:
-        return self == DatasetType.SNV or self == DatasetType.MITO
+        return self == DatasetType.SNV

@@ -6,6 +6,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import (
     gcnv,
+    mito,
     reference_dataset_collection,
     sample_lookup_table,
     shared,
@@ -40,7 +41,12 @@ ANNOTATION_CONFIG = {
         shared.GT,
     ],
     (DatasetType.MITO, AnnotationType.FORMATTING): [
+        mito.common_low_heteroplasmy,
+        mito.callset_heteroplasmy,
+        mito.haplogroup,
+        mito.mitotip,
         shared.rg37_locus,
+        mito.rsid,
         shared.sorted_transcript_consequences,
         shared.variant_id,
         shared.xpos,
