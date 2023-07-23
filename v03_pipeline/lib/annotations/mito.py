@@ -38,6 +38,14 @@ def haplogroup(ht: hl.Table, **_: Any) -> hl.Expression:
     )
 
 
+def high_constraint_region(
+    ht: hl.Table,
+    interval_mito_ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    return hl.is_defined(interval_mito_ht[ht.locus])
+
+
 def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
     return (
         hl.Struct(

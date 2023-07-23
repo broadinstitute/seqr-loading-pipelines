@@ -57,13 +57,15 @@ def import_callset(
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
-        return import_gcnv_bed_file(callset_path)
-    mt = import_vcf(callset_path, reference_genome)
+        mt = import_gcnv_bed_file(callset_path)
+    elif 'vcf' in callset_path:
+        mt = import_vcf(callset_path, reference_genome)
+    elif 'mt' in callset_path:
+        mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SNV:
         mt = split_multi_hts(mt)
-    key_type = dataset_type.table_key_type(reference_genome)
-    mt = mt.key_rows_by(*key_type.fields)
     mt = mt.select_globals()
+    mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
     mt = mt.select_rows(*dataset_type.row_fields)
     return mt.select_entries(*dataset_type.entries_fields)
 

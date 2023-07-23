@@ -73,7 +73,7 @@ class FieldsTest(unittest.TestCase):
                     ht,
                     AnnotationType.REFERENCE_DATASET_COLLECTION,
                     env=Env.TEST,
-                    dataset_type=DatasetType.MITO,
+                    dataset_type=DatasetType.SV,
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
             ),

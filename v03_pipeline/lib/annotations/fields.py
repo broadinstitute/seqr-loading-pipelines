@@ -7,7 +7,6 @@ import hail as hl
 from v03_pipeline.lib.annotations import (
     gcnv,
     mito,
-    reference_dataset_collection,
     sample_lookup_table,
     shared,
     snv,
@@ -28,8 +27,8 @@ ANNOTATION_CONFIG = {
         shared.xpos,
     ],
     (DatasetType.SNV, AnnotationType.REFERENCE_DATASET_COLLECTION): [
-        reference_dataset_collection.gnomad_non_coding_constraint,
-        reference_dataset_collection.screen,
+        snv.gnomad_non_coding_constraint,
+        snv.screen,
     ],
     (DatasetType.SNV, AnnotationType.SAMPLE_LOOKUP_TABLE): [
         sample_lookup_table.gt_stats,
@@ -53,6 +52,9 @@ ANNOTATION_CONFIG = {
     ],
     (DatasetType.MITO, AnnotationType.SAMPLE_LOOKUP_TABLE): [
         sample_lookup_table.gt_stats,
+    ],
+    (DatasetType.MITO, AnnotationType.REFERENCE_DATASET_COLLECTION): [
+        mito.high_constraint_region,
     ],
     (DatasetType.SV, AnnotationType.FORMATTING): [
         shared.rg37_locus,

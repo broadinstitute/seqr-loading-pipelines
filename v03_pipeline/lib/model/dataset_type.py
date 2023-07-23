@@ -24,6 +24,9 @@ class DatasetType(Enum):
             DatasetType.SNV: [
                 ReferenceDatasetCollection.INTERVAL,
             ],
+            DatasetType.MITO: [
+                ReferenceDatasetCollection.INTERVAL_MITO,
+            ],
         }.get(self, set())
 
     def joinable_reference_dataset_collections(
@@ -63,7 +66,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL', 'mito_cn', 'contamination'],
-        }.get(self, [])
+        }[self]
 
     @property
     def row_fields(
