@@ -29,51 +29,6 @@ class FieldsTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_reference_data):
             shutil.rmtree(self._temp_local_reference_data)
 
-    def test_get_rdc_fields(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        ht = hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
-                alleles=hl.tarray(hl.tstr),
-            ),
-            key=('locus', 'alleles'),
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    DatasetType.SNV.reference_dataset_collection_annotation_fns,
-                    {
-                        f'{rdc.value}_ht': hl.read_table(
-                            valid_reference_dataset_collection_path(
-                                Env.TEST,
-                                ReferenceGenome.GRCh38,
-                                rdc,
-                            ),
-                        )
-                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
-                    },
-                    env=Env.TEST,
-                    dataset_type=DatasetType.SNV,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            ['gnomad_non_coding_constraint', 'screen'],
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    DatasetType.SV.reference_dataset_collection_annotation_fns,
-                    {},
-                    env=Env.TEST,
-                    dataset_type=DatasetType.SV,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            [],
-        )
 
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
@@ -91,14 +46,25 @@ class FieldsTest(unittest.TestCase):
                 get_fields(
                     ht,
                     DatasetType.SNV.formatting_annotation_fns,
-                    {},
+                    {
+                        f'{rdc.value}_ht': hl.read_table(
+                            valid_reference_dataset_collection_path(
+                                Env.TEST,
+                                ReferenceGenome.GRCh38,
+                                rdc,
+                            ),
+                        )
+                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                    },
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
                     liftover_ref_path=LIFTOVER,
                 ).keys(),
             ),
-            [
+            [   
+                'screen',
+                'gnomad_non_coding_constraint',
                 'rg37_locus',
                 'rsid',
                 'sorted_transcript_consequences',
@@ -111,7 +77,16 @@ class FieldsTest(unittest.TestCase):
                 get_fields(
                     ht,
                     DatasetType.SNV.formatting_annotation_fns,
-                    {},
+                    {
+                        f'{rdc.value}_ht': hl.read_table(
+                            valid_reference_dataset_collection_path(
+                                Env.TEST,
+                                ReferenceGenome.GRCh38,
+                                rdc,
+                            ),
+                        )
+                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                    },
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh37,
@@ -119,6 +94,8 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
+                'screen',
+                'gnomad_non_coding_constraint',
                 'rsid',
                 'sorted_transcript_consequences',
                 'variant_id',

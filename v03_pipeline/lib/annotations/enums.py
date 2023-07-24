@@ -146,9 +146,9 @@ MITOTIP_PATHOGENICITIES = [
 
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
-    formatting_annotation_names = set([
+    formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns
-    ])
+    }
     if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(
             paths=hl.Struct(

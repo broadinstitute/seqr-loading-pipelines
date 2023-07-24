@@ -11,7 +11,6 @@ from v03_pipeline.lib.misc.sample_entries import (
     globalize_sample_ids,
 )
 from v03_pipeline.lib.misc.sample_ids import subset_samples
-from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
@@ -88,7 +87,7 @@ class WriteFamilyTableTask(BaseWriteTask):
                         s=callset_mt.s,
                         **get_fields(
                             callset_mt,
-                            AnnotationType.GENOTYPE_ENTRIES,
+                            self.dataset_type.genotype_entry_annotation_fns,
                             **self.param_kwargs,
                         ),
                     ),

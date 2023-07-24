@@ -103,6 +103,8 @@ class DatasetType(Enum):
     def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
+                snv.gnomad_non_coding_constraint,
+                snv.screen,
                 shared.rg37_locus,
                 shared.rsid,
                 shared.sorted_transcript_consequences,
@@ -113,6 +115,7 @@ class DatasetType(Enum):
                 mito.common_low_heteroplasmy,
                 mito.callset_heteroplasmy,
                 mito.haplogroup,
+                mito.high_constraint_region,
                 mito.mitotip,
                 shared.rg37_locus,
                 mito.rsid,
@@ -140,6 +143,14 @@ class DatasetType(Enum):
                 snv.DP,
                 shared.GT,
             ],
+            DatasetType.MITO: [
+                mito.contamination,
+                mito.DP,
+                mito.HL,
+                mito.mito_cn,
+                mito.GQ,
+                shared.GT,
+            ],
         }.get(self, [])
 
     @property
@@ -150,19 +161,5 @@ class DatasetType(Enum):
             ],
             DatasetType.MITO: [
                 sample_lookup_table.gt_stats,
-            ],
-        }.get(self, [])
-
-    @property
-    def reference_dataset_collection_annotation_fns(
-        self,
-    ) -> list[Callable[..., hl.Expression]]:
-        return {
-            DatasetType.SNV: [
-                snv.gnomad_non_coding_constraint,
-                snv.screen,
-            ],
-            DatasetType.MITO: [
-                mito.high_constraint_region,
             ],
         }.get(self, [])

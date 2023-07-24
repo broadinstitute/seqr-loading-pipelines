@@ -28,10 +28,29 @@ def callset_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
     )
 
 
+def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return mt.contamination
+
+
+def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    is_called = hl.is_defined(mt.GT)
+    return (hl.cond(is_called, hl.int(hl.min(mt.DP, 32000)), hl.missing(hl.tfloat)),)
+
+
+def GQ(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    is_called = hl.is_defined(mt.GT)
+    return hl.if_else(is_called, mt.MQ, 0)
+
+
 def haplogroup(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.Struct(
         is_defining=hl.if_else(ht.hap_defining_variant, 0, hl.missing(hl.tint)),
     )
+
+
+def HL(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    is_called = hl.is_defined(mt.GT)
+    return hl.if_else(is_called, mt.HL, 0)
 
 
 def high_constraint_region(
@@ -40,6 +59,10 @@ def high_constraint_region(
     **_: Any,
 ) -> hl.Expression:
     return hl.is_defined(interval_mito_ht[ht.locus])
+
+
+def mito_cn(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return hl.int(mt.mito_cn)
 
 
 def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
