@@ -1,7 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import hail as hl
 
-from v03_pipeline.lib.annotations.config import CONFIG
-from v03_pipeline.lib.model import AnnotationType, DatasetType
+if TYPE_CHECKING:
+    from v03_pipeline.lib.model import DatasetType
 
 BIOTYPES = [
     'IG_C_gene',
@@ -142,8 +146,10 @@ MITOTIP_PATHOGENICITIES = [
 
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
-    formatting_annotations = CONFIG[(dataset_type, AnnotationType.FORMATTING)]
-    if 'sorted_transcript_consequences' in formatting_annotations:
+    formatting_annotation_names = [
+        fa.__name__ for fa in dataset_type.formatting_annotation_fns
+    ]
+    if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(
             paths=hl.Struct(
                 **ht.paths,
@@ -162,7 +168,7 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
                 ),
             ),
         )
-    if 'mitotip' in formatting_annotations:
+    if 'mitotip' in formatting_annotation_names:
         ht = ht.annotate_globals(
             paths=hl.Struct(
                 **ht.paths,

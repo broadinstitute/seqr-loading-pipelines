@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Callable
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import (
+    gcnv,
+    mito,
+    sample_lookup_table,
+    shared,
+    snv,
+    sv,
+)
 from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
@@ -89,3 +98,71 @@ class DatasetType(Enum):
     @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV
+
+    @property
+    def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                shared.rg37_locus,
+                shared.rsid,
+                shared.sorted_transcript_consequences,
+                shared.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.MITO: [
+                mito.common_low_heteroplasmy,
+                mito.callset_heteroplasmy,
+                mito.haplogroup,
+                mito.mitotip,
+                shared.rg37_locus,
+                mito.rsid,
+                shared.sorted_transcript_consequences,
+                shared.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.SV: [
+                shared.rg37_locus,
+                sv.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.GCNV: [
+                gcnv.variant_id,
+                gcnv.xpos,
+            ],
+        }[self]
+
+    @property
+    def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                snv.GQ,
+                snv.AB,
+                snv.DP,
+                shared.GT,
+            ],
+        }.get(self, [])
+
+    @property
+    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                sample_lookup_table.gt_stats,
+            ],
+            DatasetType.MITO: [
+                sample_lookup_table.gt_stats,
+            ],
+        }.get(self, [])
+
+    @property
+    def reference_dataset_collection_annotation_fns(
+        self,
+    ) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                snv.gnomad_non_coding_constraint,
+                snv.screen,
+            ],
+            DatasetType.MITO: [
+                mito.high_constraint_region,
+            ],
+        }.get(self, [])
