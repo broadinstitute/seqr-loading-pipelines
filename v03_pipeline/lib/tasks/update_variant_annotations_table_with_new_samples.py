@@ -170,7 +170,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     **rdc_globals.enums,
                 ),
             )
-        ht = annotate_enums(ht)
+        ht = annotate_enums(ht, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

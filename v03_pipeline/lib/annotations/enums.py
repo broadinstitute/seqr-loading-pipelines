@@ -1,5 +1,8 @@
 import hail as hl
 
+from v03_pipeline.lib.annotations.fields import ANNOTATION_CONFIG
+from v03_pipeline.lib.model import AnnotationType, DatasetType
+
 BIOTYPES = [
     'IG_C_gene',
     'IG_D_gene',
@@ -138,22 +141,44 @@ MITOTIP_PATHOGENICITIES = [
 ]
 
 
-def annotate_enums(ht: hl.Table) -> hl.Table:
-    return ht.annotate_globals(
-        paths=hl.Struct(
-            **ht.paths,
-            sorted_transcript_consequences=hl.missing(hl.tstr),
-        ),
-        versions=hl.Struct(
-            **ht.versions,
-            sorted_transcript_consequences=hl.missing(hl.tstr),
-        ),
-        enums=hl.Struct(
-            **ht.enums,
-            sorted_transcript_consequences=hl.Struct(
-                biotype=BIOTYPES,
-                consequence_term=CONSEQUENCE_TERMS,
-                lof_filter=LOF_FILTERS,
+def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
+    formatting_annotations = ANNOTATION_CONFIG[
+        (dataset_type, AnnotationType.FORMATTING)
+    ]
+    if 'sorted_transcript_consequences' in formatting_annotations:
+        ht = ht.annotate_globals(
+            paths=hl.Struct(
+                **ht.paths,
+                sorted_transcript_consequences=hl.missing(hl.tstr),
             ),
-        ),
-    )
+            versions=hl.Struct(
+                **ht.versions,
+                sorted_transcript_consequences=hl.missing(hl.tstr),
+            ),
+            enums=hl.Struct(
+                **ht.enums,
+                sorted_transcript_consequences=hl.Struct(
+                    biotype=BIOTYPES,
+                    consequence_term=CONSEQUENCE_TERMS,
+                    lof_filter=LOF_FILTERS,
+                ),
+            ),
+        )
+    if 'mitotip' in formatting_annotations:
+        ht = ht.annotate_globals(
+            paths=hl.Struct(
+                **ht.paths,
+                mitotip=hl.missing(hl.tstr),
+            ),
+            versions=hl.Struct(
+                **ht.versions,
+                mitotip=hl.missing(hl.tstr),
+            ),
+            enums=hl.Struct(
+                **ht.enums,
+                mitotip=hl.Struct(
+                    pathogenicities=MITOTIP_PATHOGENICITIES,
+                ),
+            ),
+        )
+    return ht
