@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Callable
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import gcnv, sample_lookup_table, shared, snv, sv
 from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
@@ -35,9 +37,6 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
-            DatasetType.MITO: [
-                ReferenceDatasetCollection.COMBINED_MITO,
-            ],
         }.get(self, set())
         if env == Env.LOCAL:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
@@ -62,8 +61,7 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
-            DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL', 'mito_cn', 'contamination'],
-        }.get(self, [])
+        }[self]
 
     @property
     def row_fields(
@@ -71,9 +69,59 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV: ['rsid', 'filters'],
-            DatasetType.MITO: ['rsid', 'filters'],
         }[self]
 
     @property
     def veppable(self) -> bool:
-        return self == DatasetType.SNV or self == DatasetType.MITO
+        return self == DatasetType.SNV
+
+    @property
+    def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                snv.gnomad_non_coding_constraint,
+                snv.screen,
+                shared.rg37_locus,
+                shared.rsid,
+                shared.sorted_transcript_consequences,
+                shared.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.MITO: [
+                shared.rg37_locus,
+                shared.sorted_transcript_consequences,
+                shared.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.SV: [
+                shared.rg37_locus,
+                sv.variant_id,
+                shared.xpos,
+            ],
+            DatasetType.GCNV: [
+                gcnv.variant_id,
+                gcnv.xpos,
+            ],
+        }[self]
+
+    @property
+    def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                snv.GQ,
+                snv.AB,
+                snv.DP,
+                shared.GT,
+            ],
+            DatasetType.MITO: [
+                shared.GT,
+            ],
+        }[self]
+
+    @property
+    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SNV: [
+                sample_lookup_table.gt_stats,
+            ],
+        }[self]

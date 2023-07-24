@@ -5,10 +5,11 @@ import functools
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
+    sample_lookup_table_path,
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
@@ -17,7 +18,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
-from v03_pipeline.lib.vep import annotate_sorted_transcript_consequences_enums, run_vep
+from v03_pipeline.lib.vep import run_vep
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -95,65 +96,72 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.vep_config_json_path,
         )
 
-        # 2) Select down to the formatting annotations fields and
-        # any reference dataset collection annotations.
-        new_variants_ht = new_variants_ht.select(
-            **get_fields(
-                new_variants_ht,
-                AnnotationType.FORMATTING,
-                **self.param_kwargs,
-            ),
-            **get_fields(
-                new_variants_ht,
-                AnnotationType.REFERENCE_DATASET_COLLECTION,
-                **self.param_kwargs,
-            ),
-        )
-
-        # 3) Join against the reference dataset collections
-        for rdc in self.dataset_type.joinable_reference_dataset_collections(self.env):
-            rdc_ht = hl.read_table(
+        # 2) Get handles on rdc hts:
+        annotatable_rdc_hts = {
+            f'{rdc.value}_ht': hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.env,
                     self.reference_genome,
                     rdc,
                 ),
             )
-            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+            for rdc in self.dataset_type.annotatable_reference_dataset_collections
+        }
+        joinable_rdc_hts = {
+            f'{rdc.value}_ht': hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+            for rdc in self.dataset_type.joinable_reference_dataset_collections(
+                self.env,
+            )
+        }
 
-        # 4) Union with the existing variant annotations table
-        # and annotate the global variables from the new_var
-        ht = ht.union(new_variants_ht, unify=True)
-        ht = ht.annotate(
+        # 3) Select down to the formatting annotations fields and
+        # anyreference dataset collection annotations.
+        new_variants_ht = new_variants_ht.select(
             **get_fields(
-                ht,
-                AnnotationType.SAMPLE_LOOKUP_TABLE,
+                new_variants_ht,
+                self.dataset_type.formatting_annotation_fns,
+                annotatable_rdc_hts,
                 **self.param_kwargs,
             ),
         )
 
-        # 5) Fix up the globals.
-        # NB: There's some duplication (of hl.read_table) here in order to
-        # ensure that all of the global annotating code happens within this
-        # code block.  It is possible (and maybe cleaner) to allow the joins
-        # agains the rdcs to manage the globals, but I opted to just do a second
-        # pass here to unify the logic.
+        # 4) Join against the reference dataset collections that are not "annotated".
+        for rdc_ht in joinable_rdc_hts.values():
+            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+
+        # 5) Union with the existing variant annotations table
+        # and annotate with the sample lookup table.
+        ht = ht.union(new_variants_ht, unify=True)
+        ht = ht.annotate(
+            **get_fields(
+                ht,
+                self.dataset_type.sample_lookup_table_annotation_fns,
+                {
+                    'sample_lookup_ht': hl.read_table(
+                        sample_lookup_table_path(
+                            self.env,
+                            self.reference_genome,
+                            self.dataset_type,
+                        ),
+                    ),
+                },
+                **self.param_kwargs,
+            ),
+        )
+
+        # 6) Fix up the globals.
         ht = ht.annotate_globals(
             paths=hl.Struct(),
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in (
-            self.dataset_type.joinable_reference_dataset_collections(self.env)
-            + self.dataset_type.annotatable_reference_dataset_collections
-        ):
-            rdc_ht = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
+        for rdc_ht in annotatable_rdc_hts.values() + joinable_rdc_hts.values():
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(
@@ -169,7 +177,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     **rdc_globals.enums,
                 ),
             )
-        ht = annotate_sorted_transcript_consequences_enums(ht)
+        ht = annotate_enums(ht, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

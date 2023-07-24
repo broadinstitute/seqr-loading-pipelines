@@ -6,8 +6,8 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id as expression_helpers
 
-from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.vep import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
+from v03_pipeline.lib.annotations.enums import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))

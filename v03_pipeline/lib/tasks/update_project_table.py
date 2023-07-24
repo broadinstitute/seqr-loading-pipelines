@@ -10,7 +10,6 @@ from v03_pipeline.lib.misc.sample_entries import (
     globalize_sample_ids,
     join_entries_hts,
 )
-from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
@@ -87,7 +86,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
                         s=callset_mt.s,
                         **get_fields(
                             callset_mt,
-                            AnnotationType.GENOTYPE_ENTRIES,
+                            self.dataset_type.genotype_entry_annotation_fns,
                             **self.param_kwargs,
                         ),
                     ),

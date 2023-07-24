@@ -196,9 +196,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
         )
         mock_read_table.return_value = ht
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
+        ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
-            gotten_ht.globals.collect(),
+            ht.globals.collect(),
             [
                 hl.Struct(
                     path='gs://a.com',
@@ -209,9 +209,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
+        ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
-            gotten_ht.globals.collect(),
+            ht.globals.collect(),
             [
                 hl.Struct(
                     path='gs://a.com',
@@ -222,8 +222,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
-        gotten_ht = get_ht('a', ReferenceGenome.GRCh38)
-        self.assertRaises(Exception, gotten_ht.globals.collect)
+        ht = get_ht('a', ReferenceGenome.GRCh38)
+        self.assertRaises(Exception, ht.globals.collect)
 
     @mock.patch.dict(
         'hail_scripts.reference_data.combine.CONFIG',

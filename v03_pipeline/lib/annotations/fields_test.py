@@ -7,11 +7,11 @@ from unittest.mock import Mock, patch
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.vep import run_vep
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
-TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 
@@ -21,10 +21,6 @@ class FieldsTest(unittest.TestCase):
     def setUp(self) -> None:
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
-            TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
-        )
-        shutil.copytree(
             TEST_INTERVAL_1,
             f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
@@ -32,53 +28,6 @@ class FieldsTest(unittest.TestCase):
     def tearDown(self) -> None:
         if os.path.isdir(self._temp_local_reference_data):
             shutil.rmtree(self._temp_local_reference_data)
-
-    def test_get_rdc_fields(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        ht = hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
-                alleles=hl.tarray(hl.tstr),
-            ),
-            key=('locus', 'alleles'),
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    AnnotationType.REFERENCE_DATASET_COLLECTION,
-                    env=Env.TEST,
-                    dataset_type=DatasetType.SNV,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            ['gnomad_non_coding_constraint', 'screen'],
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    AnnotationType.REFERENCE_DATASET_COLLECTION,
-                    env=Env.LOCAL,
-                    dataset_type=DatasetType.SNV,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            ['gnomad_non_coding_constraint', 'screen'],
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    AnnotationType.REFERENCE_DATASET_COLLECTION,
-                    env=Env.TEST,
-                    dataset_type=DatasetType.MITO,
-                    reference_genome=ReferenceGenome.GRCh38,
-                ).keys(),
-            ),
-            [],
-        )
 
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
@@ -95,7 +44,17 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    AnnotationType.FORMATTING,
+                    DatasetType.SNV.formatting_annotation_fns,
+                    {
+                        f'{rdc.value}_ht': hl.read_table(
+                            valid_reference_dataset_collection_path(
+                                Env.TEST,
+                                ReferenceGenome.GRCh38,
+                                rdc,
+                            ),
+                        )
+                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                    },
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -103,6 +62,8 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
+                'screen',
+                'gnomad_non_coding_constraint',
                 'rg37_locus',
                 'rsid',
                 'sorted_transcript_consequences',
@@ -114,7 +75,17 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    AnnotationType.FORMATTING,
+                    DatasetType.SNV.formatting_annotation_fns,
+                    {
+                        f'{rdc.value}_ht': hl.read_table(
+                            valid_reference_dataset_collection_path(
+                                Env.TEST,
+                                ReferenceGenome.GRCh38,
+                                rdc,
+                            ),
+                        )
+                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                    },
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh37,
@@ -122,6 +93,8 @@ class FieldsTest(unittest.TestCase):
                 ).keys(),
             ),
             [
+                'screen',
+                'gnomad_non_coding_constraint',
                 'rsid',
                 'sorted_transcript_consequences',
                 'variant_id',
@@ -129,14 +102,12 @@ class FieldsTest(unittest.TestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.annotations.fields.hl.read_table')
     def test_get_sample_lookup_table_fields(
         self,
-        mock_read_table: Mock,
         mock_dataroot: Mock,
     ) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
-        mock_read_table.return_value = hl.Table.parallelize(
+        sample_lookup_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
@@ -170,7 +141,8 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    AnnotationType.SAMPLE_LOOKUP_TABLE,
+                    DatasetType.SNV.sample_lookup_table_annotation_fns,
+                    {'sample_lookup_ht': sample_lookup_ht},
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
