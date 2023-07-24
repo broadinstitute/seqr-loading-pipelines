@@ -128,7 +128,6 @@ class FieldsTest(unittest.TestCase):
 
     def test_get_sample_lookup_table_fields(
         self,
-        mock_read_table: Mock,
         mock_dataroot: Mock,
     ) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
