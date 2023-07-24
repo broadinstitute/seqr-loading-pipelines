@@ -12,11 +12,11 @@ from hail_scripts.reference_data.clinvar import (
     CLINVAR_PATHOGENICITIES,
 )
 
+from v03_pipeline.lib.annotations.enums import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
-from v03_pipeline.lib.vep import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
 
 TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'

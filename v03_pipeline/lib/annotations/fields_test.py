@@ -29,7 +29,6 @@ class FieldsTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_reference_data):
             shutil.rmtree(self._temp_local_reference_data)
 
-
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         ht = hl.read_table(TEST_COMBINED_1)
@@ -62,7 +61,7 @@ class FieldsTest(unittest.TestCase):
                     liftover_ref_path=LIFTOVER,
                 ).keys(),
             ),
-            [   
+            [
                 'screen',
                 'gnomad_non_coding_constraint',
                 'rg37_locus',
