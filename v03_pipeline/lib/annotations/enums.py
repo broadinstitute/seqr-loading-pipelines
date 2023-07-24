@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.annotations.fields import ANNOTATION_CONFIG
+from v03_pipeline.lib.annotations.config import CONFIG
 from v03_pipeline.lib.model import AnnotationType, DatasetType
 
 BIOTYPES = [

@@ -4,68 +4,12 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import (
-    gcnv,
-    mito,
-    sample_lookup_table,
-    shared,
-    snv,
-    sv,
-)
+from v03_pipeline.lib.annotations.config import CONFIG
 from v03_pipeline.lib.model import AnnotationType, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.paths import (
     sample_lookup_table_path,
     valid_reference_dataset_collection_path,
 )
-
-ANNOTATION_CONFIG = {
-    (DatasetType.SNV, AnnotationType.FORMATTING): [
-        shared.rg37_locus,
-        shared.rsid,
-        shared.sorted_transcript_consequences,
-        shared.variant_id,
-        shared.xpos,
-    ],
-    (DatasetType.SNV, AnnotationType.REFERENCE_DATASET_COLLECTION): [
-        snv.gnomad_non_coding_constraint,
-        snv.screen,
-    ],
-    (DatasetType.SNV, AnnotationType.SAMPLE_LOOKUP_TABLE): [
-        sample_lookup_table.gt_stats,
-    ],
-    (DatasetType.SNV, AnnotationType.GENOTYPE_ENTRIES): [
-        snv.GQ,
-        snv.AB,
-        snv.DP,
-        shared.GT,
-    ],
-    (DatasetType.MITO, AnnotationType.FORMATTING): [
-        mito.common_low_heteroplasmy,
-        mito.callset_heteroplasmy,
-        mito.haplogroup,
-        mito.mitotip,
-        shared.rg37_locus,
-        mito.rsid,
-        shared.sorted_transcript_consequences,
-        shared.variant_id,
-        shared.xpos,
-    ],
-    (DatasetType.MITO, AnnotationType.SAMPLE_LOOKUP_TABLE): [
-        sample_lookup_table.gt_stats,
-    ],
-    (DatasetType.MITO, AnnotationType.REFERENCE_DATASET_COLLECTION): [
-        mito.high_constraint_region,
-    ],
-    (DatasetType.SV, AnnotationType.FORMATTING): [
-        shared.rg37_locus,
-        sv.variant_id,
-        shared.xpos,
-    ],
-    (DatasetType.GCNV, AnnotationType.FORMATTING): [
-        gcnv.variant_id,
-        gcnv.xpos,
-    ],
-}
 
 
 def hail_table_dependencies(
@@ -112,7 +56,7 @@ def get_fields(
     )
     fields = {
         field_expression.__name__: field_expression(t, **kwargs, **hts)
-        for field_expression in ANNOTATION_CONFIG.get(
+        for field_expression in CONFIG.get(
             (dataset_type, annotation_type),
             [],
         )
