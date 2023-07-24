@@ -5,6 +5,7 @@ import functools
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import AnnotationType
 from v03_pipeline.lib.paths import (
@@ -17,7 +18,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
-from v03_pipeline.lib.vep import annotate_sorted_transcript_consequences_enums, run_vep
+from v03_pipeline.lib.vep import run_vep
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -169,7 +170,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     **rdc_globals.enums,
                 ),
             )
-        ht = annotate_sorted_transcript_consequences_enums(ht)
+        ht = annotate_enums(ht)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

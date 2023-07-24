@@ -4,12 +4,8 @@ from typing import Any
 
 import hail as hl
 
-MITOTIP_PATHOGENICITIES = [
-    'likely_pathogenic',
-    'possibly_pathogenic',
-    'possibly_benign',
-    'likely_benign',
-]
+from v03_pipeline.lib.annotations.enums import MITOTIP_PATHOGENICITIES
+
 MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(MITOTIP_PATHOGENICITIES, index_first=False).extend(
         # NB: adding missing values here allows us to
