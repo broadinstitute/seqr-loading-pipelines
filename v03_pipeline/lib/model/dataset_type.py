@@ -158,5 +158,5 @@ class DatasetType(Enum):
             ],
             DatasetType.MITO: [
                 sample_lookup_table.gt_stats,
-            ]
+            ],
         }[self]
