@@ -67,9 +67,7 @@ def mito_cn(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
 
 def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.Struct(
-        trna_prediction_id=MITOTIP_PATHOGENICITIES_LOOKUP[
-            ht.mitotip_trna_prediction
-        ],
+        trna_prediction_id=MITOTIP_PATHOGENICITIES_LOOKUP[ht.mitotip_trna_prediction],
     )
 
 
