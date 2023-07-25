@@ -47,9 +47,6 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
-            DatasetType.MITO: [
-                ReferenceDatasetCollection.COMBINED_MITO,
-            ],
         }.get(self, set())
         if env == Env.LOCAL:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
@@ -151,7 +148,7 @@ class DatasetType(Enum):
                 mito.GQ,
                 shared.GT,
             ],
-        }.get(self, [])
+        }[self]
 
     @property
     def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
@@ -161,5 +158,5 @@ class DatasetType(Enum):
             ],
             DatasetType.MITO: [
                 sample_lookup_table.gt_stats,
-            ],
-        }.get(self, [])
+            ]
+        }[self]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import itertools
 
 import hail as hl
 import luigi
@@ -136,7 +137,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 5) Union with the existing variant annotations table
-        # and annotate the sample lookup table.
+        # and annotate with the sample lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         ht = ht.annotate(
             **get_fields(
@@ -161,7 +162,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc_ht in annotatable_rdc_hts.values() + joinable_rdc_hts.values():
+        for rdc_ht in itertools.chain(annotatable_rdc_hts.values(), joinable_rdc_hts.values()):
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(
