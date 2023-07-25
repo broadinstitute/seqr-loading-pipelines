@@ -18,7 +18,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 
-TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -253,11 +253,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 hl.Struct(
                     updates={
                         hl.Struct(
-                            callset='v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
                             project_guid='R0113_test_project',
                         ),
                         hl.Struct(
-                            callset='v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
                             project_guid='R0114_project4',
                         ),
                     },

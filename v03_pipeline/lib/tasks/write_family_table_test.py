@@ -10,7 +10,7 @@ import luigi.worker
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
-TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
