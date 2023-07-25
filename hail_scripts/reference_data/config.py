@@ -418,7 +418,7 @@ CONFIG = {
     'mitomap': {
         '38': {
             'version': 'Feb. 04 2022',
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/Mitomap Confirmed Mutations Feb. 04 2022.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
             'select': ['pathogenic'],
         },
     },
