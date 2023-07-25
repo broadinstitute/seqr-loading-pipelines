@@ -36,7 +36,7 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 ReferenceDatasetCollection.INTERVAL_MITO,
             ],
-        }.get(self, set())
+        }.get(self, [])
 
     def joinable_reference_dataset_collections(
         self,
@@ -47,7 +47,7 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
-        }.get(self, set())
+        }.get(self, [])
         if env == Env.LOCAL:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs
@@ -89,6 +89,7 @@ class DatasetType(Enum):
                 'AC_het',
                 'AN',
                 'mitotip_trna_prediction',
+                'vep',
             ],
         }[self]
 
