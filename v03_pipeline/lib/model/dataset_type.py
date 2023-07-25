@@ -47,6 +47,9 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
+            DatasetType.MITO: [
+                ReferenceDatasetCollection.COMBINED_MITO,
+            ],
         }.get(self, [])
         if env == Env.LOCAL:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
