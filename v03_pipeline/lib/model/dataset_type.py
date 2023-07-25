@@ -71,7 +71,7 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
-            DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL', 'mito_cn', 'contamination'],
+            DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
         }[self]
 
     @property
