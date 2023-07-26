@@ -182,7 +182,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ht = ht.annotate(
             **get_fields(
                 ht,
-                self.dataset_type.gt_stats_annotation_fns,
+                self.dataset_type.sample_lookup_table_annotation_fns,
                 sample_lookup_hts,
                 **self.param_kwargs,
             ),

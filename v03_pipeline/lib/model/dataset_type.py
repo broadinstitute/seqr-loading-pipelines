@@ -75,6 +75,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: [],
             DatasetType.MITO: ['contamination', 'mito_cn'],
+            DatasetType.SV: [],
         }[self]
 
     @property
@@ -84,6 +85,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
+            DatasetType.SV: [],
         }[self]
 
     @property
@@ -103,7 +105,7 @@ class DatasetType(Enum):
                 'mitotip_trna_prediction',
                 'vep',
             ],
-            DatasetType.SV: ['rsid', 'filters', 'info'],
+            DatasetType.SV: ['locus', 'alleles', 'filters', 'info'],
         }[self]
 
     @property
@@ -143,10 +145,10 @@ class DatasetType(Enum):
                 sv.bothsides_support,
                 sv.cpx_intervals,
                 sv.filters,
+                sv.gt_stats,
                 sv.gnomad_svs,
                 shared.rg37_locus,
                 sv.rg37_locus_end,
-                shared.rsid,
                 sv.strvctvre,
                 sv.sv_type_id,
                 sv.sv_type_detail_id,
@@ -178,7 +180,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def gt_stats_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
                 sample_lookup_table.gt_stats,
@@ -186,7 +188,5 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 sample_lookup_table.gt_stats,
             ],
-            DatasetType.SV: [
-                sv.gt_stats,
-            ],
+            DatasetType.SV: [],
         }[self]

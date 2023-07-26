@@ -55,8 +55,8 @@ def filters(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.or_missing(
-        hl.is_defined(ht.gnomad_svs_AF),
-        hl.struct(AF=ht.gnomad_svs_AF, ID=ht.gnomad_svs_ID),
+        hl.is_defined(ht.info.gnomAD_V2_AF),
+        hl.struct(AF=ht.info.gnomAD_V2_AF, ID=ht.info.gnomAD_V2_SVID),
     )
 
 

@@ -19,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
     SV_TYPES,
+    SV_TYPE_DETAILS,
 )
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
