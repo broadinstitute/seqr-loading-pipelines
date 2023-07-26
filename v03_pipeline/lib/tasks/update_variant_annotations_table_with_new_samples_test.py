@@ -12,19 +12,22 @@ from hail_scripts.reference_data.clinvar import (
     CLINVAR_PATHOGENICITIES,
 )
 
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    SV_TYPES,
 )
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 
-TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
+TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -561,3 +564,29 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 ),
             ],
         )
+
+
+    def test_sv_update_vat(self, mock_dataroot: Mock) -> None:
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                env=Env.TEST,
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SV,
+                callset_path=TEST_SV_VCF,
+                project_guids=['R0115_test_project2'],
+                project_remap_paths=['not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_5],
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        self.assertFalse(
+            GCSorLocalFolderTarget(f'{self._temp_local_datasets}/v03/GRCh38/SV/lookup.ht').exists(),
+        )
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 11)
+
