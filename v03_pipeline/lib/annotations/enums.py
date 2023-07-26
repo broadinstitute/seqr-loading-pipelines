@@ -193,7 +193,7 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
         ht = ht.annotate_globals(
             enums=ht.enums.annotate(
                 mitotip=hl.Struct(
-                    pathogenicities=MITOTIP_PATHOGENICITIES,
+                    trna_prediction=MITOTIP_PATHOGENICITIES,
                 ),
             ),
         )

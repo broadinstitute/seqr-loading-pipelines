@@ -69,6 +69,15 @@ class DatasetType(Enum):
         }.get(self, default_key)
 
     @property
+    def col_fields(
+        self,
+    ) -> list[str]:
+        return {
+            DatasetType.SNV: [],
+            DatasetType.MITO: ['contamination', 'mito_cn'],
+        }[self]
+
+    @property
     def entries_fields(
         self,
     ) -> list[str]:
