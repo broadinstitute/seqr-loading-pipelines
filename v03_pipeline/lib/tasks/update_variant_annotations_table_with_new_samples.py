@@ -19,6 +19,9 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
+from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallsetTask,
+)
 from v03_pipeline.lib.vep import run_vep
 
 
@@ -41,19 +44,43 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     )
 
     def requires(self) -> list[luigi.Task]:
+        if self.dataset_type.has_sample_lookup_table:
+            # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
+            upstream_table_tasks = [
+                UpdateSampleLookupTableTask(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.hail_temp_dir,
+                    self.callset_path,
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                    self.ignore_missing_samples,
+                ),
+            ]
+        else:
+            upstream_table_tasks = [
+                WriteRemappedAndSubsettedCallsetTask(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.hail_temp_dir,
+                    self.callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                    self.ignore_missing_samples,
+                )
+                for (project_guid, project_remap_path, project_pedigree_path) in zip(
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                )
+            ]
         return [
             *super().requires(),
-            UpdateSampleLookupTableTask(
-                self.env,
-                self.reference_genome,
-                self.dataset_type,
-                self.hail_temp_dir,
-                self.callset_path,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                self.ignore_missing_samples,
-            ),
+            *upstream_table_tasks,
         ]
 
     def complete(self) -> bool:
@@ -97,7 +124,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.vep_config_json_path,
         )
 
-        # 2) Get handles on rdc hts:
+        # 2) Get handles on hts:
         annotatable_rdc_hts = {
             f'{rdc.value}_ht': hl.read_table(
                 valid_reference_dataset_collection_path(
@@ -120,6 +147,19 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 self.env,
             )
         }
+        sample_lookup_hts = (
+            {
+                'sample_lookup_ht': hl.read_table(
+                    sample_lookup_table_path(
+                        self.env,
+                        self.reference_genome,
+                        self.dataset_type,
+                    ),
+                ),
+            }
+            if self.dataset_type.has_sample_lookup_table
+            else {}
+        )
 
         # 3) Select down to the formatting annotations fields and
         # anyreference dataset collection annotations.
@@ -142,16 +182,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ht = ht.annotate(
             **get_fields(
                 ht,
-                self.dataset_type.sample_lookup_table_annotation_fns,
-                {
-                    'sample_lookup_ht': hl.read_table(
-                        sample_lookup_table_path(
-                            self.env,
-                            self.reference_genome,
-                            self.dataset_type,
-                        ),
-                    ),
-                },
+                self.dataset_type.gt_stats_annotation_fns,
+                sample_lookup_hts,
                 **self.param_kwargs,
             ),
         )

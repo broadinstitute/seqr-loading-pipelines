@@ -94,7 +94,12 @@ class DatasetType(Enum):
                 'mitotip_trna_prediction',
                 'vep',
             ],
+            DatasetType.SV: ['rsid', 'filters', 'info'],
         }[self]
+
+    @property
+    def has_sample_lookup_table(self) -> bool:
+        return self in {DatasetType.SNV, DatasetType.MITO}
 
     @property
     def veppable(self) -> bool:
@@ -125,8 +130,17 @@ class DatasetType(Enum):
                 shared.xpos,
             ],
             DatasetType.SV: [
+                sv.algorithms,
+                sv.bothsides_support,
+                sv.cpx_intervals,
+                sv.filters,
+                sv.gnomad_svs,
                 shared.rg37_locus,
-                sv.variant_id,
+                sv.rg37_locus_end,
+                shared.rsid,
+                sv.strvctvre,
+                sv.sv_type_id,
+                sv.sv_type_detail_id,
                 shared.xpos,
             ],
             DatasetType.GCNV: [
@@ -155,7 +169,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def gt_stats_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
                 sample_lookup_table.gt_stats,

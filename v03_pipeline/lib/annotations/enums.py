@@ -144,6 +144,36 @@ MITOTIP_PATHOGENICITIES = [
     'likely_benign',
 ]
 
+SV_TYPES = [
+    'gCNV_DEL',
+    'gCNV_DUP',
+    'BND',
+    'CPX',
+    'CTX',
+    'DEL',
+    'DUP',
+    'INS',
+    'INV',
+    'CNV',
+]
+SV_TYPE_DETAILS = [
+    'INS_iDEL',
+    'INVdel',
+    'INVdup',
+    'ME',
+    'ME:ALU',
+    'ME:LINE1',
+    'ME:SVA',
+    'dDUP',
+    'dDUP_iDEL',
+    'delINV',
+    'delINVdel',
+    'delINVdup',
+    'dupINV',
+    'dupINVdel',
+    'dupINVdup',
+]
+
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     formatting_annotation_names = {
