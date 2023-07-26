@@ -284,7 +284,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
                         gnomad_non_coding_constraint='gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
                         screen='gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-                        sorted_transcript_consequences=None,
                     ),
                     versions=hl.Struct(
                         cadd='v1.6',
@@ -292,7 +291,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hgmd=None,
                         gnomad_non_coding_constraint=None,
                         screen=None,
-                        sorted_transcript_consequences=None,
                     ),
                     enums=hl.Struct(
                         cadd=hl.Struct(),
@@ -360,8 +358,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
-                        sorted_transcript_consequences=None,
-                        mitotip=None,
                     ),
                     versions=hl.Struct(
                         high_constraint_region_mito='Feb-15-2022',
@@ -372,8 +368,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hmtvar='Jan. 10 2022',
                         mitomap='Feb. 04 2022',
                         mitimpact='3.0.7',
-                        sorted_transcript_consequences=None,
-                        mitotip=None,
                     ),
                     enums=hl.Struct(
                         high_constraint_region_mito=hl.Struct(),

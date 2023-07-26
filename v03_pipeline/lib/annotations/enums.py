@@ -181,16 +181,7 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     }
     if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(
-            paths=hl.Struct(
-                **ht.paths,
-                sorted_transcript_consequences=hl.missing(hl.tstr),
-            ),
-            versions=hl.Struct(
-                **ht.versions,
-                sorted_transcript_consequences=hl.missing(hl.tstr),
-            ),
-            enums=hl.Struct(
-                **ht.enums,
+            enums=ht.enums.annotate(
                 sorted_transcript_consequences=hl.Struct(
                     biotype=BIOTYPES,
                     consequence_term=CONSEQUENCE_TERMS,
@@ -200,16 +191,7 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
         )
     if 'mitotip' in formatting_annotation_names:
         ht = ht.annotate_globals(
-            paths=hl.Struct(
-                **ht.paths,
-                mitotip=hl.missing(hl.tstr),
-            ),
-            versions=hl.Struct(
-                **ht.versions,
-                mitotip=hl.missing(hl.tstr),
-            ),
-            enums=hl.Struct(
-                **ht.enums,
+            enums=ht.enums.annotate(
                 mitotip=hl.Struct(
                     pathogenicities=MITOTIP_PATHOGENICITIES,
                 ),
