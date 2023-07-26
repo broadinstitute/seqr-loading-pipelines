@@ -391,7 +391,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                             consequence_term=CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
-                        mitotip=hl.Struct(pathogenicities=MITOTIP_PATHOGENICITIES),
+                        mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
                     ),
                     updates={
                         hl.Struct(
