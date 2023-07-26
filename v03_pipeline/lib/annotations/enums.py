@@ -173,6 +173,17 @@ SV_TYPE_DETAILS = [
     'dupINVdel',
     'dupINVdup',
 ]
+SV_CONSEQUENCE_RANKS = [
+    'COPY_GAIN',
+    'LOF',
+    'DUP_LOF',
+    'DUP_PARTIAL',
+    'INTRONIC',
+    'INV_SPAN',
+    'NEAREST_TSS',
+    'PROMOTER',
+    'UTR',
+]
 
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
@@ -200,17 +211,15 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     if 'sv_type_id' in formatting_annotation_names:
         ht = ht.annotate_globals(
             enums=ht.enums.annotate(
-                sv_type=hl.Struct(
-                    sv_type=SV_TYPES,
-                ),
+                sv_type=SV_TYPES,
             ),
         )
     if 'sv_type_detail_id' in formatting_annotation_names:
         ht = ht.annotate_globals(
-            enums=ht.enums.annotate(
-                sv_type=hl.Struct(
-                    sv_type_detail=SV_TYPE_DETAILS,
-                ),
-            ),
+            enums=ht.enums.annotate(sv_type_detail=SV_TYPE_DETAILS),
+        )
+    if 'sorted_gene_consequences' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(sv_consequence_rank=SV_CONSEQUENCE_RANKS),
         )
     return ht

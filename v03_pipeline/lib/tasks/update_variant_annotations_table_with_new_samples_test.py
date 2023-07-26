@@ -12,16 +12,17 @@ from hail_scripts.reference_data.clinvar import (
     CLINVAR_PATHOGENICITIES,
 )
 
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
-    SV_TYPES,
     SV_TYPE_DETAILS,
+    SV_TYPES,
+    SV_CONSEQUENCE_RANKS,
 )
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -38,6 +39,25 @@ TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
+
+GENE_ID_MAPPING = {
+    'OR4F5': 'ENSG00000186092',
+    'PLEKHG4B': 'ENSG00000153404',
+    'OR4F16': 'ENSG00000186192',
+    'OR4F29': 'ENSG00000284733',
+    'FBXO28': 'ENSG00000143756',
+    'SAMD11': 'ENSG00000187634',
+    'C1orf174': 'ENSG00000198912',
+    'TAS1R1': 'ENSG00000173662',
+    'FAM131C': 'ENSG00000185519',
+    'RCC2': 'ENSG00000179051',
+    'NBPF3': 'ENSG00000142794',
+    'AGBL4': 'ENSG00000186094',
+    'KIAA1614': 'ENSG00000135835',
+    'MR1': 'ENSG00000153029',
+    'STX6': 'ENSG00000135823',
+    'XPR1': 'ENSG00000143324',
+}
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
@@ -566,8 +586,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ],
         )
 
-
-    def test_sv_update_vat(self, mock_dataroot: Mock) -> None:
+    @patch('v03_pipeline.lib.model.dataset_type.load_gencode')
+    def test_sv_update_vat(self, mock_load_gencode: Mock, mock_dataroot: Mock) -> None:
+        mock_load_gencode.return_value = GENE_ID_MAPPING
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         worker = luigi.worker.Worker()
@@ -586,8 +607,309 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker.run()
         self.assertTrue(update_variant_annotations_task.complete())
         self.assertFalse(
-            GCSorLocalFolderTarget(f'{self._temp_local_datasets}/v03/GRCh38/SV/lookup.ht').exists(),
+            GCSorLocalFolderTarget(
+                f'{self._temp_local_datasets}/v03/GRCh38/SV/lookup.ht',
+            ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
         self.assertEqual(ht.count(), 11)
-
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    paths=hl.Struct(),
+                    versions=hl.Struct(),
+                    enums=hl.Struct(
+                        sv_type=SV_TYPES,
+                        sv_type_detail=SV_TYPE_DETAILS,
+                        sv_consequence_rank=SV_CONSEQUENCE_RANKS,
+                    ),
+                    updates={
+                        hl.Struct(
+                            callset=TEST_SV_VCF,
+                            project_guid='R0115_test_project2',
+                        ),
+                    },
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    rsid='BND_chr1_6',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters={'UNRESOLVED', 'HIGH_SR_BACKGROUND'},
+                    gt_stats=hl.Struct(AF=0.04775, AC=1, AN=8, Hom=0, Het=278),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=10367,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=5,
+                        position=20404,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=2,
+                    sv_type_detail_id=None,
+                    xpos=1000180928,
+                ),
+                hl.Struct(
+                    rsid='BND_chr1_9',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters={'UNRESOLVED', 'PESR_GT_OVERDISPERSION'},
+                    gt_stats=hl.Struct(AF=0.910684, AC=7, AN=8, Hom=2391, Het=520),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=724861,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=724861,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=2,
+                    sv_type_detail_id=None,
+                    xpos=1000789481,
+                ),
+                hl.Struct(
+                    rsid='CPX_chr1_22',
+                    algorithms='manta',
+                    bothsides_support=True,
+                    cpx_intervals=[
+                        hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
+                        hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723),
+                    ],
+                    filters={'HIGH_SR_BACKGROUND'},
+                    gt_stats=hl.Struct(AF=0.169873, AC=2, AN=8, Hom=3, Het=983),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=6618962,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=6619783,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=2,
+                    xpos=1006558902,
+                ),
+                hl.Struct(
+                    rsid='CPX_chr1_251',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=[
+                        hl.Struct(
+                            type='DEL',
+                            chrom='1',
+                            start=180540234,
+                            end=181074767,
+                        ),
+                        hl.Struct(
+                            type='INV',
+                            chrom='1',
+                            start=181074767,
+                            end=181074938,
+                        ),
+                    ],
+                    filters={'UNRESOLVED'},
+                    gt_stats=hl.Struct(AF=0.251804, AC=3, AN=8, Hom=114, Het=1238),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=180509370,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=181044088,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=9,
+                    xpos=1180540234,
+                ),
+                hl.Struct(
+                    rsid='CPX_chr1_41',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=[
+                        hl.Struct(type='DUP', chrom='1', start=16088760, end=16088835),
+                        hl.Struct(type='INV', chrom='1', start=16088760, end=16089601),
+                    ],
+                    filters=None,
+                    gt_stats=hl.Struct(AF=0.218138, AC=2, AN=8, Hom=18, Het=1234),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=16415255,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=16416096,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=12,
+                    xpos=1016088760,
+                ),
+                hl.Struct(
+                    rsid='CPX_chr1_54',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=[
+                        hl.Struct(type='DUP', chrom='1', start=21427498, end=21427959),
+                        hl.Struct(type='INV', chrom='1', start=21427498, end=21480073),
+                        hl.Struct(type='DEL', chrom='1', start=21480073, end=21480419),
+                    ],
+                    filters=None,
+                    gt_stats=hl.Struct(AF=0.499656, AC=4, AN=8, Hom=49, Het=2811),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=21753991,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=21806912,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=13,
+                    xpos=1021427498,
+                ),
+                hl.Struct(
+                    rsid='DEL_chr1_12',
+                    algorithms='depth',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters=None,
+                    gt_stats=hl.Struct(AF=0.064926, AC=1, AN=8, Hom=5, Het=368),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=5,
+                        position=180831919,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=5,
+                        position=180817389,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=5,
+                    sv_type_detail_id=None,
+                    xpos=1000413968,
+                ),
+                hl.Struct(
+                    rsid='DUP_chr1_5',
+                    algorithms='depth',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters=None,
+                    gt_stats=hl.Struct(AF=0.115596, AC=1, AN=8, Hom=110, Het=453),
+                    gnomad_svs=None,
+                    rg37_locus=None,
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=233417,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=6,
+                    sv_type_detail_id=None,
+                    xpos=1000257666,
+                ),
+                hl.Struct(
+                    rsid='INS_chr1_268',
+                    algorithms='melt',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters={'HIGH_SR_BACKGROUND'},
+                    gt_stats=hl.Struct(AF=0.004466, AC=1, AN=8, Hom=0, Het=26),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=17792203,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=17792219,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=7,
+                    sv_type_detail_id=6,
+                    xpos=1017465707,
+                ),
+                hl.Struct(
+                    rsid='INS_chr1_65',
+                    algorithms='manta,melt',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters={'HIGH_SR_BACKGROUND'},
+                    gt_stats=hl.Struct(AF=0.10237, AC=1, AN=8, Hom=3, Het=590),
+                    gnomad_svs=hl.Struct(
+                        AF=0.068962998688221,
+                        ID='gnomAD-SV_v2.1_INS_chr1_65',
+                    ),
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=4288465,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=4288508,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=0.1255),
+                    sv_type_id=7,
+                    sv_type_detail_id=4,
+                    xpos=1004228405,
+                ),
+                hl.Struct(
+                    rsid='INS_chr1_688',
+                    algorithms='melt',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    filters={'HIGH_SR_BACKGROUND'},
+                    gt_stats=hl.Struct(AF=0.06338, AC=1, AN=8, Hom=2, Het=365),
+                    gnomad_svs=None,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=49428756,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=49428807,
+                        reference_genome='GRCh37',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=7,
+                    sv_type_detail_id=5,
+                    xpos=1048963084,
+                ),
+            ],
+        )

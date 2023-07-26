@@ -5,6 +5,8 @@ from typing import Callable
 
 import hail as hl
 
+from hail_scripts.utils.mapping_gene_ids import load_gencode
+
 from v03_pipeline.lib.annotations import (
     gcnv,
     mito,
@@ -17,6 +19,8 @@ from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGeno
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
+
+GENCODE_RELEASE = 42
 
 
 class DatasetType(Enum):
@@ -113,6 +117,10 @@ class DatasetType(Enum):
         return self in {DatasetType.SNV, DatasetType.MITO}
 
     @property
+    def has_gencode_mapping(self) -> dict[str, str]:
+        return self == DatasetType.SV
+
+    @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV
 
@@ -149,6 +157,7 @@ class DatasetType(Enum):
                 sv.gnomad_svs,
                 shared.rg37_locus,
                 sv.rg37_locus_end,
+                sv.sorted_gene_consequences,
                 sv.strvctvre,
                 sv.sv_type_id,
                 sv.sv_type_detail_id,

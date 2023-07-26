@@ -25,6 +25,8 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 from v03_pipeline.lib.vep import run_vep
 
 
+
+
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
     callset_path = luigi.Parameter()
     project_guids = luigi.ListParameter()
@@ -42,6 +44,44 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=None,
         description='Path of hail vep config .json file',
     )
+
+    @property
+    def get_annotation_dependencies(self):
+        annotation_dependencies = {}
+
+        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
+            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+
+        for rdc in self.dataset_type.joinable_reference_dataset_collections(
+            self.env,
+        ):
+            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+
+        if self.dataset_type.has_sample_lookup_table:
+            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
+                sample_lookup_table_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
+            )
+
+        if self.dataset_type.has_gencode_mapping:
+            annotation_dependencies['gencode_mapping'] = hl.literal(load_gencode(GENCODE_RELEASE, ''))
+
+        return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
         if self.dataset_type.has_sample_lookup_table:
@@ -124,50 +164,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.vep_config_json_path,
         )
 
-        # 2) Get handles on hts:
-        annotatable_rdc_hts = {
-            f'{rdc.value}_ht': hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
-            for rdc in self.dataset_type.annotatable_reference_dataset_collections
-        }
-        joinable_rdc_hts = {
-            f'{rdc.value}_ht': hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
-            for rdc in self.dataset_type.joinable_reference_dataset_collections(
-                self.env,
-            )
-        }
-        sample_lookup_hts = (
-            {
-                'sample_lookup_ht': hl.read_table(
-                    sample_lookup_table_path(
-                        self.env,
-                        self.reference_genome,
-                        self.dataset_type,
-                    ),
-                ),
-            }
-            if self.dataset_type.has_sample_lookup_table
-            else {}
-        )
-
-        # 3) Select down to the formatting annotations fields and
+        # 2) Select down to the formatting annotations fields and
         # anyreference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns,
-                annotatable_rdc_hts,
+                **self.annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
@@ -183,7 +186,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 ht,
                 self.dataset_type.sample_lookup_table_annotation_fns,
-                sample_lookup_hts,
+                **self.annotation_dependencies,
                 **self.param_kwargs,
             ),
         )

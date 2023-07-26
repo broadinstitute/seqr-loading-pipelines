@@ -4,16 +4,26 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import SV_TYPE_DETAILS, SV_TYPES
+from v03_pipeline.lib.annotations.enums import (
+    SV_CONSEQUENCE_RANKS,
+    SV_TYPE_DETAILS,
+    SV_TYPES,
+)
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-# TODO: remove me once hail is used.
-
 BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
+CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
+NON_GENE_PREDICTIONS = {
+    'PREDICTED_INTERGENIC',
+    'PREDICTED_NONCODING_BREAKPOINT',
+    'PREDICTED_NONCODING_SPAN',
+}
 PASS = 'PASS'  # noqa: S105
+
 
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 SV_TYPE_DETAILS_LOOKUP = hl.dict(hl.enumerate(SV_TYPE_DETAILS, index_first=False))
+SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False))
 
 
 def _get_cpx_interval(x):
@@ -101,6 +111,32 @@ def rg37_locus_end(
             ReferenceGenome.GRCh37.value,
         ),
     )
+
+
+def sorted_gene_consequences(
+    ht: hl.Table,
+    gene_id_mapping: dict[str, str],
+    **_: Any,
+) -> hl.Expression:
+    # In lieu of sorted_transcript_consequences seen on SNV/MITO.
+    conseq_predicted_gene_cols = [
+        gene_col
+        for gene_col in ht.info
+        if gene_col.startswith(CONSEQ_PREDICTED_PREFIX)
+        and gene_col not in NON_GENE_PREDICTIONS
+    ]
+    mapped_genes = [
+        ht.info[gene_col].map(
+            lambda gene: hl.struct(
+                gene_id=gene_id_mapping[gene],
+                major_consequence_id=SV_CONSEQUENCE_RANKS_LOOKUP[
+                    gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)  # noqa: B023
+                ],
+            ),
+        )
+        for gene_col in conseq_predicted_gene_cols
+    ]
+    return hl.filter(hl.is_defined, mapped_genes).flatmap(lambda x: x)
 
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
