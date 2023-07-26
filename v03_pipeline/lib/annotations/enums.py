@@ -197,4 +197,20 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
                 ),
             ),
         )
+    if 'sv_type_id' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(
+                sv_type=hl.Struct(
+                    sv_type=SV_TYPES,
+                ),
+            ),
+        )
+    if 'sv_type_detail_id' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(
+                sv_type=hl.Struct(
+                    sv_type_detail=SV_TYPE_DETAILS,
+                ),
+            ),
+        )
     return ht

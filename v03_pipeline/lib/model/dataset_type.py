@@ -177,4 +177,7 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 sample_lookup_table.gt_stats,
             ],
+            DatasetType.SV: [
+                sv.gt_stats,
+            ],
         }[self]
