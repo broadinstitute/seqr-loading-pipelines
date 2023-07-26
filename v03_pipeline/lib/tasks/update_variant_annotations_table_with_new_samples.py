@@ -6,6 +6,8 @@ import itertools
 import hail as hl
 import luigi
 
+from hail_scripts.utils.mapping_gene_ids import load_gencode
+
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.paths import (
@@ -24,7 +26,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 from v03_pipeline.lib.vep import run_vep
 
-
+GENCODE_RELEASE = 42
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -45,8 +47,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         description='Path of hail vep config .json file',
     )
 
-    @property
-    def get_annotation_dependencies(self):
+    def read_annotation_dependencies(self):
         annotation_dependencies = {}
 
         for rdc in self.dataset_type.annotatable_reference_dataset_collections:
@@ -79,7 +80,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             )
 
         if self.dataset_type.has_gencode_mapping:
-            annotation_dependencies['gencode_mapping'] = hl.literal(load_gencode(GENCODE_RELEASE, ''))
+            annotation_dependencies['gencode_mapping'] = hl.literal(
+                load_gencode(GENCODE_RELEASE, ''),
+            )
 
         return annotation_dependencies
 
@@ -154,6 +157,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
         callset_ht = callset_ht.distinct()
 
+        annotation_dependencies = self.read_annotation_dependencies()
+
         # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
@@ -165,7 +170,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 2) Select down to the formatting annotations fields and
-        # anyreference dataset collection annotations.
+        # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
@@ -176,7 +181,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc_ht in joinable_rdc_hts.values():
+        for rdc in self.dataset_type.joinable_reference_dataset_collections(
+            self.env,
+        ):
+            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 5) Union with the existing variant annotations table
@@ -197,10 +205,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc_ht in itertools.chain(
-            annotatable_rdc_hts.values(),
-            joinable_rdc_hts.values(),
+        for rdc in itertools.chain(
+            self.dataset_type.annotatable_reference_dataset_collections,
+            self.dataset_type.joinable_reference_dataset_collections(self.env),
         ):
+            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(

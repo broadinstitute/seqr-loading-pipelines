@@ -5,8 +5,6 @@ from typing import Callable
 
 import hail as hl
 
-from hail_scripts.utils.mapping_gene_ids import load_gencode
-
 from v03_pipeline.lib.annotations import (
     gcnv,
     mito,

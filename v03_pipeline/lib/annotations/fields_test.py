@@ -142,7 +142,7 @@ class FieldsTest(unittest.TestCase):
                 get_fields(
                     ht,
                     DatasetType.SNV.sample_lookup_table_annotation_fns,
-                    **{'sample_lookup_ht': sample_lookup_ht},
+                    sample_lookup_ht=sample_lookup_ht,
                     env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,

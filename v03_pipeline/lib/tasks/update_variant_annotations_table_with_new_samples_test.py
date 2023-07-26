@@ -17,9 +17,9 @@ from v03_pipeline.lib.annotations.enums import (
     CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
     SV_TYPES,
-    SV_CONSEQUENCE_RANKS,
 )
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget

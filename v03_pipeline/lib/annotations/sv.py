@@ -23,7 +23,9 @@ PASS = 'PASS'  # noqa: S105
 
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 SV_TYPE_DETAILS_LOOKUP = hl.dict(hl.enumerate(SV_TYPE_DETAILS, index_first=False))
-SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False))
+SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
+    hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False),
+)
 
 
 def _get_cpx_interval(x):
