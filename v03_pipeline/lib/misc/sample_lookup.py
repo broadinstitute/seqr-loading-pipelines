@@ -18,32 +18,22 @@ def filter_callset_sample_ids(
     if hl.eval(~sample_lookup_ht.updates.project_guid.contains(project_guid)):
         return sample_lookup_ht
     sample_ids = sample_subset_ht.aggregate(hl.agg.collect_as_set(sample_subset_ht.s))
+    fields = ['ref_samples', 'het_samples', 'hom_samples']
     return sample_lookup_ht.select(
-        ref_samples=sample_lookup_ht.ref_samples.annotate(
-            **{
-                project_guid: sample_lookup_ht.ref_samples[project_guid].difference(
-                    sample_ids,
-                ),
-            },
-        ),
-        het_samples=sample_lookup_ht.het_samples.annotate(
-            **{
-                project_guid: sample_lookup_ht.het_samples[project_guid].difference(
-                    sample_ids,
-                ),
-            },
-        ),
-        hom_samples=sample_lookup_ht.hom_samples.annotate(
-            **{
-                project_guid: sample_lookup_ht.hom_samples[project_guid].difference(
-                    sample_ids,
-                ),
-            },
-        ),
+        **{
+            field: sample_lookup_ht[field].annotate(
+                **{
+                    project_guid: sample_lookup_ht[field][project_guid].difference(
+                        sample_ids,
+                    ),
+                },
+            )
+            for field in fields
+        },
     )
 
 
-def union_sample_lookup_hts(
+def join_sample_lookup_hts(
     sample_lookup_ht: hl.Table,
     callset_sample_lookup_ht: hl.Table,
     project_guid: str,
@@ -51,9 +41,10 @@ def union_sample_lookup_hts(
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
     fields = ['ref_samples', 'het_samples', 'hom_samples']
     # For rows that are "missing" in the existing sample lookup table,
-    # initialize all projects (except for this one) as empty sets.
+    # replace the "missing" with an empty struct with
+    # all projects (except for this one) as empty sets.
     # It was easier to reason about this as a separate annotation pass
-    # than combined as a single annotate call.
+    # than combined as a single annotate call
     sample_lookup_ht = sample_lookup_ht.annotate(
         **{
             field: hl.or_else(
