@@ -414,7 +414,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
                     callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
-                    haplogroup=hl.Struct(is_defining=None),
+                    haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
@@ -444,7 +444,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     alleles=['G', 'T'],
                     common_low_heteroplasmy=False,
                     callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
-                    haplogroup=hl.Struct(is_defining=None),
+                    haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
@@ -474,7 +474,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
                     callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
-                    haplogroup=hl.Struct(is_defining=None),
+                    haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
@@ -508,7 +508,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         AC=1,
                         AN=2520,
                     ),
-                    haplogroup=hl.Struct(is_defining=0),
+                    haplogroup=hl.Struct(is_defining=True),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
@@ -538,7 +538,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     alleles=['C', 'T'],
                     common_low_heteroplasmy=False,
                     callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
-                    haplogroup=hl.Struct(is_defining=None),
+                    haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
