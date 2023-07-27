@@ -19,15 +19,6 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.common_low_heteroplasmy
 
-
-def callset_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.Struct(
-        AF=ht.AF_het,
-        AC=ht.AC_het,
-        AN=ht.AN,
-    )
-
-
 def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.contamination
 
@@ -73,3 +64,7 @@ def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def rsid(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.rsid.find(lambda x: hl.is_defined(x))
+
+
+def gt_stats(ht: hl.Table, sample_lookup_ht: hl.Table, **_: Any) -> hl.Expression:
+    return None

@@ -5,18 +5,14 @@ from typing import Callable
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import (
-    gcnv,
-    mito,
-    sample_lookup_table,
-    shared,
-    snv,
-    sv,
-)
+from v03_pipeline.lib.annotations import gcnv, mito, shared, snv, sv
 from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
+
+MITO_MIN_HOM_THRESHOLD = 0.95
+ZERO = 0.0
 
 
 class DatasetType(Enum):
@@ -106,6 +102,25 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def sample_lookup_table_fields_and_genotype_filter_fns(
+        self,
+    ) -> dict[str, Callable[hl.MatrixTable, hl.Expression]]:
+        return {
+            DatasetType.SNV: {
+                'ref_samples': lambda mt: mt.GT.is_hom_ref(),
+                'het_samples': lambda mt: mt.GT.is_het(),
+                'hom_samples': lambda mt: mt.GT.is_hom_var(),
+            },
+            DatasetType.MITO: {
+                'ref_samples': lambda mt: hl.is_defined(mt.HL) & mt.HL == ZERO,
+                'hetetoplastic_samples': lambda mt: mt.HL
+                < MITO_MIN_HOM_THRESHOLD & mt.HL
+                > ZERO,
+                'homoplastic_samples': lambda mt: mt.HL >= MITO_MIN_HOM_THRESHOLD,
+            },
+        }[self]
+
+    @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV
 
@@ -123,7 +138,6 @@ class DatasetType(Enum):
             ],
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
-                mito.callset_heteroplasmy,
                 mito.haplogroup,
                 mito.high_constraint_region,
                 mito.mitotip,
@@ -167,9 +181,9 @@ class DatasetType(Enum):
     def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
-                sample_lookup_table.gt_stats,
+                snv.gt_stats,
             ],
             DatasetType.MITO: [
-                sample_lookup_table.gt_stats,
+                mito.gt_stats,
             ],
         }[self]

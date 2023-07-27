@@ -6,6 +6,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
     filter_callset_sample_ids,
     join_sample_lookup_hts,
 )
+from v03_pipeline.lib.model import DatasetType
 
 
 class SampleLookupTest(unittest.TestCase):
@@ -48,6 +49,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
         sample_lookup_ht = filter_callset_sample_ids(
+            DatasetType.SNV,
             sample_lookup_ht,
             samples_ht,
             'project_1',
@@ -79,6 +81,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
         sample_lookup_ht = filter_callset_sample_ids(
+            DatasetType.SNV,
             sample_lookup_ht,
             samples_ht,
             'project_2',
@@ -136,6 +139,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
+            DatasetType.SNV,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_1',
@@ -181,6 +185,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
+            DatasetType.SNV,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
@@ -259,6 +264,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
+            DatasetType.SNV,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_3',
@@ -358,6 +364,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
+            DatasetType.SNV,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
