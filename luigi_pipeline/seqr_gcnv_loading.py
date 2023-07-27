@@ -43,7 +43,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
 
-    def annotate_old_and_split_multi_hts(self, mt, *args, **kwargs):
+    def split_multi_hts(self, mt, *args, **kwargs):
         return mt
 
     def add_37_coordinates(self, mt, *args, **kwargs):
