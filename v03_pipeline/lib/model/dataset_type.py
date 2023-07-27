@@ -87,7 +87,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
-            DatasetType.SV: [],
+            DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
         }[self]
 
     @property
@@ -160,6 +160,7 @@ class DatasetType(Enum):
                 sv.sv_type_id,
                 sv.sv_type_detail_id,
                 shared.xpos,
+                sv.xstop,
             ],
             DatasetType.GCNV: [
                 gcnv.variant_id,
@@ -171,7 +172,7 @@ class DatasetType(Enum):
     def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
-                snv.GQ,
+                shared.GQ,
                 snv.AB,
                 snv.DP,
                 shared.GT,
@@ -182,6 +183,12 @@ class DatasetType(Enum):
                 mito.HL,
                 mito.mito_cn,
                 mito.GQ,
+                shared.GT,
+            ],
+            DatasetType.SV: [
+                sv.CN,
+                sv.concordance,
+                shared.GQ,
                 shared.GT,
             ],
         }[self]

@@ -586,7 +586,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.model.dataset_type.load_gencode')
+    @patch(
+        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
+    )
     def test_sv_update_vat(self, mock_load_gencode: Mock, mock_dataroot: Mock) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
@@ -654,10 +656,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=20404,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000186092', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000153404', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000180928,
+                    xstop=5000020404,
                 ),
                 hl.Struct(
                     rsid='BND_chr1_9',
@@ -677,10 +684,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=724861,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000143756', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000186192', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000789481,
+                    xstop=1000789481,
                 ),
                 hl.Struct(
                     rsid='CPX_chr1_22',
@@ -703,10 +715,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=6619783,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000173662', major_consequence_id=4),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
                     sv_type_detail_id=2,
                     xpos=1006558902,
+                    xstop=1006559723,
                 ),
                 hl.Struct(
                     rsid='CPX_chr1_251',
@@ -739,10 +755,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=181044088,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=1),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=1),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=1),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=1),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
                     sv_type_detail_id=9,
                     xpos=1180540234,
+                    xstop=1181074952,
                 ),
                 hl.Struct(
                     rsid='CPX_chr1_41',
@@ -765,10 +788,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=16416096,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000185519', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
                     sv_type_detail_id=12,
                     xpos=1016088760,
+                    xstop=1016089601,
                 ),
                 hl.Struct(
                     rsid='CPX_chr1_54',
@@ -792,10 +819,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=21806912,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000142794', major_consequence_id=1),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
                     sv_type_detail_id=13,
                     xpos=1021427498,
+                    xstop=1021480419,
                 ),
                 hl.Struct(
                     rsid='DEL_chr1_12',
@@ -815,10 +846,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=180817389,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=5,
                     sv_type_detail_id=None,
                     xpos=1000413968,
+                    xstop=1000428500,
                 ),
                 hl.Struct(
                     rsid='DUP_chr1_5',
@@ -834,10 +869,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=233417,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=6,
                     sv_type_detail_id=None,
                     xpos=1000257666,
+                    xstop=1000263666,
                 ),
                 hl.Struct(
                     rsid='INS_chr1_268',
@@ -857,10 +896,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=17792219,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000179051', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=7,
                     sv_type_detail_id=6,
                     xpos=1017465707,
+                    xstop=1017465723,
                 ),
                 hl.Struct(
                     rsid='INS_chr1_65',
@@ -883,10 +926,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=4288508,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000198912', major_consequence_id=6),
+                    ],
                     strvctvre=hl.Struct(score=0.1255),
                     sv_type_id=7,
                     sv_type_detail_id=4,
                     xpos=1004228405,
+                    xstop=1004228448,
                 ),
                 hl.Struct(
                     rsid='INS_chr1_688',
@@ -906,10 +953,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=49428807,
                         reference_genome='GRCh37',
                     ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000186094', major_consequence_id=4),
+                    ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=7,
                     sv_type_detail_id=5,
                     xpos=1048963084,
+                    xstop=1048963135,
                 ),
             ],
         )

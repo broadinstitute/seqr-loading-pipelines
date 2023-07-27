@@ -175,7 +175,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns,
-                **self.annotation_dependencies,
+                **annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
@@ -194,7 +194,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 ht,
                 self.dataset_type.sample_lookup_table_annotation_fns,
-                **self.annotation_dependencies,
+                **annotation_dependencies,
                 **self.param_kwargs,
             ),
         )

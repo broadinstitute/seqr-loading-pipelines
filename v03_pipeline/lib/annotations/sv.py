@@ -4,6 +4,8 @@ from typing import Any
 
 import hail as hl
 
+from hail_scripts.computed_fields import variant_id as expression_helpers
+
 from v03_pipeline.lib.annotations.enums import (
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
@@ -20,12 +22,39 @@ NON_GENE_PREDICTIONS = {
 }
 PASS = 'PASS'  # noqa: S105
 
+PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict(
+    {
+        # Map of concordance string -> previous n_alt_alleles()
+        # Concordant
+        frozenset(['TN']): 0,  # 0/0 -> 0/0
+        frozenset(['TP']): 2,  # 1/1 -> 1/1
+        frozenset(['TN', 'TP']): 1,  # 0/1 -> 0/1
+        # Novel
+        frozenset(['FP']): 0,  # 0/0 -> 1/1
+        frozenset(['TN', 'FP']): 0,  # 0/0 -> 0/1
+        # Absent
+        frozenset(['FN']): 2,  # 1/1 -> 0/0
+        frozenset(['TN', 'FN']): 1,  # 0/1 -> 0/0
+        # Discordant
+        frozenset(['FP', 'TP']): 1,  # 0/1 -> 1/1
+        frozenset(['FN', 'TP']): 2,  # 1/1 -> 0/1
+    },
+)
+
 
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 SV_TYPE_DETAILS_LOOKUP = hl.dict(hl.enumerate(SV_TYPE_DETAILS, index_first=False))
 SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
     hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False),
 )
+
+
+def _end_locus(ht: hl.Table) -> hl.StructExpression:
+    return hl.if_else(
+        hl.is_defined(ht.info.END2),
+        hl.struct(contig=ht.info.CHR2, position=ht.info.END2),
+        hl.struct(contig=ht.locus.contig, position=ht.info.END),
+    )
 
 
 def _get_cpx_interval(x):
@@ -51,6 +80,31 @@ def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def bothsides_support(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.filters.any(lambda x: x == BOTHSIDES_SUPPORT)
+
+
+def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    return mt.RD_CN
+
+
+def concordance(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    is_called = hl.is_defined(mt.GT)
+    was_previously_called = hl.is_defined(mt.CONC_ST) & ~mt.CONC_ST.contains(
+        'EMPTY',
+    )
+    num_alt = hl.if_else(is_called, mt.GT.n_alt_alleles(), -1)
+    prev_num_alt = hl.if_else(
+        was_previously_called,
+        PREVIOUS_GENOTYPE_N_ALT_ALLELES[hl.set(mt.CONC_ST)],
+        -1,
+    )
+    concordant_genotype = num_alt == prev_num_alt
+    discordant_genotype = (num_alt != prev_num_alt) & (prev_num_alt > 0)
+    novel_genotype = (num_alt != prev_num_alt) & (prev_num_alt == 0)
+    return hl.struct(
+        prev_num_alt=hl.or_missing(discordant_genotype, prev_num_alt),
+        prev_call=hl.or_missing(is_called, was_previously_called & concordant_genotype),
+        new_call=hl.or_missing(is_called, ~was_previously_called | novel_genotype),
+    )
 
 
 def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
@@ -94,11 +148,7 @@ def rg37_locus_end(
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
     if not rg38.has_liftover(rg37):
         rg38.add_liftover(liftover_ref_path, rg37)
-    end_locus = hl.if_else(
-        hl.is_defined(ht.info.END2),
-        hl.struct(contig=ht.info.CHR2, position=ht.info.END2),
-        hl.struct(contig=ht.locus.contig, position=ht.info.END),
-    )
+    end_locus = _end_locus(ht)
     return hl.or_missing(
         end_locus.position
         <= hl.literal(hl.get_reference(ReferenceGenome.GRCh38.value).lengths)[
@@ -117,7 +167,7 @@ def rg37_locus_end(
 
 def sorted_gene_consequences(
     ht: hl.Table,
-    gene_id_mapping: dict[str, str],
+    gencode_mapping: dict[str, str],
     **_: Any,
 ) -> hl.Expression:
     # In lieu of sorted_transcript_consequences seen on SNV/MITO.
@@ -130,7 +180,7 @@ def sorted_gene_consequences(
     mapped_genes = [
         ht.info[gene_col].map(
             lambda gene: hl.struct(
-                gene_id=gene_id_mapping[gene],
+                gene_id=gencode_mapping[gene],
                 major_consequence_id=SV_CONSEQUENCE_RANKS_LOOKUP[
                     gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)  # noqa: B023
                 ],
@@ -159,3 +209,8 @@ def sv_type_detail_id(ht: hl.Table, **_: Any) -> hl.Expression:
             SV_TYPE_DETAILS_LOOKUP[sv_types[1]],
         ),
     )
+
+
+def xstop(ht: hl.Table, **_: Any) -> hl.Expression:
+    end_locus = _end_locus(ht)
+    return expression_helpers.get_expr_for_xpos(end_locus)
