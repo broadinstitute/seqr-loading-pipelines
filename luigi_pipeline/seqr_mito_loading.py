@@ -24,6 +24,7 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     Loads all annotations for the variants of a Matrix Table into a Hail Table.
     """
     dataset_type = 'MITO'
+    dont_validate = True
     high_constraint_interval_path = luigi.Parameter(description='Path to the tsv file storing the high constraint intervals.')
     RUN_VEP = False
     SCHEMA_CLASS = SeqrMitoVariantSchema
@@ -37,11 +38,11 @@ class SeqrMitoVariantMTTask(SeqrVCFToVariantMTTask):
     def import_dataset(self):
         return hl.read_matrix_table(self.source_paths[0])
 
-    def annotate_globals(self, mt):
+    def annotate_globals(self, mt, clinvar_data):
         # Remove all existing global fields and annotate a new 'datasetType' field
         mt = mt.select_globals(datasetType=self.dataset_type)
 
-        return super().annotate_globals(mt)
+        return super().annotate_globals(mt, clinvar_data)
 
 
 class SeqrMitoGenotypesMTTask(BaseVCFToGenotypesMTTask):
