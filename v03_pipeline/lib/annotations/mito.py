@@ -34,7 +34,7 @@ def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
 
 def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
-    return (hl.cond(is_called, hl.int32(hl.min(mt.DP, 32000)), hl.missing(hl.tint32)))
+    return hl.cond(is_called, hl.int32(hl.min(mt.DP, 32000)), hl.missing(hl.tint32))
 
 
 def GQ(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
