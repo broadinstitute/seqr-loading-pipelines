@@ -17,7 +17,7 @@ class SampleLookupTest(unittest.TestCase):
             cols={'s': ['sample_1', 'sample_2', 'sample_3', 'sample_4']},
             entries={
                 'HL': [
-                    [0.0, 0.0, 0.99, 0.01],
+                    [0.0, hl.missing(hl.tfloat), 0.99, 0.01],
                     [0.1, 0.2, 0.94, 0.99],
                 ]
             }
@@ -31,7 +31,7 @@ class SampleLookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     row_idx=0,
-                    ref_samples={'sample_1', 'sample_2'},
+                    ref_samples={'sample_1'},
                     heteroplasmic_samples={'sample_4'},
                     homoplasmic_samples={'sample_3'},
                 ),
