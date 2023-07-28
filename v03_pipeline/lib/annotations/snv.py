@@ -12,13 +12,11 @@ N_ALT_HOM = 2
 def _AC(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
     return sum(
         (
-            (
-                row.ref_samples[project_guid].length() * N_ALT_REF
-                + row.het_samples[project_guid].length() * N_ALT_HET
-                + row.hom_samples[project_guid].length() * N_ALT_HOM
-            )
-            for project_guid in row.ref_samples
-        ),
+            row.ref_samples[project_guid].length() * N_ALT_REF
+            + row.het_samples[project_guid].length() * N_ALT_HET
+            + row.hom_samples[project_guid].length() * N_ALT_HOM
+        )
+        for project_guid in row.ref_samples
     )
 
 
@@ -29,19 +27,17 @@ def _AF(row: hl.StructExpression) -> hl.Float32Expression:  # noqa: N802
 def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
     return 2 * sum(
         (
-            (
-                row.ref_samples[project_guid].length()
-                + row.het_samples[project_guid].length()
-                + row.hom_samples[project_guid].length()
-            )
-            for project_guid in row.ref_samples
-        ),
+            row.ref_samples[project_guid].length()
+            + row.het_samples[project_guid].length()
+            + row.hom_samples[project_guid].length()
+        )
+        for project_guid in row.ref_samples
     )
 
 
 def _hom(row: hl.StructExpression) -> hl.Int32Expression:
     return sum(
-        [row.hom_samples[project_guid].length() for project_guid in row.hom_samples],
+        row.hom_samples[project_guid].length() for project_guid in row.hom_samples
     )
 
 
