@@ -33,7 +33,7 @@ def filter_callset_sample_ids(
                     ),
                 },
             )
-            for field in dataset_type.sample_lookup_table_fields_and_filter_fns
+            for field in dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
         },
     )
 
@@ -63,7 +63,7 @@ def join_sample_lookup_hts(
                     },
                 ),
             )
-            for field in dataset_type.sample_lookup_table_fields_and_filter_fns
+            for field in dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
         },
     )
     return sample_lookup_ht.select(
@@ -77,6 +77,6 @@ def join_sample_lookup_hts(
                     ),
                 },
             )
-            for field in dataset_type.sample_lookup_table_fields_and_filter_fns
+            for field in dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
         },
     )

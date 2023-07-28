@@ -16,8 +16,34 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
 )
 
 
+def _AC_het(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
+    return sum(
+        row.heteroplasmic_samples[project_guid].length()
+        for project_guid in row.ref_samples
+    )
+
+
+def _AC_hom(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
+    return sum(
+        row.homoplasmic_samples[project_guid].length()
+        for project_guid in row.ref_samples
+    )
+
+
+def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
+    return sum(
+        (
+            row.ref_samples[project_guid].length()
+            + row.heteroplasmic_samples[project_guid].length()
+            + row.homoplasmic_samples[project_guid].length()
+        )
+        for project_guid in row.ref_samples
+    )
+
+
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.common_low_heteroplasmy
+
 
 def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.contamination
@@ -67,4 +93,11 @@ def rsid(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def gt_stats(ht: hl.Table, sample_lookup_ht: hl.Table, **_: Any) -> hl.Expression:
-    return None
+    row = sample_lookup_ht[ht.key]
+    return hl.Struct(
+        AC_het=_AC_het(row),
+        AF_het=hl.float32(_AC_het(row) / _AN(row)),
+        AC_hom=_AC_hom(row),
+        AF_hom=hl.float32(_AC_hom(row) / _AN(row)),
+        AN=_AN(row),
+    )

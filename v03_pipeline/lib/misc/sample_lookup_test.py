@@ -3,6 +3,7 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.sample_lookup import (
+    compute_callset_sample_lookup_ht,
     filter_callset_sample_ids,
     join_sample_lookup_hts,
 )
@@ -10,6 +11,39 @@ from v03_pipeline.lib.model import DatasetType
 
 
 class SampleLookupTest(unittest.TestCase):
+    def test_compute_callset_sample_lookup_ht(self) -> None:
+        mt = hl.MatrixTable.from_parts(
+            rows={'variants': [1, 2]},
+            cols={'s': ['sample_1', 'sample_2', 'sample_3', 'sample_4']},
+            entries={
+                'HL': [
+                    [0.0, 0.0, 0.99, 0.01],
+                    [0.1, 0.2, 0.94, 0.99],
+                ]
+            }
+        )
+        sample_lookup_ht = compute_callset_sample_lookup_ht(
+            DatasetType.MITO,
+            mt,
+        )
+        self.assertListEqual(
+            sample_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    row_idx=0,
+                    ref_samples={'sample_1', 'sample_2'},
+                    heteroplasmic_samples={'sample_4'},
+                    homoplasmic_samples={'sample_3'},
+                ),
+                hl.Struct(
+                    row_idx=1,
+                    ref_samples=set(),
+                    heteroplasmic_samples={'sample_1', 'sample_2', 'sample_3'},
+                    homoplasmic_samples={'sample_4'},
+                ),
+            ],
+        )
+
     def test_filter_callset_sample_ids(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
             [
