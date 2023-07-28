@@ -74,9 +74,9 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
             [],
             hl.tstruct(
                 **key_type,
-                ref_samples=hl.tstruct(),
-                het_samples=hl.tstruct(),
-                hom_samples=hl.tstruct(),
+                **{
+                    field: hl.tstruct() for field in self.dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
+                }
             ),
             key=key_type.fields,
             globals=hl.Struct(

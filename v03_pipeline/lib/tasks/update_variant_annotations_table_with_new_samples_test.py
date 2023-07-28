@@ -432,7 +432,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4)
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -461,7 +461,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4)
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -490,7 +490,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4)
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -519,7 +519,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4)
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -548,7 +548,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4)
                 ),
             ],
         )
