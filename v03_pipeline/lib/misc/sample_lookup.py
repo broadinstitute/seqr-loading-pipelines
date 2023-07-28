@@ -40,30 +40,15 @@ def join_sample_lookup_hts(
 ) -> hl.Table:
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
     fields = ['ref_samples', 'het_samples', 'hom_samples']
-    # For rows that are "missing" in the existing sample lookup table,
-    # replace the "missing" with an empty struct with
-    # all projects (except for this one) as empty sets.
-    # It was easier to reason about this as a separate annotation pass
-    # than combined as a single annotate call
-    sample_lookup_ht = sample_lookup_ht.annotate(
+    empty_entry = hl.Struct(
         **{
-            field: hl.or_else(
-                sample_lookup_ht[field],
-                hl.Struct(
-                    **{
-                        existing_project_guid: hl.empty_set(hl.tstr)
-                        for existing_project_guid in sample_lookup_ht[
-                            field
-                        ].dtype.fields
-                    },
-                ),
-            )
-            for field in fields
-        },
+            project_guid: hl.empty_set(hl.tstr)
+            for project_guid in sample_lookup_ht[fields[0]].dtype.fields
+        }
     )
     return sample_lookup_ht.select(
         **{
-            field: sample_lookup_ht[field].annotate(
+            field: hl.or_else(sample_lookup_ht[field], empty_entry).annotate(
                 **{
                     project_guid: (
                         sample_lookup_ht[field]
