@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.sample_lookup import (
     filter_callset_sample_ids,
-    union_sample_lookup_hts,
+    join_sample_lookup_hts,
 )
 
 
@@ -101,7 +101,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
 
-    def test_union_sample_lookup_hts(self) -> None:
+    def test_join_sample_lookup_hts(self) -> None:
         sample_lookup_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -135,7 +135,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='id',
         )
-        sample_lookup_ht = union_sample_lookup_hts(
+        sample_lookup_ht = join_sample_lookup_hts(
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_1',
@@ -180,7 +180,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='id',
         )
-        sample_lookup_ht = union_sample_lookup_hts(
+        sample_lookup_ht = join_sample_lookup_hts(
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
@@ -258,7 +258,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='id',
         )
-        sample_lookup_ht = union_sample_lookup_hts(
+        sample_lookup_ht = join_sample_lookup_hts(
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_3',
@@ -357,7 +357,7 @@ class SampleLookupTest(unittest.TestCase):
             ),
             key='id',
         )
-        sample_lookup_ht = union_sample_lookup_hts(
+        sample_lookup_ht = join_sample_lookup_hts(
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
