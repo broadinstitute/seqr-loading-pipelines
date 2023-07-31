@@ -19,8 +19,8 @@ class SampleLookupTest(unittest.TestCase):
                 'HL': [
                     [0.0, hl.missing(hl.tfloat), 0.99, 0.01],
                     [0.1, 0.2, 0.94, 0.99],
-                ]
-            }
+                ],
+            },
         )
         sample_lookup_ht = compute_callset_sample_lookup_ht(
             DatasetType.MITO,
