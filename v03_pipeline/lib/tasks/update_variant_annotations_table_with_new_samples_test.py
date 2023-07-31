@@ -433,7 +433,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     mitomap=None,
                     mitimpact=None,
                     gt_stats=hl.Struct(
-                        AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4,
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
                     ),
                 ),
                 hl.Struct(
@@ -464,7 +468,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     mitomap=None,
                     mitimpact=None,
                     gt_stats=hl.Struct(
-                        AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4,
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
                     ),
                 ),
                 hl.Struct(
@@ -495,7 +503,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     mitomap=None,
                     mitimpact=None,
                     gt_stats=hl.Struct(
-                        AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4,
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
                     ),
                 ),
                 hl.Struct(
@@ -526,7 +538,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     mitomap=None,
                     mitimpact=None,
                     gt_stats=hl.Struct(
-                        AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4,
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
                     ),
                 ),
                 hl.Struct(
@@ -557,7 +573,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     mitomap=None,
                     mitimpact=None,
                     gt_stats=hl.Struct(
-                        AC_het=1, AF_het=0.25, AC_hom=0, AF_hom=0.0, AN=4,
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
                     ),
                 ),
             ],
