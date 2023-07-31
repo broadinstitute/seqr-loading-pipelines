@@ -21,7 +21,7 @@ def _start_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExp
 
 
 def _end_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
-    return hl.locus(ht.chr, ht.start, reference_genome.value)
+    return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
