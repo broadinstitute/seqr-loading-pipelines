@@ -33,6 +33,13 @@ SELECTED_ANNOTATIONS = [
 ]
 
 
+def add_rg38_liftover(liftover_ref_path: str) -> None:
+    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    if not rg38.has_liftover(rg37):
+        rg38.add_liftover(liftover_ref_path, rg37)
+
+
 def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.GT
 
@@ -54,10 +61,7 @@ def rg37_locus(
 ) -> hl.Expression | None:
     if reference_genome == ReferenceGenome.GRCh37:
         return None
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
+    add_rg38_liftover(liftover_ref_path)
     return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
 

@@ -11,6 +11,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
+from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
@@ -144,10 +145,7 @@ def rg37_locus_end(
 ) -> hl.Expression | None:
     if reference_genome == ReferenceGenome.GRCh37:
         return None
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
+    add_rg38_liftover(liftover_ref_path)
     end_locus = _end_locus(ht)
     return hl.or_missing(
         end_locus.position
