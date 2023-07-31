@@ -176,16 +176,20 @@ SV_TYPE_DETAILS = [
 SV_CONSEQUENCE_RANKS = [
     'COPY_GAIN',
     'LOF',
-    'DUP_LOF',
     'DUP_PARTIAL',
     'INTRONIC',
     'INV_SPAN',
     'NEAREST_TSS',
     'PROMOTER',
     'UTR',
-    # NB: is this the right order?
+    'INTERGENIC',
     'INTRAGENIC_EXON_DUP',
     'TSS_DUP',
+    'BREAKEND_EXONIC',
+    'MSV_EXON_OVERLAP',
+    'NONCODING_BREAKPOINT',
+    'NONCODING_SPAN',
+    'PARTIAL_EXON_DUP',
 ]
 
 
