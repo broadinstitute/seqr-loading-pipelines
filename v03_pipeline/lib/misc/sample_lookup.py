@@ -44,7 +44,7 @@ def join_sample_lookup_hts(
         **{
             project_guid: hl.empty_set(hl.tstr)
             for project_guid in sample_lookup_ht[fields[0]].dtype.fields
-        }
+        },
     )
     return sample_lookup_ht.select(
         **{
