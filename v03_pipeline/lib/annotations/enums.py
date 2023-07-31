@@ -183,6 +183,8 @@ SV_CONSEQUENCE_RANKS = [
     'NEAREST_TSS',
     'PROMOTER',
     'UTR',
+    # NB: is this the right order?
+    'INTRAGENIC_EXON_DUP',
 ]
 
 
