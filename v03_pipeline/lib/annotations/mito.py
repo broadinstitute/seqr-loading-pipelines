@@ -19,14 +19,14 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
 def _AC_het(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
     return sum(
         row.heteroplasmic_samples[project_guid].length()
-        for project_guid in row.ref_samples
+        for project_guid in row.heteroplasmic_samples
     )
 
 
 def _AC_hom(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
     return sum(
         row.homoplasmic_samples[project_guid].length()
-        for project_guid in row.ref_samples
+        for project_guid in row.homoplasmic_samples
     )
 
 
