@@ -182,16 +182,12 @@ SV_CONSEQUENCE_RANKS = [
     'NEAREST_TSS',
     'PROMOTER',
     'UTR',
-    'INTERGENIC',
     'INTRAGENIC_EXON_DUP',
     'TSS_DUP',
     'BREAKEND_EXONIC',
     'MSV_EXON_OVERLAP',
-    'NONCODING_BREAKPOINT',
-    'NONCODING_SPAN',
     'PARTIAL_EXON_DUP',
 ]
-
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     formatting_annotation_names = {
