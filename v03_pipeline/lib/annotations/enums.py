@@ -174,19 +174,19 @@ SV_TYPE_DETAILS = [
     'dupINVdup',
 ]
 SV_CONSEQUENCE_RANKS = [
-    'COPY_GAIN',
     'LOF',
-    'DUP_PARTIAL',
-    'INTRONIC',
-    'INV_SPAN',
-    'NEAREST_TSS',
-    'PROMOTER',
-    'UTR',
     'INTRAGENIC_EXON_DUP',
+    'PARTIAL_EXON_DUP',
+    'COPY_GAIN',
+    'DUP_PARTIAL',  
+    'MSV_EXON_OVERLAP',
+    'INV_SPAN',
+    'UTR',
+    'PROMOTER',
     'TSS_DUP',
     'BREAKEND_EXONIC',
-    'MSV_EXON_OVERLAP',
-    'PARTIAL_EXON_DUP',
+    'INTRONIC',
+    'NEAREST_TSS',
 ]
 
 
