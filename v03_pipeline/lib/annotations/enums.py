@@ -185,6 +185,7 @@ SV_CONSEQUENCE_RANKS = [
     'UTR',
     # NB: is this the right order?
     'INTRAGENIC_EXON_DUP',
+    'TSS_DUP',
 ]
 
 
