@@ -156,6 +156,7 @@ SV_TYPES = [
     'INV',
     'CNV',
 ]
+
 SV_TYPE_DETAILS = [
     'INS_iDEL',
     'INVdel',
@@ -173,6 +174,7 @@ SV_TYPE_DETAILS = [
     'dupINVdel',
     'dupINVdup',
 ]
+
 SV_CONSEQUENCE_RANKS = [
     'LOF',
     'INTRAGENIC_EXON_DUP',

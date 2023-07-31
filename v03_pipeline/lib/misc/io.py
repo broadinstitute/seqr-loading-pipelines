@@ -6,6 +6,7 @@ import uuid
 
 import hail as hl
 
+from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 
 BIALLELIC = 2
@@ -26,9 +27,44 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
-    # TODO implement me.
-    # also remember to annotate pos = hl.agg.min(mt.sample_start)
-    return hl.import_table(callset_path)
+    ht = hl.import_table(
+        callset_path,
+        types={
+            'start': hl.tint32,
+            'end': hl.tint32,
+            'CN': hl.tint32,
+            'QS': hl.tint32,
+            'defragmented': hl.tbool,
+            'sf': hl.tfloat64,
+            'sc': hl.tint32,
+            'genes_any_overlap_totalExons': hl.tint32,
+            'genes_strict_overlap_totalExons': hl.tint32,
+            'no_ovl': hl.tbool,
+            'is_latest': hl.tbool,
+        },
+        min_partitions=500,
+    )
+    mt = ht.to_matrix_table(
+        row_key=['variant_name', 'svtype'],
+        col_key=['sample_cram_basename'],
+        row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
+    )
+    # rename the sample id column before the sample subset happens
+    mt = mt.key_cols_by(s=mt.sample_cram_basename)
+    return mt.annotate_rows(
+        start=hl.agg.min(mt.start),
+        end=hl.agg.max(mt.end),
+        num_exon=hl.agg.max(mt.genes_any_overlap_totalExons),
+        genes=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_any_overlap_Ensemble_ID)),
+        ),
+        cg_genes=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_CG_Ensemble_ID)),
+        ),
+        lof_genes=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_LOF_Ensemble_ID)),
+        ),
+    )
 
 
 def import_vcf(

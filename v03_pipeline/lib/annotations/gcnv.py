@@ -1,30 +1,66 @@
 from __future__ import annotations
 
-import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import hail as hl
-import pytz
 
 from hail_scripts.computed_fields import variant_id as expression_helpers
 
+from v03_pipeline.lib.annotations.enums import SV_TYPES
 
-def xpos(ht: hl.Table, **_: Any) -> hl.Expression:
-    # NB: `pos` is an aggregated field over samples.
-    # I made the design choice to aggregate upstream so as to ensure
-    # all of the annotation methods worked w/ hl.Table rather
-    # than also support hl.MatrixTable.
-    return expression_helpers.get_expr_for_xpos(
-        hl.locus(
-            expression_helpers.replace_chr_prefix(ht.chr),
-            ht.pos,
+if TYPE_CHECKING:
+    from v03_pipeline.lib.model.definitions import ReferenceGenome
+
+SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
+
+
+def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
+    return hl.struct(
+        AF=ht.sf,
+        AC=ht.sc,
+        AN=hl.int32(ht.sc / ht.sf),
+        Hom=hl.missing(hl.tint32),
+        Het=hl.missing(hl.tint32),
+    )
+
+
+def num_exon(ht: hl.Table, **_: Any) -> hl.Expression:
+    return ht.num_exon
+
+
+def sorted_gene_consequences(
+    ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    return (
+        hl.array(
+            ht.geneIds.filter(lambda gene: gene != 'null').map(
+                lambda gene: hl.Struct(
+                    gene_id=gene,
+                    major_consequence_id=hl.if_else(
+                        ht.cg_genes.contains(gene),
+                        SV_CONSEQUENCE_RANKS['COPY_GAIN'],
+                        hl.if_else(
+                            ht.lof_genes.contains(gene),
+                            SV_CONSEQUENCE_RANKS['LOF'],
+                            hl.missing(hl.tint),
+                        ),
+                    ),
+                ),
+            ),
         ),
     )
 
 
-def variant_id(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.format(
-        f'%s_%s_{datetime.datetime.now(tz=pytz.timezone("US/Eastern")).date():%m%d%Y}',
-        ht.variant_name,
-        ht.svtype,
+def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
+    return hl.struct(score=hl.parse_float(ht.strvctvre_score))
+
+
+def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:
+    return SV_TYPES_LOOKUP[ht.svtype]
+
+
+def xpos(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.Expression:
+    return expression_helpers.get_expr_for_xpos(
+        hl.locus(ht.chr, ht.start, reference_genome.value),
     )

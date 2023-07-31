@@ -191,10 +191,6 @@ def sorted_gene_consequences(
     return hl.filter(hl.is_defined, mapped_genes).flatmap(lambda x: x)
 
 
-def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.struct(score=hl.parse_float(ht.info.StrVCTVRE))
-
-
 def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:
     return SV_TYPES_LOOKUP[_sv_types(ht)[0]]
 

@@ -102,6 +102,14 @@ class DatasetType(Enum):
                 'vep',
             ],
             DatasetType.SV: ['locus', 'alleles', 'filters', 'info'],
+            DatasetType.GCNV: [
+                'chr',
+                'num_exon',
+                'sc',
+                'sf',
+                'start',
+                'strvctvre_score',
+            ],
         }[self]
 
     @property
@@ -175,7 +183,10 @@ class DatasetType(Enum):
                 sv.xstop,
             ],
             DatasetType.GCNV: [
-                gcnv.variant_id,
+                gcnv.gt_stats,
+                gcnv.num_exon,
+                gcnv.strvctvre,
+                gcnv.sv_type_id,
                 gcnv.xpos,
             ],
         }[self]
