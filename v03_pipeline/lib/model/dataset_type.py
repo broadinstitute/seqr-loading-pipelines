@@ -185,6 +185,7 @@ class DatasetType(Enum):
             DatasetType.GCNV: [
                 gcnv.gt_stats,
                 gcnv.num_exon,
+                gcnv.sorted_gene_consequences,
                 gcnv.strvctvre,
                 gcnv.sv_type_id,
                 gcnv.xpos,

@@ -6,11 +6,14 @@ import hail as hl
 
 from hail_scripts.computed_fields import variant_id as expression_helpers
 
-from v03_pipeline.lib.annotations.enums import SV_TYPES
+from v03_pipeline.lib.annotations.enums import SV_CONSEQUENCE_RANKS, SV_TYPES
 
 if TYPE_CHECKING:
     from v03_pipeline.lib.model.definitions import ReferenceGenome
 
+SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
+    hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False),
+)
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 
 
@@ -32,19 +35,16 @@ def sorted_gene_consequences(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    return (
-        hl.array(
-            ht.geneIds.filter(lambda gene: gene != 'null').map(
-                lambda gene: hl.Struct(
-                    gene_id=gene,
-                    major_consequence_id=hl.if_else(
-                        ht.cg_genes.contains(gene),
-                        SV_CONSEQUENCE_RANKS['COPY_GAIN'],
-                        hl.if_else(
-                            ht.lof_genes.contains(gene),
-                            SV_CONSEQUENCE_RANKS['LOF'],
-                            hl.missing(hl.tint),
-                        ),
+    return hl.array(
+        ht.genes.filter.map(
+            lambda gene: hl.Struct(
+                gene_id=gene,
+                major_consequence_id=hl.if_else(
+                    ht.cg_genes.contains(gene),
+                    SV_CONSEQUENCE_RANKS['COPY_GAIN'],
+                    hl.or_missing(
+                        ht.lof_genes.contains(gene),
+                        SV_CONSEQUENCE_RANKS['LOF'],
                     ),
                 ),
             ),
