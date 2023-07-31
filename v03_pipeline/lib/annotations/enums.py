@@ -189,6 +189,7 @@ SV_CONSEQUENCE_RANKS = [
     'PARTIAL_EXON_DUP',
 ]
 
+
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns
