@@ -679,8 +679,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000186092', major_consequence_id=6),
-                        hl.Struct(gene_id='ENSG00000153404', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000186092', major_consequence_id=12),
+                        hl.Struct(gene_id='ENSG00000153404', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=2,
@@ -707,8 +707,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000143756', major_consequence_id=6),
-                        hl.Struct(gene_id='ENSG00000186192', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000143756', major_consequence_id=12),
+                        hl.Struct(gene_id='ENSG00000186192', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=2,
@@ -738,7 +738,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000173662', major_consequence_id=4),
+                        hl.Struct(gene_id='ENSG00000173662', major_consequence_id=11),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -778,10 +778,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=1),
-                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=1),
-                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=1),
-                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=1),
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -811,7 +811,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000185519', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000185519', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -842,7 +842,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000142794', major_consequence_id=1),
+                        hl.Struct(gene_id='ENSG00000142794', major_consequence_id=0),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -869,7 +869,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=5,
@@ -892,7 +892,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=6,
@@ -919,7 +919,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000179051', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000179051', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=7,
@@ -949,7 +949,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000198912', major_consequence_id=6),
+                        hl.Struct(gene_id='ENSG00000198912', major_consequence_id=12),
                     ],
                     strvctvre=hl.Struct(score=0.1255),
                     sv_type_id=7,
@@ -976,7 +976,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000186094', major_consequence_id=4),
+                        hl.Struct(gene_id='ENSG00000186094', major_consequence_id=11),
                     ],
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=7,
