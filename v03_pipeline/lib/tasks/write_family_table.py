@@ -6,9 +6,7 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import samples_to_include
-from v03_pipeline.lib.misc.sample_entries import (
-    globalize_sample_ids,
-)
+from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
 from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask

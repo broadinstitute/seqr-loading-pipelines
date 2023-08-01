@@ -458,9 +458,43 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         self.assertCountEqual(
             ht.entries.collect(),
             [
-                hl.Struct(defragged=False, new_call=False, prev_call=True, prev_overlap=False, CN=1, GT='1', QS=4), 
-                hl.Struct(defragged=False, new_call=False, prev_call=False, prev_overlap=False, CN=1, GT='1', QS=5), 
-                hl.Struct(defragged=False, new_call=False, prev_call=True, prev_overlap=False, CN=0, GT='1', QS=30), 
-                hl.Struct(defragged=False, new_call=False, prev_call=True, prev_overlap=False, CN=0, GT='1', QS=30)
+                [
+                    hl.Struct(
+                        defragged=False,
+                        new_call=False,
+                        prev_call=True,
+                        prev_overlap=False,
+                        CN=1,
+                        GT='1',
+                        QS=4,
+                    ),
+                    hl.Struct(
+                        defragged=False,
+                        new_call=False,
+                        prev_call=False,
+                        prev_overlap=False,
+                        CN=1,
+                        GT='1',
+                        QS=5,
+                    ),
+                    hl.Struct(
+                        defragged=False,
+                        new_call=False,
+                        prev_call=True,
+                        prev_overlap=False,
+                        CN=0,
+                        GT='1',
+                        QS=30,
+                    ),
+                    hl.Struct(
+                        defragged=False,
+                        new_call=False,
+                        prev_call=True,
+                        prev_overlap=False,
+                        CN=0,
+                        GT='1',
+                        QS=30,
+                    ),
+                ],
             ],
         )
