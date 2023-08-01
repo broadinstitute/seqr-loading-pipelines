@@ -206,7 +206,6 @@ class DatasetType(Enum):
                 sv.xstop,
             ],
             DatasetType.GCNV: [
-                gcnv.defragged,
                 gcnv.gt_stats,
                 gcnv.interval,
                 gcnv.num_exon,
