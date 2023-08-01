@@ -116,6 +116,7 @@ class DatasetType(Enum):
                 'cg_genes',
                 'chr',
                 'end',
+                'filters',
                 'genes',
                 'lof_genes',
                 'num_exon',

@@ -54,6 +54,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     mt = mt.key_cols_by(s=mt.sample_cram_basename)
     return mt.annotate_rows(
         variant_id=hl.format('%s_%s', mt.variant_name, mt.svtype),
+        filters=hl.empty_set(hl.tstr),
         start=hl.agg.min(mt.sample_start),
         end=hl.agg.max(mt.sample_end),
         num_exon=hl.agg.max(mt.genes_any_overlap_totalExons),

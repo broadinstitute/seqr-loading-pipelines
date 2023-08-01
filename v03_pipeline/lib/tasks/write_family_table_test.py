@@ -10,6 +10,7 @@ import luigi.worker
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
+TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -415,4 +416,47 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                     ),
                 ],
             ],
+        )
+
+
+    def test_gcnv_write_family_table_task(self, mock_dataroot: Mock) -> None:
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        worker = luigi.worker.Worker()
+
+        write_family_table_task = WriteFamilyTableTask(
+            env=Env.TEST,
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.GCNV,
+            callset_path=TEST_GCNV_BED_FILE,
+            project_guid='R0115_test_project2',
+            project_remap_path='not_a_real_file',
+            project_pedigree_path=TEST_PEDIGREE_5,
+            family_guid='family_2_1',
+        )
+        worker.add(write_family_table_task)
+        worker.run()
+        self.assertEqual(
+            write_family_table_task.output().path,
+            f'{self._temp_local_datasets}/v03/GRCh38/GCNV/families/family_2_1/samples.ht',
+        )
+        self.assertTrue(write_family_table_task.complete())
+        ht = hl.read_table(write_family_table_task.output().path)
+        self.assertCountEqual(
+            ht.globals.sample_ids.collect(),
+            [
+                [
+                    'RGP_164_1',
+                    'RGP_164_2',
+                    'RGP_164_3',
+                    'RGP_164_4',
+                ],
+            ],
+        )
+        self.assertEqual(
+            ht.count(),
+            2,
+        )
+        self.assertCountEqual(
+            ht.entries.collect(),
+            [],
         )
