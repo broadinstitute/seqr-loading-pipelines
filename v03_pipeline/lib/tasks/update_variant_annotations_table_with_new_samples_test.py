@@ -63,7 +63,6 @@ GENE_ID_MAPPING = {
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
-    maxDiff = None
 
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
@@ -1050,18 +1049,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         includes_end=False,
                     ),
                     num_exon=3,
-                    rg37_locus=Locus(
+                    rg37_locus=hl.Locus(
                         contig=1, position=100472493, reference_genome='GRCh37',
                     ),
-                    rg37_locus_end=Locus(
+                    rg37_locus_end=hl.Locus(
                         contig=1, position=100488769, reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        Struct(gene_id='ENSG00000117620', major_consequence_id=0),
-                        Struct(gene_id='ENSG00000283761', major_consequence_id=0),
-                        Struct(gene_id='ENSG22222222222', major_consequence_id=None),
+                        hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
                     ],
-                    strvctvre=Struct(score=0.583),
+                    strvctvre=hl.Struct(score=0.583),
                     sv_type_id=5,
                     xpos=1100006937,
                 )
