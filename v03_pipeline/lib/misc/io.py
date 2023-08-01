@@ -45,15 +45,16 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         min_partitions=500,
     )
     mt = ht.to_matrix_table(
-        row_key=['variant_name', 'svtype'],
+        row_key=['variant_name'],
         col_key=['sample_cram_basename'],
-        row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
+        row_fields=['chr', 'sc', 'sf', 'strvctvre_score', 'svtype'],
     )
+    mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
     # rename the sample id column before the sample subset happens
     mt = mt.key_cols_by(s=mt.sample_cram_basename)
     return mt.annotate_rows(
-        start=hl.agg.min(mt.start),
-        end=hl.agg.max(mt.end),
+        start=hl.agg.min(mt.sample_start),
+        end=hl.agg.max(mt.sample_end),
         num_exon=hl.agg.max(mt.genes_any_overlap_totalExons),
         genes=hl.flatten(
             hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_any_overlap_Ensemble_ID)),

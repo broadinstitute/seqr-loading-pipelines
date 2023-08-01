@@ -121,7 +121,3 @@ def sorted_transcript_consequences(ht: hl.Table, **_: Any) -> hl.Expression:
             transcript_rank=csq_with_index[0],
         ),
     )
-
-
-def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.struct(score=hl.parse_float(ht.info.StrVCTVRE))

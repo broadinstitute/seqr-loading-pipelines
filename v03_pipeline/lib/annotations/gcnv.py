@@ -78,15 +78,15 @@ def sorted_gene_consequences(
     **_: Any,
 ) -> hl.Expression:
     return hl.array(
-        ht.genes.filter.map(
+        ht.genes.map(
             lambda gene: hl.Struct(
                 gene_id=gene,
                 major_consequence_id=hl.if_else(
                     ht.cg_genes.contains(gene),
-                    SV_CONSEQUENCE_RANKS['COPY_GAIN'],
+                    SV_CONSEQUENCE_RANKS_LOOKUP['COPY_GAIN'],
                     hl.or_missing(
                         ht.lof_genes.contains(gene),
-                        SV_CONSEQUENCE_RANKS['LOF'],
+                        SV_CONSEQUENCE_RANKS_LOOKUP['LOF'],
                     ),
                 ),
             ),

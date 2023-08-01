@@ -190,14 +190,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # 5) Union with the existing variant annotations table
         # and annotate with the sample lookup table.
         ht = ht.union(new_variants_ht, unify=True)
-        ht = ht.annotate(
-            **get_fields(
-                ht,
-                self.dataset_type.sample_lookup_table_annotation_fns,
-                **annotation_dependencies,
-                **self.param_kwargs,
-            ),
-        )
+        if self.dataset_type.has_sample_lookup_table:
+            ht = ht.annotate(
+                **get_fields(
+                    ht,
+                    self.dataset_type.sample_lookup_table_annotation_fns,
+                    **annotation_dependencies,
+                    **self.param_kwargs,
+                ),
+            )
 
         # 6) Fix up the globals.
         ht = ht.annotate_globals(

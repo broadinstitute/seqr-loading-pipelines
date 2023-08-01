@@ -30,6 +30,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
+TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -984,4 +985,110 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xstop=1048963135,
                 ),
             ],
+        )
+
+    def test_gcnv_update_vat(self, mock_dataroot: Mock) -> None:
+        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                env=Env.TEST,
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.GCNV,
+                callset_path=TEST_GCNV_BED_FILE,
+                project_guids=['R0115_test_project2'],
+                project_remap_paths=['not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_5],
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        self.assertFalse(
+            GCSorLocalFolderTarget(
+                f'{self._temp_local_datasets}/v03/GRCh38/GCNV/lookup.ht',
+            ).exists(),
+        )
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 2)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    paths=hl.Struct(),
+                    versions=hl.Struct(),
+                    enums=hl.Struct(
+                        sv_type=SV_TYPES,
+                        sv_consequence_rank=SV_CONSEQUENCE_RANKS,
+                    ),
+                    updates={
+                        hl.Struct(
+                            callset=TEST_GCNV_BED_FILE,
+                            project_guid='R0115_test_project2',
+                        ),
+                    },
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.collect(),
+            hl.Struct(
+                variant_name='suffix_16453',
+                gt_stats=hl.Struct(AF=4.401408e-05, AC=1, AN=22720, Hom=None, Het=None),
+                interval=hl.Interval(
+                    start=hl.Locus(
+                        contig='chr1', position=100006937, reference_genome='GRCh38'
+                    ),
+                    end=hl.Locus(
+                        contig='chr1', position=100007881, reference_genome='GRCh38'
+                    ),
+                    includes_start=True,
+                    includes_end=False,
+                ),
+                num_exon=2,
+                rg37_locus=hl.Locus(
+                    contig=1, position=100472493, reference_genome='GRCh37'
+                ),
+                rg37_locus_end=hl.Locus(
+                    contig=1, position=100473437, reference_genome='GRCh37'
+                ),
+                sorted_gene_consequences=[
+                    hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
+                    hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                ],
+                strvctvre=hl.Struct(score=0.583),
+                sv_type_id=5,
+                xpos=1100006937,
+            ),
+            hl.Struct(
+                variant_name='suffix_16456',
+                svtype='DEL',
+                gt_stats=hl.Struct(AF=8.802817e-05, AC=2, AN=22719, Hom=None, Het=None),
+                interval=hl.Interval(
+                    start=hl.Locus(
+                        contig='chr1', position=100017585, reference_genome='GRCh38'
+                    ),
+                    end=hl.Locus(
+                        contig='chr1', position=100023213, reference_genome='GRCh38'
+                    ),
+                    includes_start=True,
+                    includes_end=False,
+                ),
+                num_exon=3,
+                rg37_locus=hl.Locus(
+                    contig=1, position=100483141, reference_genome='GRCh37'
+                ),
+                rg37_locus_end=Locus(
+                    contig=1, position=100488769, reference_genome='GRCh37'
+                ),
+                sorted_gene_consequences=[
+                    hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
+                    hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                    hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
+                ],
+                strvctvre=hl.Struct(score=0.507),
+                sv_type_id=5,
+                xpos=1100017585,
+            ),
         )

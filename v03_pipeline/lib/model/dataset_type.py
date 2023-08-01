@@ -72,6 +72,7 @@ class DatasetType(Enum):
             DatasetType.SNV: [],
             DatasetType.MITO: ['contamination', 'mito_cn'],
             DatasetType.SV: [],
+            DatasetType.GCNV: [],
         }[self]
 
     @property
@@ -82,6 +83,7 @@ class DatasetType(Enum):
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
             DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
+            DatasetType.GCNV: [],
         }[self]
 
     @property
@@ -103,7 +105,11 @@ class DatasetType(Enum):
             ],
             DatasetType.SV: ['locus', 'alleles', 'filters', 'info'],
             DatasetType.GCNV: [
+                'cg_genes',
                 'chr',
+                'end',
+                'genes',
+                'lof_genes',
                 'num_exon',
                 'sc',
                 'sf',
@@ -229,5 +235,4 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
-            DatasetType.SV: [],
         }[self]
