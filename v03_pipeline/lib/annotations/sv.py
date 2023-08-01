@@ -14,14 +14,12 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
 CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
 NON_GENE_PREDICTIONS = {
     'PREDICTED_INTERGENIC',
     'PREDICTED_NONCODING_BREAKPOINT',
     'PREDICTED_NONCODING_SPAN',
 }
-PASS = 'PASS'  # noqa: S105
 
 PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict(
     {
@@ -80,7 +78,7 @@ def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def bothsides_support(ht: hl.Table, **_: Any) -> hl.Expression:
-    return ht.filters.any(lambda x: x == BOTHSIDES_SUPPORT)
+    return ht.filters.any(lambda x: x == 'BOTHSIDES_SUPPORT')
 
 
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -113,11 +111,6 @@ def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
         hl.is_defined(ht.info.CPX_INTERVALS),
         ht.info.CPX_INTERVALS.map(lambda x: _get_cpx_interval(x)),
     )
-
-
-def filters(ht: hl.Table, **_: Any) -> hl.Expression:
-    filters = ht.filters.filter(lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT))
-    return hl.or_missing(filters.size() > 0, filters)
 
 
 def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
