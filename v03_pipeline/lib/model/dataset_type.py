@@ -89,8 +89,9 @@ class DatasetType(Enum):
                 'identical_ovl',
                 'is_latest',
                 'no_ovl',
-                'QS',
                 'CN',
+                'GT',
+                'QS',
             ],
         }[self]
 
@@ -135,6 +136,12 @@ class DatasetType(Enum):
     @property
     def has_gencode_mapping(self) -> dict[str, str]:
         return self == DatasetType.SV
+
+    @property
+    def sample_entries_filter_fn(self) -> Callable[hl.StructExpression, bool]:
+        return {
+            DatasetType.GCNV: lambda e: hl.is_defined(e.GT),
+        }.get(lambda e: e.GT.is_non_ref())
 
     @property
     def sample_lookup_table_fields_and_genotype_filter_fns(
@@ -236,11 +243,13 @@ class DatasetType(Enum):
                 shared.GT,
             ],
             DatasetType.GCNV: [
-                gcnv.CN,
-                gcnv.QS,
+                gcnv.defragged,
                 gcnv.new_call,
                 gcnv.prev_call,
                 gcnv.prev_overlap,
+                gcnv.CN,
+                shared.GT,
+                gcnv.QS,
             ],
         }[self]
 

@@ -99,7 +99,10 @@ class UpdateProjectTableTask(BaseUpdateTask):
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
-        callset_ht = filter_hom_ref_rows(callset_ht)
+        callset_ht = filter_hom_ref_rows(
+            callset_ht,
+            self.dataset_type.sample_entries_filter_fn,
+        )
         # HACK: steal the type from callset_ht when ht is empty.
         # This was the least gross way
         if 'entries' not in ht.row_value:

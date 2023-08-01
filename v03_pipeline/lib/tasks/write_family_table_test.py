@@ -418,7 +418,6 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             ],
         )
 
-
     def test_gcnv_write_family_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         worker = luigi.worker.Worker()
