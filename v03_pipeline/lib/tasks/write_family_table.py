@@ -30,7 +30,10 @@ class WriteFamilyTableTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     family_guid = luigi.Parameter()
-    is_new_joint_call = luigi.BoolParameter(default=False, description='Is this a fully joint-called callset.')
+    is_new_joint_call = luigi.BoolParameter(
+        default=False,
+        description='Is this a fully joint-called callset.',
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

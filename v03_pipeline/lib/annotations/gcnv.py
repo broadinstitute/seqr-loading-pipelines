@@ -24,6 +24,14 @@ def _end_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpre
     return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
+def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    return mt.CN
+
+
+def defragged(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
+    return mt.defragmented
+
+
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
         AF=ht.sf,
@@ -45,8 +53,34 @@ def interval(
     )
 
 
+def new_call(mt: hl.MatrixTable, is_new_joint_call: bool, **_: Any) -> hl.Expression:
+    if is_new_joint_call:
+        return mt.no_ovl
+    return False
+
+
 def num_exon(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.num_exon
+
+
+def prev_call(mt: hl.MatrixTable, is_new_joint_call: bool, **_: Any) -> hl.Expression:
+    if is_new_joint_call:
+        return hl.len(mt.identical_ovl) > 0
+    return ~mt.is_latest
+
+
+def prev_overlap(
+    mt: hl.MatrixTable,
+    is_new_joint_call: bool,
+    **_: Any,
+) -> hl.Expression:
+    if is_new_joint_call:
+        return hl.len(mt.any_ovl) > 0
+    return False
+
+
+def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
+    return mt.QS
 
 
 def rg37_locus(

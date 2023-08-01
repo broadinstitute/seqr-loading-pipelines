@@ -83,7 +83,15 @@ class DatasetType(Enum):
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
             DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
-            DatasetType.GCNV: [],
+            DatasetType.GCNV: [
+                'any_ovl',
+                'defragmented',
+                'identical_ovl',
+                'is_latest',
+                'no_ovl',
+                'QS',
+                'CN',
+            ],
         }[self]
 
     @property
@@ -190,6 +198,7 @@ class DatasetType(Enum):
                 sv.xstop,
             ],
             DatasetType.GCNV: [
+                gcnv.defragged,
                 gcnv.gt_stats,
                 gcnv.interval,
                 gcnv.num_exon,
@@ -224,6 +233,13 @@ class DatasetType(Enum):
                 sv.concordance,
                 shared.GQ,
                 shared.GT,
+            ],
+            DatasetType.GCNV: [
+                gcnv.CN,
+                gcnv.QS,
+                gcnv.new_call,
+                gcnv.prev_call,
+                gcnv.prev_overlap,
             ],
         }[self]
 
