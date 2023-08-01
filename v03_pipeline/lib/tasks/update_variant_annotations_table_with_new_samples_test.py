@@ -1033,62 +1033,91 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         )
         self.assertCountEqual(
             ht.collect(),
-            hl.Struct(
-                variant_name='suffix_16453',
-                gt_stats=hl.Struct(AF=4.401408e-05, AC=1, AN=22720, Hom=None, Het=None),
-                interval=hl.Interval(
-                    start=hl.Locus(
-                        contig='chr1', position=100006937, reference_genome='GRCh38'
+            [
+                hl.Struct(
+                    variant_id='suffix_16453_DEL',
+                    gt_stats=hl.Struct(
+                        AF=4.401408e-05,
+                        AC=1,
+                        AN=22720,
+                        Hom=None,
+                        Het=None,
                     ),
-                    end=hl.Locus(
-                        contig='chr1', position=100007881, reference_genome='GRCh38'
+                    interval=hl.Interval(
+                        start=hl.Locus(
+                            contig='chr1',
+                            position=100006937,
+                            reference_genome='GRCh38',
+                        ),
+                        end=hl.Locus(
+                            contig='chr1',
+                            position=100007881,
+                            reference_genome='GRCh38',
+                        ),
+                        includes_start=True,
+                        includes_end=False,
                     ),
-                    includes_start=True,
-                    includes_end=False,
-                ),
-                num_exon=2,
-                rg37_locus=hl.Locus(
-                    contig=1, position=100472493, reference_genome='GRCh37'
-                ),
-                rg37_locus_end=hl.Locus(
-                    contig=1, position=100473437, reference_genome='GRCh37'
-                ),
-                sorted_gene_consequences=[
-                    hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
-                    hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
-                ],
-                strvctvre=hl.Struct(score=0.583),
-                sv_type_id=5,
-                xpos=1100006937,
-            ),
-            hl.Struct(
-                variant_name='suffix_16456',
-                svtype='DEL',
-                gt_stats=hl.Struct(AF=8.802817e-05, AC=2, AN=22719, Hom=None, Het=None),
-                interval=hl.Interval(
-                    start=hl.Locus(
-                        contig='chr1', position=100017585, reference_genome='GRCh38'
+                    num_exon=2,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=100472493,
+                        reference_genome='GRCh37',
                     ),
-                    end=hl.Locus(
-                        contig='chr1', position=100023213, reference_genome='GRCh38'
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=100473437,
+                        reference_genome='GRCh37',
                     ),
-                    includes_start=True,
-                    includes_end=False,
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                    ],
+                    strvctvre=hl.Struct(score=0.583),
+                    sv_type_id=5,
+                    xpos=1100006937,
                 ),
-                num_exon=3,
-                rg37_locus=hl.Locus(
-                    contig=1, position=100483141, reference_genome='GRCh37'
+                hl.Struct(
+                    variant_id='suffix_16456_DEL',
+                    gt_stats=hl.Struct(
+                        AF=8.802817e-05,
+                        AC=2,
+                        AN=22719,
+                        Hom=None,
+                        Het=None,
+                    ),
+                    interval=hl.Interval(
+                        start=hl.Locus(
+                            contig='chr1',
+                            position=100017585,
+                            reference_genome='GRCh38',
+                        ),
+                        end=hl.Locus(
+                            contig='chr1',
+                            position=100023213,
+                            reference_genome='GRCh38',
+                        ),
+                        includes_start=True,
+                        includes_end=False,
+                    ),
+                    num_exon=3,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=100483141,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=100488769,
+                        reference_genome='GRCh37',
+                    ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
+                    ],
+                    strvctvre=hl.Struct(score=0.507),
+                    sv_type_id=5,
+                    xpos=1100017585,
                 ),
-                rg37_locus_end=Locus(
-                    contig=1, position=100488769, reference_genome='GRCh37'
-                ),
-                sorted_gene_consequences=[
-                    hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
-                    hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
-                    hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
-                ],
-                strvctvre=hl.Struct(score=0.507),
-                sv_type_id=5,
-                xpos=1100017585,
-            ),
+            ],
         )

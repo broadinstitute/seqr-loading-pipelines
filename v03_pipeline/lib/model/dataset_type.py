@@ -60,7 +60,7 @@ class DatasetType(Enum):
             alleles=hl.tarray(hl.tstr),
         )
         return {
-            DatasetType.GCNV: hl.tstruct(variant_name=hl.tstr, svtype=hl.tstr),
+            DatasetType.GCNV: hl.tstruct(variant_id=hl.tstr),
             DatasetType.SV: hl.tstruct(rsid=hl.tstr),
         }.get(self, default_key)
 
@@ -115,6 +115,7 @@ class DatasetType(Enum):
                 'sf',
                 'start',
                 'strvctvre_score',
+                'svtype',
             ],
         }[self]
 
