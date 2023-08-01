@@ -7,7 +7,6 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_entries import (
-    filter_hom_ref_rows,
     globalize_sample_ids,
 )
 from v03_pipeline.lib.misc.sample_ids import subset_samples

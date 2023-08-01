@@ -6,7 +6,6 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
     filter_callset_entries,
-    filter_hom_ref_rows,
     globalize_sample_ids,
     join_entries_hts,
 )
@@ -99,7 +98,9 @@ class UpdateProjectTableTask(BaseUpdateTask):
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
-        callset_ht = ht.filter(callset_ht.entries.any(self.dataset_type.sample_entries_filter_fn))
+        callset_ht = ht.filter(
+            callset_ht.entries.any(self.dataset_type.sample_entries_filter_fn),
+        )
         # HACK: steal the type from callset_ht when ht is empty.
         # This was the least gross way
         if 'entries' not in ht.row_value:

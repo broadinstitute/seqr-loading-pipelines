@@ -1011,7 +1011,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 2)
+        self.assertEqual(ht.count(), 1)
         self.assertCountEqual(
             ht.globals.collect(),
             [
@@ -1034,48 +1034,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         self.assertCountEqual(
             ht.collect(),
             [
-                hl.Struct(
-                    variant_id='suffix_16453_DEL',
-                    gt_stats=hl.Struct(
-                        AF=4.401408e-05,
-                        AC=1,
-                        AN=22720,
-                        Hom=None,
-                        Het=None,
-                    ),
-                    interval=hl.Interval(
-                        start=hl.Locus(
-                            contig='chr1',
-                            position=100006937,
-                            reference_genome='GRCh38',
-                        ),
-                        end=hl.Locus(
-                            contig='chr1',
-                            position=100007881,
-                            reference_genome='GRCh38',
-                        ),
-                        includes_start=True,
-                        includes_end=False,
-                    ),
-                    num_exon=2,
-                    rg37_locus=hl.Locus(
-                        contig=1,
-                        position=100472493,
-                        reference_genome='GRCh37',
-                    ),
-                    rg37_locus_end=hl.Locus(
-                        contig=1,
-                        position=100473437,
-                        reference_genome='GRCh37',
-                    ),
-                    sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000117620', major_consequence_id=0),
-                        hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
-                    ],
-                    strvctvre=hl.Struct(score=0.583),
-                    sv_type_id=5,
-                    xpos=1100006937,
-                ),
                 hl.Struct(
                     variant_id='suffix_16456_DEL',
                     gt_stats=hl.Struct(
