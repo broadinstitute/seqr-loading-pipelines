@@ -138,10 +138,10 @@ class DatasetType(Enum):
         return self == DatasetType.SV
 
     @property
-    def sample_entries_filter_fn(self) -> Callable[hl.StructExpression, bool]:
+    def sample_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
         return {
             DatasetType.GCNV: lambda e: hl.is_defined(e.GT),
-        }.get(lambda e: e.GT.is_non_ref())
+        }.get(self, lambda e: e.GT.is_non_ref())
 
     @property
     def sample_lookup_table_fields_and_genotype_filter_fns(

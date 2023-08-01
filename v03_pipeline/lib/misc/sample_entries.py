@@ -42,13 +42,6 @@ def filter_callset_entries(
     return globalize_sample_ids(ht)
 
 
-def filter_hom_ref_rows(
-    ht: hl.Table,
-    filter_fn: Callable[[hl.StructExpression], bool],
-) -> hl.Table:
-    return ht.filter(ht.entries.any(filter_fn))
-
-
 def join_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     ht = ht.join(callset_ht, 'outer')
     ht_empty_entries = ht.sample_ids.map(
