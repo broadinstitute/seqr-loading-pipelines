@@ -43,6 +43,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
             'is_latest': hl.tbool,
         },
         min_partitions=500,
+        force=callset_path.endswith('gz'),
     )
     mt = ht.to_matrix_table(
         row_key=['variant_name', 'svtype'],
