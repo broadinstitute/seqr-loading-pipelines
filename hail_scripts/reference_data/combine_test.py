@@ -250,7 +250,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 ),
             ],
         )
-
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
         ht = get_ht(
             'a',
