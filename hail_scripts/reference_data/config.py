@@ -405,6 +405,7 @@ CONFIG = {
                 'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
+            'filter': lambda ht: ht.locus.contig == 'chrM',
         },
         '38': {
             'version': '4.2',
