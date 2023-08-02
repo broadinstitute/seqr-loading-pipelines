@@ -80,9 +80,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
             'mock_dbnsfp_mito': {
                 '38': {
                     'path': '',
-                    'select': [
-                        'fathmm_MKL_coding_pred',
-                    ],
                     'custom_select': dbnsfp_mito_custom_select,
                     'enum_select': {
                         'SIFT_pred': ['D', 'T'],
@@ -146,7 +143,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         position=1,
                         reference_genome='GRCh38',
                     ),
-                    mock_dbnsfp_mito=hl.Struct(
+                    mock_dbnsfp=hl.Struct(
                         REVEL_score=None,
                         SIFT_pred_id=1,
                         Polyphen2_HVAR_pred_id=1,
@@ -160,7 +157,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         position=2,
                         reference_genome='GRCh38',
                     ),
-                    mock_dbnsfp_mito=hl.Struct(
+                    mock_dbnsfp=hl.Struct(
                         REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
                         Polyphen2_HVAR_pred_id=2,
@@ -184,7 +181,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         position=2,
                         reference_genome='GRCh38',
                     ),
-                    mock_dbnsfp=hl.Struct(
+                    mock_dbnsfp_mito=hl.Struct(
                         SIFT_pred_id=None,
                         MutationTaster_pred_id=3,
                     ),
