@@ -12,8 +12,6 @@ from hail_scripts.reference_data.clinvar import (
 )
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
 
-from v03_pipeline.lib.model import ReferenceDatasetCollection
-
 
 def import_locus_intervals(
     url: str,

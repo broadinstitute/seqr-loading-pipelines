@@ -10,7 +10,10 @@ from hail_scripts.reference_data.combine import (
     get_ht,
     update_existing_joined_hts,
 )
-from hail_scripts.reference_data.config import dbnsfp_custom_select, dbnsfp_mito_custom_select
+from hail_scripts.reference_data.config import (
+    dbnsfp_custom_select,
+    dbnsfp_mito_custom_select,
+)
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
 
