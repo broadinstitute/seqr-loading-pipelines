@@ -20,6 +20,8 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class WriteFamilyTableTaskTest(unittest.TestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 
@@ -464,8 +466,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         new_call=False,
                         prev_call=True,
                         prev_overlap=False,
+                        sample_end=100007881,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=2,
+                        sample_start=100006937,
                         CN=1,
-                        GT='1',
+                        GT=hl.Call(alleles=[0, 1], phased=False),
                         QS=4,
                     ),
                     hl.Struct(
@@ -473,8 +479,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         new_call=False,
                         prev_call=False,
                         prev_overlap=False,
+                        sample_end=100023213,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=None,
+                        sample_start=100017585,
                         CN=1,
-                        GT='1',
+                        GT=hl.Call(alleles=[0, 1], phased=False),
                         QS=5,
                     ),
                     hl.Struct(
@@ -482,8 +492,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         new_call=False,
                         prev_call=True,
                         prev_overlap=False,
+                        sample_end=100023213,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=None,
+                        sample_start=100017585,
                         CN=0,
-                        GT='1',
+                        GT=hl.Call(alleles=[1, 1], phased=False),
                         QS=30,
                     ),
                     hl.Struct(
@@ -491,8 +505,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         new_call=False,
                         prev_call=True,
                         prev_overlap=False,
+                        sample_end=100023212,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG22222222222'},
+                        sample_num_exon=2,
+                        sample_start=100017586,
                         CN=0,
-                        GT='1',
+                        GT=hl.Call(alleles=[1, 1], phased=False),
                         QS=30,
                     ),
                 ],

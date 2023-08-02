@@ -27,7 +27,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    is_new_joint_call = luigi.BoolParameter(
+    is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         description='Is this a fully joint-called callset.',
     )
