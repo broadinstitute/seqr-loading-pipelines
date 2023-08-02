@@ -62,13 +62,11 @@ def dbnsfp_custom_select_38(ht):
     return selects
 
 
-def dbnsfp_filter(
-    ht: hl.Table,
-    reference_dataset_collection: ReferenceDatasetCollection,
-) -> hl.BooleanExpression:
-    return (
-        reference_dataset_collection != ReferenceDatasetCollection.COMBINED_MITO
-    ) | (ht.locus.contig == 'chrM')
+def dbnsfp_mito_custom_select(ht):
+    selects = {}
+    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
+    selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
+    return selects
 
 
 def custom_gnomad_select_v2(ht):
@@ -204,7 +202,6 @@ CONFIG = {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
             },
-            'filter': dbnsfp_filter,
         },
     },
     'eigen': {
@@ -399,6 +396,27 @@ CONFIG = {
                     'low-DNase',
                 ],
             },
+        },
+    },
+    'dbnsfp_mito': {
+        '37': {
+            'version': '2.9.3',
+            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+            'custom_select': dbnsfp_mito_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+            },
+        },
+        '38': {
+            'version': '4.2',
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+            'custom_select': dbnsfp_mito_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+            },
+            'filter': lambda ht: ht.locus.contig == 'chrM',
         },
     },
     'gnomad_mito': {

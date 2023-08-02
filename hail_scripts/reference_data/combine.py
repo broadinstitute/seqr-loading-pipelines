@@ -102,11 +102,7 @@ def get_ht(
             hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig),
         )
 
-    ht = (
-        ht.filter(config['filter'](ht, reference_dataset_collection))
-        if 'filter' in config
-        else ht
-    )
+    ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
         **{
             **get_select_fields(config.get('select'), ht),

@@ -10,7 +10,7 @@ from hail_scripts.reference_data.combine import (
     get_ht,
     update_existing_joined_hts,
 )
-from hail_scripts.reference_data.config import dbnsfp_custom_select, dbnsfp_filter
+from hail_scripts.reference_data.config import dbnsfp_custom_select, dbnsfp_mito_custom_select
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
 
@@ -75,7 +75,20 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                         'fathmm_MKL_coding_pred': ['D', 'N'],
                     },
-                    'filter': dbnsfp_filter,
+                },
+            },
+            'mock_dbnsfp_mito': {
+                '38': {
+                    'path': '',
+                    'select': [
+                        'fathmm_MKL_coding_pred',
+                    ],
+                    'custom_select': dbnsfp_mito_custom_select,
+                    'enum_select': {
+                        'SIFT_pred': ['D', 'T'],
+                        'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                    },
+                    'filter': lambda ht: ht.locus.contig == 'chrM',
                 },
             },
         },
@@ -133,7 +146,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         position=1,
                         reference_genome='GRCh38',
                     ),
-                    mock_dbnsfp=hl.Struct(
+                    mock_dbnsfp_mito=hl.Struct(
                         REVEL_score=None,
                         SIFT_pred_id=1,
                         Polyphen2_HVAR_pred_id=1,
@@ -147,7 +160,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         position=2,
                         reference_genome='GRCh38',
                     ),
-                    mock_dbnsfp=hl.Struct(
+                    mock_dbnsfp_mito=hl.Struct(
                         REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
                         Polyphen2_HVAR_pred_id=2,
@@ -158,7 +171,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ],
         )
         ht = get_ht(
-            'mock_dbnsfp',
+            'mock_dbnsfp_mito',
             ReferenceDatasetCollection.COMBINED_MITO,
             ReferenceGenome.GRCh38,
         )
@@ -172,11 +185,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     mock_dbnsfp=hl.Struct(
-                        REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
-                        Polyphen2_HVAR_pred_id=2,
                         MutationTaster_pred_id=3,
-                        fathmm_MKL_coding_pred_id=0,
                     ),
                 ),
             ],
