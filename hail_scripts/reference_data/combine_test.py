@@ -196,9 +196,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
         )
         mock_read_table.return_value = ht
-        ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
-            ht.globals.collect(),
+            get_ht('a', ReferenceGenome.GRCh38).globals.collect(),
             [
                 hl.Struct(
                     path='gs://a.com',
@@ -209,9 +208,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
-        ht = get_ht('a', ReferenceGenome.GRCh38)
         self.assertCountEqual(
-            ht.globals.collect(),
+            get_ht('a', ReferenceGenome.GRCh38).globals.collect(),
             [
                 hl.Struct(
                     path='gs://a.com',
