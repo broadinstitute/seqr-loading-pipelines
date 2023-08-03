@@ -4,7 +4,6 @@ from typing import Any
 
 import hail as hl
 
-
 from v03_pipeline.lib.annotations.enums import (
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
@@ -144,7 +143,9 @@ def rg37_locus_end(
         end.position <= hl.literal(rg38.lengths)[end.contig],
         hl.liftover(
             hl.locus(
-                end.contig, end.position, reference_genome=ReferenceGenome.GRCh38.value,
+                end.contig,
+                end.position,
+                reference_genome=ReferenceGenome.GRCh38.value,
             ),
             ReferenceGenome.GRCh37.value,
         ),
