@@ -4,7 +4,6 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id as expression_helpers
 
 from v03_pipeline.lib.annotations.enums import (
     SV_CONSEQUENCE_RANKS,
@@ -46,14 +45,6 @@ SV_TYPE_DETAILS_LOOKUP = hl.dict(hl.enumerate(SV_TYPE_DETAILS, index_first=False
 SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
     hl.enumerate(SV_CONSEQUENCE_RANKS, index_first=False),
 )
-
-
-def _end_locus(ht: hl.Table) -> hl.StructExpression:
-    return hl.if_else(
-        hl.is_defined(ht.info.END2),
-        hl.struct(contig=ht.info.CHR2, position=ht.info.END2),
-        hl.struct(contig=ht.locus.contig, position=ht.info.END),
-    )
 
 
 def _get_cpx_interval(x):
@@ -113,6 +104,14 @@ def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
     )
 
 
+def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
+    return hl.if_else(
+        hl.is_defined(ht.info.END2),
+        hl.struct(contig=ht.info.CHR2, position=ht.info.END2),
+        hl.struct(contig=ht.locus.contig, position=ht.info.END),
+    )
+
+
 def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.or_missing(
         hl.is_defined(ht.info.gnomAD_V2_AF),
@@ -139,21 +138,21 @@ def rg37_locus_end(
     if reference_genome == ReferenceGenome.GRCh37:
         return None
     add_rg38_liftover(liftover_ref_path)
-    end_locus = _end_locus(ht)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    end = end_locus(ht)
     return hl.or_missing(
-        end_locus.position
-        <= hl.literal(hl.get_reference(ReferenceGenome.GRCh38.value).lengths)[
-            end_locus.contig
-        ],
+        end.position <= hl.literal(rg38.lengths)[end.contig],
         hl.liftover(
             hl.locus(
-                end_locus.contig,
-                end_locus.position,
-                reference_genome=ReferenceGenome.GRCh38.value,
+                end.contig, end.position, reference_genome=ReferenceGenome.GRCh38.value,
             ),
             ReferenceGenome.GRCh37.value,
         ),
     )
+
+
+def start_locus(ht: hl.Table, **_: Any):
+    return ht.locus
 
 
 def sorted_gene_consequences(
@@ -200,8 +199,3 @@ def sv_type_detail_id(ht: hl.Table, **_: Any) -> hl.Expression:
             SV_TYPE_DETAILS_LOOKUP[sv_types[1]],
         ),
     )
-
-
-def xstop(ht: hl.Table, **_: Any) -> hl.Expression:
-    end_locus = _end_locus(ht)
-    return expression_helpers.get_expr_for_xpos(end_locus)
