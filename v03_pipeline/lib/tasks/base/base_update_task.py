@@ -28,6 +28,7 @@ class BaseUpdateTask(luigi.Task):
 
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1')  # noqa: SLF001
+        hl._set_flags(no_whole_stage_codegen='1') # noqa: SLF001
 
     def run(self) -> None:
         self.init_hail()
