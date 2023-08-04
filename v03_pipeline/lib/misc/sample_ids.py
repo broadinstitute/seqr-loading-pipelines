@@ -30,10 +30,12 @@ def remap_sample_ids(mt: hl.MatrixTable, project_remap_ht: hl.Table) -> hl.Matri
     remap_count = len(collected_remap)
 
     if len(missing_samples) != 0:
-        msg = f'Only {project_remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
-        'remap IDs matched IDs in the variant callset.\n'
-        f"IDs that aren't in the callset: {missing_samples}\n"
-        f'All callset sample IDs:{mt.s.collect()}'
+        msg = (
+            f'Only {project_remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
+            'remap IDs matched IDs in the variant callset.\n'
+            f"IDs that aren't in the callset: {missing_samples}\n"
+            f'All callset sample IDs:{mt.s.collect()}'
+        )
         raise MatrixTableSampleSetError(msg, missing_samples)
 
     mt = mt.annotate_cols(**project_remap_ht[mt.s])
