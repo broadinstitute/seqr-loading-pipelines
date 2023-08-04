@@ -12,6 +12,24 @@ from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 BIALLELIC = 2
 
 
+def _checkpoint(t: hl.Table | hl.MatrixTable, env: Env):
+    suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
+    if env == Env.LOCAL or env == Env.TEST:
+        with tempfile.TemporaryDirectory() as d:
+            return t.checkpoint(
+                os.path.join(
+                    d,
+                    f'{uuid.uuid4()}.{suffix}',
+                ),
+            )
+    return t.checkpoint(
+        os.path.join(
+            DataRoot.SEQR_SCRATCH_TEMP.value,
+            f'{uuid.uuid4()}.{suffix}',
+        ),
+    )
+
+
 def does_file_exist(path: str) -> bool:
     if path.startswith('gs://'):
         return hl.hadoop_exists(path)
@@ -49,7 +67,6 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         row_key=['variant_name', 'svtype'],
         col_key=['sample_cram_basename'],
         row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
-        n_partitions=500,
     )
     # rename the sample id column before the sample subset happens
     mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
@@ -94,11 +111,14 @@ def import_vcf(
 
 def import_callset(
     callset_path: str,
+    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         mt = import_gcnv_bed_file(callset_path)
+        # NB: adding an extra checkpoint here to help resolve bizarre memory issues
+        mt = _checkpoint(mt, env)
     elif 'vcf' in callset_path:
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
@@ -109,9 +129,7 @@ def import_callset(
     mt = mt.select_globals()
     mt = mt.select_rows(*dataset_type.row_fields)
     mt = mt.select_cols(*dataset_type.col_fields)
-    mt = mt.select_entries(*dataset_type.entries_fields)
-    return mt
-
+    return mt.select_entries(*dataset_type.entries_fields)
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
@@ -138,23 +156,8 @@ def write(
     checkpoint: bool = True,
     n_partitions: int | None = None,
 ) -> hl.Table | hl.MatrixTable:
-    suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
-    if checkpoint and (env == Env.LOCAL or env == Env.TEST):
-        with tempfile.TemporaryDirectory() as d:
-            t = t.checkpoint(
-                os.path.join(
-                    d,
-                    f'{uuid.uuid4()}.{suffix}',
-                ),
-            )
-            return t.write(destination_path, overwrite=True, stage_locally=True)
-    elif checkpoint:
-        t = t.checkpoint(
-            os.path.join(
-                DataRoot.SEQR_SCRATCH_TEMP.value,
-                f'{uuid.uuid4()}.{suffix}',
-            ),
-        )
+    if checkpoint:
+        t = _checkpoint(t, env)
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
     if n_partitions and env != Env.TEST:
