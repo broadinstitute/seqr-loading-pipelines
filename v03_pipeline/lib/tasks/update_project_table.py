@@ -98,7 +98,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
             ),
         ).rows()
         callset_ht = globalize_sample_ids(callset_ht)
-        callset_ht = ht.filter(
+        callset_ht = callset_ht.filter(
             callset_ht.entries.any(self.dataset_type.sample_entries_filter_fn),
         )
         # HACK: steal the type from callset_ht when ht is empty.
