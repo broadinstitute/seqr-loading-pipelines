@@ -22,7 +22,7 @@ class BaseWriteTask(luigi.Task):
         raise NotImplementedError
 
     def init_hail(self):
-        if self.hail_temp_dir:
+        #if self.hail_temp_dir:
             # Need to use the GCP bucket as temp storage for very large callset joins
             #hl.init(tmp_dir=self.hail_temp_dir, idempotent=True)
 
