@@ -68,6 +68,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         col_key=['sample_cram_basename'],
         row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
     )
+    mt = mt.repartition(500)
     # rename the sample id column before the sample subset happens
     mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
     mt = mt.key_cols_by(s=mt.sample_cram_basename)
