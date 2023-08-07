@@ -132,6 +132,25 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def sample_lookup_table_fields_and_genotype_filter_fns(
+        self,
+    ) -> dict[str, Callable[hl.MatrixTable, hl.Expression]]:
+        return {
+            DatasetType.SNV: {
+                'ref_samples': lambda mt: mt.GT.is_hom_ref(),
+                'het_samples': lambda mt: mt.GT.is_het(),
+                'hom_samples': lambda mt: mt.GT.is_hom_var(),
+            },
+            DatasetType.MITO: {
+                'ref_samples': lambda mt: hl.is_defined(mt.HL) & (mt.HL == ZERO),
+                'heteroplasmic_samples': lambda mt: (
+                    (mt.HL < MITO_MIN_HOM_THRESHOLD) & (mt.HL > ZERO)
+                ),
+                'homoplasmic_samples': lambda mt: mt.HL >= MITO_MIN_HOM_THRESHOLD,
+            },
+        }[self]
+
+    @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV
 

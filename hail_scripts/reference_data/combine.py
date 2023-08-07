@@ -88,7 +88,6 @@ def get_enum_select_fields(enum_selects, ht):
 
 def get_ht(
     dataset: str,
-    reference_dataset_collection: ReferenceDatasetCollection,
     reference_genome: ReferenceGenome,
 ):
     config = CONFIG[dataset][reference_genome.v02_value]
@@ -102,11 +101,7 @@ def get_ht(
             hl.literal(reference_genome.standard_contigs).contains(ht.locus.contig),
         )
 
-    ht = (
-        ht.filter(config['filter'](ht, reference_dataset_collection))
-        if 'filter' in config
-        else ht
-    )
+    ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(
         **{
             **get_select_fields(config.get('select'), ht),
@@ -154,7 +149,7 @@ def join_hts(
         ),
     )
     for dataset in reference_dataset_collection.datasets:
-        dataset_ht = get_ht(dataset, reference_dataset_collection, reference_genome)
+        dataset_ht = get_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
     return joined_ht
@@ -167,7 +162,7 @@ def update_existing_joined_hts(
     reference_genome: ReferenceGenome,
 ):
     joined_ht = hl.read_table(destination_path)
-    dataset_ht = get_ht(dataset, reference_dataset_collection, reference_genome)
+    dataset_ht = get_ht(dataset, reference_genome)
     joined_ht = joined_ht.drop(dataset)
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(
