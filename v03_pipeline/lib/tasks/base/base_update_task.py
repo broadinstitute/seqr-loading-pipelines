@@ -37,6 +37,7 @@ class BaseUpdateTask(luigi.Task):
             ht = hl.read_table(self.output().path)
         ht = self.update_table(ht)
         write(
+            self.env,
             ht,
             self.output().path,
             checkpoint=True,

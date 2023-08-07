@@ -33,6 +33,7 @@ class BaseWriteTask(luigi.Task):
         self.init_hail()
         ht = self.create_table()
         write(
+            self.env,
             ht,
             self.output().path,
             checkpoint=False,

@@ -95,7 +95,6 @@ def import_vcf(
 
 def import_callset(
     callset_path: str,
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
@@ -133,6 +132,7 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 
 
 def write(
+    env: Env,
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
