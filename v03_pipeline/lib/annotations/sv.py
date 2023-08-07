@@ -104,10 +104,14 @@ def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
+    rg38_lengths = hl.literal(hl.get_reference(ReferenceGenome.GRCh38.value).lengths)
     return hl.if_else(
-        hl.is_defined(ht.info.END2),
+        (hl.is_defined(ht.info.END2) & (ht.info.END2 <= rg38_lengths[ht.info.CHR2])),
         hl.locus(ht.info.CHR2, ht.info.END2, ReferenceGenome.GRCh38.value),
-        hl.locus(ht.locus.contig, ht.info.END, ReferenceGenome.GRCh38.value),
+        hl.or_missing(
+            (ht.info.END <= rg38_lengths[ht.locus.contig]),
+            hl.locus(ht.locus.contig, ht.info.END, ReferenceGenome.GRCh38.value),
+        ),
     )
 
 
@@ -137,10 +141,9 @@ def rg37_locus_end(
     if reference_genome == ReferenceGenome.GRCh37:
         return None
     add_rg38_liftover(liftover_ref_path)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
     end = end_locus(ht)
     return hl.or_missing(
-        end.position <= hl.literal(rg38.lengths)[end.contig],
+        hl.is_defined(end),
         hl.liftover(
             hl.locus(
                 end.contig,
