@@ -17,7 +17,7 @@ SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 
 
-def _start_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
+def start_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
     return hl.locus(ht.chr, ht.start, reference_genome.value)
 
 
@@ -25,7 +25,7 @@ def _start_and_end_equal(mt: hl.MatrixTable) -> hl.BooleanExpression:
     return (mt.sample_start == mt.start) & (mt.sample_end == mt.end)
 
 
-def _end_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
+def end_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
     return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
@@ -52,17 +52,6 @@ def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
         (mt.CN == 0) | (mt.CN > 3),  # noqa: PLR2004
         hl.Call([1, 1], phased=False),
         hl.Call([0, 1], phased=False),
-    )
-
-
-def interval(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    **_: Any,
-) -> hl.Expression:
-    return hl.interval(
-        _start_locus(ht, reference_genome),
-        _end_locus(ht, reference_genome),
     )
 
 
@@ -113,7 +102,7 @@ def rg37_locus(
     if reference_genome == ReferenceGenome.GRCh37:
         return None
     add_rg38_liftover(liftover_ref_path)
-    return hl.liftover(_start_locus(ht, reference_genome), ReferenceGenome.GRCh37.value)
+    return hl.liftover(start_locus(ht, reference_genome), ReferenceGenome.GRCh37.value)
 
 
 def rg37_locus_end(
@@ -125,7 +114,7 @@ def rg37_locus_end(
     if reference_genome == ReferenceGenome.GRCh37:
         return None
     add_rg38_liftover(liftover_ref_path)
-    return hl.liftover(_end_locus(ht, reference_genome), ReferenceGenome.GRCh37.value)
+    return hl.liftover(end_locus(ht, reference_genome), ReferenceGenome.GRCh37.value)
 
 
 def sample_end(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
@@ -184,4 +173,4 @@ def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def xpos(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.Expression:
-    return expression_helpers.get_expr_for_xpos(_start_locus(ht, reference_genome))
+    return expression_helpers.get_expr_for_xpos(start_locus(ht, reference_genome))
