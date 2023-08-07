@@ -28,7 +28,10 @@ def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 def defragged(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.defragmented
 
-def end_locus(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.LocusExpression:
+
+def end_locus(
+    ht: hl.Table, reference_genome: ReferenceGenome, **_: Any,
+) -> hl.LocusExpression:
     return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
@@ -158,7 +161,10 @@ def sorted_gene_consequences(
         ),
     )
 
-def start_locus(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.LocusExpression:
+
+def start_locus(
+    ht: hl.Table, reference_genome: ReferenceGenome, **_: Any,
+) -> hl.LocusExpression:
     return hl.locus(ht.chr, ht.start, reference_genome.value)
 
 
