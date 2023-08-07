@@ -96,8 +96,8 @@ class WriteFamilyTableTask(BaseWriteTask):
                 key=lambda e: e.s,
             ),
         ).rows()
-        ht = globalize_sample_ids(ht)
         ht = ht.filter(ht.entries.any(self.dataset_type.sample_entries_filter_fn))
+        ht = globalize_sample_ids(ht)
         return ht.annotate_globals(
             updates={self.callset_path},
         )
