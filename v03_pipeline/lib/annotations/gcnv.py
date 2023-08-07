@@ -17,16 +17,8 @@ SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
 SV_TYPES_LOOKUP = hl.dict(hl.enumerate(SV_TYPES, index_first=False))
 
 
-def start_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
-    return hl.locus(ht.chr, ht.start, reference_genome.value)
-
-
 def _start_and_end_equal(mt: hl.MatrixTable) -> hl.BooleanExpression:
     return (mt.sample_start == mt.start) & (mt.sample_end == mt.end)
-
-
-def end_locus(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.LocusExpression:
-    return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -35,6 +27,9 @@ def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def defragged(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.defragmented
+
+def end_locus(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.LocusExpression:
+    return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
@@ -162,6 +157,9 @@ def sorted_gene_consequences(
             ),
         ),
     )
+
+def start_locus(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.LocusExpression:
+    return hl.locus(ht.chr, ht.start, reference_genome.value)
 
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
