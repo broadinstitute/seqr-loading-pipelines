@@ -38,13 +38,18 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
 
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
-            hl.all(
-                [
-                    hl.read_table(self.output().path).updates.contains(
-                        hl.Struct(callset=self.callset_path, project_guid=project_guid),
-                    )
-                    for project_guid in self.project_guids
-                ],
+            hl.bind(
+                lambda updates: hl.all(
+                    [
+                        updates.contains(
+                            hl.Struct(
+                                callset=self.callset_path, project_guid=project_guid,
+                            ),
+                        )
+                        for project_guid in self.project_guids
+                    ],
+                ),
+                hl.read_table(self.output().path).updates,
             ),
         )
 
