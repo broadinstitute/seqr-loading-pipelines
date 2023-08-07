@@ -12,24 +12,6 @@ from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
 BIALLELIC = 2
 
 
-def _checkpoint(t: hl.Table | hl.MatrixTable, env: Env):
-    suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
-    if env == Env.LOCAL or env == Env.TEST:
-        with tempfile.TemporaryDirectory() as d:
-            return t.checkpoint(
-                os.path.join(
-                    d,
-                    f'{uuid.uuid4()}.{suffix}',
-                ),
-            )
-    return t.checkpoint(
-        os.path.join(
-            DataRoot.SEQR_SCRATCH_TEMP.value,
-            f'{uuid.uuid4()}.{suffix}',
-        ),
-    )
-
-
 def does_file_exist(path: str) -> bool:
     if path.startswith('gs://'):
         return hl.hadoop_exists(path)
@@ -68,7 +50,6 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
         col_key=['sample_cram_basename'],
         row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
     )
-    mt = mt.repartition(500)
     # rename the sample id column before the sample subset happens
     mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
     mt = mt.key_cols_by(s=mt.sample_cram_basename)
@@ -118,8 +99,6 @@ def import_callset(
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         mt = import_gcnv_bed_file(callset_path)
-        # NB: adding an extra checkpoint here to help resolve bizarre memory issues
-        mt = _checkpoint(mt, env)
     elif 'vcf' in callset_path:
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
@@ -152,14 +131,28 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 
 
 def write(
-    env: Env,
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
     n_partitions: int | None = None,
 ) -> hl.Table | hl.MatrixTable:
-    if checkpoint:
-        t = _checkpoint(t, env)
+    suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
+    if checkpoint and (env == Env.LOCAL or env == Env.TEST):
+        with tempfile.TemporaryDirectory() as d:
+            t = t.checkpoint(
+                os.path.join(
+                    d,
+                    f'{uuid.uuid4()}.{suffix}',
+                ),
+            )
+            return t.write(destination_path, overwrite=True, stage_locally=True)
+    elif checkpoint:
+        t = t.checkpoint(
+            os.path.join(
+                DataRoot.SEQR_SCRATCH_TEMP.value,
+                f'{uuid.uuid4()}.{suffix}',
+            ),
+        )
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
     if n_partitions and env != Env.TEST:
