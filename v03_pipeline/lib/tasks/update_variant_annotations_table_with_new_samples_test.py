@@ -413,7 +413,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
-                    callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
                     haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
@@ -433,7 +432,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
+                    ),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -443,7 +448,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     alleles=['G', 'T'],
                     common_low_heteroplasmy=False,
-                    callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
                     haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
@@ -463,7 +467,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
+                    ),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -473,7 +483,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
-                    callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
                     haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
@@ -493,7 +502,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
+                    ),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -503,11 +518,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     alleles=['A', 'T'],
                     common_low_heteroplasmy=False,
-                    callset_heteroplasmy=hl.Struct(
-                        AF=0.0003968253968253968,
-                        AC=1,
-                        AN=2520,
-                    ),
                     haplogroup=hl.Struct(is_defining=True),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
@@ -527,7 +537,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
+                    ),
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -537,7 +553,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     ),
                     alleles=['C', 'T'],
                     common_low_heteroplasmy=False,
-                    callset_heteroplasmy=hl.Struct(AF=0.0, AC=0, AN=2520),
                     haplogroup=hl.Struct(is_defining=False),
                     high_constraint_region=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
@@ -557,7 +572,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     hmtvar=None,
                     mitomap=None,
                     mitimpact=None,
-                    gt_stats=hl.Struct(AC=0, AN=8, AF=0.0, hom=0),
+                    gt_stats=hl.Struct(
+                        AC_het=1,
+                        AF_het=0.25,
+                        AC_hom=0,
+                        AF_hom=0.0,
+                        AN=4,
+                    ),
                 ),
             ],
         )
