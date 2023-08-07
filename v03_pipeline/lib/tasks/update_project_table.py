@@ -82,9 +82,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
         callset_ht = callset_mt.select_rows(
-            filters=callset_mt.filters.difference(
-                hl.set(self.dataset_type.excluded_filters),
-            ),
+            filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
             entries=hl.sorted(
                 hl.agg.collect(
                     hl.Struct(

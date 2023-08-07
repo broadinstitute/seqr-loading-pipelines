@@ -134,12 +134,12 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def excluded_filters(self) -> set[str]:
+    def excluded_filters(self) -> hl.SetExpression:
         return {
-            DatasetType.SNV: set(),
-            DatasetType.MITO: {'PASS'},
-            DatasetType.SV: {'PASS', 'BOTHSIDES_SUPPORT'},
-            DatasetType.GCNV: set(),
+            DatasetType.SNV: hl.empty_set(hl.tstr),
+            DatasetType.MITO: hl.set(['PASS']),
+            DatasetType.SV: hl.set(['PASS', 'BOTHSIDES_SUPPORT']),
+            DatasetType.GCNV: hl.empty_set(hl.tstr),
         }[self]
 
     @property
