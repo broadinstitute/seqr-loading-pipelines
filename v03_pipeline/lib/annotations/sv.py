@@ -106,8 +106,8 @@ def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
 def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
     return hl.if_else(
         hl.is_defined(ht.info.END2),
-        hl.locus(contig=ht.info.CHR2, position=ht.info.END2, ReferenceGenome.GRCh38.value),
-        hl.locus(contig=ht.locus.contig, position=ht.info.END, ReferenceGenome.GRCh38.value),
+        hl.locus(ht.info.CHR2, ht.info.END2, ReferenceGenome.GRCh38.value),
+        hl.locus(ht.locus.contig, ht.info.END, ReferenceGenome.GRCh38.value),
     )
 
 
