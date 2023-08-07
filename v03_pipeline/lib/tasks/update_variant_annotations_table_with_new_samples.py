@@ -133,7 +133,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     [
                         updates.contains(
                             hl.Struct(
-                                callset=self.callset_path, project_guid=project_guid,
+                                callset=self.callset_path,
+                                project_guid=project_guid,
                             ),
                         )
                         for project_guid in self.project_guids
