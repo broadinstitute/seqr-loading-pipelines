@@ -4,8 +4,6 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id as expression_helpers
-
 from v03_pipeline.lib.annotations.enums import (
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
@@ -14,14 +12,12 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-BOTHSIDES_SUPPORT = 'BOTHSIDES_SUPPORT'
 CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
 NON_GENE_PREDICTIONS = {
     'PREDICTED_INTERGENIC',
     'PREDICTED_NONCODING_BREAKPOINT',
     'PREDICTED_NONCODING_SPAN',
 }
-PASS = 'PASS'  # noqa: S105
 
 PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict(
     {
@@ -50,14 +46,6 @@ SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
 )
 
 
-def _end_locus(ht: hl.Table) -> hl.StructExpression:
-    return hl.if_else(
-        hl.is_defined(ht.info.END2),
-        hl.struct(contig=ht.info.CHR2, position=ht.info.END2),
-        hl.struct(contig=ht.locus.contig, position=ht.info.END),
-    )
-
-
 def _get_cpx_interval(x):
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
     type_chr = x.split('_chr')
@@ -80,7 +68,7 @@ def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def bothsides_support(ht: hl.Table, **_: Any) -> hl.Expression:
-    return ht.filters.any(lambda x: x == BOTHSIDES_SUPPORT)
+    return ht.filters.any(lambda x: x == 'BOTHSIDES_SUPPORT')
 
 
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -115,9 +103,12 @@ def cpx_intervals(ht: hl.Table, **_: Any) -> hl.Expression:
     )
 
 
-def filters(ht: hl.Table, **_: Any) -> hl.Expression:
-    filters = ht.filters.filter(lambda x: (x != PASS) & (x != BOTHSIDES_SUPPORT))
-    return hl.or_missing(filters.size() > 0, filters)
+def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
+    return hl.if_else(
+        hl.is_defined(ht.info.END2),
+        hl.locus(ht.info.CHR2, ht.info.END2, ReferenceGenome.GRCh38.value),
+        hl.locus(ht.locus.contig, ht.info.END, ReferenceGenome.GRCh38.value),
+    )
 
 
 def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
@@ -146,21 +137,23 @@ def rg37_locus_end(
     if reference_genome == ReferenceGenome.GRCh37:
         return None
     add_rg38_liftover(liftover_ref_path)
-    end_locus = _end_locus(ht)
+    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
+    end = end_locus(ht)
     return hl.or_missing(
-        end_locus.position
-        <= hl.literal(hl.get_reference(ReferenceGenome.GRCh38.value).lengths)[
-            end_locus.contig
-        ],
+        end.position <= hl.literal(rg38.lengths)[end.contig],
         hl.liftover(
             hl.locus(
-                end_locus.contig,
-                end_locus.position,
+                end.contig,
+                end.position,
                 reference_genome=ReferenceGenome.GRCh38.value,
             ),
             ReferenceGenome.GRCh37.value,
         ),
     )
+
+
+def start_locus(ht: hl.Table, **_: Any):
+    return ht.locus
 
 
 def sorted_gene_consequences(
@@ -207,8 +200,3 @@ def sv_type_detail_id(ht: hl.Table, **_: Any) -> hl.Expression:
             SV_TYPE_DETAILS_LOOKUP[sv_types[1]],
         ),
     )
-
-
-def xstop(ht: hl.Table, **_: Any) -> hl.Expression:
-    end_locus = _end_locus(ht)
-    return expression_helpers.get_expr_for_xpos(end_locus)

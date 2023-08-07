@@ -663,7 +663,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters={'UNRESOLVED', 'HIGH_SR_BACKGROUND'},
                     gt_stats=hl.Struct(AF=0.04775, AC=1, AN=8, Hom=0, Het=278),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -691,7 +690,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters={'UNRESOLVED', 'PESR_GT_OVERDISPERSION'},
                     gt_stats=hl.Struct(AF=0.910684, AC=7, AN=8, Hom=2391, Het=520),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -722,7 +720,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hl.Struct(type='INV', chrom='1', start=6558902, end=6559723),
                         hl.Struct(type='DUP', chrom='1', start=6559655, end=6559723),
                     ],
-                    filters={'HIGH_SR_BACKGROUND'},
                     gt_stats=hl.Struct(AF=0.169873, AC=2, AN=8, Hom=3, Het=983),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -762,7 +759,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                             end=181074938,
                         ),
                     ],
-                    filters={'UNRESOLVED'},
                     gt_stats=hl.Struct(AF=0.251804, AC=3, AN=8, Hom=114, Het=1238),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -795,7 +791,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hl.Struct(type='DUP', chrom='1', start=16088760, end=16088835),
                         hl.Struct(type='INV', chrom='1', start=16088760, end=16089601),
                     ],
-                    filters=None,
                     gt_stats=hl.Struct(AF=0.218138, AC=2, AN=8, Hom=18, Het=1234),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -826,7 +821,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hl.Struct(type='INV', chrom='1', start=21427498, end=21480073),
                         hl.Struct(type='DEL', chrom='1', start=21480073, end=21480419),
                     ],
-                    filters=None,
                     gt_stats=hl.Struct(AF=0.499656, AC=4, AN=8, Hom=49, Het=2811),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -853,7 +847,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='depth',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters=None,
                     gt_stats=hl.Struct(AF=0.064926, AC=1, AN=8, Hom=5, Het=368),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -880,7 +873,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='depth',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters=None,
                     gt_stats=hl.Struct(AF=0.115596, AC=1, AN=8, Hom=110, Het=453),
                     gnomad_svs=None,
                     rg37_locus=None,
@@ -903,7 +895,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='melt',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters={'HIGH_SR_BACKGROUND'},
                     gt_stats=hl.Struct(AF=0.004466, AC=1, AN=8, Hom=0, Het=26),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -930,7 +921,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta,melt',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters={'HIGH_SR_BACKGROUND'},
                     gt_stats=hl.Struct(AF=0.10237, AC=1, AN=8, Hom=3, Het=590),
                     gnomad_svs=hl.Struct(
                         AF=0.068962998688221,
@@ -960,7 +950,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='melt',
                     bothsides_support=False,
                     cpx_intervals=None,
-                    filters={'HIGH_SR_BACKGROUND'},
                     gt_stats=hl.Struct(AF=0.06338, AC=1, AN=8, Hom=2, Het=365),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(

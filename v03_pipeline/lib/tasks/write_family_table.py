@@ -81,7 +81,7 @@ class WriteFamilyTableTask(BaseWriteTask):
         )
         callset_mt = subset_samples(callset_mt, sample_subset_ht, False)
         ht = callset_mt.select_rows(
-            filters=callset_mt.filters,
+            filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
             entries=hl.sorted(
                 hl.agg.collect(
                     hl.struct(

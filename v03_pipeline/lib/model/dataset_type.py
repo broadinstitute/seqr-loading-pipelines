@@ -133,6 +133,14 @@ class DatasetType(Enum):
             ],
         }[self]
 
+    def excluded_filters(self) -> set[str]:
+        return {
+            DatasetType.SNV: set(),
+            DatasetType.MITO: {'PASS'},
+            DatasetType.SV: {'PASS', 'BOTHSIDES_SUPPORT'},
+            DatasetType.GCNV: set(),
+        }[self]
+
     @property
     def has_sample_lookup_table(self) -> bool:
         return self in {DatasetType.SNV, DatasetType.MITO}
@@ -197,17 +205,17 @@ class DatasetType(Enum):
                 sv.algorithms,
                 sv.bothsides_support,
                 sv.cpx_intervals,
-                sv.filters,
+                sv.end_locus,
                 sv.gt_stats,
                 sv.gnomad_svs,
                 shared.rg37_locus,
                 sv.rg37_locus_end,
                 sv.sorted_gene_consequences,
+                sv.start_locus,
                 sv.strvctvre,
                 sv.sv_type_id,
                 sv.sv_type_detail_id,
                 shared.xpos,
-                sv.xstop,
             ],
             DatasetType.GCNV: [
                 gcnv.gt_stats,
