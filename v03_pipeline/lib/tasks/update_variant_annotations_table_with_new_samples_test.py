@@ -1124,26 +1124,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             [
                 hl.Struct(
                     variant_id='suffix_16456_DEL',
-                    gt_stats=hl.Struct(
-                        AF=4.401408e-05,
-                        AC=1,
-                        AN=22720,
-                        Hom=None,
-                        Het=None,
+                    end_locus=hl.Locus(
+                        contig='chr1',
+                        position=100023213,
+                        reference_genome='GRCh38',
                     ),
-                    interval=hl.Interval(
-                        start=hl.Locus(
-                            contig='chr1',
-                            position=100006937,
-                            reference_genome='GRCh38',
-                        ),
-                        end=hl.Locus(
-                            contig='chr1',
-                            position=100023213,
-                            reference_genome='GRCh38',
-                        ),
-                        includes_start=True,
-                        includes_end=False,
+                    gt_stats=hl.Struct(
+                        AF=4.401408e-05, AC=1, AN=22720, Hom=None, Het=None,
                     ),
                     num_exon=3,
                     rg37_locus=hl.Locus(
@@ -1161,6 +1148,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
                         hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
                     ],
+                    start_locus=hl.Locus(
+                        contig='chr1',
+                        position=100006937,
+                        reference_genome='GRCh38',
+                    ),
                     strvctvre=hl.Struct(score=0.583),
                     sv_type_id=5,
                     xpos=1100006937,
