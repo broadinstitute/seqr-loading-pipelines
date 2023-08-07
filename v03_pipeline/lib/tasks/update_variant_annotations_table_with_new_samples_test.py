@@ -1130,7 +1130,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=4.401408e-05, AC=1, AN=22720, Hom=None, Het=None,
+                        AF=4.401408e-05,
+                        AC=1,
+                        AN=22720,
+                        Hom=None,
+                        Het=None,
                     ),
                     num_exon=3,
                     rg37_locus=hl.Locus(
