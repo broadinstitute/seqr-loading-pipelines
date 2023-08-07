@@ -42,7 +42,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def create_table(self) -> hl.MatrixTable:
         return import_callset(
             self.callset_path,
-            self.env,
             self.reference_genome,
             self.dataset_type,
         )
