@@ -133,6 +133,7 @@ class DatasetType(Enum):
             ],
         }[self]
 
+    @property
     def excluded_filters(self) -> set[str]:
         return {
             DatasetType.SNV: set(),
