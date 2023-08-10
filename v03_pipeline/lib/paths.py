@@ -62,8 +62,7 @@ def family_table_path(
             dataset_type,
         ),
         'families',
-        family_guid,
-        'samples.ht',
+        f'{family_guid}.ht',
     )
 
 
@@ -118,8 +117,7 @@ def project_table_path(
             dataset_type,
         ),
         'projects',
-        project_guid,
-        'samples.ht',
+        f'{project_guid}.ht',
     )
 
 

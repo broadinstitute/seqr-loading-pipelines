@@ -41,7 +41,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             upt_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/projects/R0113_test_project/samples.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/projects/R0113_test_project.ht',
         )
         self.assertTrue(upt_task.complete())
         ht = hl.read_table(upt_task.output().path)
