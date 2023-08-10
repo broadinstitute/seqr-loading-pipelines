@@ -67,6 +67,17 @@ def dbnsfp_mito_custom_select(ht):
     return selects
 
 
+def custom_gnomad_mito(ht):
+    selects = {}
+    selects['AN'] = hl.int32(ht.AN)
+    selects['AC'] = hl.int32(ht.AC_hom)
+    selects['AC_het'] = hl.int32(ht.AC_het)
+    selects['AF'] = ht.AF_hom
+    selects['AF_het'] = ht.AF_het
+    selects['max_hl'] = ht.max_hl
+    return selects
+
+
 def custom_gnomad_select_v2(ht):
     """
     Custom select for public gnomad v2 dataset (which we did not generate). Extracts fields like
@@ -422,14 +433,7 @@ CONFIG = {
         '38': {
             'version': 'v3.1',
             'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
-            'select': {
-                'AN': 'AN',
-                'AC': 'AC_hom',
-                'AC_het': 'AC_het',
-                'AF': 'AF_hom',
-                'AF_het': 'AF_het',
-                'max_hl': 'max_hl',
-            },
+            'custom_select': custom_gnomad_mito,
         },
     },
     'mitomap': {
