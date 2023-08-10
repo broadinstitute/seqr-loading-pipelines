@@ -47,7 +47,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             wft_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc_1/samples.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc_1.ht',
         )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
@@ -185,7 +185,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             write_family_table_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SV/families/family_2_1/samples.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SV/families/family_2_1.ht',
         )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
@@ -438,7 +438,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             write_family_table_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/GCNV/families/family_2_1/samples.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/GCNV/families/family_2_1.ht',
         )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
