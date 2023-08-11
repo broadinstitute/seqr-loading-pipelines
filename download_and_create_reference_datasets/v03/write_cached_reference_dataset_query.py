@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 
-from hail_scripts.reference_data.combine import get_ht
+from hail_scripts.reference_data.config import CONFIG
 
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env, ReferenceGenome
@@ -13,8 +13,13 @@ def run(
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ):
-    ht = get_ht(query.dataset, ReferenceGenome.GRCh38)
-    ht = query.query(ht)
+    config = CONFIG[dataset][reference_genome.v02_value]
+    ht = (
+        config['custom_import'](config['source_path'], reference_genome.v02_value)
+        if 'custom_import' in config
+        else hl.read_table(config['path'])
+    )
+    ht = query.query(ht, reference_genome)
     destination_path = cached_reference_dataset_query_path(
         env,
         reference_genome,
