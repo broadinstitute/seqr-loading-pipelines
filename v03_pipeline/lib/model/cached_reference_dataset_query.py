@@ -10,33 +10,39 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
+
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
+GNOMAD_HIGH_AF_THRESHOLD = 0.90
 
 
 def clinvar_path_variants(
-    ht: hl.Table, reference_genome: ReferenceGenome,
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
     return ht
 
 
 def gnomad_coding_and_noncoding_variants(
-    ht: hl.Table, reference_genome: ReferenceGenome,
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
     filtered_contig = 'chr1' if reference_genome == ReferenceGenome.GRCh38 else '1'
     ht = hl.filter_intervals(
         ht,
         [
             hl.parse_locus_interval(
-                filtered_contig, reference_genome=reference_genome.value,
+                filtered_contig,
+                reference_genome=reference_genome.value,
             ),
         ],
     )
-    ht = ht.filter(ht.freq[0].AF > 0.90)
+    ht = ht.filter(ht.freq[0].AF > GNOMAD_HIGH_AF_THRESHOLD)
     ht = ht.annotate(
         sorted_transaction_consequences=(
             get_expr_for_vep_sorted_transcript_consequences_array(
-                ht.vep, omit_consequences=[],
+                ht.vep,
+                omit_consequences=[],
             )
         ),
     )
@@ -58,7 +64,9 @@ def gnomad_coding_and_noncoding_variants(
     return ht.filter(ht.coding | ht.noncoding)
 
 
-def gnomad_high_af_variants(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
+def gnomad_high_af_variants(
+    ht: hl.Table, reference_genome: ReferenceGenome,
+) -> hl.Table:
     return ht
 
 
