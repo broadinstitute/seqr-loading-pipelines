@@ -66,11 +66,11 @@ def gnomad_coding_and_noncoding_variants(
         ),
     )
     ht = ht.select(
-        coding=hl.int(ht.main_transcript.major_consequence_rank)
-        <= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant')),
+        coding=(
+            ht.main_transcript.major_consequence_rank <= CONSEQUENCE_TERM_RANK_LOOKUP['synonymous_variant']
+        ),
         noncoding=(
-            hl.int(ht.main_transcript.major_consequence_rank)
-            >= hl.int(CONSEQUENCE_TERM_RANK_LOOKUP.get('downstream_gene_variant'))
+            ht.main_transcript.major_consequence_rank >= CONSEQUENCE_TERM_RANK_LOOKUP['downstream_gene_variant']
         ),
     )
     return ht.filter(ht.coding | ht.noncoding)
@@ -79,6 +79,7 @@ def gnomad_coding_and_noncoding_variants(
 def gnomad_high_af_variants(
     ht: hl.Table, reference_genome: ReferenceGenome,
 ) -> hl.Table:
+    # TODO implement me.
     return ht
 
 
