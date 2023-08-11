@@ -10,9 +10,12 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
+from hail_scripts.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
+CLINVAR_PATHOGENIC_THRESHOLD = 1
+CLINVAR_LIKELY_PATHOGENIC_THRESHOLD = 5
 GNOMAD_HIGH_AF_THRESHOLD = 0.90
 
 
@@ -20,7 +23,16 @@ def clinvar_path_variants(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    return ht
+    clnsigs = parsed_clnsig(ht)
+    ht = ht.select(
+        pathogenic=(
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]] <= CLINVAR_PATHOGENIC_THRESHOLD
+        ),
+        likely_pathogenic=(
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]] <= CLINVAR_LIKELY_PATHOGENIC_THRESHOLD
+        )
+    )
+    return ht.filter(ht.pathogenic | ht.likely_pathogenic)
 
 
 def gnomad_coding_and_noncoding_variants(
