@@ -1,12 +1,14 @@
 import unittest
 
 from v03_pipeline.lib.model import (
+    CachedReferenceDatasetQuery,
     DatasetType,
     Env,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     family_table_path,
     imported_callset_path,
     metadata_for_run_path,
@@ -19,6 +21,16 @@ from v03_pipeline.lib.paths import (
 
 
 class TestPaths(unittest.TestCase):
+    def test_cached_reference_dataset_query_path(self) -> None:
+        self.assertEqual(
+            cached_reference_dataset_query_path(
+                Env.PROD,
+                ReferenceGenome.GRCh38,
+                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+            ),
+            'gs://seqr-reference-data/v03/GRCh38/cached_reference_dataset_queries/clinvar_path_variants.ht',
+        )
+
     def test_family_table_path(self) -> None:
         for env, expected_path in [
             (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/families/franklin.ht'),

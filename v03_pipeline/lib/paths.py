@@ -5,6 +5,7 @@ import os
 
 from v03_pipeline.lib.model import (
     AccessControl,
+    CachedReferenceDatasetQuery,
     DataRoot,
     DatasetType,
     Env,
@@ -45,6 +46,22 @@ def _v03_reference_data_prefix(
         root.value,
         PipelineVersion.V03.value,
         reference_genome.value,
+    )
+
+
+def cached_reference_dataset_query_path(
+    env: Env,
+    reference_genome: ReferenceGenome,
+    cached_reference_dataset_query: CachedReferenceDatasetQuery,
+) -> str:
+    return os.path.join(
+        _v03_reference_data_prefix(
+            env,
+            DataRoot.SEQR_REFERENCE_DATA,
+            reference_genome,
+        ),
+        'cached_reference_dataset_queries',
+        f'{cached_reference_dataset_query.value}.ht',
     )
 
 
