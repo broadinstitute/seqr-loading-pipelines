@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import argparse
 
+import hail as hl
+
 from hail_scripts.reference_data.config import CONFIG
 
 from v03_pipeline.lib.misc.io import write
@@ -13,7 +15,7 @@ def run(
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ):
-    config = CONFIG[dataset][reference_genome.v02_value]
+    config = CONFIG[query.dataset][reference_genome.v02_value]
     ht = (
         config['custom_import'](config['source_path'], reference_genome.v02_value)
         if 'custom_import' in config
@@ -47,6 +49,7 @@ if __name__ == '__main__':
         '--query',
         type=CachedReferenceDatasetQuery,
         choices=list(CachedReferenceDatasetQuery),
+        required=True,
     )
     args, _ = parser.parse_known_args()
     run(args.env, args.reference_genome, args.query)

@@ -10,17 +10,17 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from v03_pipeline.lib.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
 
-def clinvar_path_and_likely_path(
+def clinvar_path_variants(
     ht: hl.Table, reference_genome: ReferenceGenome,
 ) -> hl.Table:
     return ht
 
 
-def gnomad_coding_and_noncoding(
+def gnomad_coding_and_noncoding_variants(
     ht: hl.Table, reference_genome: ReferenceGenome,
 ) -> hl.Table:
     filtered_contig = 'chr1' if reference_genome == ReferenceGenome.GRCh38 else '1'
@@ -58,7 +58,7 @@ def gnomad_coding_and_noncoding(
     return ht.filter(ht.coding | ht.noncoding)
 
 
-def gnomad_high_af(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
+def gnomad_high_af_variants(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
     return ht
 
 
@@ -78,7 +78,7 @@ class CachedReferenceDatasetQuery(Enum):
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:
         return {
-            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: clinvar_path_and_likely_path,
-            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: gnomad_coding_and_noncoding,
-            CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: gnomad_high_af,
+            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: clinvar_path_variants,
+            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: gnomad_coding_and_noncoding_variants,
+            CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: gnomad_high_af_variants,
         }[self]
