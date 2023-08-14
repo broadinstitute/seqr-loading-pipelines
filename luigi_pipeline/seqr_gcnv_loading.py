@@ -56,13 +56,13 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     def import_dataset(self):
         ht = hl.import_table(self.source_paths[0], types=FIELD_TYPES, min_partitions=500)
         mt = ht.to_matrix_table(
-            row_key=['variant_name', 'svtype'], col_key=['sample_cram_basename'],
+            row_key=['variant_name', 'svtype'], col_key=['sample_fix'],
             # Analagous to CORE_COLUMNS = [CHR_COL, SC_COL, SF_COL, CALL_COL, IN_SILICO_COL] in the old implementation
             row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
         )
 
         # rename the sample id column before the sample subset happens
-        mt = mt.key_cols_by(s = mt.sample_cram_basename)
+        mt = mt.key_cols_by(s = mt.sample_fix)
 
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
