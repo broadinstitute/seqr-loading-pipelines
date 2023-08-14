@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Callable
+from typing import Any, Callable
 
 import hail as hl
 
@@ -24,7 +24,7 @@ GNOMAD_HIGH_AF_THRESHOLD = 0.90
 
 def clinvar_path_variants(
     ht: hl.Table,
-    reference_genome: ReferenceGenome,
+    **_: Any,
 ) -> hl.Table:
     clnsigs = parsed_clnsig(ht)
     ht = ht.select(
@@ -49,6 +49,7 @@ def clinvar_path_variants(
 def gnomad_coding_and_noncoding_variants(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
+    **_: Any,
 ) -> hl.Table:
     filtered_contig = 'chr1' if reference_genome == ReferenceGenome.GRCh38 else '1'
     ht = hl.filter_intervals(
@@ -91,7 +92,7 @@ def gnomad_coding_and_noncoding_variants(
 
 def gnomad_high_af_variants(
     ht: hl.Table,
-    reference_genome: ReferenceGenome,
+    **_: Any,
 ) -> hl.Table:
     # TODO implement me.
     return ht
