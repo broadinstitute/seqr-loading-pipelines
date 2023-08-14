@@ -10,7 +10,10 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from hail_scripts.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP, parsed_clnsig
+from hail_scripts.reference_data.clinvar import (
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    parsed_clnsig,
+)
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
@@ -26,11 +29,19 @@ def clinvar_path_variants(
     clnsigs = parsed_clnsig(ht)
     ht = ht.select(
         pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & (CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]] <= CLINVAR_PATHOGENIC_THRESHOLD)
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0])
+            & (
+                CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]]
+                <= CLINVAR_PATHOGENIC_THRESHOLD
+            )
         ),
         likely_pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & (CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]] <= CLINVAR_LIKELY_PATHOGENIC_THRESHOLD)
-        )
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0])
+            & (
+                CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]]
+                <= CLINVAR_LIKELY_PATHOGENIC_THRESHOLD
+            )
+        ),
     )
     return ht.filter(ht.pathogenic | ht.likely_pathogenic)
 
@@ -67,17 +78,20 @@ def gnomad_coding_and_noncoding_variants(
     )
     ht = ht.select(
         coding=(
-            ht.main_transcript.major_consequence_rank <= CONSEQUENCE_TERM_RANK_LOOKUP['synonymous_variant']
+            ht.main_transcript.major_consequence_rank
+            <= CONSEQUENCE_TERM_RANK_LOOKUP['synonymous_variant']
         ),
         noncoding=(
-            ht.main_transcript.major_consequence_rank >= CONSEQUENCE_TERM_RANK_LOOKUP['downstream_gene_variant']
+            ht.main_transcript.major_consequence_rank
+            >= CONSEQUENCE_TERM_RANK_LOOKUP['downstream_gene_variant']
         ),
     )
     return ht.filter(ht.coding | ht.noncoding)
 
 
 def gnomad_high_af_variants(
-    ht: hl.Table, reference_genome: ReferenceGenome,
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
     # TODO implement me.
     return ht
