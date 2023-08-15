@@ -36,7 +36,7 @@ class BaseWriteTask(luigi.Task):
             self.env,
             ht,
             self.output().path,
-            checkpoint=False,
+            checkpoint=True,
             n_partitions=self.n_partitions,
         )
 
