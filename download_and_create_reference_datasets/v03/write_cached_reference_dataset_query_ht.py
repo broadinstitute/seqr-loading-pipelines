@@ -21,7 +21,7 @@ def run(
         if 'custom_import' in config
         else hl.read_table(config['path'])
     )
-    ht = query.query(ht, reference_genome)
+    ht = query.query(ht, env=env, reference_genome=reference_genome)
     destination_path = cached_reference_dataset_query_path(
         env,
         reference_genome,
