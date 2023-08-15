@@ -17,8 +17,6 @@ from luigi_pipeline.seqr_loading_optimized import (
 
 logger = logging.getLogger(__name__)
 
-SAMPLE_ID_REGEX = r'(.+)_v\d+_Exome_(C|RP-)\d+$'
-
 FIELD_TYPES = {
     "start": hl.tint32, 
     "end": hl.tint32, 
@@ -45,7 +43,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
     RUN_VEP = False
     SCHEMA_CLASS = SeqrGCNVVariantSchema
 
-    def annotate_old_and_split_multi_hts(self, mt, *args, **kwargs):
+    def split_multi_hts(self, mt, *args, **kwargs):
         return mt
 
     def add_37_coordinates(self, mt, *args, **kwargs):
@@ -64,7 +62,7 @@ class SeqrGCNVVariantMTTask(SeqrVCFToVariantMTTask):
         )
 
         # rename the sample id column before the sample subset happens
-        mt = mt.key_cols_by(s = mt.sample_fix.first_match_in(SAMPLE_ID_REGEX)[0])
+        mt = mt.key_cols_by(s = mt.sample_fix)
 
         # This rename helps disambiguate between the 'start' & 'end' that are aggregations
         # over samples and the start and end of each sample.
