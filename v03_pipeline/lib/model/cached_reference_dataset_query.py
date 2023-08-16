@@ -17,8 +17,8 @@ from hail_scripts.reference_data.clinvar import (
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-CLINVAR_PATHOGENIC_THRESHOLD = 1
-CLINVAR_LIKELY_PATHOGENIC_THRESHOLD = 5
+CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
+CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
 GNOMAD_HIGH_AF_THRESHOLD = 0.90
 
 
@@ -26,20 +26,21 @@ def clinvar_path_variants(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Table:
-    clnsigs = parsed_clnsig(ht)
+    pathogenicity = parsed_clnsig(ht)[0]
+    pathogenicity_id = CLINVAR_PATHOGENICITIES_LOOKUP.get(pathogenicity)
     ht = ht.select(
         pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0])
-            & (
-                CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]]
-                <= CLINVAR_PATHOGENIC_THRESHOLD
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity) & 
+            (
+                (pathogenicity_id >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]) &
+                (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]])
             )
         ),
         likely_pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0])
-            & (
-                CLINVAR_PATHOGENICITIES_LOOKUP[clnsigs[0]]
-                <= CLINVAR_LIKELY_PATHOGENIC_THRESHOLD
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & 
+            (
+                (pathogenicity_id >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]) &
+                (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]])
             )
         ),
     )
