@@ -1,8 +1,9 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model import ReferenceGenome, SampleType
 
 MIN_ROWS_PER_CONTIG = 100
+SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
 
 class SeqrValidationError(Exception):
@@ -39,3 +40,39 @@ def validate_contigs(
         if count < min_rows_per_contig:
             msg = f'Contig {contig} has {count} rows, which is lower than expected minimum count {min_rows_per_contig}.'
             raise SeqrValidationError(msg)
+
+
+def validate_sample_type(
+    mt: hl.MatrixTable,
+    coding_and_noncoding_variants_ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    sample_type: SampleType,
+    sample_type_match_threshold: float = SAMPLE_TYPE_MATCH_THRESHOLD,
+) -> None:
+    coding_variants_ht = coding_and_noncoding_variants_ht.filter(
+        coding_and_noncoding_variants_ht.coding,
+    )
+    has_coding = (
+        mt.semi_join_rows(coding_variants_ht).count_rows() / coding_variants_ht.count()
+        >= sample_type_match_threshold
+    )
+    noncoding_variants_ht = coding_and_noncoding_variants_ht.filter(
+        coding_and_noncoding_variants_ht.noncoding,
+    )
+    has_noncoding = (
+        mt.semi_join_rows(noncoding_variants_ht).count_rows()
+        / noncoding_variants_ht.count()
+        >= sample_type_match_threshold
+    )
+    if not has_coding and not has_noncoding:
+        msg = f"Genome version validation error: dataset specified as {reference_genome.value} but doesn't contain the expected number of common {reference_genome.value} variants"
+        raise SeqrValidationError(msg)
+    if has_noncoding and not has_coding:
+        msg = f'Sample type validation error: dataset contains noncoding variants but is missing common coding variants for {reference_genome.value}. Please verify that the dataset contains coding variants.'
+        raise SeqrValidationError(msg)
+    if has_coding and not has_noncoding and sample_type != SampleType.WES:
+        msg = 'Sample type validation error: dataset sample-type is specified as WGS but appears to be WES because it contains many common coding variants'
+        raise SeqrValidationError(msg)
+    if has_noncoding and has_coding and sample_type != SampleType.WGS:
+        msg = 'Sample type validation error: dataset sample-type is specified as WES but appears to be WGS because it contains many common non-coding variants'
+        raise SeqrValidationError(msg)

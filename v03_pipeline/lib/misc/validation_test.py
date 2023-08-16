@@ -2,8 +2,12 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.validation import SeqrValidationError, validate_contigs
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.misc.validation import (
+    SeqrValidationError,
+    validate_contigs,
+    validate_sample_type,
+)
+from v03_pipeline.lib.model import ReferenceGenome, SampleType
 
 
 def _mt_from_contigs(contigs):
@@ -20,7 +24,7 @@ def _mt_from_contigs(contigs):
         },
         cols={'s': ['sample_1']},
         entries={'HL': [[0.0] for _ in range(len(contigs))]},
-    )
+    ).key_rows_by('locus')
 
 
 class ValidationTest(unittest.TestCase):
@@ -68,4 +72,174 @@ class ValidationTest(unittest.TestCase):
             mt,
             ReferenceGenome.GRCh38,
             1,
+        )
+
+    def test_validate_sample_type(self) -> None:
+        mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs)
+        coding_and_noncoding_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr2',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr3',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr4',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                coding=hl.tbool,
+                noncoding=hl.tbool,
+            ),
+            key='locus',
+        )
+        self.assertIsNone(
+            validate_sample_type(
+                mt,
+                coding_and_noncoding_ht,
+                ReferenceGenome.GRCh38,
+                SampleType.WGS,
+            ),
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'specified as WES but appears to be WGS',
+            validate_sample_type,
+            mt,
+            coding_and_noncoding_ht,
+            ReferenceGenome.GRCh38,
+            SampleType.WES,
+        )
+
+        # has coding, but not noncoding now.
+        coding_and_noncoding_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr2',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr2',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                coding=hl.tbool,
+                noncoding=hl.tbool,
+            ),
+            key='locus',
+        )
+        self.assertIsNone(
+            validate_sample_type(
+                mt,
+                coding_and_noncoding_ht,
+                ReferenceGenome.GRCh38,
+                SampleType.WES,
+            ),
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'specified as WGS but appears to be WES',
+            validate_sample_type,
+            mt,
+            coding_and_noncoding_ht,
+            ReferenceGenome.GRCh38,
+            SampleType.WGS,
+        )
+
+        # has noncoding, but not coding now.
+        coding_and_noncoding_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr2',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr2',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                coding=hl.tbool,
+                noncoding=hl.tbool,
+            ),
+            key='locus',
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'contains noncoding variants but is missing common coding variants',
+            validate_sample_type,
+            mt,
+            coding_and_noncoding_ht,
+            ReferenceGenome.GRCh38,
+            SampleType.WGS,
         )
