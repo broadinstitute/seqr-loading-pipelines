@@ -30,17 +30,22 @@ def clinvar_path_variants(
     pathogenicity_id = CLINVAR_PATHOGENICITIES_LOOKUP.get(pathogenicity)
     ht = ht.select(
         pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity) & 
-            (
-                (pathogenicity_id >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]) &
-                (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]])
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity)
+            & (
+                pathogenicity_id
+                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
             )
+            & (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]])
         ),
         likely_pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]) & 
-            (
-                (pathogenicity_id >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]) &
-                (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]])
+            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity)
+            & (
+                pathogenicity_id
+                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
+            )
+            & (
+                pathogenicity_id
+                < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
             )
         ),
     )
