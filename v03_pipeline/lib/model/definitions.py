@@ -97,6 +97,19 @@ class ReferenceGenome(Enum):
             },
         }[self]
 
+    @property
+    def optional_contigs(self) -> set[str]:
+        return {
+            ReferenceGenome.GRCh37: {
+                'Y',
+                'MT',
+            },
+            ReferenceGenome.GRCh38: {
+                'chrY',
+                'chrM',
+            },
+        }[self]
+
 
 class SampleType(Enum):
     WES = 'WES'
