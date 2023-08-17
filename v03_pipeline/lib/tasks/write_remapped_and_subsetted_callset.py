@@ -26,6 +26,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -49,6 +53,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 self.dataset_type,
                 self.hail_temp_dir,
                 self.callset_path,
+                self.validate,
             ),
             RawFileTask(self.project_pedigree_path),
         ]

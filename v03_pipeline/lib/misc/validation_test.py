@@ -76,7 +76,7 @@ class ValidationTest(unittest.TestCase):
 
     def test_validate_sample_type(self) -> None:
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs)
-        coding_and_noncoding_ht = hl.Table.parallelize(
+        coding_and_noncoding_variants_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus(
@@ -125,7 +125,7 @@ class ValidationTest(unittest.TestCase):
         self.assertIsNone(
             validate_sample_type(
                 mt,
-                coding_and_noncoding_ht,
+                coding_and_noncoding_variants_ht,
                 ReferenceGenome.GRCh38,
                 SampleType.WGS,
             ),
@@ -135,13 +135,13 @@ class ValidationTest(unittest.TestCase):
             'specified as WES but appears to be WGS',
             validate_sample_type,
             mt,
-            coding_and_noncoding_ht,
+            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WES,
         )
 
         # has coding, but not noncoding now.
-        coding_and_noncoding_ht = hl.Table.parallelize(
+        coding_and_noncoding_variants_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus(
@@ -181,7 +181,7 @@ class ValidationTest(unittest.TestCase):
         self.assertIsNone(
             validate_sample_type(
                 mt,
-                coding_and_noncoding_ht,
+                coding_and_noncoding_variants_ht,
                 ReferenceGenome.GRCh38,
                 SampleType.WES,
             ),
@@ -191,13 +191,13 @@ class ValidationTest(unittest.TestCase):
             'specified as WGS but appears to be WES',
             validate_sample_type,
             mt,
-            coding_and_noncoding_ht,
+            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WGS,
         )
 
         # has noncoding, but not coding now.
-        coding_and_noncoding_ht = hl.Table.parallelize(
+        coding_and_noncoding_variants_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus(
@@ -239,7 +239,7 @@ class ValidationTest(unittest.TestCase):
             'contains noncoding variants but is missing common coding variants',
             validate_sample_type,
             mt,
-            coding_and_noncoding_ht,
+            coding_and_noncoding_variants_ht,
             ReferenceGenome.GRCh38,
             SampleType.WGS,
         )

@@ -1,25 +1,33 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 
 import luigi
 
+from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
 from v03_pipeline.lib.misc.io import import_callset
-from v03_pipeline.lib.paths import imported_callset_path
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
+    imported_callset_path,
+)
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import (
     CallsetTask,
+    HailTableTask,
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
 )
+import hail as hl
 
-if TYPE_CHECKING:
-    import hail as hl
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
     n_partitions = 500
     callset_path = luigi.Parameter()
+    validate = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -37,11 +45,29 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         return [
             CallsetTask(self.callset_path),
+            HailTableTask(
+                cached_reference_dataset_query_path(
+                    self.env,
+                    self.reference_genome,
+                    CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                ),
+            ),
         ]
 
     def create_table(self) -> hl.MatrixTable:
-        return import_callset(
+        mt = import_callset(
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
         )
+        if self.validate and self.dataset_type.can_run_validation:
+            validate_contigs(mt, self.reference_genome)
+            coding_and_noncoding_ht = hl.read_table(
+                cached_reference_dataset_query_path(
+                    self.env,
+                    self.reference_genome,
+                    CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                ),
+            )
+            validate_sample_type(mt, coding_and_noncoding_ht, self.reference_genome, self.sample_type)
+        return mt
