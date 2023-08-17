@@ -272,6 +272,6 @@ class HailElasticSearchTask(luigi.Task):
 
     def _mt_num_shards(self, mt):
         # The greater of the user specified min shards and calculated based on the variants and samples
-        denominator = 1.4*10**9
+        denominator = 1.8*10**9
         calculated_num_shards = math.ceil((mt.count_rows() * mt.count_cols())/denominator)
         return max(self.es_index_min_num_shards, calculated_num_shards)
