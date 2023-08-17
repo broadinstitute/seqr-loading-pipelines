@@ -38,6 +38,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            validate=False,
         )
         worker.add(uslt_task)
         worker.run()

@@ -38,6 +38,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     liftover_ref_path = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
@@ -100,6 +104,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.project_remap_paths,
                     self.project_pedigree_paths,
                     self.ignore_missing_samples,
+                    self.validate,
                 ),
             ]
         else:
@@ -114,6 +119,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     project_remap_path,
                     project_pedigree_path,
                     self.ignore_missing_samples,
+                    self.validate,
                 )
                 for (project_guid, project_remap_path, project_pedigree_path) in zip(
                     self.project_guids,

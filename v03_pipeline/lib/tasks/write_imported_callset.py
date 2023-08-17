@@ -20,7 +20,6 @@ from v03_pipeline.lib.tasks.files import (
 import hail as hl
 
 
-
 class WriteImportedCallsetTask(BaseWriteTask):
     n_partitions = 500
     callset_path = luigi.Parameter()
@@ -43,16 +42,21 @@ class WriteImportedCallsetTask(BaseWriteTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
-        return [
+        requirements = [
             CallsetTask(self.callset_path),
-            HailTableTask(
-                cached_reference_dataset_query_path(
-                    self.env,
-                    self.reference_genome,
-                    CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                ),
-            ),
         ]
+        if self.validate:
+            requirements = [
+                *requirements,
+                HailTableTask(
+                    cached_reference_dataset_query_path(
+                        self.env,
+                        self.reference_genome,
+                        CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                    ),
+                ),
+            ]
+        return requirements
 
     def create_table(self) -> hl.MatrixTable:
         mt = import_callset(
@@ -69,5 +73,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),
             )
-            validate_sample_type(mt, coding_and_noncoding_ht, self.reference_genome, self.sample_type)
+            validate_sample_type(
+                mt,
+                coding_and_noncoding_ht,
+                self.reference_genome,
+                self.sample_type,
+            )
         return mt
