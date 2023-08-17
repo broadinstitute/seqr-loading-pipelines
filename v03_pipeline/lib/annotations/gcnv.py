@@ -25,6 +25,24 @@ def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.CN
 
 
+def concordance(
+    mt: hl.MatrixTable,
+    is_new_gcnv_joint_call: bool,
+    **_: Any,
+) -> hl.Expression:
+    if is_new_gcnv_joint_call:
+        return hl.struct(
+            new_call=mt.no_ovl,
+            prev_call=hl.len(mt.identical_ovl) > 0,
+            prev_overlap=hl.len(mt.any_ovl) > 0,
+        )
+    return hl.struct(
+        new_call=False,
+        prev_call=~mt.is_latest,
+        prev_overlap=False,
+    )
+
+
 def defragged(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.defragmented
 
@@ -39,7 +57,7 @@ def end_locus(
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
-        AF=ht.sf,
+        AF=hl.float32(ht.sf),
         AC=ht.sc,
         AN=hl.int32(ht.sc / ht.sf),
         Hom=hl.missing(hl.tint32),
@@ -55,38 +73,8 @@ def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     )
 
 
-def new_call(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return mt.no_ovl
-    return False
-
-
 def num_exon(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.num_exon
-
-
-def prev_call(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return hl.len(mt.identical_ovl) > 0
-    return ~mt.is_latest
-
-
-def prev_overlap(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return hl.len(mt.any_ovl) > 0
-    return False
 
 
 def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -173,7 +161,7 @@ def start_locus(
 
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.struct(score=hl.parse_float(ht.strvctvre_score))
+    return hl.struct(score=hl.parse_float32(ht.strvctvre_score))
 
 
 def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:
