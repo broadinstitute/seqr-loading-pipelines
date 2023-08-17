@@ -62,6 +62,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples,
+            self.validate,
         )
 
     def create_table(self) -> hl.Table:
