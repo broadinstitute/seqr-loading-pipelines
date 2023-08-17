@@ -229,7 +229,7 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
             enums=ht.enums.annotate(
                 sorted_gene_consequences=hl.Struct(
                     major_consequence=SV_CONSEQUENCE_RANKS,
-                )
-            )
+                ),
+            ),
         )
     return ht

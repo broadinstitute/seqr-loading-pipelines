@@ -24,7 +24,10 @@ def _start_and_end_equal(mt: hl.MatrixTable) -> hl.BooleanExpression:
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.CN
 
-def concordance(mt: hl.MatrixTable, is_new_gcnv_joint_call: bool, **_: Any) -> hl.Expression:
+
+def concordance(
+    mt: hl.MatrixTable, is_new_gcnv_joint_call: bool, **_: Any,
+) -> hl.Expression:
     if is_new_gcnv_joint_call:
         return hl.struct(
             new_call=mt.no_ovl,
@@ -70,6 +73,7 @@ def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def num_exon(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.num_exon
+
 
 def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.QS
