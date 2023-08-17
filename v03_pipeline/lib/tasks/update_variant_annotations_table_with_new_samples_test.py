@@ -646,7 +646,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
-                        sv_consequence_rank=SV_CONSEQUENCE_RANKS,
+                        sorted_gene_consequences=hl.Struct(major_consequence=SV_CONSEQUENCE_RANKS),
                     ),
                     updates={
                         hl.Struct(
@@ -661,7 +661,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ht.collect(),
             [
                 hl.Struct(
-                    rsid='BND_chr1_6',
+                    variant_id='BND_chr1_6',
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -697,7 +697,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1000180928,
                 ),
                 hl.Struct(
-                    rsid='BND_chr1_9',
+                    variant_id='BND_chr1_9',
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -733,7 +733,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1000789481,
                 ),
                 hl.Struct(
-                    rsid='CPX_chr1_22',
+                    variant_id='CPX_chr1_22',
                     algorithms='manta',
                     bothsides_support=True,
                     cpx_intervals=[
@@ -771,7 +771,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1006558902,
                 ),
                 hl.Struct(
-                    rsid='CPX_chr1_251',
+                    variant_id='CPX_chr1_251',
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
@@ -822,7 +822,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1180540234,
                 ),
                 hl.Struct(
-                    rsid='CPX_chr1_41',
+                    variant_id='CPX_chr1_41',
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
@@ -860,7 +860,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1016088760,
                 ),
                 hl.Struct(
-                    rsid='CPX_chr1_54',
+                    variant_id='CPX_chr1_54',
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
@@ -899,7 +899,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1021427498,
                 ),
                 hl.Struct(
-                    rsid='DEL_chr1_12',
+                    variant_id='DEL_chr1_12',
                     algorithms='depth',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -934,7 +934,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1000413968,
                 ),
                 hl.Struct(
-                    rsid='DUP_chr1_5',
+                    variant_id='DUP_chr1_5',
                     algorithms='depth',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -965,7 +965,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1000257666,
                 ),
                 hl.Struct(
-                    rsid='INS_chr1_268',
+                    variant_id='INS_chr1_268',
                     algorithms='melt',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -1000,7 +1000,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1017465707,
                 ),
                 hl.Struct(
-                    rsid='INS_chr1_65',
+                    variant_id='INS_chr1_65',
                     algorithms='manta,melt',
                     bothsides_support=False,
                     cpx_intervals=None,
@@ -1038,7 +1038,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     xpos=1004228405,
                 ),
                 hl.Struct(
-                    rsid='INS_chr1_688',
+                    variant_id='INS_chr1_688',
                     algorithms='melt',
                     bothsides_support=False,
                     cpx_intervals=None,

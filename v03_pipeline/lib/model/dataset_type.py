@@ -61,7 +61,7 @@ class DatasetType(Enum):
         )
         return {
             DatasetType.GCNV: hl.tstruct(variant_id=hl.tstr),
-            DatasetType.SV: hl.tstruct(rsid=hl.tstr),
+            DatasetType.SV: hl.tstruct(variant_id=hl.tstr),
         }.get(self, default_key)
 
     @property
@@ -256,10 +256,8 @@ class DatasetType(Enum):
                 shared.GT,
             ],
             DatasetType.GCNV: [
+                gcnv.concordance,
                 gcnv.defragged,
-                gcnv.new_call,
-                gcnv.prev_call,
-                gcnv.prev_overlap,
                 gcnv.sample_end,
                 gcnv.sample_gene_ids,
                 gcnv.sample_num_exon,

@@ -106,6 +106,8 @@ def import_callset(
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SNV:
         mt = split_multi_hts(mt)
+    if dataset_type == DatasetType.SV:
+        mt = mt.annotate_rows(variant_id=mt.rsid)
     mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
     mt = mt.select_globals()
     mt = mt.select_rows(*dataset_type.row_fields)

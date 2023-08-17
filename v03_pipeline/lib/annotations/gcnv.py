@@ -24,6 +24,19 @@ def _start_and_end_equal(mt: hl.MatrixTable) -> hl.BooleanExpression:
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.CN
 
+def concordance(mt: hl.MatrixTable, is_new_gcnv_joint_call: bool, **_: Any) -> hl.Expression:
+    if is_new_gcnv_joint_call:
+        return hl.struct(
+            new_call=mt.no_ovl,
+            prev_call=hl.len(mt.identical_ovl) > 0,
+            prev_overlap=hl.len(mt.any_ovl) > 0,
+        )
+    return hl.struct(
+        new_call=False,
+        prev_call=~mt.is_latest,
+        prev_overlap=False,
+    )
+
 
 def defragged(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     return mt.defragmented
@@ -55,39 +68,8 @@ def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     )
 
 
-def new_call(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return mt.no_ovl
-    return False
-
-
 def num_exon(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.num_exon
-
-
-def prev_call(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return hl.len(mt.identical_ovl) > 0
-    return ~mt.is_latest
-
-
-def prev_overlap(
-    mt: hl.MatrixTable,
-    is_new_gcnv_joint_call: bool,
-    **_: Any,
-) -> hl.Expression:
-    if is_new_gcnv_joint_call:
-        return hl.len(mt.any_ovl) > 0
-    return False
-
 
 def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return mt.QS
