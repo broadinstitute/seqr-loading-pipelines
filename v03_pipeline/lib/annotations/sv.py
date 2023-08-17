@@ -124,7 +124,7 @@ def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
-        AF=ht.info.AF[0],
+        AF=hl.float32(ht.info.AF[0]),
         AC=ht.info.AC[0],
         AN=ht.info.AN,
         Hom=ht.info.N_HOMALT,
@@ -186,7 +186,7 @@ def sorted_gene_consequences(
 
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.struct(score=hl.parse_float(ht.info.StrVCTVRE))
+    return hl.struct(score=hl.parse_float32(ht.info.StrVCTVRE))
 
 
 def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:

@@ -52,7 +52,7 @@ def end_locus(
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
-        AF=ht.sf,
+        AF=hl.float32(ht.sf),
         AC=ht.sc,
         AN=hl.int32(ht.sc / ht.sf),
         Hom=hl.missing(hl.tint32),
@@ -155,7 +155,7 @@ def start_locus(
 
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.struct(score=hl.parse_float(ht.strvctvre_score))
+    return hl.struct(score=hl.parse_float32(ht.strvctvre_score))
 
 
 def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:

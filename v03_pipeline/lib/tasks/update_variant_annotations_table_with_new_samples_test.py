@@ -670,7 +670,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=20404,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.04775, AC=1, AN=8, Hom=0, Het=278),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.04775)), AC=1, AN=8, Hom=0, Het=278),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -706,7 +706,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=789481,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.910684, AC=7, AN=8, Hom=2391, Het=520),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.910684)), AC=7, AN=8, Hom=2391, Het=520),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -745,7 +745,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=6559723,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.169873, AC=2, AN=8, Hom=3, Het=983),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.169873)), AC=2, AN=8, Hom=3, Het=983),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -793,7 +793,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=181074952,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.251804, AC=3, AN=8, Hom=114, Het=1238),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.251804)), AC=3, AN=8, Hom=114, Het=1238),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -834,7 +834,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=16089601,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.218138, AC=2, AN=8, Hom=18, Het=1234),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.218138)), AC=2, AN=8, Hom=18, Het=1234),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -873,7 +873,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=21480419,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.499656, AC=4, AN=8, Hom=49, Het=2811),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.499656)), AC=4, AN=8, Hom=49, Het=2811),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -908,7 +908,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=428500,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.064926, AC=1, AN=8, Hom=5, Het=368),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.064926)), AC=1, AN=8, Hom=5, Het=368),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=5,
@@ -943,7 +943,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=263666,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.115596, AC=1, AN=8, Hom=110, Het=453),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.115596)), AC=1, AN=8, Hom=110, Het=453),
                     gnomad_svs=None,
                     rg37_locus=None,
                     rg37_locus_end=hl.Locus(
@@ -974,7 +974,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=17465723,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.004466, AC=1, AN=8, Hom=0, Het=26),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.004466)), AC=1, AN=8, Hom=0, Het=26),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1009,9 +1009,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=4228448,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.10237, AC=1, AN=8, Hom=3, Het=590),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.10237)), AC=1, AN=8, Hom=3, Het=590),
                     gnomad_svs=hl.Struct(
-                        AF=0.068962998688221,
+                        AF=hl.eval(hl.float32(0.06896299868822098)),
                         ID='gnomAD-SV_v2.1_INS_chr1_65',
                     ),
                     rg37_locus=hl.Locus(
@@ -1032,7 +1032,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=4228405,
                         reference_genome='GRCh38',
                     ),
-                    strvctvre=hl.Struct(score=0.1255),
+                    strvctvre=hl.Struct(score=hl.eval(hl.float32(0.1255))),
                     sv_type_id=7,
                     sv_type_detail_id=4,
                     xpos=1004228405,
@@ -1047,7 +1047,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=48963135,
                         reference_genome='GRCh38',
                     ),
-                    gt_stats=hl.Struct(AF=0.06338, AC=1, AN=8, Hom=2, Het=365),
+                    gt_stats=hl.Struct(AF=hl.eval(hl.float32(0.06338)), AC=1, AN=8, Hom=2, Het=365),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
@@ -1130,7 +1130,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=4.401408e-05,
+                        AF=hl.eval(hl.float32(4.401408e-05)),
                         AC=1,
                         AN=22720,
                         Hom=None,
@@ -1157,7 +1157,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                         position=100006937,
                         reference_genome='GRCh38',
                     ),
-                    strvctvre=hl.Struct(score=0.583),
+                    strvctvre=hl.Struct(score=hl.eval(hl.float32(0.583))),
                     sv_type_id=5,
                     xpos=1100006937,
                 ),
