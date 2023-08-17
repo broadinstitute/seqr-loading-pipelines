@@ -462,10 +462,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             [
                 [
                     hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
                         defragged=False,
-                        new_call=False,
-                        prev_call=True,
-                        prev_overlap=False,
                         sample_end=100007881,
                         sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
                         sample_num_exon=2,
@@ -475,10 +477,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         QS=4,
                     ),
                     hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=False,
+                            prev_overlap=False,
+                        ),
                         defragged=False,
-                        new_call=False,
-                        prev_call=False,
-                        prev_overlap=False,
                         sample_end=100023213,
                         sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
                         sample_num_exon=None,
@@ -488,10 +492,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         QS=5,
                     ),
                     hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
                         defragged=False,
-                        new_call=False,
-                        prev_call=True,
-                        prev_overlap=False,
                         sample_end=100023213,
                         sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
                         sample_num_exon=None,
@@ -501,10 +507,12 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         QS=30,
                     ),
                     hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
                         defragged=False,
-                        new_call=False,
-                        prev_call=True,
-                        prev_overlap=False,
                         sample_end=100023212,
                         sample_gene_ids={'ENSG00000283761', 'ENSG22222222222'},
                         sample_num_exon=2,
