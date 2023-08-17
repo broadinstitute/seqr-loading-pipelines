@@ -26,7 +26,9 @@ def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 
 def concordance(
-    mt: hl.MatrixTable, is_new_gcnv_joint_call: bool, **_: Any,
+    mt: hl.MatrixTable,
+    is_new_gcnv_joint_call: bool,
+    **_: Any,
 ) -> hl.Expression:
     if is_new_gcnv_joint_call:
         return hl.struct(
