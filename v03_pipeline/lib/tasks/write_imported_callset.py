@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-
+import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
 from v03_pipeline.lib.misc.io import import_callset
+from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
@@ -13,11 +13,10 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import (
     CallsetTask,
-    HailTableTask,
     GCSorLocalFolderTarget,
     GCSorLocalTarget,
+    HailTableTask,
 )
-import hail as hl
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
