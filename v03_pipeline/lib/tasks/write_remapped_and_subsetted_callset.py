@@ -27,7 +27,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     validate = luigi.BoolParameter(
-        default=False,
+        default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 

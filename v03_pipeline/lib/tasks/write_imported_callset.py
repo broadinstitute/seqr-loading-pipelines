@@ -25,7 +25,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     n_partitions = 500
     callset_path = luigi.Parameter()
     validate = luigi.BoolParameter(
-        default=False,
+        default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
