@@ -31,15 +31,21 @@ def concordance(
     **_: Any,
 ) -> hl.Expression:
     if is_new_gcnv_joint_call:
-        return hl.struct(
-            new_call=mt.no_ovl,
-            prev_call=hl.len(mt.identical_ovl) > 0,
-            prev_overlap=hl.len(mt.any_ovl) > 0,
+        return hl.or_missing(
+            hl.is_defined(mt.GT),
+            hl.struct(
+                new_call=mt.no_ovl,
+                prev_call=hl.len(mt.identical_ovl) > 0,
+                prev_overlap=hl.len(mt.any_ovl) > 0,
+            ),
         )
-    return hl.struct(
-        new_call=False,
-        prev_call=~mt.is_latest,
-        prev_overlap=False,
+    return hl.or_missing(
+        hl.is_defined(mt.GT),
+        hl.struct(
+            new_call=False,
+            prev_call=~mt.is_latest,
+            prev_overlap=False,
+        ),
     )
 
 
