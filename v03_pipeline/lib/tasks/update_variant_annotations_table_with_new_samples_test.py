@@ -1167,7 +1167,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 1)
+        self.assertEqual(ht.count(), 2)
         self.assertCountEqual(
             ht.globals.collect(),
             [
@@ -1176,7 +1176,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     versions=hl.Struct(),
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
-                        sv_consequence_rank=SV_CONSEQUENCE_RANKS,
+                        sorted_gene_consequences=hl.Struct(
+                            major_consequence=SV_CONSEQUENCE_RANKS,
+                        ),
                     ),
                     updates={
                         hl.Struct(
@@ -1228,6 +1230,44 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     strvctvre=hl.Struct(score=hl.eval(hl.float32(0.583))),
                     sv_type_id=5,
                     xpos=1100006937,
+                ),
+                hl.Struct(
+                    variant_id='suffix_16457_DEL',
+                    end_locus=hl.Locus(
+                        contig='chr1',
+                        position=100023212,
+                        reference_genome='GRCh38',
+                    ),
+                    gt_stats=hl.Struct(
+                        AF=8.802817319519818e-05,
+                        AC=2,
+                        AN=22719,
+                        Hom=None,
+                        Het=None,
+                    ),
+                    num_exon=2,
+                    rg37_locus=hl.Locus(
+                        contig=1,
+                        position=100483142,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig=1,
+                        position=100488768,
+                        reference_genome='GRCh37',
+                    ),
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000283761', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG22222222222', major_consequence_id=None),
+                    ],
+                    start_locus=hl.Locus(
+                        contig='chr1',
+                        position=100017586,
+                        reference_genome='GRCh38',
+                    ),
+                    strvctvre=hl.Struct(score=0.5070000290870667),
+                    sv_type_id=5,
+                    xpos=1100017586,
                 ),
             ],
         )

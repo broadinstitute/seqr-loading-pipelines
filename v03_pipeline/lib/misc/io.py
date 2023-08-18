@@ -49,13 +49,12 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     )
     mt = ht.to_matrix_table(
         row_key=['variant_name', 'svtype'],
-        col_key=['sample_cram_basename'],
+        col_key=['sample_fix'],
         row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
     )
-    # rename the sample id column before the sample subset happens
     mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
-    mt = mt.key_cols_by(s=mt.sample_cram_basename)
-    return mt.annotate_rows(
+    mt = mt.key_cols_by(s=mt.sample_fix)
+    mt = mt.annotate_rows(
         variant_id=hl.format('%s_%s', mt.variant_name, mt.svtype),
         filters=hl.empty_set(hl.tstr),
         start=hl.agg.min(mt.sample_start),
@@ -71,6 +70,8 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
             hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_LOF_Ensemble_ID)),
         ),
     )
+    mt = mt.unfilter_entries()
+    return mt
 
 
 def import_vcf(

@@ -455,7 +455,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         )
         self.assertEqual(
             ht.count(),
-            1,
+            2,
         )
         self.assertCountEqual(
             ht.entries.collect(),
@@ -520,6 +520,54 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         CN=0,
                         GT=hl.Call(alleles=[1, 1], phased=False),
                         QS=30,
+                    ),
+                ],
+                [
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
+                    ),
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
+                    ),
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False, prev_call=True, prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=0,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                        QS=30,
+                    ),
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
                     ),
                 ],
             ],
