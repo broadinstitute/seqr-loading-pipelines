@@ -547,7 +547,9 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                     ),
                     hl.Struct(
                         concordance=hl.Struct(
-                            new_call=False, prev_call=True, prev_overlap=False,
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
                         ),
                         defragged=False,
                         sample_end=None,
