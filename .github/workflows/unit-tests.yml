@@ -35,3 +35,7 @@ jobs:
         run: black . --check --diff
       - name: Check Ruff
         run: ruff . --format github
+      - name: Unit Tests
+        run: |
+          nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
+          coverage report --omit '*test*' --fail-under=10
