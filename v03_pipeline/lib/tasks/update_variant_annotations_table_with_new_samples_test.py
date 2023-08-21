@@ -751,8 +751,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=True,
                     cpx_intervals=[
-                        hl.Struct(type_id=8, start=hl.Locus('chr1', 6558902, 'GRCh38'), end=hl.Locus('chr1', 6559723, 'GRCh38')),
-                        hl.Struct(type_id=6, start=hl.Locus('chr1', 6559655, 'GRCh38'), end=hl.Locus('chr1', 6559723, 'GRCh38')),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus('chr1', 6558902, 'GRCh38'),
+                            end=hl.Locus('chr1', 6559723, 'GRCh38'),
+                        ),
+                        hl.Struct(
+                            type_id=6,
+                            start=hl.Locus('chr1', 6559655, 'GRCh38'),
+                            end=hl.Locus('chr1', 6559723, 'GRCh38'),
+                        ),
                     ],
                     end_locus=hl.Locus(
                         contig='chr1',
@@ -795,8 +803,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
-                        hl.Struct(type_id=5, start=hl.Locus('chr1', 180540234, 'GRCh38'), end=hl.Locus('chr1', 181074767, 'GRCh38')),
-                        hl.Struct(type_id=8, start=hl.Locus('chr1', 181074767, 'GRCh38'), end=hl.Locus('chr1', 181074938, 'GRCh38')),
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus('chr1', 180540234, 'GRCh38'),
+                            end=hl.Locus('chr1', 181074767, 'GRCh38'),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus('chr1', 181074767, 'GRCh38'),
+                            end=hl.Locus('chr1', 181074938, 'GRCh38'),
+                        ),
                     ],
                     end_locus=hl.Locus(
                         contig='chr1',
@@ -842,8 +858,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
-                        hl.Struct(type_id=6, start=hl.Locus('chr1', 16088760, 'GRCh38'), end=hl.Locus('chr1', 16088835, 'GRCh38')),
-                        hl.Struct(type_id=8, start=hl.Locus('chr1', 16088760, 'GRCh38'), end=hl.Locus('chr1', 16089601, 'GRCh38')),
+                        hl.Struct(
+                            type_id=6,
+                            start=hl.Locus('chr1', 16088760, 'GRCh38'),
+                            end=hl.Locus('chr1', 16088835, 'GRCh38'),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus('chr1', 16088760, 'GRCh38'),
+                            end=hl.Locus('chr1', 16089601, 'GRCh38'),
+                        ),
                     ],
                     end_locus=hl.Locus(
                         contig='chr1',
@@ -886,9 +910,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                     algorithms='manta',
                     bothsides_support=False,
                     cpx_intervals=[
-                        hl.Struct(type_id=6, start=hl.Locus('chr1', 21427498, 'GRCh38'), end=hl.Locus('chr1', 21427959, 'GRCh38')),
-                        hl.Struct(type_id=8, start=hl.Locus('chr1', 21427498, 'GRCh38'), end=hl.Locus('chr1', 21480073, 'GRCh38')),
-                        hl.Struct(type_id=5, start=hl.Locus('chr1', 21480073, 'GRCh38'), end=hl.Locus('chr1', 21480419, 'GRCh38')),
+                        hl.Struct(
+                            type_id=6,
+                            start=hl.Locus('chr1', 21427498, 'GRCh38'),
+                            end=hl.Locus('chr1', 21427959, 'GRCh38'),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus('chr1', 21427498, 'GRCh38'),
+                            end=hl.Locus('chr1', 21480073, 'GRCh38'),
+                        ),
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus('chr1', 21480073, 'GRCh38'),
+                            end=hl.Locus('chr1', 21480419, 'GRCh38'),
+                        ),
                     ],
                     end_locus=hl.Locus(
                         contig='chr1',

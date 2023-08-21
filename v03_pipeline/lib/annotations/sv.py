@@ -46,7 +46,9 @@ SV_CONSEQUENCE_RANKS_LOOKUP = hl.dict(
 )
 
 
-def _get_cpx_interval(x: hl.StringExpression, reference_genome: ReferenceGenome) -> hl.StructExpression:
+def _get_cpx_interval(
+    x: hl.StringExpression, reference_genome: ReferenceGenome,
+) -> hl.StructExpression:
     # an example format of CPX_INTERVALS is "DUP_chr1:1499897-1499974"
     type_contig = x.split('_')
     contig_pos = type_contig[1].split(':')
@@ -103,7 +105,9 @@ def concordance(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
     )
 
 
-def cpx_intervals(ht: hl.Table, reference_genome: ReferenceGenome, **_: Any) -> hl.Expression:
+def cpx_intervals(
+    ht: hl.Table, reference_genome: ReferenceGenome, **_: Any,
+) -> hl.Expression:
     return hl.or_missing(
         hl.is_defined(ht.info.CPX_INTERVALS),
         ht.info.CPX_INTERVALS.map(lambda x: _get_cpx_interval(x, reference_genome)),
