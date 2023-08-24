@@ -35,3 +35,8 @@ jobs:
         run: black . --check --diff
       - name: Check Ruff
         run: ruff . --format github
+      - name: Unit Tests
+        run: |
+          export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
+          nosetests --with-coverage --cover-package v03_pipeline v03_pipeline
+          coverage report --omit '*test*' --fail-under=80
