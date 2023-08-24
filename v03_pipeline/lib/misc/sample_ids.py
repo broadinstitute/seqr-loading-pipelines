@@ -73,7 +73,9 @@ def subset_samples(
             f"IDs that aren't in the callset: {missing_samples}\n"
             f'All callset sample IDs:{mt.s.collect()}'
         )
-        if (subset_count > anti_join_ht_count) and ignore_missing_samples_when_subsetting:
+        if (
+            subset_count > anti_join_ht_count
+        ) and ignore_missing_samples_when_subsetting:
             print(message)
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
