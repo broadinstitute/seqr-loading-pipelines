@@ -63,7 +63,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         # Remap, but only if the remap file is present!
         if does_file_exist(self.project_remap_path):
             project_remap_ht = import_remap(self.project_remap_path)
-            callset_mt = remap_sample_ids(callset_mt, project_remap_ht, self.ignore_missing_samples_when_remapping)
+            callset_mt = remap_sample_ids(
+                callset_mt,
+                project_remap_ht,
+                self.ignore_missing_samples_when_remapping,
+            )
 
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         families_to_include_ht = families_to_include(pedigree_ht, callset_mt.cols())
