@@ -1,0 +1,3 @@
+# This is the default owner for everything in the repo. Unless a later match takes precedence,
+# users listed here will be requested for review when someone opens a pull request.
+*               @broadinstitute/seqr
