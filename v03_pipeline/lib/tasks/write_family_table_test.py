@@ -11,7 +11,7 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
-TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
@@ -29,15 +29,15 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         if os.path.isdir(self._temp_local_datasets):
             shutil.rmtree(self._temp_local_datasets)
 
-    def test_snv_write_family_table_task(self, mock_dataroot: Mock) -> None:
+    def test_snv_indel_write_family_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         wft_task = WriteFamilyTableTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
@@ -47,7 +47,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             wft_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc_1.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
         )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)

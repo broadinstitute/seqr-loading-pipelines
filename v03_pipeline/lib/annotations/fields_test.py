@@ -36,7 +36,7 @@ class FieldsTest(unittest.TestCase):
             ht,
             Env.TEST,
             ReferenceGenome.GRCh38,
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             None,
         )
         ht = ht.annotate(rsid='abcd')
@@ -44,7 +44,7 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    DatasetType.SNV.formatting_annotation_fns,
+                    DatasetType.SNV_INDEL.formatting_annotation_fns,
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
@@ -53,10 +53,10 @@ class FieldsTest(unittest.TestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
                     },
                     env=Env.TEST,
-                    dataset_type=DatasetType.SNV,
+                    dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
                     liftover_ref_path=LIFTOVER,
                 ).keys(),
@@ -75,7 +75,7 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    DatasetType.SNV.formatting_annotation_fns,
+                    DatasetType.SNV_INDEL.formatting_annotation_fns,
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
@@ -84,10 +84,10 @@ class FieldsTest(unittest.TestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
+                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
                     },
                     env=Env.TEST,
-                    dataset_type=DatasetType.SNV,
+                    dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh37,
                     liftover_ref_path=LIFTOVER,
                 ).keys(),
@@ -141,10 +141,10 @@ class FieldsTest(unittest.TestCase):
             list(
                 get_fields(
                     ht,
-                    DatasetType.SNV.sample_lookup_table_annotation_fns,
+                    DatasetType.SNV_INDEL.sample_lookup_table_annotation_fns,
                     sample_lookup_ht=sample_lookup_ht,
                     env=Env.TEST,
-                    dataset_type=DatasetType.SNV,
+                    dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
             ),

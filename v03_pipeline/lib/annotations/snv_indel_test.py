@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.snv import gt_stats
+from v03_pipeline.lib.annotations.snv_indel import gt_stats
 
 
 class SNVTest(unittest.TestCase):
