@@ -143,7 +143,7 @@ def write(
     if checkpoint:
         t = t.checkpoint(
             os.path.join(
-                DataRoot.HAIL_TMPDIR.value,
+                DataRoot.HAIL_TMPDIR,
                 f'{uuid.uuid4()}.{suffix}',
             ),
         )
