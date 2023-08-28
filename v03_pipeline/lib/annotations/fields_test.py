@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.vep import run_vep
 
@@ -34,7 +34,6 @@ class FieldsTest(unittest.TestCase):
         ht = hl.read_table(TEST_COMBINED_1)
         ht = run_vep(
             ht,
-            Env.TEST,
             ReferenceGenome.GRCh38,
             DatasetType.SNV,
             None,
@@ -48,14 +47,12 @@ class FieldsTest(unittest.TestCase):
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
-                                Env.TEST,
                                 ReferenceGenome.GRCh38,
                                 rdc,
                             ),
                         )
                         for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
                     },
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
                     liftover_ref_path=LIFTOVER,
@@ -79,14 +76,12 @@ class FieldsTest(unittest.TestCase):
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
-                                Env.TEST,
                                 ReferenceGenome.GRCh38,
                                 rdc,
                             ),
                         )
                         for rdc in DatasetType.SNV.annotatable_reference_dataset_collections
                     },
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh37,
                     liftover_ref_path=LIFTOVER,
@@ -143,7 +138,6 @@ class FieldsTest(unittest.TestCase):
                     ht,
                     DatasetType.SNV.sample_lookup_table_annotation_fns,
                     sample_lookup_ht=sample_lookup_ht,
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV,
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
