@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
@@ -30,7 +30,6 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         write_metadata_for_run_task = WriteMetadataForRunTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,

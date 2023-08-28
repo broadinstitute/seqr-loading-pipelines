@@ -47,7 +47,7 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED_MITO,
             ],
         }.get(self, [])
-        if Env.ACCESS_PRIVATE_DATASETS == True:
+        if Env.ACCESS_PRIVATE_DATASETS:
             return rdcs
         return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
 

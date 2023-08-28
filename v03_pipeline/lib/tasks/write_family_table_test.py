@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
@@ -34,7 +34,6 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         wft_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_SNV_VCF,
@@ -172,7 +171,6 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         write_family_table_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
             callset_path=TEST_SV_VCF,
@@ -425,7 +423,6 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         write_family_table_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.GCNV,
             callset_path=TEST_GCNV_BED_FILE,

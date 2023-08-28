@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
@@ -29,7 +29,6 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         upt_task = UpdateProjectTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,

@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -47,7 +47,6 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         vat_task = BaseVariantAnnotationsTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
         )

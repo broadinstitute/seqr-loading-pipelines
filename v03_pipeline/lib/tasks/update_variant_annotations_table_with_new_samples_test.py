@@ -21,7 +21,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -96,7 +96,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_SNV_VCF,
@@ -113,7 +112,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
         mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_SNV_VCF,
@@ -136,7 +134,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_SNV_VCF,
@@ -181,7 +178,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
         # Ensure that new variants are added correctly to the table.
         uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_SNV_VCF,
@@ -356,7 +352,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
-                env=Env.TEST,
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
                 callset_path=TEST_MITO_MT,
@@ -618,7 +613,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
-                env=Env.TEST,
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
                 callset_path=TEST_SV_VCF,
@@ -1175,7 +1169,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
-                env=Env.TEST,
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.GCNV,
                 callset_path=TEST_GCNV_BED_FILE,

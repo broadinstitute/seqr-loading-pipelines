@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import os
-import tempfile
 import uuid
 
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DataRoot, DatasetType, ReferenceGenome
 
 BIALLELIC = 2
 
@@ -135,7 +134,6 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 
 
 def write(
-    env: Env,
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,

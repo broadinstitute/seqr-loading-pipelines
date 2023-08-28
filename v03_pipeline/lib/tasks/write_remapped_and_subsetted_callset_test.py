@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -34,7 +34,6 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         worker = luigi.worker.Worker()
 
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
             callset_path=TEST_VCF,

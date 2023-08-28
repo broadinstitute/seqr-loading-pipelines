@@ -25,7 +25,6 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
             ),
@@ -42,7 +41,6 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
         return [
             HailTableTask(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),
