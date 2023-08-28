@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 def run_vep(
     mt: hl.Table,
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     vep_config_json_path: str | None,

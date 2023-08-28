@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from enum import Enum
 import os
+from enum import Enum
 
 
 class AccessControl(Enum):
@@ -11,14 +11,17 @@ class AccessControl(Enum):
 
 class DataRoot(Enum):
     DATASETS = os.environ['DATASETS_ROOT']
-    HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR_ROOT', '/tmp') # noqa: S108
+    HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR_ROOT', '/tmp')  # noqa: S108
     LOADING_DATASETS = os.environ.get(
-        'LOADING_DATASETS_ROOT', os.environ['DATASETS_ROOT'],
+        'LOADING_DATASETS_ROOT',
+        os.environ['DATASETS_ROOT'],
     )
     PRIVATE_REFERENCE_DATASETS = os.environ.get(
-        'PRIVATE_REFERENCE_DATASETS_ROOT', 'gs://seqr-reference-data-private',
+        'PRIVATE_REFERENCE_DATASETS_ROOT',
+        'gs://seqr-reference-data-private',
     )
     REFERENCE_DATASETS = os.environ['REFERENCE_DATASETS_ROOT']
+
 
 class Env(Enum):
     ACCESS_PRIVATE_DATASETS: bool = os.environ.get('ACCESS_PRIVATE_DATASETS') == '1'

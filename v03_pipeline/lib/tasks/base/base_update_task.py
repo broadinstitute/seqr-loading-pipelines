@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.model import DatasetType, DataRoot, ReferenceGenome
+from v03_pipeline.lib.model import DataRoot, DatasetType, ReferenceGenome
 
 
 class BaseUpdateTask(luigi.Task):

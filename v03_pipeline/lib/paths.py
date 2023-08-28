@@ -7,6 +7,7 @@ from v03_pipeline.lib.model import (
     AccessControl,
     DataRoot,
     DatasetType,
+    Env,
     PipelineVersion,
     ReferenceDatasetCollection,
     ReferenceGenome,
