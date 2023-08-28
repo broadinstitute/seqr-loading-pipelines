@@ -30,7 +30,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             remapped_and_subsetted_callset_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
@@ -44,7 +43,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         return [
             WriteImportedCallsetTask(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.hail_temp_dir,

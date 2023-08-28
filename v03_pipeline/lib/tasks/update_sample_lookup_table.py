@@ -30,7 +30,6 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             sample_lookup_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
             ),
@@ -57,7 +56,6 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     def requires(self) -> luigi.Task:
         return [
             WriteRemappedAndSubsettedCallsetTask(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.hail_temp_dir,

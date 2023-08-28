@@ -53,7 +53,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         for rdc in self.dataset_type.annotatable_reference_dataset_collections:
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),
@@ -62,7 +61,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         for rdc in self.dataset_type.joinable_reference_dataset_collections:
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),
@@ -71,7 +69,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         if self.dataset_type.has_sample_lookup_table:
             annotation_dependencies['sample_lookup_ht'] = hl.read_table(
                 sample_lookup_table_path(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                 ),
@@ -89,7 +86,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks = [
                 UpdateSampleLookupTableTask(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                     self.hail_temp_dir,
@@ -103,7 +99,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         else:
             upstream_table_tasks = [
                 WriteRemappedAndSubsettedCallsetTask(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                     self.hail_temp_dir,
@@ -146,7 +141,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         callset_hts = [
             hl.read_matrix_table(
                 remapped_and_subsetted_callset_path(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                     self.callset_path,
@@ -167,7 +161,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
-            self.env,
             self.reference_genome,
             self.dataset_type,
             self.vep_config_json_path,

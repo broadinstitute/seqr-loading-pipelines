@@ -24,7 +24,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             imported_callset_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,

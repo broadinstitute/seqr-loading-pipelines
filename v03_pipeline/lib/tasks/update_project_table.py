@@ -35,7 +35,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             project_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.project_guid,
@@ -51,7 +50,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
 
     def requires(self) -> luigi.Task:
         return WriteRemappedAndSubsettedCallsetTask(
-            self.env,
             self.reference_genome,
             self.dataset_type,
             self.hail_temp_dir,

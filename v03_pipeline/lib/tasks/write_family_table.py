@@ -35,7 +35,6 @@ class WriteFamilyTableTask(BaseWriteTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             family_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.family_guid,
@@ -49,7 +48,6 @@ class WriteFamilyTableTask(BaseWriteTask):
 
     def requires(self) -> luigi.Task:
         return WriteRemappedAndSubsettedCallsetTask(
-            self.env,
             self.reference_genome,
             self.dataset_type,
             self.hail_temp_dir,
