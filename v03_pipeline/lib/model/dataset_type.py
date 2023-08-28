@@ -34,9 +34,9 @@ class DatasetType(Enum):
             ],
         }.get(self, [])
 
+    @property
     def joinable_reference_dataset_collections(
         self,
-        env: Env,
     ) -> list[ReferenceDatasetCollection]:
         rdcs = {
             DatasetType.SNV: [
@@ -47,9 +47,9 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED_MITO,
             ],
         }.get(self, [])
-        if env == Env.LOCAL:
-            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
-        return rdcs
+        if Env.ACCESS_PRIVATE_DATASETS == True:
+            return rdcs
+        return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
 
     def table_key_type(
         self,

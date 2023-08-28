@@ -2,7 +2,6 @@ from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
     DataRoot,
-    Env,
     PipelineVersion,
     ReferenceGenome,
     SampleType,
@@ -15,7 +14,6 @@ __all__ = [
     'AccessControl',
     'DatasetType',
     'DataRoot',
-    'Env',
     'PipelineVersion',
     'ReferenceDatasetCollection',
     'ReferenceGenome',

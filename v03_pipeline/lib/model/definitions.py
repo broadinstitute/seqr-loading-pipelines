@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+import os
 
 
 class AccessControl(Enum):
@@ -9,20 +10,18 @@ class AccessControl(Enum):
 
 
 class DataRoot(Enum):
-    LOCAL_DATASETS = 'seqr-datasets'
-    LOCAL_REFERENCE_DATA = 'seqr-reference-data'
-    SEQR_DATASETS = 'gs://seqr-datasets'
-    SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
-    SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
-    SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
-    SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
-
+    DATASETS = os.environ['DATASETS_ROOT']
+    HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR_ROOT', '/tmp') # noqa: S108
+    LOADING_DATASETS = os.environ.get(
+        'LOADING_DATASETS_ROOT', os.environ['DATASETS_ROOT'],
+    )
+    PRIVATE_REFERENCE_DATASETS = os.environ.get(
+        'PRIVATE_REFERENCE_DATASETS_ROOT', 'gs://seqr-reference-data-private',
+    )
+    REFERENCE_DATASETS = os.environ['REFERENCE_DATASETS_ROOT']
 
 class Env(Enum):
-    DEV = 'DEV'
-    LOCAL = 'LOCAL'
-    PROD = 'PROD'
-    TEST = 'TEST'
+    ACCESS_PRIVATE_DATASETS: bool = os.environ.get('ACCESS_PRIVATE_DATASETS') == '1'
 
 
 class PipelineVersion(Enum):

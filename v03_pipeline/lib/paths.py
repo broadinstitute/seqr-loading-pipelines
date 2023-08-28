@@ -136,7 +136,8 @@ def remapped_and_subsetted_callset_path(
             dataset_type,
         ),
         'remapped_and_subsetted_callsets',
-        f'{hashlib.sha256((callset_path + project_guid).encode("utf8")).hexdigest()}.mt',
+        project_guid,
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
     )
 
 

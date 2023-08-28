@@ -119,7 +119,7 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            'gs://seqr-loading-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/902071e8f57f05930caa3e6c6c88010b6fbc9fe45de8dd17045133a269a2ee51.mt',
+            'gs://seqr-loading-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
         )
         self.assertEqual(
             remapped_and_subsetted_callset_path(
@@ -129,7 +129,7 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset/*.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/920f18219b92beb5c4506fbb6d4b6457770c2a756af691e277545b86990af457.mt',
+            'gs://seqr-scratch-temp/v03/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/bce53ccdb49a5ed2513044e1d0c6224e3ffcc323f770dc807d9175fd3c70a050.mt',
         )
 
     def test_imported_callset_path(self) -> None:

@@ -36,7 +36,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         rdcs = (
-            self.dataset_type.joinable_reference_dataset_collections(self.env)
+            self.dataset_type.joinable_reference_dataset_collections
             + self.dataset_type.annotatable_reference_dataset_collections
         )
         return [

@@ -59,9 +59,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        for rdc in self.dataset_type.joinable_reference_dataset_collections(
-            self.env,
-        ):
+        for rdc in self.dataset_type.joinable_reference_dataset_collections:
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.env,
@@ -187,9 +185,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc in self.dataset_type.joinable_reference_dataset_collections(
-            self.env,
-        ):
+        for rdc in self.dataset_type.joinable_reference_dataset_collections:
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
@@ -214,7 +210,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
         for rdc in itertools.chain(
             self.dataset_type.annotatable_reference_dataset_collections,
-            self.dataset_type.joinable_reference_dataset_collections(self.env),
+            self.dataset_type.joinable_reference_dataset_collections,
         ):
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
