@@ -22,6 +22,7 @@ class DataRoot(Enum):
 
 class Env(Enum):
     ACCESS_PRIVATE_DATASETS: bool = os.environ.get('ACCESS_PRIVATE_DATASETS') == '1'
+    MOCK_VEP: bool = os.environ.get('MOCK_VEP') == '1'
 
 
 class PipelineVersion(Enum):

@@ -142,24 +142,15 @@ def write(
     n_partitions: int | None = None,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
-    if checkpoint and (env == Env.LOCAL or env == Env.TEST):
-        with tempfile.TemporaryDirectory() as d:
-            t = t.checkpoint(
-                os.path.join(
-                    d,
-                    f'{uuid.uuid4()}.{suffix}',
-                ),
-            )
-            return t.write(destination_path, overwrite=True, stage_locally=True)
-    elif checkpoint:
+    if checkpoint:
         t = t.checkpoint(
             os.path.join(
-                DataRoot.SEQR_SCRATCH_TEMP.value,
+                DataRoot.HAIL_TMPDIR.value,
                 f'{uuid.uuid4()}.{suffix}',
             ),
         )
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
-    if n_partitions and env != Env.TEST:
+    if n_partitions:
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)

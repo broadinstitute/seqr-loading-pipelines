@@ -20,7 +20,7 @@ def run_vep(
         return mt
     vep_runner = (
         vep_runners.HailVEPRunner()
-        if env != Env.TEST
+        if Env.MOCK_VEP
         else vep_runners.HailVEPDummyRunner()
     )
     return vep_runner.run(
