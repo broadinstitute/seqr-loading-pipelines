@@ -30,7 +30,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         self,
         mock_dataroot: Mock,
     ) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(

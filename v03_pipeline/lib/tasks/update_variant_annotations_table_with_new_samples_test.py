@@ -63,7 +63,6 @@ GENE_ID_MAPPING = {
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
-    maxDiff = None
 
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
@@ -93,8 +92,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             shutil.rmtree(self._temp_local_reference_data)
 
     def test_missing_pedigree(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -109,8 +108,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         self.assertFalse(uvatwns_task.complete())
 
     def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV,
@@ -129,8 +128,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             TEST_INTERVAL_1,
             f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -346,8 +345,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         )
 
     def test_mito_update_vat(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
         update_variant_annotations_task = (
@@ -608,8 +607,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
     )
     def test_sv_update_vat(self, mock_load_gencode: Mock, mock_dataroot: Mock) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1164,8 +1163,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         )
 
     def test_gcnv_update_vat(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+        mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(

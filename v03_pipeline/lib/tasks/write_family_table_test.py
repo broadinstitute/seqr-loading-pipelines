@@ -20,7 +20,6 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class WriteFamilyTableTaskTest(unittest.TestCase):
-    maxDiff = None
 
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
@@ -30,7 +29,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             shutil.rmtree(self._temp_local_datasets)
 
     def test_snv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         wft_task = WriteFamilyTableTask(
@@ -167,7 +166,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         )
 
     def test_sv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         write_family_table_task = WriteFamilyTableTask(
@@ -419,7 +418,7 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
         )
 
     def test_gcnv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+        mock_dataroot.DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         write_family_table_task = WriteFamilyTableTask(
