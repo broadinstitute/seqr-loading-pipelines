@@ -20,7 +20,6 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class WriteFamilyTableTaskTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
 

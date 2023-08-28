@@ -63,7 +63,6 @@ GENE_ID_MAPPING = {
 
 @patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
-
     def setUp(self) -> None:
         self._temp_local_datasets = tempfile.TemporaryDirectory().name
         self._temp_local_reference_data = tempfile.TemporaryDirectory().name
