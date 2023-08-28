@@ -18,9 +18,9 @@ def run_vep(
     if not dataset_type.veppable:
         return mt
     vep_runner = (
-        vep_runners.HailVEPRunner()
+        vep_runners.HailVEPDummyRunner()
         if Env.MOCK_VEP
-        else vep_runners.HailVEPDummyRunner()
+        else vep_runners.HailVEPRunner()
     )
     return vep_runner.run(
         mt,

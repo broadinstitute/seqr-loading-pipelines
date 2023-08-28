@@ -9,11 +9,7 @@ import hail as hl
 from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.model import (
-    DataRoot,
-    ReferenceDatasetCollection,
-    ReferenceGenome,
-)
+from v03_pipeline.lib.model import DataRoot, ReferenceDatasetCollection, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 

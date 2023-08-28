@@ -6,7 +6,8 @@ from typing import Callable
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv, sv
-from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )

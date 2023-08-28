@@ -20,7 +20,7 @@ def _v03_pipeline_prefix(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        root.value,
+        root,
         PipelineVersion.V03.value,
         reference_genome.value,
         dataset_type.value,
@@ -32,7 +32,7 @@ def _v03_reference_data_prefix(
     reference_genome: ReferenceGenome,
 ) -> str:
     return os.path.join(
-        root.value,
+        root,
         PipelineVersion.V03.value,
         reference_genome.value,
     )
@@ -139,6 +139,7 @@ def valid_reference_dataset_collection_path(
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
 ) -> str | None:
+    print(Env)
     if not Env.ACCESS_PRIVATE_DATASETS:
         return None
     root = (

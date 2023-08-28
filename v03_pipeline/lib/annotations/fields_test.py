@@ -30,7 +30,7 @@ class FieldsTest(unittest.TestCase):
             shutil.rmtree(self._temp_local_reference_data)
 
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.REFERENCE_DATASETS.value = self._temp_local_reference_data
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         ht = hl.read_table(TEST_COMBINED_1)
         ht = run_vep(
             ht,
@@ -101,7 +101,7 @@ class FieldsTest(unittest.TestCase):
         self,
         mock_dataroot: Mock,
     ) -> None:
-        mock_dataroot.REFERENCE_DATASETS.value = self._temp_local_reference_data
+        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         sample_lookup_ht = hl.Table.parallelize(
             [
                 {

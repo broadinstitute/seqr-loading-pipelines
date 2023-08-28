@@ -1,31 +1,11 @@
 from __future__ import annotations
 
-import os
 from enum import Enum
 
 
 class AccessControl(Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
-
-
-class DataRoot(Enum):
-    DATASETS = os.environ.get('DATASETS_ROOT', 'seqr-datasets')
-    HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR_ROOT', '/tmp')  # noqa: S108
-    LOADING_DATASETS = os.environ.get(
-        'LOADING_DATASETS_ROOT',
-        'seqr-loading-temp',
-    )
-    PRIVATE_REFERENCE_DATASETS = os.environ.get(
-        'PRIVATE_REFERENCE_DATASETS_ROOT',
-        'seqr-reference-data-private',
-    )
-    REFERENCE_DATASETS = os.environ.get('REFERENCE_DATASETS_ROOT', 'seqr-reference-data')
-
-
-class Env(Enum):
-    ACCESS_PRIVATE_DATASETS: bool = os.environ.get('ACCESS_PRIVATE_DATASETS') == '1'
-    MOCK_VEP: bool = os.environ.get('MOCK_VEP') == '1'
 
 
 class PipelineVersion(Enum):
