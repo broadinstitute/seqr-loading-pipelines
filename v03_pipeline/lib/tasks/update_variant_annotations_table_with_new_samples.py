@@ -88,7 +88,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 UpdateSampleLookupTableTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.hail_temp_dir,
                     self.callset_path,
                     self.project_guids,
                     self.project_remap_paths,
@@ -101,7 +100,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 WriteRemappedAndSubsettedCallsetTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.hail_temp_dir,
                     self.callset_path,
                     project_guid,
                     project_remap_path,

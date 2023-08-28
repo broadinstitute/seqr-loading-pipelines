@@ -45,7 +45,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
-                self.hail_temp_dir,
                 self.callset_path,
             ),
             RawFileTask(self.project_pedigree_path),

@@ -50,7 +50,6 @@ class WriteFamilyTableTask(BaseWriteTask):
         return WriteRemappedAndSubsettedCallsetTask(
             self.reference_genome,
             self.dataset_type,
-            self.hail_temp_dir,
             self.callset_path,
             self.project_guid,
             self.project_remap_path,

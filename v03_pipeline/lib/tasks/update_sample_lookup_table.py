@@ -58,7 +58,6 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
             WriteRemappedAndSubsettedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
-                self.hail_temp_dir,
                 self.callset_path,
                 project_guid,
                 project_remap_path,
