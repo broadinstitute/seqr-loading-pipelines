@@ -1,9 +1,3 @@
-import os
-import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
-
 import hail as hl
 import luigi.worker
 
@@ -17,7 +11,6 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
-
     def test_update_project_table_task(self) -> None:
         worker = luigi.worker.Worker()
         upt_task = UpdateProjectTableTask(

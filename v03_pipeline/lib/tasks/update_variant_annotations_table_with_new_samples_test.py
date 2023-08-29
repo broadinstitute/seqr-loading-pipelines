@@ -1,7 +1,4 @@
-import os
 import shutil
-import tempfile
-import unittest
 from unittest.mock import Mock, patch
 
 import hail as hl
@@ -27,7 +24,6 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
-
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -64,7 +60,6 @@ GENE_ID_MAPPING = {
 }
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         shutil.copytree(
@@ -117,7 +112,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_mulitiple_update_vat(self) -> None:
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.,mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
         worker = luigi.worker.Worker()
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
