@@ -5,7 +5,7 @@ from typing import Callable
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import gcnv, mito, shared, snv, sv
+from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.model.reference_dataset_collection import (
@@ -19,7 +19,7 @@ ZERO = 0.0
 class DatasetType(Enum):
     GCNV = 'GCNV'
     MITO = 'MITO'
-    SNV = 'SNV'
+    SNV_INDEL = 'SNV_INDEL'
     SV = 'SV'
 
     @property
@@ -27,7 +27,7 @@ class DatasetType(Enum):
         self,
     ) -> list[ReferenceDatasetCollection]:
         return {
-            DatasetType.SNV: [
+            DatasetType.SNV_INDEL: [
                 ReferenceDatasetCollection.INTERVAL,
             ],
             DatasetType.MITO: [
@@ -40,7 +40,7 @@ class DatasetType(Enum):
         self,
     ) -> list[ReferenceDatasetCollection]:
         rdcs = {
-            DatasetType.SNV: [
+            DatasetType.SNV_INDEL: [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
@@ -70,7 +70,7 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV: [],
+            DatasetType.SNV_INDEL: [],
             DatasetType.MITO: ['contamination', 'mito_cn'],
             DatasetType.SV: [],
             DatasetType.GCNV: [],
@@ -81,7 +81,7 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV: ['GT', 'AD', 'GQ'],
+            DatasetType.SNV_INDEL: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
             DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
             DatasetType.GCNV: [
@@ -105,7 +105,7 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV: ['rsid', 'filters'],
+            DatasetType.SNV_INDEL: ['rsid', 'filters'],
             DatasetType.MITO: [
                 'rsid',
                 'filters',
@@ -137,7 +137,7 @@ class DatasetType(Enum):
     @property
     def excluded_filters(self) -> hl.SetExpression:
         return {
-            DatasetType.SNV: hl.empty_set(hl.tstr),
+            DatasetType.SNV_INDEL: hl.empty_set(hl.tstr),
             DatasetType.MITO: hl.set(['PASS']),
             DatasetType.SV: hl.set(['PASS', 'BOTHSIDES_SUPPORT']),
             DatasetType.GCNV: hl.empty_set(hl.tstr),
@@ -145,7 +145,7 @@ class DatasetType(Enum):
 
     @property
     def has_sample_lookup_table(self) -> bool:
-        return self in {DatasetType.SNV, DatasetType.MITO}
+        return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
     @property
     def has_gencode_mapping(self) -> dict[str, str]:
@@ -162,7 +162,7 @@ class DatasetType(Enum):
         self,
     ) -> dict[str, Callable[hl.MatrixTable, hl.Expression]]:
         return {
-            DatasetType.SNV: {
+            DatasetType.SNV_INDEL: {
                 'ref_samples': lambda mt: mt.GT.is_hom_ref(),
                 'het_samples': lambda mt: mt.GT.is_het(),
                 'hom_samples': lambda mt: mt.GT.is_hom_var(),
@@ -178,14 +178,14 @@ class DatasetType(Enum):
 
     @property
     def veppable(self) -> bool:
-        return self == DatasetType.SNV
+        return self == DatasetType.SNV_INDEL
 
     @property
     def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV: [
-                snv.gnomad_non_coding_constraint,
-                snv.screen,
+            DatasetType.SNV_INDEL: [
+                snv_indel.gnomad_non_coding_constraint,
+                snv_indel.screen,
                 shared.rg37_locus,
                 shared.rsid,
                 shared.sorted_transcript_consequences,
@@ -236,10 +236,10 @@ class DatasetType(Enum):
     @property
     def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV: [
+            DatasetType.SNV_INDEL: [
                 shared.GQ,
-                snv.AB,
-                snv.DP,
+                snv_indel.AB,
+                snv_indel.DP,
                 shared.GT,
             ],
             DatasetType.MITO: [
@@ -272,8 +272,8 @@ class DatasetType(Enum):
     @property
     def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV: [
-                snv.gt_stats,
+            DatasetType.SNV_INDEL: [
+                snv_indel.gt_stats,
             ],
             DatasetType.MITO: [
                 mito.gt_stats,

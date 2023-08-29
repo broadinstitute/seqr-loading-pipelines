@@ -37,7 +37,7 @@ jobs:
         run: ruff . --format github
       - name: Unit Tests
         run: |
-          export MOCK_VEP=1
+          export MOCK_VEP=1 ACCESS_PRIVATE_DATASETS=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=80

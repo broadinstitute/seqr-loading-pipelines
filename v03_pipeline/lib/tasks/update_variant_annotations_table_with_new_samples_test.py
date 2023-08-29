@@ -29,7 +29,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
-TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -97,8 +97,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
@@ -115,8 +115,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
@@ -135,12 +135,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         mock_dataroot.DATASETS = self._temp_local_datasets
         mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+        mock_dataroot.PRIVATE_REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
@@ -174,7 +175,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             [
                 {
                     hl.Struct(
-                        callset=TEST_SNV_VCF,
+                        callset=TEST_SNV_INDEL_VCF,
                         project_guid='R0113_test_project',
                     ),
                 },
@@ -184,8 +185,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         # Ensure that new variants are added correctly to the table.
         uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
@@ -365,6 +366,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                liftover_ref_path=TEST_LIFTOVER,
             )
         )
         worker.add(update_variant_annotations_task)

@@ -36,7 +36,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
 
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
+            dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
@@ -46,7 +46,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             wrsc_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/remapped_and_subsetted_callsets/e829375bb21e14190437011ca96fd4ab8ff5a0b098614957093a055f8fc9bd41.mt',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/e829375bb21e14190437011ca96fd4ab8ff5a0b098614957093a055f8fc9bd41.mt',
         )
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)

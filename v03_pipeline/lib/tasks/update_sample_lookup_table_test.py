@@ -33,7 +33,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
 
         uslt_task = UpdateSampleLookupTableTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
+            dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
@@ -43,7 +43,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             uslt_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/lookup.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/lookup.ht',
         )
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())

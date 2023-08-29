@@ -104,7 +104,7 @@ def import_callset(
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
-    if dataset_type == DatasetType.SNV:
+    if dataset_type == DatasetType.SNV_INDEL:
         mt = split_multi_hts(mt)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(variant_id=mt.rsid)
