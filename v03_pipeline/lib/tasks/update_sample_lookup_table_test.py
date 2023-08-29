@@ -11,24 +11,17 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class UpdateSampleLookupTableTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
+class UpdateSampleLookupTableTest(MockedDatarootTestCase):
 
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
-
-    def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
+    def test_update_sample_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
 
         uslt_task = UpdateSampleLookupTableTask(
@@ -43,7 +36,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             uslt_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/lookup.ht',
+            f'{self.mock_dataroot.DATASETS}/v03/GRCh38/SNV_INDEL/lookup.ht',
         )
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
