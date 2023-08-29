@@ -23,7 +23,6 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
 
     def test_update_sample_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         uslt_task = UpdateSampleLookupTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,

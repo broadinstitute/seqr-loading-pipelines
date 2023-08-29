@@ -26,6 +26,8 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -63,38 +65,26 @@ GENE_ID_MAPPING = {
 
 
 @patch('v03_pipeline.lib.paths.DataRoot')
-class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
+class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
-        self._temp_local_reference_data = tempfile.TemporaryDirectory().name
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/combined.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
+            f'{self.mock_dataroot.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
             TEST_COMBINED_MITO_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/combined_mito.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined_mito.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_MITO_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval_mito.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval_mito.ht',
         )
 
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
-
-        if os.path.isdir(self._temp_local_reference_data):
-            shutil.rmtree(self._temp_local_reference_data)
-
-    def test_missing_pedigree(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+    def test_missing_pedigree(self) -> None:
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -109,10 +99,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+    def test_missing_interval_reference(self) -> None:
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -127,17 +114,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_mulitiple_update_vat(self, mock_dataroot: Mock) -> None:
+    def test_mulitiple_update_vat(self) -> None:
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.,mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
-        mock_dataroot.PRIVATE_REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
-
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -352,12 +334,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ],
         )
 
-    def test_mito_update_vat(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+    def test_mito_update_vat(self) -> None:
         worker = luigi.worker.Worker()
-
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -615,11 +593,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
     @patch(
         'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
     )
-    def test_sv_update_vat(self, mock_load_gencode: Mock, mock_dataroot: Mock) -> None:
+    def test_sv_update_vat(self, mock_load_gencode: Mock) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1174,10 +1149,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             ],
         )
 
-    def test_gcnv_update_vat(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+    def test_gcnv_update_vat(self) -> None:
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
