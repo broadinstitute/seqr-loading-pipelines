@@ -50,13 +50,15 @@ class TestPaths(unittest.TestCase):
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
-        self.assertEqual(
-            valid_reference_dataset_collection_path(
-                ReferenceGenome.GRCh37,
-                ReferenceDatasetCollection.HGMD,
-            ),
-            None,
-        )
+        with patch('v03_pipeline.lib.paths.Env') as mock_env:
+            mock_env.ACCESS_PRIVATE_DATASETS = False
+            self.assertEqual(
+                valid_reference_dataset_collection_path(
+                    ReferenceGenome.GRCh37,
+                    ReferenceDatasetCollection.HGMD,
+                ),
+                None,
+            )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
             mock_env.ACCESS_PRIVATE_DATASETS = True
             self.assertEqual(

@@ -32,12 +32,14 @@ class FieldsTest(unittest.TestCase):
     def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         ht = hl.read_table(TEST_COMBINED_1)
-        ht = run_vep(
-            ht,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            None,
-        )
+        with patch('v03_pipeline.lib.vep.Env') as mock_env:
+            mock_env.MOCK_VEP = True
+            ht = run_vep(
+                ht,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                None,
+            )
         ht = ht.annotate(rsid='abcd')
         self.assertCountEqual(
             list(
