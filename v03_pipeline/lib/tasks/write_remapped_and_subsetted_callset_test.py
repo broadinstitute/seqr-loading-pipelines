@@ -1,8 +1,4 @@
-import os
-import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import hail as hl
 import luigi.worker
