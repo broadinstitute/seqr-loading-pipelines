@@ -12,20 +12,16 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 
 
-class BaseVariantAnnotationsTableTest(unittest.TestCase):
+class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
     def setUp(self) -> None:
-        self.patcher = patch('v03_pipeline.lib.paths.DataRoot')
-        self.mock_dataroot = self.patcher.start()
-        self.mock_dataroot.DATASETS = tempfile.TemporaryDirectory().name
-        self.mock_dataroot.LOADING_DATASETS = tempfile.TemporaryDirectory().name
-        self.mock_dataroot.REFERENCE_DATASETS = tempfile.TemporaryDirectory().name
-        self.mock_dataroot.PRIVATE_REFERENCE_DATASETS = tempfile.TemporaryDirectory.name
+        super().setUp()
         shutil.copytree(
             TEST_COMBINED_1,
             f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
@@ -38,20 +34,6 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
             TEST_INTERVAL_1,
             f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self.mock_dataroot.DATASETS):
-            shutil.rmtree(self.mock_dataroot.DATASETS)
-
-        if os.path.isdir(self.mock_dataroot.LOADING_DATASETS):
-            shutil.rmtree(self.mock_dataroot.LOADING_DATASETS)
-
-        if os.path.isdir(self.mock_dataroot.REFERENCE_DATASETS):
-            shutil.rmtree(self.mock_dataroot.REFERENCE_DATASETS)
-
-        if os.path.isdir(self.mock_dataroot.PRIVATE_REFERENCE_DATASETS):
-            shutil.rmtree(self.mock_dataroot.PRIVATE_REFERENCE_DATASETS)
-        self.patcher.stop()
 
     def test_should_create_initialized_table(self) -> None:
         vat_task = BaseVariantAnnotationsTableTask(
