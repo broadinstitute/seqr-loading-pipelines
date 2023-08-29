@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import hail as hl
 import luigi.worker
@@ -18,42 +18,49 @@ TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
 class BaseVariantAnnotationsTableTest(unittest.TestCase):
     def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
-        self._temp_local_reference_data = tempfile.TemporaryDirectory().name
+        self.patcher = patch('v03_pipeline.lib.paths.DataRoot')
+        self.mock_dataroot = self.patcher.start()
+        self.mock_dataroot.DATASETS = tempfile.TemporaryDirectory().name
+        self.mock_dataroot.LOADING_DATASETS = tempfile.TemporaryDirectory().name
+        self.mock_dataroot.REFERENCE_DATASETS = tempfile.TemporaryDirectory().name
+        self.mock_dataroot.PRIVATE_REFERENCE_DATASETS = tempfile.TemporaryDirectory.name
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/combined.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/hgmd.ht',
+            f'{self.mock_dataroot.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
     def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
+        if os.path.isdir(self.mock_dataroot.DATASETS):
+            shutil.rmtree(self.mock_dataroot.DATASETS)
 
-        if os.path.isdir(self._temp_local_reference_data):
-            shutil.rmtree(self._temp_local_reference_data)
+        if os.path.isdir(self.mock_dataroot.LOADING_DATASETS):
+            shutil.rmtree(self.mock_dataroot.LOADING_DATASETS)
 
-    def test_should_create_initialized_table(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.DATASETS = self._temp_local_datasets
-        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+        if os.path.isdir(self.mock_dataroot.REFERENCE_DATASETS):
+            shutil.rmtree(self.mock_dataroot.REFERENCE_DATASETS)
+
+        if os.path.isdir(self.mock_dataroot.PRIVATE_REFERENCE_DATASETS):
+            shutil.rmtree(self.mock_dataroot.PRIVATE_REFERENCE_DATASETS)
+        self.patcher.stop()
+
+    def test_should_create_initialized_table(self) -> None:
         vat_task = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertEqual(
             vat_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/annotations.ht',
+            f'{self.mock_dataroot.DATASETS}/v03/GRCh38/SNV_INDEL/annotations.ht',
         )
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())

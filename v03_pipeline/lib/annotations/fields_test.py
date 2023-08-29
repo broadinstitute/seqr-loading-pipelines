@@ -1,14 +1,12 @@
-import os
 import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
@@ -16,21 +14,15 @@ TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class FieldsTest(unittest.TestCase):
+class FieldsTest(MockedDatarootTestCase):
     def setUp(self) -> None:
-        self._temp_local_reference_data = tempfile.TemporaryDirectory().name
+        super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_reference_data):
-            shutil.rmtree(self._temp_local_reference_data)
-
-    def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
+    def test_get_formatting_fields(self) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
         with patch('v03_pipeline.lib.vep.Env') as mock_env:
             mock_env.MOCK_VEP = True
@@ -101,9 +93,7 @@ class FieldsTest(unittest.TestCase):
 
     def test_get_sample_lookup_table_fields(
         self,
-        mock_dataroot: Mock,
     ) -> None:
-        mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         sample_lookup_ht = hl.Table.parallelize(
             [
                 {
