@@ -45,6 +45,7 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
 
     def test_should_create_initialized_table(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         vat_task = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,

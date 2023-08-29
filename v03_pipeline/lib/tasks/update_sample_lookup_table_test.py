@@ -28,6 +28,7 @@ class UpdateSampleLookupTableTest(unittest.TestCase):
 
     def test_update_sample_lookup_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         uslt_task = UpdateSampleLookupTableTask(

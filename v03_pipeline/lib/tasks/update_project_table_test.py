@@ -26,6 +26,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
 
     def test_update_project_table_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         upt_task = UpdateProjectTableTask(

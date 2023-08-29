@@ -27,6 +27,7 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
 
     def test_write_metadata_for_run_task(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         worker = luigi.worker.Worker()
 
         write_metadata_for_run_task = WriteMetadataForRunTask(

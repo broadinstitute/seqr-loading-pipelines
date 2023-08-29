@@ -27,6 +27,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 
+TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -92,6 +93,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
     def test_missing_pedigree(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -100,6 +102,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -108,6 +111,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
     def test_missing_interval_reference(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -116,6 +120,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -128,6 +133,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
         )
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
@@ -138,6 +144,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_3)
         worker.run()
@@ -182,6 +189,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_4)
         worker.run()
@@ -345,6 +353,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
     def test_mito_update_vat(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
 
@@ -607,6 +616,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
     def test_sv_update_vat(self, mock_load_gencode: Mock, mock_dataroot: Mock) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -617,6 +627,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                liftover_ref_path=TEST_LIFTOVER,
             )
         )
         worker.add(update_variant_annotations_task)
@@ -1163,6 +1174,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
 
     def test_gcnv_update_vat(self, mock_dataroot: Mock) -> None:
         mock_dataroot.DATASETS = self._temp_local_datasets
+        mock_dataroot.LOADING_DATASETS = self._temp_local_datasets
         mock_dataroot.REFERENCE_DATASETS = self._temp_local_reference_data
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -1173,6 +1185,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(unittest.TestCase):
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                liftover_ref_path=TEST_LIFTOVER,
             )
         )
         worker.add(update_variant_annotations_task)
