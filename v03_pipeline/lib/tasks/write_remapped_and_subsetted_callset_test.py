@@ -1,4 +1,3 @@
-from unittest.mock import Mock
 
 import hail as hl
 import luigi.worker
