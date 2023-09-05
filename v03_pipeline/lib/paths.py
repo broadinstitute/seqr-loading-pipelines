@@ -5,7 +5,7 @@ import os
 
 from v03_pipeline.lib.model import (
     AccessControl,
-    DataRoot,
+    Env,
     DatasetType,
     Env,
     PipelineVersion,
@@ -15,7 +15,7 @@ from v03_pipeline.lib.model import (
 
 
 def _v03_pipeline_prefix(
-    root: DataRoot,
+    root: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
@@ -28,7 +28,7 @@ def _v03_pipeline_prefix(
 
 
 def _v03_reference_data_prefix(
-    root: DataRoot,
+    root: Env,
     reference_genome: ReferenceGenome,
 ) -> str:
     return os.path.join(
@@ -45,7 +45,7 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -61,7 +61,7 @@ def imported_callset_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.LOADING_DATASETS,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -77,7 +77,7 @@ def metadata_for_run_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -94,7 +94,7 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -111,7 +111,7 @@ def remapped_and_subsetted_callset_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.LOADING_DATASETS,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -127,7 +127,7 @@ def sample_lookup_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -145,9 +145,9 @@ def valid_reference_dataset_collection_path(
     ):
         return None
     root = (
-        DataRoot.PRIVATE_REFERENCE_DATASETS
+        Env.PRIVATE_REFERENCE_DATASETS
         if reference_dataset_collection.access_control == AccessControl.PRIVATE
-        else DataRoot.REFERENCE_DATASETS
+        else Env.REFERENCE_DATASETS
     )
     return os.path.join(
         _v03_reference_data_prefix(
@@ -165,7 +165,7 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            DataRoot.DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),

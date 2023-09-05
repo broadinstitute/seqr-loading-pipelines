@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.model import DataRoot, DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import Env, DatasetType, ReferenceGenome
 
 
 class BaseWriteTask(luigi.Task):
@@ -18,7 +18,7 @@ class BaseWriteTask(luigi.Task):
 
     def init_hail(self):
         # Need to use the GCP bucket as temp storage for very large callset joins
-        hl.init(tmp_dir=DataRoot.HAIL_TMPDIR, idempotent=True)
+        hl.init(tmp_dir=Env.HAIL_TMPDIR, idempotent=True)
 
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001

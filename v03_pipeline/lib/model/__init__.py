@@ -5,7 +5,7 @@ from v03_pipeline.lib.model.definitions import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.model.environment import DataRoot, Env
+from v03_pipeline.lib.model.environment import Env, Env
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
@@ -13,7 +13,7 @@ from v03_pipeline.lib.model.reference_dataset_collection import (
 __all__ = [
     'AccessControl',
     'DatasetType',
-    'DataRoot',
+    'Env',
     'Env',
     'PipelineVersion',
     'ReferenceDatasetCollection',

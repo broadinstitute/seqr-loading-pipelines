@@ -6,7 +6,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model import DataRoot, DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import Env, DatasetType, ReferenceGenome
 
 BIALLELIC = 2
 
@@ -143,7 +143,7 @@ def write(
     if checkpoint:
         t = t.checkpoint(
             os.path.join(
-                DataRoot.HAIL_TMPDIR,
+                Env.HAIL_TMPDIR,
                 f'{uuid.uuid4()}.{suffix}',
             ),
         )
