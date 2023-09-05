@@ -608,7 +608,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertTrue(update_variant_annotations_task.complete())
         self.assertFalse(
             GCSorLocalFolderTarget(
-                f'{self._temp_local_datasets}/v03/GRCh38/SV/lookup.ht',
+                f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/SV/lookup.ht',
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
@@ -1163,7 +1163,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertTrue(update_variant_annotations_task.complete())
         self.assertFalse(
             GCSorLocalFolderTarget(
-                f'{self._temp_local_datasets}/v03/GRCh38/GCNV/lookup.ht',
+                f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/GCNV/lookup.ht',
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
