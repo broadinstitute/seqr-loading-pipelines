@@ -83,7 +83,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
         sample_lookup_ht = filter_callset_sample_ids(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             samples_ht,
             'project_1',
@@ -115,7 +115,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
         sample_lookup_ht = filter_callset_sample_ids(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             samples_ht,
             'project_2',
@@ -173,7 +173,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_1',
@@ -219,7 +219,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
@@ -298,7 +298,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_3',
@@ -398,7 +398,7 @@ class SampleLookupTest(unittest.TestCase):
             key='id',
         )
         sample_lookup_ht = join_sample_lookup_hts(
-            DatasetType.SNV,
+            DatasetType.SNV_INDEL,
             sample_lookup_ht,
             callset_sample_lookup_ht,
             'project_2',
