@@ -14,7 +14,7 @@ from v03_pipeline.lib.model import (
 
 
 def _v03_pipeline_prefix(
-    root: Env,
+    root: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
@@ -27,7 +27,7 @@ def _v03_pipeline_prefix(
 
 
 def _v03_reference_data_prefix(
-    root: Env,
+    root: str,
     reference_genome: ReferenceGenome,
 ) -> str:
     return os.path.join(

@@ -9,7 +9,7 @@ import hail as hl
 from hail_scripts.reference_data.combine import join_hts, update_existing_joined_hts
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.model import DataRoot, ReferenceDatasetCollection, ReferenceGenome
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 
@@ -18,7 +18,7 @@ def run(reference_genome: ReferenceGenome, dataset: str | None):
         reference_genome,
         ReferenceDatasetCollection.COMBINED,
     )
-    hl.init(tmp_dir=DataRoot.SEQR_SCRATCH_TEMP.value)
+    hl.init(tmp_dir=Env.HAIL_TMPDIR)
     hl._set_flags(  # noqa: SLF001
         no_whole_stage_codegen='1',
     )  # hail 0.2.78 hits an error on the join, this flag gets around it
