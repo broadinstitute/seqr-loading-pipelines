@@ -6,7 +6,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model import Env, DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 BIALLELIC = 2
 
