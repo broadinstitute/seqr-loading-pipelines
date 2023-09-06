@@ -1,7 +1,32 @@
+from enum import Enum
+
 import hail as hl
 import matplotlib.pyplot as plt
 
 from v03_pipeline.lib.model import ReferenceGenome
+
+IMPUTE_SEX_ANNOTATIONS = [
+    'is_female',
+    'f_stat',
+    'n_called',
+    'expected_homs',
+    'observed_homs',
+    'sex',
+]
+
+
+class Ploidy(Enum):
+    AMBIGUOUS = 'ambiguous_sex'
+    ANEUPLOIDY = 'sex_aneuploidy'
+    FEMALE = 'XX'
+    MALE = 'XY'
+
+
+def validate_contig(reference_genome: ReferenceGenome, contig: str) -> None:
+    valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
+    if contig not in valid_contigs:
+        msg = f'Contig: {contig} is invalid for this reference genome'
+        raise ValueError(msg)
 
 
 def get_contig_cov(
@@ -12,29 +37,24 @@ def get_contig_cov(
     af_threshold: float = 0.01,
 ) -> hl.Table:
     """
-    Calculate mean chromosome coverage.
+    Calculate mean contig coverage.
 
     :param mt: MatrixTable containing samples with chrY variants
     :param reference_genome: ReferenceGenome, either GRCh37 or GRCh38
     :param contig: Chosen chromosome.
-    :param call_rate_threshold: Minimum call rate threshold. Default is 0.25
+    :param call_rate_threshold: Minimum call rate threshold.
     :param af_threshold: Minimum allele frequency threshold. Default is 0.01
-    :param af_field: Name of field containing allele frequency information. Default is "AF"
     :return: Table annotated with mean coverage of specified chromosome
     """
 
-    valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
-    if contig not in valid_contigs:
-        msg = f'Contig: {contig} is invalid for this reference genome'
-        raise ValueError(msg)
-
+    validate_contig(contig)
     mt = hl.filter_intervals(
         mt,
         [hl.parse_locus_interval(contig, reference_genome=reference_genome.value)],
     )
-    if contig in hl.get_reference(reference_genome.value).x_contigs:
+    if contig == hl.get_reference(reference_genome.value).x_contigs[0]:
         mt = mt.filter_rows(mt.locus.in_x_nonpar())
-    if contig in hl.get_reference(reference_genome.value).y_contigs:
+    if contig == hl.get_reference(reference_genome.value).y_contigs[0]:
         mt = mt.filter_rows(mt.locus.in_y_nonpar())
 
     # Filter to common SNVs above defined callrate (should only have one index in the array because the MT only contains biallelic variants)
@@ -73,13 +93,13 @@ def run_hails_impute_sex(
             ),
         ],
     )
-    sex_ht = hl.impute_sex(
+    ht = hl.impute_sex(
         mt.GT,
         aaf_threshold=aaf_threshold,
         male_threshold=xy_fstat_threshold,
         female_threshold=xx_fstat_threshold,
     )
-    mt = mt.annotate_cols(**sex_ht[mt.col_key])
+    mt = mt.annotate_cols(**ht[mt.col_key])
     return mt.cols()
 
 
@@ -99,18 +119,36 @@ def generate_fstat_plot(
     return plt
 
 
-def call_sex(
+def call_sex(  # noqa: PLR0913
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
-    use_y_cov: bool = False,
-    add_x_cov: bool = False,
-    y_cov_threshold: float = 0.1,
-    normalization_contig: str = '20',
+    use_chrY_cov: bool = False, # noqa: N803
+    chrY_cov_threshold: float = 0.1, # noqa: N803
+    normalization_contig: str = 'chr20',
     xy_fstat_threshold: float = 0.75,
     xx_fstat_threshold: float = 0.5,
     aaf_threshold: float = 0.05,
     call_rate_threshold: float = 0.25,
-):
+) -> hl.Table:
+    """
+    Call sex for the samples in a given callset and export results file to the desired path.
+
+    :param mt: MatrixTable containing samples with chrY variants
+    :param reference_genome: ReferenceGenome, either GRCh37 or GRCh38
+    :param use_chrY_cov: Set to True to calculate and use chrY coverage for sex inference.
+        Will also compute and report chrX coverages.
+        Default is False
+    :param chrY_cov_threshold: Y coverage threshold used to infer sex aneuploidies.
+        XY samples below and XX samples above this threshold will be inferred as having aneuploidies.
+        Default is 0.1
+    :param normalization_contig: Chosen chromosome for calculating normalized coverage. Default is "chr20"
+    :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY. Default is 0.75
+    :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX. Default is 0.5
+    :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05
+    :param call_rate_threshold: Minimum required call rate. Default is 0.25
+    :return Table with imputed sex annotations an
+    """
+    validate_contig(reference_genome, normalization_contig)
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just
     mt = mt.filter_rows(hl.is_snp(mt.alleles[0], mt.alleles[1]))
@@ -118,7 +156,8 @@ def call_sex(
     # Filter to PASS variants only (variants with empty or missing filter set)
     # TODO: Make this an optional argument before moving to gnomad_methods
     mt = mt.filter_rows(
-        hl.is_missing(mt.filters) | (mt.filters.length() == 0), keep=True,
+        hl.is_missing(mt.filters) | (mt.filters.length() == 0),
+        keep=True,
     )
 
     ht = run_hails_impute_sex(
@@ -129,61 +168,72 @@ def call_sex(
         aaf_threshold,
     )
 
-    if use_y_cov:
-        final_annotations.extend(
-            [
-                f"chr{normalization_contig}_mean_dp",
-                "chrY_mean_dp",
-                "normalized_y_coverage",
-            ]
+    annotations = [
+        *IMPUTE_SEX_ANNOTATIONS,
+        f'{normalization_contig}_mean_dp',
+    ]
+    if not use_chrY_cov:
+        ht = ht.annotate(
+            sex=(
+                hl.case()
+                .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
+                .when(ht.is_female, Ploidy.FEMALE.value)
+                .default(Ploidy.MALE.value)
+            ),
         )
-        norm_ht = get_chr_cov(mt, "GRCh38", normalization_contig, call_rate_threshold)
-        sex_ht = sex_ht.annotate(**norm_ht[sex_ht.s])
-        chry_ht = get_chr_cov(mt, "GRCh38", "Y", call_rate_threshold)
-        sex_ht = sex_ht.annotate(**chry_ht[sex_ht.s])
-        sex_ht = sex_ht.annotate(
-            normalized_y_coverage=hl.or_missing(
-                sex_ht[f"chr{normalization_contig}_mean_dp"] > 0,
-                sex_ht.chrY_mean_dp / sex_ht[f"chr{normalization_contig}_mean_dp"],
-            )
-        )
-        if add_x_cov:
-            final_annotations.extend(["chrX_mean_dp", "normalized_x_coverage"])
-            chrx_ht = get_chr_cov(mt, "GRCh38", "X", call_rate_threshold)
-            sex_ht = sex_ht.annotate(**chrx_ht[sex_ht.s])
-            sex_ht = sex_ht.annotate(
-                normalized_x_coverage=hl.or_missing(
-                    sex_ht[f"chr{normalization_contig}_mean_dp"] > 0,
-                    sex_ht.chrX_mean_dp / sex_ht[f"chr{normalization_contig}_mean_dp"],
-                )
-            )
-        sex_ht = sex_ht.annotate(
-            ambiguous_sex=hl.is_missing(sex_ht.is_female),
-            sex_aneuploidy=(sex_ht.is_female)
-            & hl.is_defined(sex_ht.normalized_y_coverage)
-            & (sex_ht.normalized_y_coverage > y_cov_threshold)
-            | (~sex_ht.is_female)
-            & hl.is_defined(sex_ht.normalized_y_coverage)
-            & (sex_ht.normalized_y_coverage < y_cov_threshold),
-        )
+        return ht.select(*annotations)
 
-        sex_expr = (
+    annotations = [
+        *IMPUTE_SEX_ANNOTATIONS,
+        f'{normalization_contig}_mean_dp',
+        'chrY_mean_dp',
+        'normalized_y_coverage',
+        'chrX_mean_dp',
+        'normalized_x_coverage',
+    ]
+    for contig in [
+        normalization_contig,
+        hl.get_reference(reference_genome.value).y_contigs[0],
+        hl.get_reference(reference_genome.value).x_contigs[0],
+    ]:
+        contig_ht = get_contig_cov(
+            mt,
+            reference_genome,
+            contig,
+            call_rate_threshold,
+        )
+        ht = ht.annotate(**contig_ht[ht.s])
+    ht = ht.annotate(
+        normalized_y_coverage=hl.or_missing(
+            ht[f'{normalization_contig}_mean_dp'] > 0,
+            ht.chrY_mean_dp / ht[f'{normalization_contig}_mean_dp'],
+        ),
+        normalized_x_coverage=hl.or_missing(
+            ht[f'{normalization_contig}_mean_dp'] > 0,
+            ht.chrX_mean_dp / ht[f'{normalization_contig}_mean_dp'],
+        ),
+    )
+    ht = ht.annotate(
+        sex=(
             hl.case()
-            .when(sex_ht.ambiguous_sex, "ambiguous_sex")
-            .when(sex_ht.sex_aneuploidy, "sex_aneuploidy")
-            .when(sex_ht.is_female, "XX")
-            .default("XY")
-        )
-
-    else:
-        sex_ht = sex_ht.annotate(ambiguous_sex=hl.is_missing(sex_ht.is_female))
-        sex_expr = hl.if_else(
-            sex_ht.ambiguous_sex,
-            "ambiguous_sex",
-            hl.if_else(sex_ht.is_female, "XX", "XY"),
-        )
-    sex_ht = sex_ht.annotate(sex=sex_expr)
-    sex_ht = sex_ht.select(*final_annotations)
-
-    out_path = f"{out_bucket}/{mt_name}_sex.txt"
-    sex_ht.export(out_path)
+            .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
+            .when(
+                (
+                    (
+                        (ht.is_female)
+                        & hl.is_defined(ht.normalized_y_coverage)
+                        & (ht.normalized_y_coverage > chrY_cov_threshold)
+                    )
+                    | (
+                        (~ht.is_female)
+                        & hl.is_defined(ht.normalized_y_coverage)
+                        & (ht.normalized_y_coverage < chrY_cov_threshold)
+                    )
+                ),
+                Ploidy.ANEUPLOIDY.value,
+            )
+            .when(ht.is_female, Ploidy.FEMALE.value)
+            .default(Ploidy.MALE.value)
+        ),
+    )
+    return ht.select(*annotations)

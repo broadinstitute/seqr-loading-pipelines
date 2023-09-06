@@ -7,6 +7,16 @@ from v03_pipeline.lib.model import ReferenceGenome
 
 
 class SexCheckTest(unittest.TestCase):
+    def test_invalid_contig(self):
+        self.assertRaises(
+            ValueError,
+            get_contig_cov,
+            None,
+            ReferenceGenome.GRCh38,
+            '1',
+            0.25,
+        )
+
     def test_get_contig_cov(self):
         mt = hl.MatrixTable.from_parts(
             rows={
