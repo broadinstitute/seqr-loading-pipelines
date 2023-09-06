@@ -58,7 +58,7 @@ class SexCheckTest(unittest.TestCase):
         )
         mt = mt.key_rows_by('locus', 'alleles')
         mt = mt.key_cols_by('s')
-        ht = get_contig_cov(mt, ReferenceGenome.GRCh38, 'chr1')
+        ht = get_contig_cov(mt, ReferenceGenome.GRCh38, 'chr1', 0.25)
         self.assertListEqual(ht.collect(), [
             hl.Struct(s='sample_1', chr1_mean_dp=0.05),
             hl.Struct(s='sample_2', chr1_mean_dp=0.3),

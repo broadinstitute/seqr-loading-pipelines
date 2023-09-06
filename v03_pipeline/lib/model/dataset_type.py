@@ -81,7 +81,7 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: ['GT', 'AD', 'GQ'],
+            DatasetType.SNV_INDEL: ['GT', 'AD', 'GQ', 'AF', 'DP'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
             DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
             DatasetType.GCNV: [
