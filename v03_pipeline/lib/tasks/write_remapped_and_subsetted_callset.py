@@ -51,6 +51,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 self.dataset_type,
                 self.sample_type,
                 self.callset_path,
+                None,
             ),
             RawFileTask(self.project_pedigree_path),
         ]

@@ -22,7 +22,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
     filters_path = luigi.OptionalParameter(
         default=None,
-        description='Path to part two outputs from callset (VCF shards containing filter information)',
+        description='Optional path to part two outputs from callset (VCF shards containing filter information)',
     )
 
     def output(self) -> luigi.Target:
