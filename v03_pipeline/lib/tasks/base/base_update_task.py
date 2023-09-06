@@ -2,12 +2,13 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
 
 
 class BaseUpdateTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
+    sample_type = luigi.EnumParameter(enum=SampleType)
     n_partitions = None
 
     def output(self) -> luigi.Target:

@@ -18,7 +18,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -84,6 +84,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
@@ -99,6 +100,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
@@ -119,6 +121,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
@@ -164,6 +167,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
@@ -336,6 +340,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
+                sample_type=SampleType.WGS,
                 callset_path=TEST_MITO_MT,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
@@ -596,6 +601,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
+                sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
@@ -1151,6 +1157,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.GCNV,
+                sample_type=SampleType.WES,
                 callset_path=TEST_GCNV_BED_FILE,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],

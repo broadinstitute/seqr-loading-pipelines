@@ -49,7 +49,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
+                self.sample_type,
                 self.callset_path,
+                # NB: filters_path is explicitly passed as None here
+                # to avoid carrying it throughout the rest of the pipeline.
+                # Only the primary import task itself should be aware of it.
+                None,
             ),
             RawFileTask(self.project_pedigree_path),
         ]

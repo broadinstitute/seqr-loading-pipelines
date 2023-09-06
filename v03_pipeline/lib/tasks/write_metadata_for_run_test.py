@@ -2,7 +2,7 @@ import json
 
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -18,6 +18,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         write_metadata_for_run_task = WriteMetadataForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP, TEST_REMAP],

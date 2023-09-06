@@ -1,7 +1,7 @@
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -20,6 +20,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
@@ -29,7 +30,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         worker.run()
         self.assertEqual(
             wrsc_task.output().path,
-            f'{self.mock_dataroot.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/R0113_test_project/e829375bb21e14190437011ca96fd4ab8ff5a0b098614957093a055f8fc9bd41.mt',
+            f'{self.mock_dataroot.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/R0113_test_project/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.mt',
         )
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)
