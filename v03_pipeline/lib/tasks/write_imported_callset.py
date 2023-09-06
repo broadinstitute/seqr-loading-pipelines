@@ -20,6 +20,10 @@ if TYPE_CHECKING:
 class WriteImportedCallsetTask(BaseWriteTask):
     n_partitions = 500
     callset_path = luigi.Parameter()
+    filters_path = luigi.OptionalParameter(
+        default=None,
+        description='Path to part two outputs from callset (VCF shards containing filter information)',
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -43,4 +47,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
+            self.sample_type,
+            self.filters_path,
         )

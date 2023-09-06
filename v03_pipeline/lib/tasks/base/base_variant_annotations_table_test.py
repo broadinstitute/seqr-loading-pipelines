@@ -3,7 +3,7 @@ import shutil
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -35,6 +35,7 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
         vat_task = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         self.assertEqual(
             vat_task.output().path,
