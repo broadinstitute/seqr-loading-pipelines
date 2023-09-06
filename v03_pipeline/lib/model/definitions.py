@@ -22,60 +22,36 @@ class ReferenceGenome(Enum):
         return self.value[-2:]
 
     @property
+    def autosomes(self) -> set[str]:
+        return {
+            ReferenceGenome.GRCh37: {str(x) for x in range(23)},
+            ReferenceGenome.GRCh38: {f'chr{x}' for x in range(23)},
+        }[self]
+
+    @property
+    def sex_chromosomes(self) -> set[str]:
+        return {
+            ReferenceGenome.GRCh37: {
+                'X',
+                'Y',
+            },
+            ReferenceGenome.GRCh38: {
+                'chrX',
+                'chrY',
+            },
+        }[self]
+
+    @property
     def standard_contigs(self) -> set[str]:
         return {
             ReferenceGenome.GRCh37: {
-                '1',
-                '10',
-                '11',
-                '12',
-                '13',
-                '14',
-                '15',
-                '16',
-                '17',
-                '18',
-                '19',
-                '2',
-                '20',
-                '21',
-                '22',
-                '3',
-                '4',
-                '5',
-                '6',
-                '7',
-                '8',
-                '9',
-                'X',
-                'Y',
+                *self.autosomes,
+                *self.sex_chromosomes,
                 'MT',
             },
             ReferenceGenome.GRCh38: {
-                'chr1',
-                'chr10',
-                'chr11',
-                'chr12',
-                'chr13',
-                'chr14',
-                'chr15',
-                'chr16',
-                'chr17',
-                'chr18',
-                'chr19',
-                'chr2',
-                'chr20',
-                'chr21',
-                'chr22',
-                'chr3',
-                'chr4',
-                'chr5',
-                'chr6',
-                'chr7',
-                'chr8',
-                'chr9',
-                'chrX',
-                'chrY',
+                *self.autosomes,
+                *self.sex_chromosomes,
                 'chrM',
             },
         }[self]
