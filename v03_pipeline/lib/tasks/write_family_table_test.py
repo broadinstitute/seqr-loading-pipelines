@@ -19,6 +19,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         wft_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,

@@ -18,6 +18,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         write_metadata_for_run_task = WriteMetadataForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP, TEST_REMAP],
