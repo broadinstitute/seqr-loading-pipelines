@@ -7,7 +7,6 @@ from v03_pipeline.lib.model import ReferenceGenome
 
 
 class SexCheckTest(unittest.TestCase):
-
     def test_invalid_contig(self):
         self.assertRaises(
             ValueError,
@@ -89,4 +88,3 @@ class SexCheckTest(unittest.TestCase):
                 hl.Struct(s='sample_2', chr1_mean_dp=0.3),
             ],
         )
-
