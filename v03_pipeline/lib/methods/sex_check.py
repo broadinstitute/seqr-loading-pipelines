@@ -60,45 +60,6 @@ def get_contig_cov(
     return mt.cols()
 
 
-def run_hails_impute_sex(
-    mt: hl.MatrixTable,
-    reference_genome: ReferenceGenome,
-    xy_fstat_threshold: float,
-    xx_fstat_threshold: float,
-    aaf_threshold: float,
-) -> hl.Table:
-    """
-    Impute sex, annotate MatrixTable with results, and output a histogram of fstat values.
-
-    :param MatrixTable mt: MatrixTable containing samples to be ascertained for sex
-    :param reference_genome: ReferenceGenome, either GRCh37 or GRCh38
-    :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY.
-    :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX.
-    :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`.
-    :return: Table with imputed sex annotations
-    """
-
-    # Filter to the X chromosome and impute sex
-    mt = hl.filter_intervals(
-        mt,
-        [
-            hl.parse_locus_interval(
-                hl.get_reference(reference_genome.value).x_contigs[0],
-                reference_genome=reference_genome.value,
-            ),
-        ],
-    )
-    print(mt.show())
-    ht = hl.impute_sex(
-        mt.GT,
-        aaf_threshold=aaf_threshold,
-        male_threshold=xy_fstat_threshold,
-        female_threshold=xx_fstat_threshold,
-    )
-    mt = mt.annotate_cols(**ht[mt.col_key])
-    return mt.cols()
-
-
 def generate_fstat_plot(
     ht: hl.Table,
     xy_fstat_threshold: float,
@@ -161,13 +122,13 @@ def call_sex(  # noqa: PLR0913
         keep=True,
     )
 
-    ht = run_hails_impute_sex(
-        mt,
-        reference_genome,
-        xy_fstat_threshold,
-        xx_fstat_threshold,
-        aaf_threshold,
+    impute_sex_ht = hl.impute_sex(
+        mt.GT,
+        aaf_threshold=aaf_threshold,
+        male_threshold=xy_fstat_threshold,
+        female_threshold=xx_fstat_threshold,
     )
+    ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
