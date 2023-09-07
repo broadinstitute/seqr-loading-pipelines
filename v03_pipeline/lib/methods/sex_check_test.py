@@ -162,7 +162,7 @@ class SexCheckTest(unittest.TestCase):
                 f.read(),
             )
 
-    def test_call_sex_w_chrY_coverage(self): # noqa: N802
+    def test_call_sex_w_chrY_coverage(self):  # noqa: N802
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht, _ = call_sex(mt, ReferenceGenome.GRCh38, use_chrY_cov=True)
         self.assertCountEqual(
