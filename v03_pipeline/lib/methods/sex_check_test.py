@@ -5,14 +5,13 @@ import hail as hl
 from v03_pipeline.lib.methods.sex_check import get_contig_cov, call_sex
 from v03_pipeline.lib.model import ReferenceGenome
 
+TEST_FSTAT_PLOT = 'v03_pipeline/var/test/plots/f_stat_plot_1.png'
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
 )
 
 
 class SexCheckTest(unittest.TestCase):
-    maxDiff = None
-
     def test_invalid_contig(self):
         self.assertRaises(
             ValueError,
@@ -97,7 +96,7 @@ class SexCheckTest(unittest.TestCase):
 
     def test_call_sex(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
-        ht = call_sex(mt, ReferenceGenome.GRCh38)
+        ht, f_stat_plot = call_sex(mt, ReferenceGenome.GRCh38)
         self.assertCountEqual(
             ht.collect(),
             [
@@ -157,10 +156,15 @@ class SexCheckTest(unittest.TestCase):
                 ),
             ],
         )
+        with open(TEST_FSTAT_PLOT, 'rb') as f:
+            self.assertEqual(
+                f_stat_plot.read(),
+                f.read(),
+            )
 
     def test_call_sex_w_chrY_coverage(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
-        ht = call_sex(mt, ReferenceGenome.GRCh38, use_chrY_cov=True)
+        ht, _ = call_sex(mt, ReferenceGenome.GRCh38, use_chrY_cov=True)
         self.assertCountEqual(
             ht.collect(),
             [

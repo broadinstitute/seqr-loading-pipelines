@@ -1,3 +1,5 @@
+from __future__ import annotations
+import io
 from enum import Enum
 
 import hail as hl
@@ -64,8 +66,10 @@ def generate_fstat_plot(
     ht: hl.Table,
     xy_fstat_threshold: float,
     xx_fstat_threshold: float,
-):
+) -> io.BytesIO:
     # Plot histogram of fstat values
+    # Returns the plot saved as a binary buffer.
+    buf = io.BytesIO()
     df = ht.to_pandas()
     plt.clf()
     plt.hist(df['f_stat'])
@@ -73,7 +77,9 @@ def generate_fstat_plot(
     plt.ylabel('Frequency')
     plt.axvline(xy_fstat_threshold, color='blue', linestyle='dashed', linewidth=1)
     plt.axvline(xx_fstat_threshold, color='red', linestyle='dashed', linewidth=1)
-    return plt
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    return buf
 
 
 def call_sex(  # noqa: PLR0913
@@ -86,7 +92,7 @@ def call_sex(  # noqa: PLR0913
     xx_fstat_threshold: float = 0.5,
     aaf_threshold: float = 0.05,
     call_rate_threshold: float = 0.25,
-) -> hl.Table:
+) -> tuple[hl.Table, io.BytesIO]:
     """
     Call sex for the samples in a given callset and export results file to the desired path.
 
@@ -103,7 +109,7 @@ def call_sex(  # noqa: PLR0913
     :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX. Default is 0.5
     :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05
     :param call_rate_threshold: Minimum required call rate. Default is 0.25
-    :return Table with imputed sex annotations an
+    :return Table with imputed sex annotations, and the fstat plot.
     """
 
     valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
@@ -129,6 +135,7 @@ def call_sex(  # noqa: PLR0913
         aaf_threshold=aaf_threshold,
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
+    f_stat_plot = generate_fstat_plot(ht, xy_fstat_threshold, xx_fstat_threshold)
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
@@ -142,7 +149,7 @@ def call_sex(  # noqa: PLR0913
                 .default(Ploidy.MALE.value)
             ),
         )
-        return ht.select(*annotations)
+        return ht.select(*annotations), f_stat_plot
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
@@ -197,4 +204,4 @@ def call_sex(  # noqa: PLR0913
             .default(Ploidy.MALE.value)
         ),
     )
-    return ht.select(*annotations)
+    return ht.select(*annotations), f_stat_plot
