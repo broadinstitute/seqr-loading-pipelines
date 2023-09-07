@@ -22,13 +22,6 @@ class Ploidy(Enum):
     MALE = 'XY'
 
 
-def validate_contig(reference_genome: ReferenceGenome, contig: str) -> None:
-    valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
-    if contig not in valid_contigs:
-        msg = f'Contig: {contig} is invalid for this reference genome'
-        raise ValueError(msg)
-
-
 def get_contig_cov(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
@@ -46,8 +39,10 @@ def get_contig_cov(
     :param af_threshold: Minimum allele frequency threshold. Default is 0.01
     :return: Table annotated with mean coverage of specified chromosome
     """
-
-    validate_contig(contig)
+    valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
+    if contig not in valid_contigs:
+        msg = f'Contig: {contig} is invalid for this reference genome'
+        raise ValueError(msg)
     mt = hl.filter_intervals(
         mt,
         [hl.parse_locus_interval(contig, reference_genome=reference_genome.value)],
@@ -77,9 +72,9 @@ def run_hails_impute_sex(
 
     :param MatrixTable mt: MatrixTable containing samples to be ascertained for sex
     :param reference_genome: ReferenceGenome, either GRCh37 or GRCh38
-    :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY. Default is 0.75
-    :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX. Default is 0.5
-    :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05
+    :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY.
+    :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX.
+    :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`.
     :return: Table with imputed sex annotations
     """
 
@@ -93,6 +88,7 @@ def run_hails_impute_sex(
             ),
         ],
     )
+    print(mt.show())
     ht = hl.impute_sex(
         mt.GT,
         aaf_threshold=aaf_threshold,
@@ -122,8 +118,8 @@ def generate_fstat_plot(
 def call_sex(  # noqa: PLR0913
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
-    use_chrY_cov: bool = False, # noqa: N803
-    chrY_cov_threshold: float = 0.1, # noqa: N803
+    use_chrY_cov: bool = False,  # noqa: N803
+    chrY_cov_threshold: float = 0.1,  # noqa: N803
     normalization_contig: str = 'chr20',
     xy_fstat_threshold: float = 0.75,
     xx_fstat_threshold: float = 0.5,
@@ -148,7 +144,12 @@ def call_sex(  # noqa: PLR0913
     :param call_rate_threshold: Minimum required call rate. Default is 0.25
     :return Table with imputed sex annotations an
     """
-    validate_contig(reference_genome, normalization_contig)
+
+    valid_contigs = {*reference_genome.autosomes, *reference_genome.sex_chromosomes}
+    if normalization_contig not in valid_contigs:
+        msg = f'Contig: {normalization_contig} is invalid for this reference genome'
+        raise ValueError(msg)
+
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just
     mt = mt.filter_rows(hl.is_snp(mt.alleles[0], mt.alleles[1]))
