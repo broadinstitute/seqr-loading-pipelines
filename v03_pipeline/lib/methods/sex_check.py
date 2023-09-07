@@ -53,7 +53,7 @@ def get_contig_cov(
         mt = mt.filter_rows(mt.locus.in_y_nonpar())
 
     # Filter to common SNVs above defined callrate (should only have one index in the array because the MT only contains biallelic variants)
-    mt = mt.filter_rows(af_threshold < mt.AF)
+    mt = mt.filter_rows(mt.AF > af_threshold)  # noqa: SIM300
     mt = hl.variant_qc(mt)
     mt = mt.filter_rows(mt.variant_qc.call_rate > call_rate_threshold)
     mt = mt.select_cols(**{f'{contig}_mean_dp': hl.agg.mean(mt.DP)})
@@ -124,15 +124,14 @@ def call_sex(  # noqa: PLR0913
 
     impute_sex_ht = hl.impute_sex(
         mt.GT,
-        aaf_threshold=aaf_threshold,
         male_threshold=xy_fstat_threshold,
         female_threshold=xx_fstat_threshold,
+        aaf_threshold=aaf_threshold,
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
-        f'{normalization_contig}_mean_dp',
     ]
     if not use_chrY_cov:
         ht = ht.annotate(
