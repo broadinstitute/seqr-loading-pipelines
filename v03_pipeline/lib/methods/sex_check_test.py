@@ -101,7 +101,7 @@ class SexCheckTest(unittest.TestCase):
 
     def test_call_sex(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
-        ht = call_sex(mt, ReferenceGenome.GRCh38, af_field = 'AF')
+        ht = call_sex(mt, ReferenceGenome.GRCh38, af_field='AF')
         self.assertCountEqual(
             ht.collect(),
             [
