@@ -58,9 +58,10 @@ def get_contig_cov(
         mt = mt.filter_rows(mt.locus.in_y_nonpar())
 
     # Filter to common SNVs above defined callrate (should only have one index in the array because the MT only contains biallelic variants)
-    mt = mt.filter_rows(mt.AF > af_threshold)  # noqa: SIM300
     mt = hl.variant_qc(mt)
-    mt = mt.filter_rows(mt.variant_qc.call_rate > call_rate_threshold)
+    mt = mt.filter_rows(
+        mt.variant_qc.call_rate > call_rate_threshold & mt.variant_qc.AF > af_threshold
+    )
     mt = mt.select_cols(**{f'{contig}_mean_dp': hl.agg.mean(mt.DP)})
     return mt.cols()
 
@@ -95,7 +96,7 @@ def call_sex(  # noqa: PLR0913
     xx_fstat_threshold: float = 0.5,
     aaf_threshold: float = 0.05,
     call_rate_threshold: float = 0.25,
-) -> tuple[hl.Table, io.BytesIO]:
+) -> hl.Table:
     """
     Call sex for the samples in a given callset and export results file to the desired path.
 
@@ -138,7 +139,6 @@ def call_sex(  # noqa: PLR0913
         aaf_threshold=aaf_threshold,
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
-    f_stat_plot = generate_fstat_plot(ht, xy_fstat_threshold, xx_fstat_threshold)
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
@@ -152,7 +152,7 @@ def call_sex(  # noqa: PLR0913
                 .default(Ploidy.MALE.value)
             ),
         )
-        return ht.select(*annotations), f_stat_plot
+        return ht.select(*annotations)
 
     annotations = [
         *IMPUTE_SEX_ANNOTATIONS,
@@ -207,4 +207,4 @@ def call_sex(  # noqa: PLR0913
             .default(Ploidy.MALE.value)
         ),
     )
-    return ht.select(*annotations), f_stat_plot
+    return ht.select(*annotations)
