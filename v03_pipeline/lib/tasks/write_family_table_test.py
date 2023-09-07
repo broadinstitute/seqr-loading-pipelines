@@ -155,6 +155,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
+            sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF,
             project_guid='R0115_test_project2',
             project_remap_path='not_a_real_file',
@@ -405,6 +406,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.GCNV,
+            sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guid='R0115_test_project2',
             project_remap_path='not_a_real_file',
