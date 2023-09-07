@@ -60,7 +60,7 @@ def get_contig_cov(
     # Filter to common SNVs above defined callrate (should only have one index in the array because the MT only contains biallelic variants)
     mt = hl.variant_qc(mt)
     mt = mt.filter_rows(
-        mt.variant_qc.call_rate > call_rate_threshold & mt.variant_qc.AF > af_threshold
+        mt.variant_qc.call_rate > call_rate_threshold & mt.variant_qc.AF > af_threshold,
     )
     mt = mt.select_cols(**{f'{contig}_mean_dp': hl.agg.mean(mt.DP)})
     return mt.cols()
