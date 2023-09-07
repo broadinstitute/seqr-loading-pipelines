@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import get_contig_cov, call_sex
+from v03_pipeline.lib.methods.sex_check import call_sex, get_contig_cov
 from v03_pipeline.lib.model import ReferenceGenome
 
 TEST_FSTAT_PLOT = 'v03_pipeline/var/test/plots/f_stat_plot_1.png'
@@ -162,7 +162,7 @@ class SexCheckTest(unittest.TestCase):
                 f.read(),
             )
 
-    def test_call_sex_w_chrY_coverage(self):
+    def test_call_sex_w_chrY_coverage(self): # noqa: N802
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht, _ = call_sex(mt, ReferenceGenome.GRCh38, use_chrY_cov=True)
         self.assertCountEqual(

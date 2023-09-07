@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 import io
 from enum import Enum
 
 import hail as hl
 import matplotlib.pyplot as plt
 
-from v03_pipeline.lib.model import ReferenceGenome
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from v03_pipeline.lib.model import ReferenceGenome
 
 IMPUTE_SEX_ANNOTATIONS = [
     'is_female',
