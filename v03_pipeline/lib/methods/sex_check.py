@@ -32,6 +32,7 @@ def get_contig_cov(
     reference_genome: ReferenceGenome,
     contig: str,
     call_rate_threshold: float,
+    af_field: str,
     af_threshold: float = 0.01,
 ) -> hl.Table:
     """
@@ -59,8 +60,9 @@ def get_contig_cov(
 
     # Filter to common SNVs above defined callrate (should only have one index in the array because the MT only contains biallelic variants)
     mt = hl.variant_qc(mt)
+    mt.AF.show()
     mt = mt.filter_rows(
-        mt.variant_qc.call_rate > call_rate_threshold & mt.variant_qc.AF > af_threshold,
+        (mt.variant_qc.call_rate > call_rate_threshold) & (mt[af_field] > af_threshold),
     )
     mt = mt.select_cols(**{f'{contig}_mean_dp': hl.agg.mean(mt.DP)})
     return mt.cols()
@@ -95,6 +97,7 @@ def call_sex(  # noqa: PLR0913
     xy_fstat_threshold: float = 0.75,
     xx_fstat_threshold: float = 0.5,
     aaf_threshold: float = 0.05,
+    af_field: str = 'info.AF',
     call_rate_threshold: float = 0.25,
 ) -> hl.Table:
     """
@@ -112,6 +115,7 @@ def call_sex(  # noqa: PLR0913
     :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY. Default is 0.75
     :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX. Default is 0.5
     :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05
+    :param af_field: Name of field containing allele frequency information. Default is 'info.AF'
     :param call_rate_threshold: Minimum required call rate. Default is 0.25
     :return Table with imputed sex annotations, and the fstat plot.
     """
@@ -172,6 +176,7 @@ def call_sex(  # noqa: PLR0913
             reference_genome,
             contig,
             call_rate_threshold,
+            af_field,
         )
         ht = ht.annotate(**contig_ht[ht.s])
     ht = ht.annotate(
