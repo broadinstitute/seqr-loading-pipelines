@@ -3,3 +3,4 @@ google-api-python-client>=1.8.0
 hail>=0.2.113
 luigi==2.8.11
 matplotlib==3.7.2
+gnomad==0.6.4
