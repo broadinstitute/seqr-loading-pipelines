@@ -99,7 +99,7 @@ def annotate_disrepant_sex(
     pedigree_ht: hl.Table,
 ) -> hl.Table:
     """
-    Adds annotations to the impute sex ht from the pedigree
+    Adds annotations to the imputed sex ht derived from the pedigree
     """
     ped_ht = pedigree_ht.key_by(s=pedigree_ht.s).select('Sex')
     ped_ht = ped_ht.transmute(

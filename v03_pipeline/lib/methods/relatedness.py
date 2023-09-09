@@ -29,8 +29,9 @@ def filter_and_ld_prune(
         apply_hard_filters=False,
     )
     if not use_gnomad_in_ld_prune:
-        pruned_mt = hl.ld_prune(mt.GT, r2=0.1)
-    elif reference_genome == ReferenceGenome.GRCh37:
+        mm_pruned = hl.ld_prune(mt.GT, r2=0.1)
+        return mt.filter_rows(hl.is_defined(mm_pruned[mt.row_key]))
+    if reference_genome == ReferenceGenome.GRCh37:
         pruned_mt = hl.read_matrix_table(qc_mt_path(reference_genome))
     elif reference_genome == ReferenceGenome.GRCh38:
         pruned_mt = hl.read_matrix_table(qc_path())
@@ -39,18 +40,29 @@ def filter_and_ld_prune(
     )
 
 
+def annotate_families(
+    ht: hl.Table,
+    pedigree_ht: hl.Table,
+) -> hl.Table:
+    sample_id_to_family_guid = {x.s: x.family_guid for x in pedigree_ht.collect()}
+    return ht.annotate(
+        fam_guid_i=sample_id_to_family_guid.get(ht.i),
+        fam_guid_j=sample_id_to_family_guid.get(ht.j),
+    )
+
+
 def call_relatedness(
     mt: hl.MatrixTable,  # NB: we've been remapped and subsetted upstream
     reference_genome: ReferenceGenome,
+    af_field: str = 'info.AF',
     use_gnomad_in_ld_prune: bool = True,
 ) -> hl.Table:
     mt = filter_and_ld_prune(mt, reference_genome, use_gnomad_in_ld_prune)
-    kin_ht = hl.identity_by_descent(mt, maf=mt.af, min=0.10, max=1.0)
+    kin_ht = hl.identity_by_descent(mt, maf=mt[af_field], min=0.10, max=1.0)
     kin_ht = kin_ht.annotate(
         ibd0=kin_ht.ibd.Z0,
         ibd1=kin_ht.ibd.Z1,
         ibd2=kin_ht.ibd.Z2,
         pi_hat=kin_ht.ibd.PI_HAT,
     ).drop('ibs0', 'ibs1', 'ibs2', 'ibd')
-    kin_ht = kin_ht.key_by('i', 'j')
-    return kin_ht
+    return kin_ht.key_by('i', 'j')
