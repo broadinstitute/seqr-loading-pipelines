@@ -3,12 +3,13 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.methods.sex_check import (
+    annotate_disrepant_sex,
     call_sex,
     generate_fstat_plot,
     get_contig_cov,
 )
-from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.model import ReferenceGenome
 
 TEST_FSTAT_PLOT = 'v03_pipeline/var/test/plots/f_stat_plot_1.png'
 TEST_PEDIGREE = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
@@ -173,10 +174,75 @@ class SexCheckTest(unittest.TestCase):
         ht = annotate_disrepant_sex(ht, pedigree_ht)
         self.assertCountEqual(
             ht.collect(),
-            [],
+            [
+                hl.Struct(
+                    s='ROS_006_18Y03226_D1',
+                    is_female=False,
+                    f_stat=1.0,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=27,
+                    sex='XY',
+                    given_sex='XX',
+                    discrepant_sex=True,
+                ),
+                hl.Struct(
+                    s='ROS_006_18Y03227_D1',
+                    is_female=False,
+                    f_stat=1.0,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=27,
+                    sex='XY',
+                    given_sex='XY',
+                    discrepant_sex=False,
+                ),
+                hl.Struct(
+                    s='ROS_006_18Y03228_D1',
+                    is_female=False,
+                    f_stat=1.0,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=27,
+                    sex='XY',
+                    given_sex='XX',
+                    discrepant_sex=True,
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05919_D1',
+                    is_female=False,
+                    f_stat=0.9016393442622951,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=26,
+                    sex='XY',
+                    given_sex='XX',
+                    discrepant_sex=True,
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05939_D1',
+                    is_female=True,
+                    f_stat=-0.08196721311475397,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=16,
+                    sex='XX',
+                    given_sex='XX',
+                    discrepant_sex=False,
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05987_D1',
+                    is_female=False,
+                    f_stat=1.0,
+                    n_called=27,
+                    expected_homs=16.833333333333332,
+                    observed_homs=27,
+                    sex='XY',
+                    given_sex='XX',
+                    discrepant_sex=True,
+                ),
+            ],
         )
-
-
 
     def test_call_sex_w_chrY_coverage(self):  # noqa: N802
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)

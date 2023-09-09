@@ -133,6 +133,7 @@ def import_remap(remap_path: str) -> hl.Table:
 def import_pedigree(pedigree_path: str) -> hl.Table:
     ht = hl.import_table(pedigree_path)
     ht = ht.select(
+        ht.Sex,
         family_guid=ht.Family_GUID,
         s=ht.Individual_ID,
     )

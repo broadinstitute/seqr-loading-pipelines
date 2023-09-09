@@ -101,7 +101,7 @@ def annotate_disrepant_sex(
     """
     Adds annotations to the impute sex ht from the pedigree
     """
-    ped_ht = pedigree_ht.key_by(s=pedigree_ht.Individual_ID).select('Sex')
+    ped_ht = pedigree_ht.key_by(s=pedigree_ht.s).select('Sex')
     ped_ht = ped_ht.transmute(
         given_sex=hl.case()
         .when(ped_ht.Sex == 'M', Ploidy.MALE.value)
