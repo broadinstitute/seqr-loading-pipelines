@@ -44,10 +44,12 @@ def annotate_families(
     ht: hl.Table,
     pedigree_ht: hl.Table,
 ) -> hl.Table:
-    sample_id_to_family_guid = {x.s: x.family_guid for x in pedigree_ht.collect()}
+    sample_id_to_family_guid = hl.dict(
+        {x.s: x.family_guid for x in pedigree_ht.collect()},
+    )
     return ht.annotate(
-        fam_guid_i=sample_id_to_family_guid.get(ht.i),
-        fam_guid_j=sample_id_to_family_guid.get(ht.j),
+        fam_guid_i=sample_id_to_family_guid[ht.i],
+        fam_guid_j=sample_id_to_family_guid[ht.j],
     )
 
 
@@ -58,6 +60,11 @@ def call_relatedness(
     use_gnomad_in_ld_prune: bool = True,
 ) -> hl.Table:
     mt = filter_and_ld_prune(mt, reference_genome, use_gnomad_in_ld_prune)
+    # NB: ibd did not work by default with my pip install of `hail` on an M1 MacOSX.
+    # I had to build hail by source with the following:
+    # - brew install lz4
+    # - CXXFLAGS='-I/opt/homebrew/include/' HAIL_COMPILE_NATIVES=1 make -C hail install
+    # Hail issue here: https://discuss.hail.is/t/noclassdeffounderror-could-not-initialize-class-is-hail-methods-ibsffi/2453
     kin_ht = hl.identity_by_descent(mt, maf=mt[af_field], min=0.10, max=1.0)
     kin_ht = kin_ht.annotate(
         ibd0=kin_ht.ibd.Z0,

@@ -25,5 +25,16 @@ class RelatednessTest(unittest.TestCase):
         ht = annotate_families(ht, pedigree_ht)
         self.assertCountEqual(
             ht.collect(),
-            [],
+            [
+                hl.Struct(
+                    i='ROS_006_18Y03226_D1',
+                    j='ROS_007_19Y05939_D1',
+                    ibd0=0.0,
+                    ibd1=1.0,
+                    ibd2=0.0,
+                    pi_hat=0.5,
+                    fam_guid_i='family_1',
+                    fam_guid_j='family_2',
+                )
+            ],
         )
