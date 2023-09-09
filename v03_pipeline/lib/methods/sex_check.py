@@ -73,8 +73,14 @@ def generate_fstat_plot(
     xy_fstat_threshold: float,
     xx_fstat_threshold: float,
 ) -> io.BytesIO:
+    """
     # Plot histogram of fstat values
     # Returns the plot saved as a binary buffer.
+    #
+    # :params ht: the output hail table from call_sex
+    # :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY.
+    # :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX.
+    """
     buf = io.BytesIO()
     df = ht.to_pandas()
     plt.clf()
@@ -86,6 +92,24 @@ def generate_fstat_plot(
     plt.savefig(buf, format='png')
     buf.seek(0)
     return buf
+
+
+def annotate_disrepant_sex(
+    ht: hl.Table,
+    pedigree_ht: hl.Table,
+) -> hl.Table:
+    """
+    Adds annotations to the impute sex ht from the pedigree
+    """
+    ped_ht = pedigree_ht.key_by(s=pedigree_ht.Individual_ID).select('Sex')
+    ped_ht = ped_ht.transmute(
+        given_sex=hl.case()
+        .when(ped_ht.Sex == 'M', Ploidy.MALE.value)
+        .when(ped_ht.Sex == 'F', Ploidy.FEMALE.value)
+        .default(ped_ht.Sex),
+    )
+    ht = ht.join(ped_ht, how='outer')
+    return ht.annotate(discrepant_sex=ht.sex != ht.given_sex)
 
 
 def call_sex(  # noqa: PLR0913

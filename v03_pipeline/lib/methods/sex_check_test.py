@@ -8,8 +8,10 @@ from v03_pipeline.lib.methods.sex_check import (
     get_contig_cov,
 )
 from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.misc.io import import_pedigree
 
 TEST_FSTAT_PLOT = 'v03_pipeline/var/test/plots/f_stat_plot_1.png'
+TEST_PEDIGREE = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
 )
@@ -167,6 +169,14 @@ class SexCheckTest(unittest.TestCase):
                 f_stat_plot.read(),
                 f.read(),
             )
+        pedigree_ht = import_pedigree(TEST_PEDIGREE)
+        ht = annotate_disrepant_sex(ht, pedigree_ht)
+        self.assertCountEqual(
+            ht.collect(),
+            [],
+        )
+
+
 
     def test_call_sex_w_chrY_coverage(self):  # noqa: N802
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
