@@ -35,6 +35,6 @@ class RelatednessTest(unittest.TestCase):
                     pi_hat=0.5,
                     fam_guid_i='family_1',
                     fam_guid_j='family_2',
-                )
+                ),
             ],
         )
