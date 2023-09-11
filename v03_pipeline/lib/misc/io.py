@@ -161,6 +161,5 @@ def write(
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
     if n_partitions and env != Env.TEST:
-        print(f'Naively coalescing to {n_partitions} partitions')
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)
