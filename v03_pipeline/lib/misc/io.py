@@ -6,7 +6,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 BIALLELIC = 2
 
@@ -98,7 +98,6 @@ def import_callset(
     callset_path: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    sample_type: SampleType,
     filters_path: str | None = None,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
@@ -111,7 +110,7 @@ def import_callset(
         mt = split_multi_hts(mt)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(variant_id=mt.rsid)
-    if sample_type == SampleType.WES and filters_path:
+    if filters_path:
         filters_ht = import_vcf(filters_path, reference_genome).rows()
         mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
     mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)

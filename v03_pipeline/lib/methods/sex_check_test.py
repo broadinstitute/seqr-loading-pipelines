@@ -26,8 +26,8 @@ class SexCheckTest(unittest.TestCase):
             None,
             ReferenceGenome.GRCh38,
             '1',
-            0.25,
             'AF',
+            0.25,
         )
 
     def test_get_contig_cov(self):
@@ -93,7 +93,7 @@ class SexCheckTest(unittest.TestCase):
         )
         mt = mt.key_rows_by('locus', 'alleles')
         mt = mt.key_cols_by('s')
-        ht = get_contig_cov(mt, ReferenceGenome.GRCh38, 'chr1', 0.25, 'AF')
+        ht = get_contig_cov(mt, ReferenceGenome.GRCh38, 'chr1', 'AF', 0.25)
         self.assertListEqual(
             ht.collect(),
             [
