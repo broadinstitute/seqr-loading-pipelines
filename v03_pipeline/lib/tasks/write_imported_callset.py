@@ -38,6 +38,11 @@ class WriteImportedCallsetTask(BaseWriteTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
+        if self.filters_path:
+            return [
+                CallsetTask(self.callset_path),
+                CallsetTask(self.filters_path),
+            ]
         return [
             CallsetTask(self.callset_path),
         ]
