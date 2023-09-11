@@ -5,16 +5,15 @@ from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
 from v03_pipeline.lib.model import ReferenceGenome
 
+GNOMAD_SAMPLE_QC_PATH = 'gs://gnomad/sample_qc/mt'
 
-# Stub port from https://github.com/broadinstitute/gnomad_qc/blob/9763d8a581665ed0be8bf2ea09d74e3cabc4806e/gnomad_qc/v2/resources/sample_qc.py#L40
+
+# Ported from https://github.com/broadinstitute/gnomad_qc/blob/9763d8a581665ed0be8bf2ea09d74e3cabc4806e/gnomad_qc/v2/resources/sample_qc.py#L40
+# and https://github.com/broadinstitute/gnomad_qc/blame/9763d8a581665ed0be8bf2ea09d74e3cabc4806e/gnomad_qc/v3/resources/sample_qc.py#L219
 def qc_mt_path(reference_genome: ReferenceGenome) -> str:
-    ref_str = '.grch38' if reference_genome == ReferenceGenome.GRCh38 else ''
-    return f'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned{ref_str}.mt'
-
-
-# Stub port from https://github.com/broadinstitute/gnomad_qc/blame/9763d8a581665ed0be8bf2ea09d74e3cabc4806e/gnomad_qc/v3/resources/sample_qc.py#L219
-def qc_path() -> str:
-    return 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
+    if reference_genome == ReferenceGenome.GRCh37:
+        return f'{GNOMAD_SAMPLE_QC_PATH}/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt'
+    return f'{GNOMAD_SAMPLE_QC_PATH}/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
 
 
 def filter_and_ld_prune(
@@ -31,10 +30,7 @@ def filter_and_ld_prune(
     if not use_gnomad_in_ld_prune:
         mm_pruned = hl.ld_prune(mt.GT, r2=0.1)
         return mt.filter_rows(hl.is_defined(mm_pruned[mt.row_key]))
-    if reference_genome == ReferenceGenome.GRCh37:
-        pruned_mt = hl.read_matrix_table(qc_mt_path(reference_genome))
-    elif reference_genome == ReferenceGenome.GRCh38:
-        pruned_mt = hl.read_matrix_table(qc_path())
+    pruned_mt = hl.read_matrix_table(qc_mt_path(reference_genome))
     return mt.filter_rows(
         hl.is_defined(pruned_mt.index_rows(mt.row_key)),
     )
