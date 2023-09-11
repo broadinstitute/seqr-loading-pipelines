@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+import hail as hl
+
 
 class AccessControl(Enum):
     PUBLIC = 'public'
@@ -30,31 +32,18 @@ class ReferenceGenome(Enum):
 
     @property
     def sex_chromosomes(self) -> set[str]:
+        hl_reference = hl.get_reference(self.value)
         return {
-            ReferenceGenome.GRCh37: {
-                'X',
-                'Y',
-            },
-            ReferenceGenome.GRCh38: {
-                'chrX',
-                'chrY',
-            },
-        }[self]
+            *hl_reference.x_contigs,
+            *hl_reference.y_contigs,
+        }
 
     @property
     def standard_contigs(self) -> set[str]:
+        hl_reference = hl.get_reference(self.value)
         return {
-            ReferenceGenome.GRCh37: {
-                *self.autosomes,
-                *self.sex_chromosomes,
-                'MT',
-            },
-            ReferenceGenome.GRCh38: {
-                *self.autosomes,
-                *self.sex_chromosomes,
-                'chrM',
-            },
-        }[self]
+            *hl_reference.contigs[:25],
+        }
 
 
 class SampleType(Enum):
