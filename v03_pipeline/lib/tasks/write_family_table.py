@@ -22,7 +22,11 @@ class WriteFamilyTableTask(BaseWriteTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    ignore_missing_samples = luigi.BoolParameter(
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
@@ -57,7 +61,8 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.project_guid,
             self.project_remap_path,
             self.project_pedigree_path,
-            self.ignore_missing_samples,
+            self.ignore_missing_samples_when_subsetting,
+            self.ignore_missing_samples_when_remapping,
         )
 
     def create_table(self) -> hl.Table:

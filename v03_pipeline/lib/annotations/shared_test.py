@@ -26,7 +26,7 @@ class SharedAnnotationsTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
         )
-        ht = run_vep(ht, Env.TEST, ReferenceGenome.GRCh38, DatasetType.SNV, None)
+        ht = run_vep(ht, Env.TEST, ReferenceGenome.GRCh38, DatasetType.SNV_INDEL, None)
         ht = ht.select(
             sorted_transcript_consequences=sorted_transcript_consequences(ht),
         )

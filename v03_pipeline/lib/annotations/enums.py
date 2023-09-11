@@ -226,6 +226,10 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
         )
     if 'sorted_gene_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(
-            enums=ht.enums.annotate(sv_consequence_rank=SV_CONSEQUENCE_RANKS),
+            enums=ht.enums.annotate(
+                sorted_gene_consequences=hl.Struct(
+                    major_consequence=SV_CONSEQUENCE_RANKS,
+                ),
+            ),
         )
     return ht

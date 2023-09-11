@@ -33,22 +33,22 @@ class TestPaths(unittest.TestCase):
 
     def test_family_table_path(self) -> None:
         for env, expected_path in [
-            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV/families/franklin.ht'),
-            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV/families/franklin.ht'),
+            (Env.TEST, 'seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht'),
+            (Env.LOCAL, 'seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht'),
             (
                 Env.DEV,
-                'gs://seqr-scratch-temp/v03/GRCh37/SNV/families/franklin.ht',
+                'gs://seqr-scratch-temp/v03/GRCh37/SNV_INDEL/families/franklin.ht',
             ),
             (
                 Env.PROD,
-                'gs://seqr-datasets/v03/GRCh37/SNV/families/franklin.ht',
+                'gs://seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht',
             ),
         ]:
             self.assertEqual(
                 family_table_path(
                     env,
                     ReferenceGenome.GRCh37,
-                    DatasetType.SNV,
+                    DatasetType.SNV_INDEL,
                     'franklin',
                 ),
                 expected_path,
@@ -106,10 +106,10 @@ class TestPaths(unittest.TestCase):
             metadata_for_run_path(
                 Env.PROD,
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV,
+                DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            'gs://seqr-datasets/v03/GRCh38/SNV/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            'gs://seqr-datasets/v03/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -149,8 +149,8 @@ class TestPaths(unittest.TestCase):
             imported_callset_path(
                 Env.PROD,
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV,
+                DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            'gs://seqr-loading-temp/v03/GRCh38/SNV/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+            'gs://seqr-loading-temp/v03/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
         )
