@@ -36,8 +36,8 @@ def validate_contig(reference_genome: ReferenceGenome, contig: str) -> None:
 
 def get_sex_expression(
     ht: hl.Table,
-    use_chrY_cov: bool, # noqa: N803
-    chrY_cov_threshold: float, # noqa: N803
+    use_chrY_cov: bool,  # noqa: N803
+    chrY_cov_threshold: float,  # noqa: N803
 ) -> hl.Expression:
     sex_expression = (
         hl.case()
