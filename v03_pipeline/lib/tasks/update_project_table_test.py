@@ -31,7 +31,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
         upt_task = UpdateProjectTableTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
+            dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
@@ -42,7 +42,7 @@ class UpdateProjectTableTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             upt_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/projects/R0113_test_project.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/projects/R0113_test_project.ht',
         )
         self.assertTrue(upt_task.complete())
         ht = hl.read_table(upt_task.output().path)

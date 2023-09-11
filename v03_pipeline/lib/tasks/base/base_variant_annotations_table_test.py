@@ -49,11 +49,11 @@ class BaseVariantAnnotationsTableTest(unittest.TestCase):
         vat_task = BaseVariantAnnotationsTableTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
+            dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertEqual(
             vat_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/annotations.ht',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/annotations.ht',
         )
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())

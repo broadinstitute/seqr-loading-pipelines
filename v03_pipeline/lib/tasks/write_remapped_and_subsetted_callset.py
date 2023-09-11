@@ -22,7 +22,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    ignore_missing_samples = luigi.BoolParameter(
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
@@ -64,7 +68,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         # Remap, but only if the remap file is present!
         if does_file_exist(self.project_remap_path):
             project_remap_ht = import_remap(self.project_remap_path)
-            callset_mt = remap_sample_ids(callset_mt, project_remap_ht)
+            callset_mt = remap_sample_ids(
+                callset_mt,
+                project_remap_ht,
+                self.ignore_missing_samples_when_remapping,
+            )
 
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         families_to_include_ht = families_to_include(pedigree_ht, callset_mt.cols())
@@ -72,7 +80,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         callset_mt = subset_samples(
             callset_mt,
             sample_subset_ht,
-            self.ignore_missing_samples,
+            self.ignore_missing_samples_when_subsetting,
         )
         return callset_mt.annotate_globals(
             family_guids=sorted(families_to_include_ht.family_guid.collect()),

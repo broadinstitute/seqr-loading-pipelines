@@ -49,13 +49,12 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     )
     mt = ht.to_matrix_table(
         row_key=['variant_name', 'svtype'],
-        col_key=['sample_cram_basename'],
+        col_key=['sample_fix'],
         row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
     )
-    # rename the sample id column before the sample subset happens
     mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
-    mt = mt.key_cols_by(s=mt.sample_cram_basename)
-    return mt.annotate_rows(
+    mt = mt.key_cols_by(s=mt.sample_fix)
+    mt = mt.annotate_rows(
         variant_id=hl.format('%s_%s', mt.variant_name, mt.svtype),
         filters=hl.empty_set(hl.tstr),
         start=hl.agg.min(mt.sample_start),
@@ -71,6 +70,8 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
             hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_LOF_Ensemble_ID)),
         ),
     )
+    mt = mt.unfilter_entries()
+    return mt
 
 
 def import_vcf(
@@ -104,8 +105,10 @@ def import_callset(
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
-    if dataset_type == DatasetType.SNV:
+    if dataset_type == DatasetType.SNV_INDEL:
         mt = split_multi_hts(mt)
+    if dataset_type == DatasetType.SV:
+        mt = mt.annotate_rows(variant_id=mt.rsid)
     mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
     mt = mt.select_globals()
     mt = mt.select_rows(*dataset_type.row_fields)
@@ -158,6 +161,5 @@ def write(
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
     if n_partitions and env != Env.TEST:
-        print(f'Naively coalescing to {n_partitions} partitions')
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)

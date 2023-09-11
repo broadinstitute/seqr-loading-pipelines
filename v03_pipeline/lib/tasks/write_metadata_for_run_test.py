@@ -32,7 +32,7 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
         write_metadata_for_run_task = WriteMetadataForRunTask(
             env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
+            dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP, TEST_REMAP],
@@ -44,7 +44,7 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             write_metadata_for_run_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/runs/run_123456/metadata.json',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
         )
         self.assertTrue(write_metadata_for_run_task.complete())
         with write_metadata_for_run_task.output().open('r') as f:

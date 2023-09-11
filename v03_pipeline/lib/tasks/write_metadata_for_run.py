@@ -18,7 +18,11 @@ class WriteMetadataForRunTask(BaseWriteTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    ignore_missing_samples = luigi.BoolParameter(
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
@@ -52,7 +56,8 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
-                self.ignore_missing_samples,
+                self.ignore_missing_samples_when_subsetting,
+                self.ignore_missing_samples_when_remapping,
                 self.validate,
             )
             for (project_guid, project_remap_path, project_pedigree_path) in zip(

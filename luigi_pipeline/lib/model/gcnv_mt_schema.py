@@ -176,10 +176,6 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
         }, **{
             "gte_4": self._genotype_filter_samples(lambda g: g.cn >= 4)
         })
-
-    def _genotype_filter_samples(self, filter):
-        samples = self.mt.genotypes.filter(filter).map(lambda g: g.sample_id)
-        return hl.if_else(hl.len(samples) > 0, samples, hl.missing(hl.dtype('array<str>')))
     
     def _genotype_fields(self):
         if self._is_new_joint_call:
@@ -208,7 +204,7 @@ class SeqrGCNVGenotypesSchema(SeqrGenotypesSchema):
                 self.mt.genes_any_overlap_totalExons != self.mt.num_exon,
                 self.mt.genes_any_overlap_totalExons,
             ),
-            'geneIds': hl.or_missing(parsed_genes != self.mt.geneIds, parsed_genes),
+            'geneIds': hl.if_else(parsed_genes != self.mt.geneIds, parsed_genes, hl.empty_array(hl.tstr)),
             **call_fields,
         }
 

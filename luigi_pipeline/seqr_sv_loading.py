@@ -42,7 +42,7 @@ class SeqrSVVariantMTTask(SeqrVCFToVariantMTTask):
         return mt.key_rows_by('rsid')
 
     # NB: `split_multi_hts` is a no-op for SVs.
-    def annotate_old_and_split_multi_hts(self, mt):
+    def split_multi_hts(self, mt):
         return mt
 
     def get_schema_class_kwargs(self):
