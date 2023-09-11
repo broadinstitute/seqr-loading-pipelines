@@ -7,9 +7,15 @@
 aiodns==2.0.0
     # via hail
 aiohttp==3.8.5
-    # via hail
+    # via
+    #   hail
+    #   slackclient
 aiosignal==1.3.1
     # via aiohttp
+appnope==0.1.3
+    # via ipython
+asttokens==2.4.0
+    # via stack-data
 async-timeout==4.0.2
     # via aiohttp
 asyncinit==0.2.4
@@ -26,6 +32,8 @@ azure-identity==1.12.0
     # via hail
 azure-storage-blob==12.16.0
     # via hail
+backcall==0.2.0
+    # via ipython
 bokeh==1.4.0
     # via hail
 boto3==1.26.126
@@ -49,6 +57,8 @@ charset-normalizer==3.1.0
     # via
     #   aiohttp
     #   requests
+comm==0.1.4
+    # via ipywidgets
 commonmark==0.9.1
     # via rich
 contourpy==1.1.0
@@ -61,8 +71,12 @@ cryptography==41.0.3
     #   pyjwt
 cycler==0.11.0
     # via matplotlib
+cython==0.29.36
+    # via hdbscan
 decorator==4.4.2
-    # via hail
+    # via
+    #   hail
+    #   ipython
 deprecated==1.2.13
     # via hail
 dill==0.3.6
@@ -71,6 +85,8 @@ docutils==0.19
     # via python-daemon
 elasticsearch==7.9.1
     # via -r requirements.in
+executing==1.2.0
+    # via stack-data
 fonttools==4.42.1
     # via matplotlib
 frozenlist==1.3.3
@@ -78,6 +94,8 @@ frozenlist==1.3.3
     #   aiohttp
     #   aiosignal
     #   hail
+gnomad==0.6.4
+    # via -r requirements.in
 google-api-core==2.11.0
     # via
     #   google-api-python-client
@@ -107,6 +125,8 @@ googleapis-common-protos==1.59.0
     # via google-api-core
 hail==0.2.115
     # via -r requirements.in
+hdbscan==0.8.33
+    # via gnomad
 httplib2==0.22.0
     # via
     #   google-api-python-client
@@ -121,10 +141,16 @@ idna==3.4
     #   yarl
 importlib-resources==6.0.1
     # via matplotlib
+ipython==8.12.2
+    # via ipywidgets
+ipywidgets==8.1.0
+    # via gnomad
 isodate==0.6.1
     # via azure-storage-blob
 janus==1.0.0
     # via hail
+jedi==0.19.0
+    # via ipython
 jinja2==3.0.3
     # via
     #   bokeh
@@ -133,6 +159,12 @@ jmespath==1.0.1
     # via
     #   boto3
     #   botocore
+joblib==1.3.2
+    # via
+    #   hdbscan
+    #   scikit-learn
+jupyterlab-widgets==3.0.8
+    # via ipywidgets
 kiwisolver==1.4.5
     # via matplotlib
 lockfile==0.12.2
@@ -143,6 +175,8 @@ markupsafe==2.1.2
     # via jinja2
 matplotlib==3.7.2
     # via -r requirements.in
+matplotlib-inline==0.1.6
+    # via ipython
 msal==1.22.0
     # via
     #   azure-identity
@@ -160,8 +194,10 @@ numpy==1.24.3
     #   bokeh
     #   contourpy
     #   hail
+    #   hdbscan
     #   matplotlib
     #   pandas
+    #   scikit-learn
     #   scipy
 orjson==3.8.11
     # via hail
@@ -174,6 +210,12 @@ pandas==2.0.1
     # via hail
 parsimonious==0.10.0
     # via hail
+parso==0.8.3
+    # via jedi
+pexpect==4.8.0
+    # via ipython
+pickleshare==0.7.5
+    # via ipython
 pillow==9.5.0
     # via
     #   bokeh
@@ -182,11 +224,17 @@ plotly==5.14.1
     # via hail
 portalocker==2.7.0
     # via msal-extensions
+prompt-toolkit==3.0.39
+    # via ipython
 protobuf==3.20.2
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   hail
+ptyprocess==0.7.0
+    # via pexpect
+pure-eval==0.2.2
+    # via stack-data
 py4j==0.10.9.5
     # via pyspark
 pyasn1==0.5.0
@@ -200,7 +248,9 @@ pycares==4.3.0
 pycparser==2.21
     # via cffi
 pygments==2.15.1
-    # via rich
+    # via
+    #   ipython
+    #   rich
 pyjwt[crypto]==2.6.0
     # via msal
 pyparsing==3.0.9
@@ -239,8 +289,15 @@ rsa==4.9
     # via google-auth
 s3transfer==0.6.0
     # via boto3
+scikit-learn==1.3.0
+    # via
+    #   gnomad
+    #   hdbscan
 scipy==1.9.3
-    # via hail
+    # via
+    #   hail
+    #   hdbscan
+    #   scikit-learn
 six==1.16.0
     # via
     #   azure-core
@@ -250,20 +307,33 @@ six==1.16.0
     #   google-auth-httplib2
     #   isodate
     #   python-dateutil
+slackclient==2.5.0
+    # via gnomad
 sortedcontainers==2.4.0
     # via hail
+stack-data==0.6.2
+    # via ipython
 tabulate==0.9.0
     # via hail
 tenacity==8.2.2
     # via plotly
+threadpoolctl==3.2.0
+    # via scikit-learn
 tornado==5.1.1
     # via
     #   bokeh
     #   luigi
+traitlets==5.9.0
+    # via
+    #   comm
+    #   ipython
+    #   ipywidgets
+    #   matplotlib-inline
 typing-extensions==4.5.0
     # via
     #   azure-core
     #   azure-storage-blob
+    #   ipython
     #   janus
     #   rich
 tzdata==2023.3
@@ -277,6 +347,10 @@ urllib3==1.26.15
     #   requests
 uvloop==0.17.0
     # via hail
+wcwidth==0.2.6
+    # via prompt-toolkit
+widgetsnbextension==4.0.8
+    # via ipywidgets
 wrapt==1.15.0
     # via deprecated
 yarl==1.9.2
