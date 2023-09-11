@@ -34,6 +34,35 @@ def validate_contig(reference_genome: ReferenceGenome, contig: str) -> None:
         raise ValueError(msg)
 
 
+def get_sex_expression(
+    ht: hl.Table,
+    use_chrY_cov: bool, # noqa: N803
+    chrY_cov_threshold: float, # noqa: N803
+) -> hl.Expression:
+    sex_expression = (
+        hl.case()
+        .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
+        .when(ht.is_female, Ploidy.FEMALE.value)
+    )
+    if use_chrY_cov:
+        sex_expression = sex_expression.when(
+            (
+                (
+                    (ht.is_female)
+                    & hl.is_defined(ht.normalized_y_coverage)
+                    & (ht.normalized_y_coverage > chrY_cov_threshold)
+                )
+                | (
+                    (~ht.is_female)
+                    & hl.is_defined(ht.normalized_y_coverage)
+                    & (ht.normalized_y_coverage < chrY_cov_threshold)
+                )
+            ),
+            Ploidy.ANEUPLOIDY.value,
+        )
+    return sex_expression.default(Ploidy.MALE.value)
+
+
 def get_contig_cov(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
@@ -174,55 +203,23 @@ def call_sex(  # noqa: PLR0913
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
 
-    if not use_chrY_cov:
-        ht = ht.annotate(
-            sex=(
-                hl.case()
-                .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
-                .when(ht.is_female, Ploidy.FEMALE.value)
-                .default(Ploidy.MALE.value)
-            ),
+    annotations = IMPUTE_SEX_ANNOTATIONS
+    if use_chrY_cov:
+        ht = annotate_contig_coverages(
+            mt,
+            ht,
+            reference_genome,
+            normalization_contig,
+            af_field,
+            call_rate_threshold,
         )
-        return ht.select(*IMPUTE_SEX_ANNOTATIONS)
-
-    ht = annotate_contig_coverages(
-        mt,
-        ht,
-        reference_genome,
-        normalization_contig,
-        af_field,
-        call_rate_threshold,
-    )
-    ht = ht.annotate(
-        sex=(
-            hl.case()
-            .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
-            .when(ht.is_female, Ploidy.FEMALE.value)
-            .when(
-                (
-                    (
-                        (ht.is_female)
-                        & hl.is_defined(ht.normalized_y_coverage)
-                        & (ht.normalized_y_coverage > chrY_cov_threshold)
-                    )
-                    | (
-                        (~ht.is_female)
-                        & hl.is_defined(ht.normalized_y_coverage)
-                        & (ht.normalized_y_coverage < chrY_cov_threshold)
-                    )
-                ),
-                Ploidy.ANEUPLOIDY.value,
-            )
-            .default(Ploidy.MALE.value)
-        ),
-    )
-    return ht.select(
-        *[
+        annotations = [
             *IMPUTE_SEX_ANNOTATIONS,
             f'{normalization_contig}_mean_dp',
             'chrY_mean_dp',
             'normalized_y_coverage',
             'chrX_mean_dp',
             'normalized_x_coverage',
-        ],
-    )
+        ]
+    ht = ht.annotate(sex=get_sex_expression(ht, use_chrY_cov, chrY_cov_threshold))
+    return ht.select(*annotations)
