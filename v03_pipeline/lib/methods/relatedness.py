@@ -62,10 +62,10 @@ def call_relatedness(
     # - CXXFLAGS='-I/opt/homebrew/include/' HAIL_COMPILE_NATIVES=1 make -C hail install
     # Hail issue here: https://discuss.hail.is/t/noclassdeffounderror-could-not-initialize-class-is-hail-methods-ibsffi/2453
     kin_ht = hl.identity_by_descent(mt, maf=mt[af_field], min=0.10, max=1.0)
-    kin_ht = kin_ht.annotate(
+    kin_ht = kin_ht.key_by('i', 'j')
+    return kin_ht.select(
         ibd0=kin_ht.ibd.Z0,
         ibd1=kin_ht.ibd.Z1,
         ibd2=kin_ht.ibd.Z2,
         pi_hat=kin_ht.ibd.PI_HAT,
-    ).drop('ibs0', 'ibs1', 'ibs2', 'ibd')
-    return kin_ht.key_by('i', 'j')
+    )
