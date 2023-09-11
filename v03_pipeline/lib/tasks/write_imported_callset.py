@@ -47,6 +47,5 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
-            self.sample_type,
             self.filters_path,
         )
