@@ -16,8 +16,6 @@ TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
 
 
 class SexCheckTest(unittest.TestCase):
-    maxDiff = None
-
     def test_invalid_contig(self):
         self.assertRaises(
             ValueError,
