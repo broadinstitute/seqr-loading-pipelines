@@ -2,14 +2,9 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import (
-    call_sex,
-    generate_fstat_plot,
-    get_contig_cov,
-)
+from v03_pipeline.lib.methods.sex_check import call_sex, get_contig_cov
 from v03_pipeline.lib.model import ReferenceGenome
 
-TEST_FSTAT_PLOT = 'v03_pipeline/var/test/plots/f_stat_plot_1.png'
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
 )
@@ -161,12 +156,6 @@ class SexCheckTest(unittest.TestCase):
                 ),
             ],
         )
-        f_stat_plot = generate_fstat_plot(ht, 0.75, 0.5)
-        with open(TEST_FSTAT_PLOT, 'rb') as f:
-            self.assertEqual(
-                f_stat_plot.read(),
-                f.read(),
-            )
 
     def test_call_sex_w_chrY_coverage(self):  # noqa: N802
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)

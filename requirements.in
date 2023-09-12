@@ -2,4 +2,3 @@ elasticsearch==7.9.1
 google-api-python-client>=1.8.0
 hail>=0.2.113
 luigi==2.8.11
-matplotlib==3.7.2

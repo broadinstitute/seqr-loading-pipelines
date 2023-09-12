@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import io
 from enum import Enum
 from typing import TYPE_CHECKING
 
 import hail as hl
-import matplotlib.pyplot as plt
 
 if TYPE_CHECKING:
     from v03_pipeline.lib.model import ReferenceGenome
@@ -18,6 +16,15 @@ IMPUTE_SEX_ANNOTATIONS = [
     'observed_homs',
     'sex',
 ]
+
+
+XY_FSTAT_THRESHOLD: float = (
+    0.75  # F-stat threshold above which a sample will be called XY.
+)
+XX_FSTAT_THRESHOLD: float = (
+    0.5  # F-stat threshold below which a sample will be called XX
+)
+AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
 
 
 class Ploidy(Enum):
@@ -132,35 +139,12 @@ def annotate_contig_coverages(
     )
 
 
-def generate_fstat_plot(
-    ht: hl.Table,
-    xy_fstat_threshold: float,
-    xx_fstat_threshold: float,
-) -> io.BytesIO:
-    # Plot histogram of fstat values
-    # Returns the plot saved as a binary buffer.
-    buf = io.BytesIO()
-    df = ht.to_pandas()
-    plt.clf()
-    plt.hist(df['f_stat'])
-    plt.xlabel('Fstat')
-    plt.ylabel('Frequency')
-    plt.axvline(xy_fstat_threshold, color='blue', linestyle='dashed', linewidth=1)
-    plt.axvline(xx_fstat_threshold, color='red', linestyle='dashed', linewidth=1)
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    return buf
-
-
 def call_sex(  # noqa: PLR0913
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
     use_chrY_cov: bool = False,  # noqa: N803
     chrY_cov_threshold: float = 0.1,  # noqa: N803
     normalization_contig: str = 'chr20',
-    xy_fstat_threshold: float = 0.75,
-    xx_fstat_threshold: float = 0.5,
-    aaf_threshold: float = 0.05,
     af_field: str = 'info.AF',
     call_rate_threshold: float = 0.25,
 ) -> hl.Table:
@@ -176,9 +160,6 @@ def call_sex(  # noqa: PLR0913
         XY samples below and XX samples above this threshold will be inferred as having aneuploidies.
         Default is 0.1
     :param normalization_contig: Chosen chromosome for calculating normalized coverage. Default is "chr20"
-    :param xy_fstat_threshold: F-stat threshold above which a sample will be called XY. Default is 0.75
-    :param xx_fstat_threshold: F-stat threshold below which a sample will be called XX. Default is 0.5
-    :param aaf_threshold: Alternate allele frequency threshold for `hl.impute_sex`. Default is 0.05
     :param af_field: Name of field containing allele frequency information. Default is 'info.AF'
     :param call_rate_threshold: Minimum required call rate. Default is 0.25
     :return Table with imputed sex annotations, and the fstat plot.
@@ -197,9 +178,9 @@ def call_sex(  # noqa: PLR0913
 
     impute_sex_ht = hl.impute_sex(
         mt.GT,
-        male_threshold=xy_fstat_threshold,
-        female_threshold=xx_fstat_threshold,
-        aaf_threshold=aaf_threshold,
+        male_threshold=XY_FSTAT_THRESHOLD,
+        female_threshold=XX_FSTAT_THRESHOLD,
+        aaf_threshold=AAF_THRESHOLD,
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
 
