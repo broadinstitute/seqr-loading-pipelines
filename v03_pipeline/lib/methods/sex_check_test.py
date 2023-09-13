@@ -3,13 +3,8 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import (
-    annotate_discrepant_sex,
-    call_sex,
-)
+from v03_pipeline.lib.methods.sex_check import annotate_discrepant_sex, call_sex
 from v03_pipeline.lib.misc.io import import_pedigree
-from v03_pipeline.lib.model import ReferenceGenome
-
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
