@@ -359,11 +359,11 @@ CONFIG = {
     },
     'gnomad_qc': {
         '37': {
-            'path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt'
+            'path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
             'path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
-        }
+        },
     },
     'exac': {
         '37': {
