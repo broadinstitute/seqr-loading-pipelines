@@ -30,6 +30,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -55,6 +59,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 # to avoid carrying it throughout the rest of the pipeline.
                 # Only the primary import task itself should be aware of it.
                 None,
+                self.validate,
             ),
             RawFileTask(self.project_pedigree_path),
         ]
