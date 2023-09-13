@@ -25,6 +25,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
+            validate=False,
         )
         worker.add(wrsc_task)
         worker.run()

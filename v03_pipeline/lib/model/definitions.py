@@ -33,6 +33,19 @@ class ReferenceGenome(Enum):
             *self.hl_reference.contigs[:25],
         }
 
+    @property
+    def optional_contigs(self) -> set[str]:
+        return {
+            ReferenceGenome.GRCh37: {
+                'Y',
+                'MT',
+            },
+            ReferenceGenome.GRCh38: {
+                'chrY',
+                'chrM',
+            },
+        }[self]
+
 
 class SampleType(Enum):
     WES = 'WES'

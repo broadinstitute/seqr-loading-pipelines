@@ -89,6 +89,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
+            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker = luigi.worker.Worker()
@@ -105,6 +106,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker = luigi.worker.Worker()
@@ -126,6 +128,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_3)
@@ -172,6 +175,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
+            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_4)
@@ -345,6 +349,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
             )
         )
@@ -606,6 +611,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
             )
         )
@@ -1162,6 +1168,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
+                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
             )
         )
