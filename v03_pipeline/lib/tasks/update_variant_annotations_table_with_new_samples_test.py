@@ -61,7 +61,6 @@ GENE_ID_MAPPING = {
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
-
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
