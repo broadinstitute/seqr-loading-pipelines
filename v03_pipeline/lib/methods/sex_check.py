@@ -13,7 +13,7 @@ IMPUTE_SEX_ANNOTATIONS = [
     'sex',
 ]
 
-AMBIGUOUS_THRESHOLD_PERC: float = 0.005  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
+AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
 XX_FSTAT_THRESHOLD: float = (
     0.5  # F-stat threshold below which a sample will be called XX
