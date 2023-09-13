@@ -11,9 +11,6 @@ from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
 if TYPE_CHECKING:
     from v03_pipeline.lib.model import ReferenceGenome
 
-GNOMAD_SAMPLE_QC_PATH = 'gs://gnomad/sample_qc/mt'
-
-
 def filter_and_ld_prune(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
@@ -28,14 +25,14 @@ def filter_and_ld_prune(
     if not use_gnomad_in_ld_prune:
         mm_pruned = hl.ld_prune(mt.GT, r2=0.1)
         return mt.filter_rows(hl.is_defined(mm_pruned[mt.row_key]))
-    pruned_ht = hl.read_table(
+    qnomad_qc_ht = hl.read_table(
         valid_cached_reference_dataset_query_path(
             reference_genome,
             CachedReferenceDatasetQuery.GNOMAD_QC,
         ),
     )
     return mt.filter_rows(
-        hl.is_defined(pruned_ht[mt.row_key]),
+        hl.is_defined(qnomad_qc_ht[mt.row_key]),
     )
 
 
