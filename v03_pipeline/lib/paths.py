@@ -108,6 +108,22 @@ def project_table_path(
     )
 
 
+def relatedness_check_table_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.LOADING_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        'relatedness_check',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
+    )
+
+
 def remapped_and_subsetted_callset_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -151,7 +167,7 @@ def sex_check_table_path(
             reference_genome,
             dataset_type,
         ),
-        'sex_checks',
+        'sex_check',
         f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
     )
 

@@ -9,11 +9,7 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import (
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    HailTableTask,
-)
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 if TYPE_CHECKING:
     import luigi
@@ -29,9 +25,6 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                 self.dataset_type,
             ),
         )
-
-    def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
         rdcs = (

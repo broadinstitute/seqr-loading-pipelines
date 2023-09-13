@@ -12,6 +12,7 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
     metadata_for_run_path,
     project_table_path,
+    relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
     sex_check_table_path,
@@ -98,7 +99,17 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/sex_checks/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
+            '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/sex_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
+        )
+
+    def test_relatedness_check_table_path(self) -> None:
+        self.assertEqual(
+            relatedness_check_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                'gs://abc.efg/callset.vcf.gz',
+            ),
+            '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/relatedness_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
         )
 
     def test_metadata_for_run_path(self) -> None:
