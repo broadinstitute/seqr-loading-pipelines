@@ -180,6 +180,7 @@ class DatasetType(Enum):
             },
         }[self]
 
+    @property
     def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: [
