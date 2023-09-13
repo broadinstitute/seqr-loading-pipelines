@@ -48,7 +48,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 HailTableTask(
                     cached_reference_dataset_query_path(
-                        self.env,
                         self.reference_genome,
                         CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     ),
@@ -66,7 +65,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             validate_contigs(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 cached_reference_dataset_query_path(
-                    self.env,
                     self.reference_genome,
                     CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),
