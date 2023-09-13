@@ -20,6 +20,13 @@ def import_locus_intervals(
     return hl.import_locus_intervals(url, f'GRCh{genome_version}')
 
 
+def import_matrix_table(
+    url: str,
+    _: str,
+) -> hl.Table:
+    return hl.read_matrix_table(url).rows()
+
+
 def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
 
@@ -359,9 +366,11 @@ CONFIG = {
     },
     'gnomad_qc': {
         '37': {
+            'custom_import': import_matrix_table,
             'path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
+            'custom_import': import_matrix_table,
             'path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
         },
     },

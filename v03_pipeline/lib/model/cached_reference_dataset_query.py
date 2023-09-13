@@ -104,10 +104,18 @@ def gnomad_high_af_variants(
     return ht
 
 
+def gnomad_qc(
+    ht: hl.Table,
+    **_: Any,
+) -> hl.Table:
+    return ht.select()
+
+
 class CachedReferenceDatasetQuery(Enum):
     CLINVAR_PATH_VARIANTS = 'clinvar_path_variants'
     GNOMAD_CODING_AND_NONCODING_VARIANTS = 'gnomad_coding_and_noncoding_variants'
     GNOMAD_HIGH_AF_VARIANTS = 'gnomad_high_af_variants'
+    GNOMAD_QC = 'gnomad_qc'
 
     @property
     def dataset(self) -> str:
@@ -115,6 +123,7 @@ class CachedReferenceDatasetQuery(Enum):
             CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: 'clinvar',
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: 'gnomad_genomes',
+            CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',
         }[self]
 
     @property
@@ -123,4 +132,5 @@ class CachedReferenceDatasetQuery(Enum):
             CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: clinvar_path_variants,
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: gnomad_coding_and_noncoding_variants,
             CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: gnomad_high_af_variants,
+            CachedReferenceDatasetQuery.GNOMAD_QC: gnomad_qc,
         }[self]
