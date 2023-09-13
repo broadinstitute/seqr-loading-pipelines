@@ -6,7 +6,7 @@ import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
-from v03_pipeline.lib.paths import cached_reference_dataset_query_path
+from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
 
 if TYPE_CHECKING:
     from v03_pipeline.lib.model import ReferenceGenome
@@ -29,7 +29,7 @@ def filter_and_ld_prune(
         mm_pruned = hl.ld_prune(mt.GT, r2=0.1)
         return mt.filter_rows(hl.is_defined(mm_pruned[mt.row_key]))
     pruned_ht = hl.read_table(
-        cached_reference_dataset_query_path(
+        valid_cached_reference_dataset_query_path(
             reference_genome,
             CachedReferenceDatasetQuery.GNOMAD_QC,
         ),

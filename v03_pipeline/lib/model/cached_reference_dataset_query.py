@@ -15,7 +15,7 @@ from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
 )
 
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
@@ -116,6 +116,12 @@ class CachedReferenceDatasetQuery(Enum):
     GNOMAD_CODING_AND_NONCODING_VARIANTS = 'gnomad_coding_and_noncoding_variants'
     GNOMAD_HIGH_AF_VARIANTS = 'gnomad_high_af_variants'
     GNOMAD_QC = 'gnomad_qc'
+
+    @property
+    def access_control(self) -> AccessControl:
+        if self == CachedReferenceDatasetQuery.GNOMAD_QC:
+            return AccessControl.PRIVATE
+        return AccessControl.PUBLIC
 
     @property
     def dataset(self) -> str:

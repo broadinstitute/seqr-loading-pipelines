@@ -7,7 +7,7 @@ from hail_scripts.reference_data.config import CONFIG
 
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, ReferenceGenome
-from v03_pipeline.lib.paths import cached_reference_dataset_query_path
+from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
 
 
 def run(
@@ -21,7 +21,7 @@ def run(
         else hl.read_table(config['path'])
     )
     ht = query.query(ht, reference_genome=reference_genome)
-    destination_path = cached_reference_dataset_query_path(
+    destination_path = valid_cached_reference_dataset_query_path(
         reference_genome,
         query,
     )

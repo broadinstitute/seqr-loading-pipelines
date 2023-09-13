@@ -8,13 +8,13 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
     family_table_path,
     imported_callset_path,
     metadata_for_run_path,
     project_table_path,
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
+    valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
@@ -23,7 +23,7 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_cached_reference_dataset_query_path(self) -> None:
         self.assertEqual(
-            cached_reference_dataset_query_path(
+            valid_cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ),

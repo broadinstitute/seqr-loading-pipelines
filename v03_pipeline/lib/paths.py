@@ -28,27 +28,18 @@ def _v03_pipeline_prefix(
 
 
 def _v03_reference_data_prefix(
-    root: str,
+    access_control: AccessControl,
     reference_genome: ReferenceGenome,
 ) -> str:
+    root = (
+        Env.PRIVATE_REFERENCE_DATASETS
+        if access_control == AccessControl.PRIVATE
+        else Env.REFERENCE_DATASETS
+    )
     return os.path.join(
         root,
         PipelineVersion.V03.value,
         reference_genome.value,
-    )
-
-
-def cached_reference_dataset_query_path(
-    reference_genome: ReferenceGenome,
-    cached_reference_dataset_query: CachedReferenceDatasetQuery,
-) -> str:
-    return os.path.join(
-        _v03_reference_data_prefix(
-            Env.REFERENCE_DATASETS,
-            reference_genome,
-        ),
-        'cached_reference_dataset_queries',
-        f'{cached_reference_dataset_query.value}.ht',
     )
 
 
@@ -149,6 +140,25 @@ def sample_lookup_table_path(
     )
 
 
+def valid_cached_reference_dataset_query_path(
+    reference_genome: ReferenceGenome,
+    cached_reference_dataset_query: CachedReferenceDatasetQuery,
+) -> str | None:
+    if (
+        not Env.ACCESS_PRIVATE_DATASETS
+        and cached_reference_dataset_query.access_control == AccessControl.PRIVATE
+    ):
+        return None
+    return os.path.join(
+        _v03_reference_data_prefix(
+            cached_reference_dataset_query.access_control,
+            reference_genome,
+        ),
+        'cached_reference_dataset_queries',
+        f'{cached_reference_dataset_query.value}.ht',
+    )
+
+
 def valid_reference_dataset_collection_path(
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
@@ -158,14 +168,9 @@ def valid_reference_dataset_collection_path(
         and reference_dataset_collection.access_control == AccessControl.PRIVATE
     ):
         return None
-    root = (
-        Env.PRIVATE_REFERENCE_DATASETS
-        if reference_dataset_collection.access_control == AccessControl.PRIVATE
-        else Env.REFERENCE_DATASETS
-    )
     return os.path.join(
         _v03_reference_data_prefix(
-            root,
+            reference_dataset_collection.access_control,
             reference_genome,
         ),
         'reference_datasets',
