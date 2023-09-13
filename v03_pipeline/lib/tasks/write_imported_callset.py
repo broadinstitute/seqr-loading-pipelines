@@ -64,7 +64,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             *requirements,
             CallsetTask(self.callset_path),
         ]
-        return requirements
 
     def create_table(self) -> hl.MatrixTable:
         mt = import_callset(
