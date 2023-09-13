@@ -31,6 +31,10 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         description='Is this a fully joint-called callset.',
@@ -63,6 +67,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
             self.project_pedigree_path,
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
+            self.validate,
         )
 
     def initialize_table(self) -> hl.Table:

@@ -26,6 +26,10 @@ class WriteMetadataForRunTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     run_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
@@ -52,6 +56,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 project_pedigree_path,
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
+                self.validate,
             )
             for (project_guid, project_remap_path, project_pedigree_path) in zip(
                 self.project_guids,
