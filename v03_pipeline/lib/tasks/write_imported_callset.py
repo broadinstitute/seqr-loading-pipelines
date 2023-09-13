@@ -44,14 +44,12 @@ class WriteImportedCallsetTask(BaseWriteTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
+        requirements = []
         if self.filters_path:
-            return [
-                CallsetTask(self.callset_path),
+            requirements = [
+                *requirements,
                 CallsetTask(self.filters_path),
             ]
-        return [
-            CallsetTask(self.callset_path),
-        ]
         if self.validate:
             requirements = [
                 *requirements,
@@ -62,7 +60,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     ),
                 ),
             ]
-        return requirements
+        return [
+            *requirements,
+            CallsetTask(self.callset_path),
+        ]
 
     def create_table(self) -> hl.MatrixTable:
         mt = import_callset(
