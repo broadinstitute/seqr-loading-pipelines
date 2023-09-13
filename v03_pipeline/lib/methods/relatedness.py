@@ -11,6 +11,7 @@ from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
 if TYPE_CHECKING:
     from v03_pipeline.lib.model import ReferenceGenome
 
+
 def filter_and_ld_prune(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
