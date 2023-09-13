@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 
 import luigi
 
+from v03_pipeline.lib.methods.sex_check import call_sex
 from v03_pipeline.lib.paths import sex_check_table_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
+import hail as hl
 
-if TYPE_CHECKING:
-    import hail as hl
 
 
 class WriteSexCheckTableTask(BaseWriteTask):
