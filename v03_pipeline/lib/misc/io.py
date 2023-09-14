@@ -135,6 +135,8 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
         ht.Sex,
         family_guid=ht.Family_GUID,
         s=ht.Individual_ID,
+        maternal_s=ht.Maternal_ID,
+        paternal_s=ht.Paternal_ID,
     )
     return ht.key_by(ht.family_guid)
 

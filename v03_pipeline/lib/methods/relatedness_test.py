@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.methods.relatedness import annotate_families, call_relatedness
+from v03_pipeline.lib.methods.relatedness import call_relatedness
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.model import ReferenceGenome
 
@@ -21,8 +21,7 @@ class RelatednessTest(unittest.TestCase):
             af_field='AF',
             use_gnomad_in_ld_prune=False,
         )
-        pedigree_ht = import_pedigree(TEST_PEDIGREE)
-        ht = annotate_families(ht, pedigree_ht)
+        import_pedigree(TEST_PEDIGREE)
         self.assertCountEqual(
             ht.collect(),
             [
@@ -33,8 +32,6 @@ class RelatednessTest(unittest.TestCase):
                     ibd1=1.0,
                     ibd2=0.0,
                     pi_hat=0.5,
-                    fam_guid_i='family_1',
-                    fam_guid_j='family_2',
                 ),
             ],
         )
