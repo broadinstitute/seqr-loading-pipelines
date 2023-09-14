@@ -7,6 +7,7 @@ from v03_pipeline.lib.methods.sex_check import annotate_discrepant_sex
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import families_to_include, samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
@@ -47,7 +48,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        return [
+        requirements = [
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
@@ -59,20 +60,25 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 None,
                 self.validate,
             ),
-            WriteSexCheckTableTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.callset_path,
-            ),
-            WriteRelatednessCheckTableTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.callset_path,
-            ),
             RawFileTask(self.project_pedigree_path),
         ]
+        if Env.RUN_SEX_AND_RELATEDNESS:
+            requirements = [
+                *requirements,
+                WriteSexCheckTableTask(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.callset_path,
+                ),
+                WriteRelatednessCheckTableTask(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.callset_path,
+                ),
+            ]
+        return requirements
 
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)

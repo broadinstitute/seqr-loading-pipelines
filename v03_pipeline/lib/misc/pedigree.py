@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -27,29 +26,3 @@ def samples_to_include(
     ht = pedigree_ht.join(families_to_include_ht)
     ht = ht.key_by(ht.s)
     return ht.select()
-
-
-def expected_relations(
-    pedigree_ht: hl.Table,
-    families_to_include_ht: hl.Table,
-) -> dict[str, set[tuple[str, str]]]:
-    ht = pedigree_ht.join(families_to_include_ht)
-    relations = {}
-    for family_guid, rows_grouper in itertools.groupby(
-        ht.collect(),
-        lambda x: x.family_guid,
-    ):
-        rows = list(rows_grouper)
-        relations[family_guid] = list(
-            itertools.combinations(sorted([row.s for row in rows]), 2),
-        )
-
-        # Find and remove parents, since Mother and Father should not be related:
-        parents = [
-            (row.maternal_s, row.paternal_s)
-            for row in rows
-            if row.maternal_s and row.paternal_s
-        ]
-        if parents:
-            relations[family_guid].remove((min(parents[0]), max(parents[0])))
-    return relations
