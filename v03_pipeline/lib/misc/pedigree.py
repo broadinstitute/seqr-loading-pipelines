@@ -36,7 +36,8 @@ def expected_relations(
     ht = pedigree_ht.join(families_to_include_ht)
     relations = {}
     for family_guid, rows_grouper in itertools.groupby(
-        ht.collect(), lambda x: x.family_guid,
+        ht.collect(),
+        lambda x: x.family_guid,
     ):
         rows = list(rows_grouper)
         relations[family_guid] = list(
