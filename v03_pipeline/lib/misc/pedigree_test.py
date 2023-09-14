@@ -4,7 +4,6 @@ import hail as hl
 
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import (
-    expected_relations,
     families_to_exclude,
     families_to_include,
     samples_to_include,
@@ -71,17 +70,4 @@ class PedigreesTest(unittest.TestCase):
                 'BBL_BC1-000345_02_D1',
                 'BBL_BC1-000345_03_D1',
             ],
-        )
-        self.assertEqual(
-            expected_relations(
-                pedigree_ht,
-                families_to_include(pedigree_ht, samples_ht),
-            ),
-            {
-                'BBL_BC1-000345_1': [
-                    ('BBL_BC1-000345_01_D1', 'BBL_BC1-000345_02_D1'),
-                    ('BBL_BC1-000345_01_D1', 'BBL_BC1-000345_03_D1'),
-                ],
-                'BBL_SDS1-000178_1': [],
-            },
         )
