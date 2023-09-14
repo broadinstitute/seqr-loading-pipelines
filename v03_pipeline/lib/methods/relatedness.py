@@ -37,19 +37,6 @@ def filter_and_ld_prune(
     )
 
 
-def annotate_families(
-    ht: hl.Table,
-    pedigree_ht: hl.Table,
-) -> hl.Table:
-    sample_id_to_family_guid = hl.dict(
-        {x.s: x.family_guid for x in pedigree_ht.collect()},
-    )
-    return ht.annotate(
-        fam_guid_i=sample_id_to_family_guid[ht.i],
-        fam_guid_j=sample_id_to_family_guid[ht.j],
-    )
-
-
 def call_relatedness(
     mt: hl.MatrixTable,  # NB: we've been remapped and subsetted upstream
     reference_genome: ReferenceGenome,
