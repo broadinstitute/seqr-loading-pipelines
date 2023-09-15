@@ -17,6 +17,7 @@ class DirectRelation(IntEnum):
     PATERNAL_GRANDMOTHER = 4
     PATERNAL_GRANDFATHER = 5
 
+    @property
     def coefficient(self):
         if self <= DirectRelation.FATHER:
             return 0.5
@@ -28,38 +29,46 @@ class CollateralRelation(IntEnum):
     HALF_SIBLING = 1
     AUNT_UNCLE = 2
 
+    @property
+    def coefficient(self):
+        return {
+            CollateralRelation.SIBLING: 0.5,
+            CollateralRelation.HALF_SIBLING: 0.25,
+            CollateralRelation.AUNT_UNCLE: 0.25,
+        }[self]
+
 
 @dataclass
 class Family:
     family_guid: str
-    collateral_lineage: dict[str, list[list[str]]]
+    collateral_lineage: dict[str, list[list[[str]]]]
     direct_lineage: dict[str, list[str]]
 
     @staticmethod
     def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, list[str]]:
         direct_lineage = {}
         for row in rows:
-            direct_lineage[row.s] = [len(DirectRelation) * None]
+            direct_lineage[row.s] = [None] * len(DirectRelation)
             direct_lineage[row.s][DirectRelation.MOTHER] = row.maternal_s
             direct_lineage[row.s][DirectRelation.FATHER] = row.paternal_s
 
         for row in rows:
-            mother = direct_lineage[row.s][DirectRelation.MOTHER]
-            if mother:
+            maternal_s = direct_lineage[row.s][DirectRelation.MOTHER]
+            if maternal_s:
                 direct_lineage[row.s][
                     DirectRelation.MATERNAL_GRANDMOTHER
-                ] = direct_lineage[mother.s][DirectRelation.MOTHER]
+                ] = direct_lineage[maternal_s][DirectRelation.MOTHER]
                 direct_lineage[row.s][
                     DirectRelation.MATERNAL_GRANDFATHER
-                ] = direct_lineage[mother.s][DirectRelation.FATHER]
-            father = direct_lineage[row.s][DirectRelation.FATHER]
-            if father:
+                ] = direct_lineage[maternal_s][DirectRelation.FATHER]
+            paternal_s = direct_lineage[row.s][DirectRelation.FATHER]
+            if paternal_s:
                 direct_lineage[row.s][
                     DirectRelation.PATERNAL_GRANDMOTHER
-                ] = direct_lineage[father.s][DirectRelation.MOTHER]
+                ] = direct_lineage[paternal_s][DirectRelation.MOTHER]
                 direct_lineage[row.s][
                     DirectRelation.PATERNAL_GRANDFATHER
-                ] = direct_lineage[father.s][DirectRelation.FATHER]
+                ] = direct_lineage[paternal_s][DirectRelation.FATHER]
         return direct_lineage
 
     @staticmethod
@@ -68,6 +77,7 @@ class Family:
     ) -> dict[str, list[list[str]]]:
         collateral_lineage = {}
         for sample_i, sample_j in itertools.combinations(direct_lineage.keys(), 2):
+            collateral_lineage[sample_i] = [[]] * len(CollateralRelation)
             # If both parents are not None and the same, samples are siblings.
             if (
                 direct_lineage[sample_i][DirectRelation.MOTHER]
@@ -81,7 +91,7 @@ class Family:
                     == direct_lineage[sample_j][DirectRelation.FATHER]
                 )
             ):
-                collateral_lineage[sample_i][CollateralRelation.SIBLING] = sample_j
+                collateral_lineage[sample_i][CollateralRelation.SIBLING].append(sample_j)
 
             # If only a single parent is the same, samples are half siblings
             elif (
@@ -91,9 +101,10 @@ class Family:
                 direct_lineage[sample_i][DirectRelation.FATHER]
                 == direct_lineage[sample_j][DirectRelation.FATHER]
             ):
-                collateral_lineage[sample_i][CollateralRelation.HALF_SIBLING] = sample_j
+                collateral_lineage[sample_i][CollateralRelation.HALF_SIBLING].append(sample_j)
 
-            # If either set of one sample's grandparents is equal to
+            # If either set of one sample's grandparents is equal the other's parents,
+            # they're aunt/uncle
             if (
                 direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDMOTHER]
                 and direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDFATHER]
@@ -117,7 +128,7 @@ class Family:
                     == direct_lineage[sample_j][DirectRelation.FATHER]
                 )
             ):
-                collateral_lineage[sample_i][CollateralRelation.AUNT_UNCLE] = sample_j
+                collateral_lineage[sample_i][CollateralRelation.AUNT_UNCLE].append(sample_j)
         return collateral_lineage
 
     @classmethod
