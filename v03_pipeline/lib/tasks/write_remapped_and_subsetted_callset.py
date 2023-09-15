@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.methods.sex_check import annotate_discrepant_sex
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
-from v03_pipeline.lib.misc.pedigree import families_to_include, samples_to_include
+from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
@@ -94,14 +94,18 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             )
 
         pedigree_ht = import_pedigree(self.project_pedigree_path)
-        families_to_include_ht = families_to_include(pedigree_ht, callset_mt.cols())
-        sample_subset_ht = samples_to_include(pedigree_ht, families_to_include_ht)
+        sex_check_ht = annotate_discrepant_sex(sex_check_ht, pedigree_ht)
+
+        # 1) Exclude all samples from any family in the pedigree where at least one
+        # family member is missing from the callset.
+        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
         callset_mt = subset_samples(
             callset_mt,
             sample_subset_ht,
             self.ignore_missing_samples_when_subsetting,
         )
-        sex_check_ht = annotate_discrepant_sex(sex_check_ht, pedigree_ht)
+
+        # 2) Exclude samples with given sex discrepant from given sex.
         discrepant_sex_samples = (
             sex_check_ht.filter(sex_check_ht.discrepant_sex).select().collect()
         )
@@ -114,6 +118,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 sex_check_ht.filter(~sex_check_ht.discrepant_sex).select(),
                 self.ignore_missing_samples_when_subsetting,
             )
+
         return callset_mt.annotate_globals(
             family_guids=sorted(families_to_include_ht.family_guid.collect()),
         )
