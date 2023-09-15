@@ -1,145 +1,134 @@
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass
-from enum import IntEnum
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import hail as hl
 
 
-class DirectRelation(IntEnum):
-    MOTHER = 0
-    FATHER = 1
-    MATERNAL_GRANDMOTHER = 2
-    MATERNAL_GRANDFATHER = 3
-    PATERNAL_GRANDMOTHER = 4
-    PATERNAL_GRANDFATHER = 5
-
-    @property
-    def coefficient(self):
-        if self <= DirectRelation.FATHER:
-            return 0.5
-        return 0.25
-
-
-class CollateralRelation(IntEnum):
-    SIBLING = 0
-    HALF_SIBLING = 1
-    AUNT_UNCLE = 2
-
-    @property
-    def coefficient(self):
-        return {
-            CollateralRelation.SIBLING: 0.5,
-            CollateralRelation.HALF_SIBLING: 0.25,
-            CollateralRelation.AUNT_UNCLE: 0.25,
-        }[self]
+@dataclass
+class Lineage:
+    mother: str = None
+    father: str = None
+    maternal_grandmother: str = None
+    maternal_grandfather: str = None
+    paternal_grandmother: str = None
+    paternal_grandfather: str = None
+    siblings: list[str] = field(default_factory=list)
+    half_siblings: list[str] = field(default_factory=list)
+    aunt_uncles: list[str] = field(default_factory=list)
 
 
 @dataclass
 class Family:
     family_guid: str
-    collateral_lineage: dict[str, list[list[[str]]]]
-    direct_lineage: dict[str, list[str]]
+    sample_lineage: dict[str, Lineage]
 
     @staticmethod
-    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, list[str]]:
+    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Lineage]:
         direct_lineage = {}
         for row in rows:
-            direct_lineage[row.s] = [None] * len(DirectRelation)
-            direct_lineage[row.s][DirectRelation.MOTHER] = row.maternal_s
-            direct_lineage[row.s][DirectRelation.FATHER] = row.paternal_s
+            direct_lineage[row.s] = Lineage(
+                mother=row.maternal_s,
+                father=row.paternal_s,
+            )
 
         for row in rows:
-            maternal_s = direct_lineage[row.s][DirectRelation.MOTHER]
-            if maternal_s:
-                direct_lineage[row.s][
-                    DirectRelation.MATERNAL_GRANDMOTHER
-                ] = direct_lineage[maternal_s][DirectRelation.MOTHER]
-                direct_lineage[row.s][
-                    DirectRelation.MATERNAL_GRANDFATHER
-                ] = direct_lineage[maternal_s][DirectRelation.FATHER]
-            paternal_s = direct_lineage[row.s][DirectRelation.FATHER]
-            if paternal_s:
-                direct_lineage[row.s][
-                    DirectRelation.PATERNAL_GRANDMOTHER
-                ] = direct_lineage[paternal_s][DirectRelation.MOTHER]
-                direct_lineage[row.s][
-                    DirectRelation.PATERNAL_GRANDFATHER
-                ] = direct_lineage[paternal_s][DirectRelation.FATHER]
+            # Maternal Parents
+            maternal_s = direct_lineage[row.s].mother
+            if maternal_s and direct_lineage[maternal_s].mother:
+                direct_lineage[row.s].maternal_grandmother = direct_lineage[
+                    maternal_s
+                ].mother
+            if maternal_s and direct_lineage[maternal_s].father:
+                direct_lineage[row.s].maternal_grandfather = direct_lineage[
+                    maternal_s
+                ].father
+
+            # Paternal Parents
+            paternal_s = direct_lineage[row.s].father
+            if paternal_s and direct_lineage[paternal_s].mother:
+                direct_lineage[row.s].paternal_grandmother = direct_lineage[
+                    paternal_s
+                ].mother
+            if paternal_s and direct_lineage[paternal_s].father:
+                direct_lineage[row.s].paternal_grandfather = direct_lineage[
+                    paternal_s
+                ].father
         return direct_lineage
 
     @staticmethod
     def parse_collateral_lineage(
-        direct_lineage: dict[str, list[str]],
-    ) -> dict[str, list[list[str]]]:
-        collateral_lineage = {}
-        for sample_i, sample_j in itertools.combinations(direct_lineage.keys(), 2):
-            collateral_lineage[sample_i] = [[]] * len(CollateralRelation)
+        sample_lineage: dict[str, Lineage],
+    ) -> dict[str, Lineage]:
+        for sample_i, sample_j in itertools.combinations(sample_lineage.keys(), 2):
+            # If other sample is mother or father, continue
+            if (
+                sample_j == sample_lineage[sample_i].mother
+                or sample_j == sample_lineage[sample_i].father
+            ):
+                continue
+
             # If both parents are not None and the same, samples are siblings.
             if (
-                direct_lineage[sample_i][DirectRelation.MOTHER]
-                and direct_lineage[sample_i][DirectRelation.FATHER]
-                and (
-                    direct_lineage[sample_i][DirectRelation.MOTHER]
-                    == direct_lineage[sample_j][DirectRelation.MOTHER]
-                )
-                and (
-                    direct_lineage[sample_i][DirectRelation.FATHER]
-                    == direct_lineage[sample_j][DirectRelation.FATHER]
-                )
+                sample_lineage[sample_i].mother
+                and sample_lineage[sample_i].father
+                and (sample_lineage[sample_i].mother == sample_lineage[sample_j].mother)
+                and (sample_lineage[sample_i].father == sample_lineage[sample_j].father)
             ):
-                collateral_lineage[sample_i][CollateralRelation.SIBLING].append(sample_j)
+                sample_lineage[sample_i].siblings.append(
+                    sample_j,
+                )
 
-            # If only a single parent is the same, samples are half siblings
+            # If only a single parent non-null and the same, samples are half siblings
             elif (
-                direct_lineage[sample_i][DirectRelation.MOTHER]
-                == direct_lineage[sample_j][DirectRelation.MOTHER]
+                sample_lineage[sample_i].mother
+                and sample_lineage[sample_i].mother == sample_lineage[sample_j].mother
             ) or (
-                direct_lineage[sample_i][DirectRelation.FATHER]
-                == direct_lineage[sample_j][DirectRelation.FATHER]
+                sample_lineage[sample_i].father
+                and sample_lineage[sample_i].father == sample_lineage[sample_j].father
             ):
-                collateral_lineage[sample_i][CollateralRelation.HALF_SIBLING].append(sample_j)
+                sample_lineage[sample_i].half_siblings.append(
+                    sample_j,
+                )
 
             # If either set of one sample's grandparents is equal the other's parents,
             # they're aunt/uncle
             if (
-                direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDMOTHER]
-                and direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDFATHER]
+                sample_lineage[sample_i].maternal_grandmother
+                and sample_lineage[sample_i].maternal_grandfather
                 and (
-                    direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDMOTHER]
-                    == direct_lineage[sample_j][DirectRelation.MOTHER]
+                    sample_lineage[sample_i].maternal_grandmother
+                    == sample_lineage[sample_j].mother
                 )
                 and (
-                    direct_lineage[sample_i][DirectRelation.MATERNAL_GRANDFATHER]
-                    == direct_lineage[sample_j][DirectRelation.FATHER]
+                    sample_lineage[sample_i].maternal_grandfather
+                    == sample_lineage[sample_j].father
                 )
             ) or (
-                direct_lineage[sample_i][DirectRelation.PATERNAL_GRANDMOTHER]
-                and direct_lineage[sample_i][DirectRelation.PATERNAL_GRANDFATHER]
+                sample_lineage[sample_i].paternal_grandmother
+                and sample_lineage[sample_i].paternal_grandfather
                 and (
-                    direct_lineage[sample_i][DirectRelation.PATERNAL_GRANDMOTHER]
-                    == direct_lineage[sample_j][DirectRelation.MOTHER]
+                    sample_lineage[sample_i].paternal_grandmother
+                    == sample_lineage[sample_j].mother
                 )
                 and (
-                    direct_lineage[sample_i][DirectRelation.PATERNAL_GRANDFATHER]
-                    == direct_lineage[sample_j][DirectRelation.FATHER]
+                    sample_lineage[sample_i].paternal_grandfather
+                    == sample_lineage[sample_j].father
                 )
             ):
-                collateral_lineage[sample_i][CollateralRelation.AUNT_UNCLE].append(sample_j)
-        return collateral_lineage
+                sample_lineage[sample_i].aunt_uncles.append(
+                    sample_j,
+                )
+        return sample_lineage
 
     @classmethod
     def parse(cls, family_guid: str, rows: list[hl.Struct]) -> Family:
-        direct_lineage = cls.parse_direct_lineage(rows)
-        collateral_lineage = cls.parse_collateral_lineage(direct_lineage)
-        return cls(
-            family_guid=family_guid,
-            collateral_lineage=collateral_lineage,
-            direct_lineage=direct_lineage,
-        )
+        sample_lineage = cls.parse_direct_lineage(rows)
+        sample_lineage = cls.parse_collateral_lineage(sample_lineage)
+        return cls(family_guid=family_guid, sample_lineage=sample_lineage)
 
 
 def parse_pedigree_ht(
