@@ -159,6 +159,10 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def check_sex_and_relatedness(self) -> bool:
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def veppable(self) -> bool:
         return self == DatasetType.SNV_INDEL
 
