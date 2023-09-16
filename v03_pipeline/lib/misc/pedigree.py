@@ -91,8 +91,9 @@ class Family:
                 sample_lineage[sample_i].siblings.append(
                     sample_j,
                 )
+                continue
 
-            # If only a single parent non-null and the same, samples are half siblings
+            # If only a single parent is non-null and the same, samples are half siblings
             elif (
                 sample_lineage[sample_i].mother
                 and sample_lineage[sample_i].mother == sample_lineage[sample_j].mother
@@ -103,6 +104,7 @@ class Family:
                 sample_lineage[sample_i].half_siblings.append(
                     sample_j,
                 )
+                continue
 
             # If either set of one sample's grandparents is equal the other's parents,
             # they're aunt/uncle
@@ -153,6 +155,6 @@ def parse_pedigree_ht_to_families(
     for family_guid, rows in itertools.groupby(
         pedigree_ht.collect(),
         lambda x: x.family_guid,
-    ):
-        families.append(Family.parse(family_guid, list(rows)))
+    ):  
+        families.append(Family.parse(family_guid, sorted(rows, key=lambda x: x.s)))
     return families

@@ -36,7 +36,10 @@ class RelatednessTest(unittest.TestCase):
             ],
         )
         self.assertEqual(
-            build_relatedness_check_lookup(ht, hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'})),
+            build_relatedness_check_lookup(
+                ht,
+                hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'}),
+            ),
             {
                 ('remapped_id', 'ROS_007_19Y05939_D1'): hl.Struct(
                     ibd0=0.0,
