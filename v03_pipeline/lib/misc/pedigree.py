@@ -94,7 +94,7 @@ class Family:
                 continue
 
             # If only a single parent is non-null and the same, samples are half siblings
-            elif (
+            if (
                 sample_lineage[sample_i].mother
                 and sample_lineage[sample_i].mother == sample_lineage[sample_j].mother
             ) or (
@@ -155,6 +155,6 @@ def parse_pedigree_ht_to_families(
     for family_guid, rows in itertools.groupby(
         pedigree_ht.collect(),
         lambda x: x.family_guid,
-    ):  
+    ):
         families.append(Family.parse(family_guid, sorted(rows, key=lambda x: x.s)))
     return families

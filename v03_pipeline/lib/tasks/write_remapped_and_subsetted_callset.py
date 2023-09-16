@@ -102,7 +102,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                     hl.read_table(self.input()[1].path),
                     remap_lookup,
                 )
-                relatedness_check_lookup = build_relatedness_check_lookup(
+                build_relatedness_check_lookup(
                     hl.read_table(self.input()[2].path),
                     remap_lookup,
                 )
@@ -110,7 +110,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families = parse_pedigree_ht_to_families(pedigree_ht)
         families_failed_missing_samples = set()
         families_failed_sex_check = set()
-        families_failed_relatedness_check = set()
         for family in families:
             if len(family.sample_lineage.keys() - callset_samples) > 0:
                 families_failed_missing_samples.add(family)
