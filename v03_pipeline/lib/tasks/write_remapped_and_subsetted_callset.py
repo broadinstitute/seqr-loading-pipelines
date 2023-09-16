@@ -8,7 +8,6 @@ from v03_pipeline.lib.methods.sex_check import build_sex_check_lookup
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
@@ -49,7 +48,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = [
+        return [
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
@@ -61,28 +60,25 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 None,
                 self.validate,
             ),
+            WriteSexCheckTableTask(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                self.callset_path,
+            ),
+            WriteRelatednessCheckTableTask(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                self.callset_path,
+            ),
             RawFileTask(self.project_pedigree_path),
         ]
-        if Env.RUN_SEX_AND_RELATEDNESS:
-            requirements = [
-                *requirements,
-                WriteSexCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    self.callset_path,
-                ),
-                WriteRelatednessCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    self.callset_path,
-                ),
-            ]
-        return requirements
 
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
+        sex_check_ht = hl.read_table(self.input()[1].path)
+        relatedness_check_ht = hl.read_table(self.input()[2].path)
         callset_samples = set(callset_mt.cols().s.collect())
         pedigree_ht = import_pedigree(self.project_pedigree_path)
 
@@ -94,20 +90,19 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 project_remap_ht,
                 self.ignore_missing_samples_when_remapping,
             )
-            if Env.RUN_SEX_AND_RELATEDNESS:
-                remap_lookup = hl.dict(
-                    {r.s: r.seqr_id for r in project_remap_ht.collect()},
-                )
-                sex_check_lookup = build_sex_check_lookup(
-                    hl.read_table(self.input()[1].path),
-                    remap_lookup,
-                )
-                build_relatedness_check_lookup(
-                    hl.read_table(self.input()[2].path),
-                    remap_lookup,
-                )
+            remap_lookup = hl.dict(
+                {r.s: r.seqr_id for r in project_remap_ht.collect()},
+            )
+            sex_check_lookup = build_sex_check_lookup(
+                sex_check_ht,
+                remap_lookup,
+            )
+            build_relatedness_check_lookup(
+                relatedness_check_ht,
+                remap_lookup,
+            )
 
-        families = parse_pedigree_ht_to_families(pedigree_ht)
+        families = set(parse_pedigree_ht_to_families(pedigree_ht))
         families_failed_missing_samples = set()
         families_failed_sex_check = set()
         for family in families:
@@ -115,12 +110,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 families_failed_missing_samples.add(family)
                 continue
 
-            if Env.RUN_SEX_AND_RELATEDNESS:
-                for sample_id in family.sample_sex:
-                    if family.sample_sex[sample_id] != sex_check_lookup[sample_id]:
-                        families_failed_sex_check.add(sample_id)
-                        continue
-
+            for sample_id in family.sample_sex:
+                if family.sample_sex[sample_id] != sex_check_lookup[sample_id]:
+                    families_failed_sex_check.add(family)
+                    continue
         callset_mt = subset_samples(
             callset_mt,
             callset_samples_ht,
