@@ -57,3 +57,15 @@ def call_relatedness(
         ibd2=kin_ht.ibd.Z2,
         pi_hat=kin_ht.ibd.PI_HAT,
     )
+
+
+def build_relatedness_check_lookup(
+    relatedness_check_ht: hl.Table,
+    remap_lookup: hl.dict,
+) -> dict[tuple[str, str], hl.Struct]:
+    # Build relatedness check lookup
+    relatedness_check_ht = relatedness_check_ht.key_by(
+        i=remap_lookup.get(relatedness_check_ht.i, relatedness_check_ht.i),
+        j=remap_lookup.get(relatedness_check_ht.j, relatedness_check_ht.j),
+    )
+    return {(r.i, r.j): r.drop('i', 'j') for r in relatedness_check_ht.collect()}

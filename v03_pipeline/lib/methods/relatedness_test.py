@@ -2,7 +2,10 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.methods.relatedness import call_relatedness
+from v03_pipeline.lib.methods.relatedness import (
+    build_relatedness_check_lookup,
+    call_relatedness,
+)
 from v03_pipeline.lib.model import ReferenceGenome
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
@@ -31,4 +34,15 @@ class RelatednessTest(unittest.TestCase):
                     pi_hat=0.5,
                 ),
             ],
+        )
+        self.assertEqual(
+            build_relatedness_check_lookup(ht, hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'})),
+            {
+                ('remapped_id', 'ROS_007_19Y05939_D1'): hl.Struct(
+                    ibd0=0.0,
+                    ibd1=1.0,
+                    ibd2=0.0,
+                    pi_hat=0.5,
+                ),
+            },
         )

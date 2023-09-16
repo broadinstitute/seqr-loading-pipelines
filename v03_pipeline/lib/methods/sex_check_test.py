@@ -3,8 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import call_sex
-from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.methods.sex_check import Ploidy, build_sex_check_lookup, call_sex
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
@@ -16,7 +15,6 @@ class SexCheckTest(unittest.TestCase):
     def test_call_sex(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht = call_sex(mt)
-        import_pedigree(TEST_PEDIGREE)
         self.assertCountEqual(
             ht.collect(),
             [
@@ -75,6 +73,17 @@ class SexCheckTest(unittest.TestCase):
                     sex='M',
                 ),
             ],
+        )
+        self.assertEqual(
+            build_sex_check_lookup(ht, hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'})),
+            {
+                'remapped_id': Ploidy.MALE,
+                'ROS_006_18Y03227_D1': Ploidy.MALE,
+                'ROS_006_18Y03228_D1': Ploidy.MALE,
+                'ROS_007_19Y05919_D1': Ploidy.MALE,
+                'ROS_007_19Y05939_D1': Ploidy.FEMALE,
+                'ROS_007_19Y05987_D1': Ploidy.MALE,
+            },
         )
 
     def test_call_sex_ambiguous(self):
