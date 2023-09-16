@@ -2,14 +2,21 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.methods.sex_check import Ploidy
 from v03_pipeline.lib.misc.io import import_pedigree
-from v03_pipeline.lib.misc.pedigree import Family, Lineage, parse_pedigree_ht
+from v03_pipeline.lib.misc.pedigree import (
+    Family,
+    Lineage,
+    parse_pedigree_ht_to_families,
+)
 
 TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
 TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
 
 
 class PedigreesTest(unittest.TestCase):
+    maxDiff = None
+
     def test_empty_pedigree(self) -> None:
         with self.assertRaises(ValueError):
             _ = import_pedigree(TEST_PEDIGREE_1)
@@ -157,7 +164,7 @@ class PedigreesTest(unittest.TestCase):
     def test_parse_project(self) -> None:
         pedigree_ht = import_pedigree(TEST_PEDIGREE_2)
         self.assertListEqual(
-            parse_pedigree_ht(pedigree_ht),
+            parse_pedigree_ht_to_families(pedigree_ht),
             [
                 Family(
                     family_guid='BBL_BC1-000345_1',
@@ -195,6 +202,11 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
+                    },
+                    sample_sex={
+                        'BBL_BC1-000345_01_D1': Ploidy.FEMALE,
+                        'BBL_BC1-000345_02_D1': Ploidy.MALE,
+                        'BBL_BC1-000345_03_D1': Ploidy.FEMALE,
                     },
                 ),
                 Family(
@@ -271,6 +283,14 @@ class PedigreesTest(unittest.TestCase):
                             aunt_uncles=[],
                         ),
                     },
+                    sample_sex={
+                        'BBL_HT-007-5195_01_D1': Ploidy.FEMALE,
+                        'BBL_HT-007-5195_02_D1': Ploidy.MALE,
+                        'BBL_HT-007-5195_03_D1': Ploidy.FEMALE,
+                        'BBL_HT-007-5195_04_D1': Ploidy.MALE,
+                        'BBL_HT-007-5195_05_D1': Ploidy.FEMALE,
+                        'BBL_HT-007-5195_06_D1': Ploidy.MALE,
+                    },
                 ),
                 Family(
                     family_guid='BBL_SDS1-000178_1',
@@ -286,6 +306,9 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
+                    },
+                    sample_sex={
+                        'BBL_SDS1-000178_01_D1': Ploidy.FEMALE,
                     },
                 ),
             ],

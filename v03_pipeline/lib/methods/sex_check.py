@@ -25,26 +25,8 @@ XY_FSTAT_THRESHOLD: float = (
 
 class Ploidy(Enum):
     AMBIGUOUS = 'ambiguous_sex'
-    FEMALE = 'XX'
-    MALE = 'XY'
-
-
-def annotate_discrepant_sex(
-    ht: hl.Table,
-    pedigree_ht: hl.Table,
-) -> hl.Table:
-    """
-    Adds annotations to the imputed sex ht derived from the pedigree
-    """
-    ped_ht = pedigree_ht.key_by(s=pedigree_ht.s).select('sex')
-    ped_ht = ped_ht.transmute(
-        given_sex=hl.case()
-        .when(ped_ht.sex == 'M', Ploidy.MALE.value)
-        .when(ped_ht.sex == 'F', Ploidy.FEMALE.value)
-        .default(ped_ht.sex),
-    )
-    ht = ht.join(ped_ht, how='outer')
-    return ht.annotate(discrepant_sex=ht.sex != ht.given_sex)
+    FEMALE = 'F'
+    MALE = 'M'
 
 
 def call_sex(mt: hl.MatrixTable) -> hl.Table:

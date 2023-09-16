@@ -4,6 +4,8 @@ import itertools
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
+from v03_pipeline.lib.methods.sex_check import Ploidy
+
 if TYPE_CHECKING:
     import hail as hl
 
@@ -25,6 +27,14 @@ class Lineage:
 class Family:
     family_guid: str
     sample_lineage: dict[str, Lineage]
+    sample_sex: dict[str, Ploidy]
+
+    @staticmethod
+    def parse_sample_sex(rows: list[hl.Struct]) -> dict[str, Ploidy]:
+        sample_sex = {}
+        for row in rows:
+            sample_sex[row.s] = Ploidy(row.sex)
+        return sample_sex
 
     @staticmethod
     def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Lineage]:
@@ -128,10 +138,15 @@ class Family:
     def parse(cls, family_guid: str, rows: list[hl.Struct]) -> Family:
         sample_lineage = cls.parse_direct_lineage(rows)
         sample_lineage = cls.parse_collateral_lineage(sample_lineage)
-        return cls(family_guid=family_guid, sample_lineage=sample_lineage)
+        sample_sex = cls.parse_sample_sex(rows)
+        return cls(
+            family_guid=family_guid,
+            sample_lineage=sample_lineage,
+            sample_sex=sample_sex,
+        )
 
 
-def parse_pedigree_ht(
+def parse_pedigree_ht_to_families(
     pedigree_ht: hl.Table,
 ) -> list[Family]:
     families = []

@@ -3,9 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.methods.sex_check import annotate_discrepant_sex
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
-from v03_pipeline.lib.misc.pedigree import samples_to_include
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
@@ -82,7 +80,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
-        sex_check_ht = hl.read_table(self.input()[1].path)
+        callset_samples = set(callset_mt.cols().s.collect())
+        pedigree_ht = import_pedigree(self.project_pedigree_path)
 
         # Remap, but only if the remap file is present!
         if does_file_exist(self.project_remap_path):
@@ -92,33 +91,32 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 project_remap_ht,
                 self.ignore_missing_samples_when_remapping,
             )
+            if Env.RUN_SEX_AND_RELATEDNESS:
+                remap_lookup = hl.dict(
+                    {r.s: r.seqr_id for r in project_remap_ht.collect()},
+                )
+                sex_check_ht = hl.read_table(self.input()[1].path)
+                sex_check_ht = sex_check_ht.transmute(
+                    s=remap_lookup.get(sex_check_ht.s, sex_check_ht.s),
+                )
+                relatedness_check_ht = hl.read_table(self.input()[2].path)
+                relatedness_check_ht = relatedness_check_ht.transmute(
+                    i=remap_lookup.get(relatedness_check_ht.i, relatedness_check_ht.i),
+                    j=remap_lookup.get(relatedness_check_ht.j, relatedness_check_ht.j),
+                )
 
-        pedigree_ht = import_pedigree(self.project_pedigree_path)
-        sex_check_ht = annotate_discrepant_sex(sex_check_ht, pedigree_ht)
+        families = parse_pedigree_ht_to_families(pedigree_ht)
+        families_failed_missing_samples = set()
+        for family in families:
+            if len(family.sample_lineage.keys() - callset_samples) > 0:
+                families_failed_missing_samples.add(family)
 
-        # 1) Exclude all samples from any family in the pedigree where at least one
-        # family member is missing from the callset.
-        sample_subset_ht = samples_to_include(pedigree_ht, callset_mt.cols())
+            if Env.RUN_SEX_AND_RELATEDNESS:
+                pass
+
         callset_mt = subset_samples(
             callset_mt,
-            sample_subset_ht,
+            callset_samples_ht,
             self.ignore_missing_samples_when_subsetting,
         )
-
-        # 2) Exclude samples with given sex discrepant from given sex.
-        discrepant_sex_samples = (
-            sex_check_ht.filter(sex_check_ht.discrepant_sex).select().collect()
-        )
-        if len(discrepant_sex_samples) != 0:
-            print(
-                f'Samples with discrepant sex: {[sample.s for sample in discrepant_sex_samples]}',
-            )
-            callset_mt = subset_samples(
-                callset_mt,
-                sex_check_ht.filter(~sex_check_ht.discrepant_sex).select(),
-                self.ignore_missing_samples_when_subsetting,
-            )
-
-        return callset_mt.annotate_globals(
-            family_guids=sorted(families_to_include_ht.family_guid.collect()),
-        )
+        return callset_mt
