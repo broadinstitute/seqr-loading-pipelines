@@ -76,10 +76,10 @@ class WriteFamilyTableTask(BaseWriteTask):
             callset_mt,
             hl.Table.parallelize(
                 [
-                    {'s': s}
+                    {'s': sample_id}
                     for family in families
                     if family.family_guid == self.family_guid
-                    for s in family.sample_sex
+                    for sample_id in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',
