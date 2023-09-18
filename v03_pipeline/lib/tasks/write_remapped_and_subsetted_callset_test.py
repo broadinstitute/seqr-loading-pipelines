@@ -10,9 +10,17 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_checks/test_sex_check_1.ht'
 
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
+    def setUp(self) -> None:
+        super().setUp()
+        shutil.copytree(
+            TEST_SEX_CHECK_1,
+            f'{self.mock_dataroot.LOADING_DATASETS}/v03/GRCh38/sex_checks/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+        )
+
     def test_write_remapped_and_subsetted_callset_task(
         self,
     ) -> None:
