@@ -1,3 +1,5 @@
+import shutil
+
 import hail as hl
 import luigi.worker
 
