@@ -63,14 +63,18 @@ class Family:
         samples: dict[str, SampleMeta],
     ) -> dict[str, SampleMeta]:
         for sample_i, sample_j in itertools.combinations(samples.keys(), 2):
-            # If other sample is mother or father, continue
+            # If other sample is already related, continue
             if (
                 sample_j == samples[sample_i].mother
                 or sample_j == samples[sample_i].father
+                or sample_j == sample_i[sample_i].maternal_grandmother
+                or sample_j == sample_i[sample_i].maternal_grandfather
+                or sample_j == sample_i[sample_i].paternal_grandmother
+                or sample_j == sample_i[sample_i].paternal_grandfather
             ):
                 continue
 
-            # If both parents are not None and the same, samples are siblings.
+            # If both parents are identified and the same, samples are siblings.
             if (
                 samples[sample_i].mother
                 and samples[sample_i].father
