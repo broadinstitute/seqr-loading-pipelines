@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class SampleMeta:
+class Sample:
+    sample_id: str
     sex: Ploidy
     mother: str = None
     father: str = None
@@ -27,16 +28,17 @@ class SampleMeta:
 @dataclass
 class Family:
     family_guid: str
-    samples: dict[str, SampleMeta]
+    samples: dict[str, Sample]
 
     def __hash__(self):
         return hash(self.family_guid)
 
     @staticmethod
-    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, SampleMeta]:
+    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]:
         samples = {}
         for row in rows:
-            samples[row.s] = SampleMeta(
+            samples[row.s] = Sample(
+                sample_id=row.s,
                 sex=Ploidy(row.sex),
                 mother=row.maternal_s,
                 father=row.paternal_s,
@@ -60,17 +62,17 @@ class Family:
 
     @staticmethod
     def parse_collateral_lineage(
-        samples: dict[str, SampleMeta],
-    ) -> dict[str, SampleMeta]:
+        samples: dict[str, Sample],
+    ) -> dict[str, Sample]:
         for sample_i, sample_j in itertools.combinations(samples.keys(), 2):
             # If other sample is already related, continue
             if (
                 sample_j == samples[sample_i].mother
                 or sample_j == samples[sample_i].father
-                or sample_j == sample_i[sample_i].maternal_grandmother
-                or sample_j == sample_i[sample_i].maternal_grandfather
-                or sample_j == sample_i[sample_i].paternal_grandmother
-                or sample_j == sample_i[sample_i].paternal_grandfather
+                or sample_j == samples[sample_i].maternal_grandmother
+                or sample_j == samples[sample_i].maternal_grandfather
+                or sample_j == samples[sample_i].paternal_grandmother
+                or sample_j == samples[sample_i].paternal_grandfather
             ):
                 continue
 

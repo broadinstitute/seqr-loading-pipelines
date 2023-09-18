@@ -3,11 +3,7 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.io import import_pedigree
-from v03_pipeline.lib.misc.pedigree import (
-    Family,
-    SampleMeta,
-    parse_pedigree_ht_to_families,
-)
+from v03_pipeline.lib.misc.pedigree import Family, Sample, parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import Ploidy
 
 TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
@@ -76,7 +72,8 @@ class PedigreesTest(unittest.TestCase):
         self.assertEqual(
             Family.parse_collateral_lineage(samples),
             {
-                'sample_1': SampleMeta(
+                'sample_1': Sample(
+                    sample_id='sample_1',
                     sex=Ploidy.FEMALE,
                     mother=None,
                     father=None,
@@ -88,7 +85,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_2': SampleMeta(
+                'sample_2': Sample(
+                    sample_id='sample_2',
                     sex=Ploidy.MALE,
                     mother='sample_3',
                     father=None,
@@ -100,7 +98,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=['sample_4', 'sample_5'],
                     aunt_uncles=[],
                 ),
-                'sample_3': SampleMeta(
+                'sample_3': Sample(
+                    sample_id='sample_3',
                     sex=Ploidy.FEMALE,
                     mother=None,
                     father='sample_7',
@@ -112,7 +111,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_4': SampleMeta(
+                'sample_4': Sample(
+                    sample_id='sample_4',
                     sex=Ploidy.MALE,
                     mother='sample_3',
                     father='sample_8',
@@ -124,7 +124,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=['sample_6'],
                 ),
-                'sample_5': SampleMeta(
+                'sample_5': Sample(
+                    sample_id='sample_5',
                     sex=Ploidy.MALE,
                     mother='sample_3',
                     father='sample_8',
@@ -136,7 +137,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=['sample_6'],
                 ),
-                'sample_6': SampleMeta(
+                'sample_6': Sample(
+                    sample_id='sample_6',
                     sex=Ploidy.MALE,
                     mother='sample_9',
                     father='sample_10',
@@ -148,7 +150,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_7': SampleMeta(
+                'sample_7': Sample(
+                    sample_id='sample_7',
                     sex=Ploidy.MALE,
                     mother=None,
                     father=None,
@@ -160,7 +163,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_8': SampleMeta(
+                'sample_8': Sample(
+                    sample_id='sample_8',
                     sex=Ploidy.FEMALE,
                     mother='sample_9',
                     father='sample_10',
@@ -172,7 +176,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_9': SampleMeta(
+                'sample_9': Sample(
+                    sample_id='sample_9',
                     sex=Ploidy.FEMALE,
                     mother=None,
                     father=None,
@@ -184,7 +189,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_uncles=[],
                 ),
-                'sample_10': SampleMeta(
+                'sample_10': Sample(
+                    sample_id='sample_10',
                     sex=Ploidy.MALE,
                     mother=None,
                     father=None,
@@ -206,8 +212,9 @@ class PedigreesTest(unittest.TestCase):
             [
                 Family(
                     family_guid='BBL_BC1-000345_1',
-                    sample_lineage={
-                        'BBL_BC1-000345_01_D1': SampleMeta(
+                    samples={
+                        'BBL_BC1-000345_01_D1': Sample(
+                            sample_id='BBL_BC1-000345_01_D1',
                             sex=Ploidy.FEMALE,
                             mother='BBL_BC1-000345_03_D1',
                             father='BBL_BC1-000345_02_D1',
@@ -219,7 +226,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_BC1-000345_02_D1': SampleMeta(
+                        'BBL_BC1-000345_02_D1': Sample(
+                            sample_id='BBL_BC1-000345_02_D1',
                             sex=Ploidy.MALE,
                             mother=None,
                             father=None,
@@ -231,7 +239,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_BC1-000345_03_D1': SampleMeta(
+                        'BBL_BC1-000345_03_D1': Sample(
+                            sample_id='BBL_BC1-000345_03_D1',
                             sex=Ploidy.FEMALE,
                             mother=None,
                             father=None,
@@ -247,8 +256,9 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 Family(
                     family_guid='BBL_HT-007-5195_1',
-                    sample_lineage={
-                        'BBL_HT-007-5195_01_D1': SampleMeta(
+                    samples={
+                        'BBL_HT-007-5195_01_D1': Sample(
+                            sample_id='BBL_HT-007-5195_01_D1',
                             sex=Ploidy.FEMALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
@@ -264,7 +274,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_HT-007-5195_02_D1': SampleMeta(
+                        'BBL_HT-007-5195_02_D1': Sample(
+                            sample_id='BBL_HT-007-5195_02_D1',
                             sex=Ploidy.MALE,
                             mother=None,
                             father=None,
@@ -276,7 +287,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_HT-007-5195_03_D1': SampleMeta(
+                        'BBL_HT-007-5195_03_D1': Sample(
+                            sample_id='BBL_HT-007-5195_03_D1',
                             sex=Ploidy.FEMALE,
                             mother=None,
                             father=None,
@@ -288,7 +300,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_HT-007-5195_04_D1': SampleMeta(
+                        'BBL_HT-007-5195_04_D1': Sample(
+                            sample_id='BBL_HT-007-5195_04_D1',
                             sex=Ploidy.MALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
@@ -300,7 +313,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_HT-007-5195_05_D1': SampleMeta(
+                        'BBL_HT-007-5195_05_D1': Sample(
+                            sample_id='BBL_HT-007-5195_05_D1',
                             sex=Ploidy.FEMALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
@@ -312,7 +326,8 @@ class PedigreesTest(unittest.TestCase):
                             half_siblings=[],
                             aunt_uncles=[],
                         ),
-                        'BBL_HT-007-5195_06_D1': SampleMeta(
+                        'BBL_HT-007-5195_06_D1': Sample(
+                            sample_id='BBL_HT-007-5195_06_D1',
                             sex=Ploidy.MALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
@@ -328,8 +343,9 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 Family(
                     family_guid='BBL_SDS1-000178_1',
-                    sample_lineage={
-                        'BBL_SDS1-000178_01_D1': SampleMeta(
+                    samples={
+                        'BBL_SDS1-000178_01_D1': Sample(
+                            sample_id='BBL_SDS1-000178_01_D1',
                             sex=Ploidy.FEMALE,
                             mother=None,
                             father=None,
