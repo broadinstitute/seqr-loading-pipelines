@@ -4,7 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.paths import relatedness_check_table_path
+from v03_pipeline.lib.paths import relatedness_check_table_path, valid_cached_reference_dataset_query_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
@@ -23,14 +23,25 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
         )
 
     def requires(self) -> luigi.Task:
-        return [
+        requirements =  [
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
                 self.callset_path,
-            ),
+            )
         ]
+        if Env.ACCESS_PRIVATE_DATASETS:
+            requirements = [
+                *requirements,
+                HailTableTask(
+                    valid_cached_reference_dataset_query_path(
+                        self.reference_genome,
+                        CachedReferenceDatasetQuery.GNOMAD_QC,
+                    ),
+                ),
+            ]
+        return requirements
 
     def create_table(self) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input()[0].path)

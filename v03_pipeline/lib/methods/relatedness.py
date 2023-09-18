@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 def filter_and_ld_prune(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
-    use_gnomad_in_ld_prune: bool,
+    gnomad_qc_ht: hl.Table | None,
 ) -> hl.MatrixTable:
     mt = filter_rows_for_qc(
         mt,
@@ -23,27 +23,21 @@ def filter_and_ld_prune(
         min_callrate=0.99,
         apply_hard_filters=False,
     )
-    if not use_gnomad_in_ld_prune:
+    if not gnomad_qc_ht:
         mm_pruned = hl.ld_prune(mt.GT, r2=0.1)
         return mt.filter_rows(hl.is_defined(mm_pruned[mt.row_key]))
-    qnomad_qc_ht = hl.read_table(
-        valid_cached_reference_dataset_query_path(
-            reference_genome,
-            CachedReferenceDatasetQuery.GNOMAD_QC,
-        ),
-    )
     return mt.filter_rows(
-        hl.is_defined(qnomad_qc_ht[mt.row_key]),
+        hl.is_defined(gnomad_qc_ht[mt.row_key]),
     )
 
 
 def call_relatedness(
     mt: hl.MatrixTable,  # NB: we've been remapped and subsetted upstream
     reference_genome: ReferenceGenome,
+    gnomad_qc_ht: hl.Table | None,
     af_field: str = 'info.AF',
-    use_gnomad_in_ld_prune: bool = True,
 ) -> hl.Table:
-    mt = filter_and_ld_prune(mt, reference_genome, use_gnomad_in_ld_prune)
+    mt = filter_and_ld_prune(mt, reference_genome, gnomad_qc_ht)
     # NB: ibd did not work by default with my pip install of `hail` on an M1 MacOSX.
     # I had to build hail by source with the following:
     # - brew install lz4

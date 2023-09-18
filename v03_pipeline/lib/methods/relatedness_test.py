@@ -19,8 +19,8 @@ class RelatednessTest(unittest.TestCase):
         ht = call_relatedness(
             mt,
             ReferenceGenome.GRCh38,
+            None,
             af_field='AF',
-            use_gnomad_in_ld_prune=False,
         )
         self.assertCountEqual(
             ht.collect(),
