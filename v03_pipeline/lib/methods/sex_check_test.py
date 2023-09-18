@@ -3,7 +3,8 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import Ploidy, build_sex_check_lookup, call_sex
+from v03_pipeline.lib.methods.sex_check import build_sex_check_lookup, call_sex
+from v03_pipeline.lib.model import Ploidy
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'

@@ -2,13 +2,13 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import Ploidy
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import (
     Family,
     SampleMeta,
     parse_pedigree_ht_to_families,
 )
+from v03_pipeline.lib.model import Ploidy
 
 TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
 TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'

@@ -10,6 +10,12 @@ class AccessControl(Enum):
     PRIVATE = 'private'
 
 
+class Ploidy(Enum):
+    AMBIGUOUS = 'ambiguous_sex'
+    FEMALE = 'F'
+    MALE = 'M'
+
+
 class PipelineVersion(Enum):
     V02 = 'v02'
     V03 = 'v03'

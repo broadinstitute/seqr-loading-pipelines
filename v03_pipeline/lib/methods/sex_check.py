@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from enum import Enum
-
 import hail as hl
+
+from v03_pipeline.lib.model import Ploidy
 
 IMPUTE_SEX_ANNOTATIONS = [
     'is_female',
@@ -21,12 +21,6 @@ XX_FSTAT_THRESHOLD: float = (
 XY_FSTAT_THRESHOLD: float = (
     0.75  # F-stat threshold above which a sample will be called XY.
 )
-
-
-class Ploidy(Enum):
-    AMBIGUOUS = 'ambiguous_sex'
-    FEMALE = 'F'
-    MALE = 'M'
 
 
 def call_sex(mt: hl.MatrixTable) -> hl.Table:

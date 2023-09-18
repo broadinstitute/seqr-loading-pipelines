@@ -4,7 +4,7 @@ import itertools
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from v03_pipeline.lib.methods.sex_check import Ploidy
+from v03_pipeline.lib.model import Ploidy
 
 if TYPE_CHECKING:
     import hail as hl
