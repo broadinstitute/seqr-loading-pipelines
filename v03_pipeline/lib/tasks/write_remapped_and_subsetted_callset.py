@@ -109,9 +109,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 callset_mt,
                 hl.Table.parallelize(
                     [
-                        {'s': sample.sample_id}
+                        {'s': sample_id}
                         for family in (families - families_failed_missing_samples)
-                        for sample in family.samples
+                        for sample_id in family.samples
                     ],
                     hl.tstruct(s=hl.dtype('str')),
                     key='s',
@@ -132,7 +132,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_sex_check = set()
         families_failed_relatedness_check = set()
         for family in families:
-            for sample_id in family.sample_sex:
+            for sample_id in family.samples:
                 if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
                     families_failed_sex_check.add(family)
                     continue
@@ -141,14 +141,14 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             callset_mt,
             hl.Table.parallelize(
                 [
-                    {'s': sample.sample_id}
+                    {'s': sample_id}
                     for family in (
                         families
                         - families_failed_missing_samples
                         - families_failed_sex_check
                         - families_failed_relatedness_check
                     )
-                    for sample in family.samples
+                    for ssample_id in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',
