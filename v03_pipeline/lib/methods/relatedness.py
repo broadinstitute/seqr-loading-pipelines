@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
 
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
-from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
-
-if TYPE_CHECKING:
-    from v03_pipeline.lib.model import ReferenceGenome
 
 
 def filter_and_ld_prune(
     mt: hl.MatrixTable,
-    reference_genome: ReferenceGenome,
     gnomad_qc_ht: hl.Table | None,
 ) -> hl.MatrixTable:
     mt = filter_rows_for_qc(
@@ -33,11 +26,10 @@ def filter_and_ld_prune(
 
 def call_relatedness(
     mt: hl.MatrixTable,  # NB: we've been remapped and subsetted upstream
-    reference_genome: ReferenceGenome,
     gnomad_qc_ht: hl.Table | None,
     af_field: str = 'info.AF',
 ) -> hl.Table:
-    mt = filter_and_ld_prune(mt, reference_genome, gnomad_qc_ht)
+    mt = filter_and_ld_prune(mt, gnomad_qc_ht)
     # NB: ibd did not work by default with my pip install of `hail` on an M1 MacOSX.
     # I had to build hail by source with the following:
     # - brew install lz4

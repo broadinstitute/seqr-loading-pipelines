@@ -6,7 +6,6 @@ from v03_pipeline.lib.methods.relatedness import (
     build_relatedness_check_lookup,
     call_relatedness,
 )
-from v03_pipeline.lib.model import ReferenceGenome
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
@@ -18,7 +17,6 @@ class RelatednessTest(unittest.TestCase):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht = call_relatedness(
             mt,
-            ReferenceGenome.GRCh38,
             None,
             af_field='AF',
         )
