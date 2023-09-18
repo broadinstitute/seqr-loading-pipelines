@@ -3,8 +3,6 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.methods.relatedness import build_relatedness_check_lookup
-from v03_pipeline.lib.methods.sex_check import build_sex_check_lookup
 from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_missing_samples,
     get_families_failed_relatedness_check,
@@ -112,21 +110,15 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         if self.dataset_type.check_sex_and_relatedness:
             relatedness_check_ht = hl.read_table(self.input()[2].path)
             sex_check_ht = hl.read_table(self.input()[3].path)
-            relatedness_check_lookup = build_relatedness_check_lookup(
+            families_failed_relatedness_check = get_families_failed_relatedness_check(
+                families,
                 relatedness_check_ht,
                 remap_lookup,
             )
-            sex_check_lookup = build_sex_check_lookup(
-                sex_check_ht,
-                remap_lookup,
-            )
-            families_failed_relatedness_check = get_families_failed_relatedness_check(
-                families,
-                relatedness_check_lookup,
-            )
             families_failed_sex_check = get_families_failed_sex_check(
                 families,
-                sex_check_lookup,
+                sex_check_ht,
+                remap_lookup,
             )
 
         return subset_samples(

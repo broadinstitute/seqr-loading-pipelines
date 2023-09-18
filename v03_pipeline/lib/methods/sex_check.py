@@ -55,15 +55,3 @@ def call_sex(mt: hl.MatrixTable) -> hl.Table:
         msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
         raise ValueError(msg)
     return ht.select(*IMPUTE_SEX_ANNOTATIONS)
-
-
-def build_sex_check_lookup(
-    sex_check_ht: hl.Table,
-    remap_lookup: hl.dict,
-) -> dict[str, Ploidy]:
-    # Build sex check lookup
-    sex_check_ht = sex_check_ht.key_by(
-        s=remap_lookup.get(sex_check_ht.s, sex_check_ht.s),
-    )
-    sex_check_ht = sex_check_ht.select('sex')
-    return {r.s: Ploidy(r.sex) for r in sex_check_ht.collect()}
