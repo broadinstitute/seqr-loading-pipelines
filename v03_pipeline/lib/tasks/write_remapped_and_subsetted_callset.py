@@ -148,7 +148,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                         - families_failed_sex_check
                         - families_failed_relatedness_check
                     )
-                    for ssample_id in family.samples
+                    for sample_id in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',

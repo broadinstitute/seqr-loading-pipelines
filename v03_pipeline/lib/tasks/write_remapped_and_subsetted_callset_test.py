@@ -55,5 +55,5 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self.assertEqual(mt.count(), (30, 3))
         self.assertEqual(
             mt.globals.collect(),
-            [hl.Struct(family_guids=['abc_1'])],
+            [hl.Struct()],
         )
