@@ -101,7 +101,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families = set(parse_pedigree_ht_to_families(pedigree_ht))
         families_failed_missing_samples = set()
         for family in families:
-            if len(family.sample_lineage.keys() - callset_samples) > 0:
+            if len(family.samples.keys() - callset_samples) > 0:
                 families_failed_missing_samples.add(family)
 
         if not self.dataset_type.check_sex_and_relatedness:
@@ -109,9 +109,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 callset_mt,
                 hl.Table.parallelize(
                     [
-                        {'s': s}
+                        {'s': sample.sample_id}
                         for family in (families - families_failed_missing_samples)
-                        for s in family.sample_sex
+                        for sample in family.samples
                     ],
                     hl.tstruct(s=hl.dtype('str')),
                     key='s',
@@ -141,14 +141,14 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             callset_mt,
             hl.Table.parallelize(
                 [
-                    {'s': sample.s}
+                    {'s': sample.sample_id}
                     for family in (
                         families
                         - families_failed_missing_samples
                         - families_failed_sex_check
                         - families_failed_relatedness_check
                     )
-                    for sample in family.sample_sex
+                    for sample in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',
