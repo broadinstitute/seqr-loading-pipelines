@@ -1,8 +1,13 @@
 from __future__ import annotations
-import hail as hl
 
-from v03_pipeline.lib.misc.pedigree import Family
+from typing import TYPE_CHECKING
+
 from v03_pipeline.lib.model import Ploidy
+
+if TYPE_CHECKING:
+    import hail as hl
+
+    from v03_pipeline.lib.misc.pedigree import Family
 
 
 def build_relatedness_check_lookup(
