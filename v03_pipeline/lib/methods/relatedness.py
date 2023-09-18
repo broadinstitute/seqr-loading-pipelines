@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
-
 
 
 def filter_and_ld_prune(
