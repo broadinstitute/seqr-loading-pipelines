@@ -39,6 +39,11 @@ TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
+TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
+TEST_RELATEDNESS_CHECK_1 = (
+    'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
+)
+
 
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
@@ -78,6 +83,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         shutil.copytree(
             TEST_INTERVAL_MITO_1,
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval_mito.ht',
+        )
+        shutil.copytree(
+            TEST_SEX_CHECK_1,
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/sex_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+        )
+        shutil.copytree(
+            TEST_RELATEDNESS_CHECK_1,
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/relatedness_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
         )
 
     def test_missing_pedigree(self) -> None:
