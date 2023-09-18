@@ -41,8 +41,8 @@ class TestPaths(unittest.TestCase):
             ),
             '/seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht',
         )
-        with patch('v03_pipeline.lib.paths.Env') as mock_dataroot:
-            mock_dataroot.DATASETS = 'gs://seqr-datasets/'
+        with patch('v03_pipeline.lib.paths.Env') as mock_env:
+            mock_env.DATASETS = 'gs://seqr-datasets/'
             self.assertEqual(
                 family_table_path(
                     ReferenceGenome.GRCh37,
