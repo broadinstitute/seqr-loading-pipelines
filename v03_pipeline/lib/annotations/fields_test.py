@@ -19,7 +19,7 @@ class FieldsTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_dataroot.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
     def test_get_formatting_fields(self) -> None:

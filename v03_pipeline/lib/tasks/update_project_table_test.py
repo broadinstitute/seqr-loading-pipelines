@@ -27,7 +27,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
         worker.run()
         self.assertEqual(
             upt_task.output().path,
-            f'{self.mock_dataroot.DATASETS}/v03/GRCh38/SNV_INDEL/projects/R0113_test_project.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/projects/R0113_test_project.ht',
         )
         self.assertTrue(upt_task.complete())
         ht = hl.read_table(upt_task.output().path)
