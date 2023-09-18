@@ -133,7 +133,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_relatedness_check = set()
         for family in families:
             for sample_id in family.sample_sex:
-                if family.sample_sex[sample_id] != sex_check_lookup[sample_id]:
+                if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
                     families_failed_sex_check.add(family)
                     continue
 
