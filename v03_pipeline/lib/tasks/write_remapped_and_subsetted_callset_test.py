@@ -21,7 +21,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_SEX_CHECK_1,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/sex_checks/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/sex_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
         )
         shutil.copytree(
             TEST_GNOMAD_QC,

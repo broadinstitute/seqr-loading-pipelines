@@ -25,7 +25,6 @@ def filter_and_ld_prune(
 def call_relatedness(
     mt: hl.MatrixTable,  # NB: we've been remapped and subsetted upstream
     gnomad_qc_ht: hl.Table | None,
-    af_field: str = 'info.AF',
 ) -> hl.Table:
     mt = filter_and_ld_prune(mt, gnomad_qc_ht)
     # NB: ibd did not work by default with my pip install of `hail` on an M1 MacOSX.
@@ -33,7 +32,7 @@ def call_relatedness(
     # - brew install lz4
     # - CXXFLAGS='-I/opt/homebrew/include/' HAIL_COMPILE_NATIVES=1 make -C hail install
     # Hail issue here: https://discuss.hail.is/t/noclassdeffounderror-could-not-initialize-class-is-hail-methods-ibsffi/2453
-    kin_ht = hl.identity_by_descent(mt, maf=mt[af_field], min=0.10, max=1.0)
+    kin_ht = hl.identity_by_descent(mt, maf=mt.info.AF, min=0.10, max=1.0)
     kin_ht = kin_ht.key_by('i', 'j')
     return kin_ht.select(
         ibd0=kin_ht.ibd.Z0,

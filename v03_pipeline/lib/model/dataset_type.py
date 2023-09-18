@@ -105,7 +105,7 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: ['rsid', 'filters'],
+            DatasetType.SNV_INDEL: ['rsid', 'filters', 'info'],
             DatasetType.MITO: [
                 'rsid',
                 'filters',

@@ -18,7 +18,6 @@ class RelatednessTest(unittest.TestCase):
         ht = call_relatedness(
             mt,
             None,
-            af_field='AF',
         )
         self.assertCountEqual(
             ht.collect(),
