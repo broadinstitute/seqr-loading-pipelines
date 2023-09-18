@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.io import import_pedigree
-from v03_pipeline.lib.misc.pedigree import samples_to_include
+from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
 from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.paths import family_table_path
@@ -71,23 +71,21 @@ class WriteFamilyTableTask(BaseWriteTask):
     def create_table(self) -> hl.Table:
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         callset_mt = hl.read_matrix_table(self.input().path)
-        callset_family_guids = set(callset_mt.family_guids.collect()[0])
-        if self.family_guid not in callset_family_guids:
-            msg = f'Family: {self.family_guid} was not complete in this callset'
-            raise ValueError(msg)
-        sample_subset_ht = samples_to_include(
-            pedigree_ht,
+        families = parse_pedigree_ht_to_families(pedigree_ht)
+        callset_mt = subset_samples(
+            callset_mt,
             hl.Table.parallelize(
                 [
-                    {'family_guid': self.family_guid},
+                    {'s': s}
+                    for family in families
+                    if family.family_guid == self.family_guid
+                    for s in family.sample_sex
                 ],
-                hl.tstruct(
-                    family_guid=hl.dtype('str'),
-                ),
-                key='family_guid',
+                hl.tstruct(s=hl.dtype('str')),
+                key='s',
             ),
+            False,
         )
-        callset_mt = subset_samples(callset_mt, sample_subset_ht, False)
         ht = callset_mt.select_rows(
             filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
             entries=hl.sorted(

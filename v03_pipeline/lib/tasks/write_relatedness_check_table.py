@@ -34,4 +34,4 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
 
     def create_table(self) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
-        return call_relatedness(callset_mt)
+        return call_relatedness(callset_mt, self.reference_genome)

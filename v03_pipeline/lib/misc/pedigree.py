@@ -29,6 +29,9 @@ class Family:
     sample_lineage: dict[str, Lineage]
     sample_sex: dict[str, Ploidy]
 
+    def __hash__(self):
+        return hash(self.family_guid)
+
     @staticmethod
     def parse_sample_sex(rows: list[hl.Struct]) -> dict[str, Ploidy]:
         sample_sex = {}

@@ -109,9 +109,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 callset_mt,
                 hl.Table.parallelize(
                     [
-                        {'s': sample.s}
+                        {'s': s}
                         for family in (families - families_failed_missing_samples)
-                        for sample in family.sample_sex
+                        for s in family.sample_sex
                     ],
                     hl.tstruct(s=hl.dtype('str')),
                     key='s',
