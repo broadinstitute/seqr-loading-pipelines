@@ -12,8 +12,8 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_checks/test_sex_check_1.ht'
-TEST_GNOMAD_QC = 'v03_pipeline/var/test/cached_reference_dataset_queries/gnomad_qc.ht'
+TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
+TEST_RELATEDNESS_CHECK_1 = 'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
 
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
@@ -21,11 +21,11 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_SEX_CHECK_1,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/sex_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/sex_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
         )
         shutil.copytree(
-            TEST_GNOMAD_QC,
-            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/cached_reference_dataset_queries/gnomad_qc.ht',
+            TEST_RELATEDNESS_CHECK_1,
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/relatedness_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
         )
 
     def test_write_remapped_and_subsetted_callset_task(
