@@ -13,7 +13,9 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
-TEST_RELATEDNESS_CHECK_1 = 'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
+TEST_RELATEDNESS_CHECK_1 = (
+    'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
+)
 
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
