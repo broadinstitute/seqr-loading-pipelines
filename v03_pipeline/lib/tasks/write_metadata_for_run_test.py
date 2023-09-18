@@ -29,7 +29,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         worker.run()
         self.assertEqual(
             write_metadata_for_run_task.output().path,
-            f'{self.mock_dataroot.DATASETS}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
         )
         self.assertTrue(write_metadata_for_run_task.complete())
         with write_metadata_for_run_task.output().open('r') as f:

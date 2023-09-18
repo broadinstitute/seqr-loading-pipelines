@@ -28,7 +28,7 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
         worker.run()
         self.assertEqual(
             uslt_task.output().path,
-            f'{self.mock_dataroot.DATASETS}/v03/GRCh38/SNV_INDEL/lookup.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/lookup.ht',
         )
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
