@@ -5,6 +5,11 @@ import luigi
 
 from v03_pipeline.lib.methods.relatedness import build_relatedness_check_lookup
 from v03_pipeline.lib.methods.sex_check import build_sex_check_lookup
+from v03_pipeline.lib.misc.family_loading_failures import (
+    get_families_failed_missing_samples,
+    get_families_failed_relatedness_check,
+    get_families_failed_sex_check,
+)
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
@@ -65,13 +70,13 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         if self.dataset_type.check_sex_and_relatedness:
             requirements = [
                 *requirements,
-                WriteSexCheckTableTask(
+                WriteRelatednessCheckTableTask(
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
                     self.callset_path,
                 ),
-                WriteRelatednessCheckTableTask(
+                WriteSexCheckTableTask(
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
@@ -97,45 +102,32 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 {r.s: r.seqr_id for r in project_remap_ht.collect()},
             )
 
-        callset_samples = set(callset_mt.cols().s.collect())
-        families = set(parse_pedigree_ht_to_families(pedigree_ht))
-        families_failed_missing_samples = set()
-        for family in families:
-            if len(family.samples.keys() - callset_samples) > 0:
-                families_failed_missing_samples.add(family)
-
-        if not self.dataset_type.check_sex_and_relatedness:
-            return subset_samples(
-                callset_mt,
-                hl.Table.parallelize(
-                    [
-                        {'s': sample_id}
-                        for family in (families - families_failed_missing_samples)
-                        for sample_id in family.samples
-                    ],
-                    hl.tstruct(s=hl.dtype('str')),
-                    key='s',
-                ),
-                self.ignore_missing_samples_when_subsetting,
-            )
-
-        sex_check_ht = hl.read_table(self.input()[2].path)
-        relatedness_check_ht = hl.read_table(self.input()[3].path)
-        sex_check_lookup = build_sex_check_lookup(
-            sex_check_ht,
-            remap_lookup,
+        families = parse_pedigree_ht_to_families(pedigree_ht)
+        families_failed_missing_samples = get_families_failed_missing_samples(
+            callset_mt,
+            families,
         )
-        build_relatedness_check_lookup(
-            relatedness_check_ht,
-            remap_lookup,
-        )
-        families_failed_sex_check = set()
         families_failed_relatedness_check = set()
-        for family in families:
-            for sample_id in family.samples:
-                if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
-                    families_failed_sex_check.add(family)
-                    continue
+        families_failed_sex_check = set()
+        if self.dataset_type.check_sex_and_relatedness:
+            relatedness_check_ht = hl.read_table(self.input()[2].path)
+            sex_check_ht = hl.read_table(self.input()[3].path)
+            relatedness_check_lookup = build_relatedness_check_lookup(
+                relatedness_check_ht,
+                remap_lookup,
+            )
+            sex_check_lookup = build_sex_check_lookup(
+                sex_check_ht,
+                remap_lookup,
+            )
+            families_failed_relatedness_check = get_families_failed_relatedness_check(
+                families,
+                relatedness_check_lookup,
+            )
+            families_failed_sex_check = get_families_failed_sex_check(
+                families,
+                sex_check_lookup,
+            )
 
         return subset_samples(
             callset_mt,

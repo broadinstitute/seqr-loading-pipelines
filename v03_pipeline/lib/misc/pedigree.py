@@ -131,11 +131,11 @@ class Family:
 
 def parse_pedigree_ht_to_families(
     pedigree_ht: hl.Table,
-) -> list[Family]:
-    families = []
+) -> set[Family]:
+    families = set()
     for family_guid, rows in itertools.groupby(
         pedigree_ht.collect(),
         lambda x: x.family_guid,
     ):
-        families.append(Family.parse(family_guid, sorted(rows, key=lambda x: x.s)))
+        families.add(Family.parse(family_guid, sorted(rows, key=lambda x: x.s)))
     return families

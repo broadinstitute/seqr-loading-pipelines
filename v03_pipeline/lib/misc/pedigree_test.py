@@ -207,8 +207,8 @@ class PedigreesTest(unittest.TestCase):
 
     def test_parse_project(self) -> None:
         pedigree_ht = import_pedigree(TEST_PEDIGREE_2)
-        self.assertListEqual(
-            parse_pedigree_ht_to_families(pedigree_ht),
+        self.assertCountEqual(
+            list(parse_pedigree_ht_to_families(pedigree_ht)),
             [
                 Family(
                     family_guid='BBL_BC1-000345_1',
