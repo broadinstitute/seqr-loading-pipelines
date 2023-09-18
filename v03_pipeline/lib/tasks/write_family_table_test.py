@@ -1,3 +1,5 @@
+import shutil
+
 import hail as hl
 import luigi.worker
 
@@ -15,7 +17,6 @@ TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 TEST_RELATEDNESS_CHECK_1 = (
     'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
 )
-
 
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
