@@ -135,12 +135,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             - families_failed_relatedness_check
         )
         if not len(loadable_families):
-            print(
-                families_failed_missing_samples
-                ,families_failed_sex_check
-                ,families_failed_relatedness_check
-            )
-            raise RuntimeError('All families failed checks')
+            msg = 'All families failed checks'
+            raise RuntimeError(msg)
 
         return subset_samples(
             callset_mt,
