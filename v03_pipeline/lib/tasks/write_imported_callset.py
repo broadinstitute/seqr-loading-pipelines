@@ -11,12 +11,7 @@ from v03_pipeline.lib.paths import (
     valid_cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
-from v03_pipeline.lib.tasks.files import (
-    CallsetTask,
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    HailTableTask,
-)
+from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
@@ -39,9 +34,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.callset_path,
             ),
         )
-
-    def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
