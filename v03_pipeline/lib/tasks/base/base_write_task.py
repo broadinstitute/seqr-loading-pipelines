@@ -3,6 +3,7 @@ import luigi
 
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 
 class BaseWriteTask(luigi.Task):
@@ -14,7 +15,7 @@ class BaseWriteTask(luigi.Task):
         raise NotImplementedError
 
     def complete(self) -> bool:
-        raise NotImplementedError
+        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def init_hail(self):
         # Need to use the GCP bucket as temp storage for very large callset joins
