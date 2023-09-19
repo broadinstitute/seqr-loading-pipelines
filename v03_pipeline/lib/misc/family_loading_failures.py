@@ -37,7 +37,7 @@ def passes_relationship_check(
     )
 
 
-def passes_all_relationship_checks(
+def passes_all_relationship_checks( # noqa: C901
     relatedness_check_lookup: dict[tuple[str, str], list],
     sample: Sample,
 ) -> bool:
@@ -148,13 +148,12 @@ def get_families_failed_relatedness_check(
         relatedness_check_ht,
         remap_lookup,
     )
-    failed_families = set()
-    for family in families:
-        for sample in family.samples.values():
-            if not passes_all_relationship_checks(relatedness_check_lookup, sample):
-                failed_families.add(family)
-                continue
-    return failed_families
+    return {
+        family
+        for family in families
+        for sample in family.samples.values()
+        if not passes_all_relationship_checks(relatedness_check_lookup, sample)
+    }
 
 
 def get_families_failed_sex_check(

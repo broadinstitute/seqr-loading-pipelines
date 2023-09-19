@@ -106,7 +106,7 @@ class Family:
                 )
                 continue
 
-            # If only a single parent is non-null and the same, samples are half siblings
+            # If only a single parent is identified and the same, samples are half siblings
             if (
                 samples[sample_i].mother
                 and samples[sample_i].mother == samples[sample_j].mother
@@ -119,8 +119,8 @@ class Family:
                 )
                 continue
 
-            # If either set of one's grandparents is equal to the other's parents,
-            # they're aunt -> nephew related
+            # If either set of one's grandparents is identified and equal to the other's parents,
+            # they're aunt/uncle related
             if (
                 (
                     samples[sample_i].maternal_grandmother
