@@ -19,7 +19,7 @@ class Relation(Enum):
     AUNT_UNCLE = 'aunt_uncle'
 
     @property
-    def coeffiecients(self):
+    def coefficients(self):
         return {
             Relation.PARENT: [0, 1, 0, 0.5],
             Relation.GRANDPARENT: [0.5, 0.5, 0, 0.25],
