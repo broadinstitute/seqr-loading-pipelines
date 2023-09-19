@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import TYPE_CHECKING
 
 from v03_pipeline.lib.model import Ploidy
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
     import hail as hl
 
 
-class Relation:
+class Relation(Enum):
     PARENT = 'parent'
     GRANDPARENT = 'grandparent'
     SIBLING = 'sibling'

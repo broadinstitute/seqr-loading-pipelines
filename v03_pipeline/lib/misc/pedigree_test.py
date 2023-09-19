@@ -20,7 +20,7 @@ class PedigreesTest(unittest.TestCase):
         #
         #       sample_9   sample_10        sample_7
         #           \        /                  \                       |
-        #   sample_6,sample_8      ---------     sample_3 ----- ?       |
+        # sample_6 -> sample_8      ---------     sample_3 ----- ?       |
         #                \                       /    \        /        |
         #                   sample_4, sample_5          sample_2        |    sample_1
         #

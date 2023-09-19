@@ -93,7 +93,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         }
         sample = Sample(
             sex=Ploidy.FEMALE,
-            sample_id='sample1',
+            sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',
             half_siblings=['sample_4'],
@@ -109,7 +109,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         }
         sample = Sample(
             sex=Ploidy.FEMALE,
-            sample_id='sample1',
+            sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',
             siblings=['sample_4'],

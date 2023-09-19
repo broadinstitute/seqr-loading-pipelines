@@ -25,7 +25,7 @@ def passes_relatedness_check(
     coefficients = relatedness_check_lookup.get(
         # NB: sibling, half_sibling, and aunt/uncle relationships are
         # guaranteed to be identified with sample_id < other_id so this is unnecessary.
-        # Parent/Grandparent relationships, however, are not guarnanteed.
+        # Parent & Grandparent relationships, however, are not guarnanteed.
         (min(sample_id, other_id), max(sample_id, other_id)),
     )
     if not coefficients:
@@ -153,6 +153,7 @@ def get_families_failed_relatedness_check(
         for sample in family.samples.values():
             if not passes_all_relatedness_checks(relatedness_check_lookup, sample):
                 failed_families.add(family)
+                break
     return failed_families
 
 
@@ -167,4 +168,5 @@ def get_families_failed_sex_check(
         for sample_id in family.samples:
             if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
                 failed_families.add(family)
+                break
     return failed_families
