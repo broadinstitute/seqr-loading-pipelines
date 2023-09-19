@@ -32,8 +32,8 @@ class RelatednessTest(unittest.TestCase):
                     j='ROS_007_19Y05987_D1',
                     ibd0=0.0,
                     ibd1=1.0,
-                    ibd2=0.0, 
-                    pi_hat=0.5
-                )
+                    ibd2=0.0,
+                    pi_hat=0.5,
+                ),
             ],
         )

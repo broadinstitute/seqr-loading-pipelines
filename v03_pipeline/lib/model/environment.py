@@ -17,6 +17,7 @@ REFERENCE_DATASETS = os.environ.get(
 @dataclass
 class Env:
     ACCESS_PRIVATE_DATASETS: bool = os.environ.get('ACCESS_PRIVATE_DATASETS') == '1'
+    CHECK_SEX_AND_RELATEDNESS: bool = os.environ.get('CHECK_SEX_AND_RELATEDNESS') == '1'
     DATASETS: str = DATASETS
     HAIL_TMPDIR: str = HAIL_TMPDIR
     LOADING_DATASETS: str = LOADING_DATASETS

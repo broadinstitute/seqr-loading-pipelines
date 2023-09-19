@@ -11,6 +11,7 @@ from v03_pipeline.lib.misc.family_loading_failures import (
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
@@ -65,7 +66,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ),
             RawFileTask(self.project_pedigree_path),
         ]
-        if self.dataset_type.check_sex_and_relatedness:
+        if (
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and self.dataset_type.check_sex_and_relatedness
+        ):
             requirements = [
                 *requirements,
                 WriteRelatednessCheckTableTask(
@@ -107,7 +111,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         )
         families_failed_relatedness_check = set()
         families_failed_sex_check = set()
-        if self.dataset_type.check_sex_and_relatedness:
+        if (
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and self.dataset_type.check_sex_and_relatedness
+        ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)
             sex_check_ht = hl.read_table(self.input()[3].path)
             families_failed_relatedness_check = get_families_failed_relatedness_check(
@@ -121,17 +128,26 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 remap_lookup,
             )
 
+        loadable_families = (
+            families
+            - families_failed_missing_samples
+            - families_failed_sex_check
+            - families_failed_relatedness_check
+        )
+        if not len(loadable_families):
+            print(
+                families_failed_missing_samples
+                ,families_failed_sex_check
+                ,families_failed_relatedness_check
+            )
+            raise RuntimeError('All families failed checks')
+
         return subset_samples(
             callset_mt,
             hl.Table.parallelize(
                 [
                     {'s': sample_id}
-                    for family in (
-                        families
-                        - families_failed_missing_samples
-                        - families_failed_sex_check
-                        - families_failed_relatedness_check
-                    )
+                    for family in loadable_families
                     for sample_id in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
