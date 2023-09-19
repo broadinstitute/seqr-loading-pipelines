@@ -27,5 +27,13 @@ class RelatednessTest(unittest.TestCase):
                     ibd2=0.0,
                     pi_hat=0.5,
                 ),
+                hl.Struct(
+                    i='ROS_007_19Y05939_D1',
+                    j='ROS_007_19Y05987_D1',
+                    ibd0=0.0,
+                    ibd1=1.0,
+                    ibd2=0.0, 
+                    pi_hat=0.5
+                )
             ],
         )
