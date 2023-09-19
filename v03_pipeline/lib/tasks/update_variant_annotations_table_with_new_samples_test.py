@@ -19,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -86,11 +87,19 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         shutil.copytree(
             TEST_SEX_CHECK_1,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/sex_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+            sex_check_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_SNV_INDEL_VCF,
+            ),
         )
         shutil.copytree(
             TEST_RELATEDNESS_CHECK_1,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/relatedness_check/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.ht',
+            relatedness_check_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_SNV_INDEL_VCF,
+            ),
         )
 
     def test_missing_pedigree(self) -> None:
