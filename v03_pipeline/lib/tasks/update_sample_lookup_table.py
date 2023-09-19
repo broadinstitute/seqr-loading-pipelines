@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
 )
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -44,7 +44,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
+        return super().complete() and hl.eval(
             hl.bind(
                 lambda updates: hl.all(
                     [
