@@ -10,6 +10,24 @@ if TYPE_CHECKING:
     import hail as hl
 
 
+class Relation:
+    PARENT = 'parent'
+    GRANDPARENT = 'grandparent'
+    SIBLING = 'sibling'
+    HALF_SIBLING = 'half_sibling'
+    AUNT_UNCLE = 'aunt_uncle'
+
+    @property
+    def coeffiecients(self):
+        return {
+            Relation.PARENT: [0, 1, 0, 0.5],
+            Relation.GRANDPARENT: [0.5, 0.5, 0, 0.25],
+            Relation.SIBLING: [0.25, 0.5, 0.25, 0.5],
+            Relation.HALF_SIBLING: [0.5, 0.5, 0, 0.25],
+            Relation.AUNT_UNCLE: [0.5, 0.5, 0, 0.25],
+        }[self]
+
+
 @dataclass
 class Sample:
     sample_id: str
@@ -101,18 +119,57 @@ class Family:
                 )
                 continue
 
-            # If either set of one sample's grandparents is equal the other's parents,
-            # they're aunt/uncle
+            # If either set of one's grandparents is equal to the other's parents,
+            # they're aunt -> nephew related
             if (
-                samples[sample_i].maternal_grandmother
-                and samples[sample_i].maternal_grandfather
-                and (samples[sample_i].maternal_grandmother == samples[sample_j].mother)
-                and (samples[sample_i].maternal_grandfather == samples[sample_j].father)
-            ) or (
-                samples[sample_i].paternal_grandmother
-                and samples[sample_i].paternal_grandfather
-                and (samples[sample_i].paternal_grandmother == samples[sample_j].mother)
-                and (samples[sample_i].paternal_grandfather == samples[sample_j].father)
+                (
+                    samples[sample_i].maternal_grandmother
+                    and samples[sample_i].maternal_grandfather
+                    and (
+                        samples[sample_i].maternal_grandmother
+                        == samples[sample_j].mother
+                    )
+                    and (
+                        samples[sample_i].maternal_grandfather
+                        == samples[sample_j].father
+                    )
+                )
+                or (
+                    samples[sample_i].paternal_grandmother
+                    and samples[sample_i].paternal_grandfather
+                    and (
+                        samples[sample_i].paternal_grandmother
+                        == samples[sample_j].mother
+                    )
+                    and (
+                        samples[sample_i].paternal_grandfather
+                        == samples[sample_j].father
+                    )
+                )
+                or (
+                    samples[sample_i].mother
+                    and samples[sample_i].father
+                    and (
+                        samples[sample_i].mother
+                        == samples[sample_j].maternal_grandmother
+                    )
+                    and (
+                        samples[sample_i].father
+                        == samples[sample_j].maternal_grandfather
+                    )
+                )
+                or (
+                    samples[sample_i].mother
+                    and samples[sample_i].father
+                    and (
+                        samples[sample_i].mother
+                        == samples[sample_j].paternal_grandmother
+                    )
+                    and (
+                        samples[sample_i].father
+                        == samples[sample_j].paternal_grandfather
+                    )
+                )
             ):
                 samples[sample_i].aunt_uncles.append(
                     sample_j,

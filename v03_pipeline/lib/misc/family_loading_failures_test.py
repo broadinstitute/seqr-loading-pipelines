@@ -3,8 +3,8 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.family_loading_failures import (
-    build_sex_check_lookup,
     build_relatedness_check_lookup,
+    build_sex_check_lookup,
 )
 from v03_pipeline.lib.model import Ploidy
 
@@ -38,12 +38,12 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'}),
             ),
             {
-                ('remapped_id', 'ROS_007_19Y05939_D1'): hl.Struct(
-                    ibd0=0.0,
-                    ibd1=1.0,
-                    ibd2=0.0,
-                    pi_hat=0.5,
-                ),
+                ('remapped_id', 'ROS_007_19Y05939_D1'): [
+                    0.0,
+                    1.0,
+                    0.0,
+                    0.5,
+                ],
             },
         )
 
