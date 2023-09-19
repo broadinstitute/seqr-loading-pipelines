@@ -5,7 +5,9 @@ import hail as hl
 from v03_pipeline.lib.misc.family_loading_failures import (
     build_relatedness_check_lookup,
     build_sex_check_lookup,
+    passes_all_relatedness_checks,
 )
+from v03_pipeline.lib.misc.pedigree import Sample
 from v03_pipeline.lib.model import Ploidy
 
 
@@ -75,5 +77,43 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             },
         )
 
-    def test_passes_all_relationship_checks(self):
-        pass
+    def test_passes_all_relatedness_checks(self):
+        relatedness_check_lookup = {
+            # Parent
+            ('sample_1', 'sample_2'): [
+                0.0,
+                0.98,
+                0.0,
+                0.52,
+            ],
+            # GrandParent
+            ('sample_1', 'sample_3'): [0.47, 0.53, 0, 0.23],
+            # Half Sibling (but actually a hidden Sibling)
+            ('sample_1', 'sample_4'): [0.25, 0.5, 0.25, 0.5],
+        }
+        sample = Sample(
+            sex=Ploidy.FEMALE,
+            sample_id='sample1',
+            mother='sample_2',
+            paternal_grandfather='sample_3',
+            half_siblings=['sample_4'],
+        )
+        self.assertTrue(
+            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        )
+
+        # Sibling is actually a half sibling.
+        relatedness_check_lookup = {
+            **relatedness_check_lookup,
+            ('sample_1', 'sample_4'): [0.5, 0.5, 0, 0.25],
+        }
+        sample = Sample(
+            sex=Ploidy.FEMALE,
+            sample_id='sample1',
+            mother='sample_2',
+            paternal_grandfather='sample_3',
+            siblings=['sample_4'],
+        )
+        self.assertFalse(
+            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        )
