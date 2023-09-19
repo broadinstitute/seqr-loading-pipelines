@@ -87,7 +87,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 0.52,
             ],
             # GrandParent
-            ('sample_1', 'sample_3'): [0.47, 0.53, 0, 0.23],
+            ('sample_1', 'sample_3'): [0.48, 0.52, 0, 0.24],
             # Half Sibling (but actually a hidden Sibling)
             ('sample_1', 'sample_4'): [0.25, 0.5, 0.25, 0.5],
         }
@@ -99,6 +99,18 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             half_siblings=['sample_4'],
         )
         self.assertTrue(
+            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        )
+
+        # Defined grandparent missing in relatedness table
+        sample = Sample(
+            sex=Ploidy.FEMALE,
+            sample_id='sample_1',
+            mother='sample_2',
+            paternal_grandfather='sample_3',
+            paternal_grandmother='sample_5',
+        )
+        self.assertFalse(
             passes_all_relatedness_checks(relatedness_check_lookup, sample),
         )
 

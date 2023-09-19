@@ -23,9 +23,6 @@ def passes_relatedness_check(
     if other_id is None:
         return True
     coefficients = relatedness_check_lookup.get(
-        # NB: sibling, half_sibling, and aunt/uncle relationships are
-        # guaranteed to be identified with sample_id < other_id so this is unnecessary.
-        # Parent & Grandparent relationships, however, are not guarnanteed.
         (min(sample_id, other_id), max(sample_id, other_id)),
     )
     if not coefficients:
@@ -33,7 +30,7 @@ def passes_relatedness_check(
     return np.allclose(
         coefficients,
         relation.coefficients,
-        5e-2,
+        0.1,
     )
 
 

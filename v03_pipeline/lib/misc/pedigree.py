@@ -122,6 +122,8 @@ class Family:
 
             # If either set of one's grandparents is identified and equal to the other's parents,
             # they're aunt/uncle related
+            # NB: because we will only check an  i, j pair of samples a single time, (itertools.combinations)
+            # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
             if (
                 (
                     samples[sample_i].maternal_grandmother
@@ -195,5 +197,5 @@ def parse_pedigree_ht_to_families(
         pedigree_ht.collect(),
         lambda x: x.family_guid,
     ):
-        families.add(Family.parse(family_guid, sorted(rows, key=lambda x: x.s)))
+        families.add(Family.parse(family_guid, list(rows)))
     return families
