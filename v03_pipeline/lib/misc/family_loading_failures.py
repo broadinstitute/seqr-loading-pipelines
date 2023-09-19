@@ -37,7 +37,7 @@ def passes_relationship_check(
     )
 
 
-def passes_all_relationship_checks( # noqa: C901
+def passes_all_relationship_checks(  # noqa: C901
     relatedness_check_lookup: dict[tuple[str, str], list],
     sample: Sample,
 ) -> bool:
@@ -132,11 +132,11 @@ def get_families_failed_missing_samples(
     families: set[Family],
 ) -> set[Family]:
     callset_samples = set(mt.cols().s.collect())
-    return {
-        family
-        for family in families
-        if len(family.samples.keys() - callset_samples) > 0
-    }
+    failed_families = set()
+    for family in families:
+        if len(family.samples.keys() - callset_samples) > 0:
+            failed_families.add(family)
+    return failed_families
 
 
 def get_families_failed_relatedness_check(
@@ -148,12 +148,12 @@ def get_families_failed_relatedness_check(
         relatedness_check_ht,
         remap_lookup,
     )
-    return {
-        family
-        for family in families
-        for sample in family.samples.values()
-        if not passes_all_relationship_checks(relatedness_check_lookup, sample)
-    }
+    failed_families = set()
+    for family in families:
+        for sample in family.samples.values():
+            if not passes_all_relationship_checks(relatedness_check_lookup, sample):
+                failed_families.add(family)
+    return failed_families
 
 
 def get_families_failed_sex_check(
@@ -162,9 +162,9 @@ def get_families_failed_sex_check(
     remap_lookup: hl.dict,
 ) -> set[Family]:
     sex_check_lookup = build_sex_check_lookup(sex_check_ht, remap_lookup)
-    return {
-        family
-        for family in families
-        for sample_id in family.samples
-        if family.samples[sample_id].sex != sex_check_lookup[sample_id]
-    }
+    failed_families = set()
+    for family in families:
+        for sample_id in family.samples:
+            if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
+                failed_families.add(family)
+    return failed_families

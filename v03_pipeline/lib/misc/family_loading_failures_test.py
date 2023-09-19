@@ -74,3 +74,6 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 'ROS_007_19Y05987_D1': Ploidy.MALE,
             },
         )
+
+    def test_passes_all_relationship_checks(self):
+        pass
