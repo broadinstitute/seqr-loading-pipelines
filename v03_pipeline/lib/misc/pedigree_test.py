@@ -83,7 +83,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_2': Sample(
                     sample_id='sample_2',
@@ -96,7 +96,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=['sample_4', 'sample_5'],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_3': Sample(
                     sample_id='sample_3',
@@ -109,7 +109,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_4': Sample(
                     sample_id='sample_4',
@@ -122,7 +122,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather='sample_10',
                     siblings=['sample_5'],
                     half_siblings=[],
-                    aunt_uncles=['sample_6'],
+                    aunt_nephews=['sample_6'],
                 ),
                 'sample_5': Sample(
                     sample_id='sample_5',
@@ -135,7 +135,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather='sample_10',
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=['sample_6'],
+                    aunt_nephews=['sample_6'],
                 ),
                 'sample_6': Sample(
                     sample_id='sample_6',
@@ -148,7 +148,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=['sample_8'],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_7': Sample(
                     sample_id='sample_7',
@@ -161,7 +161,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_8': Sample(
                     sample_id='sample_8',
@@ -174,7 +174,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_9': Sample(
                     sample_id='sample_9',
@@ -187,7 +187,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
                 'sample_10': Sample(
                     sample_id='sample_10',
@@ -200,7 +200,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_grandfather=None,
                     siblings=[],
                     half_siblings=[],
-                    aunt_uncles=[],
+                    aunt_nephews=[],
                 ),
             },
         )
@@ -224,7 +224,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_BC1-000345_02_D1': Sample(
                             sample_id='BBL_BC1-000345_02_D1',
@@ -237,7 +237,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_BC1-000345_03_D1': Sample(
                             sample_id='BBL_BC1-000345_03_D1',
@@ -250,7 +250,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                     },
                 ),
@@ -272,7 +272,7 @@ class PedigreesTest(unittest.TestCase):
                                 'BBL_HT-007-5195_06_D1',
                             ],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_HT-007-5195_02_D1': Sample(
                             sample_id='BBL_HT-007-5195_02_D1',
@@ -285,7 +285,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_HT-007-5195_03_D1': Sample(
                             sample_id='BBL_HT-007-5195_03_D1',
@@ -298,7 +298,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_HT-007-5195_04_D1': Sample(
                             sample_id='BBL_HT-007-5195_04_D1',
@@ -311,7 +311,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=['BBL_HT-007-5195_05_D1', 'BBL_HT-007-5195_06_D1'],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_HT-007-5195_05_D1': Sample(
                             sample_id='BBL_HT-007-5195_05_D1',
@@ -324,7 +324,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=['BBL_HT-007-5195_06_D1'],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                         'BBL_HT-007-5195_06_D1': Sample(
                             sample_id='BBL_HT-007-5195_06_D1',
@@ -337,7 +337,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                     },
                 ),
@@ -355,7 +355,7 @@ class PedigreesTest(unittest.TestCase):
                             paternal_grandfather=None,
                             siblings=[],
                             half_siblings=[],
-                            aunt_uncles=[],
+                            aunt_nephews=[],
                         ),
                     },
                 ),

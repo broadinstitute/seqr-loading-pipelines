@@ -16,7 +16,7 @@ class Relation(Enum):
     GRANDPARENT = 'grandparent'
     SIBLING = 'sibling'
     HALF_SIBLING = 'half_sibling'
-    AUNT_UNCLE = 'aunt_uncle'
+    AUNT_NEPHEW = 'aunt_nephew'
 
     @property
     def coefficients(self):
@@ -25,7 +25,7 @@ class Relation(Enum):
             Relation.GRANDPARENT: [0.5, 0.5, 0, 0.25],
             Relation.SIBLING: [0.25, 0.5, 0.25, 0.5],
             Relation.HALF_SIBLING: [0.5, 0.5, 0, 0.25],
-            Relation.AUNT_UNCLE: [0.5, 0.5, 0, 0.25],
+            Relation.AUNT_NEPHEW: [0.5, 0.5, 0, 0.25],
         }[self]
 
 
@@ -41,7 +41,7 @@ class Sample:
     paternal_grandfather: str = None
     siblings: list[str] = field(default_factory=list)
     half_siblings: list[str] = field(default_factory=list)
-    aunt_uncles: list[str] = field(default_factory=list)
+    aunt_nephews: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -83,6 +83,10 @@ class Family:
     def parse_collateral_lineage(
         samples: dict[str, Sample],
     ) -> dict[str, Sample]:
+        # NB: relationships are identified unidirectionally here (for better or for worse)
+        # A sample_i that is siblings with sample_j, will list sample_j as as sibling, but
+        # sample_j will not list sample_i as a sibling.  Relationships only appear in the
+        # ibd table a single time, so we only need to check the pairing once.
         for sample_i, sample_j in itertools.combinations(samples.keys(), 2):
             # If other sample is already related, continue
             if (
@@ -174,7 +178,7 @@ class Family:
                     )
                 )
             ):
-                samples[sample_i].aunt_uncles.append(
+                samples[sample_i].aunt_nephews.append(
                     sample_j,
                 )
         return samples

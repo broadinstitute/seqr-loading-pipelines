@@ -86,12 +86,12 @@ def passes_all_relatedness_checks(  # noqa: C901
         ):
             return False
 
-    for aunt_uncle_id in sample.aunt_uncles:
+    for aunt_nephew_id in sample.aunt_nephews:
         if not passes_relatedness_check(
             relatedness_check_lookup,
             sample.sample_id,
-            aunt_uncle_id,
-            Relation.AUNT_UNCLE,
+            aunt_nephew_id,
+            Relation.AUNT_NEPHEW,
         ):
             return False
     return True
