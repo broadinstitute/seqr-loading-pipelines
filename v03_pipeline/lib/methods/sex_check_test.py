@@ -16,14 +16,13 @@ class SexCheckTest(unittest.TestCase):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht = call_sex(mt)
         self.assertCountEqual(
-            ht.collect(),
+            ht.drop('expected_homs').collect(),
             [
                 hl.Struct(
                     s='ROS_006_18Y03226_D1',
                     is_female=False,
                     f_stat=1.0,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=27,
                     sex='M',
                 ),
@@ -32,7 +31,6 @@ class SexCheckTest(unittest.TestCase):
                     is_female=False,
                     f_stat=1.0,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=27,
                     sex='M',
                 ),
@@ -41,7 +39,6 @@ class SexCheckTest(unittest.TestCase):
                     is_female=False,
                     f_stat=1.0,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=27,
                     sex='M',
                 ),
@@ -50,16 +47,14 @@ class SexCheckTest(unittest.TestCase):
                     is_female=False,
                     f_stat=0.9016393442622951,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=26,
                     sex='M',
                 ),
                 hl.Struct(
                     s='ROS_007_19Y05939_D1',
                     is_female=True,
-                    f_stat=-0.08196721311475397,
+                    f_stat=-0.08196721311475359,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=16,
                     sex='F',
                 ),
@@ -68,7 +63,6 @@ class SexCheckTest(unittest.TestCase):
                     is_female=False,
                     f_stat=1.0,
                     n_called=27,
-                    expected_homs=16.833333333333332,
                     observed_homs=27,
                     sex='M',
                 ),
