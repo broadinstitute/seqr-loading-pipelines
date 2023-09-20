@@ -43,6 +43,21 @@ class Sample:
     half_siblings: list[str] = field(default_factory=list)
     aunt_nephews: list[str] = field(default_factory=list)
 
+    def is_aunt_nephew(self: Sample, other: Sample) -> bool:
+        return (
+            # My Maternal Grandparents are your Parents
+            self.maternal_grandmother
+            and self.maternal_grandfather
+            and (self.maternal_grandmother == other.mother)
+            and (self.maternal_grandfather == other.father)
+        ) or (
+            # My Paternal Grandparents are your Parents
+            self.paternal_grandmother
+            and self.paternal_grandfather
+            and (self.paternal_grandmother == other.mother)
+            and (self.paternal_grandfather == other.father)
+        )
+
 
 @dataclass
 class Family:
@@ -89,14 +104,14 @@ class Family:
         # ibd table a single time, so we only need to check the pairing once.
         for sample_i, sample_j in itertools.combinations(samples.keys(), 2):
             # If other sample is already related, continue
-            if (
-                sample_j == samples[sample_i].mother
-                or sample_j == samples[sample_i].father
-                or sample_j == samples[sample_i].maternal_grandmother
-                or sample_j == samples[sample_i].maternal_grandfather
-                or sample_j == samples[sample_i].paternal_grandmother
-                or sample_j == samples[sample_i].paternal_grandfather
-            ):
+            if sample_j in {
+                samples[sample_i].mother,
+                samples[sample_i].father,
+                samples[sample_i].maternal_grandmother,
+                samples[sample_i].maternal_grandfather,
+                samples[sample_i].paternal_grandmother,
+                samples[sample_i].paternal_grandfather,
+            }:
                 continue
 
             # If both parents are identified and the same, samples are siblings.
@@ -128,60 +143,9 @@ class Family:
             # they're aunt/uncle related
             # NB: because we will only check an  i, j pair of samples a single time, (itertools.combinations)
             # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
-            if (
-                (
-                    # My Maternal Grandparents are your Parents
-                    samples[sample_i].maternal_grandmother
-                    and samples[sample_i].maternal_grandfather
-                    and (
-                        samples[sample_i].maternal_grandmother
-                        == samples[sample_j].mother
-                    )
-                    and (
-                        samples[sample_i].maternal_grandfather
-                        == samples[sample_j].father
-                    )
-                )
-                or (
-                    # My Paternal Grandparents are your Parents
-                    samples[sample_i].paternal_grandmother
-                    and samples[sample_i].paternal_grandfather
-                    and (
-                        samples[sample_i].paternal_grandmother
-                        == samples[sample_j].mother
-                    )
-                    and (
-                        samples[sample_i].paternal_grandfather
-                        == samples[sample_j].father
-                    )
-                )
-                or (
-                    # My Parents your Maternal Grandparents
-                    samples[sample_i].mother
-                    and samples[sample_i].father
-                    and (
-                        samples[sample_i].mother
-                        == samples[sample_j].maternal_grandmother
-                    )
-                    and (
-                        samples[sample_i].father
-                        == samples[sample_j].maternal_grandfather
-                    )
-                )
-                or (
-                     # My Parents your Paternal Grandparents
-                    samples[sample_i].mother
-                    and samples[sample_i].father
-                    and (
-                        samples[sample_i].mother
-                        == samples[sample_j].paternal_grandmother
-                    )
-                    and (
-                        samples[sample_i].father
-                        == samples[sample_j].paternal_grandfather
-                    )
-                )
-            ):
+            if samples[sample_i].is_aunt_nephew(samples[sample_j]) or samples[
+                sample_j
+            ].is_aunt_nephew(samples[sample_i]):
                 samples[sample_i].aunt_nephews.append(
                     sample_j,
                 )
