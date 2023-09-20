@@ -130,6 +130,7 @@ class Family:
             # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
             if (
                 (
+                    # My Maternal Grandparents are your Parents
                     samples[sample_i].maternal_grandmother
                     and samples[sample_i].maternal_grandfather
                     and (
@@ -142,6 +143,7 @@ class Family:
                     )
                 )
                 or (
+                    # My Paternal Grandparents are your Parents
                     samples[sample_i].paternal_grandmother
                     and samples[sample_i].paternal_grandfather
                     and (
@@ -154,6 +156,7 @@ class Family:
                     )
                 )
                 or (
+                    # My Parents your Maternal Grandparents
                     samples[sample_i].mother
                     and samples[sample_i].father
                     and (
@@ -166,6 +169,7 @@ class Family:
                     )
                 )
                 or (
+                     # My Parents your Paternal Grandparents
                     samples[sample_i].mother
                     and samples[sample_i].father
                     and (
