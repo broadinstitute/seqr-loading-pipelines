@@ -1,10 +1,7 @@
-import shutil
-
 import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
@@ -13,31 +10,11 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
-TEST_RELATEDNESS_CHECK_1 = (
-    'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
-)
 
 
 class UpdateSampleLookupTableTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        shutil.copytree(
-            TEST_SEX_CHECK_1,
-            sex_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_VCF,
-            ),
-        )
-        shutil.copytree(
-            TEST_RELATEDNESS_CHECK_1,
-            relatedness_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_VCF,
-            ),
-        )
 
     def test_update_sample_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()

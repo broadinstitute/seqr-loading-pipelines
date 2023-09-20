@@ -1,10 +1,7 @@
-import shutil
-
 import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -14,31 +11,11 @@ TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
-TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
-TEST_RELATEDNESS_CHECK_1 = (
-    'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
-)
 
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        shutil.copytree(
-            TEST_SEX_CHECK_1,
-            sex_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_SNV_INDEL_VCF,
-            ),
-        )
-        shutil.copytree(
-            TEST_RELATEDNESS_CHECK_1,
-            relatedness_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_SNV_INDEL_VCF,
-            ),
-        )
 
     def test_snv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()

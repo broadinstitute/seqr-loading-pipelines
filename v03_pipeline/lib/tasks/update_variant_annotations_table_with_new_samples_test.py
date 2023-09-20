@@ -19,7 +19,6 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -40,10 +39,6 @@ TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
-TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
-TEST_RELATEDNESS_CHECK_1 = (
-    'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
-)
 
 
 GENE_ID_MAPPING = {
@@ -84,22 +79,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         shutil.copytree(
             TEST_INTERVAL_MITO_1,
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval_mito.ht',
-        )
-        shutil.copytree(
-            TEST_SEX_CHECK_1,
-            sex_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_SNV_INDEL_VCF,
-            ),
-        )
-        shutil.copytree(
-            TEST_RELATEDNESS_CHECK_1,
-            relatedness_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_SNV_INDEL_VCF,
-            ),
         )
 
     def test_missing_pedigree(self) -> None:
