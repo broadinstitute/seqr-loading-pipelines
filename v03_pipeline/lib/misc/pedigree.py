@@ -143,12 +143,15 @@ class Family:
             # they're aunt/uncle related
             # NB: because we will only check an  i, j pair of samples a single time, (itertools.combinations)
             # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
-            if samples[sample_i].is_aunt_nephew(samples[sample_j]) or samples[
-                sample_j
-            ].is_aunt_nephew(samples[sample_i]):
+            # fmt: off
+            if (
+                samples[sample_i].is_aunt_nephew(samples[sample_j])
+                or samples[sample_j].is_aunt_nephew(samples[sample_i])
+            ):
                 samples[sample_i].aunt_nephews.append(
                     sample_j,
                 )
+            # fmt: on
         return samples
 
     @classmethod
