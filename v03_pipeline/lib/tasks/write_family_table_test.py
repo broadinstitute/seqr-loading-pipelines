@@ -14,8 +14,6 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
-    def setUp(self) -> None:
-        super().setUp()
 
     def test_snv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
