@@ -13,9 +13,6 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
 class UpdateSampleLookupTableTest(MockedDatarootTestCase):
-    def setUp(self) -> None:
-        super().setUp()
-
     def test_update_sample_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateSampleLookupTableTask(
