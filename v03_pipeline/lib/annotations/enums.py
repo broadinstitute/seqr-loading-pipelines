@@ -144,6 +144,51 @@ MITOTIP_PATHOGENICITIES = [
     'likely_benign',
 ]
 
+SV_TYPES = [
+    'gCNV_DEL',
+    'gCNV_DUP',
+    'BND',
+    'CPX',
+    'CTX',
+    'DEL',
+    'DUP',
+    'INS',
+    'INV',
+    'CNV',
+]
+SV_TYPE_DETAILS = [
+    'INS_iDEL',
+    'INVdel',
+    'INVdup',
+    'ME',
+    'ME:ALU',
+    'ME:LINE1',
+    'ME:SVA',
+    'dDUP',
+    'dDUP_iDEL',
+    'delINV',
+    'delINVdel',
+    'delINVdup',
+    'dupINV',
+    'dupINVdel',
+    'dupINVdup',
+]
+SV_CONSEQUENCE_RANKS = [
+    'LOF',
+    'INTRAGENIC_EXON_DUP',
+    'PARTIAL_EXON_DUP',
+    'COPY_GAIN',
+    'DUP_PARTIAL',
+    'MSV_EXON_OVERLAP',
+    'INV_SPAN',
+    'UTR',
+    'PROMOTER',
+    'TSS_DUP',
+    'BREAKEND_EXONIC',
+    'INTRONIC',
+    'NEAREST_TSS',
+]
+
 
 def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
     formatting_annotation_names = {
@@ -166,5 +211,19 @@ def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
                     trna_prediction=MITOTIP_PATHOGENICITIES,
                 ),
             ),
+        )
+    if 'sv_type_id' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(
+                sv_type=SV_TYPES,
+            ),
+        )
+    if 'sv_type_detail_id' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(sv_type_detail=SV_TYPE_DETAILS),
+        )
+    if 'sorted_gene_consequences' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(sv_consequence_rank=SV_CONSEQUENCE_RANKS),
         )
     return ht

@@ -71,6 +71,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: [],
             DatasetType.MITO: ['contamination', 'mito_cn'],
+            DatasetType.SV: [],
         }[self]
 
     @property
@@ -80,6 +81,7 @@ class DatasetType(Enum):
         return {
             DatasetType.SNV: ['GT', 'AD', 'GQ'],
             DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
+            DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
         }[self]
 
     @property
@@ -96,7 +98,16 @@ class DatasetType(Enum):
                 'mitotip_trna_prediction',
                 'vep',
             ],
+            DatasetType.SV: ['locus', 'alleles', 'filters', 'info'],
         }[self]
+
+    @property
+    def has_sample_lookup_table(self) -> bool:
+        return self in {DatasetType.SNV, DatasetType.MITO}
+
+    @property
+    def has_gencode_mapping(self) -> dict[str, str]:
+        return self == DatasetType.SV
 
     @property
     def sample_lookup_table_fields_and_genotype_filter_fns(
@@ -145,9 +156,20 @@ class DatasetType(Enum):
                 shared.xpos,
             ],
             DatasetType.SV: [
+                sv.algorithms,
+                sv.bothsides_support,
+                sv.cpx_intervals,
+                sv.filters,
+                sv.gt_stats,
+                sv.gnomad_svs,
                 shared.rg37_locus,
-                sv.variant_id,
+                sv.rg37_locus_end,
+                sv.sorted_gene_consequences,
+                sv.strvctvre,
+                sv.sv_type_id,
+                sv.sv_type_detail_id,
                 shared.xpos,
+                sv.xstop,
             ],
             DatasetType.GCNV: [
                 gcnv.variant_id,
@@ -159,7 +181,7 @@ class DatasetType(Enum):
     def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV: [
-                snv.GQ,
+                shared.GQ,
                 snv.AB,
                 snv.DP,
                 shared.GT,
@@ -170,6 +192,12 @@ class DatasetType(Enum):
                 mito.HL,
                 mito.mito_cn,
                 mito.GQ,
+                shared.GT,
+            ],
+            DatasetType.SV: [
+                sv.CN,
+                sv.concordance,
+                shared.GQ,
                 shared.GT,
             ],
         }[self]
@@ -183,4 +211,5 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
+            DatasetType.SV: [],
         }[self]

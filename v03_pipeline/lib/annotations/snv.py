@@ -41,11 +41,6 @@ def _hom(row: hl.StructExpression) -> hl.Int32Expression:
     )
 
 
-def GQ(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
-    is_called = hl.is_defined(mt.GT)
-    return hl.if_else(is_called, mt.GQ, 0)
-
-
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.bind(
