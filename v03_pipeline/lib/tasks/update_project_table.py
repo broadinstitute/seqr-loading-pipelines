@@ -117,6 +117,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
             )
         ht = filter_callset_entries(ht, callset_mt.cols())
         ht = join_entries_hts(ht, callset_ht)
-        return ht.annotate_globals(
+        return ht.select_globals(
             updates=ht.updates.add(self.callset_path),
         )

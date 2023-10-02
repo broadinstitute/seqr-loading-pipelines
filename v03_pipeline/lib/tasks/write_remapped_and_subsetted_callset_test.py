@@ -70,7 +70,14 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         self.assertEqual(mt.count(), (30, 3))
         self.assertEqual(
             mt.globals.collect(),
-            [hl.Struct()],
+            [
+                hl.Struct(
+                    family_guids_failed_missing_samples=set(),
+                    family_guids_failed_relatedness_check=set(),
+                    family_guids_failed_sex_check=set(),
+                    family_guids={'abc_1'},
+                )
+            ],
         )
 
     @patch('v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset.Env')

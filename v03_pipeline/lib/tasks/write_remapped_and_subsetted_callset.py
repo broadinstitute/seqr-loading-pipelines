@@ -138,7 +138,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             msg = 'All families failed checks'
             raise RuntimeError(msg)
 
-        return subset_samples(
+        mt = subset_samples(
             callset_mt,
             hl.Table.parallelize(
                 [
@@ -150,4 +150,21 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 key='s',
             ),
             self.ignore_missing_samples_when_subsetting,
+        )
+        return mt.select_globals(
+            family_guids_failed_missing_samples=(
+                {f.family_guid for f in families_failed_missing_samples}
+                or hl.empty_set(hl.tstr)
+            ),
+            family_guids_failed_relatedness_check=(
+                {f.family_guid for f in families_failed_relatedness_check}
+                or hl.empty_set(hl.tstr)
+            ),
+            family_guids_failed_sex_check=(
+                {f.family_guid for f in families_failed_sex_check}
+                or hl.empty_set(hl.tstr)
+            ),
+            family_guids=(
+                {f.family_guid for f in loadable_families} or hl.empty_set(hl.tstr)
+            ),
         )
