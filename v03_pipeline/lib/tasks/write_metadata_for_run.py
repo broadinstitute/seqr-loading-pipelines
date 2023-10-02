@@ -66,13 +66,13 @@ class WriteMetadataForRunTask(BaseWriteTask):
         ]
 
     def run(self) -> None:
-        metadata_json = {'projects': {}, 'callset': self.callset_path}
-        for project_guid, remapped_and_subsetted_callset in zip(
-            self.project_guids,
-            self.input(),
-        ):
+        metadata_json = {'families': {}, 'callset': self.callset_path}
+        for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
-            metadata_json['projects'][project_guid] = callset_mt.cols().s.collect()
+            metadata_json['families'] = {
+                **callset_mt.families.collect()[0],
+                **metadata_json['families'],
+            }
 
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

@@ -186,7 +186,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                         'RGP_164_3',
                         'RGP_164_4',
                     ],
-                )
+                ),
             ],
         )
         self.assertEqual(
@@ -441,7 +441,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                         'RGP_164_3',
                         'RGP_164_4',
                     ],
-                )
+                ),
             ],
         )
         self.assertEqual(
