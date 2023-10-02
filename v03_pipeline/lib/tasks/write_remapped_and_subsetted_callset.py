@@ -164,7 +164,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 {f.family_guid for f in families_failed_sex_check}
                 or hl.empty_set(hl.tstr)
             ),
-            family_guids=(
-                {f.family_guid for f in loadable_families} or hl.empty_set(hl.tstr)
+            loaded_families=(
+                {
+                    f.family_guid: sorted(f.samples.keys())
+                    for f in loadable_families
+                    or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
+                }
             ),
         )

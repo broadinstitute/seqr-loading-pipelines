@@ -75,7 +75,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                     family_guids_failed_missing_samples=set(),
                     family_guids_failed_relatedness_check=set(),
                     family_guids_failed_sex_check=set(),
-                    family_guids={'abc_1'},
+                    loaded_families={'abc_1': ['HG00731_1', 'HG00732_1', 'HG00733_1']},
                 )
             ],
         )

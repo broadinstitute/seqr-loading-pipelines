@@ -38,7 +38,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                     sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
                     updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'},
                 ),
-            ]
+            ],
         )
 
         self.assertCountEqual(
