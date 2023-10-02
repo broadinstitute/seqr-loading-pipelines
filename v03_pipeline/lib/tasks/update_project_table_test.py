@@ -32,10 +32,13 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
         self.assertTrue(upt_task.complete())
         ht = hl.read_table(upt_task.output().path)
         self.assertCountEqual(
-            ht.globals.sample_ids.collect(),
+            ht.globals.collect(),
             [
-                ['HG00731_1', 'HG00732_1', 'HG00733_1'],
-            ],
+                hl.Struct(
+                    sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'},
+                ),
+            ]
         )
 
         self.assertCountEqual(

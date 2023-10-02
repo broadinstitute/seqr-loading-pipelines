@@ -36,9 +36,12 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
         self.assertCountEqual(
-            ht.globals.sample_ids.collect(),
+            ht.globals.collect(),
             [
-                ['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                hl.Struct(
+                    sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'},
+                ),
             ],
         )
         self.assertEqual(
@@ -173,14 +176,17 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(
-            ht.globals.sample_ids.collect(),
+            ht.globals.collect(),
             [
-                [
-                    'RGP_164_1',
-                    'RGP_164_2',
-                    'RGP_164_3',
-                    'RGP_164_4',
-                ],
+                hl.Struct(
+                    updates={TEST_SV_VCF},
+                    sample_ids=[
+                        'RGP_164_1',
+                        'RGP_164_2',
+                        'RGP_164_3',
+                        'RGP_164_4',
+                    ],
+                )
             ],
         )
         self.assertEqual(
@@ -425,14 +431,17 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(
-            ht.globals.sample_ids.collect(),
+            ht.globals.collect(),
             [
-                [
-                    'RGP_164_1',
-                    'RGP_164_2',
-                    'RGP_164_3',
-                    'RGP_164_4',
-                ],
+                hl.Struct(
+                    updates={TEST_GCNV_BED_FILE},
+                    sample_ids=[
+                        'RGP_164_1',
+                        'RGP_164_2',
+                        'RGP_164_3',
+                        'RGP_164_4',
+                    ],
+                )
             ],
         )
         self.assertEqual(
