@@ -42,6 +42,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     liftover_ref_path = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
@@ -57,18 +61,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         for rdc in self.dataset_type.annotatable_reference_dataset_collections:
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),
             )
 
-        for rdc in self.dataset_type.joinable_reference_dataset_collections(
-            self.env,
-        ):
+        for rdc in self.dataset_type.joinable_reference_dataset_collections:
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),
@@ -77,7 +77,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         if self.dataset_type.has_sample_lookup_table:
             annotation_dependencies['sample_lookup_ht'] = hl.read_table(
                 sample_lookup_table_path(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                 ),
@@ -95,31 +94,29 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks = [
                 UpdateSampleLookupTableTask(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
-                    self.hail_temp_dir,
                     self.callset_path,
                     self.project_guids,
                     self.project_remap_paths,
                     self.project_pedigree_paths,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
+                    self.validate,
                 ),
             ]
         else:
             upstream_table_tasks = [
                 WriteRemappedAndSubsettedCallsetTask(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
-                    self.hail_temp_dir,
                     self.callset_path,
                     project_guid,
                     project_remap_path,
                     project_pedigree_path,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
+                    self.validate,
                 )
                 for (project_guid, project_remap_path, project_pedigree_path) in zip(
                     self.project_guids,
@@ -154,7 +151,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         callset_hts = [
             hl.read_matrix_table(
                 remapped_and_subsetted_callset_path(
-                    self.env,
                     self.reference_genome,
                     self.dataset_type,
                     self.callset_path,
@@ -175,7 +171,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
-            self.env,
             self.reference_genome,
             self.dataset_type,
             self.vep_config_json_path,
@@ -193,9 +188,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc in self.dataset_type.joinable_reference_dataset_collections(
-            self.env,
-        ):
+        for rdc in self.dataset_type.joinable_reference_dataset_collections:
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
@@ -220,7 +213,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
         for rdc in itertools.chain(
             self.dataset_type.annotatable_reference_dataset_collections,
-            self.dataset_type.joinable_reference_dataset_collections(self.env),
+            self.dataset_type.joinable_reference_dataset_collections,
         ):
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()

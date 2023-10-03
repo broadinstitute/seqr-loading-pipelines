@@ -6,7 +6,8 @@ from typing import Callable
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceGenome
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
@@ -34,9 +35,9 @@ class DatasetType(Enum):
             ],
         }.get(self, [])
 
+    @property
     def joinable_reference_dataset_collections(
         self,
-        env: Env,
     ) -> list[ReferenceDatasetCollection]:
         rdcs = {
             DatasetType.SNV_INDEL: [
@@ -47,9 +48,9 @@ class DatasetType(Enum):
                 ReferenceDatasetCollection.COMBINED_MITO,
             ],
         }.get(self, [])
-        if env == Env.LOCAL:
-            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
-        return rdcs
+        if Env.ACCESS_PRIVATE_DATASETS:
+            return rdcs
+        return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
 
     def table_key_type(
         self,
@@ -154,6 +155,14 @@ class DatasetType(Enum):
         }.get(self, lambda e: e.GT.is_non_ref())
 
     @property
+    def can_run_validation(self) -> bool:
+        return self == DatasetType.SNV_INDEL
+
+    @property
+    def veppable(self) -> bool:
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def sample_lookup_table_fields_and_genotype_filter_fns(
         self,
     ) -> dict[str, Callable[hl.MatrixTable, hl.Expression]]:
@@ -171,10 +180,6 @@ class DatasetType(Enum):
                 'homoplasmic_samples': lambda mt: mt.HL >= MITO_MIN_HOM_THRESHOLD,
             },
         }[self]
-
-    @property
-    def veppable(self) -> bool:
-        return self == DatasetType.SNV_INDEL
 
     @property
     def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
