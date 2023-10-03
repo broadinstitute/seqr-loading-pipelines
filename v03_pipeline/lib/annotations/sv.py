@@ -172,6 +172,7 @@ def rg37_locus_end(
 def start_locus(ht: hl.Table, **_: Any):
     return ht.locus
 
+
 def sorted_gene_consequences(
     ht: hl.Table,
     gencode_mapping: dict[str, str],
