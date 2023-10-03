@@ -214,6 +214,7 @@ class DatasetType(Enum):
                 sv.sv_type_id,
                 sv.sv_type_detail_id,
                 shared.xpos,
+                sv.xstop,
             ],
             DatasetType.GCNV: [
                 gcnv.end_locus,
@@ -274,4 +275,8 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
+            DatasetType.MITO: [
+                mito.gt_stats,
+            ],
+            DatasetType.SV: [],
         }[self]
