@@ -59,6 +59,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         'efg_1': ['NA20888_1'],
                     },
                     'run_id': 'run_123456',
-                    'sample_tyope': SampleType.WGS.value,
+                    'sample_type': SampleType.WGS.value,
                 },
             )
