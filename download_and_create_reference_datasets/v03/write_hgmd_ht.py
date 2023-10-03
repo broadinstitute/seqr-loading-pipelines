@@ -27,4 +27,4 @@ if __name__ == '__main__':
         default=ReferenceGenome.GRCh38,
     )
     args, _ = parser.parse_known_args()
-    run(args.env, args.reference_genome)
+    run(args.reference_genome)
