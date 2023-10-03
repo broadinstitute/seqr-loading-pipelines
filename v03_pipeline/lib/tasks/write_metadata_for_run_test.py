@@ -1,14 +1,10 @@
 import json
-import os
-import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
 
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -16,21 +12,10 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class WriteMetadataForRunTaskTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
-
-    def test_write_metadata_for_run_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
+    def test_write_metadata_for_run_task(self) -> None:
         worker = luigi.worker.Worker()
-
         write_metadata_for_run_task = WriteMetadataForRunTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_VCF,
@@ -44,7 +29,7 @@ class WriteMetadataForRunTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             write_metadata_for_run_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
         )
         self.assertTrue(write_metadata_for_run_task.complete())
         with write_metadata_for_run_task.output().open('r') as f:

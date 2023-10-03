@@ -9,11 +9,7 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import (
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    HailTableTask,
-)
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 if TYPE_CHECKING:
     import luigi
@@ -25,24 +21,19 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
             ),
         )
 
-    def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
-
     def requires(self) -> list[luigi.Task]:
         rdcs = (
-            self.dataset_type.joinable_reference_dataset_collections(self.env)
+            self.dataset_type.joinable_reference_dataset_collections
             + self.dataset_type.annotatable_reference_dataset_collections
         )
         return [
             HailTableTask(
                 valid_reference_dataset_collection_path(
-                    self.env,
                     self.reference_genome,
                     rdc,
                 ),

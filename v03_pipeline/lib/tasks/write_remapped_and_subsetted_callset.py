@@ -8,11 +8,7 @@ from v03_pipeline.lib.misc.pedigree import families_to_include, samples_to_inclu
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
-from v03_pipeline.lib.tasks.files import (
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    RawFileTask,
-)
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 
 
@@ -38,7 +34,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             remapped_and_subsetted_callset_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
@@ -46,16 +41,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ),
         )
 
-    def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
-
     def requires(self) -> list[luigi.Task]:
         return [
             WriteImportedCallsetTask(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
-                self.hail_temp_dir,
                 self.callset_path,
                 self.validate,
             ),

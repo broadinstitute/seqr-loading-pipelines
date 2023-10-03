@@ -6,7 +6,6 @@ import os
 from v03_pipeline.lib.model import (
     AccessControl,
     CachedReferenceDatasetQuery,
-    DataRoot,
     DatasetType,
     Env,
     PipelineVersion,
@@ -16,17 +15,12 @@ from v03_pipeline.lib.model import (
 
 
 def _v03_pipeline_prefix(
-    env: Env,
-    root: DataRoot,
+    root: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if env == Env.LOCAL or env == Env.TEST:
-        root = DataRoot.LOCAL_DATASETS
-    elif env == Env.DEV:
-        root = DataRoot.SEQR_SCRATCH_TEMP
     return os.path.join(
-        root.value,
+        root,
         PipelineVersion.V03.value,
         reference_genome.value,
         dataset_type.value,
@@ -34,30 +28,23 @@ def _v03_pipeline_prefix(
 
 
 def _v03_reference_data_prefix(
-    env: Env,
-    root: DataRoot,
+    root: str,
     reference_genome: ReferenceGenome,
 ) -> str:
-    if env == Env.LOCAL or env == Env.TEST:
-        root = DataRoot.LOCAL_REFERENCE_DATA
-    if env == Env.DEV:
-        root = DataRoot.SEQR_SCRATCH_TEMP
     return os.path.join(
-        root.value,
+        root,
         PipelineVersion.V03.value,
         reference_genome.value,
     )
 
 
 def cached_reference_dataset_query_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     cached_reference_dataset_query: CachedReferenceDatasetQuery,
 ) -> str:
     return os.path.join(
         _v03_reference_data_prefix(
-            env,
-            DataRoot.SEQR_REFERENCE_DATA,
+            Env.REFERENCE_DATASETS,
             reference_genome,
         ),
         'cached_reference_dataset_queries',
@@ -66,15 +53,13 @@ def cached_reference_dataset_query_path(
 
 
 def family_table_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     family_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -84,15 +69,13 @@ def family_table_path(
 
 
 def imported_callset_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     callset_path: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_LOADING_TEMP,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -102,15 +85,13 @@ def imported_callset_path(
 
 
 def metadata_for_run_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -121,15 +102,13 @@ def metadata_for_run_path(
 
 
 def project_table_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     project_guid: str,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -139,7 +118,6 @@ def project_table_path(
 
 
 def remapped_and_subsetted_callset_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     callset_path: str,
@@ -147,25 +125,23 @@ def remapped_and_subsetted_callset_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_LOADING_TEMP,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
         'remapped_and_subsetted_callsets',
-        f'{hashlib.sha256((callset_path + project_guid).encode("utf8")).hexdigest()}.mt',
+        project_guid,
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
     )
 
 
 def sample_lookup_table_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -174,23 +150,21 @@ def sample_lookup_table_path(
 
 
 def valid_reference_dataset_collection_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     reference_dataset_collection: ReferenceDatasetCollection,
 ) -> str | None:
     if (
-        env == Env.LOCAL
+        not Env.ACCESS_PRIVATE_DATASETS
         and reference_dataset_collection.access_control == AccessControl.PRIVATE
     ):
         return None
     root = (
-        DataRoot.SEQR_REFERENCE_DATA_PRIVATE
+        Env.PRIVATE_REFERENCE_DATASETS
         if reference_dataset_collection.access_control == AccessControl.PRIVATE
-        else DataRoot.SEQR_REFERENCE_DATA
+        else Env.REFERENCE_DATASETS
     )
     return os.path.join(
         _v03_reference_data_prefix(
-            env,
             root,
             reference_genome,
         ),
@@ -200,14 +174,12 @@ def valid_reference_dataset_collection_path(
 
 
 def variant_annotations_table_path(
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            env,
-            DataRoot.SEQR_DATASETS,
+            Env.DATASETS,
             reference_genome,
             dataset_type,
         ),

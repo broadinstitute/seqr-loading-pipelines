@@ -11,12 +11,7 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
 )
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
-from v03_pipeline.lib.tasks.files import (
-    CallsetTask,
-    GCSorLocalFolderTarget,
-    GCSorLocalTarget,
-    HailTableTask,
-)
+from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
@@ -30,15 +25,11 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             imported_callset_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
             ),
         )
-
-    def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
@@ -49,7 +40,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 HailTableTask(
                     cached_reference_dataset_query_path(
-                        self.env,
                         self.reference_genome,
                         CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     ),
@@ -67,7 +57,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             validate_contigs(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 cached_reference_dataset_query_path(
-                    self.env,
                     self.reference_genome,
                     CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),

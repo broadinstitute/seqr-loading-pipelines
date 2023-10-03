@@ -11,7 +11,7 @@ from v03_pipeline.lib.misc.sample_entries import (
 )
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -43,7 +43,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             project_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.project_guid,
@@ -51,7 +50,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
+        return super().complete() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
                 self.callset_path,
             ),
@@ -59,10 +58,8 @@ class UpdateProjectTableTask(BaseUpdateTask):
 
     def requires(self) -> luigi.Task:
         return WriteRemappedAndSubsettedCallsetTask(
-            self.env,
             self.reference_genome,
             self.dataset_type,
-            self.hail_temp_dir,
             self.callset_path,
             self.project_guid,
             self.project_remap_path,
