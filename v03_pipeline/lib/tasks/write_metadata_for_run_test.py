@@ -58,5 +58,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         'def_1': ['NA20885_1'],
                         'efg_1': ['NA20888_1'],
                     },
+                    'run_id': 'run_123456',
                 },
             )
