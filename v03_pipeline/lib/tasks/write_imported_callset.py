@@ -57,17 +57,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             *requirements,
             CallsetTask(self.callset_path),
         ]
-        if self.validate:
-            requirements = [
-                *requirements,
-                HailTableTask(
-                    cached_reference_dataset_query_path(
-                        self.reference_genome,
-                        CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                    ),
-                ),
-            ]
-        return requirements
 
     def create_table(self) -> hl.MatrixTable:
         mt = import_callset(
