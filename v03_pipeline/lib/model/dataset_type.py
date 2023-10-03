@@ -278,4 +278,8 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
+            DatasetType.MITO: [
+                mito.gt_stats,
+            ],
+            DatasetType.SV: [],
         }[self]
