@@ -86,7 +86,10 @@ def get_enum_select_fields(enum_selects, ht):
     return enum_select_fields
 
 
-def get_ht(dataset: str, reference_genome: ReferenceGenome):
+def get_ht(
+    dataset: str,
+    reference_genome: ReferenceGenome,
+):
     config = CONFIG[dataset][reference_genome.v02_value]
     ht = (
         config['custom_import'](config['source_path'], reference_genome.v02_value)

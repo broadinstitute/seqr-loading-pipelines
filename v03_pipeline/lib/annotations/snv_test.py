@@ -2,10 +2,10 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.sample_lookup_table import gt_stats
+from v03_pipeline.lib.annotations.snv import gt_stats
 
 
-class SampleLookupTableAnnotationsTest(unittest.TestCase):
+class SNVTest(unittest.TestCase):
     def test_allele_count_annotations(self) -> None:
         ht = hl.Table.parallelize(
             [

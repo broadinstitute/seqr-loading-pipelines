@@ -12,7 +12,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
-TEST_VCF = 'v03_pipeline/var/test/vcfs/1kg_30variants.vcf.bgz'
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
@@ -46,7 +46,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(unittest.TestCase):
         worker.run()
         self.assertEqual(
             wrsc_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/remapped_and_subsetted_callsets/9c5523b646159774624584580b2cceacb8d14dc1c317ffbbad2da2c5f08fa71f.mt',
+            f'{self._temp_local_datasets}/v03/GRCh38/SNV/remapped_and_subsetted_callsets/e829375bb21e14190437011ca96fd4ab8ff5a0b098614957093a055f8fc9bd41.mt',
         )
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)

@@ -6,6 +6,8 @@ import itertools
 import hail as hl
 import luigi
 
+from hail_scripts.utils.mapping_gene_ids import load_gencode
+
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.paths import (
@@ -19,7 +21,12 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
+from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
+    WriteRemappedAndSubsettedCallsetTask,
+)
 from v03_pipeline.lib.vep import run_vep
+
+GENCODE_RELEASE = 42
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -40,20 +47,83 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         description='Path of hail vep config .json file',
     )
 
+    def read_annotation_dependencies(self):
+        annotation_dependencies = {}
+
+        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
+            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+
+        for rdc in self.dataset_type.joinable_reference_dataset_collections(
+            self.env,
+        ):
+            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
+                valid_reference_dataset_collection_path(
+                    self.env,
+                    self.reference_genome,
+                    rdc,
+                ),
+            )
+
+        if self.dataset_type.has_sample_lookup_table:
+            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
+                sample_lookup_table_path(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
+            )
+
+        if self.dataset_type.has_gencode_mapping:
+            annotation_dependencies['gencode_mapping'] = hl.literal(
+                load_gencode(GENCODE_RELEASE, ''),
+            )
+
+        return annotation_dependencies
+
     def requires(self) -> list[luigi.Task]:
+        if self.dataset_type.has_sample_lookup_table:
+            # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
+            upstream_table_tasks = [
+                UpdateSampleLookupTableTask(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.hail_temp_dir,
+                    self.callset_path,
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                    self.ignore_missing_samples,
+                ),
+            ]
+        else:
+            upstream_table_tasks = [
+                WriteRemappedAndSubsettedCallsetTask(
+                    self.env,
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.hail_temp_dir,
+                    self.callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                    self.ignore_missing_samples,
+                )
+                for (project_guid, project_remap_path, project_pedigree_path) in zip(
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                )
+            ]
         return [
             *super().requires(),
-            UpdateSampleLookupTableTask(
-                self.env,
-                self.reference_genome,
-                self.dataset_type,
-                self.hail_temp_dir,
-                self.callset_path,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                self.ignore_missing_samples,
-            ),
+            *upstream_table_tasks,
         ]
 
     def complete(self) -> bool:
@@ -87,6 +157,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
         callset_ht = callset_ht.distinct()
 
+        annotation_dependencies = self.read_annotation_dependencies()
+
         # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
@@ -97,43 +169,22 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.vep_config_json_path,
         )
 
-        # 2) Get handles on rdc hts:
-        annotatable_rdc_hts = {
-            f'{rdc.value}_ht': hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
-            for rdc in self.dataset_type.annotatable_reference_dataset_collections
-        }
-        joinable_rdc_hts = {
-            f'{rdc.value}_ht': hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.env,
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
-            for rdc in self.dataset_type.joinable_reference_dataset_collections(
-                self.env,
-            )
-        }
-
-        # 3) Select down to the formatting annotations fields and
-        # anyreference dataset collection annotations.
+        # 2) Select down to the formatting annotations fields and
+        # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns,
-                annotatable_rdc_hts,
+                **annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc_ht in joinable_rdc_hts.values():
+        for rdc in self.dataset_type.joinable_reference_dataset_collections(
+            self.env,
+        ):
+            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 5) Union with the existing variant annotations table
@@ -143,15 +194,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 ht,
                 self.dataset_type.sample_lookup_table_annotation_fns,
-                {
-                    'sample_lookup_ht': hl.read_table(
-                        sample_lookup_table_path(
-                            self.env,
-                            self.reference_genome,
-                            self.dataset_type,
-                        ),
-                    ),
-                },
+                **annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
@@ -162,10 +205,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc_ht in itertools.chain(
-            annotatable_rdc_hts.values(),
-            joinable_rdc_hts.values(),
+        for rdc in itertools.chain(
+            self.dataset_type.annotatable_reference_dataset_collections,
+            self.dataset_type.joinable_reference_dataset_collections(self.env),
         ):
+            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(

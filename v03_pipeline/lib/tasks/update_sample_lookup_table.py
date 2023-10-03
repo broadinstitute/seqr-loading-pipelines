@@ -74,9 +74,10 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
             [],
             hl.tstruct(
                 **key_type,
-                ref_samples=hl.tstruct(),
-                het_samples=hl.tstruct(),
-                hom_samples=hl.tstruct(),
+                **{
+                    field: hl.tstruct()
+                    for field in self.dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
+                },
             ),
             key=key_type.fields,
             globals=hl.Struct(
@@ -87,9 +88,22 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
-            ht = filter_callset_sample_ids(ht, callset_mt.cols(), project_guid)
-            callset_sample_lookup_ht = compute_callset_sample_lookup_ht(callset_mt)
-            ht = join_sample_lookup_hts(ht, callset_sample_lookup_ht, project_guid)
+            ht = filter_callset_sample_ids(
+                self.dataset_type,
+                ht,
+                callset_mt.cols(),
+                project_guid,
+            )
+            callset_sample_lookup_ht = compute_callset_sample_lookup_ht(
+                self.dataset_type,
+                callset_mt,
+            )
+            ht = join_sample_lookup_hts(
+                self.dataset_type,
+                ht,
+                callset_sample_lookup_ht,
+                project_guid,
+            )
             ht = ht.select_globals(
                 updates=ht.updates.add(
                     hl.Struct(callset=self.callset_path, project_guid=project_guid),

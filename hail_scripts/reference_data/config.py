@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 import hail as hl
 
 from hail_scripts.reference_data.clinvar import (
@@ -13,6 +11,13 @@ from hail_scripts.reference_data.clinvar import (
     parsed_clnsig,
 )
 from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
+
+
+def import_locus_intervals(
+    url: str,
+    genome_version: str,
+) -> hl.Table:
+    return hl.import_locus_intervals(url, f'GRCh{genome_version}')
 
 
 def predictor_parse(field: hl.StringExpression):
@@ -52,6 +57,13 @@ def dbnsfp_custom_select_38(ht):
     selects = dbnsfp_custom_select(ht)
     selects['VEST4_score'] = hl.parse_float32(predictor_parse(ht.VEST4_score))
     selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
+    return selects
+
+
+def dbnsfp_mito_custom_select(ht):
+    selects = {}
+    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
+    selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     return selects
 
 
@@ -384,6 +396,28 @@ CONFIG = {
             },
         },
     },
+    'dbnsfp_mito': {
+        '37': {
+            'version': '2.9.3',
+            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+            'custom_select': dbnsfp_mito_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+            },
+            'filter': lambda ht: ht.locus.contig == 'chrM',
+        },
+        '38': {
+            'version': '4.2',
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+            'custom_select': dbnsfp_mito_custom_select,
+            'enum_select': {
+                'SIFT_pred': ['D', 'T'],
+                'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+            },
+            'filter': lambda ht: ht.locus.contig == 'chrM',
+        },
+    },
     'gnomad_mito': {
         '38': {
             'version': 'v3.1',
@@ -401,7 +435,7 @@ CONFIG = {
     'mitomap': {
         '38': {
             'version': 'Feb. 04 2022',
-            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/Mitomap Confirmed Mutations Feb. 04 2022.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
             'select': ['pathogenic'],
         },
     },
@@ -433,7 +467,11 @@ CONFIG = {
             },
         },
     },
+    'high_constraint_region_mito': {
+        '38': {
+            'version': 'Feb-15-2022',
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
+            'custom_import': import_locus_intervals,
+        },
+    },
 }
-
-CONFIG['dbnsfp_mito'] = {'38': deepcopy(CONFIG['dbnsfp']['38'])}
-CONFIG['dbnsfp_mito']['38']['filter'] = lambda ht: ht.locus.contig == 'chrM'
