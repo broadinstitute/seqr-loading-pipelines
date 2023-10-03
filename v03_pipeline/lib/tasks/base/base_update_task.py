@@ -10,6 +10,7 @@ class BaseUpdateTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
+
     n_partitions = None
 
     def output(self) -> luigi.Target:
