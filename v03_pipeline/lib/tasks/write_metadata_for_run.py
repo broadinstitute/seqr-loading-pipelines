@@ -69,7 +69,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
         metadata_json = {
             'callset': self.callset_path,
             'run_id': self.run_id,
-            'families': {}
+            'families': {},
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
