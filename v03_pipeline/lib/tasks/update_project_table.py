@@ -6,13 +6,12 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.sample_entries import (
     filter_callset_entries,
-    filter_hom_ref_rows,
     globalize_sample_ids,
     join_entries_hts,
 )
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -24,15 +23,26 @@ class UpdateProjectTableTask(BaseUpdateTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    ignore_missing_samples = luigi.BoolParameter(
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    is_new_gcnv_joint_call = luigi.BoolParameter(
+        default=False,
+        description='Is this a fully joint-called callset.',
     )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             project_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.project_guid,
@@ -40,7 +50,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
+        return super().complete() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
                 self.callset_path,
             ),
@@ -48,15 +58,15 @@ class UpdateProjectTableTask(BaseUpdateTask):
 
     def requires(self) -> luigi.Task:
         return WriteRemappedAndSubsettedCallsetTask(
-            self.env,
             self.reference_genome,
             self.dataset_type,
-            self.hail_temp_dir,
             self.callset_path,
             self.project_guid,
             self.project_remap_path,
             self.project_pedigree_path,
-            self.ignore_missing_samples,
+            self.ignore_missing_samples_when_subsetting,
+            self.ignore_missing_samples_when_remapping,
+            self.validate,
         )
 
     def initialize_table(self) -> hl.Table:
@@ -79,7 +89,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
         callset_ht = callset_mt.select_rows(
-            filters=callset_mt.filters,
+            filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
             entries=hl.sorted(
                 hl.agg.collect(
                     hl.Struct(
@@ -94,8 +104,10 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 key=lambda e: e.s,
             ),
         ).rows()
+        callset_ht = callset_ht.filter(
+            callset_ht.entries.any(self.dataset_type.sample_entries_filter_fn),
+        )
         callset_ht = globalize_sample_ids(callset_ht)
-        callset_ht = filter_hom_ref_rows(callset_ht)
         # HACK: steal the type from callset_ht when ht is empty.
         # This was the least gross way
         if 'entries' not in ht.row_value:

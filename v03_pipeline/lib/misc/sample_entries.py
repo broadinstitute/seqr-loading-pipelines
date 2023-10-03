@@ -40,12 +40,6 @@ def filter_callset_entries(
     return globalize_sample_ids(ht)
 
 
-def filter_hom_ref_rows(
-    ht: hl.Table,
-) -> hl.Table:
-    return ht.filter(ht.entries.any(lambda e: e.GT.is_non_ref()))
-
-
 def join_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     ht = ht.join(callset_ht, 'outer')
     ht_empty_entries = ht.sample_ids.map(

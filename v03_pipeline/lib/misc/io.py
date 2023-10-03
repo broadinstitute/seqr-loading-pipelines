@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import os
-import tempfile
 import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.model import DataRoot, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 BIALLELIC = 2
 
@@ -26,9 +26,51 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
-    # TODO implement me.
-    # also remember to annotate pos = hl.agg.min(mt.sample_start)
-    return hl.import_table(callset_path)
+    # Hail falls over itself with OOMs with use_new_shuffle here... no clue why.
+    hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
+    ht = hl.import_table(
+        callset_path,
+        types={
+            'start': hl.tint32,
+            'end': hl.tint32,
+            'CN': hl.tint32,
+            'QS': hl.tint32,
+            'defragmented': hl.tbool,
+            'sf': hl.tfloat64,
+            'sc': hl.tint32,
+            'genes_any_overlap_totalExons': hl.tint32,
+            'genes_strict_overlap_totalExons': hl.tint32,
+            'no_ovl': hl.tbool,
+            'is_latest': hl.tbool,
+        },
+        min_partitions=500,
+        force=callset_path.endswith('gz'),
+    )
+    mt = ht.to_matrix_table(
+        row_key=['variant_name', 'svtype'],
+        col_key=['sample_fix'],
+        row_fields=['chr', 'sc', 'sf', 'strvctvre_score'],
+    )
+    mt = mt.rename({'start': 'sample_start', 'end': 'sample_end'})
+    mt = mt.key_cols_by(s=mt.sample_fix)
+    mt = mt.annotate_rows(
+        variant_id=hl.format('%s_%s', mt.variant_name, mt.svtype),
+        filters=hl.empty_set(hl.tstr),
+        start=hl.agg.min(mt.sample_start),
+        end=hl.agg.max(mt.sample_end),
+        num_exon=hl.agg.max(mt.genes_any_overlap_totalExons),
+        gene_ids=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_any_overlap_Ensemble_ID)),
+        ),
+        cg_genes=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_CG_Ensemble_ID)),
+        ),
+        lof_genes=hl.flatten(
+            hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_LOF_Ensemble_ID)),
+        ),
+    )
+    mt = mt.unfilter_entries()
+    return mt
 
 
 def import_vcf(
@@ -62,13 +104,15 @@ def import_callset(
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
-    if dataset_type == DatasetType.SNV:
+    if dataset_type == DatasetType.SNV_INDEL:
         mt = split_multi_hts(mt)
-    mt = mt.select_globals()
+    if dataset_type == DatasetType.SV:
+        mt = mt.annotate_rows(variant_id=mt.rsid)
     mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
+    mt = mt.select_globals()
+    mt = mt.select_rows(*dataset_type.row_fields)
     mt = mt.select_cols(*dataset_type.col_fields)
-    mt = mt.select_entries(*dataset_type.entries_fields)
-    return mt.select_rows(*dataset_type.row_fields)
+    return mt.select_entries(*dataset_type.entries_fields)
 
 
 def import_remap(remap_path: str) -> hl.Table:
@@ -90,31 +134,21 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 
 
 def write(
-    env: Env,
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
     n_partitions: int | None = None,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
-    if checkpoint and (env == Env.LOCAL or env == Env.TEST):
-        with tempfile.TemporaryDirectory() as d:
-            t = t.checkpoint(
-                os.path.join(
-                    d,
-                    f'{uuid.uuid4()}.{suffix}',
-                ),
-            )
-            return t.write(destination_path, overwrite=True, stage_locally=True)
-    elif checkpoint:
+    if checkpoint:
         t = t.checkpoint(
             os.path.join(
-                DataRoot.SEQR_SCRATCH_TEMP.value,
+                Env.HAIL_TMPDIR,
                 f'{uuid.uuid4()}.{suffix}',
             ),
         )
     # "naive_coalesce" will decrease parallelism of hail's pipelined operations
     # , so we sneak this re-partitioning until after the checkpoint.
-    if n_partitions and env != Env.TEST:
+    if n_partitions:
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)

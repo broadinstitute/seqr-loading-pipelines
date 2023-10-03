@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
 )
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
@@ -22,44 +22,57 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    ignore_missing_samples = luigi.BoolParameter(
+    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    validate = luigi.BoolParameter(
+        default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             sample_lookup_table_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
             ),
         )
 
     def complete(self) -> bool:
-        return GCSorLocalFolderTarget(self.output().path).exists() and hl.eval(
-            hl.all(
-                [
-                    hl.read_table(self.output().path).updates.contains(
-                        hl.Struct(callset=self.callset_path, project_guid=project_guid),
-                    )
-                    for project_guid in self.project_guids
-                ],
+        return super().complete() and hl.eval(
+            hl.bind(
+                lambda updates: hl.all(
+                    [
+                        updates.contains(
+                            hl.Struct(
+                                callset=self.callset_path,
+                                project_guid=project_guid,
+                            ),
+                        )
+                        for project_guid in self.project_guids
+                    ],
+                ),
+                hl.read_table(self.output().path).updates,
             ),
         )
 
     def requires(self) -> luigi.Task:
         return [
             WriteRemappedAndSubsettedCallsetTask(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
-                self.hail_temp_dir,
                 self.callset_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
-                self.ignore_missing_samples,
+                self.ignore_missing_samples_when_subsetting,
+                self.ignore_missing_samples_when_remapping,
+                self.validate,
             )
             for (project_guid, project_remap_path, project_pedigree_path) in zip(
                 self.project_guids,

@@ -5,7 +5,6 @@ import hail as hl
 from v03_pipeline.lib.misc.sample_entries import (
     deglobalize_sample_ids,
     filter_callset_entries,
-    filter_hom_ref_rows,
     globalize_sample_ids,
     join_entries_hts,
 )
@@ -323,89 +322,6 @@ class SampleEntriesTest(unittest.TestCase):
                     entries=[
                         hl.Struct(a=3),
                         hl.Struct(a=4),
-                    ],
-                ),
-            ],
-        )
-
-    def test_filter_hom_ref_rows(self) -> None:
-        entries_ht = hl.Table.parallelize(
-            [
-                {
-                    'id': 0,
-                    'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                    ],
-                },
-                {
-                    'id': 1,
-                    'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.missing(hl.tstruct(GT=hl.tcall)),
-                        hl.missing(hl.tstruct(GT=hl.tcall)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                    ],
-                },
-                {
-                    'id': 2,
-                    'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 0], phased=False)),
-                        hl.missing(hl.tstruct(GT=hl.tcall)),
-                        hl.missing(hl.tstruct(GT=hl.tcall)),
-                    ],
-                },
-                {
-                    'id': 3,
-                    'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 1], phased=False)),
-                    ],
-                },
-            ],
-            hl.tstruct(
-                id=hl.tint32,
-                filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(GT=hl.tcall)),
-            ),
-            key='id',
-            globals=hl.Struct(sample_ids=['a', 'b', 'c', 'd']),
-        )
-        ht = filter_hom_ref_rows(entries_ht)
-        self.assertCountEqual(
-            ht.globals.collect(),
-            [hl.Struct(sample_ids=['a', 'b', 'c', 'd'])],
-        )
-        self.assertCountEqual(
-            ht.collect(),
-            [
-                hl.Struct(
-                    id=2,
-                    filters={'HIGH_SR_BACKGROUND'},
-                    entries=[
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 0], phased=False)),
-                        None,
-                        None,
-                    ],
-                ),
-                hl.Struct(
-                    id=3,
-                    filters={'HIGH_SR_BACKGROUND'},
-                    entries=[
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 0], phased=False)),
-                        hl.Struct(GT=hl.Call(alleles=[1, 1], phased=False)),
                     ],
                 ),
             ],

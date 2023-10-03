@@ -1,50 +1,36 @@
-import os
-import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
-
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_SNV_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class WriteFamilyTableTaskTest(unittest.TestCase):
-    def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
-
-    def test_snv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+class WriteFamilyTableTaskTest(MockedDatarootTestCase):
+    def test_snv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         wft_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV,
-            callset_path=TEST_SNV_VCF,
+            dataset_type=DatasetType.SNV_INDEL,
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             family_guid='abc_1',
+            validate=False,
         )
         worker.add(wft_task)
         worker.run()
         self.assertEqual(
             wft_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV/families/abc_1/samples.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
         )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
@@ -164,12 +150,9 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             ],
         )
 
-    def test_sv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+    def test_sv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         write_family_table_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
             callset_path=TEST_SV_VCF,
@@ -177,12 +160,13 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             project_remap_path='not_a_real_file',
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
+            validate=False,
         )
         worker.add(write_family_table_task)
         worker.run()
         self.assertEqual(
             write_family_table_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SV/families/family_2_1/samples.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SV/families/family_2_1.ht',
         )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
@@ -412,6 +396,159 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
                         ),
                         GQ=62,
                         GT=hl.Call(alleles=[0, 1], phased=False),
+                    ),
+                ],
+            ],
+        )
+
+    def test_gcnv_write_family_table_task(self) -> None:
+        worker = luigi.worker.Worker()
+        write_family_table_task = WriteFamilyTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.GCNV,
+            callset_path=TEST_GCNV_BED_FILE,
+            project_guid='R0115_test_project2',
+            project_remap_path='not_a_real_file',
+            project_pedigree_path=TEST_PEDIGREE_5,
+            family_guid='family_2_1',
+            validate=False,
+        )
+        worker.add(write_family_table_task)
+        worker.run()
+        self.assertEqual(
+            write_family_table_task.output().path,
+            f'{self.mock_env.DATASETS}/v03/GRCh38/GCNV/families/family_2_1.ht',
+        )
+        self.assertTrue(write_family_table_task.complete())
+        ht = hl.read_table(write_family_table_task.output().path)
+        self.assertCountEqual(
+            ht.globals.sample_ids.collect(),
+            [
+                [
+                    'RGP_164_1',
+                    'RGP_164_2',
+                    'RGP_164_3',
+                    'RGP_164_4',
+                ],
+            ],
+        )
+        self.assertEqual(
+            ht.count(),
+            2,
+        )
+        self.assertCountEqual(
+            ht.entries.collect(),
+            [
+                [
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=100007881,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=2,
+                        sample_start=100006937,
+                        CN=1,
+                        GT=hl.Call(alleles=[0, 1], phased=False),
+                        QS=4,
+                    ),
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=False,
+                            prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=100023213,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=None,
+                        sample_start=100017585,
+                        CN=1,
+                        GT=hl.Call(alleles=[0, 1], phased=False),
+                        QS=5,
+                    ),
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=100023213,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG00000117620'},
+                        sample_num_exon=None,
+                        sample_start=100017585,
+                        CN=0,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                        QS=30,
+                    ),
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=100023212,
+                        sample_gene_ids={'ENSG00000283761', 'ENSG22222222222'},
+                        sample_num_exon=2,
+                        sample_start=100017586,
+                        CN=0,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                        QS=30,
+                    ),
+                ],
+                [
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
+                    ),
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
+                    ),
+                    hl.Struct(
+                        concordance=hl.Struct(
+                            new_call=False,
+                            prev_call=True,
+                            prev_overlap=False,
+                        ),
+                        defragged=False,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=0,
+                        GT=hl.Call(alleles=[1, 1], phased=False),
+                        QS=30,
+                    ),
+                    hl.Struct(
+                        concordance=None,
+                        defragged=None,
+                        sample_end=None,
+                        sample_gene_ids=None,
+                        sample_num_exon=None,
+                        sample_start=None,
+                        CN=None,
+                        GT=None,
+                        QS=None,
                     ),
                 ],
             ],
