@@ -69,6 +69,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
         metadata_json = {
             'callset': self.callset_path,
             'run_id': self.run_id,
+            'sample_type': self.sample_type.value,
             'families': {},
         }
         for remapped_and_subsetted_callset in self.input():
