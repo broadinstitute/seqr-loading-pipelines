@@ -1,14 +1,9 @@
-import os
-import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
-
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
@@ -18,23 +13,10 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class WriteFamilyTableTaskTest(unittest.TestCase):
-    maxDiff = None
-
-    def setUp(self) -> None:
-        self._temp_local_datasets = tempfile.TemporaryDirectory().name
-
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_datasets):
-            shutil.rmtree(self._temp_local_datasets)
-
-    def test_snv_indel_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+class WriteFamilyTableTaskTest(MockedDatarootTestCase):
+    def test_snv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         wft_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             callset_path=TEST_SNV_INDEL_VCF,
@@ -42,12 +24,13 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             family_guid='abc_1',
+            validate=False,
         )
         worker.add(wft_task)
         worker.run()
         self.assertEqual(
             wft_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
         )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
@@ -167,12 +150,9 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             ],
         )
 
-    def test_sv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+    def test_sv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         write_family_table_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
             callset_path=TEST_SV_VCF,
@@ -180,12 +160,13 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             project_remap_path='not_a_real_file',
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
+            validate=False,
         )
         worker.add(write_family_table_task)
         worker.run()
         self.assertEqual(
             write_family_table_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/SV/families/family_2_1.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/SV/families/family_2_1.ht',
         )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
@@ -420,12 +401,9 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             ],
         )
 
-    def test_gcnv_write_family_table_task(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_DATASETS.value = self._temp_local_datasets
+    def test_gcnv_write_family_table_task(self) -> None:
         worker = luigi.worker.Worker()
-
         write_family_table_task = WriteFamilyTableTask(
-            env=Env.TEST,
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.GCNV,
             callset_path=TEST_GCNV_BED_FILE,
@@ -433,12 +411,13 @@ class WriteFamilyTableTaskTest(unittest.TestCase):
             project_remap_path='not_a_real_file',
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
+            validate=False,
         )
         worker.add(write_family_table_task)
         worker.run()
         self.assertEqual(
             write_family_table_task.output().path,
-            f'{self._temp_local_datasets}/v03/GRCh38/GCNV/families/family_2_1.ht',
+            f'{self.mock_env.DATASETS}/v03/GRCh38/GCNV/families/family_2_1.ht',
         )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)

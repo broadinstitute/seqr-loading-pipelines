@@ -1,9 +1,10 @@
 import unittest
+from unittest.mock import patch
 
 import hail as hl
 
 from v03_pipeline.lib.annotations.shared import sorted_transcript_consequences
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
 
 
@@ -26,7 +27,14 @@ class SharedAnnotationsTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
         )
-        ht = run_vep(ht, Env.TEST, ReferenceGenome.GRCh38, DatasetType.SNV_INDEL, None)
+        with patch('v03_pipeline.lib.vep.Env') as mock_env:
+            mock_env.MOCK_VEP = True
+            ht = run_vep(
+                ht,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                None,
+            )
         ht = ht.select(
             sorted_transcript_consequences=sorted_transcript_consequences(ht),
         )

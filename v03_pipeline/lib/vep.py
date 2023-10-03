@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 def run_vep(
     mt: hl.Table,
-    env: Env,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     vep_config_json_path: str | None,
@@ -19,9 +18,9 @@ def run_vep(
     if not dataset_type.veppable:
         return mt
     vep_runner = (
-        vep_runners.HailVEPRunner()
-        if env != Env.TEST
-        else vep_runners.HailVEPDummyRunner()
+        vep_runners.HailVEPDummyRunner()
+        if Env.MOCK_VEP
+        else vep_runners.HailVEPRunner()
     )
     return vep_runner.run(
         mt,

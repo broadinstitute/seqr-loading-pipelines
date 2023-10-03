@@ -8,23 +8,6 @@ class AccessControl(Enum):
     PRIVATE = 'private'
 
 
-class DataRoot(Enum):
-    LOCAL_DATASETS = 'seqr-datasets'
-    LOCAL_REFERENCE_DATA = 'seqr-reference-data'
-    SEQR_DATASETS = 'gs://seqr-datasets'
-    SEQR_LOADING_TEMP = 'gs://seqr-loading-temp'
-    SEQR_REFERENCE_DATA = 'gs://seqr-reference-data'
-    SEQR_REFERENCE_DATA_PRIVATE = 'gs://seqr-reference-data-private'
-    SEQR_SCRATCH_TEMP = 'gs://seqr-scratch-temp'
-
-
-class Env(Enum):
-    DEV = 'DEV'
-    LOCAL = 'LOCAL'
-    PROD = 'PROD'
-    TEST = 'TEST'
-
-
 class PipelineVersion(Enum):
     V02 = 'v02'
     V03 = 'v03'
@@ -92,6 +75,19 @@ class ReferenceGenome(Enum):
                 'chr8',
                 'chr9',
                 'chrX',
+                'chrY',
+                'chrM',
+            },
+        }[self]
+
+    @property
+    def optional_contigs(self) -> set[str]:
+        return {
+            ReferenceGenome.GRCh37: {
+                'Y',
+                'MT',
+            },
+            ReferenceGenome.GRCh38: {
                 'chrY',
                 'chrM',
             },

@@ -1,14 +1,12 @@
-import os
 import shutil
-import tempfile
-import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
@@ -16,29 +14,24 @@ TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 
 
-@patch('v03_pipeline.lib.paths.DataRoot')
-class FieldsTest(unittest.TestCase):
+class FieldsTest(MockedDatarootTestCase):
     def setUp(self) -> None:
-        self._temp_local_reference_data = tempfile.TemporaryDirectory().name
+        super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self._temp_local_reference_data}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
         )
 
-    def tearDown(self) -> None:
-        if os.path.isdir(self._temp_local_reference_data):
-            shutil.rmtree(self._temp_local_reference_data)
-
-    def test_get_formatting_fields(self, mock_dataroot: Mock) -> None:
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
+    def test_get_formatting_fields(self) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
-        ht = run_vep(
-            ht,
-            Env.TEST,
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            None,
-        )
+        with patch('v03_pipeline.lib.vep.Env') as mock_env:
+            mock_env.MOCK_VEP = True
+            ht = run_vep(
+                ht,
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                None,
+            )
         ht = ht.annotate(rsid='abcd')
         self.assertCountEqual(
             list(
@@ -48,14 +41,12 @@ class FieldsTest(unittest.TestCase):
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
-                                Env.TEST,
                                 ReferenceGenome.GRCh38,
                                 rdc,
                             ),
                         )
                         for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
                     },
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
                     liftover_ref_path=LIFTOVER,
@@ -79,14 +70,12 @@ class FieldsTest(unittest.TestCase):
                     **{
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
-                                Env.TEST,
                                 ReferenceGenome.GRCh38,
                                 rdc,
                             ),
                         )
                         for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
                     },
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh37,
                     liftover_ref_path=LIFTOVER,
@@ -104,9 +93,7 @@ class FieldsTest(unittest.TestCase):
 
     def test_get_sample_lookup_table_fields(
         self,
-        mock_dataroot: Mock,
     ) -> None:
-        mock_dataroot.LOCAL_REFERENCE_DATA.value = self._temp_local_reference_data
         sample_lookup_ht = hl.Table.parallelize(
             [
                 {
@@ -143,7 +130,6 @@ class FieldsTest(unittest.TestCase):
                     ht,
                     DatasetType.SNV_INDEL.sample_lookup_table_annotation_fns,
                     sample_lookup_ht=sample_lookup_ht,
-                    env=Env.TEST,
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),

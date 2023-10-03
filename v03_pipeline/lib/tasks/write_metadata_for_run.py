@@ -26,12 +26,15 @@ class WriteMetadataForRunTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     run_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             metadata_for_run_path(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
                 self.run_id,
@@ -44,16 +47,15 @@ class WriteMetadataForRunTask(BaseWriteTask):
     def requires(self) -> luigi.Task:
         return [
             WriteRemappedAndSubsettedCallsetTask(
-                self.env,
                 self.reference_genome,
                 self.dataset_type,
-                self.hail_temp_dir,
                 self.callset_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
+                self.validate,
             )
             for (project_guid, project_remap_path, project_pedigree_path) in zip(
                 self.project_guids,
