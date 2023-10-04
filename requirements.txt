@@ -16,7 +16,7 @@ asyncinit==0.2.4
     # via hail
 attrs==23.1.0
     # via aiohttp
-avro==1.11.1
+avro==1.11.3
     # via hail
 azure-core==1.26.4
     # via
