@@ -159,7 +159,7 @@ pandas==2.0.1
     # via hail
 parsimonious==0.10.0
     # via hail
-pillow==9.5.0
+pillow==10.0.1
     # via bokeh
 plotly==5.14.1
     # via hail
