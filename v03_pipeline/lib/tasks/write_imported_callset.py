@@ -21,7 +21,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
         default=None,
         description='Optional path to part two outputs from callset (VCF shards containing filter information)',
     )
-
     validate = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
