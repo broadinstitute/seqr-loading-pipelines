@@ -1,7 +1,9 @@
 import os
 
+import hail as hl
 import luigi
 from luigi.contrib import gcs
+
 
 def CallsetTask(pathname: str) -> luigi.Task:  # noqa: N802
     if 'vcf' in pathname:
