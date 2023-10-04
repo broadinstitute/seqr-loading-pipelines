@@ -11,9 +11,9 @@ class AccessControl(Enum):
 
 
 class Ploidy(Enum):
-    AMBIGUOUS = 'ambiguous_sex'
     FEMALE = 'F'
     MALE = 'M'
+    UNKNOWN = 'U'
 
 
 class PipelineVersion(Enum):
