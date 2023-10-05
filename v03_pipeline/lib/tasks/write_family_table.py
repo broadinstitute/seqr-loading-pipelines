@@ -69,16 +69,15 @@ class WriteFamilyTableTask(BaseWriteTask):
         )
 
     def create_table(self) -> hl.Table:
-        pedigree_ht = import_pedigree(self.project_pedigree_path)
         callset_mt = hl.read_matrix_table(self.input().path)
+        pedigree_ht = import_pedigree(self.project_pedigree_path)
         families = parse_pedigree_ht_to_families(pedigree_ht)
+        family = [family for family in families if family.family_guid == self.family_guid][0]
         callset_mt = subset_samples(
             callset_mt,
             hl.Table.parallelize(
                 [
                     {'s': sample_id}
-                    for family in families
-                    if family.family_guid == self.family_guid
                     for sample_id in family.samples
                 ],
                 hl.tstruct(s=hl.dtype('str')),
