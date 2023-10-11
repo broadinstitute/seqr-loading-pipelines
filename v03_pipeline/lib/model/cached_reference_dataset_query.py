@@ -12,44 +12,45 @@ from hail_scripts.computed_fields.vep import (
 )
 from hail_scripts.reference_data.clinvar import (
     CLINVAR_PATHOGENICITIES_LOOKUP,
-    parsed_clnsig,
 )
+from hail_scripts.reference_data.config import CONFIG
 
-from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome, ReferenceDatasetCollection
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
-GNOMAD_HIGH_AF_THRESHOLD = 0.90
+GNOMAD_CODING_NONCODING_HIGH_AF_THRESHOLD = 0.90
+ONE_PERCENT = 0.01
+TEN_PERCENT = 0.10
 
 
 def clinvar_path_variants(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Table:
-    pathogenicity = parsed_clnsig(ht)[0]
-    pathogenicity_id = CLINVAR_PATHOGENICITIES_LOOKUP.get(pathogenicity)
+    ht = ht.select_globals()
     ht = ht.select(
         pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity)
+            ht.clinvar.pathogenicity_id
+            >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
             & (
-                pathogenicity_id
-                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
+                ht.clinvar.pathogenicity_id
+                < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
-            & (pathogenicity_id < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]])
         ),
         likely_pathogenic=(
-            CLINVAR_PATHOGENICITIES_LOOKUP.contains(pathogenicity)
+            ht.clinvar.pathogenicity_id
+            >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
             & (
-                pathogenicity_id
-                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
-            )
-            & (
-                pathogenicity_id
+                ht.clinvar.pathogenicity_id
                 < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
             )
         ),
     )
-    return ht.filter(ht.pathogenic | ht.likely_pathogenic)
+    ht = ht.filter(ht.pathogenic | ht.likely_pathogenic)
+    ht = ht.repartition(1)
+    return ht
 
 
 def gnomad_coding_and_noncoding_variants(
@@ -67,7 +68,7 @@ def gnomad_coding_and_noncoding_variants(
             ),
         ],
     )
-    ht = ht.filter(ht.freq[0].AF > GNOMAD_HIGH_AF_THRESHOLD)
+    ht = ht.filter(ht.freq[0].AF > GNOMAD_CODING_NONCODING_HIGH_AF_THRESHOLD)
     ht = ht.annotate(
         sorted_transaction_consequences=(
             get_expr_for_vep_sorted_transcript_consequences_array(
@@ -96,11 +97,14 @@ def gnomad_coding_and_noncoding_variants(
     return ht.filter(ht.coding | ht.noncoding)
 
 
-def gnomad_high_af_variants(
+def high_af_variants(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Table:
-    # TODO implement me.
+    ht = ht.select_globals()
+    ht = ht.filter(ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > ONE_PERCENT)
+    ht = ht.select(is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT)
+    ht = ht.repartition(1)
     return ht
 
 
@@ -114,8 +118,8 @@ def gnomad_qc(
 class CachedReferenceDatasetQuery(Enum):
     CLINVAR_PATH_VARIANTS = 'clinvar_path_variants'
     GNOMAD_CODING_AND_NONCODING_VARIANTS = 'gnomad_coding_and_noncoding_variants'
-    GNOMAD_HIGH_AF_VARIANTS = 'gnomad_high_af_variants'
     GNOMAD_QC = 'gnomad_qc'
+    HIGH_AF_VARIANTS = 'high_af_variants'
 
     @property
     def access_control(self) -> AccessControl:
@@ -124,19 +128,34 @@ class CachedReferenceDatasetQuery(Enum):
         return AccessControl.PUBLIC
 
     @property
-    def dataset(self) -> str:
+    def dataset(self) -> str | None:
         return {
-            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: 'clinvar',
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
-            CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',
-        }[self]
+        }.get(self)
+
+    def ht(self, reference_genome: ReferenceGenome) -> hl.Table:
+        # If the query is defined over the uncombined reference dataset, use the combiner config.
+        if self.dataset:
+            config = CONFIG[self.dataset][reference_genome.v02_value]
+            return (
+                config['custom_import'](
+                    config['source_path'], reference_genome.v02_value,
+                )
+                if 'custom_import' in config
+                else hl.read_table(config['path'])
+            )
+        return hl.read_table(
+            valid_reference_dataset_collection_path(
+                reference_genome, ReferenceDatasetCollection.COMBINED,
+            ),
+        )
 
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:
         return {
             CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: clinvar_path_variants,
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: gnomad_coding_and_noncoding_variants,
-            CachedReferenceDatasetQuery.GNOMAD_HIGH_AF_VARIANTS: gnomad_high_af_variants,
             CachedReferenceDatasetQuery.GNOMAD_QC: gnomad_qc,
+            CachedReferenceDatasetQuery.HIGH_AF_VARIANTS: high_af_variants,
         }[self]
