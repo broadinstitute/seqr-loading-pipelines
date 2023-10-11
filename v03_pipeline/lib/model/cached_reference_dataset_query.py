@@ -34,7 +34,7 @@ def clinvar_path_variants(
             )
             & (
                 ht.clinvar.pathogenicity_id
-                < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
+                <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
         ),
         likely_pathogenic=(
@@ -44,7 +44,7 @@ def clinvar_path_variants(
             )
             & (
                 ht.clinvar.pathogenicity_id
-                < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
+                <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
             )
         ),
     )
