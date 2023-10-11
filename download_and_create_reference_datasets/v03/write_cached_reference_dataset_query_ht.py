@@ -51,7 +51,7 @@ def run(
         query,
     )
     print(f'Uploading ht to {destination_path}')
-    write(ht, destination_path)
+    write(ht, destination_path, n_partitions=1)
 
 
 if __name__ == '__main__':

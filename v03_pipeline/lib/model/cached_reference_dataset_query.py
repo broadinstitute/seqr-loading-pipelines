@@ -49,7 +49,6 @@ def clinvar_path_variants(
         ),
     )
     ht = ht.filter(ht.pathogenic | ht.likely_pathogenic)
-    ht = ht.repartition(1)
     return ht
 
 
@@ -104,7 +103,6 @@ def high_af_variants(
     ht = ht.select_globals()
     ht = ht.filter(ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > ONE_PERCENT)
     ht = ht.select(is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT)
-    ht = ht.repartition(1)
     return ht
 
 
