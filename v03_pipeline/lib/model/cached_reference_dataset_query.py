@@ -11,14 +11,11 @@ from hail_scripts.computed_fields.vep import (
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
 from hail_scripts.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
-from hail_scripts.reference_data.config import CONFIG
 
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
@@ -135,25 +132,6 @@ class CachedReferenceDatasetQuery(Enum):
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',
         }.get(self)
-
-    def ht(self, reference_genome: ReferenceGenome) -> hl.Table:
-        # If the query is defined over the uncombined reference dataset, use the combiner config.
-        if self.dataset:
-            config = CONFIG[self.dataset][reference_genome.v02_value]
-            return (
-                config['custom_import'](
-                    config['source_path'],
-                    reference_genome.v02_value,
-                )
-                if 'custom_import' in config
-                else hl.read_table(config['path'])
-            )
-        return hl.read_table(
-            valid_reference_dataset_collection_path(
-                reference_genome,
-                ReferenceDatasetCollection.COMBINED,
-            ),
-        )
 
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:
