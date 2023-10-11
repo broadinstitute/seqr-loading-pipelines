@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 
-
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, ReferenceGenome
 from v03_pipeline.lib.paths import valid_cached_reference_dataset_query_path
