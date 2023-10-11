@@ -44,7 +44,7 @@ def run(
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ):
-    ht = get_ht(query, reference_genome)
+    ht = get_ht(reference_genome, query)
     ht = query.query(ht, reference_genome=reference_genome)
     destination_path = valid_cached_reference_dataset_query_path(
         reference_genome,
