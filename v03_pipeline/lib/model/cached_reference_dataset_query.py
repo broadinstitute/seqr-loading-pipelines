@@ -28,16 +28,20 @@ def clinvar_path_variants(
     ht = ht.select_globals()
     ht = ht.select(
         pathogenic=(
-            ht.clinvar.pathogenicity_id
-            >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
+            (
+                ht.clinvar.pathogenicity_id
+                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
+            )
             & (
                 ht.clinvar.pathogenicity_id
                 < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
         ),
         likely_pathogenic=(
-            ht.clinvar.pathogenicity_id
-            >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
+            (
+                ht.clinvar.pathogenicity_id
+                >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
+            )
             & (
                 ht.clinvar.pathogenicity_id
                 < CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
