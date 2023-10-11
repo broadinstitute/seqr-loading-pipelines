@@ -128,7 +128,7 @@ class CachedReferenceDatasetQuery(Enum):
         return AccessControl.PUBLIC
 
     @property
-    def dataset(self) -> str | None:
+    def reference_dataset(self) -> str | None:
         return {
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',

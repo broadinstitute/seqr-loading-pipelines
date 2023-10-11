@@ -21,9 +21,9 @@ def get_ht(
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ) -> hl.Table:
-    # If the query is defined over the uncombined reference dataset, use the combiner config.
-    if query.dataset:
-        config = CONFIG[query.dataset][reference_genome.v02_value]
+    # If the query is defined over an uncombined reference dataset, use the combiner config.
+    if query.reference_dataset:
+        config = CONFIG[query.reference_dataset][reference_genome.v02_value]
         return (
             config['custom_import'](
                 config['source_path'],
