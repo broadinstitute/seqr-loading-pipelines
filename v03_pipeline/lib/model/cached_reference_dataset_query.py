@@ -12,10 +12,7 @@ from hail_scripts.computed_fields.vep import (
 )
 from hail_scripts.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
-from v03_pipeline.lib.model.definitions import (
-    AccessControl,
-    ReferenceGenome,
-)
+from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
