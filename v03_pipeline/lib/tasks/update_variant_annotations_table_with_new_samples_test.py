@@ -27,6 +27,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
+TEST_ONT_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/ont_snv_indel_1.vcf'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
@@ -1283,6 +1284,59 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     strvctvre=hl.Struct(score=0.5070000290870667),
                     sv_type_id=5,
                     xpos=1100017586,
+                ),
+            ],
+        )
+
+
+    def test_ont_snv_indel_update_vat(self) -> None:
+        shutil.copytree(
+            TEST_INTERVAL_1,
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+        )
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.ONT_SNV_INDEL,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_ONT_SNV_INDEL_VCF,
+                project_guids=['R0113_test_project'],
+                project_remap_paths=[TEST_REMAP],
+                project_pedigree_paths=[TEST_PEDIGREE_3],
+                validate=False,
+                liftover_ref_path=TEST_LIFTOVER,
+                ignore_missing_samples_when_remapping=True,
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        self.assertTrue( 
+            GCSorLocalFolderTarget(
+                f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/ONT_SNV_INDEL/lookup.ht',
+            ).exists(),
+        )
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 5)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    paths=hl.Struct(),
+                    versions=hl.Struct(),
+                    enums=hl.Struct(
+                        sv_type=SV_TYPES,
+                        sorted_gene_consequences=hl.Struct(
+                            major_consequence=SV_CONSEQUENCE_RANKS,
+                        ),
+                    ),
+                    updates={
+                        hl.Struct(
+                            callset=TEST_GCNV_BED_FILE,
+                            project_guid='R0115_test_project2',
+                        ),
+                    },
                 ),
             ],
         )

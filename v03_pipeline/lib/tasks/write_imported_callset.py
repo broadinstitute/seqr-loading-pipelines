@@ -3,7 +3,7 @@ from __future__ import annotations
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.io import import_callset
+from v03_pipeline.lib.misc.io import import_callset, split_multi_hts
 from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
@@ -64,6 +64,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
+        if self.dataset_type.has_multi_allelic_variants:
+            mt = split_multi_hts(mt)
         if self.validate and self.dataset_type.can_run_validation:
             validate_contigs(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(

@@ -90,7 +90,10 @@ def import_vcf(
         contig_recoding=recode,
         force_bgz=True,
         min_partitions=500,
+        # NB: find_replace was added to support the filters vcfs delivered with internal exome callsets
         find_replace=('nul', '.'),
+        # NB: long read data has missing array elements
+        array_elements_required=False,
     )
 
 
@@ -106,8 +109,6 @@ def import_callset(
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
-    if dataset_type == DatasetType.SNV_INDEL:
-        mt = split_multi_hts(mt)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(variant_id=mt.rsid)
     if filters_path:
