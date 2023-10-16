@@ -1380,13 +1380,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             [
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10004, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10004,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10004, reference_genome='GRCh37',
+                        contig=1,
+                        position=10004,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1441,13 +1445,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10010, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10010,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'A'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10010, reference_genome='GRCh37',
+                        contig=1,
+                        position=10010,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1502,13 +1510,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10010, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10010,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10010, reference_genome='GRCh37',
+                        contig=1,
+                        position=10010,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1563,13 +1575,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10019, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10019,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['T', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10019, reference_genome='GRCh37',
+                        contig=1,
+                        position=10019,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1624,13 +1640,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10022, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10022,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10022, reference_genome='GRCh37',
+                        contig=1,
+                        position=10022,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1685,13 +1705,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10025, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10025,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['T', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10025, reference_genome='GRCh37',
+                        contig=1,
+                        position=10025,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
@@ -1746,13 +1770,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hl.Struct(
                     locus=hl.Locus(
-                        contig='chr1', position=10028, reference_genome='GRCh38',
+                        contig='chr1',
+                        position=10028,
+                        reference_genome='GRCh38',
                     ),
                     alleles=['C', 'G'],
                     gnomad_non_coding_constraint=hl.Struct(z_score=None),
                     screen=hl.Struct(region_type_ids=[]),
                     rg37_locus=hl.Locus(
-                        contig=1, position=10028, reference_genome='GRCh37',
+                        contig=1,
+                        position=10028,
+                        reference_genome='GRCh37',
                     ),
                     sorted_transcript_consequences=[
                         hl.Struct(
