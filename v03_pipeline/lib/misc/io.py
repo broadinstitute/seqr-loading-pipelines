@@ -26,8 +26,6 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
-    # Hail falls over itself with OOMs with use_new_shuffle here... no clue why.
-    hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
     ht = hl.import_table(
         callset_path,
         types={

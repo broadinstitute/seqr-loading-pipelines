@@ -5,7 +5,7 @@ import luigi
 
 from v03_pipeline.lib.misc.io import import_callset, split_multi_hts
 from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_cached_reference_dataset_query_path,
@@ -25,6 +25,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+
+    def init_hail(self):
+        # Need to use the GCP bucket as temp storage for very large callset joins
+        hl.init(tmp_dir=Env.HAIL_TMPDIR, idempotent=True)
+
+        # Hail falls over itself with OOMs with use_new_shuffle here... no clue why.
+        # Long read data also dies with use_new_shuffle :( !
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
