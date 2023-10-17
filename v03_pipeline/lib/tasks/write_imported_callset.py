@@ -26,14 +26,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
-    def init_hail(self):
-        # Need to use the GCP bucket as temp storage for very large callset joins
-        hl.init(tmp_dir=Env.HAIL_TMPDIR, idempotent=True)
-
-        # Hail falls over itself with OOMs with use_new_shuffle here... no clue why.
-        # Long read data also dies with use_new_shuffle :( !
-        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
-
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             imported_callset_path(
@@ -66,6 +58,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
         ]
 
     def create_table(self) -> hl.MatrixTable:
+        # Hail falls over itself with OOMs with use_new_shuffle here within the GCNV import,
+        # OR fails with non-serializability errors.
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         mt = import_callset(
             self.callset_path,
             self.reference_genome,
