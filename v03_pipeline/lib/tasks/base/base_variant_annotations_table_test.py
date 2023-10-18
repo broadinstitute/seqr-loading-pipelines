@@ -20,15 +20,15 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
+            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
         )
 
     def test_should_create_initialized_table(self) -> None:
