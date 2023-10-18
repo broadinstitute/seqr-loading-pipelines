@@ -4,7 +4,11 @@ from typing import TYPE_CHECKING
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model.definitions import (
+    AccessControl,
+    Env,
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,

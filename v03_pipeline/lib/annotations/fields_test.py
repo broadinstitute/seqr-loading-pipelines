@@ -4,7 +4,7 @@ from unittest.mock import patch
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
@@ -46,7 +46,8 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection if rdc.requires_annotation
+                        for rdc in ReferenceDatasetCollection
+                        if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -75,7 +76,8 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection if rdc.requires_annotation
+                        for rdc in ReferenceDatasetCollection
+                        if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh37,

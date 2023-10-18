@@ -9,6 +9,7 @@ from hail_scripts.utils.mapping_gene_ids import load_gencode
 
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.model import AccessControl, Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
@@ -24,7 +25,6 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 from v03_pipeline.lib.vep import run_vep
-from v03_pipeline.lib.model import AccessControl, Env, ReferenceDatasetCollection
 
 GENCODE_RELEASE = 42
 
