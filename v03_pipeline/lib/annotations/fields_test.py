@@ -77,6 +77,7 @@ class FieldsTest(MockedDatarootTestCase):
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
                                 ReferenceGenome.GRCh38,
+                                DatasetType.SNV_INDEL,
                                 rdc,
                             ),
                         )

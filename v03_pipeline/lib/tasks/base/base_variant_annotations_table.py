@@ -36,6 +36,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
             HailTableTask(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
+                    self.dataset_type,
                     rdc,
                 ),
             )
