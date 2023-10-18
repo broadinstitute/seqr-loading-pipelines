@@ -50,7 +50,7 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection
+                        for rdc in ReferenceDatasetCollection.for_dataset_type(DatasetType.SNV_INDEL)
                         if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
@@ -81,7 +81,7 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection
+                        for rdc in ReferenceDatasetCollection.for_dataset_type(DatasetType.SNV_INDEL)
                         if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,

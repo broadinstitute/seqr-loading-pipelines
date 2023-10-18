@@ -40,8 +40,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                     rdc,
                 ),
             )
-            for rdc in ReferenceDatasetCollection
-            if rdc.access_control == AccessControl.PUBLIC or Env.ACCESS_PRIVATE_DATASETS
+            for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type)   
         ]
 
     def initialize_table(self) -> hl.Table:
