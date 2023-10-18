@@ -31,15 +31,15 @@ def run(dataset_type: DatasetType, dataset: str | None):
         ht = update_existing_joined_hts(
             destination_path,
             dataset,
+            reference_genome,
             dataset_type,
             ReferenceDatasetCollection.INTERVAL,
-            reference_genome,
         )
     else:
         ht = join_hts(
+            reference_genome,
             dataset_type,
             ReferenceDatasetCollection.INTERVAL,
-            reference_genome,
         )
 
     ht.describe()
@@ -61,7 +61,9 @@ if __name__ == '__main__':
         help='When used, update the passed dataset, otherwise run all datasets.',
     )
     args, _ = parser.parse_known_args()
-    if args.dataset not in ReferenceDatasetCollection.INTERVAL.datasets(dataset_type):
+    if args.dataset not in ReferenceDatasetCollection.for_dataset_type(
+        args.dataset_type,
+    ):
         msg = f'{args.dataset} is not a valid dataset for {DatasetType}'
         raise ValueError(msg)
     run(args.dataset_type, args.dataset)

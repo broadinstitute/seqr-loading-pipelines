@@ -15,7 +15,11 @@ from hail_scripts.reference_data.config import (
     dbnsfp_mito_custom_select,
 )
 
-from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
+from v03_pipeline.lib.model import (
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
@@ -410,8 +414,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
         ht = update_existing_joined_hts(
             'destination',
             'b',
-            ReferenceDatasetCollection.INTERVAL,
             ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            ReferenceDatasetCollection.INTERVAL,
         )
         self.assertCountEqual(
             ht.collect(),
