@@ -86,4 +86,4 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
             ],
-        }[dataset_type]
+        }.get(dataset_type, [])
