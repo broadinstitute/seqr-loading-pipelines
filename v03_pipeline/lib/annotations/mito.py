@@ -72,7 +72,7 @@ def HL(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def high_constraint_region(
     ht: hl.Table,
-    interval_mito_ht: hl.Table,
+    interval_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
     return hl.is_defined(interval_mito_ht[ht.locus])
