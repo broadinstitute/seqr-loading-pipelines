@@ -12,6 +12,7 @@ def run(reference_genome: ReferenceGenome):
     ht = join_hts(ReferenceDatasetCollection.HGMD, ReferenceGenome.GRCh38)
     destination_path = valid_reference_dataset_collection_path(
         reference_genome,
+        DatasetType.SNV_INDEL,
         ReferenceDatasetCollection.HGMD,
     )
     print(f'Uploading ht to {destination_path}')
