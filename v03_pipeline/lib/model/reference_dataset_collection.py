@@ -73,7 +73,8 @@ class ReferenceDatasetCollection(Enum):
 
     @classmethod
     def for_dataset_type(
-        cls, dataset_type: DatasetType,
+        cls,
+        dataset_type: DatasetType,
     ) -> list[ReferenceDatasetCollection]:
         return {
             DatasetType.SNV_INDEL: [
@@ -85,4 +86,4 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
             ],
-        }[self]
+        }[dataset_type]

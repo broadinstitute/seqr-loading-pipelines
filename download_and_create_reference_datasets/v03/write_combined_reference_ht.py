@@ -19,7 +19,9 @@ from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 
 
 def run(
-    dataset_type: DatasetType, reference_genome: ReferenceGenome, dataset: str | None,
+    dataset_type: DatasetType,
+    reference_genome: ReferenceGenome,
+    dataset: str | None,
 ):
     destination_path = valid_reference_dataset_collection_path(
         reference_genome,
