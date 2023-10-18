@@ -138,7 +138,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         ht = get_ht(
             'mock_dbnsfp',
-            ReferenceDatasetCollection.COMBINED,
             ReferenceGenome.GRCh38,
         )
         self.assertCountEqual(
@@ -176,7 +175,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         ht = get_ht(
             'mock_dbnsfp_mito',
-            ReferenceDatasetCollection.COMBINED_MITO,
             ReferenceGenome.GRCh38,
         )
         self.assertCountEqual(
@@ -242,7 +240,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertCountEqual(
             get_ht(
                 'a',
-                ReferenceDatasetCollection.COMBINED,
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
             [
@@ -258,7 +255,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertCountEqual(
             get_ht(
                 'a',
-                ReferenceDatasetCollection.COMBINED,
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
             [
@@ -273,7 +269,6 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
         ht = get_ht(
             'a',
-            ReferenceDatasetCollection.COMBINED,
             ReferenceGenome.GRCh38,
         )
         self.assertRaises(Exception, ht.globals.collect)
@@ -303,13 +298,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
     @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
     @mock.patch('hail_scripts.reference_data.combine.get_ht')
     @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
-    # NB: mocking syntax is different here because we're mocking a property on an object that
-    # is being passed IN to the update_existing_joined_hts function.
-    @mock.patch.object(
-        ReferenceDatasetCollection,
-        'datasets',
-        new_callable=mock.PropertyMock,
-    )
+    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_existing_joined_hts(
         self,
         mock_reference_dataset_collection_datasets,
