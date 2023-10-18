@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import hail as hl
 
-from v03_pipeline.lib.model.definitions import (
+from v03_pipeline.lib.model import (
     AccessControl,
     Env,
     ReferenceDatasetCollection,

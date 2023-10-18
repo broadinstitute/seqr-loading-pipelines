@@ -215,27 +215,23 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             enums=hl.Struct(),
         )
         for rdc in ReferenceDatasetCollection:
-            if not (
-                rdc.access_control == AccessControl.PUBLIC
-                or Env.ACCESS_PRIVATE_DATASETS
-            ):
-                continue
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
-            rdc_globals = rdc_ht.index_globals()
-            ht = ht.annotate_globals(
-                paths=hl.Struct(
-                    **ht.globals.paths,
-                    **rdc_globals.paths,
-                ),
-                versions=hl.Struct(
-                    **ht.globals.versions,
-                    **rdc_globals.versions,
-                ),
-                enums=hl.Struct(
-                    **ht.globals.enums,
-                    **rdc_globals.enums,
-                ),
-            )
+            if rdc.access_control == AccessControl.PUBLIC or Env.ACCESS_PRIVATE_DATASETS:
+                rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
+                rdc_globals = rdc_ht.index_globals()
+                ht = ht.annotate_globals(
+                    paths=hl.Struct(
+                        **ht.globals.paths,
+                        **rdc_globals.paths,
+                    ),
+                    versions=hl.Struct(
+                        **ht.globals.versions,
+                        **rdc_globals.versions,
+                    ),
+                    enums=hl.Struct(
+                        **ht.globals.enums,
+                        **rdc_globals.enums,
+                    ),
+                )
         ht = annotate_enums(ht, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
