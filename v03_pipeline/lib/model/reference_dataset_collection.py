@@ -72,15 +72,17 @@ class ReferenceDatasetCollection(Enum):
         }.get(self, default_key)
 
     @classmethod
-    def for_dataset_type(cls, dataset_type: DatasetType) -> list[ReferenceDatasetCollection]
+    def for_dataset_type(
+        cls, dataset_type: DatasetType,
+    ) -> list[ReferenceDatasetCollection]:
         return {
             DatasetType.SNV_INDEL: [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
-                ReferenceDatasetCollection.HGMD
+                ReferenceDatasetCollection.HGMD,
             ],
             DatasetType.MITO: [
-                ReferenceDatasetCollection.COMBINED, 
+                ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
             ],
         }[self]

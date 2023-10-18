@@ -4,11 +4,7 @@ from typing import TYPE_CHECKING
 
 import hail as hl
 
-from v03_pipeline.lib.model import (
-    AccessControl,
-    Env,
-    ReferenceDatasetCollection,
-)
+from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -40,7 +36,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                     rdc,
                 ),
             )
-            for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type)   
+            for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type)
         ]
 
     def initialize_table(self) -> hl.Table:
