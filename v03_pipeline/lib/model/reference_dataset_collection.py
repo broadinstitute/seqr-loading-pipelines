@@ -4,15 +4,14 @@ from enum import Enum
 
 import hail as hl
 
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 
 
 class ReferenceDatasetCollection(Enum):
     COMBINED = 'combined'
-    COMBINED_MITO = 'combined_mito'
     HGMD = 'hgmd'
     INTERVAL = 'interval'
-    INTERVAL_MITO = 'interval_mito'
 
     @property
     def access_control(self) -> AccessControl:
@@ -21,9 +20,12 @@ class ReferenceDatasetCollection(Enum):
         return AccessControl.PUBLIC
 
     @property
-    def datasets(self) -> list[str]:
+    def requires_annotation(self) -> bool:
+        return self == ReferenceDatasetCollection.INTERVAL
+
+    def datasets(self, dataset_type: DatasetType) -> list[str]:
         return {
-            ReferenceDatasetCollection.COMBINED: [
+            (ReferenceDatasetCollection.COMBINED, DatasetType.SNV_INDEL): [
                 'cadd',
                 'clinvar',
                 'dbnsfp',
@@ -36,8 +38,8 @@ class ReferenceDatasetCollection(Enum):
                 'splice_ai',
                 'topmed',
             ],
-            ReferenceDatasetCollection.COMBINED_MITO: [
-                'clinvar',
+            (ReferenceDatasetCollection.COMBINED, DatasetType.MITO): [
+                'clinvar_mito',
                 'dbnsfp_mito',
                 'gnomad_mito',
                 'helix_mito',
@@ -45,15 +47,15 @@ class ReferenceDatasetCollection(Enum):
                 'mitomap',
                 'mitimpact',
             ],
-            ReferenceDatasetCollection.HGMD: ['hgmd'],
-            ReferenceDatasetCollection.INTERVAL: [
+            (ReferenceDatasetCollection.HGMD, DatasetType.SNV_INDEL): ['hgmd'],
+            (ReferenceDatasetCollection.INTERVAL, DatasetType.SNV_INDEL): [
                 'gnomad_non_coding_constraint',
                 'screen',
             ],
-            ReferenceDatasetCollection.INTERVAL_MITO: [
+            (ReferenceDatasetCollection.INTERVAL, DatasetType.MITO): [
                 'high_constraint_region_mito',
             ],
-        }[self]
+        }[(self, dataset_type)]
 
     def table_key_type(
         self,
@@ -65,9 +67,6 @@ class ReferenceDatasetCollection(Enum):
         )
         return {
             ReferenceDatasetCollection.INTERVAL: hl.tstruct(
-                interval=hl.tinterval(hl.tlocus(reference_genome.value)),
-            ),
-            ReferenceDatasetCollection.INTERVAL_MITO: hl.tstruct(
                 interval=hl.tinterval(hl.tlocus(reference_genome.value)),
             ),
         }.get(self, default_key)

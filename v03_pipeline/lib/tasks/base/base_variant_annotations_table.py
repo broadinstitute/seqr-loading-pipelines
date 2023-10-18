@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import hail as hl
 
+from v03_pipeline.lib.model.definitions import AccessControl, Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -27,10 +28,6 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        rdcs = (
-            self.dataset_type.joinable_reference_dataset_collections
-            + self.dataset_type.annotatable_reference_dataset_collections
-        )
         return [
             HailTableTask(
                 valid_reference_dataset_collection_path(
@@ -38,7 +35,8 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                     rdc,
                 ),
             )
-            for rdc in rdcs
+            for rdc in ReferenceDatasetCollection
+            if rdc.access_control == AccessControl.PUBLIC or Env.ACCESS_PRIVATE_DATASETS
         ]
 
     def initialize_table(self) -> hl.Table:

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import itertools
 
 import hail as hl
 import luigi
@@ -25,6 +24,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 from v03_pipeline.lib.vep import run_vep
+from v03_pipeline.lib.model import AccessControl, Env, ReferenceDatasetCollection
 
 GENCODE_RELEASE = 42
 
@@ -58,21 +58,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def read_annotation_dependencies(self):
         annotation_dependencies = {}
 
-        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
-
-        for rdc in self.dataset_type.joinable_reference_dataset_collections:
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    rdc,
-                ),
-            )
+        for rdc in ReferenceDatasetCollection:
+            if (
+                rdc.access_control == AccessControl.PUBLIC
+                or Env.ACCESS_PRIVATE_DATASETS
+            ):
+                annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
+                    valid_reference_dataset_collection_path(
+                        self.reference_genome,
+                        self.dataset_type,
+                        rdc,
+                    ),
+                )
 
         if self.dataset_type.has_sample_lookup_table:
             annotation_dependencies['sample_lookup_ht'] = hl.read_table(
@@ -190,9 +187,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc in self.dataset_type.joinable_reference_dataset_collections:
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
-            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+        for rdc in ReferenceDatasetCollection:
+            if (
+                rdc.access_control == AccessControl.PUBLIC
+                or Env.ACCESS_PRIVATE_DATASETS
+            ) and not rdc.requires_annotation:
+                rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
+                new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 5) Union with the existing variant annotations table
         # and annotate with the sample lookup table.
@@ -213,10 +214,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in itertools.chain(
-            self.dataset_type.annotatable_reference_dataset_collections,
-            self.dataset_type.joinable_reference_dataset_collections,
-        ):
+        for rdc in ReferenceDatasetCollection:
+            if not (
+                rdc.access_control == AccessControl.PUBLIC
+                or Env.ACCESS_PRIVATE_DATASETS
+            ):
+                continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(

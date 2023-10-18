@@ -19,7 +19,7 @@ class FieldsTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
         )
 
     def test_get_formatting_fields(self) -> None:
@@ -42,10 +42,11 @@ class FieldsTest(MockedDatarootTestCase):
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
                                 ReferenceGenome.GRCh38,
+                                DatasetType.SNV_INDEL,
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
+                        for rdc in ReferenceDatasetCollection if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -74,7 +75,7 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
+                        for rdc in ReferenceDatasetCollection if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh37,

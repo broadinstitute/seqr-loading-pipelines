@@ -193,6 +193,7 @@ def valid_cached_reference_dataset_query_path(
 
 def valid_reference_dataset_collection_path(
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     reference_dataset_collection: ReferenceDatasetCollection,
 ) -> str | None:
     if (
@@ -206,6 +207,7 @@ def valid_reference_dataset_collection_path(
             reference_genome,
         ),
         'reference_datasets',
+        dataset_type.value,
         f'{reference_dataset_collection.value}.ht',
     )
 

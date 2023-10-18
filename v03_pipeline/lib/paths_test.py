@@ -68,6 +68,7 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(
                 valid_reference_dataset_collection_path(
                     ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
                     ReferenceDatasetCollection.HGMD,
                 ),
                 None,
@@ -78,9 +79,10 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(
                 valid_reference_dataset_collection_path(
                     ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
                     ReferenceDatasetCollection.HGMD,
                 ),
-                '/seqr-reference-data-private/v03/GRCh38/reference_datasets/hgmd.ht',
+                '/seqr-reference-data-private/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',
             )
 
     def test_sample_lookup_table_path(self) -> None:

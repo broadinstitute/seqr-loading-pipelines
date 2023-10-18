@@ -66,19 +66,19 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         super().setUp()
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/combined.ht',
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
+            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',
         )
         shutil.copytree(
             TEST_COMBINED_MITO_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined_mito.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/MITO/combined.ht',
         )
         shutil.copytree(
             TEST_INTERVAL_MITO_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval_mito.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/MITO/interval.ht',
         )
 
     def test_missing_pedigree(self) -> None:
@@ -118,7 +118,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_mulitiple_update_vat(self) -> None:
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
         )
         worker = luigi.worker.Worker()
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
