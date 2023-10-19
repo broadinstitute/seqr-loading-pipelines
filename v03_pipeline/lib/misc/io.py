@@ -178,5 +178,5 @@ def write(
     # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
     t.write(checkpoint_path)
     t = read_fn(checkpoint_path)
-    t = t.naive_coalesce(compute_hail_n_partitions(file_size_bytes(path)))
+    t = t.naive_coalesce(compute_hail_n_partitions(file_size_bytes(checkpoint_path)))
     return t.write(destination_path, overwrite=True, stage_locally=True)
