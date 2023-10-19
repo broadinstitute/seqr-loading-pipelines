@@ -171,6 +171,7 @@ def write(
     checkpoint: bool = True,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
+    read_fn = hl.read_matrix_table if isinstance(t, hl.MatrixTable) else hl.read_table
     if checkpoint:
         path = os.path.join(
             Env.HAIL_TMPDIR,
@@ -178,7 +179,7 @@ def write(
         )
         # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
         t.write(path)
-        t = hl.read_table(path)
+        t = read_fn(path)
         n_partitions = compute_hail_n_partitions(file_size_bytes(path))
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)
