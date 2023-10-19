@@ -27,11 +27,7 @@ class BaseWriteTask(luigi.Task):
     def run(self) -> None:
         self.init_hail()
         ht = self.create_table()
-        write(
-            ht,
-            self.output().path,
-            checkpoint=True,
-        )
+        write(ht, self.output().path)
 
     def create_table(self) -> hl.Table:
         raise NotImplementedError

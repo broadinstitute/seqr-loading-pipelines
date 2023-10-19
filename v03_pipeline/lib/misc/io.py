@@ -168,18 +168,15 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
 def write(
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
-    checkpoint: bool = True,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     read_fn = hl.read_matrix_table if isinstance(t, hl.MatrixTable) else hl.read_table
-    if checkpoint:
-        path = os.path.join(
-            Env.HAIL_TMPDIR,
-            f'{uuid.uuid4()}.{suffix}',
-        )
-        # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
-        t.write(path)
-        t = read_fn(path)
-        n_partitions = compute_hail_n_partitions(file_size_bytes(path))
-        t = t.naive_coalesce(n_partitions)
+    checkpoint_path = os.path.join(
+        Env.HAIL_TMPDIR,
+        f'{uuid.uuid4()}.{suffix}',
+    )
+    # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
+    t.write(checkpoint_path)
+    t = read_fn(checkpoint_path)
+    t = t.naive_coalesce(compute_hail_n_partitions(file_size_bytes(path)))
     return t.write(destination_path, overwrite=True, stage_locally=True)
