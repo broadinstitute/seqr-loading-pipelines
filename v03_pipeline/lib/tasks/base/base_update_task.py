@@ -11,8 +11,6 @@ class BaseUpdateTask(luigi.Task):
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
 
-    n_partitions = None
-
     def output(self) -> luigi.Target:
         raise NotImplementedError
 
@@ -37,7 +35,6 @@ class BaseUpdateTask(luigi.Task):
             ht,
             self.output().path,
             checkpoint=True,
-            n_partitions=self.n_partitions,
         )
 
     def initialize_table(self) -> hl.Table:

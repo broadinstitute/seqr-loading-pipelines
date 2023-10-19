@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 import uuid
 
@@ -9,12 +10,38 @@ from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 BIALLELIC = 2
+B_PER_MB = 1 << 20  # 1024 * 1024
+MB_PER_PARTITION = 128
 
 
 def does_file_exist(path: str) -> bool:
     if path.startswith('gs://'):
         return hl.hadoop_exists(path)
     return os.path.exists(path)
+
+
+def file_size_bytes(path: str) -> int:
+    size_bytes = 0
+    seen_files = set()
+    while True:
+        files = hl.hadoop_ls(path)
+        has_directory = False
+        for f in files:
+            if f['path'] in seen_files:
+                continue
+            if f['is_dir']:
+                has_directory = True
+                continue
+            size_bytes += f['size_bytes']
+            seen_files.add(f['path'])
+        if not has_directory:
+            break
+        path = os.path.join(path, '**')
+    return size_bytes
+
+
+def compute_hail_n_partitions(file_size_b: int) -> int:
+    return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
 
 def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
@@ -43,7 +70,6 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
             'no_ovl': hl.tbool,
             'is_latest': hl.tbool,
         },
-        min_partitions=500,
         force=callset_path.endswith('gz'),
     )
     mt = ht.to_matrix_table(
@@ -89,7 +115,6 @@ def import_vcf(
         skip_invalid_loci=True,
         contig_recoding=recode,
         force_bgz=True,
-        min_partitions=500,
         find_replace=('nul', '.'),
     )
 
@@ -144,18 +169,16 @@ def write(
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     checkpoint: bool = True,
-    n_partitions: int | None = None,
 ) -> hl.Table | hl.MatrixTable:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     if checkpoint:
-        t = t.checkpoint(
-            os.path.join(
-                Env.HAIL_TMPDIR,
-                f'{uuid.uuid4()}.{suffix}',
-            ),
+        path = os.path.join(
+            Env.HAIL_TMPDIR,
+            f'{uuid.uuid4()}.{suffix}',
         )
-    # "naive_coalesce" will decrease parallelism of hail's pipelined operations
-    # , so we sneak this re-partitioning until after the checkpoint.
-    if n_partitions:
+        # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
+        t.write(path)
+        t = hl.read_table(path)
+        n_partitions = compute_hail_n_partitions(file_size_bytes(path))
         t = t.naive_coalesce(n_partitions)
     return t.write(destination_path, overwrite=True, stage_locally=True)

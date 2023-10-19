@@ -15,7 +15,6 @@ from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTabl
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
-    n_partitions = 500
     callset_path = luigi.Parameter()
     filters_path = luigi.OptionalParameter(
         default=None,
