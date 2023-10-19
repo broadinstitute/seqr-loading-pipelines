@@ -1,6 +1,5 @@
 import unittest
 
-
 from v03_pipeline.lib.misc.io import compute_hail_n_partitions, file_size_bytes
 
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
