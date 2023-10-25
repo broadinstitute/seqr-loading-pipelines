@@ -63,6 +63,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
+        mt = mt.filter_rows(
+            hl.set(self.reference_genome.standard_contigs).contains(ht.locus.contig),
+        )
         if self.validate and self.dataset_type.can_run_validation:
             validate_contigs(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(

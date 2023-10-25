@@ -27,7 +27,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
-TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -285,11 +285,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 hl.Struct(
                     updates={
                         hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0113_test_project',
                         ),
                         hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0114_project4',
                         ),
                     },

@@ -63,17 +63,6 @@ class ValidationTest(unittest.TestCase):
             1,
         )
 
-        # Add an unexpected contig
-        mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs | {'chr503'})
-        self.assertRaisesRegex(
-            SeqrValidationError,
-            'Found the following unexpected contigs',
-            validate_contigs,
-            mt,
-            ReferenceGenome.GRCh38,
-            1,
-        )
-
     def test_validate_sample_type(self) -> None:
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs)
         coding_and_noncoding_variants_ht = hl.Table.parallelize(
