@@ -34,7 +34,7 @@ jobs:
       - name: Check Black
         run: black . --check --diff
       - name: Check Ruff
-        run: ruff . --format github
+        run: ruff . --output-format github
       - name: Unit Tests
         run: |
           export MOCK_VEP=1 ACCESS_PRIVATE_DATASETS=1
