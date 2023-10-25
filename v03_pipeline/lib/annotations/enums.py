@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import hail as hl
-
 from typing import TYPE_CHECKING
+
+import hail as hl
 
 if TYPE_CHECKING:
     from v03_pipeline.lib.model import DatasetType
