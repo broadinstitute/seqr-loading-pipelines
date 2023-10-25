@@ -1,5 +1,5 @@
 elasticsearch==7.9.1
 google-api-python-client>=1.8.0
-hail>=0.2.113
+hail>=0.2.122
 luigi==2.8.11
 gnomad==0.6.4
