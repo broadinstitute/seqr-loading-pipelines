@@ -63,10 +63,12 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
-        mt = mt.filter_rows(
-            hl.set(self.reference_genome.standard_contigs).contains(mt.locus.contig),
-        )
         if self.validate and self.dataset_type.can_run_validation:
+            # Rather than throwing an error, we silently remove invalid contigs.
+            # This happens fairly often for AnVIL requests.
+            mt = mt.filter_rows(
+                hl.set(self.reference_genome.standard_contigs).contains(mt.locus.contig),
+            )
             validate_contigs(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(
