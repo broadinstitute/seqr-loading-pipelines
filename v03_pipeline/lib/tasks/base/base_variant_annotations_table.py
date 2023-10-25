@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
 
 import hail as hl
 
@@ -10,9 +7,8 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+import luigi
 
-if TYPE_CHECKING:
-    import luigi
 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):

@@ -1,14 +1,10 @@
-from __future__ import annotations
-
 import itertools
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from v03_pipeline.lib.model import Ploidy
+import hail as hl
 
-if TYPE_CHECKING:
-    import hail as hl
 
 
 class Relation(Enum):
@@ -43,7 +39,7 @@ class Sample:
     half_siblings: list[str] = field(default_factory=list)
     aunt_nephews: list[str] = field(default_factory=list)
 
-    def is_aunt_nephew(self: Sample, other: Sample) -> bool:
+    def is_aunt_nephew(self: 'Sample', other: 'Sample') -> bool:
         return (
             # My Maternal Grandparents are your Parents
             self.maternal_grandmother
@@ -155,7 +151,7 @@ class Family:
         return samples
 
     @classmethod
-    def parse(cls, family_guid: str, rows: list[hl.Struct]) -> Family:
+    def parse(cls, family_guid: str, rows: list[hl.Struct]) -> 'Family':
         samples = cls.parse_direct_lineage(rows)
         samples = cls.parse_collateral_lineage(samples)
         return cls(

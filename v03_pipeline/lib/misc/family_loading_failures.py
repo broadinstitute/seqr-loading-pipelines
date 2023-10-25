@@ -1,16 +1,12 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from v03_pipeline.lib.misc.pedigree import Relation
 from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.misc.pedigree import Family, Sample
+import hail as hl
 
-if TYPE_CHECKING:
-    import hail as hl
 
-    from v03_pipeline.lib.misc.pedigree import Family, Sample
 
 
 def passes_relatedness_check(
