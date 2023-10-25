@@ -1,6 +1,11 @@
+from __future__ import annotations
+
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from v03_pipeline.lib.model import DatasetType
 
 BIOTYPES = [
     'IG_C_gene',
