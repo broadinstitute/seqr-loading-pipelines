@@ -64,7 +64,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.filters_path,
         )
         mt = mt.filter_rows(
-            hl.set(self.reference_genome.standard_contigs).contains(ht.locus.contig),
+            hl.set(self.reference_genome.standard_contigs).contains(mt.locus.contig),
         )
         if self.validate and self.dataset_type.can_run_validation:
             validate_contigs(mt, self.reference_genome)
