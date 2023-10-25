@@ -1,4 +1,5 @@
 import shutil
+from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
@@ -18,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
+from v03_pipeline.lib.misc.validation import validate_contigs
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -122,10 +124,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    @patch('v03_pipeline.lib.misc.validation.MIN_ROWS_PER_CONTIG', 30)
+    @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.validate_contigs',
+        partial(validate_contigs, min_rows_per_contig=25),
+    )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     def test_mulitiple_update_vat(
-        self, mock_standard_contigs: Mock,
+        self,
+        mock_standard_contigs: Mock,
     ) -> None:
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
