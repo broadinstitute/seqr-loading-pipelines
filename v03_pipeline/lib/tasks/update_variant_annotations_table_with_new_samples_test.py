@@ -1,5 +1,6 @@
 import shutil
-from unittest.mock import Mock, patch
+from functools import partial
+from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
 import luigi.worker
@@ -18,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
+from v03_pipeline.lib.misc.validation import validate_contigs
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -73,6 +75,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
         )
         shutil.copytree(
+            TEST_INTERVAL_1,
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+        )
+        shutil.copytree(
             TEST_COMBINED_MITO_1,
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined_mito.ht',
         )
@@ -99,6 +105,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     def test_missing_interval_reference(self) -> None:
+        shutil.rmtree(
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+        )
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -115,10 +124,48 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_mulitiple_update_vat(self) -> None:
-        shutil.copytree(
-            TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+    @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.validate_contigs',
+        partial(validate_contigs, min_rows_per_contig=25),
+    )
+    @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
+    def test_mulitiple_update_vat(
+        self,
+        mock_standard_contigs: Mock,
+    ) -> None:
+        mock_standard_contigs.return_value = {'chr1'}
+        # This creates a mock validation table with 1 coding and 1 non-coding variant
+        # explicitly chosen from the VCF.
+        coding_and_noncoding_variants_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                coding=hl.tbool,
+                noncoding=hl.tbool,
+            ),
+            key='locus',
+        )
+        coding_and_noncoding_variants_ht.write(
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/cached_reference_dataset_queries/gnomad_coding_and_noncoding_variants.ht',
         )
         worker = luigi.worker.Worker()
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -129,7 +176,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_3)
@@ -176,7 +223,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_4)
