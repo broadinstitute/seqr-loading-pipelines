@@ -115,7 +115,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_mulitiple_update_vat(self) -> None:
+    
+    @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.validate_sample_type',
+    )
+    def test_mulitiple_update_vat(self, validate_sample_type_mock: Mock) -> None:
+        validate_sample_type_mock.return_value = None
         shutil.copytree(
             TEST_INTERVAL_1,
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
@@ -129,7 +134,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_3)
@@ -176,7 +181,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_4)
