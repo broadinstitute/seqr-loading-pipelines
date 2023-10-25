@@ -1,8 +1,7 @@
+import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-import hail as hl
-
 
 
 def run_vep(

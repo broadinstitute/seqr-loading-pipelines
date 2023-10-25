@@ -1,7 +1,6 @@
-
 import hail as hl
-from v03_pipeline.lib.model import DatasetType
 
+from v03_pipeline.lib.model import DatasetType
 
 BIOTYPES = [
     'IG_C_gene',

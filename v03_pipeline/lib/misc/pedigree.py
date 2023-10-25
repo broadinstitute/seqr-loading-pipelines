@@ -2,9 +2,9 @@ import itertools
 from dataclasses import dataclass, field
 from enum import Enum
 
-from v03_pipeline.lib.model import Ploidy
 import hail as hl
 
+from v03_pipeline.lib.model import Ploidy
 
 
 class Relation(Enum):

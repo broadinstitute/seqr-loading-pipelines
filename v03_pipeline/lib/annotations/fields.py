@@ -1,6 +1,6 @@
 from typing import Any, Callable
-import hail as hl
 
+import hail as hl
 
 
 def get_fields(

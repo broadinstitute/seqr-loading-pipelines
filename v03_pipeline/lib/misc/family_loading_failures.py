@@ -1,12 +1,8 @@
-
+import hail as hl
 import numpy as np
 
-from v03_pipeline.lib.misc.pedigree import Relation
+from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
 from v03_pipeline.lib.model import Ploidy
-from v03_pipeline.lib.misc.pedigree import Family, Sample
-import hail as hl
-
-
 
 
 def passes_relatedness_check(
