@@ -47,8 +47,7 @@ def clinvar_path_variants(
             )
         ),
     )
-    ht = ht.filter(ht.pathogenic | ht.likely_pathogenic)
-    return ht
+    return ht.filter(ht.pathogenic | ht.likely_pathogenic)
 
 
 def gnomad_coding_and_noncoding_variants(
@@ -101,8 +100,7 @@ def high_af_variants(
 ) -> hl.Table:
     ht = ht.select_globals()
     ht = ht.filter(ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > ONE_PERCENT)
-    ht = ht.select(is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT)
-    return ht
+    return ht.select(is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT)
 
 
 def gnomad_qc(

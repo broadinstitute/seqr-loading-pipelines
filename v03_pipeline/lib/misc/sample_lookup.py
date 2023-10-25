@@ -45,9 +45,7 @@ def join_sample_lookup_hts(
     project_guid: str,
 ) -> hl.Table:
     sample_lookup_ht = sample_lookup_ht.join(callset_sample_lookup_ht, 'outer')
-    first_field_name = list(
-        dataset_type.sample_lookup_table_fields_and_genotype_filter_fns.keys(),
-    )[0]
+    first_field_name = next(dataset_type.sample_lookup_table_fields_and_genotype_filter_fns.keys())
     empty_entry = hl.Struct(
         **{
             project_guid: hl.empty_set(hl.tstr)

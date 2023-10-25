@@ -191,16 +191,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     'gt_stats',
                 ).collect()
                 if x.locus.position <= 871269  # noqa: PLR2004
-            ][0],
-            hl.Struct(
-                locus=hl.Locus(
-                    contig='chr1',
-                    position=871269,
-                    reference_genome='GRCh38',
+            ],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
                 ),
-                alleles=['A', 'C'],
-                gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
-            ),
+            ],
         )
         self.assertEqual(
             ht.globals.updates.collect(),
