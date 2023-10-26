@@ -70,7 +70,9 @@ class WriteFamilyTableTask(BaseWriteTask):
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         families = parse_pedigree_ht_to_families(pedigree_ht)
         family = next(
-            iter(family for family in families if family.family_guid == self.family_guid),
+            iter(
+                family for family in families if family.family_guid == self.family_guid
+            ),
         )
         callset_mt = subset_samples(
             callset_mt,
