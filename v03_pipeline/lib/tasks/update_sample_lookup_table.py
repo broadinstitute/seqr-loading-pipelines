@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 import luigi
 
@@ -78,6 +76,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
+                strict=True,
             )
         ]
 

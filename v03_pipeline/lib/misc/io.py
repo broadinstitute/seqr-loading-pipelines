@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import math
 import os
 import uuid
@@ -95,8 +93,7 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
             hl.agg.collect_as_set(parse_gcnv_genes(mt.genes_LOF_Ensemble_ID)),
         ),
     )
-    mt = mt.unfilter_entries()
-    return mt
+    return mt.unfilter_entries()
 
 
 def import_vcf(
