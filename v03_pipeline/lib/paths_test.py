@@ -72,16 +72,13 @@ class TestPaths(unittest.TestCase):
                 ),
                 None,
             )
-        with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.ACCESS_PRIVATE_DATASETS = True
-            mock_env.PRIVATE_REFERENCE_DATASETS = '/seqr-reference-data-private'
-            self.assertEqual(
-                valid_reference_dataset_collection_path(
-                    ReferenceGenome.GRCh38,
-                    ReferenceDatasetCollection.HGMD,
-                ),
-                '/seqr-reference-data-private/v03/GRCh38/reference_datasets/hgmd.ht',
-            )
+        self.assertEqual(
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDatasetCollection.HGMD,
+            ),
+            '/seqr-reference-data-private/v03/GRCh38/reference_datasets/hgmd.ht',
+        )
 
     def test_sample_lookup_table_path(self) -> None:
         self.assertEqual(

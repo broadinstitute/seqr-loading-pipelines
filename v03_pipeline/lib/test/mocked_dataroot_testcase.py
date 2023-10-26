@@ -9,8 +9,9 @@ from v03_pipeline.lib.model import Env
 
 class MockedDatarootTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.patcher = patch('v03_pipeline.lib.paths.Env')
-        self.mock_env = self.patcher.start()
+        patcher = patch('v03_pipeline.lib.paths.Env')
+        self.mock_env = patcher.start()
+        self.addCleanup(pather.stop) #https://stackoverflow.com/a/37534051
         for field_name in Env.__dataclass_fields__:
             if 'DATASETS' not in field_name:
                 continue
@@ -20,4 +21,3 @@ class MockedDatarootTestCase(unittest.TestCase):
         for field_name in Env.__dataclass_fields__:
             if os.path.isdir(getattr(self.mock_env, field_name)):
                 shutil.rmtree(getattr(self.mock_env, field_name))
-        self.patcher.stop()
