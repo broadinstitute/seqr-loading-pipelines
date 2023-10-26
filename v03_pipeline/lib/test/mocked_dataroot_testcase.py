@@ -11,7 +11,7 @@ class MockedDatarootTestCase(unittest.TestCase):
     def setUp(self) -> None:
         patcher = patch('v03_pipeline.lib.paths.Env')
         self.mock_env = patcher.start()
-        self.addCleanup(pather.stop) #https://stackoverflow.com/a/37534051
+        self.addCleanup(patcher.stop)  # https://stackoverflow.com/a/37534051
         for field_name in Env.__dataclass_fields__:
             if 'DATASETS' not in field_name:
                 continue
