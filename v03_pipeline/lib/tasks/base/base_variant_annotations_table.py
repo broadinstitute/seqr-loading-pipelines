@@ -1,8 +1,5 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
@@ -11,13 +8,8 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
-if TYPE_CHECKING:
-    import luigi
-
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
-    n_partitions = 200
-
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(

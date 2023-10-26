@@ -75,7 +75,7 @@ def get_enum_select_fields(enum_selects, ht):
         )
         # NB: this conditioning on type is "outside" the hail expression context.
         if (
-            isinstance(ht[field_name].dtype, (hl.tarray, hl.tset))
+            isinstance(ht[field_name].dtype, hl.tarray | hl.tset)
             and ht[field_name].dtype.element_type == hl.tstr
         ):
             enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
