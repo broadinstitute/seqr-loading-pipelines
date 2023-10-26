@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 
 from v03_pipeline.lib.model import Ploidy

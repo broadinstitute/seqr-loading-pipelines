@@ -1,9 +1,7 @@
-from __future__ import annotations
+from collections.abc import Callable
+from typing import Any
 
-from typing import TYPE_CHECKING, Any, Callable
-
-if TYPE_CHECKING:
-    import hail as hl
+import hail as hl
 
 
 def get_fields(

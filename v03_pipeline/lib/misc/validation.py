@@ -10,7 +10,7 @@ class SeqrValidationError(Exception):
     pass
 
 
-def validate_contigs(
+def validate_expected_contig_frequency(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
     min_rows_per_contig: int = MIN_ROWS_PER_CONTIG,
@@ -24,13 +24,6 @@ def validate_contigs(
     if missing_contigs:
         msg = 'Missing the following expected contigs:{}'.format(
             ', '.join(missing_contigs),
-        )
-        raise SeqrValidationError(msg)
-
-    unexpected_contigs = rows_per_contig.keys() - reference_genome.standard_contigs
-    if unexpected_contigs:
-        msg = 'Found the following unexpected contigs:{}'.format(
-            ', '.join(unexpected_contigs),
         )
         raise SeqrValidationError(msg)
 
