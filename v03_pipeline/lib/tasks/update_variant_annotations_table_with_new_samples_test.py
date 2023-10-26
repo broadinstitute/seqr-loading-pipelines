@@ -19,7 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.misc.validation import validate_contigs
+from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -125,8 +125,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.write_imported_callset.validate_contigs',
-        partial(validate_contigs, min_rows_per_contig=25),
+        'v03_pipeline.lib.tasks.write_imported_callset.validate_expected_contig_frequency',
+        partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     def test_mulitiple_update_vat(
