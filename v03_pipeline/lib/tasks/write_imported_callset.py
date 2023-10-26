@@ -2,7 +2,10 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import import_callset
-from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
+from v03_pipeline.lib.misc.validation import (
+    validate_expected_contig_frequency,
+    validate_sample_type,
+)
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     imported_callset_path,
@@ -61,7 +64,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
-        if self.validate and self.dataset_type.can_run_validation:
+        if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
             mt = mt.filter_rows(
@@ -69,7 +72,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
-            validate_contigs(mt, self.reference_genome)
+        if self.validate and self.dataset_type.can_run_validation:
+            validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(
                     self.reference_genome,

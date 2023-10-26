@@ -10,7 +10,7 @@ class SeqrValidationError(Exception):
     pass
 
 
-def validate_contigs(
+def validate_expected_contig_frequency(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
     min_rows_per_contig: int = MIN_ROWS_PER_CONTIG,
