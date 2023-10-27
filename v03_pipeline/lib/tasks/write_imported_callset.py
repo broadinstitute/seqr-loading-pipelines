@@ -1,10 +1,11 @@
-from __future__ import annotations
-
 import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import import_callset
-from v03_pipeline.lib.misc.validation import validate_contigs, validate_sample_type
+from v03_pipeline.lib.misc.validation import (
+    validate_expected_contig_frequency,
+    validate_sample_type,
+)
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     imported_callset_path,
@@ -15,13 +16,11 @@ from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTabl
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
-    n_partitions = 500
     callset_path = luigi.Parameter()
     filters_path = luigi.OptionalParameter(
         default=None,
         description='Optional path to part two outputs from callset (VCF shards containing filter information)',
     )
-
     validate = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -65,8 +64,16 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
+        if self.dataset_type.can_run_validation:
+            # Rather than throwing an error, we silently remove invalid contigs.
+            # This happens fairly often for AnVIL requests.
+            mt = mt.filter_rows(
+                hl.set(self.reference_genome.standard_contigs).contains(
+                    mt.locus.contig,
+                ),
+            )
         if self.validate and self.dataset_type.can_run_validation:
-            validate_contigs(mt, self.reference_genome)
+            validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(
                     self.reference_genome,

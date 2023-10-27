@@ -65,6 +65,7 @@ def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
                 tmp_file_name,
                 gcs_tmp_file_name,
             ],
+            check=True,
         )
     except subprocess.CalledProcessError as e:
         print(e)
@@ -156,8 +157,7 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
     with gzip.open(local_vcf_path, 'rt') as f:
         for line in f:
             if line.startswith('##fileDate='):
-                clinvar_release_date = line.split('=')[-1].strip()
-                return clinvar_release_date
+                return line.split('=')[-1].strip()
 
             if not line.startswith('#'):
                 return None

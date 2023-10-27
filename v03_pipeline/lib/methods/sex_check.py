@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 
 from v03_pipeline.lib.model import Ploidy
@@ -43,13 +41,13 @@ def call_sex(mt: hl.MatrixTable) -> hl.Table:
     ht = ht.annotate(
         sex=(
             hl.case()
-            .when(hl.is_missing(ht.is_female), Ploidy.AMBIGUOUS.value)
+            .when(hl.is_missing(ht.is_female), Ploidy.UNKNOWN.value)
             .when(ht.is_female, Ploidy.FEMALE.value)
             .default(Ploidy.MALE.value)
         ),
     )
     ambiguous_perc = ht.aggregate(
-        hl.agg.fraction(ht.sex == Ploidy.AMBIGUOUS.value),
+        hl.agg.fraction(ht.sex == Ploidy.UNKNOWN.value),
     )
     if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
         msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'

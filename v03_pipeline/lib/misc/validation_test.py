@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
-    validate_contigs,
+    validate_expected_contig_frequency,
     validate_sample_type,
 )
 from v03_pipeline.lib.model import ReferenceGenome, SampleType
@@ -28,13 +28,15 @@ def _mt_from_contigs(contigs):
 
 
 class ValidationTest(unittest.TestCase):
-    def test_validate_contigs(self) -> None:
+    def test_validate_expected_contig_frequency(self) -> None:
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs)
-        self.assertIsNone(validate_contigs(mt, ReferenceGenome.GRCh38, 1))
+        self.assertIsNone(
+            validate_expected_contig_frequency(mt, ReferenceGenome.GRCh38, 1),
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
             'Missing the following expected contigs',
-            validate_contigs,
+            validate_expected_contig_frequency,
             mt,
             ReferenceGenome.GRCh37,
             1,
@@ -42,7 +44,7 @@ class ValidationTest(unittest.TestCase):
         self.assertRaisesRegex(
             SeqrValidationError,
             'which is lower than expected minimum count',
-            validate_contigs,
+            validate_expected_contig_frequency,
             mt,
             ReferenceGenome.GRCh38,
             2,
@@ -50,25 +52,16 @@ class ValidationTest(unittest.TestCase):
 
         # Drop an optional contig
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs - {'chrY'})
-        self.assertIsNone(validate_contigs(mt, ReferenceGenome.GRCh38, 1))
+        self.assertIsNone(
+            validate_expected_contig_frequency(mt, ReferenceGenome.GRCh38, 1),
+        )
 
         # Drop a non-optional contig
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs - {'chr3'})
         self.assertRaisesRegex(
             SeqrValidationError,
             'Missing the following expected contigs',
-            validate_contigs,
-            mt,
-            ReferenceGenome.GRCh38,
-            1,
-        )
-
-        # Add an unexpected contig
-        mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs | {'chr503'})
-        self.assertRaisesRegex(
-            SeqrValidationError,
-            'Found the following unexpected contigs',
-            validate_contigs,
+            validate_expected_contig_frequency,
             mt,
             ReferenceGenome.GRCh38,
             1,

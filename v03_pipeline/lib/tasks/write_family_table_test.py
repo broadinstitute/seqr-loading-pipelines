@@ -6,7 +6,7 @@ from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
-TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
@@ -29,10 +29,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(wft_task)
         worker.run()
-        self.assertEqual(
-            wft_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
-        )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
         self.assertCountEqual(
@@ -40,7 +36,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             [
                 hl.Struct(
                     sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
-                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'},
+                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
                 ),
             ],
         )
@@ -169,10 +165,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(write_family_table_task)
         worker.run()
-        self.assertEqual(
-            write_family_table_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SV/families/family_2_1.ht',
-        )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(
@@ -424,10 +416,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(write_family_table_task)
         worker.run()
-        self.assertEqual(
-            write_family_table_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/GCNV/families/family_2_1.ht',
-        )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(

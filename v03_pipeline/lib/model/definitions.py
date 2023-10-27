@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from enum import Enum
 
 import hail as hl
@@ -11,9 +9,9 @@ class AccessControl(Enum):
 
 
 class Ploidy(Enum):
-    AMBIGUOUS = 'ambiguous_sex'
     FEMALE = 'F'
     MALE = 'M'
+    UNKNOWN = 'U'
 
 
 class PipelineVersion(Enum):

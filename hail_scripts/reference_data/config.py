@@ -182,6 +182,7 @@ CONFIG = {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
                 'assertion': CLINVAR_ASSERTIONS,
             },
+            'filter': lambda ht: ht.locus.contig != 'MT',
         },
         '38': {
             'custom_import': download_and_import_latest_clinvar_vcf,
@@ -192,6 +193,7 @@ CONFIG = {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
                 'assertion': CLINVAR_ASSERTIONS,
             },
+            'filter': lambda ht: ht.locus.contig != 'chrM',
         },
     },
     'dbnsfp': {
@@ -204,6 +206,7 @@ CONFIG = {
                 'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
+            'filter': lambda ht: ht.locus.contig != 'MT',
         },
         '38': {
             'version': '4.2',
@@ -218,6 +221,7 @@ CONFIG = {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
             },
+            'filter': lambda ht: ht.locus.contig != 'chrM',
         },
     },
     'eigen': {
@@ -424,6 +428,30 @@ CONFIG = {
             },
         },
     },
+    'clinvar_mito': {
+        '37': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+            'filter': lambda ht: ht.locus.contig == 'MT',
+        },
+        '38': {
+            'custom_import': download_and_import_latest_clinvar_vcf,
+            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select': clinvar_custom_select,
+            'enum_select': {
+                'pathogenicity': CLINVAR_PATHOGENICITIES,
+                'assertion': CLINVAR_ASSERTIONS,
+            },
+            'filter': lambda ht: ht.locus.contig == 'chrM',
+        },
+    },
     'dbnsfp_mito': {
         '37': {
             'version': '2.9.3',
@@ -433,7 +461,7 @@ CONFIG = {
                 'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
-            'filter': lambda ht: ht.locus.contig == 'chrM',
+            'filter': lambda ht: ht.locus.contig == 'MT',
         },
         '38': {
             'version': '4.2',

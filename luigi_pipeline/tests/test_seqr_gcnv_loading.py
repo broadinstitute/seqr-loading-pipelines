@@ -161,6 +161,7 @@ NEW_JOINT_CALLED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     for (x, y) in zip(
         NEW_JOINT_CALLED_EXPECTED_VARIANT_DATA,
         NEW_JOINT_CALLED_EXPECTED_GENOTYPES_DATA,
+        strict=True,
     )
 ]
 
@@ -281,7 +282,11 @@ MERGED_EXPECTED_GENOTYPES_DATA = [
 ]
 MERGED_EXPECTED_VARIANT_AND_GENOTYPES_DATA = [
     hl.Struct(**x, **y)
-    for (x, y) in zip(MERGED_EXPECTED_VARIANT_DATA, MERGED_EXPECTED_GENOTYPES_DATA)
+    for (x, y) in zip(
+        MERGED_EXPECTED_VARIANT_DATA,
+        MERGED_EXPECTED_GENOTYPES_DATA,
+        strict=True,
+    )
 ]
 
 EXPECTED_DISABLED_INDEX_FIELDS = ['contig', 'genotypes', 'start', 'xstart', 'docId']

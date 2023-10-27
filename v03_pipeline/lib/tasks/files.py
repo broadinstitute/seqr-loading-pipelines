@@ -1,9 +1,8 @@
 import os
 
+import hail as hl
 import luigi
 from luigi.contrib import gcs
-
-GLOB = '*'
 
 
 def CallsetTask(pathname: str) -> luigi.Task:  # noqa: N802
@@ -36,9 +35,7 @@ class RawFileTask(luigi.Task):
 class VCFFileTask(RawFileTask):
     def complete(self) -> bool:
         # NB: hail supports reading glob bgz files.
-        if GLOB in self.pathname:
-            return GCSorLocalTarget(os.path.dirname(self.pathname)).exists()
-        return GCSorLocalTarget(self.pathname).exists()
+        return len(hl.hadoop_ls(self.pathname)) > 0
 
 
 class HailTableTask(RawFileTask):
