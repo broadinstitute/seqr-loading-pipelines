@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 import luigi
 
@@ -17,7 +15,6 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class WriteFamilyTableTask(BaseWriteTask):
-    n_partitions = 2
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -72,9 +69,11 @@ class WriteFamilyTableTask(BaseWriteTask):
         callset_mt = hl.read_matrix_table(self.input().path)
         pedigree_ht = import_pedigree(self.project_pedigree_path)
         families = parse_pedigree_ht_to_families(pedigree_ht)
-        family = [
-            family for family in families if family.family_guid == self.family_guid
-        ][0]
+        family = next(
+            iter(
+                family for family in families if family.family_guid == self.family_guid
+            ),
+        )
         callset_mt = subset_samples(
             callset_mt,
             hl.Table.parallelize(

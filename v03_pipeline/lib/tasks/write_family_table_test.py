@@ -6,7 +6,7 @@ from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
-TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
@@ -40,7 +40,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             [
                 hl.Struct(
                     sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
-                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'},
+                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
                 ),
             ],
         )

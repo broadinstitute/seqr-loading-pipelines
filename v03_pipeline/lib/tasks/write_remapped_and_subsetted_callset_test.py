@@ -12,7 +12,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -63,7 +63,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         worker.run()
         self.assertEqual(
             wrsc_task.output().path,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/R0113_test_project/78d7998164bbe170d4f5282a66873df2e3b18099175069a32565fb0dc08dc3d4.mt',
+            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/R0113_test_project/570a4ade9b5ef15ea3c4960b7b7d78bad1cb61928af1363e1fb5f2cd32529576.mt',
         )
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)

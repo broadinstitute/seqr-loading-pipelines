@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 import luigi
 
@@ -18,7 +16,6 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class UpdateProjectTableTask(BaseUpdateTask):
-    n_partitions = 10
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()

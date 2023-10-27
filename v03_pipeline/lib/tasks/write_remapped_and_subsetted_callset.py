@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hail as hl
 import luigi
 
@@ -23,7 +21,6 @@ from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
-    n_partitions = 100
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()

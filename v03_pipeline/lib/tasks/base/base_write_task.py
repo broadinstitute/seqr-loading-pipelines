@@ -10,7 +10,6 @@ class BaseWriteTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
-    n_partitions = None
 
     def output(self) -> luigi.Target:
         raise NotImplementedError
@@ -28,12 +27,7 @@ class BaseWriteTask(luigi.Task):
     def run(self) -> None:
         self.init_hail()
         ht = self.create_table()
-        write(
-            ht,
-            self.output().path,
-            checkpoint=True,
-            n_partitions=self.n_partitions,
-        )
+        write(ht, self.output().path)
 
     def create_table(self) -> hl.Table:
         raise NotImplementedError

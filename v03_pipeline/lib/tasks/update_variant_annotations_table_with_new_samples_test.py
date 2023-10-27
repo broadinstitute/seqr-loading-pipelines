@@ -1,5 +1,6 @@
 import shutil
-from unittest.mock import Mock, patch
+from functools import partial
+from unittest.mock import Mock, PropertyMock, patch
 
 import hail as hl
 import luigi.worker
@@ -18,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
+from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -27,7 +29,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
-TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -73,6 +75,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',
         )
         shutil.copytree(
+            TEST_INTERVAL_1,
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+        )
+        shutil.copytree(
             TEST_COMBINED_MITO_1,
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/MITO/combined.ht',
         )
@@ -99,6 +105,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     def test_missing_interval_reference(self) -> None:
+        shutil.rmtree(
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+        )
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -115,10 +124,48 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_mulitiple_update_vat(self) -> None:
-        shutil.copytree(
-            TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
+    @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.validate_expected_contig_frequency',
+        partial(validate_expected_contig_frequency, min_rows_per_contig=25),
+    )
+    @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
+    def test_mulitiple_update_vat(
+        self,
+        mock_standard_contigs: Mock,
+    ) -> None:
+        mock_standard_contigs.return_value = {'chr1'}
+        # This creates a mock validation table with 1 coding and 1 non-coding variant
+        # explicitly chosen from the VCF.
+        coding_and_noncoding_variants_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': False,
+                    'noncoding': True,
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    'coding': True,
+                    'noncoding': False,
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                coding=hl.tbool,
+                noncoding=hl.tbool,
+            ),
+            key='locus',
+        )
+        coding_and_noncoding_variants_ht.write(
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/cached_reference_dataset_queries/gnomad_coding_and_noncoding_variants.ht',
         )
         worker = luigi.worker.Worker()
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -129,7 +176,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_3)
@@ -144,16 +191,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     'gt_stats',
                 ).collect()
                 if x.locus.position <= 871269  # noqa: PLR2004
-            ][0],
-            hl.Struct(
-                locus=hl.Locus(
-                    contig='chr1',
-                    position=871269,
-                    reference_genome='GRCh38',
+            ],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                    gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
                 ),
-                alleles=['A', 'C'],
-                gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
-            ),
+            ],
         )
         self.assertEqual(
             ht.globals.updates.collect(),
@@ -176,7 +225,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=False,
+            validate=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uvatwns_task_4)
@@ -285,11 +334,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 hl.Struct(
                     updates={
                         hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0113_test_project',
                         ),
                         hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz',
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0114_project4',
                         ),
                     },

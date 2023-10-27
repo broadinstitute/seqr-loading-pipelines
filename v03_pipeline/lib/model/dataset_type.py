@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from collections.abc import Callable
 from enum import Enum
 from typing import TYPE_CHECKING, Callable
 
@@ -137,7 +136,7 @@ class DatasetType(Enum):
     @property
     def sample_lookup_table_fields_and_genotype_filter_fns(
         self,
-    ) -> dict[str, Callable[hl.MatrixTable, hl.Expression]]:
+    ) -> dict[str, Callable[[hl.MatrixTable], hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: {
                 'ref_samples': lambda mt: mt.GT.is_hom_ref(),
