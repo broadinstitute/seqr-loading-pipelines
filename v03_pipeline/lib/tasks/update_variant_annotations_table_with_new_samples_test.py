@@ -20,7 +20,17 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
 )
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import (
+    CachedReferenceDatasetQuery,
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+    SampleType,
+)
+from v03_pipeline.lib.paths import (
+    valid_cached_reference_dataset_query_path,
+    valid_reference_dataset_collection_path,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -68,23 +78,43 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         super().setUp()
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.COMBINED,
+            ),
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.HGMD,
+            ),
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
         )
         shutil.copytree(
             TEST_COMBINED_MITO_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined_mito.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                ReferenceDatasetCollection.COMBINED,
+            ),
         )
         shutil.copytree(
             TEST_INTERVAL_MITO_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval_mito.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
         )
 
     def test_missing_pedigree(self) -> None:
@@ -106,7 +136,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
 
     def test_missing_interval_reference(self) -> None:
         shutil.rmtree(
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
         )
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -165,7 +199,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             key='locus',
         )
         coding_and_noncoding_variants_ht.write(
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/cached_reference_dataset_queries/gnomad_coding_and_noncoding_variants.ht',
+            valid_cached_reference_dataset_query_path(
+                ReferenceGenome.GRCh38,
+                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+            ),
         )
         worker = luigi.worker.Worker()
         uvatwns_task_3 = UpdateVariantAnnotationsTableWithNewSamplesTask(

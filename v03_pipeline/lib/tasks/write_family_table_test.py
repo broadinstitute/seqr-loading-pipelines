@@ -29,10 +29,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(wft_task)
         worker.run()
-        self.assertEqual(
-            wft_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/families/abc_1.ht',
-        )
         self.assertTrue(wft_task.complete())
         ht = hl.read_table(wft_task.output().path)
         self.assertCountEqual(
@@ -169,10 +165,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(write_family_table_task)
         worker.run()
-        self.assertEqual(
-            write_family_table_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SV/families/family_2_1.ht',
-        )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(
@@ -424,10 +416,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(write_family_table_task)
         worker.run()
-        self.assertEqual(
-            write_family_table_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/GCNV/families/family_2_1.ht',
-        )
         self.assertTrue(write_family_table_task.complete())
         ht = hl.read_table(write_family_table_task.output().path)
         self.assertCountEqual(

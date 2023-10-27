@@ -5,7 +5,11 @@ import pytz
 
 from hail_scripts.reference_data.config import CONFIG
 
-from v03_pipeline.lib.model import ReferenceDatasetCollection, ReferenceGenome
+from v03_pipeline.lib.model import (
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
 
 
 def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
@@ -134,8 +138,9 @@ def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.T
 
 
 def join_hts(
-    reference_dataset_collection: ReferenceDatasetCollection,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    reference_dataset_collection: ReferenceDatasetCollection,
 ):
     key_type = reference_dataset_collection.table_key_type(reference_genome)
     joined_ht = hl.Table.parallelize(
@@ -148,7 +153,7 @@ def join_hts(
             enums=hl.Struct(),
         ),
     )
-    for dataset in reference_dataset_collection.datasets:
+    for dataset in reference_dataset_collection.datasets(dataset_type):
         dataset_ht = get_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
@@ -158,8 +163,9 @@ def join_hts(
 def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
-    reference_dataset_collection: ReferenceDatasetCollection,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    reference_dataset_collection: ReferenceDatasetCollection,
 ):
     joined_ht = hl.read_table(destination_path)
     dataset_ht = get_ht(dataset, reference_genome)
@@ -169,7 +175,7 @@ def update_existing_joined_hts(
         hl.any(
             [
                 ~hl.is_missing(joined_ht[dataset])
-                for dataset in reference_dataset_collection.datasets
+                for dataset in reference_dataset_collection.datasets(dataset_type)
             ],
         ),
     )

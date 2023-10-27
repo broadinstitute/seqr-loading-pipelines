@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -19,18 +20,15 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        rdcs = (
-            self.dataset_type.joinable_reference_dataset_collections
-            + self.dataset_type.annotatable_reference_dataset_collections
-        )
         return [
             HailTableTask(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
+                    self.dataset_type,
                     rdc,
                 ),
             )
-            for rdc in rdcs
+            for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type)
         ]
 
     def initialize_table(self) -> hl.Table:

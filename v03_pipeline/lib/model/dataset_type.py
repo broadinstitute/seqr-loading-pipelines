@@ -4,11 +4,7 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
-from v03_pipeline.lib.model.reference_dataset_collection import (
-    ReferenceDatasetCollection,
-)
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -19,36 +15,6 @@ class DatasetType(Enum):
     MITO = 'MITO'
     SNV_INDEL = 'SNV_INDEL'
     SV = 'SV'
-
-    @property
-    def annotatable_reference_dataset_collections(
-        self,
-    ) -> list[ReferenceDatasetCollection]:
-        return {
-            DatasetType.SNV_INDEL: [
-                ReferenceDatasetCollection.INTERVAL,
-            ],
-            DatasetType.MITO: [
-                ReferenceDatasetCollection.INTERVAL_MITO,
-            ],
-        }.get(self, [])
-
-    @property
-    def joinable_reference_dataset_collections(
-        self,
-    ) -> list[ReferenceDatasetCollection]:
-        rdcs = {
-            DatasetType.SNV_INDEL: [
-                ReferenceDatasetCollection.COMBINED,
-                ReferenceDatasetCollection.HGMD,
-            ],
-            DatasetType.MITO: [
-                ReferenceDatasetCollection.COMBINED_MITO,
-            ],
-        }.get(self, [])
-        if Env.ACCESS_PRIVATE_DATASETS:
-            return rdcs
-        return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
 
     def table_key_type(
         self,
@@ -281,11 +247,4 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
-            DatasetType.MITO: [
-                mito.gt_stats,
-            ],
-            DatasetType.MITO: [
-                mito.gt_stats,
-            ],
-            DatasetType.SV: [],
         }[self]

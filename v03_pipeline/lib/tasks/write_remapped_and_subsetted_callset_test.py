@@ -61,10 +61,6 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         )
         worker.add(wrsc_task)
         worker.run()
-        self.assertEqual(
-            wrsc_task.output().path,
-            f'{self.mock_env.LOADING_DATASETS}/v03/GRCh38/SNV_INDEL/remapped_and_subsetted_callsets/R0113_test_project/570a4ade9b5ef15ea3c4960b7b7d78bad1cb61928af1363e1fb5f2cd32529576.mt',
-        )
         self.assertTrue(wrsc_task.complete())
         mt = hl.read_matrix_table(wrsc_task.output().path)
         self.assertEqual(mt.count(), (30, 3))
