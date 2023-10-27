@@ -73,7 +73,7 @@ class ReferenceDatasetCollection(Enum):
     def for_dataset_type(
         cls,
         dataset_type: DatasetType,
-    ) -> list[ReferenceDatasetCollection]:
+    ) -> list['ReferenceDatasetCollection']:
         return {
             DatasetType.SNV_INDEL: [
                 ReferenceDatasetCollection.COMBINED,

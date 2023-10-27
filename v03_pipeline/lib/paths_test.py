@@ -76,6 +76,7 @@ class TestPaths(unittest.TestCase):
         self.assertEqual(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
                 ReferenceDatasetCollection.HGMD,
             ),
             '/seqr-reference-data-private/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',

@@ -1,13 +1,10 @@
 from collections.abc import Callable
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
 
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-
-if TYPE_CHECKING:
-    from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
