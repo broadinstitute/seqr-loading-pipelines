@@ -4,7 +4,11 @@ from unittest.mock import patch
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import (
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
@@ -19,7 +23,7 @@ class FieldsTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
         )
 
     def test_get_formatting_fields(self) -> None:
@@ -42,10 +46,14 @@ class FieldsTest(MockedDatarootTestCase):
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
                                 ReferenceGenome.GRCh38,
+                                DatasetType.SNV_INDEL,
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
+                        for rdc in ReferenceDatasetCollection.for_dataset_type(
+                            DatasetType.SNV_INDEL,
+                        )
+                        if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
@@ -71,10 +79,14 @@ class FieldsTest(MockedDatarootTestCase):
                         f'{rdc.value}_ht': hl.read_table(
                             valid_reference_dataset_collection_path(
                                 ReferenceGenome.GRCh38,
+                                DatasetType.SNV_INDEL,
                                 rdc,
                             ),
                         )
-                        for rdc in DatasetType.SNV_INDEL.annotatable_reference_dataset_collections
+                        for rdc in ReferenceDatasetCollection.for_dataset_type(
+                            DatasetType.SNV_INDEL,
+                        )
+                        if rdc.requires_annotation
                     },
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh37,

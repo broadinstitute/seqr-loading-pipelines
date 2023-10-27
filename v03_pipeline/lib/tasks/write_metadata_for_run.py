@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 
 import hail as hl
@@ -62,6 +60,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
+                strict=True,
             )
         ]
 

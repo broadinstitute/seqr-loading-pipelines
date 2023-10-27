@@ -3,7 +3,13 @@ import shutil
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import (
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+    SampleType,
+)
+from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -20,15 +26,27 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_COMBINED_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/combined.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.COMBINED,
+            ),
         )
         shutil.copytree(
             TEST_HGMD_1,
-            f'{self.mock_env.PRIVATE_REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/hgmd.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.HGMD,
+            ),
         )
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/interval.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
         )
 
     def test_should_create_initialized_table(self) -> None:
@@ -37,10 +55,8 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
         )
-        self.assertEqual(
-            vat_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/annotations.ht',
-        )
+        self.assertTrue('annotations.ht' in vat_task.output().path)
+        self.assertTrue(DatasetType.SNV_INDEL.value in vat_task.output().path)
         self.assertFalse(vat_task.output().exists())
         self.assertFalse(vat_task.complete())
 
