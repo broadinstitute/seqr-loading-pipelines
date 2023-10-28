@@ -64,7 +64,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--dataset-type',
-        choices=DatasetType,
+        type=DatasetType,
+        choices=list(DatasetType),
         default=None,
         help='When used, update the passed dataset, otherwise run all datasets.',
     )
