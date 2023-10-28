@@ -75,7 +75,7 @@ if __name__ == '__main__':
         help='When passed, update the single dataset, otherwise update all datasets.',
     )
     args, _ = parser.parse_known_args()
-    if args.dataset not in ReferenceDatasetCollection.for_dataset_type(
+    if args.dataset and args.dataset not in ReferenceDatasetCollection.for_dataset_type(
         args.dataset_type,
     ):
         msg = f'{args.dataset} is not a valid dataset for {DatasetType}'
