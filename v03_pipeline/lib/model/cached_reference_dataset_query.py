@@ -47,8 +47,7 @@ def clinvar_path_variants(
             )
         ),
     )
-    ht = ht.filter(ht.pathogenic | ht.likely_pathogenic)
-    return ht
+    return ht.filter(ht.pathogenic | ht.likely_pathogenic)
 
 
 def gnomad_coding_and_noncoding_variants(
