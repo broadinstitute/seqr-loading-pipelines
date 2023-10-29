@@ -159,7 +159,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
         callset_ht = callset_ht.distinct()
         callset_ht = callset_ht.filter(
-            hl.set(self.reference_genome.standard_contigs).contains(callset_ht.locus.contig),
+            hl.set(self.reference_genome.standard_contigs).contains(
+                callset_ht.locus.contig,
+            ),
         )
 
         annotation_dependencies = self.read_annotation_dependencies()
