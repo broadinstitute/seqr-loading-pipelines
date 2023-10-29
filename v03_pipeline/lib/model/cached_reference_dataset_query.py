@@ -1,7 +1,6 @@
-from __future__ import annotations
-
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 import hail as hl
 
@@ -102,8 +101,9 @@ def high_af_variants(
 ) -> hl.Table:
     ht = ht.select_globals()
     ht = ht.filter(ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > ONE_PERCENT)
-    ht = ht.select(is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT)
-    return ht
+    return ht.select(
+        is_gt_10_percent=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL > TEN_PERCENT,
+    )
 
 
 def gnomad_qc(

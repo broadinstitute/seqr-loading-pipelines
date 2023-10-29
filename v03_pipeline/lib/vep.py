@@ -1,12 +1,7 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+import hail as hl
 
 import luigi_pipeline.lib.hail_vep_runners as vep_runners
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
-
-if TYPE_CHECKING:
-    import hail as hl
 
 
 def run_vep(

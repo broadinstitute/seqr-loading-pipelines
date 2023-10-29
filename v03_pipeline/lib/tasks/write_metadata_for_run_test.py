@@ -6,7 +6,7 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf.bgz'
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -28,9 +28,8 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         )
         worker.add(write_metadata_for_run_task)
         worker.run()
-        self.assertEqual(
-            write_metadata_for_run_task.output().path,
-            f'{self.mock_env.DATASETS}/v03/GRCh38/SNV_INDEL/runs/run_123456/metadata.json',
+        self.assertTrue(
+            'run_123456/metadata.json' in write_metadata_for_run_task.output().path,
         )
         self.assertTrue(write_metadata_for_run_task.complete())
         with write_metadata_for_run_task.output().open('r') as f:

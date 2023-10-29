@@ -9,8 +9,7 @@ from luigi_pipeline.tests.data.sample_vep import DERIVED_DATA, VEP_DATA
 class TestSeqrModel(unittest.TestCase):
     def _get_filtered_mt(self, rsid='rs35471880'):
         mt = hl.import_vcf('tests/data/1kg_30variants.vcf.bgz')
-        mt = hl.split_multi(mt.filter_rows(mt.rsid == rsid))
-        return mt
+        return hl.split_multi(mt.filter_rows(mt.rsid == rsid))
 
     def test_variant_derived_fields(self):
         rsid = 'rs35471880'

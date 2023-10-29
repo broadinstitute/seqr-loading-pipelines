@@ -1,7 +1,4 @@
-from __future__ import annotations
-
 import functools
-import itertools
 
 import hail as hl
 import luigi
@@ -10,6 +7,7 @@ from hail_scripts.utils.mapping_gene_ids import load_gencode
 
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
@@ -58,18 +56,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def read_annotation_dependencies(self):
         annotation_dependencies = {}
 
-        for rdc in self.dataset_type.annotatable_reference_dataset_collections:
+        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
-                    rdc,
-                ),
-            )
-
-        for rdc in self.dataset_type.joinable_reference_dataset_collections:
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
+                    self.dataset_type,
                     rdc,
                 ),
             )
@@ -124,6 +115,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.project_guids,
                     self.project_remap_paths,
                     self.project_pedigree_paths,
+                    strict=True,
                 )
             ]
         return [
@@ -193,7 +185,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 4) Join against the reference dataset collections that are not "annotated".
-        for rdc in self.dataset_type.joinable_reference_dataset_collections:
+        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+            if rdc.requires_annotation:
+                continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
@@ -216,10 +210,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in itertools.chain(
-            self.dataset_type.annotatable_reference_dataset_collections,
-            self.dataset_type.joinable_reference_dataset_collections,
-        ):
+        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
