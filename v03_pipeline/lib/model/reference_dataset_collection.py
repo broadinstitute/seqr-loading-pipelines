@@ -80,6 +80,11 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
             ],
+            DatasetType.ONT_SNV_INDEL: [
+                ReferenceDatasetCollection.COMBINED,
+                ReferenceDatasetCollection.INTERVAL,
+                ReferenceDatasetCollection.HGMD,
+            ],
             DatasetType.MITO: [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
