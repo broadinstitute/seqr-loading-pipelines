@@ -42,10 +42,7 @@ strict = true
 extend-exclude = [
     'download_and_create_reference_datasets/v02/*',
     'gcloud_dataproc/*',
-    'hail_scripts/computed_fields/*',
-    'hail_scripts/elasticsearch/*',
-    'hail_scripts/update_models/*',
-    'hail_scripts/utils/*',
+    'hail_scripts/*',
     'kubernetes/*',
     'luigi_pipeline/lib/*',
     'luigi_pipeline/seqr*.py',
