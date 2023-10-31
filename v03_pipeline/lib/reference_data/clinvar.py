@@ -5,8 +5,6 @@ import urllib
 
 import hail as hl
 
-from hail_scripts.utils.hail_utils import import_vcf
-
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_ASSERTIONS = [
     'Affects',
@@ -128,18 +126,23 @@ def download_and_import_latest_clinvar_vcf(
 
     if genome_version not in ['37', '38']:
         raise ValueError('Invalid genome_version: ' + str(genome_version))
-    mt_contig_recoding = {'MT': 'chrM'} if genome_version == '38' else None
+
+    if genome_version == '38':
+        recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
+        recode.update({'MT': 'chrM'})
+    else:
+        recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = f'gs://seqr-scratch-temp{tmp_file.name}'
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
-        mt = import_vcf(
+        mt = hl.import_vcf(
             gcs_tmp_file_name,
-            genome_version,
+            reference_genome=genome_version,
             drop_samples=True,
-            min_partitions=2000,
             skip_invalid_loci=True,
-            more_contig_recoding=mt_contig_recoding,
+            contig_recoding=recode,
+            min_partitions=2000,
         )
         mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
         return mt.rows()
