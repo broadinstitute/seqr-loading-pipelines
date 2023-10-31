@@ -3,7 +3,7 @@ import logging
 import os
 import pickle
 
-from hail_scripts.utils.download_utils import (
+from v03_pipeline.lib.reference_data.gencode.download_utils import (
     download_file,
     file_writer,
     is_gs_path,
