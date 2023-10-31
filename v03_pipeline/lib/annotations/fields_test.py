@@ -30,7 +30,7 @@ class FieldsTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
-        mock_vep.return_value = ht.annotate(MOCK_VEP_DATA)
+        mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
