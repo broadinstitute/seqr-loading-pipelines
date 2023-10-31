@@ -49,7 +49,8 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_download_file.assert_not_called()
         mock_gopen.assert_not_called()
         mock_open.assert_called_with(
-            'test/path/gencode.v23.annotation.gtf.pickle', 'rb',
+            'test/path/gencode.v23.annotation.gtf.pickle',
+            'rb',
         )
         mock_pickle.load.assert_called_with(
             mock_open.return_value.__enter__.return_value,
@@ -149,7 +150,8 @@ class LoadGencodeTestCase(unittest.TestCase):
         with self.assertRaises(ValueError) as ve:
             _ = load_gencode(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(
-            str(ve.exception), "Unexpected number of fields on line #0: ['bad data']",
+            str(ve.exception),
+            "Unexpected number of fields on line #0: ['bad data']",
         )
 
     @mock.patch('v03_pipeline.lib.reference_data.gencode.mapping_gene_ids.gzip')

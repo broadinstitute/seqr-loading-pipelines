@@ -120,7 +120,8 @@ def load_gencode(gencode_release, download_path=''):
         download_path (str): The path for downloaded data
     """
     gene_id_mapping, gencode_gtf_path = _load_parsed_data_or_download(
-        gencode_release, download_path,
+        gencode_release,
+        download_path,
     )
 
     if not gene_id_mapping:
