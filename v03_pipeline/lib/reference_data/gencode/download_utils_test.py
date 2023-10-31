@@ -1,10 +1,9 @@
 import unittest
 from unittest import mock
+
 import responses
 
-from v03_pipeline.lib.reference_data.gencode.download_utils import (
-    download_file,
-)
+from v03_pipeline.lib.reference_data.gencode.download_utils import download_file
 
 DEFAULT_TEST_DIR = 'default_test/dir'
 TEST_DIR = 'test/dir'
@@ -44,11 +43,17 @@ class DownloadUtilsTest(unittest.TestCase):
         mock_logger,
     ):
         responses.add(
-            responses.HEAD, GZ_DATA_URL, headers={'Content-Length': '1024'}, status=200,
+            responses.HEAD,
+            GZ_DATA_URL,
+            headers={'Content-Length': '1024'},
+            status=200,
         )
         responses.add(responses.GET, GZ_DATA_URL, body=GZ_DATA)
         responses.add(
-            responses.HEAD, TXT_DATA_URL, headers={'Content-Length': '1024'}, status=200,
+            responses.HEAD,
+            TXT_DATA_URL,
+            headers={'Content-Length': '1024'},
+            status=200,
         )
         responses.add(responses.GET, TXT_DATA_URL, body='test data\nanother line\n')
 

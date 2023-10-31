@@ -3,18 +3,32 @@ import logging
 import os
 import pickle
 
-from hail_scripts.utils.download_utils import download_file, path_exists, is_gs_path, file_writer, stream_gs_file
+from hail_scripts.utils.download_utils import (
+    download_file,
+    file_writer,
+    is_gs_path,
+    path_exists,
+    stream_gs_file,
+)
 
-GENOME_VERSION_GRCh37 = "37"
-GENOME_VERSION_GRCh38 = "38"
+GENOME_VERSION_GRCh37 = '37'
+GENOME_VERSION_GRCh38 = '38'
 
 logger = logging.getLogger(__name__)
 
-GENCODE_GTF_URL = "http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.annotation.gtf.gz"
+GENCODE_GTF_URL = 'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.annotation.gtf.gz'
 
 # expected GTF file header
 GENCODE_FILE_HEADER = [
-    'chrom', 'source', 'feature_type', 'start', 'end', 'score', 'strand', 'phase', 'info'
+    'chrom',
+    'source',
+    'feature_type',
+    'start',
+    'end',
+    'score',
+    'strand',
+    'phase',
+    'info',
 ]
 
 
@@ -29,7 +43,11 @@ def _load_parsed_data_or_download(gencode_release, download_path):
     gencode_gtf_path = os.path.join(download_path, os.path.basename(url))
     pickle_file = _get_pickle_file(gencode_gtf_path)
     if path_exists(pickle_file):
-        logger.info('Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(pickle_file))
+        logger.info(
+            'Use the existing pickle file {}.\nIf you want to reload the data, please delete it and re-run the data loading.'.format(
+                pickle_file,
+            ),
+        )
         if is_gs_path(pickle_file):
             p = pickle.loads(stream_gs_file(pickle_file))
         else:
@@ -38,19 +56,28 @@ def _load_parsed_data_or_download(gencode_release, download_path):
         gene_id_mapping.update(p)
     elif not path_exists(gencode_gtf_path):
         gencode_gtf_path = download_file(url, to_dir=download_path)
-        logger.info('Downloaded to {}'.format(gencode_gtf_path))
+        logger.info(f'Downloaded to {gencode_gtf_path}')
     else:
-        logger.info('Use the existing downloaded file {}.\nIf you want to re-download it, please delete the file and re-run the pipeline.'.format(gencode_gtf_path))
+        logger.info(
+            'Use the existing downloaded file {}.\nIf you want to re-download it, please delete the file and re-run the pipeline.'.format(
+                gencode_gtf_path,
+            ),
+        )
 
     return gene_id_mapping, gencode_gtf_path
 
 
 def _parse_gtf_data(gencode_gtf_path):
     gene_id_mapping = {}
-    logger.info("Loading {}".format(gencode_gtf_path))
+    logger.info(f'Loading {gencode_gtf_path}')
     is_gs = is_gs_path(gencode_gtf_path)
-    gencode_file = gzip.decompress(stream_gs_file(gencode_gtf_path, raw_download=True)).decode().split('\n') \
-        if is_gs else gzip.open(gencode_gtf_path, 'rt')
+    gencode_file = (
+        gzip.decompress(stream_gs_file(gencode_gtf_path, raw_download=True))
+        .decode()
+        .split('\n')
+        if is_gs
+        else gzip.open(gencode_gtf_path, 'rt')
+    )
     for i, line in enumerate(gencode_file):
         line = line.rstrip('\r\n')
         if not line or line.startswith('#'):
@@ -58,7 +85,9 @@ def _parse_gtf_data(gencode_gtf_path):
         fields = line.split('\t')
 
         if len(fields) != len(GENCODE_FILE_HEADER):
-            raise ValueError("Unexpected number of fields on line #%s: %s" % (i, fields))
+            raise ValueError(
+                'Unexpected number of fields on line #%s: %s' % (i, fields),
+            )
 
         record = dict(zip(GENCODE_FILE_HEADER, fields))
 
@@ -90,10 +119,12 @@ def load_gencode(gencode_release, download_path=''):
         gencode_release (int): the gencode release to load (eg. 25)
         download_path (str): The path for downloaded data
     """
-    gene_id_mapping, gencode_gtf_path = _load_parsed_data_or_download(gencode_release, download_path)
+    gene_id_mapping, gencode_gtf_path = _load_parsed_data_or_download(
+        gencode_release, download_path,
+    )
 
     if not gene_id_mapping:
         gene_id_mapping = _parse_gtf_data(gencode_gtf_path)
 
-    logger.info('Got {} gene id mapping records'.format(len(gene_id_mapping)))
+    logger.info(f'Got {len(gene_id_mapping)} gene id mapping records')
     return gene_id_mapping

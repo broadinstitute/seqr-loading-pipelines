@@ -1,10 +1,10 @@
-from contextlib import contextmanager
 import logging
 import os
-import requests
 import tempfile
+from contextlib import contextmanager
 
 import hail as hl
+import requests
 from google.cloud import storage
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,8 @@ def file_writer(file_path, get_existing_size=False):
     size = None
     if is_gs_path(file_path):
         local_file_path = os.path.join(
-            tempfile.gettempdir(), os.path.basename(file_path),
+            tempfile.gettempdir(),
+            os.path.basename(file_path),
         )
         bucket, file_name = parse_gs_path_to_bucket(file_path)
         if get_existing_size:
