@@ -138,7 +138,7 @@ def download_and_import_latest_clinvar_vcf(
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
-            reference_genome=genome_version,
+            reference_genome=f'GRCh{genome_version}',
             drop_samples=True,
             skip_invalid_loci=True,
             contig_recoding=recode,
