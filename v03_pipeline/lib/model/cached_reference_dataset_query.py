@@ -4,12 +4,11 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields.vep import (
+from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
+from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-
-from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
