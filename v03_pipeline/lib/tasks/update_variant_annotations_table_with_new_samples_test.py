@@ -371,7 +371,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         self.assertCountEqual(
             ht.filter(
-                ht.locus.position <= 878809, # noqa: PLR2004
+                ht.locus.position <= 878809,  # noqa: PLR2004
             ).sorted_transcript_consequences.consequence_term_ids.collect(),
             [
                 [[11], [22, 26], [22, 26]],
