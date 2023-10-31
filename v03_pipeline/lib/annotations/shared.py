@@ -3,7 +3,6 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.annotations import expression_helpers
-
 from v03_pipeline.lib.annotations.enums import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
