@@ -2,7 +2,7 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id as expression_helpers
+from v03_pipeline.lib.annotations import expression_helpers
 
 from v03_pipeline.lib.annotations.enums import SV_CONSEQUENCE_RANKS, SV_TYPES
 from v03_pipeline.lib.annotations.shared import add_rg38_liftover
