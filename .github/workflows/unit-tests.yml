@@ -39,5 +39,5 @@ jobs:
         run: |
           export ACCESS_PRIVATE_DATASETS=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
-          nosetests --with-coverage --cover-package hail_scripts/ --cover-package v03_pipeline/lib hail_scripts/ v03_pipeline/lib
+          nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
