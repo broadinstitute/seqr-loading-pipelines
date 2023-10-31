@@ -115,7 +115,17 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
         hl._set_flags(use_new_shuffle='1') # Interval ref data join causes shuffle death, this prevents it
 
         mt = self.import_dataset()
+        if hasattr(mt, 'PL'):
+            mt = mt.drop('PL')
+        if hasattr(mt, 'AF'):
+            mt = mt.drop('AF')
         mt = self.split_multi_hts(mt)
+        standard_contigs = GRCh38_STANDARD_CONTIGS if self.genome_version == '38' else GRCh37_STANDARD_CONTIGS
+        mt = mt.filter_rows(
+            hl.set(standard_contigs).contains(
+                mt.locus.contig,
+            ),
+        )
         if not self.dont_validate:
             self.validate_mt(mt, self.genome_version, self.sample_type)
         if self.remap_path:
@@ -166,7 +176,6 @@ class SeqrVCFToMTTask(HailMatrixTableTask):
 
         for k,v in row_dict.items():
             if k not in standard_contigs:
-                check_result_dict.setdefault('Unexpected chromosome(s)',[]).append(k)
                 logger.warning(f'Chromosome {k} is unexpected.')
             elif (k not in OPTIONAL_CHROMOSOMES) and (v < threshold):
                 check_result_dict.setdefault(f'Chromosome(s) whose variants count under threshold {threshold}',[]).append(k)
