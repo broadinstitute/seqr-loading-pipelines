@@ -4,7 +4,7 @@ import sys
 import hail as hl
 import luigi
 
-from hail_scripts.utils.mapping_gene_ids import load_gencode
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 
 from luigi_pipeline.lib.model.sv_mt_schema import (
     SeqrSVGenotypesSchema,
