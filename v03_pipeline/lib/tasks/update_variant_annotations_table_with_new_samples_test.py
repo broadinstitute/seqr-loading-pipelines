@@ -171,7 +171,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
     ) -> None:
-        mock_vep.side_effect = lambda ht, **kwargs: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -370,12 +370,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
         self.assertCountEqual(
-            [
-                x
-                for x in ht.filter(
-                    ht.locus.position <= 878809
-                ).sorted_transcript_consequences.consequence_term_ids.collect()
-            ],
+            ht.filter(
+                ht.locus.position <= 878809, # noqa: PLR2004
+            ).sorted_transcript_consequences.consequence_term_ids.collect(),
             [
                 [[11], [22, 26], [22, 26]],
                 [[11], [22, 26], [22, 26]],
