@@ -37,7 +37,7 @@ jobs:
         run: ruff . --output-format github
       - name: Unit Tests
         run: |
-          export MOCK_VEP=1 ACCESS_PRIVATE_DATASETS=1
+          export ACCESS_PRIVATE_DATASETS=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           nosetests --with-coverage --cover-package hail_scripts/ --cover-package v03_pipeline/lib hail_scripts/ v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75

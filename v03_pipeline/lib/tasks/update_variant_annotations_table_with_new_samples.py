@@ -165,7 +165,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
-            self.reference_genome,
             self.dataset_type,
             self.vep_config_json_path,
         )
