@@ -3,7 +3,7 @@ from datetime import datetime
 import hail as hl
 import pytz
 
-from hail_scripts.reference_data.config import CONFIG
+from v03_pipeline.lib.reference_data.config import CONFIG
 
 from v03_pipeline.lib.model import (
     DatasetType,

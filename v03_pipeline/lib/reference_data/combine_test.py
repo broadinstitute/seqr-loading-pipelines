@@ -5,12 +5,12 @@ from unittest import mock
 import hail as hl
 import pytz
 
-from hail_scripts.reference_data.combine import (
+from v03_pipeline.lib.reference_data.combine import (
     get_enum_select_fields,
     get_ht,
     update_existing_joined_hts,
 )
-from hail_scripts.reference_data.config import (
+from v03_pipeline.lib.reference_data.config import (
     dbnsfp_custom_select,
     dbnsfp_mito_custom_select,
 )
@@ -67,7 +67,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertRaises(Exception, mapped_ht.collect)
 
     @mock.patch.dict(
-        'hail_scripts.reference_data.combine.CONFIG',
+        'v03_pipeline.lib.reference_data.combine.CONFIG',
         {
             'mock_dbnsfp': {
                 '38': {
@@ -97,7 +97,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             },
         },
     )
-    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
     def test_dbnsfp_select_and_filter(self, mock_read_table):
         mock_read_table.return_value = hl.Table.parallelize(
             [
@@ -195,7 +195,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
     @mock.patch.dict(
-        'hail_scripts.reference_data.combine.CONFIG',
+        'v03_pipeline.lib.reference_data.combine.CONFIG',
         {
             'a': {
                 '38': {
@@ -206,7 +206,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             },
         },
     )
-    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
+    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
     def test_parse_version(self, mock_read_table):
         ht = hl.Table.parallelize(
             [
@@ -274,7 +274,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertRaises(Exception, ht.globals.collect)
 
     @mock.patch.dict(
-        'hail_scripts.reference_data.combine.CONFIG',
+        'v03_pipeline.lib.reference_data.combine.CONFIG',
         {
             'a': {
                 '38': {
@@ -295,9 +295,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
             },
         },
     )
-    @mock.patch('hail_scripts.reference_data.combine.hl.read_table')
-    @mock.patch('hail_scripts.reference_data.combine.get_ht')
-    @mock.patch('hail_scripts.reference_data.combine.datetime', wraps=datetime)
+    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
+    @mock.patch('v03_pipeline.lib.reference_data.combine.get_ht')
+    @mock.patch('v03_pipeline.lib.reference_data.combine.datetime', wraps=datetime)
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_existing_joined_hts(
         self,

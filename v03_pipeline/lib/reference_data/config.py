@@ -1,6 +1,6 @@
 import hail as hl
 
-from hail_scripts.reference_data.clinvar import (
+from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_DEFAULT_PATHOGENICITY,
     CLINVAR_GOLD_STARS_LOOKUP,
@@ -10,7 +10,7 @@ from hail_scripts.reference_data.clinvar import (
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
 )
-from hail_scripts.reference_data.hgmd import download_and_import_hgmd_vcf
+from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 
 
 def import_locus_intervals(

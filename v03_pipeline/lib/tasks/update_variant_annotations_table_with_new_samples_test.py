@@ -5,7 +5,7 @@ from unittest.mock import Mock, PropertyMock, patch
 import hail as hl
 import luigi.worker
 
-from hail_scripts.reference_data.clinvar import (
+from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_PATHOGENICITIES,
 )
