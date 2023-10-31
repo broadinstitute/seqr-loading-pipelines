@@ -35,6 +35,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -73,6 +74,8 @@ GENE_ID_MAPPING = {
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
@@ -168,7 +171,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
     ) -> None:
-        mock_vep.side_effect = lambda ht: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **kwargs: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -364,6 +367,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
                 ),
+            ],
+        )
+        self.assertCountEqual(
+            [
+                x
+                for x in ht.filter(
+                    ht.locus.position <= 878809
+                ).sorted_transcript_consequences.consequence_term_ids.collect()
+            ],
+            [
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
             ],
         )
 
