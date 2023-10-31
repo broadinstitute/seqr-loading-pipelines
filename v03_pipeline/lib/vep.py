@@ -4,19 +4,19 @@ from v03_pipeline.lib.model import DatasetType
 
 
 def run_vep(
-    mt: hl.Table,
+    ht: hl.Table,
     dataset_type: DatasetType,
     vep_config_json_path: str | None,
 ) -> hl.Table:
     if not dataset_type.veppable:
-        return mt
+        return ht
     config = (
         vep_config_json_path
         if vep_config_json_path is not None
         else 'file:///vep_data/vep-gcloud.json'
     )
     return hl.vep(
-        mt,
+        ht,
         config=config,
         name='vep',
         block_size=1000,

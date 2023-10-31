@@ -162,10 +162,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
+    @patch('v03_pipeline.lib.vep.hl.vep')
     def test_mulitiple_update_vat(
         self,
+        mock_vep: Mock,
         mock_standard_contigs: Mock,
     ) -> None:
+        mock_vep.side_effect = lambda ht: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
