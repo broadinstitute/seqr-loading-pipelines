@@ -1,4 +1,5 @@
 import shutil
+from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -11,6 +12,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
@@ -25,8 +27,10 @@ class FieldsTest(MockedDatarootTestCase):
             f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
         )
 
-    def test_get_formatting_fields(self) -> None:
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_get_formatting_fields(self, mock_vep: Mock) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
+        mock_vep.return_value = ht.annotate(MOCK_VEP_DATA)
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
