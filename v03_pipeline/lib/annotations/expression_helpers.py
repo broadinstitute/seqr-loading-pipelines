@@ -1,5 +1,6 @@
 import hail as hl
 
+
 def _replace_chr_prefix(contig: str):
     return contig.replace('^chr', '')
 
@@ -35,7 +36,15 @@ def get_expr_for_variant_id(table, max_length=None):
         string: "<chrom>-<pos>-<ref>-<alt>"
     """
     contig = _get_expr_for_contig(table.locus)
-    variant_id = contig + "-" + hl.str(table.locus.position) + "-" + table.alleles[0] + "-" + table.alleles[1]
+    variant_id = (
+        contig
+        + '-'
+        + hl.str(table.locus.position)
+        + '-'
+        + table.alleles[0]
+        + '-'
+        + table.alleles[1]
+    )
     if max_length is not None:
         return variant_id[0:max_length]
     return variant_id
