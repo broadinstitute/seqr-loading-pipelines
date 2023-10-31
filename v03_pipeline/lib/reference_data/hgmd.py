@@ -1,5 +1,6 @@
 import hail as hl
 
+
 def download_and_import_hgmd_vcf(
     hgmd_url: str,
     genome_version: str,

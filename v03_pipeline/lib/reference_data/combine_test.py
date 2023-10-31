@@ -5,6 +5,11 @@ from unittest import mock
 import hail as hl
 import pytz
 
+from v03_pipeline.lib.model import (
+    DatasetType,
+    ReferenceDatasetCollection,
+    ReferenceGenome,
+)
 from v03_pipeline.lib.reference_data.combine import (
     get_enum_select_fields,
     get_ht,
@@ -13,12 +18,6 @@ from v03_pipeline.lib.reference_data.combine import (
 from v03_pipeline.lib.reference_data.config import (
     dbnsfp_custom_select,
     dbnsfp_mito_custom_select,
-)
-
-from v03_pipeline.lib.model import (
-    DatasetType,
-    ReferenceDatasetCollection,
-    ReferenceGenome,
 )
 
 

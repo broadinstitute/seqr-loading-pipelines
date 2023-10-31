@@ -3,13 +3,12 @@ from datetime import datetime
 import hail as hl
 import pytz
 
-from v03_pipeline.lib.reference_data.config import CONFIG
-
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
+from v03_pipeline.lib.reference_data.config import CONFIG
 
 
 def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
