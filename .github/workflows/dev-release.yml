@@ -1,0 +1,44 @@
+name: dev release
+on:
+  workflow_run:
+    workflows: ["unit tests"]
+    types:
+      - completed
+    branches:
+      - dev
+
+permissions:
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: authenticate to google cloud
+        id: "auth"
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.RUN_SA_EMAIL }}"
+
+      - name: "setup gcloud sdk"
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Build and push images
+        run: |-
+          gcloud builds submit --quiet --substitutions="COMMIT_SHA=${{ github.event.workflow_run.head_sha }},_CUSTOM_BRANCH_TAG=gcloud-prod" --config .cloudbuild/seqr-docker.cloudbuild.yaml --gcs-log-dir=gs://seqr-github-actions-logs/logs .

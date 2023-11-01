@@ -1,3 +1,19 @@
+[project]
+name = "seqr-loading-pipeline"
+dynamic = ['version']
+requires-python = ">=3.10"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "v03_pipeline.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["v03_pipeline*"]
+exclude = ["v03_pipeline*bin*", "v03_pipeline*test*"]
+namespaces = false
+
 [tool.black]
 line-length = 88
 skip-string-normalization = true
