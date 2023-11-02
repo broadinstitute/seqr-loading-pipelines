@@ -27,6 +27,7 @@ jobs:
 
       - name: Build package
         run: |
+          rm -rf dist/
           python -m build
 
       - name: authenticate to google cloud
@@ -39,6 +40,8 @@ jobs:
       - name: "setup gcloud sdk"
         uses: google-github-actions/setup-gcloud@v0
 
-      - name: Build and push images
+      - name: Copy files to release directory
         run: |-
-          gcloud builds submit --quiet --substitutions="COMMIT_SHA=${{ github.event.workflow_run.head_sha }},_CUSTOM_BRANCH_TAG=gcloud-prod" --config .cloudbuild/seqr-docker.cloudbuild.yaml --gcs-log-dir=gs://seqr-github-actions-logs/logs .
+          gcloud storage rm -r gs://seqr-luigi/releases/dev/latest/
+          gcloud storage cp bin/* gs://seqr-luigi/releases/dev/latest/
+          gcloud storage cp dist/*.whl gs://seqr-luigi/releases/dev/latest/pyscripts.zip

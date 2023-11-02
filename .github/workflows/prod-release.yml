@@ -20,14 +20,21 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
 
-      - name: Set up Python
+      - name: set up python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10' 
 
-      - name: Build package
+      - name: build package
         run: |
+          rm -rf dist/
           python -m build
+
+      - name: set tag name
+        shell: bash
+        run: |
+          tag_name=`python3 -c "import v03_pipeline;print(v03_pipeline.__version__)"`
+          echo "TAG_NAME=$tag_name" >> $GITHUB_ENV
 
       - name: authenticate to google cloud
         id: "auth"
@@ -39,6 +46,22 @@ jobs:
       - name: "setup gcloud sdk"
         uses: google-github-actions/setup-gcloud@v0
 
-      - name: Build and push images
+      - name: Copy files to release directory
+        shell: bash
         run: |-
-          gcloud builds submit --quiet --substitutions="COMMIT_SHA=${{ github.event.workflow_run.head_sha }},_CUSTOM_BRANCH_TAG=gcloud-prod" --config .cloudbuild/seqr-docker.cloudbuild.yaml --gcs-log-dir=gs://seqr-github-actions-logs/logs .
+          gcloud storage rm -r gs://seqr-luigi/releases/prod/latest/
+          gcloud storage cp bin/* gs://seqr-luigi/releases/prod/latest/
+          gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/latest/pyscripts.zip
+          gcloud storage cp bin/* gs://seqr-luigi/releases/prod/$TAG_NAME/
+          gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/$TAG_NAME/pyscripts.zip
+
+      - name: Create tag
+        uses: actions/github-script@v5
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/${{ env.TAG_NAME }}',
+              sha: context.sha
+            })
