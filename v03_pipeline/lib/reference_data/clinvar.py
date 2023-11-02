@@ -143,6 +143,7 @@ def download_and_import_latest_clinvar_vcf(
             skip_invalid_loci=True,
             contig_recoding=recode,
             min_partitions=2000,
+            force_bgz=True,
         )
         mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
         return mt.rows()
