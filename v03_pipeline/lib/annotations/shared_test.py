@@ -1,15 +1,17 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import hail as hl
 
 from v03_pipeline.lib.annotations.shared import sorted_transcript_consequences
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 
 
 class SharedAnnotationsTest(unittest.TestCase):
-    def test_sorted_transcript_consequences(self) -> None:
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_sorted_transcript_consequences(self, mock_vep: Mock) -> None:
         ht = hl.Table.parallelize(
             [
                 {
@@ -27,14 +29,12 @@ class SharedAnnotationsTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
         )
-        with patch('v03_pipeline.lib.vep.Env') as mock_env:
-            mock_env.MOCK_VEP = True
-            ht = run_vep(
-                ht,
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                None,
-            )
+        mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
+        ht = run_vep(
+            ht,
+            DatasetType.SNV_INDEL,
+            None,
+        )
         ht = ht.select(
             sorted_transcript_consequences=sorted_transcript_consequences(ht),
         )

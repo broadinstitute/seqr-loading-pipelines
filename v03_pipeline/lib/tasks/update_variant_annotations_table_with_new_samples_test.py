@@ -5,11 +5,6 @@ from unittest.mock import Mock, PropertyMock, patch
 import hail as hl
 import luigi.worker
 
-from hail_scripts.reference_data.clinvar import (
-    CLINVAR_ASSERTIONS,
-    CLINVAR_PATHOGENICITIES,
-)
-
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CONSEQUENCE_TERMS,
@@ -31,11 +26,16 @@ from v03_pipeline.lib.paths import (
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
+from v03_pipeline.lib.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -163,10 +163,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
+    @patch('v03_pipeline.lib.vep.hl.vep')
     def test_mulitiple_update_vat(
         self,
+        mock_vep: Mock,
         mock_standard_contigs: Mock,
     ) -> None:
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -362,6 +365,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
                 ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.filter(
+                ht.locus.position <= 878809,  # noqa: PLR2004
+            ).sorted_transcript_consequences.consequence_term_ids.collect(),
+            [
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
+                [[11], [22, 26], [22, 26]],
             ],
         )
 

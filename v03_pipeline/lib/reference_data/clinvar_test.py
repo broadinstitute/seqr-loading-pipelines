@@ -2,7 +2,7 @@ import unittest
 
 import hail as hl
 
-from hail_scripts.reference_data.clinvar import (
+from v03_pipeline.lib.reference_data.clinvar import (
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
 )

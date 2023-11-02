@@ -1,24 +1,24 @@
 import hail as hl
 
-import luigi_pipeline.lib.hail_vep_runners as vep_runners
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType
 
 
 def run_vep(
-    mt: hl.Table,
-    reference_genome: ReferenceGenome,
+    ht: hl.Table,
     dataset_type: DatasetType,
     vep_config_json_path: str | None,
 ) -> hl.Table:
     if not dataset_type.veppable:
-        return mt
-    vep_runner = (
-        vep_runners.HailVEPDummyRunner()
-        if Env.MOCK_VEP
-        else vep_runners.HailVEPRunner()
+        return ht
+    config = (
+        vep_config_json_path
+        if vep_config_json_path is not None
+        else 'file:///vep_data/vep-gcloud.json'
     )
-    return vep_runner.run(
-        mt,
-        reference_genome.v02_value,
-        vep_config_json_path=vep_config_json_path,
+    return hl.vep(
+        ht,
+        config=config,
+        name='vep',
+        block_size=1000,
+        tolerate_parse_error=True,
     )
