@@ -13,6 +13,5 @@ def download_and_import_hgmd_vcf(
         force=True,
         min_partitions=100,
         skip_invalid_loci=True,
-        force_bgz=True,
     )
     return mt.rows()
