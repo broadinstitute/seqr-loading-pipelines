@@ -2,8 +2,7 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields import variant_id as expression_helpers
-
+from v03_pipeline.lib.annotations import expression_helpers
 from v03_pipeline.lib.annotations.enums import BIOTYPES, CONSEQUENCE_TERMS, LOF_FILTERS
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 

@@ -3,8 +3,6 @@ import functools
 import hail as hl
 import luigi
 
-from hail_scripts.utils.mapping_gene_ids import load_gencode
-
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import ReferenceDatasetCollection
@@ -13,6 +11,7 @@ from v03_pipeline.lib.paths import (
     sample_lookup_table_path,
     valid_reference_dataset_collection_path,
 )
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -170,7 +169,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_ht = run_vep(
             new_variants_ht,
-            self.reference_genome,
             self.dataset_type,
             self.vep_config_json_path,
         )

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 
-from hail_scripts.reference_data.combine import join_hts
-
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -10,6 +8,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.reference_data.combine import join_hts
 
 
 def run(reference_genome: ReferenceGenome):

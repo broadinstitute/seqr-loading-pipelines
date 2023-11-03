@@ -4,17 +4,19 @@ from typing import Any
 
 import hail as hl
 
-from hail_scripts.computed_fields.vep import (
-    CONSEQUENCE_TERM_RANK_LOOKUP,
+from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
+from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
-from hail_scripts.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
-
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
+CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
+    hl.enumerate(CONSEQUENCE_TERMS, index_first=False),
+)
 GNOMAD_CODING_NONCODING_HIGH_AF_THRESHOLD = 0.90
 ONE_PERCENT = 0.01
 TEN_PERCENT = 0.10

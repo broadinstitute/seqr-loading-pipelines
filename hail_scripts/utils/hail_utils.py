@@ -1,4 +1,3 @@
-from __future__ import annotations
 import hail as hl
 import logging
 
@@ -112,11 +111,11 @@ write_ht = write_mt  # alias
 
 
 def run_vep(
-        mt: hl.MatrixTable | hl.Table,
+        mt: hl.MatrixTable,
         genome_version: str,
         name: str = 'vep',
         block_size: int = 1000,
-        vep_config_json_path = None) -> hl.MatrixTable | hl.Table:
+        vep_config_json_path = None) -> hl.MatrixTable:
     """Runs VEP.
 
     :param MatrixTable mt: MT to annotate with VEP
