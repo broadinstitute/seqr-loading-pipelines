@@ -110,7 +110,6 @@ def import_vcf(
         skip_invalid_loci=True,
         contig_recoding=recode,
         force_bgz=True,
-        min_partitions=500,
         # NB: find_replace was added to support the filters vcfs delivered with internal exome callsets
         find_replace=('nul', '.'),
         # NB: long read data has missing array elements
