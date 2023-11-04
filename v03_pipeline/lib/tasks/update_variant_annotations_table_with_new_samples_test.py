@@ -119,6 +119,30 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ReferenceDatasetCollection.INTERVAL,
             ),
         )
+        shutil.copytree(
+            TEST_COMBINED_1,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.ONT_SNV_INDEL,
+                ReferenceDatasetCollection.COMBINED,
+            ),
+        )
+        shutil.copytree(
+            TEST_HGMD_1,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.ONT_SNV_INDEL,
+                ReferenceDatasetCollection.HGMD,
+            ),
+        )
+        shutil.copytree(
+            TEST_INTERVAL_1,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.ONT_SNV_INDEL,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
+        )
 
     def test_missing_pedigree(self) -> None:
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
