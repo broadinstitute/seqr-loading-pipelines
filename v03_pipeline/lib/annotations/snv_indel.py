@@ -19,7 +19,8 @@ def _AC(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
 
 
 def _AF(row: hl.StructExpression) -> hl.Float32Expression:  # noqa: N802
-    return hl.float32(_AC(row) / _AN(row))
+    # NB: AN might be 0 in test callsets, but shouldn't ever happen in a real callset?
+    return hl.if_else(_AN(row) == 0, 0, hl.float32(_AC(row) / _AN(row)))
 
 
 def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
