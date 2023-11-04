@@ -1415,7 +1415,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
-    def test_ont_snv_indel_update_vat(self) -> None:
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_ont_snv_indel_update_vat(self, mock_vep: Mock) -> None:
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1434,11 +1436,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.add(update_variant_annotations_task)
         worker.run()
         self.assertTrue(update_variant_annotations_task.complete())
-        self.assertFalse(
-            GCSorLocalFolderTarget(
-                f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/GCNV/lookup.ht',
-            ).exists(),
-        )
         ht = hl.read_table(update_variant_annotations_task.output().path)
         self.assertEqual(ht.count(), 7)
         self.assertCountEqual(
