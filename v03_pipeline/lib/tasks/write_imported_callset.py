@@ -42,12 +42,13 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 CallsetTask(self.filters_path),
             ]
-        if self.validate:
+        if self.validate and self.dataset_type.can_run_validation:
             requirements = [
                 *requirements,
                 HailTableTask(
                     valid_cached_reference_dataset_query_path(
                         self.reference_genome,
+                        self.dataset_type,
                         CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     ),
                 ),
@@ -77,6 +78,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(
                     self.reference_genome,
+                    self.dataset_type,
                     CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),
             )
