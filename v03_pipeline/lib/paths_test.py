@@ -27,9 +27,10 @@ class TestPaths(unittest.TestCase):
         self.assertEqual(
             valid_cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ),
-            '/seqr-reference-data/v03/GRCh38/cached_reference_dataset_queries/clinvar_path_variants.ht',
+            '/seqr-reference-data/v03/GRCh38/cached_reference_dataset_queries/SNV_INDEL/clinvar_path_variants.ht',
         )
 
     def test_family_table_path(self) -> None:
