@@ -27,7 +27,7 @@ class FieldsTest(MockedDatarootTestCase):
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                rdc,
+                ReferenceDatasetCollection.INTERVAL,
             ),
         )
 
