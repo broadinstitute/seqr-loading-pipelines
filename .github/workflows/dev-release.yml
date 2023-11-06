@@ -43,5 +43,5 @@ jobs:
       - name: Copy files to release directory
         run: |-
           gcloud storage rm -r gs://seqr-luigi/releases/dev/latest/
-          gcloud storage cp bin/* gs://seqr-luigi/releases/dev/latest/
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/dev/latest/
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/dev/latest/pyscripts.zip

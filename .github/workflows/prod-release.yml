@@ -50,9 +50,9 @@ jobs:
         shell: bash
         run: |-
           gcloud storage rm -r gs://seqr-luigi/releases/prod/latest/
-          gcloud storage cp bin/* gs://seqr-luigi/releases/prod/latest/
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/latest/
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/latest/pyscripts.zip
-          gcloud storage cp bin/* gs://seqr-luigi/releases/prod/$TAG_NAME/
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/$TAG_NAME/
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/$TAG_NAME/pyscripts.zip
 
       - name: Create tag
