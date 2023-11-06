@@ -39,6 +39,7 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
                 HailTableTask(
                     valid_cached_reference_dataset_query_path(
                         self.reference_genome,
+                        self.dataset_type,
                         CachedReferenceDatasetQuery.GNOMAD_QC,
                     ),
                 ),

@@ -9,6 +9,7 @@ from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
@@ -24,27 +25,29 @@ TEN_PERCENT = 0.10
 
 def clinvar_path_variants(
     ht: hl.Table,
+    dataset_type: DatasetType,
     **_: Any,
 ) -> hl.Table:
+    clinvar_field = 'clinvar_mito' if dataset_type == DatasetType.MITO else 'clinvar'
     ht = ht.select_globals()
     ht = ht.select(
         pathogenic=(
             (
-                ht.clinvar.pathogenicity_id
+                ht[clinvar_field].pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
             )
             & (
-                ht.clinvar.pathogenicity_id
+                ht[clinvar_field].pathogenicity_id
                 <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
         ),
         likely_pathogenic=(
             (
-                ht.clinvar.pathogenicity_id
+                ht[clinvar_field].pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
             )
             & (
-                ht.clinvar.pathogenicity_id
+                ht[clinvar_field].pathogenicity_id
                 <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
             )
         ),
@@ -141,3 +144,20 @@ class CachedReferenceDatasetQuery(Enum):
             CachedReferenceDatasetQuery.GNOMAD_QC: gnomad_qc,
             CachedReferenceDatasetQuery.HIGH_AF_VARIANTS: high_af_variants,
         }[self]
+
+    @classmethod
+    def for_dataset_type(
+        cls,
+        dataset_type: DatasetType,
+    ) -> list['CachedReferenceDatasetQuery']:
+        return {
+            DatasetType.SNV_INDEL: [
+                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+                CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
+                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                CachedReferenceDatasetQuery.GNOMAD_QC,
+            ],
+            DatasetType.MITO: [
+                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+            ],
+        }.get(dataset_type, [])

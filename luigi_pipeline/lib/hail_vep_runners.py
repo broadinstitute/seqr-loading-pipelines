@@ -8,7 +8,7 @@ from hail_scripts.utils import hail_utils
 class HailVEPRunnerBase(ABC):
 
     @abstractmethod
-    def run(self, mt, genome_version, vep_config_json_path=None):
+    def run(self, mt, genome_version):
         pass
 
 
@@ -115,8 +115,8 @@ class HailVEPDummyRunner(HailVEPRunnerBase):
                                                              'hgvsp': 'ENSP00000317992.6:p.Ser556Leu',
                                                              'impact': 'MODERATE',
                                                              'intron': hl.null('str'),
-                                                             'lof': 'LC',
-                                                             'lof_filter': 'END_TRUNC,INCOMPLETE_CDS',
+                                                             'lof': hl.null('str'),
+                                                             'lof_filter': hl.null('str'),
                                                              'lof_flags': hl.null('str'),
                                                              'lof_info': 'INTRON_END:881781,EXON_END:881925,EXON_START:881782,DE_NOVO_DONOR_MES:-7.36719797135343,DE_NOVO_DONOR_PROB:0.261170618766552,DE_NOVO_DONOR_POS:-138,INTRON_START:881667,DE_NOVO_DONOR_MES_POS:-138,MUTANT_DONOR_MES:4.93863747168278',
                                                              'minimised': 1,
@@ -559,7 +559,5 @@ class HailVEPDummyRunner(HailVEPRunnerBase):
            'variant_class': 'SNV'},)
 
 
-    def run(self, mt, genome_version, vep_config_json_path=None):
-        if isinstance(mt, hl.Table):
-            return mt.annotate(vep=self.MOCK_VEP_DATA)
+    def run(self, mt, genome_version):
         return mt.annotate_rows(vep=self.MOCK_VEP_DATA)
