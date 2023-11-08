@@ -59,9 +59,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
         ]
 
     def create_table(self) -> hl.MatrixTable:
-        # Hail falls over itself with OOMs with use_new_shuffle here within the GCNV import,
-        # OR fails with non-serializability errors.
-        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         mt = import_callset(
             self.callset_path,
             self.reference_genome,
