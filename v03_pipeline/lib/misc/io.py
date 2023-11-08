@@ -137,7 +137,8 @@ def import_callset(
 
 
 def select_relevant_fields(
-    mt: hl.MatrixTable, dataset_type: DatasetType,
+    mt: hl.MatrixTable,
+    dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(*dataset_type.row_fields)
