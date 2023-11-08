@@ -1,7 +1,11 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.io import import_callset
+from v03_pipeline.lib.misc.io import (
+    import_callset,
+    select_relevant_fields,
+    split_multi_hts,
+)
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
     validate_sample_type,
@@ -65,6 +69,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
+        mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
@@ -73,7 +78,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
-        if dataset_type.has_multi_allelic_variants:
+        if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
         if self.validate and self.dataset_type.can_run_validation:
             validate_expected_contig_frequency(mt, self.reference_genome)

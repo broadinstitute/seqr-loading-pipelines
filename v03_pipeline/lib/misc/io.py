@@ -133,7 +133,12 @@ def import_callset(
     if filters_path:
         filters_ht = import_vcf(filters_path, reference_genome).rows()
         mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
-    mt = mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
+    return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
+
+
+def select_relevant_fields(
+    mt: hl.MatrixTable, dataset_type: DatasetType
+) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(*dataset_type.row_fields)
     mt = mt.select_cols(*dataset_type.col_fields)
