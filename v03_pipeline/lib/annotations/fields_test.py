@@ -24,7 +24,11 @@ class FieldsTest(MockedDatarootTestCase):
         super().setUp()
         shutil.copytree(
             TEST_INTERVAL_1,
-            f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/reference_datasets/SNV_INDEL/interval.ht',
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.INTERVAL,
+            ),
         )
 
     @patch('v03_pipeline.lib.vep.hl.vep')

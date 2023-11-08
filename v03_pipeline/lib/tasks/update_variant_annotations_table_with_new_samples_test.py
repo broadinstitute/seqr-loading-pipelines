@@ -231,6 +231,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         coding_and_noncoding_variants_ht.write(
             valid_cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
             ),
         )

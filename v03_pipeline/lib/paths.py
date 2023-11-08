@@ -172,6 +172,7 @@ def sex_check_table_path(
 
 def valid_cached_reference_dataset_query_path(
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     cached_reference_dataset_query: CachedReferenceDatasetQuery,
 ) -> str | None:
     if (
@@ -184,6 +185,7 @@ def valid_cached_reference_dataset_query_path(
             cached_reference_dataset_query.access_control,
             reference_genome,
         ),
+        dataset_type.value,
         'cached_reference_dataset_queries',
         f'{cached_reference_dataset_query.value}.ht',
     )
@@ -204,8 +206,8 @@ def valid_reference_dataset_collection_path(
             reference_dataset_collection.access_control,
             reference_genome,
         ),
-        'reference_datasets',
         dataset_type.value,
+        'reference_datasets',
         f'{reference_dataset_collection.value}.ht',
     )
 

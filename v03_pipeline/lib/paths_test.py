@@ -27,9 +27,10 @@ class TestPaths(unittest.TestCase):
         self.assertEqual(
             valid_cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ),
-            '/seqr-reference-data/v03/GRCh38/cached_reference_dataset_queries/clinvar_path_variants.ht',
+            '/seqr-reference-data/v03/GRCh38/SNV_INDEL/cached_reference_dataset_queries/clinvar_path_variants.ht',
         )
 
     def test_family_table_path(self) -> None:
@@ -79,7 +80,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 ReferenceDatasetCollection.HGMD,
             ),
-            '/seqr-reference-data-private/v03/GRCh38/reference_datasets/SNV_INDEL/hgmd.ht',
+            '/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
         )
 
     def test_sample_lookup_table_path(self) -> None:

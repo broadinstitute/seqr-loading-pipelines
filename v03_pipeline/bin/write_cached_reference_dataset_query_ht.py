@@ -6,6 +6,7 @@ import hail as hl
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
+    DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
@@ -17,6 +18,7 @@ from v03_pipeline.lib.reference_data.config import CONFIG
 
 
 def get_ht(
+    dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ) -> hl.Table:
@@ -34,23 +36,26 @@ def get_ht(
     return hl.read_table(
         valid_reference_dataset_collection_path(
             reference_genome,
+            dataset_type,
             ReferenceDatasetCollection.COMBINED,
         ),
     )
 
 
 def run(
+    dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
     query: CachedReferenceDatasetQuery,
 ):
-    ht = get_ht(reference_genome, query)
-    ht = query.query(ht, reference_genome=reference_genome)
+    ht = get_ht(dataset_type, reference_genome, query)
+    ht = query.query(ht, dataset_type=dataset_type, reference_genome=reference_genome)
     destination_path = valid_cached_reference_dataset_query_path(
         reference_genome,
+        dataset_type,
         query,
     )
     print(f'Uploading ht to {destination_path}')
-    write(ht, destination_path, n_partitions=2)
+    write(ht, destination_path)
 
 
 if __name__ == '__main__':
@@ -62,10 +67,22 @@ if __name__ == '__main__':
         default=ReferenceGenome.GRCh38,
     )
     parser.add_argument(
+        '--dataset-type',
+        type=DatasetType,
+        choices=list(DatasetType),
+        default=None,
+        help='When used, update the passed dataset, otherwise run all datasets.',
+    )
+    parser.add_argument(
         '--query',
         type=CachedReferenceDatasetQuery,
         choices=list(CachedReferenceDatasetQuery),
         required=True,
     )
     args, _ = parser.parse_known_args()
-    run(args.reference_genome, args.query)
+    if args.query and args.query not in CachedReferenceDatasetQuery.for_dataset_type(
+        args.dataset_type,
+    ):
+        msg = f'{args.query} is not a valid query for {DatasetType}'
+        raise ValueError(msg)
+    run(args.dataset_type, args.reference_genome, args.query)

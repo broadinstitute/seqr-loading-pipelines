@@ -36,6 +36,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             [
                 hl.Struct(
                     sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                    sample_type=SampleType.WGS.value,
                     updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
                 ),
             ],
@@ -172,6 +173,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             [
                 hl.Struct(
                     updates={TEST_SV_VCF},
+                    sample_type=SampleType.WGS.value,
                     sample_ids=[
                         'RGP_164_1',
                         'RGP_164_2',
@@ -423,6 +425,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             [
                 hl.Struct(
                     updates={TEST_GCNV_BED_FILE},
+                    sample_type=SampleType.WES.value,
                     sample_ids=[
                         'RGP_164_1',
                         'RGP_164_2',
