@@ -128,8 +128,6 @@ def import_callset(
         mt = import_vcf(callset_path, reference_genome)
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
-    if dataset_type == DatasetType.SNV_INDEL:
-        mt = split_multi_hts(mt)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(variant_id=mt.rsid)
     if filters_path:
@@ -176,4 +174,4 @@ def write(
     t.write(checkpoint_path)
     t = read_fn(checkpoint_path)
     t = t.naive_coalesce(compute_hail_n_partitions(file_size_bytes(checkpoint_path)))
-    return t.write(destination_path, overwrite=True, stage_locally=True)
+    return t.write(destination_path, overwrite=True)

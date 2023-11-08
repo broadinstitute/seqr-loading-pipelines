@@ -73,6 +73,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
+        if dataset_type.has_multi_allelic_variants:
+            mt = split_multi_hts(mt)
         if self.validate and self.dataset_type.can_run_validation:
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
