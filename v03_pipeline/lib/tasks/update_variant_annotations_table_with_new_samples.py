@@ -163,9 +163,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         annotation_dependencies = self.read_annotation_dependencies()
 
         # 1) Get new rows and annotate with vep
-        # Note about the repartition: our work here is cpu/memory bound and 
+        # Note about the repartition: our work here is cpu/memory bound and
         # proportional to the number of new variants.  Our default partitioning
-        # will under-partition in that regard, so we split up our work 
+        # will under-partition in that regard, so we split up our work
         # with a partitioning scheme local to this task.
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_count = new_variants_ht.count()
