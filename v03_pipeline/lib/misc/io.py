@@ -123,6 +123,10 @@ def import_callset(
     dataset_type: DatasetType,
     filters_path: str | None = None,
 ) -> hl.MatrixTable:
+    # Hail falls over itself with OOMs with use_new_shuffle here during GCNV bed file import... no clue why.
+    # Long read data also dies with use_new_shuffle :( !
+    if dataset_type == DatasetType.GCNV or dataset_type == DatasetType.ONT_SNV_INDEL:
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')
     if dataset_type == DatasetType.GCNV:
         mt = import_gcnv_bed_file(callset_path)
     elif 'vcf' in callset_path:
