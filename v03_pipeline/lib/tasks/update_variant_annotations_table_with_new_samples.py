@@ -1,4 +1,5 @@
 import functools
+import math
 
 import hail as hl
 import luigi
@@ -24,6 +25,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 from v03_pipeline.lib.vep import run_vep
 
 GENCODE_RELEASE = 42
+VARIANTS_PER_VEP_PARTITION = 20e3
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -162,6 +164,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
         # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
+
+        # Our work here is proportional to the number of new variants
+        new_variants_count = new_variants_ht.count()
+        new_variants_ht = new_variants_ht.repartition(
+            math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+        )
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
@@ -179,14 +187,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
 
-        # 4) Join against the reference dataset collections that are not "annotated".
+        # 3) Join against the reference dataset collections that are not "annotated".
         for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
             if rdc.requires_annotation:
                 continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        # 5) Union with the existing variant annotations table
+        # 4) Union with the existing variant annotations table
         # and annotate with the sample lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         if self.dataset_type.has_sample_lookup_table:
@@ -199,7 +207,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        # 6) Fix up the globals.
+        # 5) Fix up the globals.
         ht = ht.annotate_globals(
             paths=hl.Struct(),
             versions=hl.Struct(),
