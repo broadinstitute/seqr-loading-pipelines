@@ -127,6 +127,10 @@ class DatasetType(Enum):
         return self == DatasetType.SV
 
     @property
+    def has_multi_allelic_variants(self) -> bool:
+        return self in {DatasetType.SNV_INDEL, DatasetType.ONT_SNV_INDEL}
+
+    @property
     def sample_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
         return {
             DatasetType.GCNV: lambda e: hl.is_defined(e.GT),

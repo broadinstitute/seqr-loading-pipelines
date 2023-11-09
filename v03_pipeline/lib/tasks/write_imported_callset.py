@@ -1,7 +1,15 @@
 import hail as hl
 import luigi
 
+<<<<<<< HEAD
 from v03_pipeline.lib.misc.io import import_callset, split_multi_hts
+=======
+from v03_pipeline.lib.misc.io import (
+    import_callset,
+    select_relevant_fields,
+    split_multi_hts,
+)
+>>>>>>> 630c8162110c517e9129fd11838e2e53770768a7
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
     validate_sample_type,
@@ -65,6 +73,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
+        mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
         if self.dataset_type.can_run_validation:
