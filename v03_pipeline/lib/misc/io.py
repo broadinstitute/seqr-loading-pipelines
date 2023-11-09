@@ -126,7 +126,7 @@ def import_callset(
     # Hail falls over itself with OOMs with use_new_shuffle here during GCNV bed file import... no clue why.
     # Long read data also dies with use_new_shuffle :( !
     if dataset_type == DatasetType.GCNV or dataset_type == DatasetType.ONT_SNV_INDEL:
-        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1') # noqa: SLF001
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
     if dataset_type == DatasetType.GCNV:
         mt = import_gcnv_bed_file(callset_path)
     elif 'vcf' in callset_path:
