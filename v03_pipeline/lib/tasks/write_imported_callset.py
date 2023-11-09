@@ -1,15 +1,11 @@
 import hail as hl
 import luigi
 
-<<<<<<< HEAD
-from v03_pipeline.lib.misc.io import import_callset, split_multi_hts
-=======
 from v03_pipeline.lib.misc.io import (
     import_callset,
     select_relevant_fields,
     split_multi_hts,
 )
->>>>>>> 630c8162110c517e9129fd11838e2e53770768a7
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
     validate_sample_type,
