@@ -1,4 +1,6 @@
 import functools
+import os
+import uuid
 
 import hail as hl
 import luigi
@@ -141,7 +143,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        print('HERE')
         callset_hts = [
             hl.read_matrix_table(
                 remapped_and_subsetted_callset_path(
@@ -158,13 +159,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             callset_hts,
         )
         callset_ht = callset_ht.distinct()
-        print('GOT DISTINCT VARIANTS')
         annotation_dependencies = self.read_annotation_dependencies()
-        print(annotation_dependencies)
 
         # 1) Get new rows and annotate with vep
         new_variants_ht = callset_ht.anti_join(ht)
-        print('new_variants_ht count', new_variants_ht.count())
+        new_variants_ht = new_variants_ht.repartition(1000)
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
