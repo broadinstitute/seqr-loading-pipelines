@@ -1,4 +1,5 @@
 import functools
+import math
 
 import hail as hl
 import luigi
@@ -24,6 +25,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 from v03_pipeline.lib.vep import run_vep
 
 GENCODE_RELEASE = 42
+VARIANTS_PER_VEP_PARTITION = 20e3
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -161,7 +163,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         annotation_dependencies = self.read_annotation_dependencies()
 
         # 1) Get new rows and annotate with vep
+        # Note about the repartition: our work here is cpu/memory bound and
+        # proportional to the number of new variants.  Our default partitioning
+        # will under-partition in that regard, so we split up our work
+        # with a partitioning scheme local to this task.
         new_variants_ht = callset_ht.anti_join(ht)
+        new_variants_count = new_variants_ht.count()
+        new_variants_ht = new_variants_ht.repartition(
+            max(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 1),
+        )
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
@@ -179,14 +189,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ),
         )
 
-        # 4) Join against the reference dataset collections that are not "annotated".
+        # 3) Join against the reference dataset collections that are not "annotated".
         for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
             if rdc.requires_annotation:
                 continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        # 5) Union with the existing variant annotations table
+        # 4) Union with the existing variant annotations table
         # and annotate with the sample lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         if self.dataset_type.has_sample_lookup_table:
@@ -199,7 +209,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        # 6) Fix up the globals.
+        # 5) Fix up the globals.
         ht = ht.annotate_globals(
             paths=hl.Struct(),
             versions=hl.Struct(),
