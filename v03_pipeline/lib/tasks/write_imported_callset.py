@@ -72,7 +72,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
-        if self.dataset_type.can_run_validation:
+        if self.dataset_type.needs_invalid_contig_filtering:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
             mt = mt.filter_rows(

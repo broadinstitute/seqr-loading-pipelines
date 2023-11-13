@@ -137,6 +137,10 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def needs_invalid_contig_filtering(self) -> bool:
+        return self in {DatasetType.SNV_INDEL, DatasetType.ONT_SNV_INDEL}
+
+    @property
     def check_sex_and_relatedness(self) -> bool:
         return self == DatasetType.SNV_INDEL
 
