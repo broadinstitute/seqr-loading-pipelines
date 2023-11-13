@@ -40,16 +40,6 @@ PROTEIN_LETTERS_1TO3 = hl.dict(
     },
 )
 
-
-def _replace_chr_prefix(contig: str):
-    return contig.replace('^chr', '')
-
-
-def _get_expr_for_contig(locus: hl.expr.LocusExpression) -> hl.expr.StringExpression:
-    """Normalized contig name"""
-    return _replace_chr_prefix(locus.contig)
-
-
 def _get_expr_for_contig_number(
     locus: hl.expr.LocusExpression,
 ) -> hl.expr.Int32Expression:
@@ -62,7 +52,7 @@ def _get_expr_for_contig_number(
             .when(contig[0] == 'M', 25)
             .default(hl.int(contig))
         ),
-        _get_expr_for_contig(locus),
+        locus.contig.replace('^chr', ''),
     )
 
 
