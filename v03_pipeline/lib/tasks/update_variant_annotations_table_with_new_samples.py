@@ -1,10 +1,5 @@
 import functools
-<<<<<<< HEAD
-import os
-import uuid
-=======
 import math
->>>>>>> 59db7da2f898cb905b312c3ce86496003956dfd7
 
 import hail as hl
 import luigi
@@ -172,14 +167,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # will under-partition in that regard, so we split up our work
         # with a partitioning scheme local to this task.
         new_variants_ht = callset_ht.anti_join(ht)
-<<<<<<< HEAD
-        new_variants_ht = new_variants_ht.repartition(1000)
-=======
         new_variants_count = new_variants_ht.count()
         new_variants_ht = new_variants_ht.repartition(
             max(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 1),
         )
->>>>>>> 59db7da2f898cb905b312c3ce86496003956dfd7
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
