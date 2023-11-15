@@ -252,7 +252,7 @@ tzdata==2023.3
     # via pandas
 uritemplate==4.1.1
     # via google-api-python-client
-urllib3==1.26.15
+urllib3==1.26.18
     # via
     #   botocore
     #   elasticsearch
