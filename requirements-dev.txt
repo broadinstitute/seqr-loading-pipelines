@@ -49,7 +49,7 @@ pyyaml==6.0
     # via
     #   -c requirements.txt
     #   responses
-requests==2.29.0
+requests==2.31.0
     # via
     #   -c requirements.txt
     #   responses
@@ -61,6 +61,7 @@ tomli==2.0.1
     # via
     #   black
     #   build
+    #   pyproject-hooks
 types-pyyaml==6.0.12.9
     # via responses
 typing-extensions==4.5.0
