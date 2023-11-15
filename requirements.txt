@@ -208,7 +208,7 @@ pyyaml==6.0
     # via bokeh
 regex==2023.5.5
     # via parsimonious
-requests==2.29.0
+requests==2.31.0
     # via
     #   azure-core
     #   google-api-core
