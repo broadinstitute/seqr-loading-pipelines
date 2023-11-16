@@ -47,6 +47,7 @@ class DownloadUtilsTest(unittest.TestCase):
             GZ_DATA_URL,
             headers={'Content-Length': '1024'},
             status=200,
+            body=b' ' * 1024,
         )
         responses.add(responses.GET, GZ_DATA_URL, body=GZ_DATA)
         responses.add(
@@ -54,6 +55,7 @@ class DownloadUtilsTest(unittest.TestCase):
             TXT_DATA_URL,
             headers={'Content-Length': '1024'},
             status=200,
+            body=b' ' * 1024,
         )
         responses.add(responses.GET, TXT_DATA_URL, body='test data\nanother line\n')
 
