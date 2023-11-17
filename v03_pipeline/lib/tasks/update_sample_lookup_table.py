@@ -98,6 +98,9 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
+        # Repartition the sample lookup table during the work phase?
+        ht = ht.repartition(500)
+
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
             ht = filter_callset_sample_ids(
