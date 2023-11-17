@@ -1,3 +1,6 @@
+import os
+import uuid
+
 import hail as hl
 import luigi
 
@@ -6,6 +9,7 @@ from v03_pipeline.lib.misc.sample_lookup import (
     filter_callset_sample_ids,
     join_sample_lookup_hts,
 )
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import sample_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -100,6 +104,12 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         # Repartition the sample lookup table during the work phase?
         ht = ht.repartition(500)
+        ht = ht.checkpoint(
+            os.path.join(
+                Env.HAIL_TMPDIR,
+                f'{uuid.uuid4()}.ht',
+            ),
+        )
 
         for i, project_guid in enumerate(self.project_guids):
             callset_mt = hl.read_matrix_table(self.input()[i].path)
