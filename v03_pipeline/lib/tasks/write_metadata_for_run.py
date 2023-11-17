@@ -12,7 +12,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class WriteMetadataForRunTask(BaseWriteTask):
-    callset_path = luigi.Parameter()
+    callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
@@ -48,7 +48,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
-                self.callset_path,
+                callset_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
@@ -56,6 +56,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
             )
+            for callset_path in self.callset_paths
             for (project_guid, project_remap_path, project_pedigree_path) in zip(
                 self.project_guids,
                 self.project_remap_paths,
@@ -66,7 +67,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
 
     def run(self) -> None:
         metadata_json = {
-            'callset': self.callset_path,
+            'callsets': self.callset_paths,
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
             'families': {},

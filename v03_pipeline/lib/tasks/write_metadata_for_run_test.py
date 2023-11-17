@@ -19,7 +19,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_path=TEST_VCF,
+            callset_paths=[TEST_VCF],
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP, TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
@@ -36,7 +36,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             self.assertDictEqual(
                 json.load(f),
                 {
-                    'callset': TEST_VCF,
+                    'callsets': [TEST_VCF],
                     'families': {
                         'abc_1': [
                             'HG00731_1',
