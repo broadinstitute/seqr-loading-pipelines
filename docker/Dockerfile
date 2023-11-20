@@ -1,4 +1,4 @@
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:bookworm
 
 LABEL maintainer="Broad TGG"
 
@@ -27,14 +27,14 @@ RUN install_packages \
 # install java-8    (adds 340Mb)
 RUN install_packages default-jdk
 
-# install python3.7 (adds 800Mb)
+# install python3.10 (adds 800Mb)
 RUN apt-get update \
 	&& apt-get dist-upgrade -y \
-	&& apt-get install -y --no-install-recommends python-smbus libncursesw5-dev libgdbm-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
+	&& apt-get install -y --no-install-recommends python3-smbus python3-pkg-resources libncursesw5-dev libgdbm-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
 	&& apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PYTHON_VERSION="3.7.1"
+ENV PYTHON_VERSION="3.10.13"
 RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz \
 	&& tar xvf Python-${PYTHON_VERSION}.tar.xz \
 	&& rm Python-${PYTHON_VERSION}.tar.xz
@@ -44,26 +44,17 @@ RUN ./configure --enable-optimizations \
     && make clean
 WORKDIR /
 
-RUN install_packages python-pkg-resources
-
-
 # install gcloud tools
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --no-cache-dir -U crcmod
 
 ENV CLOUDSDK_PYTHON=python3
-RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-286.0.0-linux-x86_64.tar.gz
-RUN tar xzf google-cloud-sdk-286.0.0-linux-x86_64.tar.gz && rm google-cloud-sdk-286.0.0-linux-x86_64.tar.gz
+RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-455.0.0-linux-x86_64.tar.gz
+RUN tar xzf google-cloud-sdk-455.0.0-linux-x86_64.tar.gz && rm google-cloud-sdk-455.0.0-linux-x86_64.tar.gz
 RUN /google-cloud-sdk/install.sh -q
 
 # python packages
 RUN python3 -m pip install --upgrade gsutil
-
-# install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
-# assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
-RUN python3 -m pip install hail
-COPY docker/spark-defaults.conf /usr/local/lib/python3.7/site-packages/pyspark/conf/spark-defaults.conf
-RUN wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop2-1.9.17/gcs-connector-hadoop2-1.9.17-shaded.jar -O /usr/local/lib/python3.7/site-packages/pyspark/jars/gcs-connector-hadoop2-1.9.17-shaded.jar
 
 # install htslib
 ENV SAMTOOLS_VERSION="1.9"
@@ -100,12 +91,14 @@ WORKDIR /ensembl-vep-release-${VEP_VERSION}
 RUN perl INSTALL.pl -a ap -n -l -g all
 RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 
-# install hail utils
-RUN python3 -m pip install git+https://github.com/bw2/hail-utils.git
-
 WORKDIR /seqr-loading-pipelines
 COPY requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt
+
+# install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
+# assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
+COPY docker/spark-defaults.conf /usr/local/lib/python3.10/site-packages/pyspark/conf/spark-defaults.conf
+RUN wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop2-1.9.17/gcs-connector-hadoop2-1.9.17-shaded.jar -O /usr/local/lib/python3.10/site-packages/pyspark/jars/gcs-connector-hadoop2-1.9.17-shaded.jar
 
 # copy files from seqr-loading-pipelines repo
 COPY hail_builds/ ./hail_builds
@@ -118,7 +111,7 @@ COPY docker/bashrc /root/.bashrc
 COPY docker/gitconfig /root/.gitconfig
 COPY docker/bin/*.sh /usr/local/bin/
 
-ENV PATH=/usr/local/lib/python3.7/site-packages/pyspark/bin:/google-cloud-sdk/bin:$PATH
+ENV PATH=/usr/local/lib/python3.10/site-packages/pyspark/bin:/google-cloud-sdk/bin:$PATH
 ENV PYTHONPATH=".:/seqr-loading-pipelines:/seqr-loading-pipelines/luigi_pipeline"
 
 COPY docker/entrypoint.sh /
