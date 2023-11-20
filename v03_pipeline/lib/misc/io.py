@@ -46,7 +46,7 @@ def coalesce_duplicate_locii(mt: hl.MatrixTable) -> hl.MatrixTable:
     row_keys = set(mt.row.keys()) - set(mt.row_key)
     mt = mt.group_rows_by(*mt.row_key)
     mt = mt.aggregate(**{f'{k}_agg': hl.agg.collect(mt[k]) for k in row_keys | entry_keys})
-    mt = mt.select_rows(**{k: hl.agg.collect(mt[f'{k}_agg']).filter(hl.is_defined).first() for k in row_keys})
+    mt = mt.select_rows(**{k: hl.agg.collect(mt[f'{k}_agg']).first().filter(hl.is_defined).first() for k in row_keys})
     # NB: filter and first here because coalesce expects multiple arguments, which we can't
     # access in the normal destructured way (e.b. *mt[k])
     return mt.select_entries(**{k: mt[f'{k}_agg'].filter(hl.is_defined).first() for k in entry_keys})
