@@ -41,14 +41,23 @@ def file_size_bytes(path: str) -> int:
 def compute_hail_n_partitions(file_size_b: int) -> int:
     return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
+def coalesce_duplicate_locii(mt: hl.MatrixTable) -> hl.MatrixTable:
+    entry_keys = set(mt.entry.keys())
+    row_keys = set(mt.row.keys()) - set(mt.row_key)
+    mt = mt.group_rows_by(*mt.row_key)
+    mt = mt.aggregate(**{f'{k}_agg': hl.agg.collect(mt[k]) for k in row_keys | entry_keys})
+    mt = mt.select_rows(**{k: hl.agg.collect(mt[f'{k}_agg']).filter(hl.is_defined).first() for k in row_keys})
+    # NB: filter and first here because coalesce expects multiple arguments, which we can't
+    # access in the normal destructured way (e.b. *mt[k])
+    return mt.select_entries(**{k: mt[f'{k}_agg'].filter(hl.is_defined).first() for k in entry_keys})
 
 def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
     bi = bi.annotate_rows(a_index=1, was_split=False)
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(multi, permit_shuffle=True)
-    return split.union_rows(bi)
-
+    merged = split.union_rows(bi)
+    return coalesce_duplicate_locii(merged)
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     ht = hl.import_table(
