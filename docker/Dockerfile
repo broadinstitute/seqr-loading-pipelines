@@ -30,7 +30,7 @@ RUN install_packages default-jdk
 # install python3.10 (adds 800Mb)
 RUN apt-get update \
        && apt-get dist-upgrade -y \
-       && apt-get install -y --no-install-recommends python3-smbus python3-pkg-resources libncursesw5-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
+       && apt-get install -y --no-install-recommends python3-smbus python3-pkg-resources libncursesw5-dev libgdbm-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
        && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -98,7 +98,7 @@ RUN python3 -m pip install -r ./requirements.txt
 # install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
 # assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
 COPY docker/spark-defaults.conf /usr/local/lib/python3.10/site-packages/pyspark/conf/spark-defaults.conf
-RUN wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop2-1.9.17/gcs-connector-hadoop2-1.9.17-shaded.jar -O /usr/local/lib/python3.10/site-packages/pyspark/jars/gcs-connector-hadoop2-1.9.17-shaded.jar
+RUN wget https://repo1.maven.org/maven2/com/google/cloud/bigdataoss/gcs-connector/hadoop2-2.2.18/gcs-connector-hadoop2-2.2.18-shaded.jar -O /usr/local/lib/python3.10/site-packages/pyspark/jars/gcs-connector-hadoop2-2.2.18-shaded.jar
 
 # copy files from seqr-loading-pipelines repo
 COPY hail_builds/ ./hail_builds
