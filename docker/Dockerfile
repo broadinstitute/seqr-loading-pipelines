@@ -1,8 +1,8 @@
-FROM bitnami/minideb:bookworm
+FROM bitnami/minideb:bullseye
 
 LABEL maintainer="Broad TGG"
 
-# install commmon utilities
+# install common utilities
 RUN install_packages \
     ca-certificates \
     less \
@@ -24,20 +24,20 @@ RUN install_packages \
     libbz2-dev \
     liblzma-dev
 
-# install java-8    (adds 340Mb)
+# install java-11    (adds 340Mb)
 RUN install_packages default-jdk
 
 # install python3.10 (adds 800Mb)
 RUN apt-get update \
-	&& apt-get dist-upgrade -y \
-	&& apt-get install -y --no-install-recommends python3-smbus python3-pkg-resources libncursesw5-dev libgdbm-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
-	&& apt-get clean \
+       && apt-get dist-upgrade -y \
+       && apt-get install -y --no-install-recommends python3-smbus python3-pkg-resources libncursesw5-dev libc6-dev zlib1g-dev libsqlite3-dev libssl-dev openssl libffi-dev \
+       && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PYTHON_VERSION="3.10.13"
 RUN wget https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz \
-	&& tar xvf Python-${PYTHON_VERSION}.tar.xz \
-	&& rm Python-${PYTHON_VERSION}.tar.xz
+       && tar xvf Python-${PYTHON_VERSION}.tar.xz \
+       && rm Python-${PYTHON_VERSION}.tar.xz
 WORKDIR /Python-${PYTHON_VERSION}
 RUN ./configure --enable-optimizations \
     && make install \
