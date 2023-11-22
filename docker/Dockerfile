@@ -48,16 +48,12 @@ RUN ./configure --enable-optimizations \
 WORKDIR /
 
 # install gcloud tools
-RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --no-cache-dir -U crcmod
 
 ENV CLOUDSDK_PYTHON=python3
 RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-455.0.0-linux-x86_64.tar.gz
 RUN tar xzf google-cloud-sdk-455.0.0-linux-x86_64.tar.gz && rm google-cloud-sdk-455.0.0-linux-x86_64.tar.gz
 RUN /google-cloud-sdk/install.sh -q
-
-# python packages
-RUN python3 -m pip install --upgrade gsutil
 
 # install htslib
 ENV SAMTOOLS_VERSION="1.9"
@@ -96,8 +92,7 @@ RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 
 WORKDIR /seqr-loading-pipelines
 COPY requirements.txt .
-RUN python3 -m pip install -r ./requirements.txt
-RUN python3 -m pip cache purge
+RUN python3 -m pip install --no-cache-dir -r ./requirements.txt
 
 # install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
 # assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
