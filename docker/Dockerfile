@@ -88,7 +88,7 @@ RUN /usr/bin/cpanm --notest  List::MoreUtils
 
 # install VEP
 WORKDIR /ensembl-vep-release-${VEP_VERSION}
-RUN perl INSTALL.pl -a ap -n -l -g all
+RUN perl INSTALL.pl -a ap -n -g all
 RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 
 WORKDIR /seqr-loading-pipelines
