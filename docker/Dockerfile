@@ -22,7 +22,10 @@ RUN install_packages \
     build-essential \
     libcurl4-openssl-dev \
     libbz2-dev \
-    liblzma-dev
+    liblzma-dev \
+    procps \
+    liblapack3 \
+    libopenblas0
 
 # install java-11    (adds 340Mb)
 RUN install_packages default-jdk
@@ -94,6 +97,7 @@ RUN ln -s /ensembl-vep-release-${VEP_VERSION}/vep /vep
 WORKDIR /seqr-loading-pipelines
 COPY requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt
+RUN python3 -m pip cache purge
 
 # install GCS connector using the same steps as in https://raw.githubusercontent.com/broadinstitute/install-gcs-connector/master/install_gcs_connector.py
 # assumes ~/.config/gcloud/application_default_credentials.json will be mounted into the docker container
