@@ -48,7 +48,7 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            Env.DATASETS,
+            Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
@@ -80,7 +80,7 @@ def metadata_for_run_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            Env.DATASETS,
+            Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
@@ -97,7 +97,7 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            Env.DATASETS,
+            Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
@@ -146,7 +146,7 @@ def sample_lookup_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            Env.DATASETS,
+            Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
@@ -218,7 +218,7 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         _v03_pipeline_prefix(
-            Env.DATASETS,
+            Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
