@@ -40,7 +40,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'franklin',
             ),
-            '/seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht',
+            '/hail-search-data/v03/GRCh37/SNV_INDEL/families/franklin.ht',
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
             mock_env.DATASETS = 'gs://seqr-datasets/'
@@ -60,7 +60,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.MITO,
                 'R0652_pipeline_test',
             ),
-            '/seqr-datasets/v03/GRCh38/MITO/projects/R0652_pipeline_test.ht',
+            '/hail-search-data/v03/GRCh38/MITO/projects/R0652_pipeline_test.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -89,7 +89,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            '/seqr-datasets/v03/GRCh37/SV/lookup.ht',
+            '/hail-search-data/v03/GRCh37/SV/lookup.ht',
         )
 
     def test_sex_check_table_path(self) -> None:
@@ -119,7 +119,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr-datasets/v03/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            '/hail-search-data/v03/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -128,7 +128,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            '/seqr-datasets/v03/GRCh38/GCNV/annotations.ht',
+            '/hail-search-data/v03/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
