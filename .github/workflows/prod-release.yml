@@ -28,6 +28,7 @@ jobs:
       - name: build package
         run: |
           rm -rf dist/
+          python -m pip install build
           python -m build
 
       - name: set tag name
