@@ -50,7 +50,7 @@ jobs:
       - name: Copy files to release directory
         shell: bash
         run: |-
-          gcloud storage rm -r gs://seqr-luigi/releases/prod/latest/
+          gcloud storage rm -r gs://seqr-luigi/releases/prod/latest/ || echo 'No latest release'
           gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/latest/
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/latest/pyscripts.zip
           gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/$TAG_NAME/
