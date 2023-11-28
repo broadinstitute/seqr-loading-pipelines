@@ -3,8 +3,8 @@ import os
 
 import hail as hl
 
-from hail_scripts.reference_data.combine import join_hts
-from hail_scripts.reference_data.config import CONFIG
+from v03_pipeline.lib.reference_data.combine import join_hts
+from v03_pipeline.lib.reference_data.config import CONFIG
 
 VERSION = '2.0.4'
 OUTPUT_TEMPLATE = 'gs://seqr-reference-data/GRCh{genome_version}/' \

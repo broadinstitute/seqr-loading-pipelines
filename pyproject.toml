@@ -1,3 +1,19 @@
+[project]
+name = "seqr-loading-pipeline"
+dynamic = ['version']
+requires-python = ">=3.10"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.dynamic]
+version = {attr = "v03_pipeline.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["v03_pipeline*"]
+exclude = ["v03_pipeline.bin", "v03_pipeline*test*"]
+namespaces = false
+
 [tool.black]
 line-length = 88
 skip-string-normalization = true
@@ -32,18 +48,22 @@ skip_glob = [
     'kubernetes/*'
 ]
 
+[tool.mypy]
+packages = 'v03_pipeline'
+python_version = "3.10"
+ignore_missing_imports = true
+strict = true
+
 [tool.ruff]
 extend-exclude = [
     'download_and_create_reference_datasets/v02/*',
     'gcloud_dataproc/*',
-    'hail_scripts/computed_fields/*',
-    'hail_scripts/elasticsearch/*',
-    'hail_scripts/update_models/*',
-    'hail_scripts/utils/*',
+    'hail_scripts/*',
     'kubernetes/*',
     'luigi_pipeline/lib/*',
     'luigi_pipeline/seqr*.py',
     'luigi_pipeline/tests/data/*',
+    'v03_pipeline/lib/reference_data/gencode/*',
 ]
 ignore = [
     # Individual Rules
@@ -62,18 +82,23 @@ ignore = [
     "PTH",   # pathlib is preferred, but we're not using it yet
     "PD",    # pandas specific
     "NPY",   # numpy specific
+    "TD",    # todos
+    "FIX",   # fixmes
 ]
 line-length = 88
 select = [
     "ALL"
 ]
-target-version = "py38"
+target-version = "py310"
 
 [tool.ruff.flake8-quotes]
 inline-quotes = "single"
 
 [tool.ruff.per-file-ignores]
 '*test*' = [
-    'ARG002', # allow unused arguments
+    'ARG002', # allow unused method arguments
     'SLF001', # allow private access
 ]
+
+[tool.ruff.pylint]
+max-args = 6

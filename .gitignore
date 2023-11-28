@@ -8,6 +8,7 @@ download_and_create_reference_datasets/*.txt
 download_and_create_reference_datasets/*.gz
 *.ht
 *.mt
+!/v03_pipeline/var/test/**/*
 
 # Standard python gitignore below
 ######################################################################
@@ -29,11 +30,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
 share/python-wheels/
 *.egg-info/

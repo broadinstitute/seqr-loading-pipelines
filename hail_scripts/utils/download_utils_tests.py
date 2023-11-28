@@ -26,9 +26,9 @@ class DownloadUtilsTest(unittest.TestCase):
     @mock.patch('hail_scripts.utils.download_utils.parse_gs_path_to_bucket')
     def test_download_file(self, mock_get_bucket, mock_gettempdir, mock_open, mock_getsize, mock_isfile,
                            mock_logger):
-        responses.add(responses.HEAD, GZ_DATA_URL, headers={"Content-Length": "1024"}, status=200)
+        responses.add(responses.HEAD, GZ_DATA_URL, headers={"Content-Length": "1024"}, status=200, body=b' ' * 1024)
         responses.add(responses.GET, GZ_DATA_URL, body=GZ_DATA)
-        responses.add(responses.HEAD, TXT_DATA_URL, headers={"Content-Length": "1024"}, status=200)
+        responses.add(responses.HEAD, TXT_DATA_URL, headers={"Content-Length": "1024"}, status=200, body=b' ' * 1024)
         responses.add(responses.GET, TXT_DATA_URL, body='test data\nanother line\n')
 
         # Test bad url
