@@ -57,9 +57,9 @@ jobs:
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/$TAG_NAME/pyscripts.zip
 
       - name: Create tag
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.rest.git.createRef({
               owner: context.repo.owner,
