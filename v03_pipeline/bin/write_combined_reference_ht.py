@@ -77,7 +77,7 @@ if __name__ == '__main__':
     if (
         args.dataset
         and args.dataset
-        not in ReferenceDatasetCollection.for_dataset_type(
+        not in ReferenceDatasetCollection.datasets(
             args.dataset_type,
         )
     ):
