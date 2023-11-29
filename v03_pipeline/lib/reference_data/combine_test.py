@@ -22,7 +22,6 @@ from v03_pipeline.lib.reference_data.config import (
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
-    maxDiff = None
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
             [
