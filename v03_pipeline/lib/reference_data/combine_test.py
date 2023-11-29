@@ -22,6 +22,7 @@ from v03_pipeline.lib.reference_data.config import (
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
+    maxDiff = None
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
             [
@@ -108,7 +109,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ),
                     'REVEL_score': hl.missing(hl.tstr),
                     'SIFT_pred': '.;.;T',
+                    'SIFT_score': '.;0.082',
                     'Polyphen2_HVAR_pred': '.;.;P',
+                    'Polyphen2_HVAR_score': '.;0.401',
                     'MutationTaster_pred': 'P',
                     'fathmm_MKL_coding_pred': 'N',
                 },
@@ -120,7 +123,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ),
                     'REVEL_score': '0.052',
                     'SIFT_pred': '.;.',
+                    'SIFT_score': '.;0.082',
                     'Polyphen2_HVAR_pred': 'B',
+                    'Polyphen2_HVAR_score': '.;0.401',
                     'MutationTaster_pred': 'P',
                     'fathmm_MKL_coding_pred': 'D',
                 },
@@ -129,7 +134,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 locus=hl.tlocus('GRCh38'),
                 REVEL_score=hl.tstr,
                 SIFT_pred=hl.tstr,
+                SIFT_score=hl.tstr,
                 Polyphen2_HVAR_pred=hl.tstr,
+                Polyphen2_HVAR_score=hl.tstr,
                 MutationTaster_pred=hl.tstr,
                 fathmm_MKL_coding_pred=hl.tstr,
             ),
@@ -151,7 +158,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=None,
                         SIFT_pred_id=1,
+                        SIFT_score=hl.eval(hl.float32(0.082)),
                         Polyphen2_HVAR_pred_id=1,
+                        Polyphen2_HVAR_score=hl.eval(hl.float32(0.401)),
                         MutationTaster_pred_id=3,
                         fathmm_MKL_coding_pred_id=1,
                     ),
@@ -165,7 +174,9 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     mock_dbnsfp=hl.Struct(
                         REVEL_score=hl.eval(hl.float32(0.052)),
                         SIFT_pred_id=None,
+                        SIFT_score=hl.eval(hl.float32(0.082)),
                         Polyphen2_HVAR_pred_id=2,
+                        Polyphen2_HVAR_score=hl.eval(hl.float32(0.401)),
                         MutationTaster_pred_id=3,
                         fathmm_MKL_coding_pred_id=0,
                     ),
@@ -187,6 +198,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                     ),
                     mock_dbnsfp_mito=hl.Struct(
                         SIFT_pred_id=None,
+                        SIFT_score=hl.eval(hl.float32(0.0820000022649765)),
                         MutationTaster_pred_id=3,
                     ),
                 ),
