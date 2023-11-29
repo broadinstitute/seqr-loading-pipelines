@@ -186,7 +186,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
-                self.dataset_type.formatting_annotation_fns,
+                self.dataset_type.formatting_annotation_fns(self.reference_genome),
                 **annotation_dependencies,
                 **self.param_kwargs,
             ),
@@ -241,7 +241,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     **rdc_globals.enums,
                 ),
             )
-        ht = annotate_enums(ht, self.dataset_type)
+        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

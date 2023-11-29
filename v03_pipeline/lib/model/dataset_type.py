@@ -153,10 +153,11 @@ class DatasetType(Enum):
             },
         }[self]
 
-    @property
-    def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def formatting_annotation_fns(
+        self, reference_genome: ReferenceGenome
+    ) -> list[Callable[..., hl.Expression]]:
         return {
-            DatasetType.SNV_INDEL: [
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
                 snv_indel.gnomad_non_coding_constraint,
                 snv_indel.screen,
                 shared.rg37_locus,
@@ -165,7 +166,13 @@ class DatasetType(Enum):
                 shared.variant_id,
                 shared.xpos,
             ],
-            DatasetType.MITO: [
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
+                shared.rsid,
+                shared.sorted_transcript_consequences,
+                shared.variant_id,
+                shared.xpos,
+            ],
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 mito.common_low_heteroplasmy,
                 mito.haplogroup,
                 mito.high_constraint_region,
@@ -176,7 +183,7 @@ class DatasetType(Enum):
                 shared.variant_id,
                 shared.xpos,
             ],
-            DatasetType.SV: [
+            (ReferenceGenome.GRCh38, DatasetType.SV): [
                 sv.algorithms,
                 sv.bothsides_support,
                 sv.cpx_intervals,
@@ -192,7 +199,7 @@ class DatasetType(Enum):
                 sv.sv_type_detail_id,
                 shared.xpos,
             ],
-            DatasetType.GCNV: [
+            (ReferenceGenome.GRCh38, DatasetType.GCNV): [
                 gcnv.end_locus,
                 gcnv.gt_stats,
                 gcnv.num_exon,
@@ -204,7 +211,7 @@ class DatasetType(Enum):
                 gcnv.sv_type_id,
                 gcnv.xpos,
             ],
-        }[self]
+        }[(reference_genome, self)]
 
     @property
     def genotype_entry_annotation_fns(self) -> list[Callable[..., hl.Expression]]:

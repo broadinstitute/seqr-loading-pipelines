@@ -68,7 +68,7 @@ class FieldsTest(MockedDatarootTestCase):
                 list(
                     get_fields(
                         ht,
-                        DatasetType.SNV_INDEL.formatting_annotation_fns,
+                        DatasetType.SNV_INDEL.formatting_annotation_fns(reference_genome),
                         **{
                             f'{rdc.value}_ht': hl.read_table(
                                 valid_reference_dataset_collection_path(
