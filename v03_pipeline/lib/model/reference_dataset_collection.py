@@ -73,6 +73,7 @@ class ReferenceDatasetCollection(Enum):
     @classmethod
     def for_reference_genome_dataset_type(
         cls,
+        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ) -> list['ReferenceDatasetCollection']:
         rdcs = {
