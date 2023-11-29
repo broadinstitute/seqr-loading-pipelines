@@ -1,15 +1,18 @@
 import hail as hl
 
+from v03_pipeline.lib.model import ReferenceGenome
+
 
 def download_and_import_hgmd_vcf(
     hgmd_url: str,
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    if genome_version not in ['37', '38']:
-        raise ValueError('Invalid genome_version: ' + str(genome_version))
+    if reference_genome not in [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38]:
+        raise ValueError('Invalid genome_version: ' + str(reference_genome.value))
+
     mt = hl.import_vcf(
         hgmd_url,
-        reference_genome=f'GRCh{genome_version}',
+        reference_genome=reference_genome.value,
         force=True,
         min_partitions=100,
         skip_invalid_loci=True,

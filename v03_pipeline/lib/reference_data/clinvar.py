@@ -5,6 +5,8 @@ import urllib
 
 import hail as hl
 
+from v03_pipeline.lib.model import ReferenceGenome
+
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_ASSERTIONS = [
     'Affects',
@@ -116,18 +118,14 @@ def parsed_and_mapped_clnsigconf(ht: hl.Table):
 
 def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
+    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
 
-    Args:
-        genome_version (str): "37" or "38"
-    """
+    if reference_genome not in [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38]:
+        raise ValueError('Invalid genome_version: ' + str(reference_genome.value))
 
-    if genome_version not in ['37', '38']:
-        raise ValueError('Invalid genome_version: ' + str(genome_version))
-
-    if genome_version == '38':
+    if reference_genome == ReferenceGenome.GRCh38:
         recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
         recode.update({'MT': 'chrM'})
     else:
@@ -138,7 +136,7 @@ def download_and_import_latest_clinvar_vcf(
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
-            reference_genome=f'GRCh{genome_version}',
+            reference_genome=reference_genome.value,
             drop_samples=True,
             skip_invalid_loci=True,
             contig_recoding=recode,

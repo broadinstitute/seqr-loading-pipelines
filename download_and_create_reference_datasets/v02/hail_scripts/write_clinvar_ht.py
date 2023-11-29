@@ -1,18 +1,20 @@
 import tempfile
 
 import hail as hl
+
+from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
     download_and_import_latest_clinvar_vcf,
     CLINVAR_GOLD_STARS_LOOKUP,
 )
 from hail_scripts.utils.hail_utils import write_ht
 
-CLINVAR_PATH = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh{genome_version}/clinvar.vcf.gz'
-CLINVAR_HT_PATH = 'gs://seqr-reference-data/GRCh{genome_version}/clinvar/clinvar.GRCh{genome_version}.ht'
+CLINVAR_PATH = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_{reference_genome}/clinvar.vcf.gz'
+CLINVAR_HT_PATH = 'gs://seqr-reference-data/{reference_genome}/clinvar/clinvar.{reference_genome}.ht'
 
-for genome_version in ["37", "38"]:
-    clinvar_url = CLINVAR_PATH.format(genome_version=genome_version)
-    ht = download_and_import_latest_clinvar_vcf(clinvar_url, genome_version)
+for reference_genome in [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38]:
+    clinvar_url = CLINVAR_PATH.format(reference_genome=reference_genome.value)
+    ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
     timestamp = hl.eval(ht.version)
     ht = ht.annotate(
         gold_stars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
@@ -21,7 +23,7 @@ for genome_version in ["37", "38"]:
     ht = ht.repartition(100)
     write_ht(
         ht,
-        CLINVAR_HT_PATH.format(genome_version=genome_version).replace(".ht", ".")
+        CLINVAR_HT_PATH.format(reference_genome=reference_genome.value).replace(".ht", ".")
         + timestamp
         + ".ht",
     )
