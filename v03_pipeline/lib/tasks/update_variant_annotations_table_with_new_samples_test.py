@@ -458,6 +458,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
+    @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_grch37(self, mock_vep: Mock) -> None:
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
@@ -502,6 +503,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_update_vat_without_accessing_private_datasets(
         self,
         mock_vep: Mock,
+        mock_rdc_env: Mock,
     ) -> None:
         shutil.rmtree(
             valid_reference_dataset_collection_path(
@@ -511,6 +513,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         self.mock_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
