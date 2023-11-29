@@ -57,7 +57,9 @@ def dbnsfp_custom_select(ht):
     selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['SIFT_score'] = hl.parse_float32(predictor_parse(ht.SIFT_score))
     selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
-    selects['Polyphen2_HVAR_score'] = hl.parse_float32(predictor_parse(ht.Polyphen2_HVAR_score))
+    selects['Polyphen2_HVAR_score'] = hl.parse_float32(
+        predictor_parse(ht.Polyphen2_HVAR_score),
+    )
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     return selects
 
