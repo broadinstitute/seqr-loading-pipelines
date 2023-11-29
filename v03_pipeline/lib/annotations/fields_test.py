@@ -69,7 +69,7 @@ class FieldsTest(MockedDatarootTestCase):
                     get_fields(
                         ht,
                         DatasetType.SNV_INDEL.formatting_annotation_fns(
-                            reference_genome
+                            reference_genome,
                         ),
                         **{
                             f'{rdc.value}_ht': hl.read_table(

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import hail as hl
 
 if TYPE_CHECKING:
-    from v03_pipeline.lib.model import DatasetType
+    from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 BIOTYPES = [
     'IG_C_gene',
@@ -193,7 +193,7 @@ SV_CONSEQUENCE_RANKS = [
 
 
 def annotate_enums(
-    ht: hl.Table, reference_genome: ReferenceGenome, dataset_type: DatasetType
+    ht: hl.Table, reference_genome: ReferenceGenome, dataset_type: DatasetType,
 ) -> hl.Table:
     formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)

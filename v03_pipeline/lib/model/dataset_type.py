@@ -154,7 +154,7 @@ class DatasetType(Enum):
         }[self]
 
     def formatting_annotation_fns(
-        self, reference_genome: ReferenceGenome
+        self, reference_genome: ReferenceGenome,
     ) -> list[Callable[..., hl.Expression]]:
         return {
             (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [

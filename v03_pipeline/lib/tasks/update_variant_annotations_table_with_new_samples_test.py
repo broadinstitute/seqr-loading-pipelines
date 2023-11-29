@@ -493,7 +493,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
                     splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
                     topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
-                )
+                ),
             ],
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
