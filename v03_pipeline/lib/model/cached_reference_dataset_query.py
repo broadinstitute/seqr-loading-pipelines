@@ -11,6 +11,7 @@ from v03_pipeline.lib.annotations.expression_helpers import (
 )
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
@@ -146,18 +147,30 @@ class CachedReferenceDatasetQuery(Enum):
         }[self]
 
     @classmethod
-    def for_dataset_type(
+    def for_reference_genome_dataset_type(
         cls,
+        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ) -> list['CachedReferenceDatasetQuery']:
-        return {
-            DatasetType.SNV_INDEL: [
+        crdqs = {
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
                 CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
                 CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 CachedReferenceDatasetQuery.GNOMAD_QC,
             ],
-            DatasetType.MITO: [
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ],
-        }.get(dataset_type, [])
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
+                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+                CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
+                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                CachedReferenceDatasetQuery.GNOMAD_QC,
+            ],
+        }.get((reference_genome, dataset_type), [])
+        if not Env.ACCESS_PRIVATE_DATASETS:
+            return [
+                crdq for crdq in crdqs if crdq.access_control == AccessControl.PUBLIC
+            ]
+        return crdqs

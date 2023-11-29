@@ -90,7 +90,7 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.HGMD,
             ],
-        }.get(dataset_type, [])
+        }.get((reference_genome, dataset_type), [])
         if not Env.ACCESS_PRIVATE_DATASETS:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs

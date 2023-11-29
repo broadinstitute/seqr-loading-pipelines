@@ -41,73 +41,55 @@ class FieldsTest(MockedDatarootTestCase):
             None,
         )
         ht = ht.annotate(rsid='abcd')
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    DatasetType.SNV_INDEL.formatting_annotation_fns,
-                    **{
-                        f'{rdc.value}_ht': hl.read_table(
-                            valid_reference_dataset_collection_path(
-                                ReferenceGenome.GRCh38,
-                                DatasetType.SNV_INDEL,
-                                rdc,
-                            ),
-                        )
-                        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                            ReferenceGenome.GRCh38,
-                            DatasetType.SNV_INDEL,
-                        )
-                        if rdc.requires_annotation
-                    },
-                    dataset_type=DatasetType.SNV_INDEL,
-                    reference_genome=ReferenceGenome.GRCh38,
-                    liftover_ref_path=LIFTOVER,
-                ).keys(),
+        for reference_genome, expected_fields in [
+            (
+                ReferenceGenome.GRCh38,
+                [
+                    'screen',
+                    'gnomad_non_coding_constraint',
+                    'rg37_locus',
+                    'rsid',
+                    'sorted_transcript_consequences',
+                    'variant_id',
+                    'xpos',
+                ],
             ),
-            [
-                'screen',
-                'gnomad_non_coding_constraint',
-                'rg37_locus',
-                'rsid',
-                'sorted_transcript_consequences',
-                'variant_id',
-                'xpos',
-            ],
-        )
-        self.assertCountEqual(
-            list(
-                get_fields(
-                    ht,
-                    DatasetType.SNV_INDEL.formatting_annotation_fns,
-                    **{
-                        f'{rdc.value}_ht': hl.read_table(
-                            valid_reference_dataset_collection_path(
-                                ReferenceGenome.GRCh38,
-                                DatasetType.SNV_INDEL,
-                                rdc,
-                            ),
-                        )
-                        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                            ReferenceGenome.GRCh38,
-                            DatasetType.SNV_INDEL,
-                        )
-                        if rdc.requires_annotation
-                    },
-                    dataset_type=DatasetType.SNV_INDEL,
-                    reference_genome=ReferenceGenome.GRCh37,
-                    liftover_ref_path=LIFTOVER,
-                ).keys(),
+            (
+                ReferenceGenome.GRCh37,
+                [
+                    'rsid',
+                    'sorted_transcript_consequences',
+                    'variant_id',
+                    'xpos',
+                ],
             ),
-            [
-                'screen',
-                'gnomad_non_coding_constraint',
-                'rsid',
-                'sorted_transcript_consequences',
-                'variant_id',
-                'xpos',
-            ],
-        )
+        ]:
+            self.assertCountEqual(
+                list(
+                    get_fields(
+                        ht,
+                        DatasetType.SNV_INDEL.formatting_annotation_fns,
+                        **{
+                            f'{rdc.value}_ht': hl.read_table(
+                                valid_reference_dataset_collection_path(
+                                    reference_genome,
+                                    DatasetType.SNV_INDEL,
+                                    rdc,
+                                ),
+                            )
+                            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                                reference_genome,
+                                DatasetType.SNV_INDEL,
+                            )
+                            if rdc.requires_annotation
+                        },
+                        dataset_type=DatasetType.SNV_INDEL,
+                        reference_genome=reference_genome,
+                        liftover_ref_path=LIFTOVER,
+                    ).keys(),
+                ),
+                expected_fields,
+            )
 
     def test_get_sample_lookup_table_fields(
         self,

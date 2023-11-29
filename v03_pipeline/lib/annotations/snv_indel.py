@@ -76,9 +76,11 @@ def gt_stats(
 
 def gnomad_non_coding_constraint(
     ht: hl.Table,
-    interval_ht: hl.Table,
+    interval_ht: hl.Table | None = None,
     **_: Any,
 ) -> hl.Expression:
+    if not interval_ht:
+        return None
     return hl.Struct(
         z_score=(
             interval_ht.index(ht.locus, all_matches=True)
@@ -92,9 +94,11 @@ def gnomad_non_coding_constraint(
 
 def screen(
     ht: hl.Table,
-    interval_ht: hl.Table,
+    interval_ht: hl.Table | None = None,
     **_: Any,
 ) -> hl.Expression:
+    if not interval_ht:
+        return None
     return hl.Struct(
         region_type_ids=(
             interval_ht.index(
