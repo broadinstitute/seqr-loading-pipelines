@@ -479,11 +479,24 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         ht = hl.read_table(uvatwns_task.output().path)
         self.assertEqual(ht.count(), 30)
         self.assertCountEqual(
-            ht.globals.collect(),
+            ht.globals.paths.collect(),
             [
-
+                hl.Struct(
+                    cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+                    clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                    dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+                    eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+                    exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+                    gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+                    gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                    mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+                    primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+                    splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+                    topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                )
             ],
         )
+        self.assertFalse(hasattr(ht, 'rg37_locus'))
 
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_without_accessing_private_datasets(

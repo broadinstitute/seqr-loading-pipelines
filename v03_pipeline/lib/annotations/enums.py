@@ -192,7 +192,9 @@ SV_CONSEQUENCE_RANKS = [
 ]
 
 
-def annotate_enums(ht: hl.Table, reference_genome: ReferenceGenome, dataset_type: DatasetType) -> hl.Table:
+def annotate_enums(
+    ht: hl.Table, reference_genome: ReferenceGenome, dataset_type: DatasetType
+) -> hl.Table:
     formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
     }

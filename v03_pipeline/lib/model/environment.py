@@ -2,7 +2,9 @@ import os
 from dataclasses import dataclass
 
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
-ACCESS_PRIVATE_REFERENCE_DATASETS = os.environ.get('ACCESS_PRIVATE_REFERENCE_DATASETS') == '1'
+ACCESS_PRIVATE_REFERENCE_DATASETS = (
+    os.environ.get('ACCESS_PRIVATE_REFERENCE_DATASETS') == '1'
+)
 CHECK_SEX_AND_RELATEDNESS = os.environ.get('CHECK_SEX_AND_RELATEDNESS') == '1'
 HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/hail-search-data')
