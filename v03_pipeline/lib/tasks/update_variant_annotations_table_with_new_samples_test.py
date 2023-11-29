@@ -498,6 +498,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
 
+    @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_without_accessing_private_datasets(
         self,
