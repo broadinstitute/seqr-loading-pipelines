@@ -455,7 +455,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ReferenceDatasetCollection.HGMD,
             ),
         )
-        self.mock_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         worker = luigi.worker.Worker()
