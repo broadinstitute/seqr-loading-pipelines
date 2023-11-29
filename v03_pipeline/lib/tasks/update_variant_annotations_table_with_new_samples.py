@@ -57,7 +57,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def read_annotation_dependencies(self):
         annotation_dependencies = {}
 
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
@@ -190,7 +193,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
         # 3) Join against the reference dataset collections that are not "annotated".
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             if rdc.requires_annotation:
                 continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
@@ -215,7 +221,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(

@@ -54,7 +54,8 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection.for_dataset_type(
+                        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                            ReferenceGenome.GRCh38,
                             DatasetType.SNV_INDEL,
                         )
                         if rdc.requires_annotation
@@ -87,7 +88,8 @@ class FieldsTest(MockedDatarootTestCase):
                                 rdc,
                             ),
                         )
-                        for rdc in ReferenceDatasetCollection.for_dataset_type(
+                        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                            ReferenceGenome.GRCh38,
                             DatasetType.SNV_INDEL,
                         )
                         if rdc.requires_annotation

@@ -71,19 +71,23 @@ class ReferenceDatasetCollection(Enum):
         }.get(self, default_key)
 
     @classmethod
-    def for_dataset_type(
+    def for_reference_genome_dataset_type(
         cls,
         dataset_type: DatasetType,
     ) -> list['ReferenceDatasetCollection']:
         rdcs = {
-            DatasetType.SNV_INDEL: [
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
             ],
-            DatasetType.MITO: [
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
+            ],
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
+                ReferenceDatasetCollection.COMBINED,
+                ReferenceDatasetCollection.HGMD,
             ],
         }.get(dataset_type, [])
         if not Env.ACCESS_PRIVATE_DATASETS:
