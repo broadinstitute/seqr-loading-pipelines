@@ -487,6 +487,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
                     eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
                     exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+                    hgmd='gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
                     gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
                     gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
                     mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
