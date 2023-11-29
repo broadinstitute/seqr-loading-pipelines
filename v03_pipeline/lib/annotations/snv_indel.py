@@ -76,10 +76,11 @@ def gt_stats(
 
 def gnomad_non_coding_constraint(
     ht: hl.Table,
+    reference_genome: ReferenceGenome,
     interval_ht: hl.Table | None = None,
     **_: Any,
 ) -> hl.Expression:
-    if not interval_ht:
+    if reference_genome == ReferenceGenome.GRCh37:
         return None
     return hl.Struct(
         z_score=(
@@ -94,10 +95,11 @@ def gnomad_non_coding_constraint(
 
 def screen(
     ht: hl.Table,
+    reference_genome: ReferenceGenome,
     interval_ht: hl.Table | None = None,
     **_: Any,
 ) -> hl.Expression:
-    if not interval_ht:
+    if reference_genome == ReferenceGenome.GRCh37:
         return None
     return hl.Struct(
         region_type_ids=(
