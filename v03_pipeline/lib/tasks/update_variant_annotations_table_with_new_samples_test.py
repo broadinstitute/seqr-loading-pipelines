@@ -441,6 +441,51 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
+    @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_update_vat_without_accessing_private_datasets(
+        self,
+        mock_vep: Mock,
+        mock_rdc_env: Mock,
+    ) -> None:
+        shutil.rmtree(
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.HGMD,
+            ),
+        )
+        mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        worker = luigi.worker.Worker()
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
+            validate=False,
+            liftover_ref_path=TEST_LIFTOVER,
+        )
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertTrue(uvatwns_task.complete())
+        ht = hl.read_table(uvatwns_task.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertCountEqual(
+            ht.globals.versions.collect(),
+            [
+                hl.Struct(
+                    cadd='v1.6',
+                    clinvar='2023-07-02',
+                    gnomad_non_coding_constraint=None,
+                    screen=None,
+                ),
+            ],
+        )
+
     def test_mito_update_vat(self) -> None:
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
