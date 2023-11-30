@@ -86,6 +86,7 @@ def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def rg37_locus(
     ht: hl.Table,
+    reference_genome: ReferenceGenome,
     liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
@@ -95,6 +96,7 @@ def rg37_locus(
 
 def rg37_locus_end(
     ht: hl.Table,
+    reference_genome: ReferenceGenome,
     liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
