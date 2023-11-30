@@ -22,8 +22,7 @@ class ReferenceDatasetCollection(Enum):
     def requires_annotation(self) -> bool:
         return self == ReferenceDatasetCollection.INTERVAL
 
-    @classmethod
-    def datasets(cls, dataset_type: DatasetType) -> list[str]:
+    def datasets(self, dataset_type: DatasetType) -> list[str]:
         return {
             (ReferenceDatasetCollection.COMBINED, DatasetType.SNV_INDEL): [
                 'cadd',
