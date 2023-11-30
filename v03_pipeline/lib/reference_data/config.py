@@ -54,9 +54,7 @@ def clinvar_custom_select(ht):
 def dbnsfp_custom_select(ht):
     selects = {}
     selects['REVEL_score'] = hl.parse_float32(ht.REVEL_score)
-    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['SIFT_score'] = hl.parse_float32(predictor_parse(ht.SIFT_score))
-    selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
     selects['Polyphen2_HVAR_score'] = hl.parse_float32(
         predictor_parse(ht.Polyphen2_HVAR_score),
     )
@@ -74,7 +72,6 @@ def dbnsfp_custom_select_38(ht):
 
 def dbnsfp_mito_custom_select(ht):
     selects = {}
-    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
     selects['SIFT_score'] = hl.parse_float32(predictor_parse(ht.SIFT_score))
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     return selects
@@ -208,8 +205,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
             'custom_select': dbnsfp_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
-                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig != 'MT',
@@ -222,8 +217,6 @@ CONFIG = {
             ],
             'custom_select': dbnsfp_custom_select_38,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
-                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
                 'fathmm_MKL_coding_pred': ['D', 'N'],
             },
