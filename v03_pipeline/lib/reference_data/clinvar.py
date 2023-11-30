@@ -5,7 +5,7 @@ import urllib
 
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_ASSERTIONS = [

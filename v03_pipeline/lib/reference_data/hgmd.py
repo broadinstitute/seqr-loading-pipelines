@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
 def download_and_import_hgmd_vcf(
