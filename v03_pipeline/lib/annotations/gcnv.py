@@ -90,7 +90,10 @@ def rg37_locus(
     **_: Any,
 ) -> hl.Expression | None:
     add_rg38_liftover(liftover_ref_path)
-    return hl.liftover(start_locus(ht, ReferenceGenome.GRCh38), ReferenceGenome.GRCh37.value)
+    return hl.liftover(
+        start_locus(ht, ReferenceGenome.GRCh38),
+        ReferenceGenome.GRCh37.value,
+    )
 
 
 def rg37_locus_end(
@@ -99,7 +102,10 @@ def rg37_locus_end(
     **_: Any,
 ) -> hl.Expression | None:
     add_rg38_liftover(liftover_ref_path)
-    return hl.liftover(end_locus(ht, ReferenceGenome.GRCh38), ReferenceGenome.GRCh37.value)
+    return hl.liftover(
+        end_locus(ht, ReferenceGenome.GRCh38),
+        ReferenceGenome.GRCh37.value,
+    )
 
 
 def sample_end(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
