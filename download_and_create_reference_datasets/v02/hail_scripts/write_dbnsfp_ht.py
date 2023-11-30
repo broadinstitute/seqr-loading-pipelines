@@ -5,12 +5,12 @@ DBNSFP_INFO = {
     '2.9.3': {
         'reference_genome': '37',
         'source_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.chr*.gz',
-        'output_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+        'output_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
     },
     '4.2': {
         'reference_genome': '38',
         'source_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.chr*.gz',
-        'output_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+        'output_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
     },
 }
 
@@ -21,9 +21,9 @@ DBNSFP_SCHEMA = {
         'pos(1-coor)': tint,
         'ref': tstr,
         'alt': tstr,
-        'SIFT_pred': tstr,
+        'SIFT_score': tstr,
         'Polyphen2_HDIV_pred': tstr,
-        'Polyphen2_HVAR_pred': tstr,
+        'Polyphen2_HVAR_score': tstr,
         'LRT_pred': tstr,
         'MutationTaster_pred': tstr,
         'MutationAssessor_pred': tstr,
@@ -68,8 +68,8 @@ DBNSFP_SCHEMA = {
         'pos(1-based)': tint,
         'ref': tstr,
         'alt': tstr,
-        'SIFT_pred': tstr,
-        'Polyphen2_HVAR_pred': tstr,
+        'SIFT_score': tstr,
+        'Polyphen2_HVAR_score': tstr,
         'MutationTaster_pred': tstr,
         'FATHMM_pred': tstr,
         'VEST4_score': tstr,
@@ -77,7 +77,7 @@ DBNSFP_SCHEMA = {
         'REVEL_score': tstr,
         'GERP++_RS': tstr,
         'phastCons100way_vertebrate': tstr,
-        'fathmm-MKL_coding_pred': tstr,
+        'fathmm-MKL_coding_score': tfloat,
         'MutPred_score': tstr,
     }
 }
