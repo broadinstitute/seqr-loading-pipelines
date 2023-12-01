@@ -66,7 +66,7 @@ def dbnsfp_custom_select_38(ht):
     selects = dbnsfp_custom_select(ht)
     selects['VEST4_score'] = hl.parse_float32(predictor_parse(ht.VEST4_score))
     selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
-    selects['fathmm_MKL_coding_score'] = hl.parse_float32(ht.fathmm_MKL_coding_score)
+    selects['fathmm_MKL_coding_score'] = hl.float32(ht.fathmm_MKL_coding_score)
     return selects
 
 
