@@ -369,11 +369,13 @@ class PedigreesTest(unittest.TestCase):
         )
         parsed_pedigree = parse_pedigree_ht_to_families(pedigree_ht)
         family = next(
-            [
-                family
-                for family in parsed_pedigree
-                if family.family_guid == 'BBL_BC1-000345_1'
-            ],
+            iter(
+                [
+                    family
+                    for family in parsed_pedigree
+                    if family.family_guid == 'BBL_BC1-000345_1'
+                ]
+            ),
         )
         self.assertEqual(len(family.samples), 2)
         self.assertIsNone(family.samples['BBL_BC1-000345_01_D1'].father)
