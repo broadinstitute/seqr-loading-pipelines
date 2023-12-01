@@ -212,13 +212,9 @@ CONFIG = {
         '38': {
             'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
-            'select': [
-                'fathmm_MKL_coding_pred',
-            ],
             'custom_select': dbnsfp_custom_select_38,
             'enum_select': {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
-                'fathmm_MKL_coding_pred': ['D', 'N'],
             },
             'filter': lambda ht: ht.locus.contig != 'chrM',
         },
