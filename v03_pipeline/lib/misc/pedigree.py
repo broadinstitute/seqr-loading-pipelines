@@ -78,7 +78,9 @@ class Family:
             # Maternal GrandParents
             maternal_s = samples[row.s].mother
             if maternal_s and maternal_s not in samples:
-                # sample may be removed from the pedigree :/
+                # A sample id may be referenced for a proband that has been
+                # removed from the pedigree as an individual.  We handle this by
+                # nulling out the parent here.
                 samples[row.s].mother = None
             elif maternal_s:
                 if samples[maternal_s].mother:
