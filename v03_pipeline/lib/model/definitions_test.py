@@ -107,7 +107,8 @@ class TestReferenceGenomeProperties(unittest.TestCase):
             'MT': 'chrM',
         }
         self.assertDictEqual(
-            ReferenceGenome.GRCh37.contig_recoding(include_mt=True), expected_37_recode
+            ReferenceGenome.GRCh37.contig_recoding(include_mt=True),
+            expected_37_recode,
         )
 
         expected_38_recode = {
@@ -137,5 +138,6 @@ class TestReferenceGenomeProperties(unittest.TestCase):
             'Y': 'chrY',
         }
         self.assertDictEqual(
-            ReferenceGenome.GRCh38.contig_recoding(), expected_38_recode
+            ReferenceGenome.GRCh38.contig_recoding(),
+            expected_38_recode,
         )
