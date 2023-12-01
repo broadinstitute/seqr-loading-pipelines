@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -71,3 +72,8 @@ class ClinvarTest(unittest.TestCase):
                 ],
             ],
         )
+    #
+    # @patch('v03_pipeline.lib.reference_data.urllib.request.urlretrieve')
+    # @patch('v03_pipeline.lib.reference_data.safely_move_to_gcs')
+    # def test_download_and_import_latest_clinvar_vcf(self, safely_move_to_gcs, urlretrieve, tempdir):
+    #     pass

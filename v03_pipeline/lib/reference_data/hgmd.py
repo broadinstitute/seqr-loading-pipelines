@@ -7,7 +7,7 @@ def download_and_import_hgmd_vcf(
     hgmd_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    if reference_genome not in [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38]:
+    if reference_genome not in [x for x in ReferenceGenome]:
         raise ValueError('Invalid genome_version: ' + str(reference_genome.value))
 
     mt = hl.import_vcf(
