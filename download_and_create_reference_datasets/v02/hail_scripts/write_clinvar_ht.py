@@ -12,7 +12,7 @@ from hail_scripts.utils.hail_utils import write_ht
 CLINVAR_PATH = 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_{reference_genome}/clinvar.vcf.gz'
 CLINVAR_HT_PATH = 'gs://seqr-reference-data/{reference_genome}/clinvar/clinvar.{reference_genome}.ht'
 
-for reference_genome in [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38]:
+for reference_genome in [x for x in ReferenceGenome]:
     clinvar_url = CLINVAR_PATH.format(reference_genome=reference_genome.value)
     ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
     timestamp = hl.eval(ht.version)
