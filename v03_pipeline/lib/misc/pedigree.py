@@ -64,7 +64,7 @@ class Family:
         return hash(self.family_guid)
 
     @staticmethod
-    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]: # noqa: C901
+    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]:  # noqa: C901
         samples = {}
         for row in rows:
             samples[row.s] = Sample(
