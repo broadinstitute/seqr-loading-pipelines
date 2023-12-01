@@ -453,7 +453,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig == 'MT',
@@ -463,7 +462,6 @@ CONFIG = {
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig == 'chrM',
