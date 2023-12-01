@@ -1,13 +1,10 @@
 import unittest
-from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
-    download_and_import_latest_clinvar_vcf,
 )
 
 
@@ -74,13 +71,3 @@ class ClinvarTest(unittest.TestCase):
                 ],
             ],
         )
-
-
-    # @patch('urllib.request.urlretrieve')
-    # @patch('v03_pipeline.lib.reference_data.clinvar.safely_move_to_gcs')
-    # def test_download_and_import_latest_clinvar_vcf(self, mock_move_to_gcs, mock_urlretrieve):
-    #     mock_urlretrieve.return_value = ('local_tmp_file_path', None)
-    #     mock_move_to_gcs.return_value = None
-    #
-    #     download_and_import_latest_clinvar_vcf('123', ReferenceGenome.GRCh38)
-    #
