@@ -1,16 +1,16 @@
 import hail as hl
 
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    CLINVAR_PATHOGENICITIES,
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+)
 from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
     download_and_import_latest_clinvar_vcf,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
-)
-from v03_pipeline.lib.annotations.enums import (
-    CLINVAR_DEFAULT_PATHOGENICITY,
-    CLINVAR_PATHOGENICITIES,
-    CLINVAR_PATHOGENICITIES_LOOKUP
 )
 from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 

@@ -52,8 +52,12 @@ class ReferenceGenome(Enum):
 
     def contig_recoding(self, include_mt: bool = False) -> dict[str, str]:
         recode = {
-            ReferenceGenome.GRCh37: {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])},
-            ReferenceGenome.GRCh38: {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
+            ReferenceGenome.GRCh37: {
+                f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])
+            },
+            ReferenceGenome.GRCh38: {
+                f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])
+            },
         }[self]
 
         if include_mt:

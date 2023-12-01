@@ -4,7 +4,10 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS, CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    CONSEQUENCE_TERMS,
+)
 from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
