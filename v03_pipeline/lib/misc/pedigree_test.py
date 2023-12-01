@@ -361,3 +361,20 @@ class PedigreesTest(unittest.TestCase):
                 ),
             ],
         )
+
+    def test_subsetted_pedigree_with_removed_parent(self) -> None:
+        pedigree_ht = import_pedigree(TEST_PEDIGREE_2)
+        pedigree_ht = pedigree_ht.filter(
+            pedigree_ht.s != 'BBL_BC1-000345_02_D1',
+        )
+        parsed_pedigree = parse_pedigree_ht_to_families(pedigree_ht)
+        family = [
+            family
+            for family in parsed_pedigree
+            if family.family_guid == 'BBL_BC1-000345_1'
+        ]
+        self.assertEqual(len(family.samples), 2)
+        self.assertIsNone(family.samples['BBL_BC1-000345_01_D1'].father)
+        self.assertEqual(
+            family.samples['BBL_BC1-000345_01_D1'].mother, 'BBL_BC1-000345_03_D1',
+        )

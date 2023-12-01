@@ -77,17 +77,24 @@ class Family:
         for row in rows:
             # Maternal GrandParents
             maternal_s = samples[row.s].mother
-            if maternal_s and samples[maternal_s].mother:
-                samples[row.s].maternal_grandmother = samples[maternal_s].mother
-            if maternal_s and samples[maternal_s].father:
-                samples[row.s].maternal_grandfather = samples[maternal_s].father
+            if maternal_s and maternal_s not in samples:
+                # sample may be removed from the pedigree :/
+                samples[row.s].mother = None
+            elif maternal_s:
+                if samples[maternal_s].mother:
+                    samples[row.s].maternal_grandmother = samples[maternal_s].mother
+                if samples[maternal_s].father:
+                    samples[row.s].maternal_grandfather = samples[maternal_s].father
 
             # Paternal GrandParents
             paternal_s = samples[row.s].father
-            if paternal_s and samples[paternal_s].mother:
-                samples[row.s].paternal_grandmother = samples[paternal_s].mother
-            if paternal_s and samples[paternal_s].father:
-                samples[row.s].paternal_grandfather = samples[paternal_s].father
+            if paternal_s and paternal_s not in samples:
+                samples[row.s].father = None
+            elif paternal_s:
+                if samples[paternal_s].mother:
+                    samples[row.s].paternal_grandmother = samples[paternal_s].mother
+                if samples[paternal_s].father:
+                    samples[row.s].paternal_grandfather = samples[paternal_s].father
         return samples
 
     @staticmethod
