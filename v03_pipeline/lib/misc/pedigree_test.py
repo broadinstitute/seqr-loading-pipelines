@@ -372,7 +372,7 @@ class PedigreesTest(unittest.TestCase):
             family
             for family in parsed_pedigree
             if family.family_guid == 'BBL_BC1-000345_1'
-        ]
+        ][0]
         self.assertEqual(len(family.samples), 2)
         self.assertIsNone(family.samples['BBL_BC1-000345_01_D1'].father)
         self.assertEqual(
