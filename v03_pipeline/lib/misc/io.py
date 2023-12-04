@@ -113,6 +113,7 @@ def import_vcf(
         contig_recoding=recode,
         force_bgz=True,
         find_replace=('nul', '.'),
+        array_elements_required=False,
     )
 
 

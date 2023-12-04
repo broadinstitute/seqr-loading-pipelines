@@ -61,8 +61,12 @@ if __name__ == '__main__':
         help='When used, update the passed dataset, otherwise run all datasets.',
     )
     args, _ = parser.parse_known_args()
-    if args.dataset and args.dataset not in ReferenceDatasetCollection.datasets(
-        args.dataset_type,
+    if (
+        args.dataset
+        and args.dataset
+        not in ReferenceDatasetCollection.INTERVAL.datasets(
+            args.dataset_type,
+        )
     ):
         msg = f'{args.dataset} is not a valid dataset for {DatasetType}'
         raise ValueError(msg)
