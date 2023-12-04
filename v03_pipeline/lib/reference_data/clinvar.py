@@ -100,9 +100,6 @@ def download_and_import_latest_clinvar_vcf(
 ) -> hl.Table:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
 
-    if reference_genome not in ReferenceGenome:
-        raise ValueError('Invalid genome_version: ' + str(reference_genome.value))
-
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = f'gs://seqr-scratch-temp{tmp_file.name}'

@@ -7,9 +7,6 @@ def download_and_import_hgmd_vcf(
     hgmd_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    if reference_genome not in ReferenceGenome:
-        raise ValueError('Invalid genome_version: ' + str(reference_genome.value))
-
     mt = hl.import_vcf(
         hgmd_url,
         reference_genome=reference_genome.value,

@@ -1,3 +1,5 @@
+from typing import Any
+
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
@@ -5,6 +7,7 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES,
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
@@ -17,14 +20,14 @@ from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 
 def import_locus_intervals(
     url: str,
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    return hl.import_locus_intervals(url, f'GRCh{genome_version}')
+    return hl.import_locus_intervals(url, reference_genome.value)
 
 
 def import_matrix_table(
     url: str,
-    _: str,
+    _: Any,
 ) -> hl.Table:
     return hl.read_matrix_table(url).rows()
 

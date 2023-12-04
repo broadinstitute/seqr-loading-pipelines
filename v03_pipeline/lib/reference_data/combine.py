@@ -95,7 +95,7 @@ def get_ht(
 ):
     config = CONFIG[dataset][reference_genome.v02_value]
     ht = (
-        config['custom_import'](config['source_path'], reference_genome.v02_value)
+        config['custom_import'](config['source_path'], reference_genome)
         if 'custom_import' in config
         else hl.read_table(config['path'])
     )
