@@ -228,6 +228,8 @@ class DatasetType(Enum):
                 gcnv.end_locus,
                 gcnv.gt_stats,
                 gcnv.num_exon,
+                gcnv.rg37_locus,
+                gcnv.rg37_locus_end,
                 gcnv.sorted_gene_consequences,
                 gcnv.start_locus,
                 gcnv.strvctvre,
