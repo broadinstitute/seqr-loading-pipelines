@@ -45,8 +45,10 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
+TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
+TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
 
@@ -83,9 +85,25 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         shutil.copytree(
+            TEST_COMBINED_37,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.COMBINED,
+            ),
+        )
+        shutil.copytree(
             TEST_HGMD_1,
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.HGMD,
+            ),
+        )
+        shutil.copytree(
+            TEST_HGMD_37,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
                 ReferenceDatasetCollection.HGMD,
             ),
@@ -378,7 +396,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 [[11], [22, 26], [22, 26]],
             ],
         )
-
         self.assertCountEqual(
             ht.globals.collect(),
             [
@@ -438,6 +455,47 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
             ],
         )
+
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_update_vat_grch37(self, mock_vep: Mock) -> None:
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        worker = luigi.worker.Worker()
+        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+            reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
+            validate=False,
+            liftover_ref_path=TEST_LIFTOVER,
+        )
+        worker.add(uvatwns_task)
+        worker.run()
+        self.assertTrue(uvatwns_task.complete())
+        ht = hl.read_table(uvatwns_task.output().path)
+        self.assertEqual(ht.count(), 30)
+        self.assertCountEqual(
+            ht.globals.paths.collect(),
+            [
+                hl.Struct(
+                    cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+                    clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                    dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+                    eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+                    exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+                    hgmd='gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
+                    gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+                    gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                    mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+                    primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+                    splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+                    topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                ),
+            ],
+        )
+        self.assertFalse(hasattr(ht, 'rg37_locus'))
 
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import hail as hl
 
 if TYPE_CHECKING:
-    from v03_pipeline.lib.model import DatasetType
+    from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 BIOTYPES = [
     'IG_C_gene',
@@ -219,9 +219,13 @@ CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
 )
 
 
-def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
+def annotate_enums(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> hl.Table:
     formatting_annotation_names = {
-        fa.__name__ for fa in dataset_type.formatting_annotation_fns
+        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
     }
     if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(

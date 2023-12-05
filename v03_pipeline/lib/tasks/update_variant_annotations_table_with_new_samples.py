@@ -57,7 +57,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def read_annotation_dependencies(self):
         annotation_dependencies = {}
 
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
@@ -183,14 +186,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = new_variants_ht.select(
             **get_fields(
                 new_variants_ht,
-                self.dataset_type.formatting_annotation_fns,
+                self.dataset_type.formatting_annotation_fns(self.reference_genome),
                 **annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
 
         # 3) Join against the reference dataset collections that are not "annotated".
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             if rdc.requires_annotation:
                 continue
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
@@ -215,7 +221,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type):
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
             rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
@@ -232,7 +241,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     **rdc_globals.enums,
                 ),
             )
-        ht = annotate_enums(ht, self.dataset_type)
+        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

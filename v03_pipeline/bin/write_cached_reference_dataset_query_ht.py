@@ -77,8 +77,13 @@ if __name__ == '__main__':
         required=True,
     )
     args, _ = parser.parse_known_args()
-    if args.query and args.query not in CachedReferenceDatasetQuery.for_dataset_type(
-        args.dataset_type,
+    if (
+        args.query
+        and args.query
+        not in CachedReferenceDatasetQuery.for_reference_genome_dataset_type(
+            args.reference_genome,
+            args.dataset_type,
+        )
     ):
         msg = f'{args.query} is not a valid query for {DatasetType}'
         raise ValueError(msg)

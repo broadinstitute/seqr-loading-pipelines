@@ -52,12 +52,9 @@ def rsid(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
 
 def rg37_locus(
     ht: hl.Table,
-    reference_genome: ReferenceGenome,
     liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    if reference_genome == ReferenceGenome.GRCh37:
-        return None
     add_rg38_liftover(liftover_ref_path)
     return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
