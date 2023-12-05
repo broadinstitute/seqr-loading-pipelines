@@ -191,6 +191,33 @@ SV_CONSEQUENCE_RANKS = [
     'NEAREST_TSS',
 ]
 
+CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
+
+# NB: sorted by pathogenicity
+CLINVAR_PATHOGENICITIES = [
+    'Pathogenic',
+    'Pathogenic/Likely_pathogenic',
+    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
+    'Pathogenic/Likely_risk_allele',
+    'Likely_pathogenic',
+    'Likely_pathogenic/Likely_risk_allele',
+    'Established_risk_allele',
+    'Likely_risk_allele',
+    'Conflicting_interpretations_of_pathogenicity',
+    'Uncertain_risk_allele',
+    'Uncertain_significance/Uncertain_risk_allele',
+    'Uncertain_significance',
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    'Likely_benign',
+    'Benign/Likely_benign',
+    'Benign',
+]
+
+
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
+    hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
+)
+
 
 def annotate_enums(
     ht: hl.Table,

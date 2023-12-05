@@ -101,16 +101,11 @@ def import_vcf(
     reference_genome: ReferenceGenome,
 ) -> hl.MatrixTable:
     # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
-    recode = {}
-    if reference_genome == ReferenceGenome.GRCh38:
-        recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
-    else:
-        recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
     return hl.import_vcf(
         callset_path,
         reference_genome=reference_genome.value,
         skip_invalid_loci=True,
-        contig_recoding=recode,
+        contig_recoding=reference_genome.contig_recoding(),
         force_bgz=True,
         find_replace=('nul', '.'),
         array_elements_required=False,

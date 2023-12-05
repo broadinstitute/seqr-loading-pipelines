@@ -4,7 +4,10 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    CONSEQUENCE_TERMS,
+)
 from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
@@ -12,7 +15,6 @@ from v03_pipeline.lib.annotations.expression_helpers import (
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
