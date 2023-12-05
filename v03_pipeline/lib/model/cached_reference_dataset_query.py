@@ -155,23 +155,13 @@ class CachedReferenceDatasetQuery(Enum):
         dataset_type: DatasetType,
     ) -> list['CachedReferenceDatasetQuery']:
         crdqs = {
-            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
-                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
-                CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_QC,
-            ],
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): list(cls),
             (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ],
-            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
-                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
-                CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_QC,
-            ],
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): list(cls),
         }.get((reference_genome, dataset_type), [])
-        if not Env.ACCESS_PRIVATE_DATASETS:
+        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [
                 crdq for crdq in crdqs if crdq.access_control == AccessControl.PUBLIC
             ]
