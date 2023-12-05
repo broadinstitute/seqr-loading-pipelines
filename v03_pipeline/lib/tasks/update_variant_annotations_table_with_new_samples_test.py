@@ -7,6 +7,7 @@ import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    CLINVAR_PATHOGENICITIES,
     CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
@@ -26,10 +27,7 @@ from v03_pipeline.lib.paths import (
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
-from v03_pipeline.lib.reference_data.clinvar import (
-    CLINVAR_ASSERTIONS,
-    CLINVAR_PATHOGENICITIES,
-)
+from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
