@@ -28,7 +28,7 @@ class HailElasticsearchClient(ElasticsearchClient):
         table: hl.Table,
         index_name :str = "data",
         index_type_name :str = '_doc',
-        block_size :int = 5000,
+        block_size :int = 4000,
         num_shards :int = 10,
         delete_index_before_exporting :bool = True,
         elasticsearch_write_operation :str = ELASTICSEARCH_INDEX,
