@@ -39,18 +39,8 @@ class WriteProjectFamilyTables(luigi.Task):
         families = parse_pedigree_ht_to_families(pedigree_ht)
         return [
             WriteFamilyTableTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.callset_path,
-                self.project_guid,
-                self.project_remap_path,
-                self.project_pedigree_path,
-                self.ignore_missing_samples_when_subsetting,
-                self.ignore_missing_samples_when_remapping,
-                self.validate,
-                self.is_new_gcnv_joint_call,
-                family.family_guid,
+                **self.param_kwargs,
+                family_guid=family.family_guid,
             )
             for family in families
         ]
