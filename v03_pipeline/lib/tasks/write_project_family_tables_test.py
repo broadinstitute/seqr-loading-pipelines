@@ -26,3 +26,23 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         worker.add(write_project_family_tables)
         worker.run()
         self.assertTrue(write_project_family_tables.complete())
+        hts = [hl.read_table(output.path) for output in write_project_family_tables.output()]
+        self.assertCountEqual(
+            [ht.globals.sample_ids.collect() for ht in hts],
+            [
+                ['NA19675_1'],
+                ['NA19678_1'],
+                ['NA19679_1'],
+                ['NA20870_1'],
+                ['NA20872_1'],
+                ['NA20874_1'],
+                ['NA20875_1'],
+                ['NA20876_1'],
+                ['NA20877_1'],
+                ['NA20878_1'],
+                ['NA20881_1'],
+                ['NA20885_1'],
+                ['NA20888_1'],
+            ],
+        )
+
