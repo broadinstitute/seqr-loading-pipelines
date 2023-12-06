@@ -2,7 +2,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.write_project_family_tables import WriteProjectFamilyTables
+from v03_pipeline.lib.tasks.write_project_family_tables import WriteProjectFamilyTablesTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -13,7 +13,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
     def test_snv_write_project_family_tables_task(self) -> None:
         worker = luigi.worker.Worker()
-        write_project_family_tables = WriteProjectFamilyTables(
+        write_project_family_tables = WriteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,

@@ -8,7 +8,7 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 
-class WriteProjectFamilyTables(luigi.Task):
+class WriteProjectFamilyTablesTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
