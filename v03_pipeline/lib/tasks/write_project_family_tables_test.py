@@ -11,6 +11,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
 
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
+
     def test_snv_write_project_family_tables_task(self) -> None:
         worker = luigi.worker.Worker()
         write_project_family_tables = WriteProjectFamilyTables(
@@ -27,24 +28,24 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         worker.run()
         self.assertTrue(write_project_family_tables.complete())
         hts = [
-            hl.read_table(output.path)
-            for output in write_project_family_tables.output()
+            hl.read_table(write_family_table_task.output().path)
+            for write_family_table_task in write_project_family_tables.requires()
         ]
         self.assertCountEqual(
             [ht.globals.sample_ids.collect() for ht in hts],
             [
-                ['NA19675_1'],
-                ['NA19678_1'],
-                ['NA19679_1'],
-                ['NA20870_1'],
-                ['NA20872_1'],
-                ['NA20874_1'],
-                ['NA20875_1'],
-                ['NA20876_1'],
-                ['NA20877_1'],
-                ['NA20878_1'],
-                ['NA20881_1'],
-                ['NA20885_1'],
-                ['NA20888_1'],
+                [['NA19675_1']],
+                [['NA19678_1']],
+                [['NA19679_1']],
+                [['NA20870_1']],
+                [['NA20872_1']],
+                [['NA20874_1']],
+                [['NA20875_1']],
+                [['NA20876_1']],
+                [['NA20877_1']],
+                [['NA20878_1']],
+                [['NA20881_1']],
+                [['NA20885_1']],
+                [['NA20888_1']],
             ],
         )
