@@ -13,9 +13,9 @@ class WriteProjectFamilyTablesTask(luigi.Task):
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
-    project_guid = luigi.ListParameter()
-    project_remap_path = luigi.ListParameter()
-    project_pedigree_path = luigi.ListParameter()
+    project_guid = luigi.Parameter()
+    project_remap_path = luigi.Parameter()
+    project_pedigree_path = luigi.Parameter()
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
