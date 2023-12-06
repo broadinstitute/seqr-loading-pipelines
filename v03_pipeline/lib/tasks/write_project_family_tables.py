@@ -55,8 +55,11 @@ class WriteProjectFamilyTables(luigi.Task):
             for family in families
         ]
 
-    def output(self) -> list[luigi.Target]:
-        return [task.output() for task in self.write_family_table_tasks()]
+    def complete(self) -> bool:
+        return all(
+            write_family_table_task.complete()
+            for write_family_table_task in self.write_family_table_tasks
+        )
 
     def requires(self) -> luigi.Task:
-        return self.write_family_table_tasks()
+        return self.write_family_table_tasks

@@ -20,19 +20,15 @@ class WriteFamilyTableTask(BaseWriteTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
-        default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     validate = luigi.BoolParameter(
-        default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     is_new_gcnv_joint_call = luigi.BoolParameter(
-        default=False,
         description='Is this a fully joint-called callset.',
     )
     family_guid = luigi.Parameter()
