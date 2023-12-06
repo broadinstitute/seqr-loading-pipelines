@@ -176,7 +176,7 @@ def valid_cached_reference_dataset_query_path(
     cached_reference_dataset_query: CachedReferenceDatasetQuery,
 ) -> str | None:
     if (
-        not Env.ACCESS_PRIVATE_DATASETS
+        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
         and cached_reference_dataset_query.access_control == AccessControl.PRIVATE
     ):
         return None
@@ -197,7 +197,7 @@ def valid_reference_dataset_collection_path(
     reference_dataset_collection: ReferenceDatasetCollection,
 ) -> str | None:
     if (
-        not Env.ACCESS_PRIVATE_DATASETS
+        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
         and reference_dataset_collection.access_control == AccessControl.PRIVATE
     ):
         return None

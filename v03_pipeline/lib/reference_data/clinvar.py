@@ -5,7 +5,9 @@ import urllib
 
 import hail as hl
 
-CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
+from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.model.definitions import ReferenceGenome
+
 CLINVAR_ASSERTIONS = [
     'Affects',
     'association',
@@ -29,28 +31,6 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         'reviewed_by_expert_panel': 3,
         'practice_guideline': 4,
     },
-)
-# NB: sorted by pathogenicity
-CLINVAR_PATHOGENICITIES = [
-    'Pathogenic',
-    'Pathogenic/Likely_pathogenic',
-    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
-    'Pathogenic/Likely_risk_allele',
-    'Likely_pathogenic',
-    'Likely_pathogenic/Likely_risk_allele',
-    'Established_risk_allele',
-    'Likely_risk_allele',
-    'Conflicting_interpretations_of_pathogenicity',
-    'Uncertain_risk_allele',
-    'Uncertain_significance/Uncertain_risk_allele',
-    'Uncertain_significance',
-    CLINVAR_DEFAULT_PATHOGENICITY,
-    'Likely_benign',
-    'Benign/Likely_benign',
-    'Benign',
-]
-CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
-    hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
 
 
@@ -116,32 +96,20 @@ def parsed_and_mapped_clnsigconf(ht: hl.Table):
 
 def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that.
+    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
 
-    Args:
-        genome_version (str): "37" or "38"
-    """
-
-    if genome_version not in ['37', '38']:
-        raise ValueError('Invalid genome_version: ' + str(genome_version))
-
-    if genome_version == '38':
-        recode = {f'{i}': f'chr{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
-        recode.update({'MT': 'chrM'})
-    else:
-        recode = {f'chr{i}': f'{i}' for i in ([*list(range(1, 23)), 'X', 'Y'])}
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = f'gs://seqr-scratch-temp{tmp_file.name}'
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
-            reference_genome=f'GRCh{genome_version}',
+            reference_genome=reference_genome.value,
             drop_samples=True,
             skip_invalid_loci=True,
-            contig_recoding=recode,
+            contig_recoding=reference_genome.contig_recoding(include_mt=True),
             min_partitions=2000,
             force_bgz=True,
         )

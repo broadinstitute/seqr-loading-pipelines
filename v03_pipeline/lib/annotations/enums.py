@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import hail as hl
 
 if TYPE_CHECKING:
-    from v03_pipeline.lib.model import DatasetType
+    from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 BIOTYPES = [
     'IG_C_gene',
@@ -191,10 +191,41 @@ SV_CONSEQUENCE_RANKS = [
     'NEAREST_TSS',
 ]
 
+CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 
-def annotate_enums(ht: hl.Table, dataset_type: DatasetType) -> hl.Table:
+# NB: sorted by pathogenicity
+CLINVAR_PATHOGENICITIES = [
+    'Pathogenic',
+    'Pathogenic/Likely_pathogenic',
+    'Pathogenic/Likely_pathogenic/Likely_risk_allele',
+    'Pathogenic/Likely_risk_allele',
+    'Likely_pathogenic',
+    'Likely_pathogenic/Likely_risk_allele',
+    'Established_risk_allele',
+    'Likely_risk_allele',
+    'Conflicting_interpretations_of_pathogenicity',
+    'Uncertain_risk_allele',
+    'Uncertain_significance/Uncertain_risk_allele',
+    'Uncertain_significance',
+    CLINVAR_DEFAULT_PATHOGENICITY,
+    'Likely_benign',
+    'Benign/Likely_benign',
+    'Benign',
+]
+
+
+CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
+    hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
+)
+
+
+def annotate_enums(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> hl.Table:
     formatting_annotation_names = {
-        fa.__name__ for fa in dataset_type.formatting_annotation_fns
+        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
     }
     if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(

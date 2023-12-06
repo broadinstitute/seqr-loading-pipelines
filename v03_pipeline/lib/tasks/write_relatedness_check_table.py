@@ -33,7 +33,7 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
                 self.callset_path,
             ),
         ]
-        if Env.ACCESS_PRIVATE_DATASETS:
+        if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             requirements = [
                 *requirements,
                 HailTableTask(

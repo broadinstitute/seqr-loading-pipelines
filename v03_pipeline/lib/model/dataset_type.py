@@ -153,13 +153,12 @@ class DatasetType(Enum):
             },
         }[self]
 
-    @property
-    def formatting_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
-        return {
+    def formatting_annotation_fns(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> list[Callable[..., hl.Expression]]:
+        GRCh37_fns = {  # noqa: N806
             DatasetType.SNV_INDEL: [
-                snv_indel.gnomad_non_coding_constraint,
-                snv_indel.screen,
-                shared.rg37_locus,
                 shared.rsid,
                 shared.sorted_transcript_consequences,
                 shared.variant_id,
@@ -170,7 +169,6 @@ class DatasetType(Enum):
                 mito.haplogroup,
                 mito.high_constraint_region,
                 mito.mitotip,
-                shared.rg37_locus,
                 mito.rsid,
                 shared.sorted_transcript_consequences,
                 shared.variant_id,
@@ -183,8 +181,6 @@ class DatasetType(Enum):
                 sv.end_locus,
                 sv.gt_stats,
                 sv.gnomad_svs,
-                shared.rg37_locus,
-                sv.rg37_locus_end,
                 sv.sorted_gene_consequences,
                 sv.start_locus,
                 sv.strvctvre,
@@ -196,13 +192,35 @@ class DatasetType(Enum):
                 gcnv.end_locus,
                 gcnv.gt_stats,
                 gcnv.num_exon,
-                gcnv.rg37_locus,
-                gcnv.rg37_locus_end,
                 gcnv.sorted_gene_consequences,
                 gcnv.start_locus,
                 gcnv.strvctvre,
                 gcnv.sv_type_id,
                 gcnv.xpos,
+            ],
+        }
+        if reference_genome == ReferenceGenome.GRCh37:
+            return GRCh37_fns[self]
+        return {
+            DatasetType.SNV_INDEL: [
+                *GRCh37_fns[DatasetType.SNV_INDEL],
+                snv_indel.gnomad_non_coding_constraint,
+                snv_indel.screen,
+                shared.rg37_locus,
+            ],
+            DatasetType.MITO: [
+                *GRCh37_fns[DatasetType.MITO],
+                shared.rg37_locus,
+            ],
+            DatasetType.SV: [
+                *GRCh37_fns[DatasetType.SV],
+                shared.rg37_locus,
+                sv.rg37_locus_end,
+            ],
+            DatasetType.GCNV: [
+                *GRCh37_fns[DatasetType.GCNV],
+                gcnv.rg37_locus,
+                gcnv.rg37_locus_end,
             ],
         }[self]
 
