@@ -13,7 +13,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
     def test_snv_write_project_family_tables_task(self) -> None:
         worker = luigi.worker.Worker()
-        write_project_family_tables = WriteProjectFamilyTablesTest(
+        write_project_family_tables = WriteProjectFamilyTables(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -26,7 +26,10 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         worker.add(write_project_family_tables)
         worker.run()
         self.assertTrue(write_project_family_tables.complete())
-        hts = [hl.read_table(output.path) for output in write_project_family_tables.output()]
+        hts = [
+            hl.read_table(output.path)
+            for output in write_project_family_tables.output()
+        ]
         self.assertCountEqual(
             [ht.globals.sample_ids.collect() for ht in hts],
             [
@@ -45,4 +48,3 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
                 ['NA20888_1'],
             ],
         )
-

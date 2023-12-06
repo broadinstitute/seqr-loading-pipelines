@@ -1,11 +1,12 @@
 import functools
-import hail as hl
+
 import luigi
 
+from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.write_family_table import (
-    WriteFamilyTableTask,
-)
+from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
+
 
 class WriteProjectFamilyTables(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
@@ -49,9 +50,9 @@ class WriteProjectFamilyTables(luigi.Task):
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
                 self.is_new_gcnv_joint_call,
-                family_guid
+                family.family_guid,
             )
-            for family.family_guid in families
+            for family in families
         ]
 
     def output(self) -> list[luigi.Target]:
