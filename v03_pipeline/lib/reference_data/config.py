@@ -165,6 +165,8 @@ Format:
             using the a_index.>',
         'custom_select': '<Optional function of custom select function>',
         'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
+        'custom_import': '<Optional function of custom import function>',
+        'source_path': '<Optional source path to import from - required if "custom_import" is present.>'
     },
 """
 CONFIG = {
@@ -371,11 +373,11 @@ CONFIG = {
     'gnomad_qc': {
         '37': {
             'custom_import': import_matrix_table,
-            'path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
+            'source_path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
             'custom_import': import_matrix_table,
-            'path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
+            'source_path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
         },
     },
     'exac': {
