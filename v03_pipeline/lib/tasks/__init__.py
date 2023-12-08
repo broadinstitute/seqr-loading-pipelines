@@ -5,13 +5,15 @@ from v03_pipeline.lib.tasks.update_sample_lookup_table import (
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
-from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
+from v03_pipeline.lib.tasks.write_project_family_tables import (
+    WriteProjectFamilyTablesTask,
+)
 
 __all__ = [
     'UpdateProjectTableTask',
     'UpdateSampleLookupTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'WriteMetadataForRunTask',
-    'WriteFamilyTableTask',
+    'WriteProjectFamilyTablesTask',
 ]
