@@ -78,6 +78,7 @@ BIOTYPES = [
     'vaultRNA/vault_RNA',
     'vaultRNA',
     'bidirectional_promoter_lncRNA',
+    '3prime_overlapping_ncrna',
 ]
 
 CONSEQUENCE_TERMS = [
