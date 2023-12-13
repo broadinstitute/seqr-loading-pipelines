@@ -71,6 +71,8 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV_INDEL: (
+                # The "info" field is used by one of the relatedness
+                # check methods, and not by an annotation method.
                 ['rsid', 'filters', 'info']
                 if Env.CHECK_SEX_AND_RELATEDNESS
                 else ['rsid', 'filters']
