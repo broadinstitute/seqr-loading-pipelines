@@ -70,9 +70,11 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: ['rsid', 'filters', 'info']
-            if Env.CHECK_SEX_AND_RELATEDNESS
-            else ['rsid', 'filters'],
+            DatasetType.SNV_INDEL: (
+                ['rsid', 'filters', 'info']
+                if Env.CHECK_SEX_AND_RELATEDNESS
+                else ['rsid', 'filters']
+            ),
             DatasetType.MITO: [
                 'rsid',
                 'filters',
