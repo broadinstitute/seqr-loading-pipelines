@@ -43,6 +43,33 @@ class WriteMetadataForRunTask(BaseWriteTask):
         return GCSorLocalTarget(self.output().path).exists()
 
     def requires(self) -> luigi.Task:
+        if len(self.callset_paths) == len(self.project_guids):
+            return [
+                WriteRemappedAndSubsettedCallsetTask(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                    self.ignore_missing_samples_when_subsetting,
+                    self.ignore_missing_samples_when_remapping,
+                    self.validate,
+                )
+                for (
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                ) in zip(
+                    self.callset_paths,
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                    strict=True,
+                )
+            ]
         return [
             WriteRemappedAndSubsettedCallsetTask(
                 self.reference_genome,
