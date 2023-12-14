@@ -1,4 +1,3 @@
-import functools
 import math
 
 import hail as hl
@@ -30,9 +29,9 @@ VARIANTS_PER_VEP_PARTITION = 20e3
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
     callset_path = luigi.Parameter()
-    project_guids = luigi.ListParameter()
-    project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.ListParameter()
+    project_guid = luigi.ListParameter()
+    project_remap_path = luigi.ListParameter()
+    project_pedigree_path = luigi.ListParameter()
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -93,9 +92,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.dataset_type,
                     self.sample_type,
                     self.callset_path,
-                    self.project_guids,
-                    self.project_remap_paths,
-                    self.project_pedigree_paths,
+                    self.project_guid,
+                    self.project_remap_path,
+                    self.project_pedigree_path,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
                     self.validate,
@@ -108,19 +107,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.dataset_type,
                     self.sample_type,
                     self.callset_path,
-                    project_guid,
-                    project_remap_path,
-                    project_pedigree_path,
+                    self.project_guid,
+                    self.project_remap_path,
+                    self.project_pedigree_path,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
                     self.validate,
-                )
-                for (project_guid, project_remap_path, project_pedigree_path) in zip(
-                    self.project_guids,
-                    self.project_remap_paths,
-                    self.project_pedigree_paths,
-                    strict=True,
-                )
+                ),
             ]
         return [
             *super().requires(),
@@ -129,40 +122,24 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.bind(
-                lambda updates: hl.all(
-                    [
-                        updates.contains(
-                            hl.Struct(
-                                callset=self.callset_path,
-                                project_guid=project_guid,
-                            ),
-                        )
-                        for project_guid in self.project_guids
-                    ],
+            hl.read_table(self.output().path).updates.contains(
+                hl.Struct(
+                    callset=self.callset_path,
+                    project_guid=self.project_guid,
                 ),
-                hl.read_table(self.output().path).updates,
             ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        callset_hts = [
-            hl.read_matrix_table(
-                remapped_and_subsetted_callset_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                    project_guid,
-                ),
-            ).rows()
-            for project_guid in self.project_guids
-        ]
-        callset_ht = functools.reduce(
-            (lambda ht1, ht2: ht1.union(ht2, unify=True)),
-            callset_hts,
-        )
+        callset_ht = hl.read_matrix_table(
+            remapped_and_subsetted_callset_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_path,
+                self.project_guid,
+            ),
+        ).rows()
         callset_ht = callset_ht.distinct()
-
         annotation_dependencies = self.read_annotation_dependencies()
 
         # 1) Get new rows and annotate with vep
@@ -245,10 +222,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(
-            updates=ht.updates.union(
-                {
-                    hl.Struct(callset=self.callset_path, project_guid=project_guid)
-                    for project_guid in self.project_guids
-                },
+            updates=ht.updates.add(
+                hl.Struct(callset=self.callset_path, project_guid=self.project_guid),
             ),
         )
