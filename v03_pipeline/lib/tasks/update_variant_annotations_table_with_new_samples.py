@@ -6,6 +6,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
@@ -84,26 +85,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
         return annotation_dependencies
 
-    def callset_project_pairs(self):
-        if len(self.callset_paths) == len(self.project_guids):
-            return zip(
-                self.callset_paths,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                strict=True,
-            )
-        return [
-            (callset_path, project_guid, project_remap_path, project_pedigree_path)
-            for callset_path in self.callset_paths
-            for (project_guid, project_remap_path, project_pedigree_path) in zip(
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                strict=True,
-            )
-        ]
-
     def requires(self) -> list[luigi.Task]:
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
@@ -125,7 +106,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     project_guid,
                     project_remap_path,
                     project_pedigree_path,
-                ) in self.callset_project_pairs()
+                ) in callset_project_pairs(
+                    self.callset_paths,
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                )
             ]
         else:
             upstream_table_tasks = [
@@ -146,7 +132,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     project_guid,
                     project_remap_path,
                     project_pedigree_path,
-                ) in self.callset_project_pairs()
+                ) in callset_project_pairs(
+                    self.callset_paths,
+                    self.project_guids,
+                    self.project_remap_paths,
+                    self.project_pedigree_paths,
+                )
             ]
         return [
             *super().requires(),
@@ -169,7 +160,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                             project_guid,
                             _,
                             _,
-                        ) in self.callset_project_pairs()
+                        ) in callset_project_pairs(
+                            self.callset_paths,
+                            self.project_guids,
+                            self.project_remap_paths,
+                            self.project_pedigree_paths,
+                        )
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -186,7 +182,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     project_guid,
                 ),
             ).rows()
-            for (callset_path, project_guid, _, _) in self.callset_project_pairs()
+            for (callset_path, project_guid, _, _) in callset_project_pairs(
+                self.callset_paths,
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+            )
         ]
         callset_ht = functools.reduce(
             (lambda ht1, ht2: ht1.union(ht2, unify=True)),
@@ -283,7 +284,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                         project_guid,
                         _,
                         _,
-                    ) in self.callset_project_pairs()
+                    ) in callset_project_pairs(
+                        self.callset_paths,
+                        self.project_guids,
+                        self.project_remap_paths,
+                        self.project_pedigree_paths,
+                    )
                 },
             ),
         )
