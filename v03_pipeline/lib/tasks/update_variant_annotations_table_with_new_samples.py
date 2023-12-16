@@ -1,3 +1,4 @@
+import functools
 import math
 
 import hail as hl
@@ -28,10 +29,10 @@ VARIANTS_PER_VEP_PARTITION = 20e3
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
-    callset_path = luigi.Parameter()
-    project_guid = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    callset_paths = luigi.ListParameter()
+    project_guids = luigi.ListParameter()
+    project_remap_paths = luigi.ListParameter()
+    project_pedigree_paths = luigi.ListParameter()
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -83,6 +84,26 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
         return annotation_dependencies
 
+    def callset_project_pairs(self):
+        if len(self.callset_paths) == len(self.project_guids):
+            return zip(
+                self.callset_paths,
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+                strict=True,
+            )
+        return [
+            (callset_path, project_guid, project_remap_path, project_pedigree_path)
+            for callset_path in self.callset_paths
+            for (project_guid, project_remap_path, project_pedigree_path) in zip(
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+                strict=True,
+            )
+        ]
+
     def requires(self) -> list[luigi.Task]:
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
@@ -91,14 +112,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
-                    self.callset_path,
-                    self.project_guid,
-                    self.project_remap_path,
-                    self.project_pedigree_path,
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
                     self.validate,
-                ),
+                )
+                for (
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                ) in self.callset_project_pairs()
             ]
         else:
             upstream_table_tasks = [
@@ -106,14 +133,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
-                    self.callset_path,
-                    self.project_guid,
-                    self.project_remap_path,
-                    self.project_pedigree_path,
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
                     self.ignore_missing_samples_when_subsetting,
                     self.ignore_missing_samples_when_remapping,
                     self.validate,
-                ),
+                )
+                for (
+                    callset_path,
+                    project_guid,
+                    project_remap_path,
+                    project_pedigree_path,
+                ) in self.callset_project_pairs()
             ]
         return [
             *super().requires(),
@@ -122,23 +155,43 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(
-                hl.Struct(
-                    callset=self.callset_path,
-                    project_guid=self.project_guid,
+            hl.bind(
+                lambda updates: hl.all(
+                    [
+                        updates.contains(
+                            hl.Struct(
+                                callset=self.callset_path,
+                                project_guid=project_guid,
+                            ),
+                        )
+                        for (
+                            callset_path,
+                            project_guid,
+                            _,
+                            _,
+                        ) in self.callset_project_pairs()
+                    ],
                 ),
+                hl.read_table(self.output().path).updates,
             ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        callset_ht = hl.read_matrix_table(
-            remapped_and_subsetted_callset_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.callset_path,
-                self.project_guid,
-            ),
-        ).rows()
+        callset_hts = [
+            hl.read_matrix_table(
+                remapped_and_subsetted_callset_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    callset_path,
+                    project_guid,
+                ),
+            ).rows()
+            for (callset_path, project_guid, _, _) in self.callset_project_pairs()
+        ]
+        callset_ht = functools.reduce(
+            (lambda ht1, ht2: ht1.union(ht2, unify=True)),
+            callset_hts,
+        )
         callset_ht = callset_ht.distinct()
         annotation_dependencies = self.read_annotation_dependencies()
 
@@ -222,7 +275,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(
-            updates=ht.updates.add(
-                hl.Struct(callset=self.callset_path, project_guid=self.project_guid),
+            updates=ht.updates.union(
+                {
+                    hl.Struct(callset=callset_path, project_guid=project_guid)
+                    for (
+                        callset_path,
+                        project_guid,
+                        _,
+                        _,
+                    ) in self.callset_project_pairs()
+                },
             ),
         )
