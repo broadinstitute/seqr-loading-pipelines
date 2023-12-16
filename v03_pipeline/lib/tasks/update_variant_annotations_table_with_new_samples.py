@@ -160,7 +160,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     [
                         updates.contains(
                             hl.Struct(
-                                callset=self.callset_path,
+                                callset=callset_path,
                                 project_guid=project_guid,
                             ),
                         )
