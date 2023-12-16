@@ -3,6 +3,7 @@ import json
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -56,12 +57,16 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
             )
-            for callset_path in self.callset_paths
-            for (project_guid, project_remap_path, project_pedigree_path) in zip(
+            for (
+                callset_path,
+                project_guid,
+                project_remap_path,
+                project_pedigree_path,
+            ) in callset_project_pairs(
+                self.callset_paths,
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
-                strict=True,
             )
         ]
 
