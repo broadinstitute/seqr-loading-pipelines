@@ -136,8 +136,13 @@ def custom_gnomad_select_v4(ht):
     selects['AC'] = ht.freq[global_idx].AC
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
+    grpmax_af = (
+        ht.grpmax['gnomad'].AF
+        if hasattr(ht.grpmax, 'gnomad') 
+        else ht.grpmax.AF
+    )
     selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
-        hl.or_else(ht.grpmax.AF, ht.freq[global_idx].AF),
+        hl.or_else(grpmax_af, ht.freq[global_idx].AF),
     )
     selects['FAF_AF'] = hl.float32(ht.faf[ht.globals.faf_index_dict['adj']].faf95)
     selects['Hemi'] = hl.if_else(
