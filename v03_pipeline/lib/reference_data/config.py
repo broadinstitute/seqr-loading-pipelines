@@ -122,9 +122,9 @@ def custom_gnomad_select_v2(ht):
     return selects
 
 
-def custom_gnomad_select_v3(ht):
+def custom_gnomad_select_v4(ht):
     """
-    Custom select for public gnomad v3 dataset (which we did not generate). Extracts fields like
+    Custom select for public gnomad v4 dataset (which we did not generate). Extracts fields like
     'AF', 'AN', and generates 'hemi'.
     :param ht: hail table
     :return: select expression dict
@@ -137,13 +137,13 @@ def custom_gnomad_select_v3(ht):
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
-        hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF),
+        hl.or_else(ht.grpmax.AF, ht.freq[global_idx].AF),
     )
     selects['FAF_AF'] = hl.float32(ht.faf[ht.globals.faf_index_dict['adj']].faf95)
     selects['Hemi'] = hl.if_else(
         ht.locus.in_autosome_or_par(),
         0,
-        ht.freq[ht.globals.freq_index_dict['XY-adj']].AC,
+        ht.freq[ht.globals.freq_index_dict['XY_adj']].AC,
     )
     return selects
 
@@ -354,8 +354,8 @@ CONFIG = {
         },
         '38': {
             'version': 'r2.1.1',
-            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
-            'custom_select': custom_gnomad_select_v2,
+            'path': 'gs://gcp-public-data--gnomad/release/4.0/ht/exomes/gnomad.exomes.v4.0.sites.ht',
+            'custom_select': custom_gnomad_select_v4,
         },
     },
     'gnomad_genomes': {
@@ -366,8 +366,8 @@ CONFIG = {
         },
         '38': {
             'version': 'v3.1.2',
-            'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
-            'custom_select': custom_gnomad_select_v3,
+            'path': 'gs://gcp-public-data--gnomad/release/4.0/ht/genomes/gnomad.genomes.v4.0.sites.ht',
+            'custom_select': custom_gnomad_select_v4,
         },
     },
     'gnomad_qc': {
