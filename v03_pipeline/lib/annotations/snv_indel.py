@@ -1,3 +1,4 @@
+# ruff: noqa: N806
 from typing import Any
 
 import hail as hl
@@ -5,38 +6,6 @@ import hail as hl
 N_ALT_REF = 0
 N_ALT_HET = 1
 N_ALT_HOM = 2
-
-
-def _AC(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return sum(
-        (
-            row.ref_samples[project_guid].length() * N_ALT_REF
-            + row.het_samples[project_guid].length() * N_ALT_HET
-            + row.hom_samples[project_guid].length() * N_ALT_HOM
-        )
-        for project_guid in row.ref_samples
-    )
-
-
-def _AF(row: hl.StructExpression) -> hl.Float32Expression:  # noqa: N802
-    return hl.float32(_AC(row) / _AN(row))
-
-
-def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return 2 * sum(
-        (
-            row.ref_samples[project_guid].length()
-            + row.het_samples[project_guid].length()
-            + row.hom_samples[project_guid].length()
-        )
-        for project_guid in row.ref_samples
-    )
-
-
-def _hom(row: hl.StructExpression) -> hl.Int32Expression:
-    return sum(
-        row.hom_samples[project_guid].length() for project_guid in row.hom_samples
-    )
 
 
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -66,11 +35,23 @@ def gt_stats(
     **_: Any,
 ) -> hl.Expression:
     row = sample_lookup_ht[ht.key]
+    AC, AN, hom = 0, 0, 0
+    for project_guid in row.ref_samples:
+        ref_samples_length = row.ref_samples[project_guid].length()
+        het_samples_length = row.het_samples[project_guid].length()
+        hom_samples_length = row.hom_samples[project_guid].length()
+        AC += (
+            ref_samples_length * N_ALT_REF
+            + het_samples_length * N_ALT_HET
+            + hom_samples_length * N_ALT_HOM
+        )
+        AN += 2 * (ref_samples_length + het_samples_length + hom_samples_length)
+        hom += hom_samples_length
     return hl.Struct(
-        AC=_AC(row),
-        AN=_AN(row),
-        AF=_AF(row),
-        hom=_hom(row),
+        AC=AC,
+        AN=AN,
+        AF=hl.float32(AC / AN),
+        hom=hom,
     )
 
 
