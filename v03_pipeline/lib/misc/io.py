@@ -52,7 +52,7 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(multi)
     mt = split.union_rows(bi)
-    return mt.distinct()
+    return mt.distinct_by_row()
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
