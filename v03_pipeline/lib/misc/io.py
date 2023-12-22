@@ -182,6 +182,6 @@ def write(
     t = read_fn(checkpoint_path)
     t = t.repartition(
         compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
-        shuffle=True,
+        shuffle=False,
     )
     return t.write(destination_path, overwrite=True)
