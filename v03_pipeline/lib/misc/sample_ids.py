@@ -1,5 +1,3 @@
-from collections import Counter
-
 import hail as hl
 
 
@@ -20,10 +18,15 @@ def remap_sample_ids(
     ignore_missing_samples_when_remapping: bool,
 ) -> hl.MatrixTable:
     mt = vcf_remap(mt)
-    collected_remap = project_remap_ht.collect()
-    s_dups = [k for k, v in Counter([r.s for r in collected_remap]).items() if v > 1]
+
+    remap_count_by_s = project_remap_ht.aggregate(hl.agg.counter(project_remap_ht.s))
+    remap_count_by_seqr_id = project_remap_ht.aggregate(
+        hl.agg.counter(project_remap_ht.seqr_id),
+    )
+
+    s_dups = [s_id for s_id, count in remap_count_by_s.items() if count > 1]
     seqr_dups = [
-        k for k, v in Counter([r.seqr_id for r in collected_remap]).items() if v > 1
+        seqr_id for seqr_id, count in remap_count_by_seqr_id.items() if count > 1
     ]
 
     if len(s_dups) > 0 or len(seqr_dups) > 0:
@@ -31,7 +34,7 @@ def remap_sample_ids(
         raise ValueError(msg)
 
     missing_samples = project_remap_ht.anti_join(mt.cols()).collect()
-    remap_count = len(collected_remap)
+    remap_count = len(remap_count_by_s)
 
     if len(missing_samples) != 0:
         message = (
@@ -46,7 +49,7 @@ def remap_sample_ids(
             raise MatrixTableSampleSetError(message, missing_samples)
 
     mt = mt.annotate_cols(**project_remap_ht[mt.s])
-    remap_expr = hl.cond(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
+    remap_expr = hl.if_else(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
     mt = mt.annotate_cols(seqr_id=remap_expr, vcf_id=mt.s)
     mt = mt.key_cols_by(s=mt.seqr_id)
     print(f'Remapped {remap_count} sample ids...')
