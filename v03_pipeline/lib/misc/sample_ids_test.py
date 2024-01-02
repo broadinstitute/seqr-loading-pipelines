@@ -29,8 +29,8 @@ class SampleLookupTest(unittest.TestCase):
                 {'s': 'HG00732', 'seqr_id': 'HG00732_1'},
             ],
             hl.tstruct(
-                s=hl.dtype('str'),
-                seqr_id=hl.dtype('str'),
+                s=hl.tstr,
+                seqr_id=hl.tstr,
             ),
             key='s',
         )
@@ -70,8 +70,8 @@ class SampleLookupTest(unittest.TestCase):
                 {'s': 'HG00732', 'seqr_id': 'HG00732_1'},  # duplicate
             ],
             hl.tstruct(
-                s=hl.dtype('str'),
-                seqr_id=hl.dtype('str'),
+                s=hl.tstr,
+                seqr_id=hl.tstr,
             ),
             key='s',
         )
@@ -93,8 +93,8 @@ class SampleLookupTest(unittest.TestCase):
                 {'s': 'HG00734', 'seqr_id': 'HG00734_1'},  # missing in callset
             ],
             hl.tstruct(
-                s=hl.dtype('str'),
-                seqr_id=hl.dtype('str'),
+                s=hl.tstr,
+                seqr_id=hl.tstr,
             ),
             key='s',
         )
@@ -113,7 +113,7 @@ class SampleLookupTest(unittest.TestCase):
                 {'s': 'HG00731'},
                 {'s': 'HG00732'},
             ],
-            hl.tstruct(s=hl.dtype('str')),
+            hl.tstruct(s=hl.tstr),
             key='s',
         )
 
@@ -136,7 +136,7 @@ class SampleLookupTest(unittest.TestCase):
         # subset 0 of 3 samples in callset
         sample_subset_ht = hl.Table.parallelize(
             [],
-            hl.tstruct(s=hl.dtype('str')),
+            hl.tstruct(s=hl.tstr),
             key='s',
         )
 
@@ -155,7 +155,7 @@ class SampleLookupTest(unittest.TestCase):
                 {'s': 'HG00732'},
                 {'s': 'HG00734'},  # missing in callset
             ],
-            hl.tstruct(s=hl.dtype('str')),
+            hl.tstruct(s=hl.tstr),
             key='s',
         )
 
