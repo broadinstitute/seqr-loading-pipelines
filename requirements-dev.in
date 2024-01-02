@@ -1,9 +1,7 @@
 -c requirements.txt
-black>=23.7.0
 coverage>=7.2.2
-isort>=5.12.0
 mypy>=1.2.0
 nose-py3>=1.6.3 # bug in regular nose here: https://github.com/nose-devs/nose/issues/1099#issuecomment-577647469
 pip-tools>=6.12.3
 responses>=0.23.1
-ruff>=0.0.259
+ruff>=0.1.8

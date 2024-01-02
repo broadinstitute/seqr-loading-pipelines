@@ -71,7 +71,6 @@ ignore = [
     "G004",  # logging-f-string, these are fine for now
 
     # Rule Groupings
-    "I",     # isort is enabled so this is unnecessary (for now, maybe we want to disable isort)
     "D",     # pydocstyle is for docs... we have none
     "FBT",   # flake-boolean-trap... disallows boolean args to functions... fixing this code will require refactors.
     "ANN",   # flake8-annotations is for typed code

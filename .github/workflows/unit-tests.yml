@@ -30,10 +30,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      - name: Check Import Sort
-        run: isort . --check --diff
-      - name: Check Black
-        run: black . --check --diff
       - name: Check Ruff
         run: ruff . --output-format github
       - name: Unit Tests
