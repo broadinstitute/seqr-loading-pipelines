@@ -1,9 +1,12 @@
 import unittest
 
 import hail as hl
-from hail import Struct
 
-from v03_pipeline.lib.misc.sample_ids import MatrixTableSampleSetError, remap_sample_ids
+from v03_pipeline.lib.misc.sample_ids import (
+    MatrixTableSampleSetError,
+    remap_sample_ids,
+    subset_samples,
+)
 
 CALLSET_MT = hl.MatrixTable.from_parts(
     rows={'variants': [1, 2]},
@@ -42,9 +45,19 @@ class SampleLookupTest(unittest.TestCase):
         self.assertEqual(
             remapped_mt.cols().collect(),
             [
-                Struct(col_idx=0, s='HG00731_1', seqr_id='HG00731_1', vcf_id='HG00731'),
-                Struct(col_idx=1, s='HG00732_1', seqr_id='HG00732_1', vcf_id='HG00732'),
-                Struct(col_idx=2, s='HG00733', seqr_id='HG00733', vcf_id='HG00733'),
+                hl.Struct(
+                    col_idx=0,
+                    s='HG00731_1',
+                    seqr_id='HG00731_1',
+                    vcf_id='HG00731',
+                ),
+                hl.Struct(
+                    col_idx=1,
+                    s='HG00732_1',
+                    seqr_id='HG00732_1',
+                    vcf_id='HG00732',
+                ),
+                hl.Struct(col_idx=2, s='HG00733', seqr_id='HG00733', vcf_id='HG00733'),
             ],
         )
 
@@ -91,4 +104,64 @@ class SampleLookupTest(unittest.TestCase):
                 CALLSET_MT,
                 project_remap_ht,
                 ignore_missing_samples_when_remapping=False,
+            )
+
+    def test_subset_samples(self):
+        # subset 2 of 3 samples in callset
+        sample_subset_ht = hl.Table.parallelize(
+            [
+                {'s': 'HG00731'},
+                {'s': 'HG00732'},
+            ],
+            hl.tstruct(s=hl.dtype('str')),
+            key='s',
+        )
+
+        subset_mt = subset_samples(
+            CALLSET_MT,
+            sample_subset_ht,
+            ignore_missing_samples_when_subsetting=True,
+        )
+
+        self.assertEqual(subset_mt.cols().count(), 2)
+        self.assertEqual(
+            subset_mt.cols().collect(),
+            [
+                hl.Struct(col_idx=0, s='HG00731'),
+                hl.Struct(col_idx=1, s='HG00732'),
+            ],
+        )
+
+    def test_subset_samples_zero_samples(self):
+        # subset 0 of 3 samples in callset
+        sample_subset_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(s=hl.dtype('str')),
+            key='s',
+        )
+
+        with self.assertRaises(MatrixTableSampleSetError):
+            subset_samples(
+                CALLSET_MT,
+                sample_subset_ht,
+                ignore_missing_samples_when_subsetting=True,
+            )
+
+    def test_subset_samples_missing_samples(self):
+        # subset 2 of 3 samples in callset, but 1 is missing
+        sample_subset_ht = hl.Table.parallelize(
+            [
+                {'s': 'HG00731'},
+                {'s': 'HG00732'},
+                {'s': 'HG00734'},  # missing in callset
+            ],
+            hl.tstruct(s=hl.dtype('str')),
+            key='s',
+        )
+
+        with self.assertRaises(MatrixTableSampleSetError):
+            subset_samples(
+                CALLSET_MT,
+                sample_subset_ht,
+                ignore_missing_samples_when_subsetting=False,
             )
