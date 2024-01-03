@@ -10,6 +10,7 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
 
+# TODO: remove this once UpdatedReferenceDatasetCollectionTask is used
 
 def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
     annotated_version = ht.globals.get('version', hl.missing(hl.tstr))

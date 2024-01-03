@@ -15,6 +15,8 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.combine import join_hts, update_existing_joined_hts
 
+# TODO: remove this once UpdatedReferenceDatasetCollectionTask is used
+
 
 def run(dataset_type: DatasetType, dataset: str | None):
     reference_genome = ReferenceGenome.GRCh38
