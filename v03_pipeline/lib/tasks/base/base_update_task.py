@@ -14,6 +14,9 @@ class BaseUpdateTask(luigi.Task):
     def output(self) -> luigi.Target:
         raise NotImplementedError
 
+    def should_write(self) -> bool:
+        return True
+
     def complete(self) -> bool:
         return GCSorLocalFolderTarget(self.output().path).exists()
 
@@ -31,7 +34,9 @@ class BaseUpdateTask(luigi.Task):
         else:
             ht = hl.read_table(self.output().path)
         ht = self.update_table(ht)
-        write(ht, self.output().path)
+
+        if self.should_write():
+            write(ht, self.output().path)
 
     def initialize_table(self) -> hl.Table:
         raise NotImplementedError

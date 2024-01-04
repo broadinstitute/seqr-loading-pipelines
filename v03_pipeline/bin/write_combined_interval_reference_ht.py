@@ -13,7 +13,10 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
-from v03_pipeline.lib.reference_data.combine import join_hts, update_existing_joined_hts
+from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    join_hts,
+    update_existing_joined_hts,
+)
 
 # TODO: remove this once UpdatedReferenceDatasetCollectionTask is used
 

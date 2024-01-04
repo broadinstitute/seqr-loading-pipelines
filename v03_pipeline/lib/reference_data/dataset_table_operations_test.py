@@ -10,14 +10,14 @@ from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_data.combine import (
-    get_enum_select_fields,
-    get_ht,
-    update_existing_joined_hts,
-)
 from v03_pipeline.lib.reference_data.config import (
     dbnsfp_custom_select,
     dbnsfp_mito_custom_select,
+)
+from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    get_dataset_ht,
+    get_enum_select_fields,
+    update_existing_joined_hts,
 )
 
 
@@ -132,7 +132,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
             key='locus',
         )
-        ht = get_ht(
+        ht = get_dataset_ht(
             'mock_dbnsfp',
             ReferenceGenome.GRCh38,
         )
@@ -169,7 +169,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 ),
             ],
         )
-        ht = get_ht(
+        ht = get_dataset_ht(
             'mock_dbnsfp_mito',
             ReferenceGenome.GRCh38,
         )
@@ -234,7 +234,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         mock_read_table.return_value = ht
         self.assertCountEqual(
-            get_ht(
+            get_dataset_ht(
                 'a',
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
@@ -249,7 +249,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
 
         self.assertCountEqual(
-            get_ht(
+            get_dataset_ht(
                 'a',
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
@@ -263,7 +263,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
-        ht = get_ht(
+        ht = get_dataset_ht(
             'a',
             ReferenceGenome.GRCh38,
         )

@@ -3,7 +3,7 @@ import os
 
 import hail as hl
 
-from v03_pipeline.lib.reference_data.combine import join_hts
+from v03_pipeline.lib.reference_data.dataset_table_operations import join_hts
 from v03_pipeline.lib.reference_data.config import CONFIG
 
 VERSION = '2.0.4'
