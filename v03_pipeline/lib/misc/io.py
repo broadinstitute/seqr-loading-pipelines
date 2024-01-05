@@ -10,6 +10,7 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
+MAX_WRITE_PARTITIONS = 5
 
 
 def does_file_exist(path: str) -> bool:
@@ -181,7 +182,7 @@ def write(
     t.write(checkpoint_path)
     t = read_fn(checkpoint_path)
     t = t.repartition(
-        compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
+        min(compute_hail_n_partitions(file_size_bytes(checkpoint_path)), MAX_WRITE_PARTITIONS),
         shuffle=False,
     )
     return t.write(destination_path, overwrite=True)

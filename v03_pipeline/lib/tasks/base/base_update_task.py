@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.io import write
+from v03_pipeline.lib.misc.io import compute_hail_n_partitions, file_size_bytes, write
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
@@ -30,6 +30,10 @@ class BaseUpdateTask(luigi.Task):
             ht = self.initialize_table()
         else:
             ht = hl.read_table(self.output().path)
+            t = t.repartition(
+                compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
+                shuffle=False,
+            )
         ht = self.update_table(ht)
         write(ht, self.output().path)
 
