@@ -22,6 +22,12 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.reference_dataset_collection,
         )
 
+    def complete(self) -> bool:
+        # TODO: implement in subsequent PR
+        # if dataset is provided and globals are the same in existing ref data table, return a PassThroughTarget
+        # else
+        return super().complete()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(self._destination_path)
 
