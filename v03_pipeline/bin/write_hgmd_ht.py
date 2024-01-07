@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.dataset_table_operations import join_hts
 
-# TODO: remove this once UpdatedReferenceDatasetCollectionTask is used
 
 def run(reference_genome: ReferenceGenome):
     ht = join_hts(

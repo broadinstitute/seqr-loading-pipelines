@@ -9,8 +9,6 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
-# NOTE: this is intended to replace the code in v03_pipeline/bin/write_combined_reference_ht.py, v03_pipeline/bin/write_combined_interval_reference_ht.py, and dataset_table_operations.py
-
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
@@ -24,14 +22,8 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.reference_dataset_collection,
         )
 
-    def should_write(self) -> bool:
-        return False
-
     def output(self) -> luigi.Target:
-        if self.should_write():
-            return GCSorLocalTarget(self._destination_path)
-
-        # else return target that does nothing?
+        return GCSorLocalTarget(self._destination_path)
 
     def initialize_table(self) -> hl.Table:
         key_type = self.reference_dataset_collection.table_key_type(

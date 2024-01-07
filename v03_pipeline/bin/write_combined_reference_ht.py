@@ -19,8 +19,6 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_existing_joined_hts,
 )
 
-# TODO: remove this once UpdatedReferenceDatasetCollectionTask is used
-
 
 def run(
     dataset_type: DatasetType,

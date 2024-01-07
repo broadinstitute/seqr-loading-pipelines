@@ -25,7 +25,10 @@ def GCSorLocalFolderTarget(pathname: str) -> luigi.Target:  # noqa: N802
     return GCSorLocalTarget(os.path.join(pathname, '_SUCCESS'))
 
 
-# TODO: new target for doing nothing
+class PassThroughTarget(luigi.Target):
+    def exists(self) -> bool:
+        return True
+
 
 class RawFileTask(luigi.Task):
     pathname = luigi.Parameter()
