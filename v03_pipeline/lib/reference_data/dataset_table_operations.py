@@ -27,19 +27,21 @@ def update_or_create_joined_ht(
 
     for dataset in datasets:
         dataset_ht = get_dataset_ht(dataset, reference_genome)
-        joined_ht = joined_ht.drop(dataset)
+
+        if dataset in joined_ht.row:
+            joined_ht = joined_ht.drop(dataset)
+
         joined_ht = joined_ht.join(dataset_ht, 'outer')
-        joined_ht = joined_ht.filter(
-            hl.any(
-                [
-                    ~hl.is_missing(joined_ht[dataset])
-                    for dataset in reference_dataset_collection.datasets(dataset_type)
-                ],
-            ),
-        )
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
 
-    return joined_ht
+    return joined_ht.filter(
+        hl.any(
+            [
+                ~hl.is_missing(joined_ht[dataset])
+                for dataset in reference_dataset_collection.datasets(dataset_type)
+            ],
+        ),
+    )
 
 
 def get_dataset_ht(
@@ -168,7 +170,7 @@ def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.T
         date=datetime.now(tz=pytz.timezone('US/Eastern')).isoformat(),
     )
 
-# Todo replace usages w/ update_or_create_joined_ht()
+
 def join_hts(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -192,7 +194,6 @@ def join_hts(
     return joined_ht
 
 
-# Todo replace usages w/ update_or_create_joined_ht()
 def update_existing_joined_hts(
     destination_path: str,
     dataset: str,
