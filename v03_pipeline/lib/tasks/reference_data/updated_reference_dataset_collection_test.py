@@ -45,21 +45,18 @@ MOCK_PRIMATE_AI_DATASET_HT = hl.Table.parallelize(
 )
 
 
-def delete_reference_data_ht() -> None:
-    shutil.rmtree(
-        valid_reference_dataset_collection_path(
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            ReferenceDatasetCollection.COMBINED,
-        ),
-    )
-
-
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
             COMBINED_2_PATH,
+            valid_reference_dataset_collection_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                ReferenceDatasetCollection.COMBINED,
+            ),
+        )
+        shutil.rmtree(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -76,7 +73,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
     ) -> None:
-        delete_reference_data_ht()
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
 
         # mock tables for both datasets
@@ -160,7 +156,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
     ) -> None:
-        delete_reference_data_ht()
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai']
         mock_get_dataset_ht.return_value = MOCK_PRIMATE_AI_DATASET_HT
 
@@ -219,7 +214,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         mock_get_dataset_ht,
         mock_initialize_table,
     ) -> None:
-        delete_reference_data_ht()
         # make initialize_table() return existing reference dataset collection table
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
