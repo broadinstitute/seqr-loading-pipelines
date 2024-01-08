@@ -1,4 +1,3 @@
-import shutil
 from unittest import mock
 from unittest.mock import ANY
 
@@ -11,7 +10,6 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
@@ -46,24 +44,6 @@ MOCK_PRIMATE_AI_DATASET_HT = hl.Table.parallelize(
 
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        shutil.copytree(
-            COMBINED_2_PATH,
-            valid_reference_dataset_collection_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                ReferenceDatasetCollection.COMBINED,
-            ),
-        )
-        shutil.rmtree(
-            valid_reference_dataset_collection_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                ReferenceDatasetCollection.COMBINED,
-            ),
-        )
-
     @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
     )
@@ -74,7 +54,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         mock_get_dataset_ht,
     ) -> None:
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
-
         # mock tables for both datasets
         mock_get_dataset_ht.side_effect = [
             MOCK_PRIMATE_AI_DATASET_HT,
@@ -214,50 +193,8 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         mock_get_dataset_ht,
         mock_initialize_table,
     ) -> None:
-        # make initialize_table() return existing reference dataset collection table
-        mock_initialize_table.return_value = hl.Table.parallelize(
-            [
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': ['A', 'C'],
-                    'cadd': 1,
-                    'clinvar': 2,
-                    'primate_ai': hl.Struct(score=0.9),
-                },
-            ],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tarray(hl.tstr),
-                cadd=hl.tint32,
-                clinvar=hl.tint32,
-                primate_ai=hl.tstruct(score=hl.tfloat32),
-            ),
-            key=['locus', 'alleles'],
-            globals=hl.Struct(
-                paths=hl.Struct(
-                    cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-                    clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                    primate_ai='to_be_replaced',
-                ),
-                versions=hl.Struct(
-                    cadd='v1.6',
-                    clinvar='2023-07-02',
-                    primate_ai='v_old',
-                ),
-                enums=hl.Struct(
-                    cadd=hl.Struct(),
-                    clinvar=hl.Struct(
-                        assertion=['Affects', 'association_not_found'],
-                        pathogenicity=['Pathogenic', 'Benign'],
-                    ),
-                    primate_ai=hl.Struct(),
-                ),
-            ),
-        )
+        # override initialize to read in existing reference dataset collection table
+        mock_initialize_table.return_value = hl.read_table(COMBINED_2_PATH)
         mock_reference_dataset_collection_datasets.return_value = [
             'primate_ai',
             'cadd',
