@@ -145,7 +145,9 @@ def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
 
 
 def parse_dataset_version(
-    ht: hl.Table, dataset: str, config: dict,
+    ht: hl.Table,
+    dataset: str,
+    config: dict,
 ) -> hl.StringExpression:
     annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
     config_version = config.get('version', hl.missing(hl.tstr))
