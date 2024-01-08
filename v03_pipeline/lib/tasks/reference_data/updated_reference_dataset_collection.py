@@ -22,6 +22,25 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.reference_dataset_collection,
         )
 
+    def complete(self) -> bool:
+        # new class attribute: self.datasets_to_update = []
+
+        # if self.output().exists():
+            # datasets_to_update = []
+            # read table from destination path
+            # for each dataset type or for single dataset type if dataset is not None
+                # if reference ht version is newer than config version, update config file with newer version string
+                # if reference ht version is older than config version, add dataset type to list of datasets to update
+                # repeat for enums, paths, select fields
+
+            # if list of datasets to update is still empty, return True - no updates required
+
+        # else output doesn't exist (base case)
+            # self.datasets_to_update = self.datasets_to_update if not empty else reference_dataset_collection.datasets(dataset_type)
+
+        # return False
+        pass
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(self._destination_path)
 

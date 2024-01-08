@@ -16,15 +16,9 @@ def update_or_create_joined_ht(
     reference_dataset_collection: ReferenceDatasetCollection,
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
-    dataset: str | None,
+    datasets: list[str],
     joined_ht: hl.Table,
 ) -> hl.Table:
-    datasets = (
-        [dataset]
-        if dataset is not None
-        else reference_dataset_collection.datasets(dataset_type)
-    )
-
     for dataset in datasets:
         dataset_ht = get_dataset_ht(dataset, reference_genome)
 
@@ -161,6 +155,21 @@ def parse_dataset_version(
         )
     )
 
+
+def compare_globals(
+    ht: hl.Table,
+    dataset: str,
+    reference_genome: ReferenceGenome,
+):
+    config = CONFIG[dataset][reference_genome.v02_value]
+    annotated_version = hl.eval(ht.globals.get('version', hl.missing(hl.tstr)))
+    config_version = hl.eval(config.get('version', hl.missing(hl.tstr)))
+
+    if config_version is not None and config_version != annotated_version:
+
+
+#         config version exists
+        pass
 
 def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.Table):
     return joined_ht.select_globals(
