@@ -12,7 +12,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
-    dataset = luigi.OptionalStrParameter()
+    dataset = luigi.OptionalStrParameter(default=None)
 
     @property
     def _destination_path(self) -> str:
