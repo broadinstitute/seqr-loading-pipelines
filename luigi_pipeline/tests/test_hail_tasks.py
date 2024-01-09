@@ -40,12 +40,10 @@ class TestHailTasks(unittest.TestCase):
 
     def _set_validation_configs(self):
         global_config = GlobalConfig()
-        global_config.param_kwargs[
-            'validation_37_coding_ht'
-        ] = global_config.validation_37_coding_ht = 'tests/data/validation_37_coding.ht'
-        global_config.param_kwargs[
-            'validation_37_noncoding_ht'
-        ] = (
+        global_config.param_kwargs['validation_37_coding_ht'] = (
+            global_config.validation_37_coding_ht
+        ) = 'tests/data/validation_37_coding.ht'
+        global_config.param_kwargs['validation_37_noncoding_ht'] = (
             global_config.validation_37_noncoding_ht
         ) = 'tests/data/validation_37_noncoding.ht'
 

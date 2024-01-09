@@ -67,3 +67,6 @@ inline-quotes = "single"
 
 [tool.ruff.pylint]
 max-args = 6
+
+[tool.ruff.format]
+quote-style = "single"

@@ -1,4 +1,5 @@
 from datetime import datetime
+from types import FunctionType
 
 import hail as hl
 import pytz
@@ -11,21 +12,75 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.reference_data.config import CONFIG
 
 
-def parse_version(ht: hl.Table, dataset: str, config: dict) -> hl.StringExpression:
-    annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
-    config_version = config.get('version', hl.missing(hl.tstr))
-    return (
-        hl.case()
-        .when(hl.is_missing(config_version), annotated_version)
-        .when(hl.is_missing(annotated_version), config_version)
-        .when(annotated_version == config_version, config_version)
-        .or_error(
-            f'found mismatching versions for dataset {dataset}, {config_version}, {hl.eval(annotated_version)}',
-        )
+def update_or_create_joined_ht(
+    reference_dataset_collection: ReferenceDatasetCollection,
+    dataset_type: DatasetType,
+    reference_genome: ReferenceGenome,
+    dataset: str | None,
+    joined_ht: hl.Table,
+) -> hl.Table:
+    datasets = (
+        [dataset]
+        if dataset is not None
+        else reference_dataset_collection.datasets(dataset_type)
+    )
+
+    for dataset in datasets:
+        dataset_ht = get_dataset_ht(dataset, reference_genome)
+
+        if dataset in joined_ht.row:
+            joined_ht = joined_ht.drop(dataset)
+
+        joined_ht = joined_ht.join(dataset_ht, 'outer')
+        joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
+
+    return joined_ht.filter(
+        hl.any(
+            [
+                ~hl.is_missing(joined_ht[dataset])
+                for dataset in reference_dataset_collection.datasets(dataset_type)
+            ],
+        ),
     )
 
 
-def get_select_fields(selects, base_ht):
+def get_dataset_ht(
+    dataset: str,
+    reference_genome: ReferenceGenome,
+) -> hl.Table:
+    config = CONFIG[dataset][reference_genome.v02_value]
+    ht = (
+        config['custom_import'](config['source_path'], reference_genome)
+        if 'custom_import' in config
+        else hl.read_table(config['path'])
+    )
+    if hasattr(ht, 'locus'):
+        ht = ht.filter(
+            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
+        )
+
+    ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
+    ht = ht.select(
+        **{
+            **get_select_fields(config.get('select'), ht),
+            **get_custom_select_fields(config.get('custom_select'), ht),
+        },
+    )
+    ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
+    ht = ht.select_globals(
+        path=(config['source_path'] if 'custom_import' in config else config['path']),
+        version=parse_dataset_version(ht, dataset, config),
+        enums=hl.Struct(
+            **config.get(
+                'enum_select',
+                hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr))),
+            ),
+        ),
+    )
+    return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
+
+
+def get_select_fields(selects: list | dict | None, base_ht: hl.Table) -> dict:
     """
     Generic function that takes in a select config and base_ht and generates a
     select dict that is generated from traversing the base_ht and extracting the right
@@ -57,13 +112,13 @@ def get_select_fields(selects, base_ht):
     return select_fields
 
 
-def get_custom_select_fields(custom_select, ht):
+def get_custom_select_fields(custom_select: FunctionType | None, ht: hl.Table) -> dict:
     if custom_select is None:
         return {}
     return custom_select(ht)
 
 
-def get_enum_select_fields(enum_selects, ht):
+def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
     enum_select_fields = {}
     if enum_selects is None:
         return enum_select_fields
@@ -89,40 +144,22 @@ def get_enum_select_fields(enum_selects, ht):
     return enum_select_fields
 
 
-def get_ht(
+def parse_dataset_version(
+    ht: hl.Table,
     dataset: str,
-    reference_genome: ReferenceGenome,
-):
-    config = CONFIG[dataset][reference_genome.v02_value]
-    ht = (
-        config['custom_import'](config['source_path'], reference_genome)
-        if 'custom_import' in config
-        else hl.read_table(config['path'])
-    )
-    if hasattr(ht, 'locus'):
-        ht = ht.filter(
-            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
+    config: dict,
+) -> hl.StringExpression:
+    annotated_version = ht.globals.get('version', hl.missing(hl.tstr))
+    config_version = config.get('version', hl.missing(hl.tstr))
+    return (
+        hl.case()
+        .when(hl.is_missing(config_version), annotated_version)
+        .when(hl.is_missing(annotated_version), config_version)
+        .when(annotated_version == config_version, config_version)
+        .or_error(
+            f'found mismatching versions for dataset {dataset}, {config_version}, {hl.eval(annotated_version)}',
         )
-
-    ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
-    ht = ht.select(
-        **{
-            **get_select_fields(config.get('select'), ht),
-            **get_custom_select_fields(config.get('custom_select'), ht),
-        },
     )
-    ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
-    ht = ht.select_globals(
-        path=(config['source_path'] if 'custom_import' in config else config['path']),
-        version=parse_version(ht, dataset, config),
-        enums=hl.Struct(
-            **config.get(
-                'enum_select',
-                hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr))),
-            ),
-        ),
-    )
-    return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
 def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.Table):
@@ -153,7 +190,7 @@ def join_hts(
         ),
     )
     for dataset in reference_dataset_collection.datasets(dataset_type):
-        dataset_ht = get_ht(dataset, reference_genome)
+        dataset_ht = get_dataset_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
     return joined_ht
@@ -167,7 +204,7 @@ def update_existing_joined_hts(
     reference_dataset_collection: ReferenceDatasetCollection,
 ):
     joined_ht = hl.read_table(destination_path)
-    dataset_ht = get_ht(dataset, reference_genome)
+    dataset_ht = get_dataset_ht(dataset, reference_genome)
     joined_ht = joined_ht.drop(dataset)
     joined_ht = joined_ht.join(dataset_ht, 'outer')
     joined_ht = joined_ht.filter(
