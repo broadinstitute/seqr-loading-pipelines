@@ -10,15 +10,219 @@ from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_data.combine import (
-    get_enum_select_fields,
-    get_ht,
-    update_existing_joined_hts,
-)
 from v03_pipeline.lib.reference_data.config import (
     dbnsfp_custom_select,
     dbnsfp_mito_custom_select,
 )
+from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    get_dataset_ht,
+    get_enum_select_fields,
+    update_existing_joined_hts,
+    update_or_create_joined_ht,
+)
+
+MOCK_CONFIG = {
+    'a': {
+        '38': {
+            'path': '',
+            'select': [
+                'd',
+            ],
+        },
+    },
+    'b': {
+        '38': {
+            'path': '',
+            'select': [
+                'e',
+            ],
+            'enum_select': {},
+        },
+    },
+}
+MOCK_JOINED_REFERENCE_DATA_HT = hl.Table.parallelize(
+    [
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=1,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'a': hl.Struct(d=1),
+            'b': hl.Struct(e=2),
+        },
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=2,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'a': hl.Struct(d=3),
+            'b': hl.Struct(e=4),
+        },
+    ],
+    hl.tstruct(
+        locus=hl.tlocus('GRCh38'),
+        alleles=hl.tarray(hl.tstr),
+        a=hl.tstruct(d=hl.tint32),
+        b=hl.tstruct(e=hl.tint32),
+    ),
+    key=['locus', 'alleles'],
+    globals=hl.Struct(
+        paths=hl.Struct(
+            a='a_path',
+            b='b_path',
+        ),
+        versions=hl.Struct(
+            a='a_version',
+            b='b_version',
+        ),
+        enums=hl.Struct(
+            a=hl.Struct(),
+            b=hl.Struct(),
+        ),
+    ),
+)
+MOCK_A_DATASET_HT = hl.Table.parallelize(
+    [
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=1,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'a': hl.Struct(d=1),
+        },
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=2,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'a': hl.Struct(d=3),
+        },
+    ],
+    hl.tstruct(
+        locus=hl.tlocus('GRCh38'),
+        alleles=hl.tarray(hl.tstr),
+        a=hl.tstruct(d=hl.tint32),
+    ),
+    key=['locus', 'alleles'],
+    globals=hl.Struct(
+        path='a_path',
+        version='a_version',
+        enums=hl.Struct(),
+    ),
+)
+MOCK_B_DATASET_HT = hl.Table.parallelize(
+    [
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=1,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'b': hl.Struct(e=5, f=1),
+        },
+        {
+            'locus': hl.Locus(
+                contig='chr1',
+                position=3,
+                reference_genome='GRCh38',
+            ),
+            'alleles': ['A', 'C'],
+            'b': hl.Struct(e=7, f=2),
+        },
+    ],
+    hl.tstruct(
+        locus=hl.tlocus('GRCh38'),
+        alleles=hl.tarray(hl.tstr),
+        b=hl.tstruct(e=hl.tint32, f=hl.tint32),
+    ),
+    key=['locus', 'alleles'],
+    globals=hl.Struct(
+        path='b_new_path',
+        version='b_new_version',
+        enums=hl.Struct(
+            enum_1=[
+                'D',
+                'F',
+            ],
+        ),
+    ),
+)
+EXPECTED_JOINED_DATA = [
+    hl.Struct(
+        locus=hl.Locus(
+            contig='chr1',
+            position=1,
+            reference_genome='GRCh38',
+        ),
+        alleles=['A', 'C'],
+        a=hl.Struct(d=1),
+        b=hl.Struct(e=5, f=1),
+    ),
+    hl.Struct(
+        locus=hl.Locus(
+            contig='chr1',
+            position=2,
+            reference_genome='GRCh38',
+        ),
+        alleles=['A', 'C'],
+        a=hl.Struct(d=3),
+        b=None,
+    ),
+    hl.Struct(
+        locus=hl.Locus(
+            contig='chr1',
+            position=3,
+            reference_genome='GRCh38',
+        ),
+        alleles=['A', 'C'],
+        a=None,
+        b=hl.Struct(e=7, f=2),
+    ),
+]
+EXPECTED_GLOBALS = [
+    hl.Struct(
+        date='2023-04-19T16:43:39.361110-04:56',
+        paths=hl.Struct(
+            a='a_path',
+            b='b_new_path',
+        ),
+        versions=hl.Struct(
+            a='a_version',
+            b='b_new_version',
+        ),
+        enums=hl.Struct(
+            a=hl.Struct(),
+            b=hl.Struct(
+                enum_1=[
+                    'D',
+                    'F',
+                ],
+            ),
+        ),
+    ),
+]
+
+MOCK_DATETIME = datetime(
+    2023,
+    4,
+    19,
+    16,
+    43,
+    39,
+    361110,
+    tzinfo=pytz.timezone('US/Eastern'),
+)
+
+PATH_TO_FILE_UNDER_TEST = 'v03_pipeline.lib.reference_data.dataset_table_operations'
 
 
 class ReferenceDataCombineTest(unittest.TestCase):
@@ -66,7 +270,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertRaises(Exception, mapped_ht.collect)
 
     @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.combine.CONFIG',
+        f'{PATH_TO_FILE_UNDER_TEST}.CONFIG',
         {
             'mock_dbnsfp': {
                 '38': {
@@ -93,7 +297,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             },
         },
     )
-    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.hl.read_table')
     def test_dbnsfp_select_and_filter(self, mock_read_table):
         mock_read_table.return_value = hl.Table.parallelize(
             [
@@ -132,7 +336,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
             key='locus',
         )
-        ht = get_ht(
+        ht = get_dataset_ht(
             'mock_dbnsfp',
             ReferenceGenome.GRCh38,
         )
@@ -169,7 +373,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
                 ),
             ],
         )
-        ht = get_ht(
+        ht = get_dataset_ht(
             'mock_dbnsfp_mito',
             ReferenceGenome.GRCh38,
         )
@@ -191,7 +395,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
     @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.combine.CONFIG',
+        f'{PATH_TO_FILE_UNDER_TEST}.CONFIG',
         {
             'a': {
                 '38': {
@@ -202,7 +406,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             },
         },
     )
-    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.hl.read_table')
     def test_parse_version(self, mock_read_table):
         ht = hl.Table.parallelize(
             [
@@ -234,7 +438,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         mock_read_table.return_value = ht
         self.assertCountEqual(
-            get_ht(
+            get_dataset_ht(
                 'a',
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
@@ -249,7 +453,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         mock_read_table.return_value = ht.annotate_globals(version=hl.missing(hl.tstr))
 
         self.assertCountEqual(
-            get_ht(
+            get_dataset_ht(
                 'a',
                 ReferenceGenome.GRCh38,
             ).globals.collect(),
@@ -263,139 +467,28 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
 
         mock_read_table.return_value = ht.annotate_globals(version='1.2.3')
-        ht = get_ht(
+        ht = get_dataset_ht(
             'a',
             ReferenceGenome.GRCh38,
         )
         self.assertRaises(Exception, ht.globals.collect)
 
-    @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.combine.CONFIG',
-        {
-            'a': {
-                '38': {
-                    'path': '',
-                    'select': [
-                        'd',
-                    ],
-                },
-            },
-            'b': {
-                '38': {
-                    'path': '',
-                    'select': [
-                        'e',
-                    ],
-                    'enum_select': {},
-                },
-            },
-        },
-    )
-    @mock.patch('v03_pipeline.lib.reference_data.combine.hl.read_table')
-    @mock.patch('v03_pipeline.lib.reference_data.combine.get_ht')
-    @mock.patch('v03_pipeline.lib.reference_data.combine.datetime', wraps=datetime)
+    @mock.patch.dict(f'{PATH_TO_FILE_UNDER_TEST}.CONFIG', MOCK_CONFIG)
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.hl.read_table')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_existing_joined_hts(
         self,
         mock_reference_dataset_collection_datasets,
         mock_datetime,
-        mock_get_ht,
+        mock_get_dataset_ht,
         mock_read_table,
     ):
         mock_reference_dataset_collection_datasets.return_value = ['a', 'b']
-        mock_datetime.now.return_value = datetime(
-            2023,
-            4,
-            19,
-            16,
-            43,
-            39,
-            361110,
-            tzinfo=pytz.timezone('US/Eastern'),
-        )
-        mock_read_table.return_value = hl.Table.parallelize(
-            [
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': 10,
-                    'a': hl.Struct(d=1),
-                    'b': hl.Struct(e=2),
-                },
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': 10,
-                    'a': hl.Struct(d=3),
-                    'b': hl.Struct(e=4),
-                },
-            ],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tint32,
-                a=hl.tstruct(d=hl.tint32),
-                b=hl.tstruct(e=hl.tint32),
-            ),
-            key=['locus', 'alleles'],
-            globals=hl.Struct(
-                paths=hl.Struct(
-                    a='a_path',
-                    b='b_path',
-                ),
-                versions=hl.Struct(
-                    a='a_version',
-                    b='b_version',
-                ),
-                enums=hl.Struct(
-                    a=hl.Struct(),
-                    b=hl.Struct(),
-                ),
-            ),
-        )
-        mock_get_ht.return_value = hl.Table.parallelize(
-            [
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': 10,
-                    'b': hl.Struct(e=5),
-                },
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=3,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': 10,
-                    'b': hl.Struct(e=7),
-                },
-            ],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tint32,
-                b=hl.tstruct(e=hl.tint32),
-            ),
-            key=['locus', 'alleles'],
-            globals=hl.Struct(
-                path='b_new_path',
-                version='b_new_version',
-                enums=hl.Struct(
-                    enum_1=[
-                        'D',
-                        'F',
-                    ],
-                ),
-            ),
-        )
+        mock_datetime.now.return_value = MOCK_DATETIME
+        mock_read_table.return_value = MOCK_JOINED_REFERENCE_DATA_HT
+        mock_get_dataset_ht.return_value = MOCK_B_DATASET_HT
         ht = update_existing_joined_hts(
             'destination',
             'b',
@@ -405,61 +498,73 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         self.assertCountEqual(
             ht.collect(),
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=10,
-                    a=hl.Struct(d=1),
-                    b=hl.Struct(e=5),
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=10,
-                    a=hl.Struct(d=3),
-                    b=None,
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=3,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=10,
-                    a=None,
-                    b=hl.Struct(e=7),
-                ),
-            ],
+            EXPECTED_JOINED_DATA,
+        )
+        self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
+
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
+    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
+    def test_update_or_create_joined_ht_one_dataset(
+        self,
+        mock_reference_dataset_collection_datasets,
+        mock_datetime,
+        mock_get_dataset_ht,
+    ):
+        mock_reference_dataset_collection_datasets.return_value = ['a', 'b']
+        mock_datetime.now.return_value = MOCK_DATETIME
+        mock_get_dataset_ht.return_value = MOCK_B_DATASET_HT
+
+        ht = update_or_create_joined_ht(
+            ReferenceDatasetCollection.INTERVAL,
+            DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+            dataset='b',
+            joined_ht=MOCK_JOINED_REFERENCE_DATA_HT,
         )
         self.assertCountEqual(
-            ht.globals.collect(),
-            [
-                hl.Struct(
-                    date='2023-04-19T16:43:39.361110-04:56',
-                    paths=hl.Struct(
-                        a='a_path',
-                        b='b_new_path',
-                    ),
-                    versions=hl.Struct(
-                        a='a_version',
-                        b='b_new_version',
-                    ),
-                    enums=hl.Struct(
-                        a=hl.Struct(),
-                        b=hl.Struct(
-                            enum_1=[
-                                'D',
-                                'F',
-                            ],
-                        ),
-                    ),
-                ),
-            ],
+            ht.collect(),
+            EXPECTED_JOINED_DATA,
         )
+        self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
+
+    @mock.patch.dict(f'{PATH_TO_FILE_UNDER_TEST}.CONFIG', MOCK_CONFIG)
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
+    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
+    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
+    def test_update_or_create_joined_ht_all_datasets(
+        self,
+        mock_reference_dataset_collection_datasets,
+        mock_datetime,
+        mock_get_dataset_ht,
+    ):
+        mock_reference_dataset_collection_datasets.return_value = ['a', 'b']
+        mock_datetime.now.return_value = MOCK_DATETIME
+        mock_get_dataset_ht.side_effect = [MOCK_A_DATASET_HT, MOCK_B_DATASET_HT]
+
+        empty_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            key=('locus', 'alleles'),
+            globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
+            ),
+        )
+
+        ht = update_or_create_joined_ht(
+            ReferenceDatasetCollection.COMBINED,
+            DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+            dataset=None,
+            joined_ht=empty_ht,
+        )
+        self.assertCountEqual(
+            ht.collect(),
+            EXPECTED_JOINED_DATA,
+        )
+        self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
