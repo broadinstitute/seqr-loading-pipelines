@@ -70,7 +70,9 @@ def get_dataset_ht(
     return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
-def import_ht_from_config_path(config: dict, reference_genome: ReferenceGenome) -> hl.Table:
+def import_ht_from_config_path(
+    config: dict, reference_genome: ReferenceGenome
+) -> hl.Table:
     return (
         config['custom_import'](config['source_path'], reference_genome)
         if 'custom_import' in config
@@ -193,19 +195,24 @@ def _ht_version_matches_config(
     dataset_config: dict,
     reference_genome: ReferenceGenome,
 ) -> bool:
-    joined_ht_version = hl.eval(ht.globals['versions'].get(dataset, hl.missing(hl.tstr)))
+    joined_ht_version = hl.eval(
+        ht.globals['versions'].get(dataset, hl.missing(hl.tstr))
+    )
     config_version = dataset_config.get('version')
 
     if joined_ht_version is None:
-        # joined ht version shouldn't be missing, so we'll return False to force reload dataset
+        # joined ht version should exist if dataset is in joined ht, so we'll return False to force reload dataset
         return False
 
     if joined_ht_version and config_version:
         return joined_ht_version == config_version
 
     if joined_ht_version and not config_version:
+        # compare joined ht version to annotated version in dataset ht
         dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-        annotated_version = hl.eval(dataset_ht.globals.get('version', hl.missing(hl.tstr)))
+        annotated_version = hl.eval(
+            dataset_ht.globals.get('version', hl.missing(hl.tstr))
+        )
 
         return joined_ht_version != annotated_version
 
@@ -215,7 +222,11 @@ def _ht_path_matches_config(
     dataset: str,
     dataset_config: dict,
 ) -> bool:
-    joined_ht_path = hl.eval(ht.globals['paths'][dataset])
+    joined_ht_path = hl.eval(ht.globals['paths'].get(dataset, hl.missing(hl.tstr)))
+
+    if joined_ht_path is None:
+        return False
+
     config_path = (
         dataset_config['source_path']
         if 'custom_import' in dataset_config
@@ -229,7 +240,11 @@ def _ht_enums_match_config(
     dataset: str,
     dataset_config: dict,
 ) -> bool:
-    joined_ht_enums = hl.eval(ht.globals['enums'][dataset])
+    joined_ht_enums = hl.eval(ht.globals['enums'].get(dataset, hl.missing(hl.tstr)))
+
+    if joined_ht_enums is None:
+        return False
+
     config_enums = hl.eval(hl.struct(**dataset_config.get('enum_select')))
     return joined_ht_enums == config_enums
 
