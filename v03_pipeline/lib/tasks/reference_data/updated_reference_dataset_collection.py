@@ -5,6 +5,7 @@ from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_or_create_joined_ht,
+    ht_globals_match_config,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -13,6 +14,8 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
     dataset = luigi.OptionalStrParameter(default=None)
+
+    _datasets_to_update: set[str] = set()
 
     @property
     def _destination_path(self) -> str:
@@ -23,23 +26,27 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        # new class attribute: self.datasets_to_update = []
+        if not self.output().exists():
+            self._datasets_to_update = set(
+                self.reference_dataset_collection.datasets(self.dataset_type)
+            )
+            return False
 
-        # if self.output().exists():
-            # datasets_to_update = []
-            # read table from destination path
-            # for each dataset type or for single dataset type if dataset is not None
-                # if reference ht version is newer than config version, update config file with newer version string
-                # if reference ht version is older than config version, add dataset type to list of datasets to update
-                # repeat for enums, paths, select fields
+        ht = hl.read_table(self._destination_path)
+        for dataset in (
+            [self.dataset]
+            if self.dataset is not None
+            else self.reference_dataset_collection.datasets(self.dataset_type)
+        ):
+            if dataset not in ht.row:
+                self._datasets_to_update.add(dataset)
+                continue
 
-            # if list of datasets to update is still empty, return True - no updates required
+            if not ht_globals_match_config(ht, dataset, self.reference_genome):
+                self._datasets_to_update.add(dataset)
+                continue
 
-        # else output doesn't exist (base case)
-            # self.datasets_to_update = self.datasets_to_update if not empty else reference_dataset_collection.datasets(dataset_type)
-
-        # return False
-        pass
+        return True if len(self._datasets_to_update) == 0 else False
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(self._destination_path)

@@ -163,6 +163,7 @@ Format:
         'select': '<Optional list of fields to select or dict of new field name to location of old field
             in the reference dataset. If '#' is at the end, we know to select the appropriate biallelic
             using the a_index.>',
+        'custom_select_keys': '<Optional set of fields to select in custom_select function>',
         'custom_select': '<Optional function of custom select function>',
         'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
         'custom_import': '<Optional function of custom import function>',
@@ -187,6 +188,12 @@ CONFIG = {
             'custom_import': download_and_import_latest_clinvar_vcf,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select_keys': [
+                'pathogenicity',
+                'assertion',
+                'conflictingPathogenicities',
+                'goldStars',
+            ],
             'custom_select': clinvar_custom_select,
             'enum_select': {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
@@ -198,6 +205,12 @@ CONFIG = {
             'custom_import': download_and_import_latest_clinvar_vcf,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select_keys': [
+                'pathogenicity',
+                'assertion',
+                'conflictingPathogenicities',
+                'goldStars',
+            ],
             'custom_select': clinvar_custom_select,
             'enum_select': {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
@@ -211,6 +224,12 @@ CONFIG = {
             'version': '2.9.3',
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
             'custom_select': dbnsfp_custom_select,
+            'custom_select_keys': [
+                'REVEL_score',
+                'SIFT_score',
+                'Polyphen2_HVAR_score',
+                'MutationTaster_pred',
+            ],
             'enum_select': {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
@@ -219,6 +238,15 @@ CONFIG = {
         '38': {
             'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
+            'custom_select_keys': [
+                'REVEL_score',
+                'SIFT_score',
+                'Polyphen2_HVAR_score',
+                'MutationTaster_pred',
+                'VEST4_score',
+                'MutPred_score',
+                'fathmm_MKL_coding_score',
+            ],
             'custom_select': dbnsfp_custom_select_38,
             'enum_select': {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -271,10 +299,12 @@ CONFIG = {
     'mpc': {
         '37': {
             'path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+            'custom_select_keys': {'MPC'},
             'custom_select': custom_mpc_select,
         },
         '38': {
             'path': 'gs://seqr-reference-data/GRCh38/MPC/fordist_constraint_official_mpc_values.liftover.GRCh38.ht',
+            'custom_select_keys': {'MPC'},
             'custom_select': custom_mpc_select,
         },
     },
@@ -350,11 +380,29 @@ CONFIG = {
         '37': {
             'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+            'custom_select_keys': {
+                'AF',
+                'AN',
+                'AC',
+                'Hom',
+                'AF_POPMAX_OR_GLOBAL',
+                'FAF_AF',
+                'Hemi',
+            },
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
             'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
+            'custom_select_keys': {
+                'AF',
+                'AN',
+                'AC',
+                'Hom',
+                'AF_POPMAX_OR_GLOBAL',
+                'FAF_AF',
+                'Hemi',
+            },
             'custom_select': custom_gnomad_select_v2,
         },
     },
@@ -362,11 +410,29 @@ CONFIG = {
         '37': {
             'version': 'r2.1.1',
             'path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'custom_select_keys': {
+                'AF',
+                'AN',
+                'AC',
+                'Hom',
+                'AF_POPMAX_OR_GLOBAL',
+                'FAF_AF',
+                'Hemi',
+            },
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
             'version': 'v3.1.2',
             'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
+            'custom_select_keys': {
+                'AF',
+                'AN',
+                'AC',
+                'Hom',
+                'AF_POPMAX_OR_GLOBAL',
+                'FAF_AF',
+                'Hemi',
+            },
             'custom_select': custom_gnomad_select_v3,
         },
     },
@@ -435,6 +501,12 @@ CONFIG = {
             'custom_import': download_and_import_latest_clinvar_vcf,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select_keys': {
+                'pathogenecity',
+                'assertion',
+                'conflictingPathogenicities',
+                'goldStars',
+            },
             'custom_select': clinvar_custom_select,
             'enum_select': {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
@@ -446,6 +518,12 @@ CONFIG = {
             'custom_import': download_and_import_latest_clinvar_vcf,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
+            'custom_select_keys': {
+                'pathogenecity',
+                'assertion',
+                'conflictingPathogenicities',
+                'goldStars',
+            },
             'custom_select': clinvar_custom_select,
             'enum_select': {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
@@ -458,6 +536,7 @@ CONFIG = {
         '37': {
             'version': '2.9.3',
             'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
+            'custom_select_keys': {'SIFT_score', 'MutationTaster_pred'},
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -467,6 +546,7 @@ CONFIG = {
         '38': {
             'version': '4.2',
             'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
+            'custom_select_keys': {'SIFT_score', 'MutationTaster_pred'},
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -478,6 +558,14 @@ CONFIG = {
         '38': {
             'version': 'v3.1',
             'path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+            'custom_select_keys': {
+                'AN',
+                'AC_hom',
+                'AC_het',
+                'AF_hom',
+                'AF_het',
+                'max_hl',
+            },
             'custom_select': custom_gnomad_mito,
         },
     },
