@@ -213,8 +213,7 @@ def _ht_version_matches_config(
         annotated_version = hl.eval(
             dataset_ht.globals.get('version', hl.missing(hl.tstr))
         )
-
-        return joined_ht_version != annotated_version
+        return joined_ht_version == annotated_version
 
 
 def _ht_path_matches_config(
