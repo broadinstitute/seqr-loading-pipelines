@@ -202,10 +202,12 @@ def main():
     )
 
     print("V2 not in V3")
-    print(v2_projects - v3_projects)
+    for project in (v2_projects - v3_projects):
+        print(project)
 
     print("V3 not in V2")
-    print(v3_projects - v2_projects)
+    for project in (v3_projects - v2_projects):
+        print(project)
 
 
 if __name__ == "__main__":
