@@ -83,6 +83,8 @@ def parse_v3_projects():
             if "matched no objects" in r.stderr:
                 continue
             for line in r.stdout.strip().split("\n"):
+                if line.endswith('projects/'):
+                    continue
                 projects.add(
                     Project(
                         line.split("/")[7].replace(".ht", ""),
