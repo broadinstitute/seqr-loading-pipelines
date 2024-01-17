@@ -23,6 +23,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_enum_select_fields,
     update_existing_joined_hts,
     update_or_create_joined_ht,
+    validate_joined_ht_globals_match_config,
 )
 
 MOCK_CONFIG = {
@@ -573,6 +574,26 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
 
+    @mock.patch.dict(
+        f'{PATH_TO_FILE_UNDER_TEST}.CONFIG',
+        {
+            'a': {
+                '38': {
+                    'path': 'a_path',
+                    'select': ['d'],
+                    'version': 'a_version',
+                },
+            },
+        },
+    )
+    def test_validate_joined_ht_globals_match_config(self):
+        result = validate_joined_ht_globals_match_config(
+            MOCK_JOINED_REFERENCE_DATA_HT,
+            dataset='a',
+            reference_genome=ReferenceGenome.GRCh38,
+        )
+        self.assertTrue(result)
+
     def test__ht_version_matches_config_joined_ht_version_missing(self):
         """If the joined_ht has no version in globals, return False."""
         joined_ht = hl.Table.parallelize(
@@ -709,8 +730,8 @@ class ReferenceDataCombineTest(unittest.TestCase):
         result_b = _ht_path_matches_config(joined_ht, 'b', dataset_b_config)
         self.assertTrue(result_b)
 
-    def test__ht_enums_match_config_joined_ht_enums_missing(self):
-        """If the joined_ht has no enums in globals for that dataset, return False."""
+    def test__ht_enums_match_config_both_missing(self):
+        """If the joined_ht has no enums in globals for that dataset nor in the config, return True."""
         joined_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -724,6 +745,24 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ),
         )
         result = _ht_enums_match_config(joined_ht, 'b', {})
+        self.assertTrue(result)
+
+    def test__ht_enums_match_config_joined_ht_missing(self):
+        """If the joined_ht has no enums in globals for that dataset but does in the config, return False."""
+        dataset_config = {'enum_select': {'test_enum': ['B']}}
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                enums=hl.Struct(
+                    a=hl.Struct(test_enum=['A', 'B']),
+                ),
+            ),
+        )
+        result = _ht_enums_match_config(joined_ht, 'b', dataset_config)
         self.assertFalse(result)
 
     def test__ht_enums_match_config(self):
