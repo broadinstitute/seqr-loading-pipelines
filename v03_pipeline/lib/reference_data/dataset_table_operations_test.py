@@ -15,6 +15,9 @@ from v03_pipeline.lib.reference_data.config import (
     dbnsfp_mito_custom_select,
 )
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    _ht_enums_match_config,
+    _ht_path_matches_config,
+    _ht_selects_match_config,
     get_dataset_ht,
     get_enum_select_fields,
     update_existing_joined_hts,
@@ -519,7 +522,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ReferenceDatasetCollection.INTERVAL,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            dataset='b',
+            datasets=['b'],
             joined_ht=MOCK_JOINED_REFERENCE_DATA_HT,
         )
         self.assertCountEqual(
@@ -560,7 +563,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ReferenceDatasetCollection.COMBINED,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            dataset=None,
+            datasets=['a', 'b'],
             joined_ht=empty_ht,
         )
         self.assertCountEqual(
@@ -568,3 +571,149 @@ class ReferenceDataCombineTest(unittest.TestCase):
             EXPECTED_JOINED_DATA,
         )
         self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
+
+    def test__ht_path_matches_config_joined_ht_path_missing(self):
+        # no path in globals for dataset b
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                paths=hl.Struct(
+                    a='gs://a_path.ht',
+                ),
+            ),
+        )
+        result = _ht_path_matches_config(joined_ht, 'b', {})
+        self.assertFalse(result)
+
+    def test__ht_path_matches_config_no_match(self):
+        dataset_a_config = {'path': 'gs://a_path.ht'}
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                paths=hl.Struct(
+                    a='gs://a_path_OLD.ht',
+                ),
+            ),
+        )
+        result_a = _ht_path_matches_config(joined_ht, 'a', dataset_a_config)
+        self.assertFalse(result_a)
+
+    def test__ht_path_matches_config_custom_import(self):
+        dataset_b_config = {
+            'custom_import': None,
+            'source_path': 'gs://b_path.mt',
+        }
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                paths=hl.Struct(
+                    b='gs://b_path.mt',
+                ),
+            ),
+        )
+        result_b = _ht_path_matches_config(joined_ht, 'b', dataset_b_config)
+        self.assertTrue(result_b)
+
+    def test__ht_enums_match_config_joined_ht_enums_missing(self):
+        # no enums in globals for dataset b
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                enums=hl.Struct(
+                    a=hl.Struct(test_enum=['A', 'B']),
+                ),
+            ),
+        )
+        result = _ht_enums_match_config(joined_ht, 'b', {})
+        self.assertFalse(result)
+
+    def test__ht_enums_match_config(self):
+        dataset_config = {
+            'enum_select': {
+                'test_enum': ['A', 'B'],
+            },
+        }
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                enums=hl.Struct(
+                    a=hl.Struct(test_enum=['A', 'B']),
+                ),
+            ),
+        )
+        result = _ht_enums_match_config(joined_ht, 'a', dataset_config)
+        self.assertTrue(result)
+
+    def test__ht_enums_match_config_no_match(self):
+        dataset_config = {
+            'enum_select': {
+                'test_enum': ['A', 'B'],
+            },
+        }
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                enums=hl.Struct(
+                    a=hl.Struct(new_enum=['A', 'B']),
+                ),
+            ),
+        )
+        result = _ht_enums_match_config(joined_ht, 'a', dataset_config)
+        self.assertFalse(result)
+
+    def test__ht_selects_match_config_no_match(self):
+        dataset_config = {
+            'select': {'field1': 'info.a', 'field2': 'info.c'},
+        }
+        # joined_ht has no 'field2' field
+        joined_ht = hl.Table.parallelize(
+            [
+                {'a': hl.Struct(field1=1)},
+            ],
+            schema=hl.tstruct(
+                a=hl.tstruct(field1=hl.tint32),
+            ),
+        )
+        result = _ht_selects_match_config(joined_ht, 'a', dataset_config)
+        self.assertFalse(result)
+
+    def test__ht_selects_match_config_custom_select(self):
+        dataset_config = {
+            'select': {'field1': 'info.a'},
+            'custom_select': None,
+            'custom_select_keys': ['field2'],
+        }
+        joined_ht = hl.Table.parallelize(
+            [
+                {'a': hl.Struct(field1=1, field2=1)},
+            ],
+            schema=hl.tstruct(
+                a=hl.tstruct(field1=hl.tint32, field2=hl.tint32),
+            ),
+        )
+        result = _ht_selects_match_config(joined_ht, 'a', dataset_config)
+        self.assertTrue(result)

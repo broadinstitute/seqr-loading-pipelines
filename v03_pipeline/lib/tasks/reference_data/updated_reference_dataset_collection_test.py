@@ -1,4 +1,3 @@
-import shutil
 from unittest import mock
 from unittest.mock import ANY
 
@@ -11,7 +10,6 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )

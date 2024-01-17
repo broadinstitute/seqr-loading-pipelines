@@ -71,7 +71,8 @@ def get_dataset_ht(
 
 
 def import_ht_from_config_path(
-    config: dict, reference_genome: ReferenceGenome
+    config: dict,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
     return (
         config['custom_import'](config['source_path'], reference_genome)
@@ -173,55 +174,56 @@ def annotate_dataset_globals(joined_ht: hl.Table, dataset: str, dataset_ht: hl.T
     )
 
 
-def ht_globals_match_config(
-    ht: hl.Table,
+def validate_joined_ht_globals_match_config(
+    joined_ht: hl.Table,
     dataset: str,
     reference_genome: ReferenceGenome,
 ) -> bool:
     config = CONFIG[dataset][reference_genome.v02_value]
     return all(
         [
-            _ht_version_matches_config(ht, dataset, config, reference_genome),
-            _ht_path_matches_config(ht, dataset, config),
-            _ht_enums_match_config(ht, dataset, config),
-            _ht_selects_match_config(ht, dataset, config),
+            _ht_version_matches_config(joined_ht, dataset, config, reference_genome),
+            _ht_path_matches_config(joined_ht, dataset, config),
+            _ht_enums_match_config(joined_ht, dataset, config),
+            _ht_selects_match_config(joined_ht, dataset, config),
         ],
     )
 
 
 def _ht_version_matches_config(
-    ht: hl.Table,
+    joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
     reference_genome: ReferenceGenome,
 ) -> bool:
     joined_ht_version = hl.eval(
-        ht.globals['versions'].get(dataset, hl.missing(hl.tstr))
+        joined_ht.index_globals().versions.get(dataset, hl.missing(hl.tstr)),
     )
     config_version = dataset_config.get('version')
 
     if joined_ht_version is None:
-        # joined ht version should exist if dataset is in joined ht, so we'll return False to force reload dataset
         return False
 
     if joined_ht_version and config_version:
         return joined_ht_version == config_version
 
-    if joined_ht_version and not config_version:
-        # compare joined ht version to annotated version in dataset ht
-        dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-        annotated_version = hl.eval(
-            dataset_ht.globals.get('version', hl.missing(hl.tstr))
-        )
-        return joined_ht_version == annotated_version
+    # joined_ht_version and not config_version
+    # compare joined ht version to annotated version in dataset ht
+    dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
+    annotated_version = hl.eval(
+        dataset_ht.globals.get('version', hl.missing(hl.tstr)),
+    )
+    return joined_ht_version == annotated_version
 
 
 def _ht_path_matches_config(
-    ht: hl.Table,
+    joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
 ) -> bool:
-    joined_ht_path = hl.eval(ht.globals['paths'].get(dataset, hl.missing(hl.tstr)))
+    joined_ht_path = hl.eval(
+        joined_ht.index_globals().paths.get(dataset, hl.missing(hl.tstr)),
+    )
 
     if joined_ht_path is None:
         return False
@@ -235,31 +237,34 @@ def _ht_path_matches_config(
 
 
 def _ht_enums_match_config(
-    ht: hl.Table,
+    joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
 ) -> bool:
-    joined_ht_enums = hl.eval(ht.globals['enums'].get(dataset, hl.missing(hl.tstr)))
+    joined_ht_enums = hl.eval(
+        joined_ht.index_globals().enums.get(dataset, hl.missing(hl.tstr)),
+    )
 
     if joined_ht_enums is None:
         return False
 
     config_enums = hl.eval(hl.struct(**dataset_config.get('enum_select')))
-    return joined_ht_enums == config_enums
+    return hl.eval(joined_ht_enums == config_enums)
 
 
 def _ht_selects_match_config(
-    ht: hl.Table,
+    joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
 ) -> bool:
-    joined_ht_selects = set(ht[dataset])
+    joined_ht_selects = set(joined_ht[dataset])
     config_selects = set(dataset_config.get('select', {}).keys())
 
-    if dataset_config.get('custom_select'):
+    if 'custom_select' in dataset_config:
         config_selects.update(set(dataset_config.get('custom_select_keys')))
 
-    return len(joined_ht_selects.intersection(config_selects)) == len(config_selects)
+    # check if all fields in 'config_selects' are in 'joined_ht_selects'
+    return config_selects.issubset(joined_ht_selects)
 
 
 def join_hts(
