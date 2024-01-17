@@ -18,6 +18,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     _ht_enums_match_config,
     _ht_path_matches_config,
     _ht_selects_match_config,
+    _ht_version_matches_config,
     get_dataset_ht,
     get_enum_select_fields,
     update_existing_joined_hts,
@@ -572,8 +573,88 @@ class ReferenceDataCombineTest(unittest.TestCase):
         )
         self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
 
+    def test__ht_version_matches_config_joined_ht_version_missing(self):
+        """If the joined_ht has no version in globals, return False."""
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                versions=hl.Struct(
+                    a='v1',
+                ),
+            ),
+        )
+        result = _ht_version_matches_config(
+            joined_ht,
+            'b',
+            {},
+            reference_genome=ReferenceGenome.GRCh38,
+        )
+        self.assertFalse(result)
+
+    def test__ht_version_matches_config(self):
+        """If the joined_ht version matches the config version, return True."""
+        dataset_a_config = {'version': 'v1'}
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                versions=hl.Struct(
+                    a='v1',
+                ),
+            ),
+        )
+        result = _ht_version_matches_config(
+            joined_ht,
+            'a',
+            dataset_a_config,
+            reference_genome=ReferenceGenome.GRCh38,
+        )
+        self.assertTrue(result)
+
+    def test__ht_version_matches_config_use_dataset_ht_version(self):
+        """If the config version is missing, use the dataset_ht version."""
+        dataset_a_config = {
+            'custom_import': lambda *_: (
+                hl.Table.parallelize(
+                    [],
+                    hl.tstruct(
+                        locus=hl.tlocus('GRCh38'),
+                        alleles=hl.tarray(hl.tstr),
+                    ),
+                    globals=hl.Struct(version='v2'),
+                )
+            ),
+            'source_path': 'gs://custom_source_path.mt',
+        }
+        joined_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(
+                versions=hl.Struct(
+                    a='v1',
+                ),
+            ),
+        )
+        result = _ht_version_matches_config(
+            joined_ht,
+            'a',
+            dataset_a_config,
+            reference_genome=ReferenceGenome.GRCh38,
+        )
+        self.assertFalse(result)
+
     def test__ht_path_matches_config_joined_ht_path_missing(self):
-        # no path in globals for dataset b
+        """If the joined_ht has no path in globals, return False."""
         joined_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -590,6 +671,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertFalse(result)
 
     def test__ht_path_matches_config_no_match(self):
+        """If the joined_ht path does not match the config path, return False."""
         dataset_a_config = {'path': 'gs://a_path.ht'}
         joined_ht = hl.Table.parallelize(
             [],
@@ -607,6 +689,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertFalse(result_a)
 
     def test__ht_path_matches_config_custom_import(self):
+        """If the config has a custom_import, check that the source_path matches instead."""
         dataset_b_config = {
             'custom_import': None,
             'source_path': 'gs://b_path.mt',
@@ -627,7 +710,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertTrue(result_b)
 
     def test__ht_enums_match_config_joined_ht_enums_missing(self):
-        # no enums in globals for dataset b
+        """If the joined_ht has no enums in globals for that dataset, return False."""
         joined_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -644,6 +727,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertFalse(result)
 
     def test__ht_enums_match_config(self):
+        """If the joined_ht enums match the config enums, return True."""
         dataset_config = {
             'enum_select': {
                 'test_enum': ['A', 'B'],
@@ -665,6 +749,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertTrue(result)
 
     def test__ht_enums_match_config_no_match(self):
+        """If the joined_ht enums do not match the config enums, return False."""
         dataset_config = {
             'enum_select': {
                 'test_enum': ['A', 'B'],
@@ -686,6 +771,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertFalse(result)
 
     def test__ht_selects_match_config_no_match(self):
+        """If the joined_ht has no matching field in the config, return False."""
         dataset_config = {
             'select': {'field1': 'info.a', 'field2': 'info.c'},
         }
@@ -702,6 +788,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
         self.assertFalse(result)
 
     def test__ht_selects_match_config_custom_select(self):
+        """If the config has a custom_select, account for those additional fields."""
         dataset_config = {
             'select': {'field1': 'info.a'},
             'custom_select': None,

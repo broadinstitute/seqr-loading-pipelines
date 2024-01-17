@@ -45,7 +45,9 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
                 continue
 
             if not validate_joined_ht_globals_match_config(
-                joined_ht, dataset, self.reference_genome,
+                joined_ht,
+                dataset,
+                self.reference_genome,
             ):
                 self._datasets_to_update.add(dataset)
                 continue
