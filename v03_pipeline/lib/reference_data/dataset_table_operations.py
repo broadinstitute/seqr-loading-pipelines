@@ -183,7 +183,6 @@ def validate_joined_ht_globals_match_config(
     reference_genome: ReferenceGenome,
 ) -> bool:
     config = CONFIG[dataset][reference_genome.v02_value]
-
     checks = {
         'version': _ht_version_matches_config(
             joined_ht,

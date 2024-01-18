@@ -1,3 +1,4 @@
+import logging
 from typing import ClassVar
 
 import hail as hl
@@ -12,12 +13,15 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
+logger = logging.getLogger(__name__)
+
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
     dataset = luigi.OptionalStrParameter(default=None)
 
-    _datasets_to_update: ClassVar[set[str]] = set()
+    _should_validate: bool = True
+    _datasets_to_update: ClassVar[list[str]] = []
 
     @property
     def _destination_path(self) -> str:
@@ -28,12 +32,25 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
+        self._datasets_to_update.clear()
+
         if not self.output().exists():
-            self._datasets_to_update.update(
+            logger.info(
+                f'Creating a new reference dataset collection for {self.reference_genome}, {self.dataset_type}, '
+                f'{self.reference_dataset_collection} because it does not exist',
+            )
+            self._datasets_to_update.extend(
                 self.reference_dataset_collection.datasets(self.dataset_type),
             )
+            self._should_validate = False
             return False
 
+        if not self._should_validate:
+            return super().complete()
+
+        logger.info(
+            f'Reading existing reference dataset collection from {self._destination_path}',
+        )
         joined_ht = hl.read_table(self._destination_path)
         for dataset in (
             [self.dataset]
@@ -41,17 +58,27 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             else self.reference_dataset_collection.datasets(self.dataset_type)
         ):
             if dataset not in joined_ht.row:
-                self._datasets_to_update.add(dataset)
+                logger.info(
+                    f'Adding missing dataset {dataset} to reference dataset collection',
+                )
+                self._datasets_to_update.append(dataset)
                 continue
 
+            logger.info(
+                f'Dataset {dataset} exists in reference dataset collection, validating its globals',
+            )
             if not validate_joined_ht_globals_match_config(
                 joined_ht,
                 dataset,
                 self.reference_genome,
             ):
-                self._datasets_to_update.add(dataset)
+                logger.info(
+                    f'Dataset {dataset} did not pass globals validation, re-adding it to reference dataset collection',
+                )
+                self._datasets_to_update.append(dataset)
                 continue
 
+        self._should_validate = False
         return len(self._datasets_to_update) == 0
 
     def output(self) -> luigi.Target:
@@ -77,6 +104,6 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.reference_dataset_collection,
             self.dataset_type,
             self.reference_genome,
-            list(self._datasets_to_update),
+            self._datasets_to_update,
             ht,
         )
