@@ -28,7 +28,10 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                     rdc,
                 ),
             )
-            for rdc in ReferenceDatasetCollection.for_dataset_type(self.dataset_type)
+            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                self.reference_genome,
+                self.dataset_type,
+            )
         ]
 
     def initialize_table(self) -> hl.Table:

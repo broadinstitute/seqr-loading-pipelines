@@ -13,7 +13,10 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
-from v03_pipeline.lib.reference_data.combine import join_hts, update_existing_joined_hts
+from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    join_hts,
+    update_existing_joined_hts,
+)
 
 
 def run(dataset_type: DatasetType, dataset: str | None):
@@ -64,7 +67,7 @@ if __name__ == '__main__':
     if (
         args.dataset
         and args.dataset
-        not in ReferenceDatasetCollection.for_dataset_type(
+        not in ReferenceDatasetCollection.INTERVAL.datasets(
             args.dataset_type,
         )
     ):

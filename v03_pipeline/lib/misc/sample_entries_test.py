@@ -326,3 +326,49 @@ class SampleEntriesTest(unittest.TestCase):
                 ),
             ],
         )
+
+
+    def test_filter_all_callset_entries(self) -> None:
+        entries_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'filters': {'HIGH_SR_BACKGROUND'},
+                    'entries': [
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
+                        hl.Struct(a=1),
+                        hl.Struct(a=2),
+                    ],
+                },
+                {
+                    'id': 1,
+                    'filters': {'HIGH_SR_BACKGROUND'},
+                    'entries': [
+                        hl.Struct(a=2),
+                        hl.Struct(a=3),
+                        hl.Struct(a=4),
+                        hl.Struct(a=5),
+                    ],
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                filters=hl.tset(hl.tstr),
+                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
+            ),
+            key='id',
+            globals=hl.Struct(sample_ids=['a', 'c', 'e', 'f']),
+        )
+        sample_subset_ht = hl.Table.parallelize(
+            [{'s': 'a'}, {'s': 'c'}, {'s': 'd'}, {'s': 'e'}, {'s': 'f'}],
+            hl.tstruct(
+                s=hl.dtype('str'),
+            ),
+            key='s',
+        )
+        ht = filter_callset_entries(entries_ht, sample_subset_ht)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [hl.Struct(sample_ids=[])],
+        )

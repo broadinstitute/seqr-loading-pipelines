@@ -4,14 +4,17 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_PATHOGENICITIES_LOOKUP,
+    CONSEQUENCE_TERMS,
+)
 from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
     get_expr_for_worst_transcript_consequence_annotations_struct,
 )
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.model.environment import Env
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
@@ -146,18 +149,20 @@ class CachedReferenceDatasetQuery(Enum):
         }[self]
 
     @classmethod
-    def for_dataset_type(
+    def for_reference_genome_dataset_type(
         cls,
+        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ) -> list['CachedReferenceDatasetQuery']:
-        return {
-            DatasetType.SNV_INDEL: [
-                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
-                CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                CachedReferenceDatasetQuery.GNOMAD_QC,
-            ],
-            DatasetType.MITO: [
+        crdqs = {
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): list(cls),
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ],
-        }.get(dataset_type, [])
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): list(cls),
+        }.get((reference_genome, dataset_type), [])
+        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+            return [
+                crdq for crdq in crdqs if crdq.access_control == AccessControl.PUBLIC
+            ]
+        return crdqs

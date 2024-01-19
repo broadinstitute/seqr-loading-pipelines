@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
     validate_sample_type,
 )
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
@@ -81,6 +82,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             )
         if self.validate and self.dataset_type.can_run_validation:
+            validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(

@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 
 
 class ReferenceDatasetCollection(Enum):
@@ -70,18 +71,26 @@ class ReferenceDatasetCollection(Enum):
         }.get(self, default_key)
 
     @classmethod
-    def for_dataset_type(
+    def for_reference_genome_dataset_type(
         cls,
+        reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ) -> list['ReferenceDatasetCollection']:
-        return {
-            DatasetType.SNV_INDEL: [
+        rdcs = {
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
             ],
-            DatasetType.MITO: [
+            (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
             ],
-        }.get(dataset_type, [])
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): [
+                ReferenceDatasetCollection.COMBINED,
+                ReferenceDatasetCollection.HGMD,
+            ],
+        }.get((reference_genome, dataset_type), [])
+        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+            return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
+        return rdcs

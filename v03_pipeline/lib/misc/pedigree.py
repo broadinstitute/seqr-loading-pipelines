@@ -64,7 +64,7 @@ class Family:
         return hash(self.family_guid)
 
     @staticmethod
-    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]:
+    def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]:  # noqa: C901
         samples = {}
         for row in rows:
             samples[row.s] = Sample(
@@ -77,17 +77,26 @@ class Family:
         for row in rows:
             # Maternal GrandParents
             maternal_s = samples[row.s].mother
-            if maternal_s and samples[maternal_s].mother:
-                samples[row.s].maternal_grandmother = samples[maternal_s].mother
-            if maternal_s and samples[maternal_s].father:
-                samples[row.s].maternal_grandfather = samples[maternal_s].father
+            if maternal_s and maternal_s not in samples:
+                # A sample id may be referenced for a proband that has been
+                # removed from the pedigree as an individual.  We handle this by
+                # nulling out the parent here.
+                samples[row.s].mother = None
+            elif maternal_s:
+                if samples[maternal_s].mother:
+                    samples[row.s].maternal_grandmother = samples[maternal_s].mother
+                if samples[maternal_s].father:
+                    samples[row.s].maternal_grandfather = samples[maternal_s].father
 
             # Paternal GrandParents
             paternal_s = samples[row.s].father
-            if paternal_s and samples[paternal_s].mother:
-                samples[row.s].paternal_grandmother = samples[paternal_s].mother
-            if paternal_s and samples[paternal_s].father:
-                samples[row.s].paternal_grandfather = samples[paternal_s].father
+            if paternal_s and paternal_s not in samples:
+                samples[row.s].father = None
+            elif paternal_s:
+                if samples[paternal_s].mother:
+                    samples[row.s].paternal_grandmother = samples[paternal_s].mother
+                if samples[paternal_s].father:
+                    samples[row.s].paternal_grandfather = samples[paternal_s].father
         return samples
 
     @staticmethod

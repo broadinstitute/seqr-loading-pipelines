@@ -1,11 +1,16 @@
+from typing import Any
+
 import hail as hl
 
-from v03_pipeline.lib.reference_data.clinvar import (
-    CLINVAR_ASSERTIONS,
+from v03_pipeline.lib.annotations.enums import (
     CLINVAR_DEFAULT_PATHOGENICITY,
-    CLINVAR_GOLD_STARS_LOOKUP,
     CLINVAR_PATHOGENICITIES,
     CLINVAR_PATHOGENICITIES_LOOKUP,
+)
+from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.reference_data.clinvar import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_GOLD_STARS_LOOKUP,
     download_and_import_latest_clinvar_vcf,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
@@ -15,14 +20,14 @@ from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 
 def import_locus_intervals(
     url: str,
-    genome_version: str,
+    reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    return hl.import_locus_intervals(url, f'GRCh{genome_version}')
+    return hl.import_locus_intervals(url, reference_genome.value)
 
 
 def import_matrix_table(
     url: str,
-    _: str,
+    _: Any,
 ) -> hl.Table:
     return hl.read_matrix_table(url).rows()
 
@@ -54,8 +59,10 @@ def clinvar_custom_select(ht):
 def dbnsfp_custom_select(ht):
     selects = {}
     selects['REVEL_score'] = hl.parse_float32(ht.REVEL_score)
-    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
-    selects['Polyphen2_HVAR_pred'] = predictor_parse(ht.Polyphen2_HVAR_pred)
+    selects['SIFT_score'] = hl.parse_float32(predictor_parse(ht.SIFT_score))
+    selects['Polyphen2_HVAR_score'] = hl.parse_float32(
+        predictor_parse(ht.Polyphen2_HVAR_score),
+    )
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     return selects
 
@@ -64,12 +71,13 @@ def dbnsfp_custom_select_38(ht):
     selects = dbnsfp_custom_select(ht)
     selects['VEST4_score'] = hl.parse_float32(predictor_parse(ht.VEST4_score))
     selects['MutPred_score'] = hl.parse_float32(ht.MutPred_score)
+    selects['fathmm_MKL_coding_score'] = hl.float32(ht.fathmm_MKL_coding_score)
     return selects
 
 
 def dbnsfp_mito_custom_select(ht):
     selects = {}
-    selects['SIFT_pred'] = predictor_parse(ht.SIFT_pred)
+    selects['SIFT_score'] = hl.parse_float32(predictor_parse(ht.SIFT_score))
     selects['MutationTaster_pred'] = predictor_parse(ht.MutationTaster_pred)
     return selects
 
@@ -157,6 +165,8 @@ Format:
             using the a_index.>',
         'custom_select': '<Optional function of custom select function>',
         'enum_select': '<Optional dictionary mapping field_name to a list of enumerated values.>'
+        'custom_import': '<Optional function of custom import function>',
+        'source_path': '<Optional source path to import from - required if "custom_import" is present.>'
     },
 """
 CONFIG = {
@@ -199,27 +209,19 @@ CONFIG = {
     'dbnsfp': {
         '37': {
             'version': '2.9.3',
-            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
             'custom_select': dbnsfp_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
-                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig != 'MT',
         },
         '38': {
             'version': '4.2',
-            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
-            'select': [
-                'fathmm_MKL_coding_pred',
-            ],
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
             'custom_select': dbnsfp_custom_select_38,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
-                'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
-                'fathmm_MKL_coding_pred': ['D', 'N'],
             },
             'filter': lambda ht: ht.locus.contig != 'chrM',
         },
@@ -371,11 +373,11 @@ CONFIG = {
     'gnomad_qc': {
         '37': {
             'custom_import': import_matrix_table,
-            'path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
+            'source_path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
             'custom_import': import_matrix_table,
-            'path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
+            'source_path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
         },
     },
     'exac': {
@@ -455,20 +457,18 @@ CONFIG = {
     'dbnsfp_mito': {
         '37': {
             'version': '2.9.3',
-            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+            'path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.with_new_scores.ht',
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig == 'MT',
         },
         '38': {
             'version': '4.2',
-            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+            'path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
             'custom_select': dbnsfp_mito_custom_select,
             'enum_select': {
-                'SIFT_pred': ['D', 'T'],
                 'MutationTaster_pred': ['D', 'A', 'N', 'P'],
             },
             'filter': lambda ht: ht.locus.contig == 'chrM',
