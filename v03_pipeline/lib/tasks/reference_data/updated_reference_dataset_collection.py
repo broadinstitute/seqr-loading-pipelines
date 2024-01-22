@@ -6,9 +6,11 @@ import luigi
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.reference_data.compare_globals import (
+    validate_joined_ht_globals_match_config,
+)
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_or_create_joined_ht,
-    validate_joined_ht_globals_match_config,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
