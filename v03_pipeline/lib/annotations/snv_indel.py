@@ -3,6 +3,8 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.annotations.constants import PROJECTS_EXCLUDED_FROM_GT_STATS
+
 N_ALT_REF = 0
 N_ALT_HET = 1
 N_ALT_HOM = 2
@@ -37,6 +39,8 @@ def gt_stats(
     row = sample_lookup_ht[ht.key]
     AC, AN, hom = 0, 0, 0
     for project_guid in row.ref_samples:
+        if project_guid in PROJECTS_EXCLUDED_FROM_GT_STATS:
+            continue
         ref_samples_length = row.ref_samples[project_guid].length()
         het_samples_length = row.het_samples[project_guid].length()
         hom_samples_length = row.hom_samples[project_guid].length()
