@@ -7,6 +7,7 @@ from hail.utils import HailUserError
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    get_ht_path,
     import_ht_from_config_path,
     parse_dataset_version,
 )
@@ -52,7 +53,6 @@ def get_datasets_to_update(
             reference_genome,
         ):
             datasets_to_update.append(dataset)
-
     return datasets_to_update
 
 
@@ -79,9 +79,7 @@ def validate_joined_ht_globals_match_config(
     for check, result in checks.items():
         if result is False:
             logger.info(f'{check} mismatch for {dataset}')
-
         results.append(result)
-
     return all(results)
 
 
@@ -124,11 +122,7 @@ def ht_path_matches_config(
     if joined_ht_path is None:
         return False
 
-    config_path = (
-        dataset_config['source_path']
-        if 'custom_import' in dataset_config
-        else dataset_config['path']
-    )
+    config_path = get_ht_path(dataset_config)
     return joined_ht_path == config_path
 
 

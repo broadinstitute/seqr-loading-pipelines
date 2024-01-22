@@ -70,14 +70,19 @@ def get_dataset_ht(
     return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
+def get_ht_path(config: dict) -> str:
+    return config['source_path'] if 'custom_import' in config else config['path']
+
+
 def import_ht_from_config_path(
     config: dict,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
+    path = get_ht_path(config)
     return (
-        config['custom_import'](config['source_path'], reference_genome)
+        config['custom_import'](path, reference_genome)
         if 'custom_import' in config
-        else hl.read_table(config['path'])
+        else hl.read_table(path)
     )
 
 
