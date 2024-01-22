@@ -71,6 +71,9 @@ MOCK_CADD_DATASET_HT = hl.Table.parallelize(
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
     )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
@@ -78,28 +81,25 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self,
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
+        mock_get_datasets_to_update,
     ) -> None:
         """
-        Given a new task with a dataset parameter and no existing reference dataset collection table,
-        expect the task to create a new reference dataset collection table for all datasets in the collection and
-        to ignore the given dataset parameter.
+        Given a new task with no existing reference dataset collection table,
+        expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
-
-        # mock tables for both datasets
+        mock_get_datasets_to_update.return_value = []
         mock_get_dataset_ht.side_effect = [
             MOCK_PRIMATE_AI_DATASET_HT,
             MOCK_CADD_DATASET_HT,
         ]
 
         worker = luigi.worker.Worker()
-        # create task with no dataset parameter
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
-            dataset='primate_ai',
         )
         worker.add(task)
         worker.run()
@@ -155,6 +155,9 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         },
     )
     @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
     )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
@@ -162,14 +165,14 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self,
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
+        mock_get_datasets_to_update,
     ) -> None:
         """
         Given an existing reference dataset collection which contains only the primate_ai dataset and has globals:
             Struct(paths=Struct(primate_ai='gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht'),
                    versions=Struct(primate_ai='v0.2'),
                    enums=Struct(primate_ai=Struct()),
-                   date=ANY)
-        , a new task with a dataset parameter, and 1 other dataset for the collection (cadd),
+                   date=ANY),
         expect the task to update the existing reference dataset collection table with the new dataset (cadd),
         new values for primate_ai, and update the globals with the new primate_ai dataset's globals and cadd's globals.
         """
@@ -184,6 +187,10 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         )
 
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
+        mock_get_datasets_to_update.side_effect = [
+            ['primate_ai', 'cadd'],
+            [],
+        ]
         mock_get_dataset_ht.side_effect = [
             MOCK_PRIMATE_AI_DATASET_HT,
             MOCK_CADD_DATASET_HT,

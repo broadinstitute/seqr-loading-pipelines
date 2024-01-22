@@ -35,6 +35,27 @@ class ReferenceDataGlobals:
         return result_dict
 
 
+def get_datasets_to_update(
+    joined_ht: hl.Table,
+    datasets: list[str],
+    reference_genome: ReferenceGenome,
+) -> list[str]:
+    datasets_to_update = []
+    for dataset in datasets:
+        if dataset not in joined_ht.row:
+            datasets_to_update.append(dataset)
+            continue
+
+        if not validate_joined_ht_globals_match_config(
+            joined_ht,
+            dataset,
+            reference_genome,
+        ):
+            datasets_to_update.append(dataset)
+
+    return datasets_to_update
+
+
 def validate_joined_ht_globals_match_config(
     joined_ht: hl.Table,
     dataset: str,
@@ -118,7 +139,6 @@ def ht_enums_match_config(
 ) -> bool:
     joined_ht_enums = joined_ht_globals.enums.get(dataset, {})
     config_enums = dataset_config.get('enum_select', {})
-
     return joined_ht_enums == config_enums
 
 

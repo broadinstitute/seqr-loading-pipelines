@@ -6,11 +6,11 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.compare_globals import (
     ReferenceDataGlobals,
+    get_datasets_to_update,
     ht_enums_match_config,
     ht_path_matches_config,
     ht_selects_match_config,
     ht_version_matches_config,
-    validate_joined_ht_globals_match_config,
 )
 
 MOCK_JOINED_REFERENCE_DATA_HT = hl.Table.parallelize(
@@ -64,24 +64,67 @@ class CompareGlobalsTest(unittest.TestCase):
         },
     )
     @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
+        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
     )
-    def test_validate_joined_ht_globals_match_config(self, mock_read_table):
-        dataset_ht_no_globals = hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tarray(hl.tstr),
-            ),
-        )
-        mock_read_table.return_value = dataset_ht_no_globals
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.compare_globals.parse_dataset_version',
+    )
+    def test_get_datasets_to_update_no_updates(
+        self,
+        mock_parse_dataset_version,
+        mock_import_ht_from_config_path,
+    ):
+        """Dataset a has the same globals as the config, so it should not be updated."""
+        mock_parse_dataset_version.return_value = 'a_version'
+        mock_import_ht_from_config_path.return_value = 'a_version'
 
-        result = validate_joined_ht_globals_match_config(
+        result = get_datasets_to_update(
             MOCK_JOINED_REFERENCE_DATA_HT,
-            dataset='a',
+            datasets=['a'],
             reference_genome=ReferenceGenome.GRCh38,
         )
-        self.assertTrue(result)
+        self.assertEqual(result, [])
+
+    @mock.patch.dict(
+        'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
+        {
+            'a': {
+                '38': {
+                    'path': 'a_path',
+                    'select': ['d'],
+                    'version': 'new_version',
+                },
+            },
+            'c': {
+                '38': {
+                    'path': 'c_path',
+                    'select': ['f'],
+                    'version': 'c_version',
+                },
+            },
+        },
+    )
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
+    )
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.compare_globals.parse_dataset_version',
+    )
+    def test_get_datasets_to_update_has_updates(
+        self,
+        mock_parse_dataset_version,
+        mock_import_ht_from_config_path,
+    ):
+        """Dataset a has a new version, and c is not in the joined table, so they should be updated."""
+        mock_parse_dataset_version.return_value = 'new_version'
+        mock_import_ht_from_config_path.return_value = 'new_version'
+
+        result = get_datasets_to_update(
+            MOCK_JOINED_REFERENCE_DATA_HT,
+            datasets=['a', 'c'],
+            reference_genome=ReferenceGenome.GRCh38,
+        )
+        self.assertEqual(result, ['a', 'c'])
 
     def test_ht_version_matches_config_joined_ht_version_missing(self):
         """If the joined_ht has no version for a given dataset in globals, return False."""
@@ -103,11 +146,21 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertFalse(result)
 
     @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
+        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
     )
-    def test_ht_version_matches_config(self, mock_read_table):
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.compare_globals.parse_dataset_version',
+    )
+    def test_ht_version_matches_config(
+        self,
+        mock_parse_dataset_version,
+        mock_import_ht_from_config_path,
+    ):
         """If the joined_ht version matches the config version for a given dataset, return True."""
         dataset_a_config = {'version': 'v1', 'path': 'mock_path'}
+        mock_import_ht_from_config_path.return_value = 'v1'
+        mock_parse_dataset_version.return_value = 'v1'
+
         joined_ht_globals = ReferenceDataGlobals(
             hl.Struct(
                 versions=hl.Struct(
@@ -117,16 +170,6 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums=hl.Struct(),
             ),
         )
-
-        dataset_ht_no_globals = hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tarray(hl.tstr),
-            ),
-        )
-        mock_read_table.return_value = dataset_ht_no_globals
-
         result = ht_version_matches_config(
             joined_ht_globals,
             'a',
@@ -139,9 +182,8 @@ class CompareGlobalsTest(unittest.TestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
     )
     def test_ht_version_matches_config_use_dataset_ht_version(self, mock_read_table):
-        """If the config version for a given dataset is missing, use the dataset_ht version."""
+        """If the config version for a given dataset is missing, use the dataset_ht version to compare."""
         dataset_a_config = {'path': 'mock_path'}
-
         dataset_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -169,16 +211,17 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         self.assertFalse(result)
 
+    @mock.patch('v03_pipeline.lib.reference_data.compare_globals.logger')
     @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
     )
     def test_ht_version_matches_config_handles_dataset_version_mismatch(
         self,
         mock_read_table,
+        mock_logger,
     ):
-        """"""
+        """If the dataset_ht version does not match the config version, return True and log warning."""
         dataset_a_config = {'path': 'mock_path', 'version': 'v1'}
-
         dataset_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -205,6 +248,9 @@ class CompareGlobalsTest(unittest.TestCase):
             reference_genome=ReferenceGenome.GRCh38,
         )
         self.assertTrue(result)
+        mock_logger.warning.assert_called_with(
+            'Please update the version in the config file for dataset a from v1 to v2.',
+        )
 
     def test_ht_path_matches_config_joined_ht_path_missing(self):
         """If the joined_ht has no path in globals, return False."""
