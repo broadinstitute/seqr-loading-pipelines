@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 
 import hail as hl
 from hail.utils import HailUserError
@@ -13,12 +14,33 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class ReferenceDataGlobals:
+    paths: dict[str]
+    versions: dict[str]
+    enums: dict[str, dict[str, list[str]]]
+
+    def __init__(self, globals_struct: hl.Struct):
+        self.paths = self._struct_to_dict(globals_struct.paths)
+        self.versions = self._struct_to_dict(globals_struct.versions)
+        self.enums = self._struct_to_dict(globals_struct.enums)
+
+    def _struct_to_dict(self, struct: hl.Struct) -> dict:
+        result_dict = {}
+        for field in struct:
+            if isinstance(struct[field], hl.Struct):
+                result_dict[field] = self._struct_to_dict(struct[field])
+            else:
+                result_dict[field] = struct[field]
+        return result_dict
+
+
 def validate_joined_ht_globals_match_config(
     joined_ht: hl.Table,
     dataset: str,
     reference_genome: ReferenceGenome,
 ) -> bool:
-    joined_ht_globals = joined_ht.index_globals()
+    joined_ht_globals = ReferenceDataGlobals(hl.eval(joined_ht.index_globals()))
     dataset_config = CONFIG[dataset][reference_genome.v02_value]
     checks = {
         'version': ht_version_matches_config(
@@ -34,73 +56,77 @@ def validate_joined_ht_globals_match_config(
 
     results = []
     for check, result in checks.items():
-        evaluated_result = hl.eval(result)
-
-        if evaluated_result is False:
+        if result is False:
             logger.info(f'{check} mismatch for {dataset}')
 
-        results.append(evaluated_result)
+        results.append(result)
 
     return all(results)
 
 
 def ht_version_matches_config(
-    joined_ht_globals: hl.StructExpression,
+    joined_ht_globals: ReferenceDataGlobals,
     dataset: str,
     dataset_config: dict,
     reference_genome: ReferenceGenome,
-) -> hl.BooleanExpression:
+) -> bool:
     joined_ht_version = joined_ht_globals.versions.get(dataset)
     if joined_ht_version is None:
-        return hl.bool(False)
+        return False
 
     dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-
     try:
-        config_or_dataset_version = parse_dataset_version(
-            dataset_ht,
-            dataset,
-            dataset_config,
+        config_or_dataset_version = hl.eval(
+            parse_dataset_version(
+                dataset_ht,
+                dataset,
+                dataset_config,
+            ),
         )
-    except HailUserError as e:
-        logger.warning(f'{e}. Please update the version in the config file.')
-        return hl.bool(True)
+    except HailUserError:
+        annotated_version = hl.eval(dataset_ht.globals).get('version')
+        config_version = dataset_config.get('version')
+        logger.warning(
+            f'Please update the version in the config file for dataset {dataset} from {config_version} to {annotated_version}.',
+        )
+        return True
 
-    return hl.if_else(joined_ht_version == config_or_dataset_version, True, False)
+    return joined_ht_version == config_or_dataset_version
 
 
 def ht_path_matches_config(
-    joined_ht_globals: hl.StructExpression,
+    joined_ht_globals: ReferenceDataGlobals,
     dataset: str,
     dataset_config: dict,
-) -> hl.BooleanExpression:
+) -> bool:
     joined_ht_path = joined_ht_globals.paths.get(dataset)
     if joined_ht_path is None:
-        return hl.bool(False)
+        return False
 
     config_path = (
         dataset_config['source_path']
         if 'custom_import' in dataset_config
         else dataset_config['path']
     )
-    return hl.if_else(joined_ht_path == config_path, True, False)
+    return joined_ht_path == config_path
 
 
 def ht_enums_match_config(
-    joined_ht_globals: hl.StructExpression,
+    joined_ht_globals: ReferenceDataGlobals,
     dataset: str,
     dataset_config: dict,
-) -> hl.BooleanExpression:
-    joined_ht_enums = hl.eval(joined_ht_globals.enums.get(dataset, hl.Struct()))
-    config_enums = hl.eval(hl.struct(**dataset_config.get('enum_select', {})))
-    return hl.if_else(joined_ht_enums == config_enums, True, False)
+) -> bool:
+    joined_ht_enums = joined_ht_globals.enums.get(dataset, {})
+    config_enums = dataset_config.get('enum_select', {})
+
+    return joined_ht_enums == config_enums
 
 
 def ht_selects_match_config(
     joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
-) -> hl.BooleanExpression:
+) -> bool:
     joined_ht_selects = set(joined_ht[dataset])
     raw_config_selects = dataset_config.get('select', {})
     config_selects = (
@@ -113,8 +139,4 @@ def ht_selects_match_config(
         # TODO refactor these
         config_selects.update(set(dataset_config.get('custom_select_keys')))
 
-    return hl.if_else(
-        len(config_selects.symmetric_difference(joined_ht_selects)) == 0,
-        True,
-        False,
-    )
+    return len(config_selects.symmetric_difference(joined_ht_selects)) == 0
