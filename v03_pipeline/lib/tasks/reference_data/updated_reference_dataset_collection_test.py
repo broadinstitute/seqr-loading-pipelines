@@ -77,7 +77,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
     )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_update_task_with_dataset_param_and_empty_reference_data_table(
+    def test_update_task_with_empty_reference_data_table(
         self,
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
