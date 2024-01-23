@@ -41,6 +41,7 @@ def get_datasets_to_update(
     datasets: list[str],
     reference_genome: ReferenceGenome,
 ) -> list[str]:
+    joined_ht_globals = ReferenceDataGlobals(hl.eval(joined_ht.index_globals()))
     datasets_to_update = []
     for dataset in datasets:
         if dataset not in joined_ht.row:
@@ -49,6 +50,7 @@ def get_datasets_to_update(
 
         if not validate_joined_ht_globals_match_config(
             joined_ht,
+            joined_ht_globals,
             dataset,
             reference_genome,
         ):
@@ -58,10 +60,10 @@ def get_datasets_to_update(
 
 def validate_joined_ht_globals_match_config(
     joined_ht: hl.Table,
+    joined_ht_globals: ReferenceDataGlobals,
     dataset: str,
     reference_genome: ReferenceGenome,
 ) -> bool:
-    joined_ht_globals = ReferenceDataGlobals(hl.eval(joined_ht.index_globals()))
     dataset_config = CONFIG[dataset][reference_genome.v02_value]
     dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
     checks = {

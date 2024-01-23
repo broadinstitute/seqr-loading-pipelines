@@ -50,13 +50,8 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             ),
         )
 
-        if len(self._datasets_to_update) != 0:
-            logger.info(
-                f'Updating the reference dataset collection with {self._datasets_to_update}',
-            )
-            return False
-
-        return True
+        logger.info(f'Datasets to update: {self._datasets_to_update}')
+        return not self._datasets_to_update
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(self._destination_path)

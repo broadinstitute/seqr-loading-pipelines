@@ -93,12 +93,14 @@ class CompareGlobalsTest(unittest.TestCase):
             'a': {
                 '38': {
                     'path': 'a_path',
+                    'select': ['d'],
                     'version': 'new_version',
                 },
             },
             'c': {
                 '38': {
                     'path': 'c_path',
+                    'select': ['e'],
                     'version': 'c_version',
                 },
             },
