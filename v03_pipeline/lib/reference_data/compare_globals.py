@@ -6,6 +6,7 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    get_all_select_fields,
     get_ht_path,
     import_ht_from_config_path,
     parse_dataset_version,
@@ -62,16 +63,22 @@ def validate_joined_ht_globals_match_config(
 ) -> bool:
     joined_ht_globals = ReferenceDataGlobals(hl.eval(joined_ht.index_globals()))
     dataset_config = CONFIG[dataset][reference_genome.v02_value]
+    dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
     checks = {
         'version': ht_version_matches_config(
             joined_ht_globals,
             dataset,
             dataset_config,
-            reference_genome,
+            dataset_ht,
         ),
         'path': ht_path_matches_config(joined_ht_globals, dataset, dataset_config),
         'enum': ht_enums_match_config(joined_ht_globals, dataset, dataset_config),
-        'select': ht_selects_match_config(joined_ht, dataset, dataset_config),
+        'select': ht_selects_match_config(
+            joined_ht,
+            dataset,
+            dataset_config,
+            dataset_ht,
+        ),
     }
 
     results = []
@@ -86,13 +93,12 @@ def ht_version_matches_config(
     joined_ht_globals: ReferenceDataGlobals,
     dataset: str,
     dataset_config: dict,
-    reference_genome: ReferenceGenome,
+    dataset_ht: hl.Table,
 ) -> bool:
     joined_ht_version = joined_ht_globals.versions.get(dataset)
     if joined_ht_version is None:
         return False
 
-    dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
     config_or_dataset_version = hl.eval(
         parse_dataset_version(
             dataset_ht,
@@ -130,17 +136,8 @@ def ht_selects_match_config(
     joined_ht: hl.Table,
     dataset: str,
     dataset_config: dict,
+    dataset_ht: hl.Table,
 ) -> bool:
     joined_ht_selects = set(joined_ht[dataset])
-    raw_config_selects = dataset_config.get('select', {})
-    config_selects = (
-        set(raw_config_selects)
-        if isinstance(raw_config_selects, list)
-        else set(raw_config_selects.keys())
-    )
-
-    if 'custom_select' in dataset_config:
-        # TODO refactor these
-        config_selects.update(set(dataset_config.get('custom_select_keys')))
-
+    config_selects = set(get_all_select_fields(dataset_ht, dataset_config).keys())
     return len(config_selects.symmetric_difference(joined_ht_selects)) == 0

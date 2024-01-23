@@ -77,7 +77,8 @@ class CompareGlobalsTest(unittest.TestCase):
     ):
         """Dataset a has the same globals as the config, so it should not be updated."""
         mock_parse_dataset_version.return_value = 'a_version'
-        mock_import_ht_from_config_path.return_value = 'a_version'
+        # set dataset ht to None because it doesn't need to be checked for this test
+        mock_import_ht_from_config_path.side_effect = None
 
         result = get_datasets_to_update(
             MOCK_JOINED_REFERENCE_DATA_HT,
@@ -92,14 +93,12 @@ class CompareGlobalsTest(unittest.TestCase):
             'a': {
                 '38': {
                     'path': 'a_path',
-                    'select': ['d'],
                     'version': 'new_version',
                 },
             },
             'c': {
                 '38': {
                     'path': 'c_path',
-                    'select': ['f'],
                     'version': 'c_version',
                 },
             },
@@ -118,7 +117,8 @@ class CompareGlobalsTest(unittest.TestCase):
     ):
         """Dataset a has a new version, and c is not in the joined table, so they should be updated."""
         mock_parse_dataset_version.return_value = 'new_version'
-        mock_import_ht_from_config_path.return_value = 'new_version'
+        # set dataset ht to None because it doesn't need to be checked for this test
+        mock_import_ht_from_config_path.side_effect = None
 
         result = get_datasets_to_update(
             MOCK_JOINED_REFERENCE_DATA_HT,
@@ -138,28 +138,26 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums=hl.Struct(),
             ),
         )
-        result = ht_version_matches_config(
-            joined_ht_globals,
-            'b',
-            {},
-            reference_genome=ReferenceGenome.GRCh38,
+        dataset_b_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(version='v1'),
         )
+        result = ht_version_matches_config(joined_ht_globals, 'b', {}, dataset_b_ht)
         self.assertFalse(result)
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
-    )
     @mock.patch(
         'v03_pipeline.lib.reference_data.compare_globals.parse_dataset_version',
     )
     def test_ht_version_matches_config(
         self,
         mock_parse_dataset_version,
-        mock_import_ht_from_config_path,
     ):
         """If the joined_ht version matches the config version for a given dataset, return True."""
         dataset_a_config = {'version': 'v1', 'path': 'mock_path'}
-        mock_import_ht_from_config_path.return_value = 'v1'
         mock_parse_dataset_version.return_value = 'v1'
 
         joined_ht_globals = ReferenceDataGlobals(
@@ -171,18 +169,23 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums=hl.Struct(),
             ),
         )
+        dataset_a_ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            globals=hl.Struct(version='v1'),
+        )
         result = ht_version_matches_config(
             joined_ht_globals,
             'a',
             dataset_a_config,
-            reference_genome=ReferenceGenome.GRCh38,
+            dataset_a_ht,
         )
         self.assertTrue(result)
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
-    )
-    def test_ht_version_matches_config_use_dataset_ht_version(self, mock_read_table):
+    def test_ht_version_matches_config_use_dataset_ht_version(self):
         """If the config version for a given dataset is missing, use the dataset_ht version to compare."""
         dataset_a_config = {'path': 'mock_path'}
         dataset_ht = hl.Table.parallelize(
@@ -193,7 +196,6 @@ class CompareGlobalsTest(unittest.TestCase):
             ),
             globals=hl.Struct(version='v2'),
         )
-        mock_read_table.return_value = dataset_ht
 
         joined_ht_globals = ReferenceDataGlobals(
             hl.Struct(
@@ -208,16 +210,12 @@ class CompareGlobalsTest(unittest.TestCase):
             joined_ht_globals,
             'a',
             dataset_a_config,
-            reference_genome=ReferenceGenome.GRCh38,
+            dataset_ht,
         )
         self.assertFalse(result)
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
-    )
     def test_ht_version_matches_config_handles_dataset_version_mismatch(
         self,
-        mock_read_table,
     ):
         """If the dataset_ht version does not match the config version, HailUserError should be raised."""
         dataset_a_config = {'path': 'mock_path', 'version': 'v1'}
@@ -229,7 +227,6 @@ class CompareGlobalsTest(unittest.TestCase):
             ),
             globals=hl.Struct(version='v2'),
         )
-        mock_read_table.return_value = dataset_ht
 
         joined_ht_globals = ReferenceDataGlobals(
             hl.Struct(
@@ -245,7 +242,7 @@ class CompareGlobalsTest(unittest.TestCase):
                 joined_ht_globals,
                 'a',
                 dataset_a_config,
-                reference_genome=ReferenceGenome.GRCh38,
+                dataset_ht,
             )
 
     def test_ht_path_matches_config_joined_ht_path_missing(self):
@@ -389,8 +386,8 @@ class CompareGlobalsTest(unittest.TestCase):
         result = ht_enums_match_config(joined_ht_globals, 'a', dataset_config)
         self.assertFalse(result)
 
-    def test_ht_selects_match_config_no_match_extra_config_field(self):
-        """If the joined_ht has no matching field in the config, return False."""
+    def test_ht_selects_match_config_no_match_extra_field(self):
+        """If the joined_ht has no matching field in the config/dataset_ht, return False."""
         dataset_config = {
             'select': {'field1': 'info.a', 'field2': 'info.c'},
         }
@@ -403,11 +400,20 @@ class CompareGlobalsTest(unittest.TestCase):
                 a=hl.tstruct(field1=hl.tint32),
             ),
         )
-        result = ht_selects_match_config(joined_ht, 'a', dataset_config)
+        # dataset_ht has extra field 'info.c'
+        dataset_ht = hl.Table.parallelize(
+            [
+                {'info': hl.Struct(a=1, c=1)},
+            ],
+            schema=hl.tstruct(
+                info=hl.tstruct(a=hl.tint32, c=hl.tint32),
+            ),
+        )
+        result = ht_selects_match_config(joined_ht, 'a', dataset_config, dataset_ht)
         self.assertFalse(result)
 
     def test_ht_selects_match_config_no_match_extra_ht_field(self):
-        """If the config is missing a field from the joined_ht, return False."""
+        """If the config/dataset_ht is missing a field from the joined_ht, return False."""
         dataset_config = {
             'select': {'field1': 'info.a'},
         }
@@ -420,16 +426,25 @@ class CompareGlobalsTest(unittest.TestCase):
                 a=hl.tstruct(field1=hl.tint32, field2=hl.tint32),
             ),
         )
-        result = ht_selects_match_config(joined_ht, 'a', dataset_config)
+        # 'field2' is present in the config and on the dataset_ht
+        dataset_ht = hl.Table.parallelize(
+            [
+                {'info': hl.Struct(a=1)},
+            ],
+            schema=hl.tstruct(
+                info=hl.tstruct(a=hl.tint32),
+            ),
+        )
+        result = ht_selects_match_config(joined_ht, 'a', dataset_config, dataset_ht)
         self.assertFalse(result)
 
     def test_ht_selects_match_config_custom_select(self):
         """If the config has a custom_select, account for those additional fields."""
         dataset_config = {
             'select': {'field1': 'info.a'},
-            'custom_select': None,
-            'custom_select_keys': ['field2'],
+            'custom_select': lambda ht: {'field2': ht.info.b},
         }
+        # both fields are on the joined_ht
         joined_ht = hl.Table.parallelize(
             [
                 {'a': hl.Struct(field1=1, field2=1)},
@@ -438,5 +453,14 @@ class CompareGlobalsTest(unittest.TestCase):
                 a=hl.tstruct(field1=hl.tint32, field2=hl.tint32),
             ),
         )
-        result = ht_selects_match_config(joined_ht, 'a', dataset_config)
+        # both fields are on the dataset_ht
+        dataset_ht = hl.Table.parallelize(
+            [
+                {'info': hl.Struct(a=1, b=1)},
+            ],
+            schema=hl.tstruct(
+                info=hl.tstruct(a=hl.tint32, b=hl.tint32),
+            ),
+        )
+        result = ht_selects_match_config(joined_ht, 'a', dataset_config, dataset_ht)
         self.assertTrue(result)

@@ -50,12 +50,7 @@ def get_dataset_ht(
         )
 
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
-    ht = ht.select(
-        **{
-            **get_select_fields(config.get('select'), ht),
-            **get_custom_select_fields(config.get('custom_select'), ht),
-        },
-    )
+    ht = ht.select(**get_all_select_fields(ht, config))
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     ht = ht.select_globals(
         path=(config['source_path'] if 'custom_import' in config else config['path']),
@@ -122,6 +117,16 @@ def get_custom_select_fields(custom_select: FunctionType | None, ht: hl.Table) -
     if custom_select is None:
         return {}
     return custom_select(ht)
+
+
+def get_all_select_fields(
+    ht: hl.Table,
+    config: dict,
+) -> dict:
+    return {
+        **get_select_fields(config.get('select'), ht),
+        **get_custom_select_fields(config.get('custom_select'), ht),
+    }
 
 
 def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
