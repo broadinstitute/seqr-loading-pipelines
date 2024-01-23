@@ -2,7 +2,6 @@ import logging
 from dataclasses import dataclass
 
 import hail as hl
-from hail.utils import HailUserError
 
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.config import CONFIG
@@ -94,22 +93,13 @@ def ht_version_matches_config(
         return False
 
     dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-    try:
-        config_or_dataset_version = hl.eval(
-            parse_dataset_version(
-                dataset_ht,
-                dataset,
-                dataset_config,
-            ),
-        )
-    except HailUserError:
-        annotated_version = hl.eval(dataset_ht.globals).get('version')
-        config_version = dataset_config.get('version')
-        logger.warning(
-            f'Please update the version in the config file for dataset {dataset} from {config_version} to {annotated_version}.',
-        )
-        return True
-
+    config_or_dataset_version = hl.eval(
+        parse_dataset_version(
+            dataset_ht,
+            dataset,
+            dataset_config,
+        ),
+    )
     return joined_ht_version == config_or_dataset_version
 
 

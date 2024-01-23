@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 
 import hail as hl
+from hail.utils import HailUserError
 
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_data.compare_globals import (
@@ -211,16 +212,14 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         self.assertFalse(result)
 
-    @mock.patch('v03_pipeline.lib.reference_data.compare_globals.logger')
     @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
     )
     def test_ht_version_matches_config_handles_dataset_version_mismatch(
         self,
         mock_read_table,
-        mock_logger,
     ):
-        """If the dataset_ht version does not match the config version, return True and log warning."""
+        """If the dataset_ht version does not match the config version, HailUserError should be raised."""
         dataset_a_config = {'path': 'mock_path', 'version': 'v1'}
         dataset_ht = hl.Table.parallelize(
             [],
@@ -241,16 +240,13 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums=hl.Struct(),
             ),
         )
-        result = ht_version_matches_config(
-            joined_ht_globals,
-            'a',
-            dataset_a_config,
-            reference_genome=ReferenceGenome.GRCh38,
-        )
-        self.assertTrue(result)
-        mock_logger.warning.assert_called_with(
-            'Please update the version in the config file for dataset a from v1 to v2.',
-        )
+        with self.assertRaises(HailUserError):
+            ht_version_matches_config(
+                joined_ht_globals,
+                'a',
+                dataset_a_config,
+                reference_genome=ReferenceGenome.GRCh38,
+            )
 
     def test_ht_path_matches_config_joined_ht_path_missing(self):
         """If the joined_ht has no path in globals, return False."""
