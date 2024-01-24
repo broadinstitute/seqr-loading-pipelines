@@ -102,11 +102,10 @@ def custom_gnomad_select_v2(ht):
     """
     selects = {}
     global_idx = hl.eval(ht.globals.freq_index_dict['gnomad'])
-    freq = ht.freq[global_idx]
-    selects['AF'] = hl.float32(freq.AF)
-    selects['AN'] = freq.AN
-    selects['AC'] = freq.AC
-    selects['Hom'] = freq.homozygote_count
+    selects['AF'] = hl.float32(ht.freq[global_idx].AF)
+    selects['AN'] = ht.freq[global_idx].AN
+    selects['AC'] = ht.freq[global_idx].AC
+    selects['Hom'] = ht.freq[global_idx].homozygote_count
 
     selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
         hl.or_else(

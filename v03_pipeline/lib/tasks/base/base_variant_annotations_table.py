@@ -3,11 +3,13 @@ import luigi
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
-    valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
+    UpdatedReferenceDatasetCollectionTask,
+)
 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
@@ -21,12 +23,11 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            HailTableTask(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                ),
+            UpdatedReferenceDatasetCollectionTask(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                rdc,
             )
             for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,

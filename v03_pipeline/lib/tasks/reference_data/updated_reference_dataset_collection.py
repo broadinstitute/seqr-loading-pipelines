@@ -22,26 +22,18 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
     _datasets_to_update: ClassVar[list[str]] = []
 
-    @property
-    def _destination_path(self) -> str:
-        return valid_reference_dataset_collection_path(
-            self.reference_genome,
-            self.dataset_type,
-            self.reference_dataset_collection,
-        )
-
     def complete(self) -> bool:
         self._datasets_to_update.clear()
         all_datasets_for_collection = self.reference_dataset_collection.datasets(
             self.dataset_type,
         )
 
-        if not self.output().exists():
+        if not super().complete():
             logger.info('Creating a new reference dataset collection')
             self._datasets_to_update.extend(all_datasets_for_collection)
             return False
 
-        joined_ht = hl.read_table(self._destination_path)
+        joined_ht = hl.read_table(self.output().path)
         self._datasets_to_update.extend(
             get_datasets_to_update(
                 joined_ht,
@@ -54,7 +46,13 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
         return not self._datasets_to_update
 
     def output(self) -> luigi.Target:
-        return GCSorLocalTarget(self._destination_path)
+        return GCSorLocalTarget(
+            valid_reference_dataset_collection_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.reference_dataset_collection,
+            ),
+        )
 
     def initialize_table(self) -> hl.Table:
         key_type = self.reference_dataset_collection.table_key_type(
