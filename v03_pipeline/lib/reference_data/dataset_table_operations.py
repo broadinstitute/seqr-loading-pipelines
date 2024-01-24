@@ -16,15 +16,9 @@ def update_or_create_joined_ht(
     reference_dataset_collection: ReferenceDatasetCollection,
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
-    dataset: str | None,
+    datasets: list[str],
     joined_ht: hl.Table,
 ) -> hl.Table:
-    datasets = (
-        [dataset]
-        if dataset is not None
-        else reference_dataset_collection.datasets(dataset_type)
-    )
-
     for dataset in datasets:
         dataset_ht = get_dataset_ht(dataset, reference_genome)
 
@@ -49,23 +43,14 @@ def get_dataset_ht(
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     config = CONFIG[dataset][reference_genome.v02_value]
-    ht = (
-        config['custom_import'](config['source_path'], reference_genome)
-        if 'custom_import' in config
-        else hl.read_table(config['path'])
-    )
+    ht = import_ht_from_config_path(config, reference_genome)
     if hasattr(ht, 'locus'):
         ht = ht.filter(
             hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
         )
 
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
-    ht = ht.select(
-        **{
-            **get_select_fields(config.get('select'), ht),
-            **get_custom_select_fields(config.get('custom_select'), ht),
-        },
-    )
+    ht = ht.select(**get_all_select_fields(ht, config))
     ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
     ht = ht.select_globals(
         path=(config['source_path'] if 'custom_import' in config else config['path']),
@@ -78,6 +63,22 @@ def get_dataset_ht(
         ),
     )
     return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
+
+
+def get_ht_path(config: dict) -> str:
+    return config['source_path'] if 'custom_import' in config else config['path']
+
+
+def import_ht_from_config_path(
+    config: dict,
+    reference_genome: ReferenceGenome,
+) -> hl.Table:
+    path = get_ht_path(config)
+    return (
+        config['custom_import'](path, reference_genome)
+        if 'custom_import' in config
+        else hl.read_table(path)
+    )
 
 
 def get_select_fields(selects: list | dict | None, base_ht: hl.Table) -> dict:
@@ -116,6 +117,16 @@ def get_custom_select_fields(custom_select: FunctionType | None, ht: hl.Table) -
     if custom_select is None:
         return {}
     return custom_select(ht)
+
+
+def get_all_select_fields(
+    ht: hl.Table,
+    config: dict,
+) -> dict:
+    return {
+        **get_select_fields(config.get('select'), ht),
+        **get_custom_select_fields(config.get('custom_select'), ht),
+    }
 
 
 def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
