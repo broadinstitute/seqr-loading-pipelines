@@ -25,18 +25,19 @@ class SNVTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'ref_samples': hl.Struct(project_1={'a', 'c'}, project_2=set()),
-                    'het_samples': hl.Struct(project_1={'b', 'd'}, project_2=set()),
-                    'hom_samples': hl.Struct(project_1={'e', 'f'}, project_2=set()),
+                    'ref_samples': hl.Struct(project_1={'a', 'c'}, project_2=set(), R0607_gregor_training_project_=set()),
+                    'het_samples': hl.Struct(project_1={'b', 'd'}, project_2=set(), R0607_gregor_training_project_=set()),
+                    'hom_samples': hl.Struct(project_1={'e', 'f'}, project_2=set(), R0607_gregor_training_project_={'l', 'm'}),
                 },
                 {
                     'id': 1,
                     'ref_samples': hl.Struct(
                         project_1={'a', 'b', 'c', 'd', 'e', 'f'},
                         project_2=set(),
+                        R0607_gregor_training_project_={'l', 'm'},
                     ),
-                    'het_samples': hl.Struct(project_1=set(), project_2=set()),
-                    'hom_samples': hl.Struct(project_1=set(), project_2=set()),
+                    'het_samples': hl.Struct(project_1=set(), project_2=set(), R0607_gregor_training_project_=set()),
+                    'hom_samples': hl.Struct(project_1=set(), project_2=set(), R0607_gregor_training_project_=set()),
                 },
             ],
             hl.tstruct(
@@ -44,14 +45,17 @@ class SNVTest(unittest.TestCase):
                 ref_samples=hl.tstruct(
                     project_1=hl.tset(hl.tstr),
                     project_2=hl.tset(hl.tstr),
+                    R0607_gregor_training_project_=hl.tset(hl.tstr),
                 ),
                 het_samples=hl.tstruct(
                     project_1=hl.tset(hl.tstr),
                     project_2=hl.tset(hl.tstr),
+                    R0607_gregor_training_project_=hl.tset(hl.tstr),
                 ),
                 hom_samples=hl.tstruct(
                     project_1=hl.tset(hl.tstr),
                     project_2=hl.tset(hl.tstr),
+                    R0607_gregor_training_project_=hl.tset(hl.tstr),
                 ),
             ),
             key='id',

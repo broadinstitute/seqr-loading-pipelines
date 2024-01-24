@@ -6,6 +6,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
@@ -26,7 +27,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 from v03_pipeline.lib.vep import run_vep
 
 GENCODE_RELEASE = 42
-VARIANTS_PER_VEP_PARTITION = 20e3
+VARIANTS_PER_VEP_PARTITION = 1e3
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTableTask):
@@ -204,7 +205,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_count = new_variants_ht.count()
         new_variants_ht = new_variants_ht.repartition(
-            max(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 1),
+            constrain(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 10, 10000),
         )
         new_variants_ht = run_vep(
             new_variants_ht,

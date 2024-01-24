@@ -8,7 +8,7 @@ def globalize_sample_ids(ht: hl.Table) -> hl.Table:
             # NB: normal python expression here because the row is localized.
             # I had an easier time with this than hl.agg.take(1), which was an
             # alternative implementation.
-            [e.s for e in row[0].entries] if len(row) > 0 else hl.empty_array(hl.tstr)
+            [e.s for e in row[0].entries] if (row and len(row[0].entries) > 0) else hl.empty_array(hl.tstr)
         ),
     )
     return ht.annotate(entries=ht.entries.map(lambda s: s.drop('s')))

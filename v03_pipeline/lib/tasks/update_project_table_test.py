@@ -81,7 +81,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                     entries=[
                         hl.Struct(
                             GQ=30,
-                            AB=0.3333333333333333,
+                            AB=hl.eval(hl.float32(0.3333333333333333)),
                             DP=3,
                             GT=hl.Call(alleles=[0, 1], phased=False),
                         ),
@@ -93,7 +93,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                         ),
                         hl.Struct(
                             GQ=61,
-                            AB=0.6,
+                            AB=hl.eval(hl.float32(0.6)),
                             DP=5,
                             GT=hl.Call(alleles=[0, 1], phased=False),
                         ),

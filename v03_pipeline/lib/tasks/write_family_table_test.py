@@ -71,7 +71,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                 [
                     hl.Struct(
                         GQ=30,
-                        AB=0.3333333333333333,
+                        AB=hl.eval(hl.float32(0.3333333333333333)),
                         DP=3,
                         GT=hl.Call(alleles=[0, 1], phased=False),
                     ),
@@ -83,7 +83,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                     ),
                     hl.Struct(
                         GQ=61,
-                        AB=0.6,
+                        AB=hl.eval(hl.float32(0.6)),
                         DP=5,
                         GT=hl.Call(alleles=[0, 1], phased=False),
                     ),
@@ -97,7 +97,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                     ),
                     hl.Struct(
                         GQ=99,
-                        AB=0.5283018867924528,
+                        AB=hl.eval(hl.float32(0.5283018867924528)),
                         DP=53,
                         GT=hl.Call(alleles=[0, 1], phased=False),
                     ),
@@ -123,7 +123,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
                     ),
                     hl.Struct(
                         GQ=99,
-                        AB=0.4146341463414634,
+                        AB=hl.eval(hl.float32(0.4146341463414634)),
                         DP=41,
                         GT=hl.Call(alleles=[0, 1], phased=False),
                     ),

@@ -3,6 +3,8 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.annotations.constants import PROJECTS_EXCLUDED_FROM_GT_STATS
+
 N_ALT_REF = 0
 N_ALT_HET = 1
 N_ALT_HOM = 2
@@ -13,8 +15,8 @@ def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return hl.bind(
         lambda total: hl.if_else(
             (is_called) & (total != 0) & (hl.len(mt.AD) > 1),
-            hl.float(mt.AD[1] / total),
-            hl.missing(hl.tfloat),
+            hl.float32(mt.AD[1] / total),
+            hl.missing(hl.tfloat32),
         ),
         hl.sum(mt.AD),
     )
@@ -24,8 +26,8 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.if_else(
         is_called & hl.is_defined(mt.AD),
-        hl.int(hl.min(hl.sum(mt.AD), 32000)),
-        hl.missing(hl.tint),
+        hl.int32(hl.min(hl.sum(mt.AD), 32000)),
+        hl.missing(hl.tint32),
     )
 
 
@@ -37,6 +39,8 @@ def gt_stats(
     row = sample_lookup_ht[ht.key]
     AC, AN, hom = 0, 0, 0
     for project_guid in row.ref_samples:
+        if project_guid in PROJECTS_EXCLUDED_FROM_GT_STATS:
+            continue
         ref_samples_length = row.ref_samples[project_guid].length()
         het_samples_length = row.het_samples[project_guid].length()
         hom_samples_length = row.hom_samples[project_guid].length()
