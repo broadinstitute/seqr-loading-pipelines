@@ -1,4 +1,5 @@
 import shutil
+from unittest import mock
 
 import hail as hl
 import luigi.worker
@@ -49,7 +50,12 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
             ),
         )
 
-    def test_should_create_initialized_table(self) -> None:
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    def test_should_create_initialized_table(self, mock_get_datasets_to_update) -> None:
+        mock_get_datasets_to_update.return_value = []
+
         vat_task = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
