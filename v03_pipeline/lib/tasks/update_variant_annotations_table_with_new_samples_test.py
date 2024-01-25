@@ -180,11 +180,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
     def test_mulitiple_update_vat(
         self,
+        mock_get_reference_datasets_to_update,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
     ) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
@@ -457,7 +462,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_update_vat_grch37(self, mock_vep: Mock) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    def test_update_vat_grch37(
+        self,
+        mock_get_reference_datasets_to_update,
+        mock_vep: Mock,
+    ) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -497,13 +510,18 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
 
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_update_vat_without_accessing_private_datasets(
         self,
         mock_vep: Mock,
         mock_rdc_env: Mock,
+        mock_get_reference_datasets_to_update,
     ) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         shutil.rmtree(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
@@ -542,7 +560,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
-    def test_mito_update_vat(self) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    def test_mito_update_vat(self, mock_get_reference_datasets_to_update) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -803,7 +825,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch(
         'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
     )
-    def test_sv_update_vat(self, mock_load_gencode: Mock) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    def test_sv_update_vat(
+        self,
+        mock_get_reference_datasets_to_update,
+        mock_load_gencode: Mock,
+    ) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         mock_load_gencode.return_value = GENE_ID_MAPPING
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -1361,7 +1391,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
-    def test_gcnv_update_vat(self) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+    )
+    def test_gcnv_update_vat(self, mock_get_reference_datasets_to_update) -> None:
+        mock_get_reference_datasets_to_update.return_value = []
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
