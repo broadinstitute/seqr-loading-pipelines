@@ -33,7 +33,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def complete(self) -> luigi.Target:
         return super().complete() and hl.eval(
-            self.sample_type == hl.read_table(self.output().path).sample_type
+            self.sample_type == hl.read_table(self.output().path).sample_type,
         )
 
     def output(self) -> luigi.Target:
