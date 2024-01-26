@@ -33,7 +33,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def complete(self) -> luigi.Target:
         return super().complete() and hl.eval(
-            self.sample_type == hl.read_matrix_table(self.output().path).sample_type,
+            self.sample_type.value == hl.read_matrix_table(self.output().path).sample_type,
         )
 
     def output(self) -> luigi.Target:
@@ -102,6 +102,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.reference_genome,
                 self.sample_type,
             )
-        return mt.annotate(
-            sample_type=self.sample_type,
+        return mt.annotate_globals(
+            sample_type=self.sample_type.value,
         )
