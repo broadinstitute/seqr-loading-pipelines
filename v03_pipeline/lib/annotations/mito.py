@@ -2,6 +2,7 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.annotations.constants import PROJECTS_EXCLUDED_FROM_GT_STATS
 from v03_pipeline.lib.annotations.enums import MITOTIP_PATHOGENICITIES
 
 MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
@@ -12,31 +13,6 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
         [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
     ),
 )
-
-
-def _AC_het(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return sum(
-        row.heteroplasmic_samples[project_guid].length()
-        for project_guid in row.heteroplasmic_samples
-    )
-
-
-def _AC_hom(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return sum(
-        row.homoplasmic_samples[project_guid].length()
-        for project_guid in row.homoplasmic_samples
-    )
-
-
-def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return sum(
-        (
-            row.ref_samples[project_guid].length()
-            + row.heteroplasmic_samples[project_guid].length()
-            + row.homoplasmic_samples[project_guid].length()
-        )
-        for project_guid in row.ref_samples
-    )
 
 
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
@@ -90,12 +66,26 @@ def rsid(ht: hl.Table, **_: Any) -> hl.Expression:
     return ht.rsid.find(lambda x: hl.is_defined(x))
 
 
-def gt_stats(ht: hl.Table, sample_lookup_ht: hl.Table, **_: Any) -> hl.Expression:
+def gt_stats(
+    ht: hl.Table,
+    sample_lookup_ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
     row = sample_lookup_ht[ht.key]
+    AC_het, AC_hom, AN = 0, 0, 0  # noqa: N806
+    for project_guid in row.ref_samples:
+        if project_guid in PROJECTS_EXCLUDED_FROM_GT_STATS:
+            continue
+        ref_samples_length = row.ref_samples[project_guid].length()
+        heteroplasmic_samples_length = row.heteroplasmic_samples[project_guid].length()
+        homoplasmic_samples_length = row.homoplasmic_samples[project_guid].length()
+        AC_het += heteroplasmic_samples_length # noqa: N806
+        AC_hom += homoplasmic_samples_length # noqa: N806
+        AN += (ref_samples_length + heteroplasmic_samples_length + homoplasmic_samples_length) # noqa: N806
     return hl.Struct(
-        AC_het=_AC_het(row),
-        AF_het=hl.float32(_AC_het(row) / _AN(row)),
-        AC_hom=_AC_hom(row),
-        AF_hom=hl.float32(_AC_hom(row) / _AN(row)),
-        AN=_AN(row),
+        AC_het=AC_het,
+        AF_het=hl.float32(AC_het / AN),
+        AC_hom=AC_hom,
+        AF_hom=hl.float32(AC_hom / AN),
+        AN=AN,
     )

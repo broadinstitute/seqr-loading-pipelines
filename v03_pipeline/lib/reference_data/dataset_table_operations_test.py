@@ -225,7 +225,7 @@ MOCK_DATETIME = datetime(
 PATH_TO_FILE_UNDER_TEST = 'v03_pipeline.lib.reference_data.dataset_table_operations'
 
 
-class ReferenceDataCombineTest(unittest.TestCase):
+class DatasetTableOperationsTest(unittest.TestCase):
     def test_get_enum_select_fields(self):
         ht = hl.Table.parallelize(
             [
@@ -519,7 +519,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ReferenceDatasetCollection.INTERVAL,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            dataset='b',
+            datasets=['b'],
             joined_ht=MOCK_JOINED_REFERENCE_DATA_HT,
         )
         self.assertCountEqual(
@@ -560,7 +560,7 @@ class ReferenceDataCombineTest(unittest.TestCase):
             ReferenceDatasetCollection.COMBINED,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            dataset=None,
+            datasets=['a', 'b'],
             joined_ht=empty_ht,
         )
         self.assertCountEqual(

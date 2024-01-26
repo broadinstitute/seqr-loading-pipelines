@@ -15,6 +15,9 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
+from v03_pipeline.lib.reference_data.dataset_table_operations import (
+    import_ht_from_config_path,
+)
 
 
 def get_ht(
@@ -25,11 +28,7 @@ def get_ht(
     # If the query is defined over an uncombined reference dataset, use the combiner config.
     if query.reference_dataset:
         config = CONFIG[query.reference_dataset][reference_genome.v02_value]
-        return (
-            config['custom_import'](config['source_path'], reference_genome)
-            if 'custom_import' in config
-            else hl.read_table(config['path'])
-        )
+        return import_ht_from_config_path(config, reference_genome)
     return hl.read_table(
         valid_reference_dataset_collection_path(
             reference_genome,
