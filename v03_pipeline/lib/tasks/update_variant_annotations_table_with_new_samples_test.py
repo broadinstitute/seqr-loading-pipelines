@@ -33,6 +33,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+from v03_pipeline.var.test.tasks.mock_complete_task import MockCompleteTask
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
@@ -73,6 +74,9 @@ GENE_ID_MAPPING = {
 }
 
 
+@patch(
+    'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
+)
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -133,7 +137,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
 
-    def test_missing_pedigree(self) -> None:
+    def test_missing_pedigree(self, mock_update_rdc_task) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -150,7 +155,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
-    def test_missing_interval_reference(self) -> None:
+    def test_missing_interval_reference(self, mock_update_rdc_task) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         shutil.rmtree(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
@@ -180,11 +186,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_mulitiple_update_vat(
+    def test_multiple_update_vat(
         self,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
+        mock_update_rdc_task: Mock,
     ) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
@@ -457,7 +465,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_update_vat_grch37(self, mock_vep: Mock) -> None:
+    def test_update_vat_grch37(
+        self,
+        mock_vep: Mock,
+        mock_update_rdc_task: Mock,
+    ) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -503,7 +516,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self,
         mock_vep: Mock,
         mock_rdc_env: Mock,
+        mock_update_rdc_task: Mock,
     ) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         shutil.rmtree(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
@@ -542,7 +557,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
-    def test_mito_update_vat(self) -> None:
+    def test_mito_update_vat(self, mock_update_rdc_task: Mock) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -801,9 +817,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
+        'v03_pipeline.lib.tasks.base.base_variant_annotations_table.load_gencode',
     )
-    def test_sv_update_vat(self, mock_load_gencode: Mock) -> None:
+    def test_sv_update_vat(
+        self,
+        mock_load_gencode: Mock,
+        mock_update_rdc_task: Mock,
+    ) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         mock_load_gencode.return_value = GENE_ID_MAPPING
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -1361,7 +1382,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
-    def test_gcnv_update_vat(self) -> None:
+    def test_gcnv_update_vat(self, mock_update_rdc_task: None) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
