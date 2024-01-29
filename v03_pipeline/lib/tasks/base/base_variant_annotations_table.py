@@ -20,6 +20,8 @@ GENCODE_RELEASE = 42
 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
+    exclude_dependencies: list[str] = luigi.OptionalListParameter(default=())
+
     @cached_property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
@@ -36,7 +38,10 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
             )
 
-        if self.dataset_type.has_sample_lookup_table:
+        if (
+            self.dataset_type.has_sample_lookup_table
+            and 'sample_lookup_ht' not in self.exclude_dependencies
+        ):
             annotation_dependencies['sample_lookup_ht'] = hl.read_table(
                 sample_lookup_table_path(
                     self.reference_genome,
@@ -44,7 +49,10 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
             )
 
-        if self.dataset_type.has_gencode_mapping:
+        if (
+            self.dataset_type.has_gencode_mapping
+            and 'gencode_mapping' not in self.exclude_dependencies
+        ):
             annotation_dependencies['gencode_mapping'] = hl.literal(
                 load_gencode(GENCODE_RELEASE, ''),
             )

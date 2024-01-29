@@ -95,9 +95,7 @@ class CompareGlobals2Test(unittest.TestCase):
             schema=hl.tstruct(
                 locus=hl.tlocus('GRCh38'),
                 alleles=hl.tarray(hl.tstr),
-                gnomad_non_coding_constraint=hl.tstruct(
-                    z_score=hl.tfloat32,
-                ),
+                gnomad_non_coding_constraint=hl.tfloat32,
                 screen=hl.tstruct(
                     region_type_ids=hl.tarray(hl.tint32),
                 ),
@@ -139,7 +137,7 @@ class CompareGlobals2Test(unittest.TestCase):
         self.assertTrue(
             rdc_globals.selects
             == {
-                'gnomad_non_coding_constraint': {'z_score'},
+                'gnomad_non_coding_constraint': set(),
                 'screen': {'region_type_ids'},
             },
         )

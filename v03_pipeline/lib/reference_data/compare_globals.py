@@ -76,7 +76,12 @@ class Globals:
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
-            selects[dataset] = set(ht[dataset])
+            if dataset in ht.row:
+                select = ht[dataset]
+                if isinstance(select, hl.StructExpression):
+                    selects[dataset] = set(select)
+                else:
+                    selects[dataset] = set()
         return cls(paths, versions, enums, selects)
 
 
