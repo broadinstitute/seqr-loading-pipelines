@@ -11,10 +11,7 @@ from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
-    sample_lookup_table_path,
-    valid_reference_dataset_collection_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -55,36 +52,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=None,
         description='Path of hail vep config .json file',
     )
-
-    def read_annotation_dependencies(self):
-        annotation_dependencies = {}
-
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                ),
-            )
-
-        if self.dataset_type.has_sample_lookup_table:
-            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
-                sample_lookup_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            )
-
-        if self.dataset_type.has_gencode_mapping:
-            annotation_dependencies['gencode_mapping'] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ''),
-            )
-
-        return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
         if self.dataset_type.has_sample_lookup_table:
@@ -195,7 +162,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             callset_hts,
         )
         callset_ht = callset_ht.distinct()
-        annotation_dependencies = self.read_annotation_dependencies()
 
         # 1) Get new rows and annotate with vep
         # Note about the repartition: our work here is cpu/memory bound and
@@ -205,7 +171,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_count = new_variants_ht.count()
         new_variants_ht = new_variants_ht.repartition(
-            constrain(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 10, 10000),
+            constrain(
+                math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+                10,
+                10000,
+            ),
         )
         new_variants_ht = run_vep(
             new_variants_ht,
@@ -219,7 +189,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns(self.reference_genome),
-                **annotation_dependencies,
+                **self.annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
@@ -231,7 +201,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ):
             if rdc.requires_annotation:
                 continue
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
@@ -242,7 +212,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **get_fields(
                     ht,
                     self.dataset_type.sample_lookup_table_annotation_fns,
-                    **annotation_dependencies,
+                    **self.annotation_dependencies,
                     **self.param_kwargs,
                 ),
             )
@@ -257,7 +227,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             self.reference_genome,
             self.dataset_type,
         ):
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.annotate_globals(
                 paths=hl.Struct(
