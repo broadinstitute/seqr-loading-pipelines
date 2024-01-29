@@ -105,6 +105,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
         return mt.annotate_globals(
             callset_path=self.callset_path,
-            filters_path=hl.or_missing(hl.is_defined(self.filters_path), self.filters_path),
+            filters_path=hl.if_else(hl.is_defined(self.filters_path), self.filters_path, hl.missing(hl.tstr)),
             sample_type=self.sample_type.value,
         )
