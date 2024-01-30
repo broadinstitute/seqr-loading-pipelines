@@ -67,7 +67,7 @@ class Globals:
         rdc: ReferenceDatasetCollection,
         dataset_type: DatasetType,
     ):
-        rdc_globals_struct = hl.eval(ht.index_globals())
+        rdc_globals_struct = hl.eval(ht.globals)
         paths = struct_to_dict(rdc_globals_struct.paths)
         versions = struct_to_dict(rdc_globals_struct.versions)
         enums = struct_to_dict(rdc_globals_struct.enums)
