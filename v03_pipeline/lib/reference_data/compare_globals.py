@@ -68,9 +68,9 @@ class Globals:
         dataset_type: DatasetType,
     ):
         rdc_globals_struct = hl.eval(ht.globals)
-        paths = struct_to_dict(rdc_globals_struct.paths)
-        versions = struct_to_dict(rdc_globals_struct.versions)
-        enums = struct_to_dict(rdc_globals_struct.enums)
+        paths = dict(rdc_globals_struct.paths)
+        versions = dict(rdc_globals_struct.versions)
+        enums = dict(rdc_globals_struct.enums)
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
