@@ -50,7 +50,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
         ht = ht.join(rdc_ht, 'outer')
         # Update the globals on annotations table with the globals from the rdc table for the next complete() check
-        # Thqis is ok because all globals for the annotations table will be cleared and re-added in the next task
+        # This is ok because all globals for the annotations table will be cleared and re-added in the next task
         return ht.select_globals(
             paths=hl.Struct(**rdc_globals.paths),
             versions=hl.Struct(**rdc_globals.versions),
