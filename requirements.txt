@@ -6,7 +6,7 @@
 #
 aiodns==2.0.0
     # via hail
-aiohttp==3.9.1
+aiohttp==3.9.2
     # via
     #   hail
     #   slackclient
