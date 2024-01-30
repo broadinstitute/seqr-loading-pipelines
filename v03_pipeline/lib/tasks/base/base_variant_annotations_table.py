@@ -5,25 +5,19 @@ import luigi
 
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
-    sample_lookup_table_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
 
-GENCODE_RELEASE = 42
-
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
-    exclude_dependencies: list[str] = luigi.OptionalListParameter(default=())
-
     @cached_property
-    def annotation_dependencies(self) -> dict[str, hl.Table]:
+    def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
 
         for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
@@ -37,26 +31,6 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                     rdc,
                 ),
             )
-
-        if (
-            self.dataset_type.has_sample_lookup_table
-            and 'sample_lookup_ht' not in self.exclude_dependencies
-        ):
-            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
-                sample_lookup_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            )
-
-        if (
-            self.dataset_type.has_gencode_mapping
-            and 'gencode_mapping' not in self.exclude_dependencies
-        ):
-            annotation_dependencies['gencode_mapping'] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ''),
-            )
-
         return annotation_dependencies
 
     def output(self) -> luigi.Target:

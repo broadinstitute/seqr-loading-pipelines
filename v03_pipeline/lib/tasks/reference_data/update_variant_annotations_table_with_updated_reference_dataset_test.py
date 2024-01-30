@@ -68,7 +68,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             rdc=ReferenceDatasetCollection.COMBINED,
-            exclude_dependencies=['sample_lookup_ht', 'gencode_mapping'],
         )
         self.assertTrue('annotations.ht' in task.output().path)
         self.assertTrue(DatasetType.SNV_INDEL.value in task.output().path)
@@ -97,7 +96,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ),
             ],
         )
-
         self.assertCountEqual(
             ht.globals.collect(),
             [
