@@ -112,9 +112,12 @@ def import_vcf(
         skip_invalid_loci=True,
         contig_recoding=reference_genome.contig_recoding(),
         force_bgz=True,
-        find_replace=('nul', '.'), # Required for internal exome callsets (+ some AnVIL requests)
+        find_replace=(
+            'nul',
+            '.',
+        ),  # Required for internal exome callsets (+ some AnVIL requests)
         array_elements_required=False,
-        call_fields=[], # PGT is unused downstream, but is occasionally present in old VCFs!
+        call_fields=[],  # PGT is unused downstream, but is occasionally present in old VCFs!
     )
 
 

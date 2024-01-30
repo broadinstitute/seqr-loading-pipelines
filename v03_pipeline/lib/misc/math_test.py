@@ -4,7 +4,6 @@ from v03_pipeline.lib.misc.math import constrain
 
 
 class TestConstrainFunction(unittest.TestCase):
-
     def test_constrain(self):
         self.assertEqual(constrain(5, 0, 10), 5)
         self.assertEqual(constrain(-3, 0, 10), 0)
