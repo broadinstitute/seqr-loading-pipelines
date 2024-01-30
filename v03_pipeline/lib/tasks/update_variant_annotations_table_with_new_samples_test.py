@@ -817,7 +817,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.base.base_variant_annotations_table.load_gencode',
+        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
     )
     def test_sv_update_vat(
         self,

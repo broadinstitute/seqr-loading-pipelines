@@ -76,19 +76,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks = [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    rdc,
-                )
-                for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                if not rdc.requires_annotation
-            ]
+        upstream_table_tasks = []
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
@@ -146,7 +134,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     )
                 ],
             )
-        print(upstream_table_tasks)
+        upstream_table_tasks.extend(
+            [
+                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    rdc,
+                )
+                for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                    self.reference_genome,
+                    self.dataset_type,
+                )
+                if not rdc.requires_annotation
+            ],
+        )
         return [
             *super().requires(),
             *upstream_table_tasks,
