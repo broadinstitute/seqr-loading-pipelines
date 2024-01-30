@@ -140,6 +140,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ],
                         ),
                     ),
+                    updates=set(),
                 ),
             ],
         )
