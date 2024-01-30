@@ -19,14 +19,6 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 logger = logging.getLogger(__name__)
 
 
-def struct_to_dict(struct: hl.Struct) -> dict:
-    struct = dict(struct)
-    for field in struct:
-        if isinstance(struct[field], hl.Struct):
-            struct[field] = struct_to_dict(struct[field])
-    return struct
-
-
 @dataclass
 class Globals:
     paths: dict[str]
