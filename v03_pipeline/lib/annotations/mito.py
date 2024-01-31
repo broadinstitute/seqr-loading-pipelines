@@ -81,7 +81,7 @@ def gt_stats(
         homoplasmic_samples_length = row.homoplasmic_samples[project_guid].length()
         AC_het += heteroplasmic_samples_length  # noqa: N806
         AC_hom += homoplasmic_samples_length  # noqa: N806
-        AN += (
+        AN += (  # noqa: N806
             ref_samples_length
             + heteroplasmic_samples_length
             + homoplasmic_samples_length
