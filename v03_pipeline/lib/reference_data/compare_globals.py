@@ -1,5 +1,5 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
 import hail as hl
 
@@ -19,12 +19,15 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclasses.dataclass
 class Globals:
     paths: dict[str]
     versions: dict[str]
     enums: dict[str, dict[str, list[str]]]
     selects: dict[str, set[str]]
+
+    def __getitem__(self, name: str):
+        return getattr(self, name)
 
     @classmethod
     def from_dataset_configs(
@@ -67,11 +70,7 @@ class Globals:
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:
-                select = ht[dataset]
-                if isinstance(select, hl.StructExpression):
-                    selects[dataset] = set(select)
-                else:
-                    selects[dataset] = set()
+                selects[dataset] = set(ht[dataset])
         return cls(paths, versions, enums, selects)
 
 
@@ -96,34 +95,18 @@ class GlobalsValidator:
         ]
 
     def _validate_globals_match(self, dataset: str) -> bool:
-        checks = {
-            'version': self._compare_versions(dataset),
-            'path': self._compare_paths(dataset),
-            'enum': self._compare_enums(dataset),
-            'select': self._compare_selects(dataset),
-        }
-
         results = []
-        for check, result in checks.items():
+        for field in dataclasses.fields(Globals):
+            if field.name == 'selects':
+                result = self._compare_selects(dataset)
+            else:
+                result = self.ht1_globals[field.name].get(dataset) == self.ht2_globals[
+                    field.name
+                ].get(dataset)
             if result is False:
-                logger.info(f'{check} mismatch for {dataset}, {self.rdc.value}')
+                logger.info(f'{field.name} mismatch for {dataset}, {self.rdc.value}')
             results.append(result)
         return all(results)
-
-    def _compare_versions(self, dataset: str) -> bool:
-        ht1_version = self.ht1_globals.versions.get(dataset)
-        hg2_version = self.ht2_globals.versions.get(dataset)
-        return ht1_version == hg2_version
-
-    def _compare_paths(self, dataset: str) -> bool:
-        ht1_path = self.ht1_globals.paths.get(dataset)
-        ht2_path = self.ht2_globals.paths.get(dataset)
-        return ht1_path == ht2_path
-
-    def _compare_enums(self, dataset: str) -> bool:
-        ht1_enums = self.ht1_globals.enums.get(dataset)
-        ht2_enums = self.ht2_globals.enums.get(dataset)
-        return ht1_enums == ht2_enums
 
     def _compare_selects(self, dataset: str) -> bool:
         ht1_selects = self.ht1_globals.selects.get(dataset)

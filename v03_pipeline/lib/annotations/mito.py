@@ -79,9 +79,13 @@ def gt_stats(
         ref_samples_length = row.ref_samples[project_guid].length()
         heteroplasmic_samples_length = row.heteroplasmic_samples[project_guid].length()
         homoplasmic_samples_length = row.homoplasmic_samples[project_guid].length()
-        AC_het += heteroplasmic_samples_length # noqa: N806
-        AC_hom += homoplasmic_samples_length # noqa: N806
-        AN += (ref_samples_length + heteroplasmic_samples_length + homoplasmic_samples_length) # noqa: N806
+        AC_het += heteroplasmic_samples_length  # noqa: N806
+        AC_hom += homoplasmic_samples_length  # noqa: N806
+        AN += (
+            ref_samples_length
+            + heteroplasmic_samples_length
+            + homoplasmic_samples_length
+        )
     return hl.Struct(
         AC_het=AC_het,
         AF_het=hl.float32(AC_het / AN),
