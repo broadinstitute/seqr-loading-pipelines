@@ -48,7 +48,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             if dataset in ht.row:
                 ht = ht.drop(dataset)
 
-        ht = ht.join(rdc_ht, 'outer')
+        ht = ht.join(rdc_ht, 'left')
         # Update the globals on annotations table with the globals from the rdc table for the next complete() check
         # This is ok because all globals for the annotations table will be cleared and re-added in the next task
         return ht.select_globals(

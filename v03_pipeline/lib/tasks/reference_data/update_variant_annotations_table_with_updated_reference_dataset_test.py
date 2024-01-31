@@ -236,6 +236,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         mock_update_rdc_task,
     ):
         mock_update_rdc_task.return_value = MockCompleteTask()
+        # dataset names differ slightly in mock rdc
         mock_rdc_datasets.return_value = [
             'clinvar',
             'dbnsfp',
