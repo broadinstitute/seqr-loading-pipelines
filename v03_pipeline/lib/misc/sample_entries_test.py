@@ -327,7 +327,6 @@ class SampleEntriesTest(unittest.TestCase):
             ],
         )
 
-
     def test_filter_all_callset_entries(self) -> None:
         entries_ht = hl.Table.parallelize(
             [

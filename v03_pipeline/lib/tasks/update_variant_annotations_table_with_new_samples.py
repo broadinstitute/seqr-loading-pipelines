@@ -205,7 +205,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = callset_ht.anti_join(ht)
         new_variants_count = new_variants_ht.count()
         new_variants_ht = new_variants_ht.repartition(
-            constrain(math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION), 10, 10000),
+            constrain(
+                math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+                10,
+                10000,
+            ),
         )
         new_variants_ht = run_vep(
             new_variants_ht,
