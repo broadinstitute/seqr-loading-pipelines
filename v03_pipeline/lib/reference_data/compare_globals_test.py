@@ -14,7 +14,7 @@ from v03_pipeline.lib.reference_data.compare_globals import (
 )
 
 
-class CompareGlobals2Test(unittest.TestCase):
+class CompareGlobalsTest(unittest.TestCase):
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         {
