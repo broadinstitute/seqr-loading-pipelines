@@ -38,15 +38,16 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                 {
                     'callsets': [TEST_VCF],
                     'families_failed_missing_samples': {
+                        'efg_1': ['NA20888_1'],
+                    },
+                    'families_failed_relatedness_check': {},
+                    'families_failed_sex_check': {},
+                    'families': {
                         'abc_1': [
                             'HG00731_1',
                             'HG00732_1',
                             'HG00733_1',
                         ],
-                    },
-                    'families_failed_relatedness_check': {},
-                    'families_failed_sex_check': {},
-                    'families': {
                         '123_1': ['NA19675_1'],
                         '234_1': ['NA19678_1'],
                         '345_1': ['NA19679_1'],
@@ -59,7 +60,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         'bcd_1': ['NA20878_1'],
                         'cde_1': ['NA20881_1'],
                         'def_1': ['NA20885_1'],
-                        'efg_1': ['NA20888_1'],
                     },
                     'run_id': 'run_123456',
                     'sample_type': SampleType.WGS.value,
