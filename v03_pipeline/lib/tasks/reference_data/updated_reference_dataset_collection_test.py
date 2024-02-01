@@ -12,6 +12,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.reference_data.compare_globals import Globals
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
@@ -52,13 +53,13 @@ MOCK_CADD_DATASET_HT = hl.Table.parallelize(
                 reference_genome='GRCh38',
             ),
             'alleles': ['A', 'C'],
-            'cadd': 1,
+            'cadd': hl.Struct(PHRED=1),
         },
     ],
     hl.tstruct(
         locus=hl.tlocus('GRCh38'),
         alleles=hl.tarray(hl.tstr),
-        cadd=hl.tint32,
+        cadd=hl.tstruct(PHRED=hl.tint32),
     ),
     key=['locus', 'alleles'],
     globals=hl.Struct(
@@ -71,7 +72,7 @@ MOCK_CADD_DATASET_HT = hl.Table.parallelize(
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.Globals',
     )
     @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
@@ -81,18 +82,31 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self,
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
-        mock_get_datasets_to_update,
+        mock_globals_class,
     ) -> None:
         """
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
-        mock_get_datasets_to_update.return_value = []
         mock_get_dataset_ht.side_effect = [
             MOCK_PRIMATE_AI_DATASET_HT,
             MOCK_CADD_DATASET_HT,
         ]
+        mock_globals_obj = Globals(
+            paths={
+                'primate_ai': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
+                'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+            },
+            versions={'primate_ai': 'v0.3', 'cadd': 'v1.6'},
+            enums={
+                'primate_ai': {'new_enum': ['A', 'B']},
+                'cadd': {'assertion': ['A', 'B']},
+            },
+            selects={'primate_ai': {'score'}, 'cadd': {'PHRED'}},
+        )
+        mock_globals_class.from_ht.return_value = mock_globals_obj
+        mock_globals_class.from_dataset_configs.return_value = mock_globals_obj
 
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
@@ -117,7 +131,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     primate_ai=hl.Struct(score=0.25),
-                    cadd=1,
+                    cadd=hl.Struct(PHRED=1),
                 ),
             ],
         )
@@ -139,23 +153,8 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             ],
         )
 
-    @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
-        {
-            'primate_ai': {
-                '38': {
-                    'path': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
-                    'version': 'v0.3',
-                    'select': ['score'],
-                    'enum_select': {
-                        'new_enum': ['A', 'B'],
-                    },
-                },
-            },
-        },
-    )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.get_datasets_to_update',
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.Globals',
     )
     @mock.patch(
         'v03_pipeline.lib.reference_data.dataset_table_operations.get_dataset_ht',
@@ -165,7 +164,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self,
         mock_reference_dataset_collection_datasets,
         mock_get_dataset_ht,
-        mock_get_datasets_to_update,
+        mock_globals_class,
     ) -> None:
         """
         Given an existing reference dataset collection which contains only the primate_ai dataset and has globals:
@@ -187,13 +186,37 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         )
 
         mock_reference_dataset_collection_datasets.return_value = ['primate_ai', 'cadd']
-        mock_get_datasets_to_update.side_effect = [
-            ['primate_ai', 'cadd'],
-            [],
-        ]
         mock_get_dataset_ht.side_effect = [
             MOCK_PRIMATE_AI_DATASET_HT,
             MOCK_CADD_DATASET_HT,
+        ]
+        mock_globals_old_primate_ai = Globals(
+            paths={
+                'primate_ai': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
+            },
+            versions={'primate_ai': 'v0.2'},
+            enums={},
+            selects={'primate_ai': {'score'}},
+        )
+        mock_globals_both = Globals(
+            paths={
+                'primate_ai': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
+                'cadd': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+            },
+            versions={'primate_ai': 'v0.3', 'cadd': 'v1.6'},
+            enums={
+                'primate_ai': {'new_enum': ['A', 'B']},
+                'cadd': {'assertion': ['A', 'B']},
+            },
+            selects={'primate_ai': {'score'}, 'cadd': {'PHRED'}},
+        )
+        mock_globals_class.from_ht.side_effect = [
+            mock_globals_old_primate_ai,
+            mock_globals_both,
+        ]
+        mock_globals_class.from_dataset_configs.side_effect = [
+            mock_globals_both,
+            mock_globals_both,
         ]
 
         worker = luigi.worker.Worker()
@@ -221,7 +244,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     primate_ai=hl.Struct(
                         score=0.25,
                     ),  # expect row in primate_ai to be updated from 0.5 to 0.25
-                    cadd=1,
+                    cadd=hl.Struct(PHRED=1),
                 ),
             ],
         )
