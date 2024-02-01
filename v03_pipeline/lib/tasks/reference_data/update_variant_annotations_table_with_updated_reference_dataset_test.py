@@ -186,7 +186,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         mock_update_rdc_task,
     ):
         mock_update_rdc_task.return_value = MockCompleteTask()
-
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,

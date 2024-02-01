@@ -4,7 +4,7 @@ import luigi
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
-    GlobalsValidator,
+    get_datasets_to_update,
 )
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
@@ -30,13 +30,12 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             self.rdc,
             self.dataset_type,
         )
-        updated_datasets_for_rdc = GlobalsValidator(
+        updated_datasets_for_rdc = get_datasets_to_update(
             annotations_ht_globals,
             rdc_ht_globals,
             self.rdc,
             self.dataset_type,
-        ).get_datasets_to_update()
-
+        )
         return len(updated_datasets_for_rdc) == 0
 
     def update_table(self, ht: hl.Table) -> hl.Table:

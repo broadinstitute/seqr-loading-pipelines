@@ -8,7 +8,7 @@ from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
-    GlobalsValidator,
+    get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_or_create_joined_ht,
@@ -46,12 +46,12 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.reference_genome,
         )
         self._datasets_to_update.extend(
-            GlobalsValidator(
+            get_datasets_to_update(
+                self.reference_dataset_collection,
                 joined_ht_globals,
                 dataset_config_globals,
-                self.reference_dataset_collection,
                 self.dataset_type,
-            ).get_datasets_to_update(),
+            ),
         )
         logger.info(f'Datasets to update: {self._datasets_to_update}')
         return not self._datasets_to_update

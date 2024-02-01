@@ -8,10 +8,13 @@ from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.reference_data.compare_globals import Globals, GlobalsValidator
+from v03_pipeline.lib.reference_data.compare_globals import (
+    Globals,
+    get_datasets_to_update,
+)
 
 
-class CompareGlobals2Test(unittest.TestCase):
+class CompareGlobalsTest(unittest.TestCase):
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         {
@@ -95,7 +98,9 @@ class CompareGlobals2Test(unittest.TestCase):
             schema=hl.tstruct(
                 locus=hl.tlocus('GRCh38'),
                 alleles=hl.tarray(hl.tstr),
-                gnomad_non_coding_constraint=hl.tfloat32,
+                gnomad_non_coding_constraint=hl.tstruct(
+                    z_score=hl.tfloat32,
+                ),
                 screen=hl.tstruct(
                     region_type_ids=hl.tarray(hl.tint32),
                 ),
@@ -133,19 +138,19 @@ class CompareGlobals2Test(unittest.TestCase):
         self.assertTrue(
             rdc_globals.enums == {'screen': {'region_type': ['C', 'D']}},
         )
-        print(rdc_globals.selects)
         self.assertTrue(
             rdc_globals.selects
             == {
-                'gnomad_non_coding_constraint': set(),
+                'gnomad_non_coding_constraint': {'z_score'},
                 'screen': {'region_type_ids'},
             },
         )
 
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_validate_globals_version_different(self, mock_rdc_datasets):
+    def test_get_datasets_to_update_version_different(self, mock_rdc_datasets):
         mock_rdc_datasets.return_value = ['a', 'b', 'c']
-        validator = GlobalsValidator(
+        result = get_datasets_to_update(
+            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 # 'a' has a different version, 'c' is missing version in ht2_globals
@@ -159,16 +164,15 @@ class CompareGlobals2Test(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': set(), 'b': set()},
             ),
-            reference_dataset_collection=ReferenceDatasetCollection.INTERVAL,
             dataset_type=DatasetType.SNV_INDEL,
         )
-        result = validator.get_datasets_to_update()
         self.assertTrue(result == ['a', 'c'])
 
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_validate_globals_path_different(self, mock_rdc_datasets):
+    def test_get_datasets_to_update_path_different(self, mock_rdc_datasets):
         mock_rdc_datasets.return_value = ['a', 'b', 'c']
-        validator = GlobalsValidator(
+        result = get_datasets_to_update(
+            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 # 'b' has a different path, 'c' is missing path in ht2_globals
                 paths={'a': 'a_path', 'b': 'old_b_path', 'c': 'extra_c_path'},
@@ -182,16 +186,15 @@ class CompareGlobals2Test(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': set(), 'b': set()},
             ),
-            reference_dataset_collection=ReferenceDatasetCollection.INTERVAL,
             dataset_type=DatasetType.SNV_INDEL,
         )
-        result = validator.get_datasets_to_update()
         self.assertTrue(result == ['b', 'c'])
 
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_validate_globals_enum_different(self, mock_rdc_datasets):
+    def test_get_datasets_to_update_enum_different(self, mock_rdc_datasets):
         mock_rdc_datasets.return_value = ['a', 'b', 'c']
-        validator = GlobalsValidator(
+        result = get_datasets_to_update(
+            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
@@ -209,22 +212,25 @@ class CompareGlobals2Test(unittest.TestCase):
                 enums={'a': {'test_enum': ['C', 'D']}, 'b': {'enum_key_2': []}},
                 selects={'a': set(), 'b': set()},
             ),
-            reference_dataset_collection=ReferenceDatasetCollection.INTERVAL,
             dataset_type=DatasetType.SNV_INDEL,
         )
-        result = validator.get_datasets_to_update()
         self.assertTrue(result == ['a', 'b', 'c'])
 
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_validate_globals_select_different(self, mock_rdc_datasets):
+    def test_get_datasets_to_update_select_different(self, mock_rdc_datasets):
         mock_rdc_datasets.return_value = ['a', 'b', 'c']
-        validator = GlobalsValidator(
+        result = get_datasets_to_update(
+            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {}, 'b': {}},
-                # 'a' has extra select, 'b' has different select, 'c' is missing select' in ht2_globals
-                selects={'a': {'field1', 'field2'}, 'b': {'test_select'}, 'c': set()},
+                # 'a' has extra select, 'b' has different select, 'c' is missing select in ht2_globals
+                selects={
+                    'a': {'field1', 'field2'},
+                    'b': {'test_select'},
+                    'c': set('test_select'),
+                },
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
@@ -232,8 +238,6 @@ class CompareGlobals2Test(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': {'field1'}, 'b': {'test_select_2'}},
             ),
-            reference_dataset_collection=ReferenceDatasetCollection.INTERVAL,
             dataset_type=DatasetType.SNV_INDEL,
         )
-        result = validator.get_datasets_to_update()
         self.assertTrue(result == ['a', 'b', 'c'])

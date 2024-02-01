@@ -1,5 +1,5 @@
+import dataclasses
 import logging
-from dataclasses import dataclass
 
 import hail as hl
 
@@ -19,22 +19,15 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 logger = logging.getLogger(__name__)
 
 
-def struct_to_dict(struct: hl.Struct) -> dict:
-    result_dict = {}
-    for field in struct:
-        if isinstance(struct[field], hl.Struct):
-            result_dict[field] = struct_to_dict(struct[field])
-        else:
-            result_dict[field] = struct[field]
-    return result_dict
-
-
-@dataclass
+@dataclasses.dataclass
 class Globals:
     paths: dict[str]
     versions: dict[str]
     enums: dict[str, dict[str, list[str]]]
     selects: dict[str, set[str]]
+
+    def __getitem__(self, name: str):
+        return getattr(self, name)
 
     @classmethod
     def from_dataset_configs(
@@ -69,75 +62,43 @@ class Globals:
         rdc: ReferenceDatasetCollection,
         dataset_type: DatasetType,
     ):
-        rdc_globals_struct = hl.eval(ht.index_globals())
-        paths = struct_to_dict(rdc_globals_struct.paths)
-        versions = struct_to_dict(rdc_globals_struct.versions)
-        enums = struct_to_dict(rdc_globals_struct.enums)
+        rdc_globals_struct = hl.eval(ht.globals)
+        paths = dict(rdc_globals_struct.paths)
+        versions = dict(rdc_globals_struct.versions)
+        enums = dict(rdc_globals_struct.enums)
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:
-                select = ht[dataset]
-                if isinstance(select, hl.StructExpression):
-                    selects[dataset] = set(select)
-                else:
-                    selects[dataset] = set()
+                selects[dataset] = set(ht[dataset])
         return cls(paths, versions, enums, selects)
 
 
-class GlobalsValidator:
-    def __init__(
-        self,
-        ht1_globals: Globals,
-        ht2_globals: Globals,
-        reference_dataset_collection: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
-    ):
-        self.ht1_globals = ht1_globals
-        self.ht2_globals = ht2_globals
-        self.rdc = reference_dataset_collection
-        self.dataset_type = dataset_type
+def get_datasets_to_update(
+    rdc: ReferenceDatasetCollection,
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset_type: DatasetType,
+) -> list[str]:
+    return [
+        dataset
+        for dataset in rdc.datasets(dataset_type)
+        if not validate_globals_match(rdc, ht1_globals, ht2_globals, dataset)
+    ]
 
-    def get_datasets_to_update(self) -> list[str]:
-        return [
-            dataset
-            for dataset in self.rdc.datasets(self.dataset_type)
-            if not self._validate_globals_match(dataset)
-        ]
 
-    def _validate_globals_match(self, dataset: str) -> bool:
-        checks = {
-            'version': self._compare_versions(dataset),
-            'path': self._compare_paths(dataset),
-            'enum': self._compare_enums(dataset),
-            'select': self._compare_selects(dataset),
-        }
-
-        results = []
-        for check, result in checks.items():
-            if result is False:
-                logger.info(f'{check} mismatch for {dataset}, {self.rdc.value}')
-            results.append(result)
-        return all(results)
-
-    def _compare_versions(self, dataset: str) -> bool:
-        ht1_version = self.ht1_globals.versions.get(dataset)
-        hg2_version = self.ht2_globals.versions.get(dataset)
-        return ht1_version == hg2_version
-
-    def _compare_paths(self, dataset: str) -> bool:
-        ht1_path = self.ht1_globals.paths.get(dataset)
-        ht2_path = self.ht2_globals.paths.get(dataset)
-        return ht1_path == ht2_path
-
-    def _compare_enums(self, dataset: str) -> bool:
-        ht1_enums = self.ht1_globals.enums.get(dataset)
-        ht2_enums = self.ht2_globals.enums.get(dataset)
-        return ht1_enums == ht2_enums
-
-    def _compare_selects(self, dataset: str) -> bool:
-        ht1_selects = self.ht1_globals.selects.get(dataset)
-        ht2_selects = self.ht2_globals.selects.get(dataset)
-        if ht1_selects is None or ht2_selects is None:
-            return False
-        return len(ht1_selects.symmetric_difference(ht2_selects)) == 0
+def validate_globals_match(
+    rdc: ReferenceDatasetCollection,
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset: str,
+) -> bool:
+    results = []
+    for field in dataclasses.fields(Globals):
+        result = ht1_globals[field.name].get(dataset) == ht2_globals[field.name].get(
+            dataset,
+        )
+        if result is False:
+            logger.info(f'{field.name} mismatch for {dataset}, {rdc.value}')
+        results.append(result)
+    return all(results)
