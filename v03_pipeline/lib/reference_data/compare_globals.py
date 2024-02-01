@@ -74,43 +74,31 @@ class Globals:
         return cls(paths, versions, enums, selects)
 
 
-class GlobalsValidator:
-    def __init__(
-        self,
-        ht1_globals: Globals,
-        ht2_globals: Globals,
-        reference_dataset_collection: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
-    ):
-        self.ht1_globals = ht1_globals
-        self.ht2_globals = ht2_globals
-        self.rdc = reference_dataset_collection
-        self.dataset_type = dataset_type
+def get_datasets_to_update(
+    rdc: ReferenceDatasetCollection,
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset_type: DatasetType,
+) -> list[str]:
+    return [
+        dataset
+        for dataset in rdc.datasets(dataset_type)
+        if not validate_globals_match(rdc, ht1_globals, ht2_globals, dataset)
+    ]
 
-    def get_datasets_to_update(self) -> list[str]:
-        return [
-            dataset
-            for dataset in self.rdc.datasets(self.dataset_type)
-            if not self._validate_globals_match(dataset)
-        ]
 
-    def _validate_globals_match(self, dataset: str) -> bool:
-        results = []
-        for field in dataclasses.fields(Globals):
-            if field.name == 'selects':
-                result = self._compare_selects(dataset)
-            else:
-                result = self.ht1_globals[field.name].get(dataset) == self.ht2_globals[
-                    field.name
-                ].get(dataset)
-            if result is False:
-                logger.info(f'{field.name} mismatch for {dataset}, {self.rdc.value}')
-            results.append(result)
-        return all(results)
-
-    def _compare_selects(self, dataset: str) -> bool:
-        ht1_selects = self.ht1_globals.selects.get(dataset)
-        ht2_selects = self.ht2_globals.selects.get(dataset)
-        if ht1_selects is None or ht2_selects is None:
-            return False
-        return len(ht1_selects.symmetric_difference(ht2_selects)) == 0
+def validate_globals_match(
+    rdc: ReferenceDatasetCollection,
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset: str,
+) -> bool:
+    results = []
+    for field in dataclasses.fields(Globals):
+        result = ht1_globals[field.name].get(dataset) == ht2_globals[field.name].get(
+            dataset,
+        )
+        if result is False:
+            logger.info(f'{field.name} mismatch for {dataset}, {rdc.value}')
+        results.append(result)
+    return all(results)
