@@ -7,7 +7,7 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTas
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
+TEST_REMAP_2 = 'v03_pipeline/var/test/remaps/test_remap_2.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
@@ -21,7 +21,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_paths=[TEST_VCF],
             project_guids=['R0113_test_project', 'R0114_project4'],
-            project_remap_paths=[TEST_REMAP, TEST_REMAP],
+            project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
             validate=False,
             run_id='run_123456',
@@ -37,15 +37,16 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                 json.load(f),
                 {
                     'callsets': [TEST_VCF],
-                    'families_failed_missing_samples': {},
-                    'families_failed_relatedness_check': {},
-                    'families_failed_sex_check': {},
-                    'families': {
+                    'families_failed_missing_samples': {
                         'abc_1': [
                             'HG00731_1',
                             'HG00732_1',
                             'HG00733_1',
                         ],
+                    },
+                    'families_failed_relatedness_check': {},
+                    'families_failed_sex_check': {},
+                    'families': {
                         '123_1': ['NA19675_1'],
                         '234_1': ['NA19678_1'],
                         '345_1': ['NA19679_1'],
