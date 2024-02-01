@@ -31,9 +31,9 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             self.dataset_type,
         )
         updated_datasets_for_rdc = get_datasets_to_update(
+            self.rdc,
             annotations_ht_globals,
             rdc_ht_globals,
-            self.rdc,
             self.dataset_type,
         )
         return len(updated_datasets_for_rdc) == 0
