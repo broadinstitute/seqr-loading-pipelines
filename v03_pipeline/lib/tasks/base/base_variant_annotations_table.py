@@ -1,8 +1,7 @@
-from functools import cached_property
-
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
@@ -16,10 +15,9 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
-    @cached_property
+    @property
     def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
-
         for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
@@ -71,3 +69,40 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         return ht
+
+    def fix_globals(
+        self,
+        ht: hl.Table,
+        reference_dataset_collection: ReferenceDatasetCollection | None = None,
+    ) -> hl.Table:
+        ht = ht.annotate_globals(
+            paths=hl.Struct(),
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        )
+        for rdc in (
+            ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                self.reference_genome,
+                self.dataset_type,
+            )
+            if reference_dataset_collection is None
+            else [reference_dataset_collection]
+        ):
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
+            rdc_globals = rdc_ht.index_globals()
+            ht = ht.select_globals(
+                paths=hl.Struct(
+                    **ht.globals.paths,
+                    **rdc_globals.paths,
+                ),
+                versions=hl.Struct(
+                    **ht.globals.versions,
+                    **rdc_globals.versions,
+                ),
+                enums=hl.Struct(
+                    **ht.globals.enums,
+                    **rdc_globals.enums,
+                ),
+                updates=ht.globals.updates,
+            )
+        return annotate_enums(ht, self.reference_genome, self.dataset_type)

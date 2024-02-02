@@ -4,7 +4,6 @@ import math
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
@@ -58,7 +57,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         description='Path of hail vep config .json file',
     )
 
-    @functools.cached_property
+    @property
     def other_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
         if self.dataset_type.has_sample_lookup_table:
@@ -76,7 +75,19 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks = []
+        upstream_table_tasks: list[luigi.Task] = [
+            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                rdc,
+            )
+            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                self.reference_genome,
+                self.dataset_type,
+            )
+            if not rdc.requires_annotation
+        ]
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
@@ -134,21 +145,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                     )
                 ],
             )
-        upstream_table_tasks.extend(
-            [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    rdc,
-                )
-                for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                if not rdc.requires_annotation
-            ],
-        )
         return [
             *super().requires(),
             *upstream_table_tasks,
@@ -262,32 +258,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             )
 
         # 5) Fix up the globals.
-        ht = ht.annotate_globals(
-            paths=hl.Struct(),
-            versions=hl.Struct(),
-            enums=hl.Struct(),
-        )
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-            rdc_globals = rdc_ht.index_globals()
-            ht = ht.annotate_globals(
-                paths=hl.Struct(
-                    **ht.globals.paths,
-                    **rdc_globals.paths,
-                ),
-                versions=hl.Struct(
-                    **ht.globals.versions,
-                    **rdc_globals.versions,
-                ),
-                enums=hl.Struct(
-                    **ht.globals.enums,
-                    **rdc_globals.enums,
-                ),
-            )
-        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
+        ht = self.fix_globals(ht)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

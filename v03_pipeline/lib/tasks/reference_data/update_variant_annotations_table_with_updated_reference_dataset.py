@@ -41,18 +41,10 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     def update_table(self, ht: hl.Table) -> hl.Table:
         rdc_ht = self.rdc_annotation_dependencies[f'{self.rdc.value}_ht']
         rdc_datasets = self.rdc.datasets(self.dataset_type)
-        rdc_globals = rdc_ht.index_globals()
 
         for dataset in rdc_datasets:
             if dataset in ht.row:
                 ht = ht.drop(dataset)
 
         ht = ht.join(rdc_ht, 'left')
-        # Update the globals on annotations table with the globals from the rdc table for the next complete() check
-        # This is ok because all globals for the annotations table will be cleared and re-added in the next task
-        return ht.select_globals(
-            paths=hl.Struct(**rdc_globals.paths),
-            versions=hl.Struct(**rdc_globals.versions),
-            enums=hl.Struct(**rdc_globals.enums),
-            updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
-        )
+        return self.fix_globals(ht, self.rdc)
