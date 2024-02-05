@@ -87,16 +87,22 @@ class UpdateProjectTableTask(BaseUpdateTask):
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        callset_ht = compute_callset_family_entries_ht(self.dataset_type, callset_mt, get_fields(
-                            callset_mt,
-                            self.dataset_type.genotype_entry_annotation_fns,
-                            **self.param_kwargs,
-                        ))
+        callset_ht = compute_callset_family_entries_ht(
+            self.dataset_type,
+            callset_mt,
+            get_fields(
+                callset_mt,
+                self.dataset_type.genotype_entry_annotation_fns,
+                **self.param_kwargs,
+            ),
+        )
         # HACK: steal the type from callset_ht when ht is empty.
         # This was the least gross way
         if 'family_entries' not in ht.row_value:
             ht = ht.annotate(
-                family_entries=hl.empty_array(hl.tarray(callset_ht.entries.dtype.element_type)),
+                family_entries=hl.empty_array(
+                    hl.tarray(callset_ht.entries.dtype.element_type)
+                ),
             )
         ht = filter_new_callset_family_guids(ht, callset_mt.family_guids.collect()[0])
         ht = join_family_entries_hts(ht, callset_ht)

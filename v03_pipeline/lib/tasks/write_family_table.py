@@ -79,11 +79,15 @@ class WriteFamilyTableTask(BaseWriteTask):
             ),
             False,
         )
-        ht = compute_callset_family_entries_ht(self.dataset_type, callset_mt, get_fields(
-                            callset_mt,
-                            self.dataset_type.genotype_entry_annotation_fns,
-                            **self.param_kwargs,
-                        ))
+        ht = compute_callset_family_entries_ht(
+            self.dataset_type,
+            callset_mt,
+            get_fields(
+                callset_mt,
+                self.dataset_type.genotype_entry_annotation_fns,
+                **self.param_kwargs,
+            ),
+        )
         return ht.select_globals(
             family_guids=ht.family_guids,
             family_samples=ht.family_samples,

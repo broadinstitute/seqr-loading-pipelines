@@ -3,20 +3,21 @@ import hail as hl
 from v03_pipeline.lib.model import DatasetType
 
 
-def compute_callset_family_entries_ht(dataset_type: DatasetType, mt: hl.MatrixTable, entries_fields: dict[str, hl.Expression]) -> hl.Table:
-    sample_id_to_family_guid = hl.dict({
-        s: f.family_guid
-        for f in mt.families
-        for s in f.samples
-    })
+def compute_callset_family_entries_ht(
+    dataset_type: DatasetType,
+    mt: hl.MatrixTable,
+    entries_fields: dict[str, hl.Expression],
+) -> hl.Table:
+    sample_id_to_family_guid = hl.dict(
+        {s: f.family_guid for f in mt.families for s in f.samples}
+    )
     callset_ht = mt.select_rows(
         filters=mt.filters.difference(dataset_type.excluded_filters),
         family_entries=(
             hl.agg.collect(
                 hl.Struct(
                     s=mt.s,
-                    family_guid=sample_id_to_family_guid[mt.s]
-                    **entries_fields,
+                    family_guid=sample_id_to_family_guid[mt.s] ** entries_fields,
                 ),
             )
             .group_by(lambda e: e.family_guid)
@@ -39,6 +40,7 @@ def compute_callset_family_entries_ht(dataset_type: DatasetType, mt: hl.MatrixTa
     )
     return globalize_ids(callset_ht)
 
+
 def globalize_ids(ht: hl.Table) -> hl.Table:
     row = ht.take(1)
     ht = ht.annotate_globals(
@@ -48,14 +50,14 @@ def globalize_ids(ht: hl.Table) -> hl.Table:
             else hl.empty_array(hl.tstr)
         ),
         family_samples=(
-            {
-                fe[0].f: [e.s for e in fe] for fe in row[0].family_entries
-            }
+            {fe[0].f: [e.s for e in fe] for fe in row[0].family_entries}
             if (row and len(row[0].family_entries) > 0)
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
     )
-    return ht.annotate(family_entries=ht.family_entries.map(lambda s: s.drop('s', 'family_guid')))
+    return ht.annotate(
+        family_entries=ht.family_entries.map(lambda s: s.drop('s', 'family_guid'))
+    )
 
 
 def deglobalize_ids(ht: hl.Table) -> hl.Table:
@@ -63,7 +65,11 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
         family_entries=(
             hl.enumerate(ht.family_entries).starmap(
                 lambda i, fe: fe.starmap(
-                    lambda j, e: hl.Struct(**e, s=ht.family_samples[ht.family_guids[i]][j], family_guid=ht.family_guids[i]),
+                    lambda j, e: hl.Struct(
+                        **e,
+                        s=ht.family_samples[ht.family_guids[i]][j],
+                        family_guid=ht.family_guids[i],
+                    ),
                 ),
             )
         ),
@@ -75,13 +81,23 @@ def filter_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:
-    family_indexes_to_keep = [i for i, f in enumerate(hl.eval(ht.globals.family_guids)) if f not in family_guids]
+    family_indexes_to_keep = [
+        i
+        for i, f in enumerate(hl.eval(ht.globals.family_guids))
+        if f not in family_guids
+    ]
     ht = ht.annotate(
         family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
     )
     return ht.annotate_globals(
-        family_guids=ht.family_guids.filter(lambda f: ~hl.set(family_guids).contains(f)),
-        family_samples=hl.dict(ht.family_guids.items().filter(lambda f, _: ~hl.set(family_guids).contains(f))),
+        family_guids=ht.family_guids.filter(
+            lambda f: ~hl.set(family_guids).contains(f)
+        ),
+        family_samples=hl.dict(
+            ht.family_guids.items().filter(
+                lambda f, _: ~hl.set(family_guids).contains(f)
+            )
+        ),
     )
 
 

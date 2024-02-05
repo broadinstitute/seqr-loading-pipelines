@@ -321,7 +321,11 @@ class SampleEntriesTest(unittest.TestCase):
         )
         self.assertCountEqual(
             ht.globals.collect(),
-            [hl.Struct(family_guids=['1', '2'], family_samples={'1': ['b'], '2': ['g']})],
+            [
+                hl.Struct(
+                    family_guids=['1', '2'], family_samples={'1': ['b'], '2': ['g']}
+                )
+            ],
         )
 
     def test_join_entries_hts(self) -> None:
