@@ -82,6 +82,11 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
             ],
+            DatasetType.ONT_SNV_INDEL: [
+                ReferenceDatasetCollection.COMBINED,
+                ReferenceDatasetCollection.INTERVAL,
+                ReferenceDatasetCollection.HGMD,
+            ],
             (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
