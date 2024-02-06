@@ -93,6 +93,7 @@ def splice_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:
+    # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
     family_indexes_to_keep = [
         i
         for i, f in enumerate(hl.eval(ht.globals.family_guids))
@@ -129,7 +130,10 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
         filters=hl.or_else(ht.filters_1, ht.filters),
         family_entries=(
             hl.case()
-            .when(hl.is_missing(ht.family_entries), ht_empty_family_entries.extend(ht.family_entries_1))
+            .when(
+                hl.is_missing(ht.family_entries),
+                ht_empty_family_entries.extend(ht.family_entries_1),
+            )
             .when(
                 hl.is_missing(ht.family_entries_1),
                 ht.family_entries.extend(callset_ht_empty_family_entries),
@@ -140,5 +144,7 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     # NB: transume because we want to drop the *_1 fields, but preserve other globals
     return ht.transmute_globals(
         family_guids=ht.family_guids.extend(ht.family_guids_1),
-        family_samples=hl.dict(ht.family_samples.items().extend(ht.family_samples_1.items()))
+        family_samples=hl.dict(
+            ht.family_samples.items().extend(ht.family_samples_1.items())
+        ),
     )

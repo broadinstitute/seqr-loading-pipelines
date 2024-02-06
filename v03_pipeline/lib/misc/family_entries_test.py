@@ -90,7 +90,9 @@ class FamilyEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))),
+                family_entries=hl.tarray(
+                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))
+                ),
             ),
             key='id',
         )
@@ -135,7 +137,9 @@ class FamilyEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))),
+                family_entries=hl.tarray(
+                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))
+                ),
             ),
             key='id',
         )
@@ -426,14 +430,16 @@ class FamilyEntriesTest(unittest.TestCase):
                         [
                             hl.Struct(a=4),
                             hl.Struct(a=5),
-                        ]
+                        ],
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32)),)
+                family_entries=hl.tarray(
+                    hl.tarray(hl.tstruct(a=hl.tint32)),
+                ),
             ),
             key='id',
             globals=hl.Struct(
@@ -492,7 +498,7 @@ class FamilyEntriesTest(unittest.TestCase):
                     id=0,
                     filters={'PASS'},
                     family_entries=[
-                        [   
+                        [
                             hl.Struct(a=1),
                             hl.Struct(a=2),
                         ],
@@ -500,7 +506,7 @@ class FamilyEntriesTest(unittest.TestCase):
                         [
                             hl.Struct(a=9),
                             hl.Struct(a=10),
-                        ]
+                        ],
                     ],
                 ),
                 hl.Struct(
