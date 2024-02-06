@@ -5,14 +5,14 @@ import hail as hl
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
     deglobalize_ids,
-    filter_new_callset_family_guids,
+    splice_new_callset_family_guids,
     globalize_ids,
     join_family_entries_hts,
 )
 from v03_pipeline.lib.model import DatasetType
 
 
-class SampleEntriesTest(unittest.TestCase):
+class FamilyEntriesTest(unittest.TestCase):
     def test_compute_callset_family_entries_ht(self) -> None:
         mt = hl.MatrixTable.from_parts(
             rows={
@@ -55,7 +55,7 @@ class SampleEntriesTest(unittest.TestCase):
                 hl.Struct(
                     family_samples={'1': ['b', 'c', 'd'], '2': ['a']},
                     family_guids=['1', '2'],
-                )
+                ),
             ],
         )
         self.assertCountEqual(
@@ -90,13 +90,13 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr))),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))),
             ),
             key='id',
         )
         family_entries_ht = globalize_ids(family_entries_ht)
         self.assertCountEqual(
-            family_entries_ht.sample_ids.collect(),
+            family_entries_ht.family_guids.collect(),
             [
                 [],
             ],
@@ -113,7 +113,7 @@ class SampleEntriesTest(unittest.TestCase):
                             hl.Struct(a=1, s='e', family_guid='123'),
                         ],
                         [
-                            hl.Struct(a=2, s='f', family_guid='012'),
+                            hl.Struct(a=2, s='f', family_guid='234'),
                         ],
                     ],
                 },
@@ -127,7 +127,7 @@ class SampleEntriesTest(unittest.TestCase):
                             hl.Struct(a=4, s='e', family_guid='123'),
                         ],
                         [
-                            hl.Struct(a=5, s='f', family_guid='012'),
+                            hl.Struct(a=5, s='f', family_guid='234'),
                         ],
                     ],
                 },
@@ -135,7 +135,7 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr))),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))),
             ),
             key='id',
         )
@@ -143,7 +143,7 @@ class SampleEntriesTest(unittest.TestCase):
         self.assertCountEqual(
             family_entries_ht.family_guids.collect(),
             [
-                ['012', '123'],
+                ['123', '234'],
             ],
         )
         self.assertCountEqual(
@@ -151,22 +151,22 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 [
                     [
+                        hl.Struct(a=1),
                         hl.Struct(a=2),
+                        hl.Struct(a=1),
                     ],
                     [
-                        hl.Struct(a=1),
                         hl.Struct(a=2),
-                        hl.Struct(a=1),
                     ],
                 ],
                 [
                     [
-                        hl.Struct(a=5),
-                    ],
-                    [
                         hl.Struct(a=2),
                         hl.Struct(a=3),
                         hl.Struct(a=4),
+                    ],
+                    [
+                        hl.Struct(a=5),
                     ],
                 ],
             ],
@@ -177,28 +177,28 @@ class SampleEntriesTest(unittest.TestCase):
             [
                 [
                     [
-                        hl.Struct(a=2, s='a', family_guid='012'),
+                        hl.Struct(a=1, s='a', family_guid='123'),
+                        hl.Struct(a=2, s='c', family_guid='123'),
+                        hl.Struct(a=1, s='e', family_guid='123'),
                     ],
                     [
-                        hl.Struct(a=1, s='c', family_guid='123'),
-                        hl.Struct(a=2, s='e', family_guid='123'),
-                        hl.Struct(a=1, s='f', family_guid='123'),
+                        hl.Struct(a=2, s='f', family_guid='234'),
                     ],
                 ],
                 [
                     [
-                        hl.Struct(a=5, s='a', family_guid='012'),
+                        hl.Struct(a=2, s='a', family_guid='123'),
+                        hl.Struct(a=3, s='c', family_guid='123'),
+                        hl.Struct(a=4, s='e', family_guid='123'),
                     ],
                     [
-                        hl.Struct(a=2, s='c', family_guid='123'),
-                        hl.Struct(a=3, s='e', family_guid='123'),
-                        hl.Struct(a=4, s='f', family_guid='123'),
+                        hl.Struct(a=5, s='f', family_guid='234'),
                     ],
                 ],
             ],
         )
 
-    def test_filter_new_callset_family_guids(self) -> None:
+    def test_splice_new_callset_family_guids(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [
                 {
@@ -229,7 +229,7 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.array(hl.tarray(hl.tstruct(a=hl.tint32))),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32))),
             ),
             key='id',
             globals=hl.Struct(
@@ -240,7 +240,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        family_entries_ht = filter_new_callset_family_guids(family_entries_ht, ['012'])
+        family_entries_ht = splice_new_callset_family_guids(family_entries_ht, ['012'])
         self.assertCountEqual(
             family_entries_ht.globals.collect(),
             [
@@ -259,7 +259,6 @@ class SampleEntriesTest(unittest.TestCase):
                     id=0,
                     filters={'HIGH_SR_BACKGROUND'},
                     family_entries=[
-                        None,
                         [
                             hl.Struct(a=2),
                             hl.Struct(a=1),
@@ -272,13 +271,12 @@ class SampleEntriesTest(unittest.TestCase):
                     filters={'HIGH_SR_BACKGROUND'},
                     family_entries=[
                         None,
-                        None,
                     ],
                 ),
             ],
         )
 
-    def test_filter_all_callset_entries(self) -> None:
+    def test_splice_new_callset_family_guids_all_families(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [
                 {
@@ -313,7 +311,7 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.array(hl.tarray(hl.tstruct(a=hl.tint32))),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32))),
             ),
             key='id',
             globals=hl.Struct(
@@ -324,7 +322,7 @@ class SampleEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        ht = filter_new_callset_family_guids(family_entries_ht, ['012', '123'])
+        ht = splice_new_callset_family_guids(family_entries_ht, ['012', '123'])
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(family_guids=[], family_samples={})],
@@ -336,7 +334,7 @@ class SampleEntriesTest(unittest.TestCase):
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr))),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32))),
             ),
             key='id',
             globals=hl.Struct(
@@ -383,12 +381,16 @@ class SampleEntriesTest(unittest.TestCase):
             ht.family_entries.collect(),
             [
                 [
-                    hl.Struct(a=9),
-                    hl.Struct(a=10),
+                    [
+                        hl.Struct(a=9),
+                        hl.Struct(a=10),
+                    ]
                 ],
                 [
-                    hl.Struct(a=11),
-                    hl.Struct(a=12),
+                    [
+                        hl.Struct(a=11),
+                        hl.Struct(a=12),
+                    ]
                 ],
             ],
         )
@@ -403,68 +405,85 @@ class SampleEntriesTest(unittest.TestCase):
         )
 
     def test_join_family_entries_hts(self) -> None:
-        entries_ht = hl.Table.parallelize(
+        family_entries_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
                     'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.Struct(a=1),
-                        hl.Struct(a=2),
-                        hl.Struct(a=1),
-                        hl.Struct(a=2),
+                    'family_entries': [
+                        [
+                            hl.Struct(a=1),
+                            hl.Struct(a=2),
+                        ],
+                        None,
                     ],
                 },
                 {
                     'id': 1,
                     'filters': {'HIGH_SR_BACKGROUND'},
-                    'entries': [
-                        hl.Struct(a=2),
-                        hl.Struct(a=3),
-                        hl.Struct(a=4),
-                        hl.Struct(a=5),
+                    'family_entries': [
+                        None,
+                        [
+                            hl.Struct(a=4),
+                            hl.Struct(a=5),
+                        ]
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32)),)
             ),
             key='id',
-            globals=hl.Struct(sample_ids=['a', 'c', 'e', 'f']),
+            globals=hl.Struct(
+                family_guids=['1', '2'],
+                family_samples={'1': ['a', 'b'], '2': ['c', 'd']},
+            ),
         )
         callset_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
                     'filters': {'PASS'},
-                    'entries': [
-                        hl.Struct(a=9),
-                        hl.Struct(a=10),
+                    'family_entries': [
+                        [
+                            hl.Struct(a=9),
+                            hl.Struct(a=10),
+                        ],
                     ],
                 },
                 {
                     'id': 2,
                     'filters': {'HIGH_SR_BACKGROUND', 'PASS'},
-                    'entries': [
-                        hl.Struct(a=11),
-                        hl.Struct(a=12),
+                    'family_entries': [
+                        [
+                            hl.Struct(a=11),
+                            hl.Struct(a=12),
+                        ]
                     ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
-                entries=hl.tarray(hl.tstruct(a=hl.tint32)),
+                family_entries=hl.tarray(hl.tarray(hl.tstruct(a=hl.tint32))),
             ),
             key='id',
-            globals=hl.Struct(sample_ids=['b', 'g']),
+            globals=hl.Struct(
+                family_guids=['3'],
+                family_samples={'3': ['e', 'f']},
+            ),
         )
-        ht = join_family_entries_hts(entries_ht, callset_ht)
+        ht = join_family_entries_hts(family_entries_ht, callset_ht)
         self.assertCountEqual(
             ht.globals.collect(),
-            [hl.Struct(sample_ids=['a', 'c', 'e', 'f', 'b', 'g'])],
+            [
+                hl.Struct(
+                    family_guids=['1', '2', '3'],
+                    family_samples={'1': ['a', 'b'], '2': ['c', 'd'], '3': ['e', 'f']},
+                )
+            ],
         )
         self.assertCountEqual(
             ht.collect(),
@@ -472,37 +491,40 @@ class SampleEntriesTest(unittest.TestCase):
                 hl.Struct(
                     id=0,
                     filters={'PASS'},
-                    entries=[
-                        hl.Struct(a=1),
-                        hl.Struct(a=2),
-                        hl.Struct(a=1),
-                        hl.Struct(a=2),
-                        hl.Struct(a=9),
-                        hl.Struct(a=10),
+                    family_entries=[
+                        [   
+                            hl.Struct(a=1),
+                            hl.Struct(a=2),
+                        ],
+                        None,
+                        [
+                            hl.Struct(a=9),
+                            hl.Struct(a=10),
+                        ]
                     ],
                 ),
                 hl.Struct(
                     id=1,
                     filters={'HIGH_SR_BACKGROUND'},
-                    entries=[
-                        hl.Struct(a=2),
-                        hl.Struct(a=3),
-                        hl.Struct(a=4),
-                        hl.Struct(a=5),
+                    family_entries=[
                         None,
+                        [
+                            hl.Struct(a=4),
+                            hl.Struct(a=5),
+                        ],
                         None,
                     ],
                 ),
                 hl.Struct(
                     id=2,
                     filters={'PASS', 'HIGH_SR_BACKGROUND'},
-                    entries=[
+                    family_entries=[
                         None,
                         None,
-                        None,
-                        None,
-                        hl.Struct(a=11),
-                        hl.Struct(a=12),
+                        [
+                            hl.Struct(a=11),
+                            hl.Struct(a=12),
+                        ],
                     ],
                 ),
             ],

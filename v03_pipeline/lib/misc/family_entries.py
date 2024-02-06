@@ -67,7 +67,7 @@ def globalize_ids(ht: hl.Table) -> hl.Table:
     )
     return ht.annotate(
         family_entries=ht.family_entries.map(
-            lambda fe: fe.map(lambda se: se.drop('s', 'family_guid'))
+            lambda fe: fe.map(lambda se: se.drop('s', 'family_guid')),
         ),
     )
 
@@ -76,7 +76,7 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate(
         family_entries=(
             hl.enumerate(ht.family_entries).starmap(
-                lambda i, fe: fe.starmap(
+                lambda i, fe: hl.enumerate(fe).starmap(
                     lambda j, e: hl.Struct(
                         **e,
                         s=ht.family_samples[ht.family_guids[i]][j],
@@ -89,7 +89,7 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('family_guids', 'family_samples')
 
 
-def filter_new_callset_family_guids(
+def splice_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:
@@ -99,15 +99,19 @@ def filter_new_callset_family_guids(
         if f not in family_guids
     ]
     ht = ht.annotate(
-        family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
+        family_entries=(
+            hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
+            if len(family_indexes_to_keep) > 0
+            else hl.missing(ht.family_entries.dtype.element_type)
+        )
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
             lambda f: ~hl.set(family_guids).contains(f),
         ),
         family_samples=hl.dict(
-            ht.family_guids.items().filter(
-                lambda f, _: ~hl.set(family_guids).contains(f),
+            ht.family_samples.items().filter(
+                lambda i: ~hl.set(family_guids).contains(i[0]),
             ),
         ),
     )
@@ -115,22 +119,26 @@ def filter_new_callset_family_guids(
 
 def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     ht = ht.join(callset_ht, 'outer')
-    ht_empty_entries = ht.sample_ids.map(
-        lambda _: hl.missing(ht.entries_1.dtype.element_type),
+    ht_empty_family_entries = ht.family_guids.map(
+        lambda _: hl.missing(ht.family_entries_1.dtype.element_type),
     )
-    callset_ht_empty_entries = ht.sample_ids_1.map(
-        lambda _: hl.missing(ht.entries_1.dtype.element_type),
+    callset_ht_empty_family_entries = ht.family_guids_1.map(
+        lambda _: hl.missing(ht.family_entries_1.dtype.element_type),
     )
     ht = ht.select(
         filters=hl.or_else(ht.filters_1, ht.filters),
-        entries=(
+        family_entries=(
             hl.case()
-            .when(hl.is_missing(ht.entries), ht_empty_entries.extend(ht.entries_1))
+            .when(hl.is_missing(ht.family_entries), ht_empty_family_entries.extend(ht.family_entries_1))
             .when(
-                hl.is_missing(ht.entries_1),
-                ht.entries.extend(callset_ht_empty_entries),
+                hl.is_missing(ht.family_entries_1),
+                ht.family_entries.extend(callset_ht_empty_family_entries),
             )
-            .default(ht.entries.extend(ht.entries_1))
+            .default(ht.family_entries.extend(ht.family_entries_1))
         ),
     )
-    return ht.transmute_globals(sample_ids=ht.sample_ids.extend(ht.sample_ids_1))
+    # NB: transume because we want to drop the *_1 fields, but preserve other globals
+    return ht.transmute_globals(
+        family_guids=ht.family_guids.extend(ht.family_guids_1),
+        family_samples=hl.dict(ht.family_samples.items().extend(ht.family_samples_1.items()))
+    )

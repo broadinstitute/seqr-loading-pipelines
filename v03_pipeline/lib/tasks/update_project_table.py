@@ -4,7 +4,7 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
-    filter_new_callset_family_guids,
+    splice_new_callset_family_guids,
     join_family_entries_hts,
 )
 from v03_pipeline.lib.paths import project_table_path
@@ -104,7 +104,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
                     hl.tarray(callset_ht.entries.dtype.element_type),
                 ),
             )
-        ht = filter_new_callset_family_guids(ht, callset_mt.family_guids.collect()[0])
+        ht = splice_new_callset_family_guids(ht, callset_mt.family_guids.collect()[0])
         ht = join_family_entries_hts(ht, callset_ht)
         return ht.select_globals(
             family_guids=ht.family_guids,
