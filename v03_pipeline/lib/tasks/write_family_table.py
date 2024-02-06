@@ -88,9 +88,11 @@ class WriteFamilyTableTask(BaseWriteTask):
                 **self.param_kwargs,
             ),
         )
+        ht = ht.annotate(
+            entries=hl.flatten(ht.family_entries)
+        )
         return ht.select_globals(
-            family_guids=ht.family_guids,
-            family_samples=ht.family_samples,
+            sample_ids=ht.family_samples[self.family_guid],
             sample_type=self.sample_type.value,
             updates={self.callset_path},
         )
