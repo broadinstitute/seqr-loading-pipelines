@@ -18,6 +18,9 @@ def compute_callset_family_entries_ht(
     ht = mt.select_rows(
         filters=mt.filters.difference(dataset_type.excluded_filters),
         family_entries=(
+            # NB: we're sorted by both family and sample when this runs.
+            # However, the sort is not guaranteed once the entries
+            # table is editted and families are spliced out and re-appended.
             hl.sorted(
                 hl.agg.collect(
                     hl.Struct(
