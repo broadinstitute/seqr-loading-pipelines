@@ -2,15 +2,88 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.sample_entries import (
+from v03_pipeline.lib.misc.family_entries import (
+    compute_callset_family_entries_ht,
     deglobalize_ids,
     filter_new_callset_family_guids,
     globalize_ids,
-    join_entries_hts,
+    join_family_entries_hts,
 )
+from v03_pipeline.lib.model import DatasetType
 
 
 class SampleEntriesTest(unittest.TestCase):
+    def test_compute_callset_family_entries_ht(self) -> None:
+        mt = hl.MatrixTable.from_parts(
+            rows={
+                'variants': [1, 2, 3],
+                'filters': [
+                    hl.empty_set(hl.tstr),
+                    {'HIGH_SR_BACKGROUND'},
+                    hl.empty_set(hl.tstr),
+                ],
+            },
+            cols={'s': ['a', 'b', 'd', 'c']},
+            entries={
+                'GT': [
+                    [
+                        hl.Call([0, 0]),
+                        hl.missing(hl.tcall),
+                        hl.Call([0, 0]),
+                        hl.Call([0, 0]),
+                    ],
+                    [
+                        hl.Call([0, 0]),
+                        hl.Call([0, 0]),
+                        hl.Call([1, 1]),
+                        hl.Call([0, 0]),
+                    ],
+                    [
+                        hl.Call([0, 1]),
+                        hl.Call([0, 0]),
+                        hl.Call([1, 1]),
+                        hl.Call([0, 0]),
+                    ],
+                ],
+            },
+            globals={'family_samples': {'2': ['a'], '1': ['b', 'c', 'd']}},
+        )
+        ht = compute_callset_family_entries_ht(DatasetType.SNV_INDEL, mt, {'GT': mt.GT})
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    family_samples={'1': ['b', 'c', 'd'], '2': ['a']},
+                    family_guids=['1', '2'],
+                )
+            ],
+        )
+        self.assertCountEqual(
+            ht.filters.collect(),
+            [{'HIGH_SR_BACKGROUND'}, set()],
+        )
+        self.assertCountEqual(
+            ht.family_entries.collect(),
+            [
+                [
+                    [
+                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(GT=hl.Call(alleles=[1, 1], phased=False)),
+                    ],
+                    None,
+                ],
+                [
+                    [
+                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(GT=hl.Call(alleles=[0, 0], phased=False)),
+                        hl.Struct(GT=hl.Call(alleles=[1, 1], phased=False)),
+                    ],
+                    [hl.Struct(GT=hl.Call(alleles=[0, 1], phased=False))],
+                ],
+            ],
+        )
+
     def test_globalize_and_deglobalize(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [],
@@ -257,7 +330,7 @@ class SampleEntriesTest(unittest.TestCase):
             [hl.Struct(family_guids=[], family_samples={})],
         )
 
-    def test_join_entries_hts_empty_current_table(self) -> None:
+    def test_join_family_entries_hts_empty_current_table(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -305,7 +378,7 @@ class SampleEntriesTest(unittest.TestCase):
                 family_samples={'1': ['b'], '2': ['g']},
             ),
         )
-        ht = join_entries_hts(family_entries_ht, callset_ht)
+        ht = join_family_entries_hts(family_entries_ht, callset_ht)
         self.assertCountEqual(
             ht.family_entries.collect(),
             [
@@ -323,12 +396,13 @@ class SampleEntriesTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    family_guids=['1', '2'], family_samples={'1': ['b'], '2': ['g']}
-                )
+                    family_guids=['1', '2'],
+                    family_samples={'1': ['b'], '2': ['g']},
+                ),
             ],
         )
 
-    def test_join_entries_hts(self) -> None:
+    def test_join_family_entries_hts(self) -> None:
         entries_ht = hl.Table.parallelize(
             [
                 {
@@ -387,7 +461,7 @@ class SampleEntriesTest(unittest.TestCase):
             key='id',
             globals=hl.Struct(sample_ids=['b', 'g']),
         )
-        ht = join_entries_hts(entries_ht, callset_ht)
+        ht = join_family_entries_hts(entries_ht, callset_ht)
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(sample_ids=['a', 'c', 'e', 'f', 'b', 'g'])],

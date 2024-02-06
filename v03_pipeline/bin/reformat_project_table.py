@@ -16,15 +16,15 @@ sc.addPyFile('gs://seqr-luigi/releases/dev/latest/pyscripts.zip')
 
 
 pedigree_ht = import_pedigree(
-    'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/base/projects/R0384_rare_genomes_project_gen/R0384_rare_genomes_project_gen_pedigree.tsv'
+    'gs://seqr-datasets/v02/GRCh38/RDG_WGS_Broad_Internal/base/projects/R0384_rare_genomes_project_gen/R0384_rare_genomes_project_gen_pedigree.tsv',
 )
 families = parse_pedigree_ht_to_families(pedigree_ht)
 sample_id_to_family_guid = hl.dict(
-    {s: f.family_guid for f in families for s in f.samples}
+    {s: f.family_guid for f in families for s in f.samples},
 )
 
 ht = hl.read_table(
-    'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0384_rare_genomes_project_gen.ht'
+    'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0384_rare_genomes_project_gen.ht',
 )
 ht = deglobalize_sample_ids(ht)
 ht = ht.select(
@@ -57,12 +57,12 @@ ht = ht.annotate_globals(
     ),
 )
 ht = ht.annotate(
-    family_entries=ht.family_entries.map(lambda fe: fe.map(lambda e: e.drop('s', 'f')))
+    family_entries=ht.family_entries.map(lambda fe: fe.map(lambda e: e.drop('s', 'f'))),
 )
 ht = ht.annotate(
     family_entries=ht.family_entries.map(
-        lambda fe: hl.or_missing(fe.any(lambda e: e.GT.is_non_ref()), fe)
-    )
+        lambda fe: hl.or_missing(fe.any(lambda e: e.GT.is_non_ref()), fe),
+    ),
 )
 ht.write(
     'gs://seqr-scratch-temp/R0384_rare_genomes_project_gen_family_entries_repartitioned.ht',

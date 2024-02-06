@@ -101,7 +101,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
         if 'family_entries' not in ht.row_value:
             ht = ht.annotate(
                 family_entries=hl.empty_array(
-                    hl.tarray(callset_ht.entries.dtype.element_type)
+                    hl.tarray(callset_ht.entries.dtype.element_type),
                 ),
             )
         ht = filter_new_callset_family_guids(ht, callset_mt.family_guids.collect()[0])

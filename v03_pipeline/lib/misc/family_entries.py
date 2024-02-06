@@ -9,54 +9,66 @@ def compute_callset_family_entries_ht(
     entries_fields: dict[str, hl.Expression],
 ) -> hl.Table:
     sample_id_to_family_guid = hl.dict(
-        {s: f.family_guid for f in mt.families for s in f.samples}
+        {
+            s: family_guid
+            for family_guid, sample_ids in hl.eval(mt.family_samples).items()
+            for s in sample_ids
+        },
     )
-    callset_ht = mt.select_rows(
+    ht = mt.select_rows(
         filters=mt.filters.difference(dataset_type.excluded_filters),
         family_entries=(
-            hl.agg.collect(
-                hl.Struct(
-                    s=mt.s,
-                    family_guid=sample_id_to_family_guid[mt.s] ** entries_fields,
+            hl.sorted(
+                hl.agg.collect(
+                    hl.Struct(
+                        s=mt.s,
+                        family_guid=sample_id_to_family_guid[mt.s],
+                        **entries_fields,
+                    ),
+                )
+                .group_by(lambda e: e.family_guid)
+                .values()
+                .map(
+                    lambda fe: hl.sorted(fe, key=lambda e: e.s),
                 ),
-            )
-            .group_by(lambda e: e.family_guid)
-            .values()
-            .map(
-                # In English:
-                # For each grouped family, if any of the samples are "non-ref"
-                # keep the family and sort by the sample id.  If all of the
-                # samples are "ref", replace the family with missing.
-                lambda fe: hl.or_missing(
-                    fe.any(dataset_type.sample_entries_filter_fn),
-                    hl.sorted(fe, key=lambda e: e.s),
-                ),
+                lambda fe: fe[0].family_guid,
             )
         ),
     ).rows()
-    # Filter out rows where
-    callset_ht = callset_ht.filter(
-        callset_ht.family_entries.any(lambda fe: ~hl.is_missing(fe)),
+    # NB: globalize before we send families to missing or filter rows
+    ht = globalize_ids(ht)
+    ht = ht.annotate(
+        family_entries=(
+            ht.family_entries.map(
+                lambda fe: hl.or_missing(
+                    fe.any(dataset_type.family_entries_filter_fn),
+                    fe,
+                ),
+            )
+        ),
     )
-    return globalize_ids(callset_ht)
+    # Only keep rows where at least one family is not missing.
+    return ht.filter(ht.family_entries.any(lambda fe: ~hl.is_missing(fe)))
 
 
 def globalize_ids(ht: hl.Table) -> hl.Table:
     row = ht.take(1)
     ht = ht.annotate_globals(
         family_guids=(
-            [fe[0].f for fe in row[0].family_entries]
+            [fe[0].family_guid for fe in row[0].family_entries]
             if (row and len(row[0].family_entries) > 0)
             else hl.empty_array(hl.tstr)
         ),
         family_samples=(
-            {fe[0].f: [e.s for e in fe] for fe in row[0].family_entries}
+            {fe[0].family_guid: [e.s for e in fe] for fe in row[0].family_entries}
             if (row and len(row[0].family_entries) > 0)
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
     )
     return ht.annotate(
-        family_entries=ht.family_entries.map(lambda s: s.drop('s', 'family_guid'))
+        family_entries=ht.family_entries.map(
+            lambda fe: fe.map(lambda se: se.drop('s', 'family_guid'))
+        ),
     )
 
 
@@ -91,12 +103,12 @@ def filter_new_callset_family_guids(
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
-            lambda f: ~hl.set(family_guids).contains(f)
+            lambda f: ~hl.set(family_guids).contains(f),
         ),
         family_samples=hl.dict(
             ht.family_guids.items().filter(
-                lambda f, _: ~hl.set(family_guids).contains(f)
-            )
+                lambda f, _: ~hl.set(family_guids).contains(f),
+            ),
         ),
     )
 

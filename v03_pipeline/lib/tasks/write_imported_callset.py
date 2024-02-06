@@ -35,7 +35,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
             return hasattr(mt, 'sample_type') and hl.eval(
-                self.sample_type.value == mt.sample_type
+                self.sample_type.value == mt.sample_type,
             )
         return False
 
