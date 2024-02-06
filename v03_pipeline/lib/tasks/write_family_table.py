@@ -89,7 +89,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             ),
         )
         ht = ht.annotate(
-            entries=hl.flatten(ht.family_entries)
+            entries=hl.flatten(ht.family_entries),
         )
         return ht.select_globals(
             sample_ids=ht.family_samples[self.family_guid],

@@ -104,7 +104,7 @@ def splice_new_callset_family_guids(
             hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
             if len(family_indexes_to_keep) > 0
             else hl.missing(ht.family_entries.dtype.element_type)
-        )
+        ),
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
@@ -145,6 +145,6 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
     return ht.transmute_globals(
         family_guids=ht.family_guids.extend(ht.family_guids_1),
         family_samples=hl.dict(
-            ht.family_samples.items().extend(ht.family_samples_1.items())
+            ht.family_samples.items().extend(ht.family_samples_1.items()),
         ),
     )

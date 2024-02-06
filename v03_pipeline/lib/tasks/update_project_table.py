@@ -4,8 +4,8 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
-    splice_new_callset_family_guids,
     join_family_entries_hts,
+    splice_new_callset_family_guids,
 )
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask

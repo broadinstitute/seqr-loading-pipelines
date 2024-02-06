@@ -5,9 +5,9 @@ import hail as hl
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
     deglobalize_ids,
-    splice_new_callset_family_guids,
     globalize_ids,
     join_family_entries_hts,
+    splice_new_callset_family_guids,
 )
 from v03_pipeline.lib.model import DatasetType
 
@@ -91,7 +91,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
                 family_entries=hl.tarray(
-                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))
+                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr)),
                 ),
             ),
             key='id',
@@ -138,7 +138,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 id=hl.tint32,
                 filters=hl.tset(hl.tstr),
                 family_entries=hl.tarray(
-                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr))
+                    hl.tarray(hl.tstruct(a=hl.tint32, s=hl.tstr, family_guid=hl.tstr)),
                 ),
             ),
             key='id',
@@ -388,13 +388,13 @@ class FamilyEntriesTest(unittest.TestCase):
                     [
                         hl.Struct(a=9),
                         hl.Struct(a=10),
-                    ]
+                    ],
                 ],
                 [
                     [
                         hl.Struct(a=11),
                         hl.Struct(a=12),
-                    ]
+                    ],
                 ],
             ],
         )
@@ -466,7 +466,7 @@ class FamilyEntriesTest(unittest.TestCase):
                         [
                             hl.Struct(a=11),
                             hl.Struct(a=12),
-                        ]
+                        ],
                     ],
                 },
             ],
@@ -488,7 +488,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 hl.Struct(
                     family_guids=['1', '2', '3'],
                     family_samples={'1': ['a', 'b'], '2': ['c', 'd'], '3': ['e', 'f']},
-                )
+                ),
             ],
         )
         self.assertCountEqual(

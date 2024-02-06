@@ -72,7 +72,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                                 DP=4,
                                 GT=hl.Call(alleles=[1, 1], phased=False),
                             ),
-                        ]
+                        ],
                     ],
                 ),
                 hl.Struct(
