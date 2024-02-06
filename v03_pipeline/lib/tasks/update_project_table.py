@@ -104,7 +104,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
                     hl.tarray(callset_ht.family_entries.dtype.element_type),
                 ),
             )
-        ht = splice_new_callset_family_guids(ht, callset_mt.family_samples.collect()[0])
+        ht = splice_new_callset_family_guids(ht, callset_mt.family_samples.collect()[0].keys())
         ht = join_family_entries_hts(ht, callset_ht)
         return ht.select_globals(
             family_guids=ht.family_guids,
