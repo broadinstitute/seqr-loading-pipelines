@@ -38,7 +38,7 @@ def compute_callset_family_entries_ht(
             )
         ),
     ).rows()
-    # NB: globalize before we send families to missing or filter rows
+    # NB: globalize before we set families to missing
     ht = globalize_ids(ht)
     ht = ht.annotate(
         family_entries=(
@@ -51,20 +51,21 @@ def compute_callset_family_entries_ht(
         ),
     )
     # Only keep rows where at least one family is not missing.
-    return ht.filter(ht.family_entries.any(lambda fe: ~hl.is_missing(fe)))
+    return ht.filter(ht.family_entries.any(hl.is_defined))
 
 
 def globalize_ids(ht: hl.Table) -> hl.Table:
     row = ht.take(1)
+    has_family_entries = row and len(row[0].family_entries) > 0
     ht = ht.annotate_globals(
         family_guids=(
             [fe[0].family_guid for fe in row[0].family_entries]
-            if (row and len(row[0].family_entries) > 0)
+            if has_family_entries
             else hl.empty_array(hl.tstr)
         ),
         family_samples=(
             {fe[0].family_guid: [e.s for e in fe] for fe in row[0].family_entries}
-            if (row and len(row[0].family_entries) > 0)
+            if has_family_entries
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
     )
@@ -92,7 +93,7 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('family_guids', 'family_samples')
 
 
-def splice_new_callset_family_guids(
+def remove_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:

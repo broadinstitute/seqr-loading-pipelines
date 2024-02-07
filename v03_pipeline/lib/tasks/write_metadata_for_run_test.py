@@ -37,11 +37,13 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                 json.load(f),
                 {
                     'callsets': [TEST_VCF],
-                    'family_samples_failed_missing_samples': {
-                        'efg_1': ['NA20888_1'],
+                    'failed_family_samples': {
+                        'missing_samples': {
+                            'efg_1': ['NA20888_1'],
+                        },
+                        'relatedness_check': {},
+                        'sex_check': {},
                     },
-                    'family_samples_failed_relatedness_check': {},
-                    'family_samples_failed_sex_check': {},
                     'family_samples': {
                         'abc_1': [
                             'HG00731_1',

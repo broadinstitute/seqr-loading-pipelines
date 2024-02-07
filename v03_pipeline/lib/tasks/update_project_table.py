@@ -5,7 +5,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
     join_family_entries_hts,
-    splice_new_callset_family_guids,
+    remove_new_callset_family_guids,
 )
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
@@ -104,8 +104,9 @@ class UpdateProjectTableTask(BaseUpdateTask):
                     hl.tarray(callset_ht.family_entries.dtype.element_type),
                 ),
             )
-        ht = splice_new_callset_family_guids(
-            ht, list(callset_mt.family_samples.collect()[0].keys()),
+        ht = remove_new_callset_family_guids(
+            ht,
+            list(callset_mt.family_samples.collect()[0].keys()),
         )
         ht = join_family_entries_hts(ht, callset_ht)
         return ht.select_globals(
