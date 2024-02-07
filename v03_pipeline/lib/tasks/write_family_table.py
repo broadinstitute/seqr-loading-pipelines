@@ -2,9 +2,9 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.misc.family_entries import compute_callset_family_entries_ht
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
-from v03_pipeline.lib.misc.sample_entries import globalize_sample_ids
 from v03_pipeline.lib.misc.sample_ids import subset_samples
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
@@ -79,26 +79,20 @@ class WriteFamilyTableTask(BaseWriteTask):
             ),
             False,
         )
-        ht = callset_mt.select_rows(
-            filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
-            entries=hl.sorted(
-                hl.agg.collect(
-                    hl.struct(
-                        s=callset_mt.s,
-                        **get_fields(
-                            callset_mt,
-                            self.dataset_type.genotype_entry_annotation_fns,
-                            **self.param_kwargs,
-                        ),
-                    ),
-                ),
-                key=lambda e: e.s,
+        ht = compute_callset_family_entries_ht(
+            self.dataset_type,
+            callset_mt,
+            get_fields(
+                callset_mt,
+                self.dataset_type.genotype_entry_annotation_fns,
+                **self.param_kwargs,
             ),
-        ).rows()
-        ht = ht.filter(ht.entries.any(self.dataset_type.sample_entries_filter_fn))
-        ht = globalize_sample_ids(ht)
+        )
+        ht = ht.annotate(
+            entries=hl.flatten(ht.family_entries),
+        )
         return ht.select_globals(
-            sample_ids=ht.sample_ids,
+            sample_ids=ht.family_samples[self.family_guid],
             sample_type=self.sample_type.value,
             updates={self.callset_path},
         )
