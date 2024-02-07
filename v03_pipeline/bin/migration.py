@@ -1,11 +1,9 @@
 import hail as hl
 
-from v03_pipeline.lib.model import Env, DatasetType, ReferenceGenome
-from v03_pipeline.lib.misc.io import import_pedigree, write
+from v03_pipeline.lib.misc.family_entries import globalize_ids
+from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
-from v03_pipeline.lib.misc.family_entries import (
-    globalize_ids
-)
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 # Need to use the GCP bucket as temp storage for very large callset joins
 hl.init(tmp_dir='gs://seqr-scratch-temp', idempotent=True)
@@ -268,14 +266,14 @@ projects = [
     'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0766_cgap_fam2.ht'
     'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0768_genysis.ht'
     'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0770_ff_solo_wgs.ht'
-    'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0772_ogi_korea_wgs.ht'
+    'gs://seqr-hail-search-data/v03/GRCh38/SNV_INDEL/projects/R0772_ogi_korea_wgs.ht',
 ]
 
 
 for project_table_path in projects:
     assert dataset_type.value in project_table_path
     assert reference_genome.value in project_table_path
-    ht = hl.read_table(project_table)
+    ht = hl.read_table(project_table_path)
     if hasattr(ht, 'family_entries'):
         continue
     sample_type = hl.eval(ht.globals.sample_type)
@@ -309,7 +307,7 @@ for project_table_path in projects:
                 lambda x: hl.sorted(x, key=lambda x: x.s),
             ),
             lambda fe: fe[0].family_guid,
-        )
+        ),
     )
     ht = globalize_ids(ht)
     ht = ht.annotate(
