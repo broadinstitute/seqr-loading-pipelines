@@ -105,7 +105,8 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 ),
             )
         ht = remove_new_callset_family_guids(
-            ht, list(callset_mt.family_samples.collect()[0].keys()),
+            ht,
+            list(callset_mt.family_samples.collect()[0].keys()),
         )
         ht = join_family_entries_hts(ht, callset_ht)
         return ht.select_globals(
