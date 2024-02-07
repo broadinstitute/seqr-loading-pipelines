@@ -51,7 +51,7 @@ def compute_callset_family_entries_ht(
         ),
     )
     # Only keep rows where at least one family is not missing.
-    return ht.filter(ht.family_entries.any(lambda fe: ~hl.is_missing(fe)))
+    return ht.filter(ht.family_entries.any(hl.is_defined))
 
 
 def globalize_ids(ht: hl.Table) -> hl.Table:
@@ -92,7 +92,7 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('family_guids', 'family_samples')
 
 
-def splice_new_callset_family_guids(
+def remove_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:

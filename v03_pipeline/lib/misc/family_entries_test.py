@@ -7,7 +7,7 @@ from v03_pipeline.lib.misc.family_entries import (
     deglobalize_ids,
     globalize_ids,
     join_family_entries_hts,
-    splice_new_callset_family_guids,
+    remove_new_callset_family_guids,
 )
 from v03_pipeline.lib.model import DatasetType
 
@@ -202,7 +202,7 @@ class FamilyEntriesTest(unittest.TestCase):
             ],
         )
 
-    def test_splice_new_callset_family_guids(self) -> None:
+    def test_remove_new_callset_family_guids(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [
                 {
@@ -244,7 +244,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        family_entries_ht = splice_new_callset_family_guids(family_entries_ht, ['012'])
+        family_entries_ht = remove_new_callset_family_guids(family_entries_ht, ['012'])
         self.assertCountEqual(
             family_entries_ht.globals.collect(),
             [
@@ -280,7 +280,7 @@ class FamilyEntriesTest(unittest.TestCase):
             ],
         )
 
-    def test_splice_new_callset_family_guids_all_families(self) -> None:
+    def test_remove_new_callset_family_guids_all_families(self) -> None:
         family_entries_ht = hl.Table.parallelize(
             [
                 {
@@ -326,7 +326,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        ht = splice_new_callset_family_guids(family_entries_ht, ['012', '123'])
+        ht = remove_new_callset_family_guids(family_entries_ht, ['012', '123'])
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(family_guids=[], family_samples={})],
