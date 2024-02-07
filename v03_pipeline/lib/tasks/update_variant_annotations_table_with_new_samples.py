@@ -258,7 +258,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             )
 
         # 5) Fix up the globals.
-        ht = self.fix_globals(ht)
+        ht = self.fix_globals(ht, clear_globals=True)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(
