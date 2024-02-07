@@ -3,7 +3,7 @@ import subprocess
 import hail as hl
 
 from v03_pipeline.lib.misc.family_entries import globalize_ids
-from v03_pipeline.lib.misc.io import import_pedigree, write
+from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
@@ -55,16 +55,16 @@ MIGRATIONS = [
 
 for dataset_type, reference_genome in MIGRATIONS:
     projects = []
-    path = f"gs://seqr-hail-search-data/v03/{reference_genome.value}/{dataset_type.value}/projects/"
+    path = f'gs://seqr-hail-search-data/v03/{reference_genome.value}/{dataset_type.value}/projects/'
     r = subprocess.run(
-         ["gsutil", "ls", path],
-         stdout=subprocess.PIPE,
-         stderr=subprocess.PIPE,
-         universal_newlines=True,
-     )
-    if "matched no objects" in r.stderr:
+        ['gsutil', 'ls', path],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    if 'matched no objects' in r.stderr:
         continue
-    for line in r.stdout.strip().split("\n"):
+    for line in r.stdout.strip().split('\n'):
         if line.endswith('projects/'):
             continue
         projects.append(line)
