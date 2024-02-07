@@ -76,11 +76,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
             'family_samples': {},
-            'failed_family_samples': {
-                'missing_samples': {},
-                'relatedness_check': {},
-                'sex_check': {},
-            },
+            'failed_family_samples': {},
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
