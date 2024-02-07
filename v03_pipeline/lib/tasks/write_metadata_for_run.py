@@ -93,7 +93,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 metadata_json['failed_family_samples'][key] = {
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
-                }                
+                }
 
         with self.output().open('w') as f:
             json.dump(metadata_json, f)
