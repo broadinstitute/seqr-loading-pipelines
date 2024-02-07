@@ -38,7 +38,7 @@ def compute_callset_family_entries_ht(
             )
         ),
     ).rows()
-    # NB: globalize before we send families to missing or filter rows
+    # NB: globalize before we set families to missing
     ht = globalize_ids(ht)
     ht = ht.annotate(
         family_entries=(
