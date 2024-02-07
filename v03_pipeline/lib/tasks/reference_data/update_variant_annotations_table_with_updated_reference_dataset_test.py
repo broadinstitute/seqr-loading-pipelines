@@ -124,6 +124,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
@@ -279,6 +282,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
@@ -344,6 +350,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
@@ -468,6 +477,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
+                paths=hl.Struct(),
+                versions=hl.Struct(),
+                enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
