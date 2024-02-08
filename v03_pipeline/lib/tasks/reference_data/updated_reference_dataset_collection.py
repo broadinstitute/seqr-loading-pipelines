@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
-    _datasets_to_update: list[str]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._datasets_to_update = []
 
     def complete(self) -> bool:
         self._datasets_to_update = []
