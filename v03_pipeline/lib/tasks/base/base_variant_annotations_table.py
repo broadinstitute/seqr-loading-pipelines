@@ -74,15 +74,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
         self,
         ht: hl.Table,
         reference_dataset_collection: ReferenceDatasetCollection | None = None,
-        clear_globals: bool = False,
     ) -> hl.Table:
-        if clear_globals:
-            ht = ht.annotate_globals(
-                paths=hl.Struct(),
-                versions=hl.Struct(),
-                enums=hl.Struct(),
-            )
-
         for rdc in (
             ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import hail as hl
 import luigi
 
@@ -14,37 +16,47 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseVariantAnnotationsTableTask,
 ):
-    rdc = luigi.EnumParameter(enum=ReferenceDatasetCollection)
+    reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
+    _datasets_to_update: ClassVar[list[str]] = []
 
     def complete(self) -> bool:
+        self._datasets_to_update.clear()
+
         if not super().complete():
+            self._datasets_to_update.extend(
+                self.reference_dataset_collection.datasets(
+                    self.dataset_type,
+                ),
+            )
             return False
 
         annotations_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            self.rdc,
+            self.reference_dataset_collection,
             self.dataset_type,
         )
         rdc_ht_globals = Globals.from_ht(
             self.rdc_annotation_dependencies[f'{self.rdc.value}_ht'],
-            self.rdc,
+            self.reference_dataset_collection,
             self.dataset_type,
         )
-        updated_datasets_for_rdc = get_datasets_to_update(
-            self.rdc,
-            annotations_ht_globals,
-            rdc_ht_globals,
-            self.dataset_type,
+        self._datasets_to_update.extend(
+            get_datasets_to_update(
+                self.reference_dataset_collection,
+                annotations_ht_globals,
+                rdc_ht_globals,
+                self.dataset_type,
+            ),
         )
-        return len(updated_datasets_for_rdc) == 0
+        return not self._datasets_to_update
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         rdc_ht = self.rdc_annotation_dependencies[f'{self.rdc.value}_ht']
-        rdc_datasets = self.rdc.datasets(self.dataset_type)
 
-        for dataset in rdc_datasets:
+        for dataset in self._datasets_to_update:
             if dataset in ht.row:
                 ht = ht.drop(dataset)
 
-        ht = ht.join(rdc_ht, 'left')
-        return self.fix_globals(ht, self.rdc)
+            ht = ht.join(rdc_ht.select(dataset), 'left')
+
+        return self.fix_globals(ht, self.reference_dataset_collection)
