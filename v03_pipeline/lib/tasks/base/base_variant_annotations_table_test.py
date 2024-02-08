@@ -1,4 +1,5 @@
 import shutil
+from unittest.mock import patch
 
 import hail as hl
 import luigi.worker
@@ -14,6 +15,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
@@ -49,7 +51,11 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
             ),
         )
 
-    def test_should_create_initialized_table(self) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
+    )
+    def test_should_create_initialized_table(self, mock_update_rdc_task) -> None:
+        mock_update_rdc_task.return_value = MockCompleteTask()
         vat_task = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,

@@ -12,11 +12,13 @@ from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
-    valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
+)
+from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
+    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
@@ -56,21 +58,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         description='Path of hail vep config .json file',
     )
 
-    def read_annotation_dependencies(self):
+    @property
+    def other_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
-
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                ),
-            )
-
         if self.dataset_type.has_sample_lookup_table:
             annotation_dependencies['sample_lookup_ht'] = hl.read_table(
                 sample_lookup_table_path(
@@ -83,63 +73,73 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             annotation_dependencies['gencode_mapping'] = hl.literal(
                 load_gencode(GENCODE_RELEASE, ''),
             )
-
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
+        upstream_table_tasks: list[luigi.Task] = [
+            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+            ),
+        ]
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
-            upstream_table_tasks = [
-                UpdateSampleLookupTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    callset_path,
-                    project_guid,
-                    project_remap_path,
-                    project_pedigree_path,
-                    self.ignore_missing_samples_when_subsetting,
-                    self.ignore_missing_samples_when_remapping,
-                    self.validate,
-                )
-                for (
-                    callset_path,
-                    project_guid,
-                    project_remap_path,
-                    project_pedigree_path,
-                ) in callset_project_pairs(
-                    self.callset_paths,
-                    self.project_guids,
-                    self.project_remap_paths,
-                    self.project_pedigree_paths,
-                )
-            ]
+            upstream_table_tasks.extend(
+                [
+                    UpdateSampleLookupTableTask(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.sample_type,
+                        callset_path,
+                        project_guid,
+                        project_remap_path,
+                        project_pedigree_path,
+                        self.ignore_missing_samples_when_subsetting,
+                        self.ignore_missing_samples_when_remapping,
+                        self.validate,
+                    )
+                    for (
+                        callset_path,
+                        project_guid,
+                        project_remap_path,
+                        project_pedigree_path,
+                    ) in callset_project_pairs(
+                        self.callset_paths,
+                        self.project_guids,
+                        self.project_remap_paths,
+                        self.project_pedigree_paths,
+                    )
+                ],
+            )
         else:
-            upstream_table_tasks = [
-                WriteRemappedAndSubsettedCallsetTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    callset_path,
-                    project_guid,
-                    project_remap_path,
-                    project_pedigree_path,
-                    self.ignore_missing_samples_when_subsetting,
-                    self.ignore_missing_samples_when_remapping,
-                    self.validate,
-                )
-                for (
-                    callset_path,
-                    project_guid,
-                    project_remap_path,
-                    project_pedigree_path,
-                ) in callset_project_pairs(
-                    self.callset_paths,
-                    self.project_guids,
-                    self.project_remap_paths,
-                    self.project_pedigree_paths,
-                )
-            ]
+            upstream_table_tasks.extend(
+                [
+                    WriteRemappedAndSubsettedCallsetTask(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.sample_type,
+                        callset_path,
+                        project_guid,
+                        project_remap_path,
+                        project_pedigree_path,
+                        self.ignore_missing_samples_when_subsetting,
+                        self.ignore_missing_samples_when_remapping,
+                        self.validate,
+                    )
+                    for (
+                        callset_path,
+                        project_guid,
+                        project_remap_path,
+                        project_pedigree_path,
+                    ) in callset_project_pairs(
+                        self.callset_paths,
+                        self.project_guids,
+                        self.project_remap_paths,
+                        self.project_pedigree_paths,
+                    )
+                ],
+            )
         return [
             *super().requires(),
             *upstream_table_tasks,
@@ -195,7 +195,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             callset_hts,
         )
         callset_ht = callset_ht.distinct()
-        annotation_dependencies = self.read_annotation_dependencies()
 
         # 1) Get new rows and annotate with vep
         # Note about the repartition: our work here is cpu/memory bound and
@@ -223,7 +222,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns(self.reference_genome),
-                **annotation_dependencies,
+                **self.rdc_annotation_dependencies,
+                **self.other_annotation_dependencies,
                 **self.param_kwargs,
             ),
         )
@@ -235,7 +235,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ):
             if rdc.requires_annotation:
                 continue
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
@@ -246,7 +246,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **get_fields(
                     ht,
                     self.dataset_type.sample_lookup_table_annotation_fns,
-                    **annotation_dependencies,
+                    **self.rdc_annotation_dependencies,
+                    **self.other_annotation_dependencies,
                     **self.param_kwargs,
                 ),
             )
@@ -257,26 +258,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            rdc_ht = annotation_dependencies[f'{rdc.value}_ht']
-            rdc_globals = rdc_ht.index_globals()
-            ht = ht.annotate_globals(
-                paths=hl.Struct(
-                    **ht.globals.paths,
-                    **rdc_globals.paths,
-                ),
-                versions=hl.Struct(
-                    **ht.globals.versions,
-                    **rdc_globals.versions,
-                ),
-                enums=hl.Struct(
-                    **ht.globals.enums,
-                    **rdc_globals.enums,
-                ),
-            )
+        ht = self.annotate_reference_dataset_collection_globals(ht)
         ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
