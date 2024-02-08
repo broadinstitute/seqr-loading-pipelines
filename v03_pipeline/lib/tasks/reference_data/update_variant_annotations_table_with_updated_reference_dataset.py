@@ -61,7 +61,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         for dataset in self._datasets_to_update:
-            rdc = ReferenceDatasetCollection.for_dataset(dataset)
+            rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
 
             if dataset in ht.row:

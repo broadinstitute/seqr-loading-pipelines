@@ -96,28 +96,14 @@ class ReferenceDatasetCollection(Enum):
         return rdcs
 
     @classmethod
-    def for_dataset(cls, dataset: str) -> 'ReferenceDatasetCollection':
-        return {
-            'cadd': cls.COMBINED,
-            'clinvar': cls.COMBINED,
-            'dbnsfp': cls.COMBINED,
-            'eigen': cls.COMBINED,
-            'exac': cls.COMBINED,
-            'gnomad_exomes': cls.COMBINED,
-            'gnomad_genomes': cls.COMBINED,
-            'mpc': cls.COMBINED,
-            'primate_ai': cls.COMBINED,
-            'splice_ai': cls.COMBINED,
-            'topmed': cls.COMBINED,
-            'clinvar_mito': cls.COMBINED,
-            'dbnsfp_mito': cls.COMBINED,
-            'gnomad_mito': cls.COMBINED,
-            'helix_mito': cls.COMBINED,
-            'hmtvar': cls.COMBINED,
-            'mitomap': cls.COMBINED,
-            'mitimpact': cls.COMBINED,
-            'hgmd': cls.HGMD,
-            'gnomad_non_coding_constraint': cls.INTERVAL,
-            'screen': cls.INTERVAL,
-            'high_constraint_region_mito': cls.INTERVAL,
-        }[dataset]
+    def for_dataset(
+        cls,
+        dataset: str,
+        dataset_type: DatasetType,
+    ) -> 'ReferenceDatasetCollection':
+        for rdc in cls:
+            if dataset in rdc.datasets(dataset_type):
+                return rdc
+
+        err_msg = f'Dataset "{dataset}" not found in any reference dataset collection'
+        raise ValueError(err_msg)
