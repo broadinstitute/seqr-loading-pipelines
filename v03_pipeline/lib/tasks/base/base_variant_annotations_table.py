@@ -1,7 +1,6 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
@@ -70,18 +69,13 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         return ht
 
-    def fix_globals(
+    def annotate_reference_dataset_collection_globals(
         self,
         ht: hl.Table,
-        reference_dataset_collection: ReferenceDatasetCollection | None = None,
     ) -> hl.Table:
-        for rdc in (
-            ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                self.reference_genome,
-                self.dataset_type,
-            )
-            if reference_dataset_collection is None
-            else [reference_dataset_collection]
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
         ):
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
@@ -100,4 +94,4 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
                 updates=ht.globals.updates,
             )
-        return annotate_enums(ht, self.reference_genome, self.dataset_type)
+        return ht

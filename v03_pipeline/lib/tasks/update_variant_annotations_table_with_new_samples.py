@@ -4,6 +4,7 @@ import math
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
@@ -80,13 +81,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
-                rdc,
-            )
-            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                self.reference_genome,
-                self.dataset_type,
-            )
-            if not rdc.requires_annotation
+            ),
         ]
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
@@ -263,7 +258,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        ht = self.fix_globals(ht)
+        ht = self.annotate_reference_dataset_collection_globals(ht)
+        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
 
         # 6) Mark the table as updated with these callset/project pairs.
         return ht.annotate_globals(

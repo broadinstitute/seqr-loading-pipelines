@@ -5,11 +5,7 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
-    BIOTYPES,
     CLINVAR_PATHOGENICITIES,
-    CONSEQUENCE_TERMS,
-    LOF_FILTERS,
-    MITOTIP_PATHOGENICITIES,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -101,7 +97,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
 
-    def test_update_vat_with_updated_rdc_snv_indel_combined(
+    def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
         mock_initialize_table,
         mock_update_rdc_task,
@@ -134,7 +130,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            rdc=ReferenceDatasetCollection.COMBINED,
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -188,6 +183,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         splice_consequence_id=3,
                     ),
                     topmed=None,
+                    hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 ),
             ],
         )
@@ -207,6 +203,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
                         splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
                         topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                        gnomad_non_coding_constraint='gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+                        screen='gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+                        hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
                     ),
                     versions=hl.Struct(
                         cadd='v1.6',
@@ -220,6 +219,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         primate_ai='v0.2',
                         splice_ai=None,
                         topmed=None,
+                        gnomad_non_coding_constraint=None,
+                        screen=None,
+                        hgmd=None,
                     ),
                     enums=hl.Struct(
                         cadd=hl.Struct(),
@@ -248,10 +250,21 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ],
                         ),
                         topmed=hl.Struct(),
-                        sorted_transcript_consequences=hl.Struct(
-                            biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
+                        gnomad_non_coding_constraint=hl.Struct(),
+                        screen=hl.Struct(
+                            region_type=[
+                                'CTCF-bound',
+                                'CTCF-only',
+                                'DNase-H3K4me3',
+                                'PLS',
+                                'dELS',
+                                'pELS',
+                                'DNase-only',
+                                'low-DNase',
+                            ],
+                        ),
+                        hgmd=hl.Struct(
+                            **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
                         ),
                     ),
                     updates=set(),
@@ -259,75 +272,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
-    def test_update_vat_with_updated_rdc_snv_indel_hgmd(
-        self,
-        mock_initialize_table,
-        mock_update_rdc_task,
-    ):
-        mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_initialize_table.return_value = hl.Table.parallelize(
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                ),
-            ],
-            hl.tstruct(
-                locus=hl.tlocus('GRCh38'),
-                alleles=hl.tarray(hl.tstr),
-            ),
-            key=['locus', 'alleles'],
-            globals=hl.Struct(
-                paths=hl.Struct(),
-                versions=hl.Struct(),
-                enums=hl.Struct(),
-                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
-            ),
-        )
-        task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            rdc=ReferenceDatasetCollection.HGMD,
-        )
-        worker = luigi.worker.Worker()
-        worker.add(task)
-        worker.run()
-        self.assertTrue(GCSorLocalFolderTarget(task.output().path).exists())
-        self.assertTrue(task.complete())
-
-        ht = hl.read_table(task.output().path)
-        self.assertCountEqual(
-            ht.collect(),
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                    hgmd=hl.Struct(accession='abcdefg', class_id=3),
-                ),
-            ],
-        )
-        ht_globals = ht.globals.collect()
-        self.assertCountEqual(
-            ht_globals[0].paths,
-            hl.Struct(
-                hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
-            ),
-        )
-        self.assertCountEqual(
-            ht_globals[0].versions,
-            hl.Struct(hgmd=None),
-        )
-
-    def test_update_vat_with_updated_rdc_mito_combined(
+    def test_update_vat_with_updated_rdc_mito_38(
         self,
         mock_initialize_table,
         mock_update_rdc_task,
@@ -360,7 +305,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
             sample_type=SampleType.WGS,
-            rdc=ReferenceDatasetCollection.COMBINED,
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -381,6 +325,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                         dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+                        high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                     ),
                     versions=hl.Struct(
                         gnomad_mito='v3.1',
@@ -390,6 +335,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         mitimpact='3.0.7',
                         clinvar_mito='2023-07-22',
                         dbnsfp_mito='4.2',
+                        high_constraint_region_mito='Feb-15-2022',
                     ),
                     enums=hl.Struct(
                         gnomad_mito=hl.Struct(),
@@ -407,12 +353,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
                             fathmm_MKL_coding_pred=['D', 'N'],
                         ),
-                        sorted_transcript_consequences=hl.Struct(
-                            biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
-                        ),
-                        mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
+                        high_constraint_region_mito=hl.Struct(),
                     ),
                     updates=set(),
                 ),
@@ -454,7 +395,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
-    def test_update_vat_with_updated_rdc_snv_indel_37_combined(
+    def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
         mock_initialize_table,
         mock_update_rdc_task,
@@ -487,7 +428,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            rdc=ReferenceDatasetCollection.COMBINED,
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -512,6 +452,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
                         splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
                         topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                        hgmd='gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
                     ),
                     versions=hl.Struct(
                         cadd='v1.6',
@@ -525,6 +466,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         primate_ai='v0.2',
                         splice_ai=None,
                         topmed=None,
+                        hgmd=None,
                     ),
                     enums=hl.Struct(
                         cadd=hl.Struct(),
@@ -553,10 +495,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ],
                         ),
                         topmed=hl.Struct(),
-                        sorted_transcript_consequences=hl.Struct(
-                            biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
+                        hgmd=hl.Struct(
+                            **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
                         ),
                     ),
                     updates=set(),
@@ -608,6 +548,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         splice_consequence_id=3,
                     ),
                     topmed=None,
+                    hgmd=None,
                 ),
             ],
         )

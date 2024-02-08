@@ -94,3 +94,40 @@ class ReferenceDatasetCollection(Enum):
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs
+
+    @classmethod
+    def for_dataset(cls, dataset: str) -> 'ReferenceDatasetCollection':
+        if dataset in [
+            'cadd',
+            'clinvar',
+            'dbnsfp',
+            'eigen',
+            'exac',
+            'gnomad_exomes',
+            'gnomad_genomes',
+            'mpc',
+            'primate_ai',
+            'splice_ai',
+            'topmed',
+            'clinvar_mito',
+            'dbnsfp_mito',
+            'gnomad_mito',
+            'helix_mito',
+            'hmtvar',
+            'mitomap',
+            'mitimpact',
+        ]:
+            return ReferenceDatasetCollection.COMBINED
+
+        if dataset in ['hgmd']:
+            return ReferenceDatasetCollection.HGMD
+
+        if dataset in [
+            'gnomad_non_coding_constraint',
+            'screen',
+            'high_constraint_region_mito',
+        ]:
+            return ReferenceDatasetCollection.INTERVAL
+
+        msg = (f'Dataset "{dataset}" not found in any reference dataset collection',)
+        raise ValueError(msg)
