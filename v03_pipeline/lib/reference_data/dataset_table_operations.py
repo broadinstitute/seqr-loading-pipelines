@@ -205,25 +205,3 @@ def join_hts(
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
     return joined_ht
-
-
-def update_existing_joined_hts(
-    destination_path: str,
-    dataset: str,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    reference_dataset_collection: ReferenceDatasetCollection,
-):
-    joined_ht = hl.read_table(destination_path)
-    dataset_ht = get_dataset_ht(dataset, reference_genome)
-    joined_ht = joined_ht.drop(dataset)
-    joined_ht = joined_ht.join(dataset_ht, 'outer')
-    joined_ht = joined_ht.filter(
-        hl.any(
-            [
-                ~hl.is_missing(joined_ht[dataset])
-                for dataset in reference_dataset_collection.datasets(dataset_type)
-            ],
-        ),
-    )
-    return annotate_dataset_globals(joined_ht, dataset, dataset_ht)

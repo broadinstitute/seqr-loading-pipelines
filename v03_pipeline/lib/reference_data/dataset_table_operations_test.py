@@ -17,7 +17,6 @@ from v03_pipeline.lib.reference_data.config import (
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_dataset_ht,
     get_enum_select_fields,
-    update_existing_joined_hts,
     update_or_create_joined_ht,
 )
 
@@ -472,35 +471,6 @@ class DatasetTableOperationsTest(unittest.TestCase):
             ReferenceGenome.GRCh38,
         )
         self.assertRaises(Exception, ht.globals.collect)
-
-    @mock.patch.dict(f'{PATH_TO_FILE_UNDER_TEST}.CONFIG', MOCK_CONFIG)
-    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.hl.read_table')
-    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
-    @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_update_existing_joined_hts(
-        self,
-        mock_reference_dataset_collection_datasets,
-        mock_datetime,
-        mock_get_dataset_ht,
-        mock_read_table,
-    ):
-        mock_reference_dataset_collection_datasets.return_value = ['a', 'b']
-        mock_datetime.now.return_value = MOCK_DATETIME
-        mock_read_table.return_value = MOCK_JOINED_REFERENCE_DATA_HT
-        mock_get_dataset_ht.return_value = MOCK_B_DATASET_HT
-        ht = update_existing_joined_hts(
-            'destination',
-            'b',
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            ReferenceDatasetCollection.INTERVAL,
-        )
-        self.assertCountEqual(
-            ht.collect(),
-            EXPECTED_JOINED_DATA,
-        )
-        self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
 
     @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
     @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
