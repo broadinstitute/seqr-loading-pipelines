@@ -16,7 +16,7 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseVariantAnnotationsTableTask,
 ):
-    reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
+    rdc = luigi.EnumParameter(enum=ReferenceDatasetCollection)
     _datasets_to_update: ClassVar[list[str]] = []
 
     def complete(self) -> bool:
@@ -24,7 +24,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
         if not super().complete():
             self._datasets_to_update.extend(
-                self.reference_dataset_collection.datasets(
+                self.rdc.datasets(
                     self.dataset_type,
                 ),
             )
@@ -32,17 +32,17 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
         annotations_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            self.reference_dataset_collection,
+            self.rdc,
             self.dataset_type,
         )
         rdc_ht_globals = Globals.from_ht(
             self.rdc_annotation_dependencies[f'{self.rdc.value}_ht'],
-            self.reference_dataset_collection,
+            self.rdc,
             self.dataset_type,
         )
         self._datasets_to_update.extend(
             get_datasets_to_update(
-                self.reference_dataset_collection,
+                self.rdc,
                 annotations_ht_globals,
                 rdc_ht_globals,
                 self.dataset_type,
@@ -59,4 +59,4 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
             ht = ht.join(rdc_ht.select(dataset), 'left')
 
-        return self.fix_globals(ht, self.reference_dataset_collection)
+        return self.fix_globals(ht, self.rdc)
