@@ -1,5 +1,4 @@
 import logging
-from typing import ClassVar
 
 import hail as hl
 import luigi
@@ -21,10 +20,13 @@ logger = logging.getLogger(__name__)
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
-    _datasets_to_update: ClassVar[list[str]] = []
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._datasets_to_update = []
 
     def complete(self) -> bool:
-        self._datasets_to_update.clear()
+        self._datasets_to_update = []
 
         if not super().complete():
             logger.info('Creating a new reference dataset collection')
