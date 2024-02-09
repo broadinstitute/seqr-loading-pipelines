@@ -59,6 +59,7 @@ class CompareGlobalsTest(unittest.TestCase):
                     test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(version='a_version'),
+                key=['locus', 'alleles'],
             ),
             hl.Table.parallelize(
                 [],
@@ -72,6 +73,7 @@ class CompareGlobalsTest(unittest.TestCase):
                     test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(version='b_version'),
+                key=['locus', 'alleles'],
             ),
         ]
         dataset_config_globals = Globals.from_dataset_configs(
