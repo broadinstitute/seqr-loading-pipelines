@@ -26,6 +26,8 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 self.reference_genome,
                 self.dataset_type,
             )
+            # I think this is a bug here.
+            # We need to handle both joins and annotations here in this task.
             if not rdc.requires_annotation
         ]
 
