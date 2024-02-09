@@ -5,7 +5,7 @@ LOG_CONFIG_FILE = 'v03_pipeline/var/log_conf.json'
 _CONFIGURED = False
 
 def get_logger(name: str):
-    global _CONFIGURED
+    global _CONFIGURED # noqa: PLW0603
     if not _CONFIGURED:
         with open(LOG_CONFIG_FILE) as f:
             logging.config.dictConfig(json.load(f))
