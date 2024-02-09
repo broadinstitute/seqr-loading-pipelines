@@ -51,7 +51,7 @@ def get_dataset_ht(
 
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(**get_all_select_fields(ht, config))
-    ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
+    ht = ht.transmute(**get_enum_select_fields(ht, config))
     ht = ht.select_globals(
         path=(config['source_path'] if 'custom_import' in config else config['path']),
         version=parse_dataset_version(ht, dataset, config),
@@ -129,7 +129,8 @@ def get_all_select_fields(
     }
 
 
-def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
+def get_enum_select_fields(ht: hl.Table, config: dict) -> dict:
+    enum_selects = config.get('enum_select')
     enum_select_fields = {}
     if enum_selects is None:
         return enum_select_fields

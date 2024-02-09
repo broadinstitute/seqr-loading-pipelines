@@ -22,7 +22,7 @@ class CompareGlobalsTest(unittest.TestCase):
                 '38': {
                     'custom_import': None,
                     'source_path': 'a_path',  # 'a' has a custom import
-                    'select': {'test_select': 'info.test_select'},
+                    'select': {'test_select': 'info.test_select', 'test_enum': 'test_enum'},
                     'version': 'a_version',
                     'enum_select': {'test_enum': ['A', 'B']},
                 },
@@ -30,7 +30,7 @@ class CompareGlobalsTest(unittest.TestCase):
             'b': {  # b is missing version
                 '38': {
                     'path': 'b_path',
-                    'select': {'test_select': 'info.test_select'},
+                    'select': {'test_select': 'info.test_select', 'test_enum': 'test_enum'},
                     'enum_select': {'test_enum': ['C', 'D']},
                     'custom_select': lambda ht: {'field2': ht.info.test_select_2},
                 },
@@ -56,6 +56,7 @@ class CompareGlobalsTest(unittest.TestCase):
                     info=hl.tstruct(
                         test_select=hl.tint,
                     ),
+                    test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(version='a_version'),
             ),
@@ -68,6 +69,7 @@ class CompareGlobalsTest(unittest.TestCase):
                         test_select=hl.tint,
                         test_select_2=hl.tint,
                     ),
+                    test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(version='b_version'),
             ),
@@ -89,7 +91,7 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         self.assertTrue(
             dataset_config_globals.selects
-            == {'a': {'test_select'}, 'b': {'test_select', 'field2'}},
+            == {'a': {'test_select', 'test_enum_id'}, 'b': {'test_select', 'field2', 'test_enum_id'}}
         )
 
     def test_from_rdc_or_annotations_ht(self):

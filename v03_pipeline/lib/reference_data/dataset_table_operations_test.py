@@ -244,11 +244,13 @@ class DatasetTableOperationsTest(unittest.TestCase):
             ),
         )
         enum_select_fields = get_enum_select_fields(
-            {
-                'variant': ['1', '2', '3', '4'],
-                'sv_type': ['a', 'b', 'c', 'd'],
-            },
             ht,
+            {
+                'enum_select': {
+                    'variant': ['1', '2', '3', '4'],
+                    'sv_type': ['a', 'b', 'c', 'd'],
+                },
+            }
         )
         mapped_ht = ht.transmute(**enum_select_fields)
         self.assertListEqual(
@@ -262,8 +264,10 @@ class DatasetTableOperationsTest(unittest.TestCase):
         )
 
         enum_select_fields = get_enum_select_fields(
-            {'sv_type': ['d']},
             ht,
+            {
+                'enum_select': {'sv_type': ['d']},
+            },
         )
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
