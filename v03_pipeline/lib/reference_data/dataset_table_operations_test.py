@@ -250,7 +250,7 @@ class DatasetTableOperationsTest(unittest.TestCase):
                     'variant': ['1', '2', '3', '4'],
                     'sv_type': ['a', 'b', 'c', 'd'],
                 },
-            }
+            },
         )
         mapped_ht = ht.transmute(**enum_select_fields)
         self.assertListEqual(

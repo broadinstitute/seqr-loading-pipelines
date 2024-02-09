@@ -51,11 +51,10 @@ class Globals:
                 ),
             )
             enums[dataset] = dataset_config.get('enum_select', {})
-            selects[dataset] = set([
+            selects[dataset] = {
                 *get_all_select_fields(dataset_ht, dataset_config).keys(),
-                *get_enum_select_fields(dataset_ht, dataset_config).keys()
-            ])
-
+                *get_enum_select_fields(dataset_ht, dataset_config).keys(),
+            }
             # HACK: Remove any keys from the selects that are present as both a "select" and an enum select
             for key in list(selects[dataset]):
                 if key.endswith('_id'):

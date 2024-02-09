@@ -91,7 +91,7 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         self.assertTrue(
             dataset_config_globals.selects
-            == {'a': {'test_select', 'test_enum_id'}, 'b': {'test_select', 'field2', 'test_enum_id'}}
+            == {'a': {'test_select', 'test_enum_id'}, 'b': {'test_select', 'field2', 'test_enum_id'}},
         )
 
     def test_from_rdc_or_annotations_ht(self):
