@@ -17,9 +17,6 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencod
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
-    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
-)
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
 )
@@ -76,13 +73,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks: list[luigi.Task] = [
-            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-            ),
-        ]
+        upstream_table_tasks: list[luigi.Task] = []
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
