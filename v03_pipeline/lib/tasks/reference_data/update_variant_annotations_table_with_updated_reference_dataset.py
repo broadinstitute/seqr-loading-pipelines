@@ -13,7 +13,10 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseVariantAnnotationsTableTask,
 ):
-    _datasets_to_update: list[str]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._datasets_to_update = []
 
     @property
     def reference_dataset_collections(self) -> list[ReferenceDatasetCollection]:

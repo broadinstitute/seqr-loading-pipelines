@@ -115,7 +115,7 @@ class CompareGlobalsTest(unittest.TestCase):
                     screen='v2',
                 ),
                 enums=hl.Struct(
-                    screen={'region_type': ['C', 'D']},
+                    screen=hl.Struct(region_type=['C', 'D']),
                 ),
             ),
         )

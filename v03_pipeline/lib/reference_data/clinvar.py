@@ -1,4 +1,5 @@
 import gzip
+import os
 import subprocess
 import tempfile
 import urllib
@@ -6,6 +7,7 @@ import urllib
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_ASSERTIONS = [
@@ -102,7 +104,7 @@ def download_and_import_latest_clinvar_vcf(
 
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        gcs_tmp_file_name = f'gs://seqr-scratch-temp{tmp_file.name}'
+        gcs_tmp_file_name = os.path.join(Env.HAIL_TMPDIR, tmp_file.name)
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
