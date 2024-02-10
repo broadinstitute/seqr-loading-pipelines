@@ -1,5 +1,6 @@
 import hail as hl
 
+from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
@@ -20,16 +21,10 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
 
     @property
     def reference_dataset_collections(self) -> list[ReferenceDatasetCollection]:
-        return [
-            rdc
-            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                self.reference_genome,
-                self.dataset_type,
-            )
-            # I think this is a bug here.
-            # We need to handle both joins and annotations here in this task.
-            if not rdc.requires_annotation
-        ]
+        return ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        )
 
     def complete(self) -> bool:
         self._datasets_to_update = []
@@ -68,10 +63,17 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         for dataset in self._datasets_to_update:
             rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-
-            if dataset in ht.row:
-                ht = ht.drop(dataset)
-
-            ht = ht.join(rdc_ht.select(dataset), 'left')
-
-        return self.annotate_reference_dataset_collection_globals(ht)
+            if rdc.requires_annotation:
+                ht = ht.select(
+                    **get_fields(
+                        ht,
+                        self.dataset_type.formatting_annotation_fns(self.reference_genome),
+                        **self.rdc_annotation_dependencies,
+                        **self.param_kwargs,
+                    ),
+                )
+            else:
+                if dataset in ht.row:
+                    ht = ht.drop(dataset)
+                ht = ht.join(rdc_ht.select(dataset), 'left')
+        return self.annotate_globals(ht)

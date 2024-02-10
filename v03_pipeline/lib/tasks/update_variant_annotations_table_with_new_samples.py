@@ -4,7 +4,6 @@ import math
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
@@ -16,6 +15,9 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
+)
+from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
+    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset
 )
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
@@ -73,7 +75,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks: list[luigi.Task] = []
+        upstream_table_tasks: list[luigi.Task] = [
+            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+            ),
+        ]
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
@@ -243,16 +251,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        # 5) Fix up the globals.
-        ht = ht.annotate_globals(
-            paths=hl.Struct(),
-            versions=hl.Struct(),
-            enums=hl.Struct(),
-        )
-        ht = self.annotate_reference_dataset_collection_globals(ht)
-        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
-
-        # 6) Mark the table as updated with these callset/project pairs.
+        # 5) Fix up the globals and mark the table as updated with these callset/project pairs.
+        ht = self.annotate_globals(ht)
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {

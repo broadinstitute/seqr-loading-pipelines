@@ -1,13 +1,17 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
+    UpdatedReferenceDatasetCollectionTask,
+)
 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
@@ -37,12 +41,11 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            HailTableTask(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                ),
+            UpdatedReferenceDatasetCollectionTask(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                rdc,
             )
             for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,
@@ -67,10 +70,15 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         return ht
 
-    def annotate_reference_dataset_collection_globals(
+    def annotate_globals(
         self,
         ht: hl.Table,
     ) -> hl.Table:
+        ht = ht.annotate_globals(
+            paths=hl.Struct(),
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        )
         for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
@@ -92,4 +100,4 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
                 updates=ht.globals.updates,
             )
-        return ht
+        return annotate_enums(ht, self.reference_genome, self.dataset_type)
