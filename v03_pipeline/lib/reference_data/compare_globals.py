@@ -72,7 +72,8 @@ class Globals:
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:
-                selects[dataset] = set(ht[dataset])
+                # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
+                selects[dataset] = set(ht[dataset]) if isinstance(ht[dataset], hl.StructExpression) else set()
         return cls(paths, versions, enums, selects)
 
 
