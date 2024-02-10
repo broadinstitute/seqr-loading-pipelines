@@ -46,6 +46,7 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.dataset_type,
             self.reference_genome,
         )
+        # Are we correctly handling cases where a dataset has been dropped ?
         self._datasets_to_update.extend(
             get_datasets_to_update(
                 self.reference_dataset_collection,
