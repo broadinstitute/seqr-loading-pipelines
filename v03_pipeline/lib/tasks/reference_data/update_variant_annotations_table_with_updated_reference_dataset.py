@@ -63,17 +63,18 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         for dataset in self._datasets_to_update:
             rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
+            if dataset in ht.row:
+                ht = ht.drop(dataset)
             if rdc.requires_annotation:
-                ht = ht.select(
+                formatting_fn = next(x for x in self.dataset_type.formatting_annotation_fns(self.reference_genome) if x.__name__ == dataset)
+                ht = ht.annotate(
                     **get_fields(
                         ht,
-                        self.dataset_type.formatting_annotation_fns(self.reference_genome),
+                        [formatting_fn],
                         **self.rdc_annotation_dependencies,
                         **self.param_kwargs,
                     ),
                 )
             else:
-                if dataset in ht.row:
-                    ht = ht.drop(dataset)
                 ht = ht.join(rdc_ht.select(dataset), 'left')
         return self.annotate_globals(ht)
