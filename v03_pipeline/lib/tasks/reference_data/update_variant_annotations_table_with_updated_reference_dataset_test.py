@@ -189,7 +189,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ),
             ],
         )
-        print(ht.globals.collect())
         self.assertCountEqual(
             ht.globals.collect(),
             [
@@ -505,6 +504,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         topmed=hl.Struct(),
                         hgmd=hl.Struct(
                             **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=['IG_C_gene', 'IG_D_gene', 'IG_J_gene', 'IG_LV_gene', 'IG_V_gene', 'TR_C_gene', 'TR_J_gene', 'TR_V_gene', 'TR_D_gene', 'IG_pseudogene', 'IG_C_pseudogene', 'IG_J_pseudogene', 'IG_V_pseudogene', 'TR_V_pseudogene', 'TR_J_pseudogene', 'Mt_rRNA', 'Mt_tRNA', 'miRNA', 'misc_RNA', 'rRNA', 'scRNA', 'snRNA', 'snoRNA', 'ribozyme', 'sRNA', 'scaRNA', 'lncRNA', 'Mt_tRNA_pseudogene', 'tRNA_pseudogene', 'snoRNA_pseudogene', 'snRNA_pseudogene', 'scRNA_pseudogene', 'rRNA_pseudogene', 'misc_RNA_pseudogene', 'miRNA_pseudogene', 'TEC', 'nonsense_mediated_decay', 'non_stop_decay', 'retained_intron', 'protein_coding', 'protein_coding_LoF', 'protein_coding_CDS_not_defined', 'processed_transcript', 'non_coding', 'ambiguous_orf', 'sense_intronic', 'sense_overlapping', 'antisense/antisense_RNA', 'antisense', 'known_ncrna', 'pseudogene', 'processed_pseudogene', 'polymorphic_pseudogene', 'retrotransposed', 'transcribed_processed_pseudogene', 'transcribed_unprocessed_pseudogene', 'transcribed_unitary_pseudogene', 'translated_processed_pseudogene', 'translated_unprocessed_pseudogene', 'unitary_pseudogene', 'unprocessed_pseudogene', 'artifact', 'lincRNA', 'lincrna', 'macro_lncRNA', '3prime_overlapping_ncRNA', 'disrupted_domain', 'vaultRNA/vault_RNA', 'vaultRNA', 'bidirectional_promoter_lncRNA', '3prime_overlapping_ncrna'],
+                            consequence_term=['transcript_ablation', 'splice_acceptor_variant', 'splice_donor_variant', 'stop_gained', 'frameshift_variant', 'stop_lost', 'start_lost', 'initiator_codon_variant', 'transcript_amplification', 'inframe_insertion', 'inframe_deletion', 'missense_variant', 'protein_altering_variant', 'splice_region_variant', 'incomplete_terminal_codon_variant', 'start_retained_variant', 'stop_retained_variant', 'synonymous_variant', 'coding_sequence_variant', 'mature_miRNA_variant', '5_prime_UTR_variant', '3_prime_UTR_variant', 'non_coding_transcript_exon_variant', 'non_coding_exon_variant', 'intron_variant', 'NMD_transcript_variant', 'non_coding_transcript_variant', 'nc_transcript_variant', 'upstream_gene_variant', 'downstream_gene_variant', 'TFBS_ablation', 'TFBS_amplification', 'TF_binding_site_variant', 'regulatory_region_ablation', 'regulatory_region_amplification', 'feature_elongation', 'regulatory_region_variant', 'feature_truncation', 'intergenic_variant'],
+                            lof_filter=['END_TRUNC', 'INCOMPLETE_CDS', 'EXON_INTRON_UNDEF', 'SMALL_INTRON', 'ANC_ALLELE', 'NON_DONOR_DISRUPTING', 'NON_ACCEPTOR_DISRUPTING', 'RESCUE_DONOR', 'RESCUE_ACCEPTOR', 'GC_TO_GT_DONOR', '5UTR_SPLICE', '3UTR_SPLICE'],
                         ),
                     ),
                     updates=set(),

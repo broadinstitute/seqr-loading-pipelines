@@ -175,7 +175,7 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
                 mito.haplogroup,
-                mito.high_constraint_region,
+                mito.high_constraint_region_mito,
                 mito.mitotip,
                 mito.rsid,
                 shared.sorted_transcript_consequences,
