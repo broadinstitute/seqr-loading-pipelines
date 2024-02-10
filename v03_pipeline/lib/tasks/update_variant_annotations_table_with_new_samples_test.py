@@ -1,4 +1,4 @@
-test_update_vat_with_updated_rdc_mito_38import shutil
+import shutil
 from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
