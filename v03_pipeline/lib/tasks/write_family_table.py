@@ -88,7 +88,7 @@ class WriteFamilyTableTask(BaseWriteTask):
                 **self.param_kwargs,
             ),
         )
-        ht = ht.annotate(
+        ht = ht.transmute(
             entries=hl.flatten(ht.family_entries),
         )
         return ht.select_globals(
