@@ -8,7 +8,7 @@ from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
-from v03_pipeline.lib.model import ReferenceDatasetCollection
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sample_lookup_table_path,
@@ -76,13 +76,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks: list[luigi.Task] = [
-            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-            ),
-        ]
+        if Env.REFERENCE_DATA_AUTO_UPDATE:
+            upstream_table_tasks: list[luigi.Task] = [
+                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                ),
+            ]
+        else:
+            upstream_table_tasks: list[luigi.Task] = []
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
