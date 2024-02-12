@@ -75,14 +75,25 @@ class WriteMetadataForRunTask(BaseWriteTask):
             'callsets': self.callset_paths,
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
-            'families': {},
+            'family_samples': {},
+            'failed_family_samples': {
+                'missing_samples': {},
+                'relatedness_check': {},
+                'sex_check': {},
+            },
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
-            metadata_json['families'] = {
-                **callset_mt.families.collect()[0],
-                **metadata_json['families'],
+            collected_globals = callset_mt.globals.collect()[0]
+            metadata_json['family_samples'] = {
+                **collected_globals['family_samples'],
+                **metadata_json['family_samples'],
             }
+            for key in ['missing_samples', 'relatedness_check', 'sex_check']:
+                metadata_json['failed_family_samples'][key] = {
+                    **collected_globals['failed_family_samples'][key],
+                    **metadata_json['failed_family_samples'][key],
+                }
 
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

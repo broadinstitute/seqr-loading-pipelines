@@ -68,10 +68,12 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             mt.globals.collect(),
             [
                 hl.Struct(
-                    family_guids_failed_missing_samples=set(),
-                    family_guids_failed_relatedness_check=set(),
-                    family_guids_failed_sex_check=set(),
-                    families={'abc_1': ['HG00731_1', 'HG00732_1', 'HG00733_1']},
+                    failed_family_samples=hl.Struct(
+                        missing_samples={},
+                        relatedness_check={},
+                        sex_check={},
+                    ),
+                    family_samples={'abc_1': ['HG00731_1', 'HG00732_1', 'HG00733_1']},
                 ),
             ],
         )

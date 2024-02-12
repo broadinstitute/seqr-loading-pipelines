@@ -58,8 +58,8 @@ class WriteProjectFamilyTablesTask(luigi.Task):
             self.validate,
         )
         callset_mt = hl.read_matrix_table(rmsct_output.path)
-        families = hl.eval(callset_mt.globals.families)
-        for family_guid in families:
+        family_samples = hl.eval(callset_mt.globals.family_samples)
+        for family_guid in family_samples:
             self.dynamic_write_family_table_tasks.add(
                 WriteFamilyTableTask(
                     **self.param_kwargs,

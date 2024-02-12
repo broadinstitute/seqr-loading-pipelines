@@ -25,9 +25,21 @@ class SNVTest(unittest.TestCase):
             [
                 {
                     'id': 0,
-                    'ref_samples': hl.Struct(project_1={'a', 'c'}, project_2=set(), R0607_gregor_training_project_=set()),
-                    'het_samples': hl.Struct(project_1={'b', 'd'}, project_2=set(), R0607_gregor_training_project_=set()),
-                    'hom_samples': hl.Struct(project_1={'e', 'f'}, project_2=set(), R0607_gregor_training_project_={'l', 'm'}),
+                    'ref_samples': hl.Struct(
+                        project_1={'a', 'c'},
+                        project_2=set(),
+                        R0607_gregor_training_project_=set(),
+                    ),
+                    'het_samples': hl.Struct(
+                        project_1={'b', 'd'},
+                        project_2=set(),
+                        R0607_gregor_training_project_=set(),
+                    ),
+                    'hom_samples': hl.Struct(
+                        project_1={'e', 'f'},
+                        project_2=set(),
+                        R0607_gregor_training_project_={'l', 'm'},
+                    ),
                 },
                 {
                     'id': 1,
@@ -36,8 +48,16 @@ class SNVTest(unittest.TestCase):
                         project_2=set(),
                         R0607_gregor_training_project_={'l', 'm'},
                     ),
-                    'het_samples': hl.Struct(project_1=set(), project_2=set(), R0607_gregor_training_project_=set()),
-                    'hom_samples': hl.Struct(project_1=set(), project_2=set(), R0607_gregor_training_project_=set()),
+                    'het_samples': hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        R0607_gregor_training_project_=set(),
+                    ),
+                    'hom_samples': hl.Struct(
+                        project_1=set(),
+                        project_2=set(),
+                        R0607_gregor_training_project_=set(),
+                    ),
                 },
             ],
             hl.tstruct(
