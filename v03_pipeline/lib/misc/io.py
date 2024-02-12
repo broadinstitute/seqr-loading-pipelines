@@ -126,7 +126,7 @@ def import_callset(
     filters_path: str | None = None,
 ) -> hl.MatrixTable:
     if dataset_type in {DatasetType.GCNV, DatasetType.ONT_SNV_INDEL}:
-        # Hail falls over itself with OOMs with use_new_shuffle here... apparantly due to 
+        # Hail falls over itself with OOMs with use_new_shuffle here... apparantly due to
         # interactions between the shuffling algorithm and codegen.
         hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
     if dataset_type == DatasetType.GCNV:
