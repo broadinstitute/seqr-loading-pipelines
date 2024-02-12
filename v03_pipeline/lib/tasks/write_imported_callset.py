@@ -31,6 +31,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
+    def complete(self) -> luigi.Target:
+        if super().complete():
+            mt = hl.read_matrix_table(self.output().path)
+            return hasattr(mt, 'sample_type') and hl.eval(
+                self.sample_type.value == mt.sample_type,
+            )
+        return False
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             imported_callset_path(
@@ -97,4 +105,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.reference_genome,
                 self.sample_type,
             )
-        return mt
+        return mt.annotate_globals(
+            callset_path=self.callset_path,
+            filters_path=self.filters_path or hl.missing(hl.tstr),
+            sample_type=self.sample_type.value,
+        )

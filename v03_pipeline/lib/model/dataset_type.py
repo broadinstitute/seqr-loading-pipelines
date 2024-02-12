@@ -139,7 +139,7 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def sample_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
+    def family_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
         return {
             DatasetType.GCNV: lambda e: hl.is_defined(e.GT),
         }.get(self, lambda e: e.GT.is_non_ref())

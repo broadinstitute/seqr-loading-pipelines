@@ -149,23 +149,34 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             self.ignore_missing_samples_when_subsetting,
         )
         return mt.select_globals(
-            families_failed_missing_samples=(
-                {f.family_guid: sorted(f.samples.keys())for f in families_failed_missing_samples}
-                or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
-            ),
-            families_failed_relatedness_check=(
-                {f.family_guid: sorted(f.samples.keys())for f in families_failed_relatedness_check}
-                or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
-            ),
-            families_failed_sex_check=(
-                {f.family_guid: sorted(f.samples.keys())for f in families_failed_sex_check}
-                or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
-            ),
-            families=(
+            family_samples=(
                 {
                     f.family_guid: sorted(f.samples.keys())
                     for f in loadable_families
                     or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
                 }
+            ),
+            failed_family_samples=hl.Struct(
+                missing_samples=(
+                    {
+                        f.family_guid: sorted(f.samples.keys())
+                        for f in families_failed_missing_samples
+                    }
+                    or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
+                ),
+                relatedness_check=(
+                    {
+                        f.family_guid: sorted(f.samples.keys())
+                        for f in families_failed_relatedness_check
+                    }
+                    or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
+                ),
+                sex_check=(
+                    {
+                        f.family_guid: sorted(f.samples.keys())
+                        for f in families_failed_sex_check
+                    }
+                    or hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
+                ),
             ),
         )

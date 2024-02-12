@@ -2,10 +2,10 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.sample_entries import (
-    filter_callset_entries,
-    globalize_sample_ids,
-    join_entries_hts,
+from v03_pipeline.lib.misc.family_entries import (
+    compute_callset_family_entries_ht,
+    join_family_entries_hts,
+    remove_new_callset_family_guids,
 )
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
@@ -79,43 +79,39 @@ class UpdateProjectTableTask(BaseUpdateTask):
             ),
             key=key_type.fields,
             globals=hl.Struct(
-                sample_ids=hl.empty_array(hl.tstr),
+                family_guids=hl.empty_array(hl.tstr),
+                family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
                 updates=hl.empty_set(hl.tstr),
             ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        callset_ht = callset_mt.select_rows(
-            filters=callset_mt.filters.difference(self.dataset_type.excluded_filters),
-            entries=hl.sorted(
-                hl.agg.collect(
-                    hl.Struct(
-                        s=callset_mt.s,
-                        **get_fields(
-                            callset_mt,
-                            self.dataset_type.genotype_entry_annotation_fns,
-                            **self.param_kwargs,
-                        ),
-                    ),
-                ),
-                key=lambda e: e.s,
+        callset_ht = compute_callset_family_entries_ht(
+            self.dataset_type,
+            callset_mt,
+            get_fields(
+                callset_mt,
+                self.dataset_type.genotype_entry_annotation_fns,
+                **self.param_kwargs,
             ),
-        ).rows()
-        callset_ht = callset_ht.filter(
-            callset_ht.entries.any(self.dataset_type.sample_entries_filter_fn),
         )
-        callset_ht = globalize_sample_ids(callset_ht)
         # HACK: steal the type from callset_ht when ht is empty.
         # This was the least gross way
-        if 'entries' not in ht.row_value:
+        if 'family_entries' not in ht.row_value:
             ht = ht.annotate(
-                entries=hl.empty_array(callset_ht.entries.dtype.element_type),
+                family_entries=hl.empty_array(
+                    hl.tarray(callset_ht.family_entries.dtype.element_type),
+                ),
             )
-        ht = filter_callset_entries(ht, callset_mt.cols())
-        ht = join_entries_hts(ht, callset_ht)
+        ht = remove_new_callset_family_guids(
+            ht,
+            list(callset_mt.family_samples.collect()[0].keys()),
+        )
+        ht = join_family_entries_hts(ht, callset_ht)
         return ht.select_globals(
-            sample_ids=ht.sample_ids,
+            family_guids=ht.family_guids,
+            family_samples=ht.family_samples,
             sample_type=self.sample_type.value,
             updates=ht.updates.add(self.callset_path),
         )
