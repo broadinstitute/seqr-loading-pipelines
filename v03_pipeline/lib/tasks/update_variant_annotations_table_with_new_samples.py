@@ -85,13 +85,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             ]
         else:
-            upstream_table_tasks: list[luigi.Task] = [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                ),
-            ]
+            upstream_table_tasks: list[luigi.Task] = []
         if self.dataset_type.has_sample_lookup_table:
             # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
