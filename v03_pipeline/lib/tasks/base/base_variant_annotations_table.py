@@ -54,7 +54,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
                         self.dataset_type,
                         rdc,
                     ),
-                )    
+                )
             )
             for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,
