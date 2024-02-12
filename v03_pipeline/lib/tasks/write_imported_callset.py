@@ -55,7 +55,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 CallsetTask(self.filters_path),
             ]
-        if self.validate and self.dataset_type.can_run_validation:
+        if self.validate and self.dataset_type.requires_validation:
             requirements = [
                 *requirements,
                 HailTableTask(
