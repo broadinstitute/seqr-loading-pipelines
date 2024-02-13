@@ -82,7 +82,7 @@ class ReferenceDatasetCollection(Enum):
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
             ],
-            DatasetType.ONT_SNV_INDEL: [
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): [
                 ReferenceDatasetCollection.COMBINED,
                 ReferenceDatasetCollection.INTERVAL,
                 ReferenceDatasetCollection.HGMD,
