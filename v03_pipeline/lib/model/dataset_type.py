@@ -245,6 +245,12 @@ class DatasetType(Enum):
                 snv_indel.screen,
                 shared.rg37_locus,
             ],
+            DatasetType.ONT_SNV_INDEL: [
+                *GRCh37_fns[DatasetType.SNV_INDEL],
+                snv_indel.gnomad_non_coding_constraint,
+                snv_indel.screen,
+                shared.rg37_locus,
+            ],
             DatasetType.MITO: [
                 *GRCh37_fns[DatasetType.MITO],
                 shared.rg37_locus,
