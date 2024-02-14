@@ -1,5 +1,3 @@
-import logging
-
 import hail as hl
 import luigi
 

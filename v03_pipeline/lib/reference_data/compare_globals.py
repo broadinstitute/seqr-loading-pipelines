@@ -1,5 +1,4 @@
 import dataclasses
-import logging
 
 import hail as hl
 
