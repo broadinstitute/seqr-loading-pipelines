@@ -7,7 +7,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 logger = get_logger(__name__)
 
-class BaseTask(luigi.Task):
+class BaseHailTableTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)
@@ -25,6 +25,8 @@ class BaseTask(luigi.Task):
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
 
+# NB: these are defined over luigi.Task instead of the BaseHailTableTask so that
+# they work on file dependencies.
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_MISSING)
 def dependency_missing(task):
     logger.info(f'{task} dependency_missing')
