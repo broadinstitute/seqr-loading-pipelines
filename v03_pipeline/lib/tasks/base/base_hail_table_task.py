@@ -40,7 +40,7 @@ def start(task):
     logger.info(f'{task} start')
 
 @luigi.Task.event_handler(luigi.Event.FAILURE)
-def failure(task, exception):
+def failure(task, _):
     logger.exception(f'{task} failure')
 
 @luigi.Task.event_handler(luigi.Event.SUCCESS)
