@@ -1,0 +1,46 @@
+import hail as hl
+import luigi
+
+from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
+
+logger = get_logger(__name__)
+
+class BaseTask(luigi.Task):
+    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
+    dataset_type = luigi.EnumParameter(enum=DatasetType)
+    sample_type = luigi.EnumParameter(enum=SampleType)
+
+    def output(self) -> luigi.Target:
+        raise NotImplementedError
+
+    def complete(self) -> bool:
+        return GCSorLocalFolderTarget(self.output().path).exists()
+
+    def init_hail(self):
+        # Need to use the GCP bucket as temp storage for very large callset joins
+        hl.init(tmp_dir=Env.HAIL_TMPDIR, idempotent=True)
+
+        # Interval ref data join causes shuffle death, this prevents it
+        hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
+
+@luigi.Task.event_handler(luigi.Event.DEPENDENCY_MISSING)
+def dependency_missing(task):
+    logger.info(f'{task} dependency_missing')
+
+@luigi.Task.event_handler(luigi.Event.DEPENDENCY_PRESENT)
+def dependency_present(task):
+    logger.info(f'{task} dependency_present')
+
+@luigi.Task.event_handler(luigi.Event.START)
+def start(task):
+    logger.info(f'{task} start')
+
+@luigi.Task.event_handler(luigi.Event.FAILURE)
+def failure(task, exception):
+    logger.exception(f'{task} failure')
+
+@luigi.Task.event_handler(luigi.Event.SUCCESS)
+def success(task):
+    logger.info(f'{task} success')
