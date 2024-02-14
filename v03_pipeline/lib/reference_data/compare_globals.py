@@ -3,6 +3,7 @@ import logging
 
 import hail as hl
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
@@ -16,7 +17,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     parse_dataset_version,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclasses.dataclass

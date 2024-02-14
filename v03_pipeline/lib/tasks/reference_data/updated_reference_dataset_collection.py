@@ -3,6 +3,7 @@ import logging
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.compare_globals import (
@@ -15,7 +16,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
