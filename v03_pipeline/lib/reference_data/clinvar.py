@@ -7,8 +7,8 @@ import urllib
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
-from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_ASSERTIONS = [
