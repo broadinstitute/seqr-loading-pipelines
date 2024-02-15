@@ -6,6 +6,7 @@ import urllib
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_ASSERTIONS = [
@@ -33,6 +34,7 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     },
 )
 
+logger = get_logger(__name__)
 
 def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
     try:
@@ -45,8 +47,8 @@ def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
             ],
             check=True,
         )
-    except subprocess.CalledProcessError as e:
-        print(e)
+    except subprocess.CalledProcessError:
+        logger.exception(f'Failed to move local tmp file {tmp_file_name} to gcs')
 
 
 def parsed_clnsig(ht: hl.Table):
