@@ -9,6 +9,7 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES,
     CONSEQUENCE_TERMS,
     LOF_FILTERS,
+    MITOTIP_PATHOGENICITIES,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -370,7 +371,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             lof_filter=LOF_FILTERS,
                         ),
                         mitotip=hl.Struct(
-                            trna_prediction=['likely_pathogenic', 'possibly_pathogenic', 'possibly_benign', 'likely_benign'],
+                            trna_prediction=MITOTIP_PATHOGENICITIES,
                         ),
                     ),
                     updates=set(),
