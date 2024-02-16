@@ -57,17 +57,45 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         )
 
     def create_table(self) -> hl.Table:
+        dataset: str = self.crdq.dataset
         if self.crdq.query_raw_dataset:
-            ht = import_ht_from_config_path(
-                CONFIG[self.crdq.dataset][self.reference_genome.v02_value],
+            query_ht = import_ht_from_config_path(
+                CONFIG[dataset][self.reference_genome.v02_value],
                 self.reference_genome,
             )
         else:
-            ht = hl.read_table(
+            query_ht = hl.read_table(
                 valid_reference_dataset_collection_path(
                     self.reference_genome,
                     self.dataset_type,
                     ReferenceDatasetCollection.COMBINED,
                 ),
             )
-        return self.crdq.query(ht, dataset_type=self.dataset_type, reference_genome=self.reference_genome)
+        ht = self.crdq.query(
+            query_ht,
+            dataset_type=self.dataset_type,
+            reference_genome=self.reference_genome,
+        )
+        return ht.select_globals(
+            paths=hl.Struct(
+                **{
+                    dataset: query_ht.index_globals().path
+                    if self.crdq.query_raw_dataset
+                    else query_ht.index_globals().paths[dataset]
+                }
+            ),
+            versions=hl.Struct(
+                **{
+                    dataset: query_ht.index_globals().version
+                    if self.crdq.query_raw_dataset
+                    else query_ht.index_globals().versions[dataset]
+                }
+            ),
+            enums=hl.Struct(
+                **{
+                    dataset: query_ht.index_globals().enums
+                    if self.crdq.query_raw_dataset
+                    else query_ht.index_globals().enums[dataset]
+                }
+            ),
+        )

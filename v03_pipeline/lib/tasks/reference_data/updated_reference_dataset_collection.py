@@ -54,7 +54,9 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
                 self.dataset_type,
             ),
         )
-        logger.info(f'Datasets to update: {self._datasets_to_update} for {self.reference_dataset_collection}')
+        logger.info(
+            f'Datasets to update: {self._datasets_to_update} for {self.reference_dataset_collection}'
+        )
         return not self._datasets_to_update
 
     def output(self) -> luigi.Target:

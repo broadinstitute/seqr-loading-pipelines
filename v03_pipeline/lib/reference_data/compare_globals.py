@@ -51,8 +51,12 @@ class Globals:
                 ),
             )
             enums[dataset] = dataset_config.get('enum_select', {})
-            dataset_ht = dataset_ht.select(**get_all_select_fields(dataset_ht, dataset_config))
-            dataset_ht = dataset_ht.transmute(**get_enum_select_fields(dataset_ht, dataset_config))
+            dataset_ht = dataset_ht.select(
+                **get_all_select_fields(dataset_ht, dataset_config)
+            )
+            dataset_ht = dataset_ht.transmute(
+                **get_enum_select_fields(dataset_ht, dataset_config)
+            )
             selects[dataset] = set(dataset_ht.row) - set(dataset_ht.key)
         return cls(paths, versions, enums, selects)
 
@@ -67,13 +71,17 @@ class Globals:
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {k: dict(v) for k,v in rdc_globals_struct.enums.items()}
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:
                 # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
-                selects[dataset] = set(ht[dataset]) if isinstance(ht[dataset], hl.StructExpression) else set()
+                selects[dataset] = (
+                    set(ht[dataset])
+                    if isinstance(ht[dataset], hl.StructExpression)
+                    else set()
+                )
         return cls(paths, versions, enums, selects)
 
 

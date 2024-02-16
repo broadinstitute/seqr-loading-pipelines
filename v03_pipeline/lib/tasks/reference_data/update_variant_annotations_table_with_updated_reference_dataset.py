@@ -14,7 +14,6 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseVariantAnnotationsTableTask,
 ):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._datasets_to_update = []
@@ -66,7 +65,13 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             if dataset in ht.row:
                 ht = ht.drop(dataset)
             if rdc.requires_annotation:
-                formatting_fn = next(x for x in self.dataset_type.formatting_annotation_fns(self.reference_genome) if x.__name__ == dataset)
+                formatting_fn = next(
+                    x
+                    for x in self.dataset_type.formatting_annotation_fns(
+                        self.reference_genome
+                    )
+                    if x.__name__ == dataset
+                )
                 ht = ht.annotate(
                     **get_fields(
                         ht,

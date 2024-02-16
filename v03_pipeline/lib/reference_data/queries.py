@@ -24,6 +24,7 @@ THREE_PERCENT = 0.03
 FIVE_PERCENT = 0.05
 TEN_PERCENT = 0.10
 
+
 def clinvar_path_variants(
     ht: hl.Table,
     dataset_type: DatasetType,
