@@ -20,11 +20,21 @@ def update_or_create_joined_ht(
     joined_ht: hl.Table,
 ) -> hl.Table:
     for dataset in datasets:
-        dataset_ht = get_dataset_ht(dataset, reference_genome)
-
+        # Drop the dataset if it exists.
         if dataset in joined_ht.row:
             joined_ht = joined_ht.drop(dataset)
+            joined_ht = joined_ht.annotate_globals(
+                paths=joined_ht.paths.drop(dataset),
+                versions=joined_ht.versions.drop(dataset),
+                enums=joined_ht.enums.drop(dataset),
+            )
 
+        # Handle cases where a dataset has been dropped OR renamed.
+        if dataset not in CONFIG:
+            continue
+
+        # Join the new one!
+        dataset_ht = get_dataset_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
 
