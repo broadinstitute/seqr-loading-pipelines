@@ -29,9 +29,18 @@ class CachedReferenceDatasetQuery(Enum):
     @property
     def dataset(self) -> str | None:
         return {
+            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: 'clinvar',
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',
+            CachedReferenceDatasetQuery.HIGH_AF_VARIANTS: 'gnomad_genomes',
         }.get(self)
+
+    @property
+    def query_raw_dataset(self) -> bool:
+        return {
+            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: True,
+            CachedReferenceDatasetQuery.GNOMAD_QC: True,
+        }.get(self, false)
 
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:

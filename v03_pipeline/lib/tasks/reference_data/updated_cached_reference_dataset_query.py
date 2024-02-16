@@ -40,9 +40,9 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                 self.sample_type,
                 ReferenceDatasetCollection.COMBINED,
             )
-        if self.crdq.dataset:
+        if self.crdq.query_raw_dataset:
             return HailTableTask(
-                get_ht_path(CONFIG[self.crdq.reference_dataset][self.reference_genome.v02_value]),
+                get_ht_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value]),
             )
         return HailTableTask(
             valid_reference_dataset_collection_path(
@@ -54,7 +54,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
 
     def create_table(self) -> hl.Table:
         if self.crdq.reference_dataset:
-            ht = import_ht_from_config_path(CONFIG[self.crdq.reference_dataset][self.reference_genome.v02_value], self.reference_genome)
+            ht = import_ht_from_config_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value], self.reference_genome)
         else:
             ht = hl.read_table(
                 valid_reference_dataset_collection_path(
