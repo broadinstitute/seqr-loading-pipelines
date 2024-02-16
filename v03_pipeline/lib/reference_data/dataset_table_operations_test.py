@@ -580,7 +580,7 @@ class DatasetTableOperationsTest(unittest.TestCase):
                     paths=hl.Struct(b='123'),
                     versions=hl.Struct(b='456'),
                     enums=hl.Struct(),
-                )
+                ),
             ],
         )
 
