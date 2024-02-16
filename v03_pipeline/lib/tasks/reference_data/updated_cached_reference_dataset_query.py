@@ -10,12 +10,16 @@ from v03_pipeline.lib.paths import (
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
+from v03_pipeline.lib.reference_data.compare_globals import (
+    Globals,
+    validate_globals_match,
+)
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_ht_path,
     import_ht_from_config_path,
 )
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_update_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
@@ -24,6 +28,27 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 
 class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
     crdq = luigi.EnumParameter(enum=CachedReferenceDatasetQuery)
+
+    def complete(self) -> bool:
+        if not super().complete():
+            return False
+
+        crdq_globals = Globals.from_ht(
+            hl.read_table(self.output().path),
+            self.reference_dataset_collection,
+            self.dataset_type,
+        )
+        dataset_config_globals = Globals.from_dataset_configs(
+            ReferenceDatasetCollection.COMBINED,
+            self.dataset_type,
+            self.reference_genome,
+        )
+        return validate_globals_match(
+            ReferenceDatasetCollection.COMBINED,
+            crdq_globals,
+            dataset_config_globals,
+            self.crdq.dataset,
+        )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -81,21 +106,21 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                 **{
                     dataset: query_ht.index_globals().path
                     if self.crdq.query_raw_dataset
-                    else query_ht.index_globals().paths[dataset]
-                }
+                    else query_ht.index_globals().paths[dataset],
+                },
             ),
             versions=hl.Struct(
                 **{
                     dataset: query_ht.index_globals().version
                     if self.crdq.query_raw_dataset
-                    else query_ht.index_globals().versions[dataset]
-                }
+                    else query_ht.index_globals().versions[dataset],
+                },
             ),
             enums=hl.Struct(
                 **{
                     dataset: query_ht.index_globals().enums
                     if self.crdq.query_raw_dataset
-                    else query_ht.index_globals().enums[dataset]
-                }
+                    else query_ht.index_globals().enums[dataset],
+                },
             ),
         )

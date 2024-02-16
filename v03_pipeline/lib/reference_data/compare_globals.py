@@ -52,10 +52,10 @@ class Globals:
             )
             enums[dataset] = dataset_config.get('enum_select', {})
             dataset_ht = dataset_ht.select(
-                **get_all_select_fields(dataset_ht, dataset_config)
+                **get_all_select_fields(dataset_ht, dataset_config),
             )
             dataset_ht = dataset_ht.transmute(
-                **get_enum_select_fields(dataset_ht, dataset_config)
+                **get_enum_select_fields(dataset_ht, dataset_config),
             )
             selects[dataset] = set(dataset_ht.row) - set(dataset_ht.key)
         return cls(paths, versions, enums, selects)
