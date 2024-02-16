@@ -17,7 +17,9 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 )
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import UpdatedReferenceDatasetCollectionTask
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
+    UpdatedReferenceDatasetCollectionTask,
+)
 
 
 class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
@@ -41,6 +43,8 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                 ReferenceDatasetCollection.COMBINED,
             )
         if self.crdq.query_raw_dataset:
+            # NB: the config contents are not guaranteed to be hail tables/matrix tables.
+            # there's a potential bug here if we ever custom_import an external table.
             return HailTableTask(
                 get_ht_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value]),
             )
@@ -53,8 +57,11 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         )
 
     def create_table(self) -> hl.Table:
-        if self.crdq.reference_dataset:
-            ht = import_ht_from_config_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value], self.reference_genome)
+        if self.crdq.query_raw_dataset:
+            ht = import_ht_from_config_path(
+                CONFIG[self.crdq.dataset][self.reference_genome.v02_value],
+                self.reference_genome,
+            )
         else:
             ht = hl.read_table(
                 valid_reference_dataset_collection_path(

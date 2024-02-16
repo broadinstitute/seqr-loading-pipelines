@@ -40,7 +40,7 @@ class CachedReferenceDatasetQuery(Enum):
         return {
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: True,
             CachedReferenceDatasetQuery.GNOMAD_QC: True,
-        }.get(self, false)
+        }.get(self, False)
 
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:
