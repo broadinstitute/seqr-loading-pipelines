@@ -20,7 +20,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import UpdatedReferenceDatasetCollectionTask
 
 
-class WriteCachedReferenceDatasetQuery(BaseWriteTask):
+class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
     crdq = luigi.EnumParameter(enum=CachedReferenceDatasetQuery)
 
     def output(self) -> luigi.Target:
