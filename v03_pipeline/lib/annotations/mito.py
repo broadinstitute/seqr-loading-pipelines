@@ -44,7 +44,7 @@ def HL(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     return hl.if_else(is_called, mt.HL, 0)
 
 
-def high_constraint_region(
+def high_constraint_region_mito(
     ht: hl.Table,
     interval_ht: hl.Table,
     **_: Any,

@@ -695,7 +695,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region=True,
+                    high_constraint_region_mito=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',
@@ -730,7 +730,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     alleles=['G', 'T'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region=True,
+                    high_constraint_region_mito=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',
@@ -765,7 +765,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region=False,
+                    high_constraint_region_mito=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',
@@ -800,7 +800,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     alleles=['A', 'T'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=True),
-                    high_constraint_region=False,
+                    high_constraint_region_mito=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',
@@ -835,7 +835,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     alleles=['C', 'T'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region=False,
+                    high_constraint_region_mito=False,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',

@@ -5,7 +5,11 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
+    BIOTYPES,
     CLINVAR_PATHOGENICITIES,
+    CONSEQUENCE_TERMS,
+    LOF_FILTERS,
+    MITOTIP_PATHOGENICITIES,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -183,6 +187,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         splice_consequence_id=3,
                     ),
                     topmed=None,
+                    gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
+                    screen=hl.Struct(region_type_ids=[1]),
                     hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 ),
             ],
@@ -265,6 +271,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         hgmd=hl.Struct(
                             **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
                         ),
                     ),
                     updates=set(),
@@ -354,6 +365,14 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             fathmm_MKL_coding_pred=['D', 'N'],
                         ),
                         high_constraint_region_mito=hl.Struct(),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
+                        ),
+                        mitotip=hl.Struct(
+                            trna_prediction=MITOTIP_PATHOGENICITIES,
+                        ),
                     ),
                     updates=set(),
                 ),
@@ -391,6 +410,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     hmtvar=hl.Struct(score=0.6700000166893005),
                     mitomap=None,
                     mitimpact=hl.Struct(score=0.5199999809265137),
+                    high_constraint_region_mito=True,
                 ),
             ],
         )
@@ -497,6 +517,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         topmed=hl.Struct(),
                         hgmd=hl.Struct(
                             **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
                         ),
                     ),
                     updates=set(),

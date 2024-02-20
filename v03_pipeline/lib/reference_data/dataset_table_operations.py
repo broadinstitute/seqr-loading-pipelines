@@ -20,11 +20,21 @@ def update_or_create_joined_ht(
     joined_ht: hl.Table,
 ) -> hl.Table:
     for dataset in datasets:
-        dataset_ht = get_dataset_ht(dataset, reference_genome)
-
+        # Drop the dataset if it exists.
         if dataset in joined_ht.row:
             joined_ht = joined_ht.drop(dataset)
+            joined_ht = joined_ht.annotate_globals(
+                paths=joined_ht.paths.drop(dataset),
+                versions=joined_ht.versions.drop(dataset),
+                enums=joined_ht.enums.drop(dataset),
+            )
 
+        # Handle cases where a dataset has been dropped OR renamed.
+        if dataset not in CONFIG:
+            continue
+
+        # Join the new one!
+        dataset_ht = get_dataset_ht(dataset, reference_genome)
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
 
@@ -51,7 +61,7 @@ def get_dataset_ht(
 
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(**get_all_select_fields(ht, config))
-    ht = ht.transmute(**get_enum_select_fields(config.get('enum_select'), ht))
+    ht = ht.transmute(**get_enum_select_fields(ht, config))
     ht = ht.select_globals(
         path=(config['source_path'] if 'custom_import' in config else config['path']),
         version=parse_dataset_version(ht, dataset, config),
@@ -129,7 +139,8 @@ def get_all_select_fields(
     }
 
 
-def get_enum_select_fields(enum_selects: dict | None, ht: hl.Table) -> dict:
+def get_enum_select_fields(ht: hl.Table, config: dict) -> dict:
+    enum_selects = config.get('enum_select')
     enum_select_fields = {}
     if enum_selects is None:
         return enum_select_fields
