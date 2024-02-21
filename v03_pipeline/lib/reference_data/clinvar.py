@@ -38,6 +38,7 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
 
 logger = get_logger(__name__)
 
+
 def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
     try:
         subprocess.run(
@@ -106,7 +107,10 @@ def download_and_import_latest_clinvar_vcf(
 
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        gcs_tmp_file_name = os.path.join(Env.HAIL_TMPDIR, os.path.basename(tmp_file.name))
+        gcs_tmp_file_name = os.path.join(
+            Env.HAIL_TMPDIR,
+            os.path.basename(tmp_file.name),
+        )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
