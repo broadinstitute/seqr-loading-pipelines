@@ -27,8 +27,9 @@ LOG_CONFIG = {
 
 _CONFIGURED = False
 
+
 def get_logger(name: str):
-    global _CONFIGURED # noqa: PLW0603
+    global _CONFIGURED  # noqa: PLW0603
     if not _CONFIGURED:
         logging.config.dictConfig(LOG_CONFIG)
         _CONFIGURED = True
