@@ -68,7 +68,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 formatting_fn = next(
                     x
                     for x in self.dataset_type.formatting_annotation_fns(
-                        self.reference_genome
+                        self.reference_genome,
                     )
                     if x.__name__ == dataset
                 )
