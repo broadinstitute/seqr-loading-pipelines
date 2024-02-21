@@ -143,21 +143,21 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def sample_lookup_table_fields_and_genotype_filter_fns(
+    def family_lookup_table_fields_and_genotype_filter_fns(
         self,
-    ) -> dict[str, Callable[[hl.MatrixTable], hl.Expression]]:
+    ) -> dict[str, Callable[[hl.StructExpression], hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: {
-                'ref_samples': lambda mt: mt.GT.is_hom_ref(),
-                'het_samples': lambda mt: mt.GT.is_het(),
-                'hom_samples': lambda mt: mt.GT.is_hom_var(),
+                'ref_samples': lambda s: s.GT.is_hom_ref(),
+                'het_samples': lambda s: s.GT.is_het(),
+                'hom_samples': lambda s: s.GT.is_hom_var(),
             },
             DatasetType.MITO: {
-                'ref_samples': lambda mt: hl.is_defined(mt.HL) & (mt.HL == ZERO),
-                'heteroplasmic_samples': lambda mt: (
-                    (mt.HL < MITO_MIN_HOM_THRESHOLD) & (mt.HL > ZERO)
+                'ref_samples': lambda s: hl.is_defined(s.HL) & (s.HL == ZERO),
+                'heteroplasmic_samples': lambda s: (
+                    (s.HL < MITO_MIN_HOM_THRESHOLD) & (s.HL > ZERO)
                 ),
-                'homoplasmic_samples': lambda mt: mt.HL >= MITO_MIN_HOM_THRESHOLD,
+                'homoplasmic_samples': lambda s: s.HL >= MITO_MIN_HOM_THRESHOLD,
             },
         }[self]
 
