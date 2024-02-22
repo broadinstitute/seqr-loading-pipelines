@@ -1,7 +1,7 @@
-from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
+from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )

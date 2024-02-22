@@ -6,6 +6,7 @@ from v03_pipeline.lib.misc.lookup import (
     join_lookup_hts,
     remove_new_callset_family_guids,
 )
+from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
 from v03_pipeline.lib.paths import lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -76,7 +77,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                             **{
                                 field: hl.tint32
                                 for field in self.dataset_type.lookup_table_fields_and_genotype_filter_fns
-                            }
+                            },
                         ),
                     ),
                 ),
@@ -90,6 +91,14 @@ class UpdateLookupTableTask(BaseUpdateTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
+        if self.project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
+            return ht.annotate_globals(
+                updates=ht.updates.add(
+                    hl.Struct(
+                        callset=self.callset_path, project_guid=self.project_guid,
+                    ),
+                ),
+            )
         callset_mt = hl.read_matrix_table(self.input().path)
         ht = remove_new_callset_family_guids(
             ht,

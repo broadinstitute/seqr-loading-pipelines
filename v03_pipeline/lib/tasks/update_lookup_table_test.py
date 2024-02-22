@@ -12,8 +12,8 @@ TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
-class UpdateSampleLookupTableTest(MockedDatarootTestCase):
-    def test_update_sample_lookup_table_task(self) -> None:
+class UpdateLookupTableTest(MockedDatarootTestCase):
+    def test_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateLookupTableTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -52,7 +52,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -61,7 +63,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -70,7 +74,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    project_stats=[[hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -79,7 +85,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'C'],
-                    project_stats=[[hl.Struct(ref_samples=1, het_samples=2, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=1, het_samples=2, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -88,7 +96,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -97,7 +107,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    project_stats=[[hl.Struct(ref_samples=2, het_samples=1, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=2, het_samples=1, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -106,7 +118,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    project_stats=[[hl.Struct(ref_samples=1, het_samples=1, hom_samples=1)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=1, het_samples=1, hom_samples=1)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -115,7 +129,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -124,7 +140,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['G', 'A'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -133,7 +151,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['C', 'T'],
-                    project_stats=[[hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                    ],
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -142,7 +162,9 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'G'],
-                    project_stats=[[hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)]],
+                    project_stats=[
+                        [hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)],
+                    ],
                 ),
             ],
         )

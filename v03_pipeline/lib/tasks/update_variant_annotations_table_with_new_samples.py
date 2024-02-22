@@ -9,8 +9,8 @@ from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
-    remapped_and_subsetted_callset_path,
     lookup_table_path,
+    remapped_and_subsetted_callset_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
@@ -60,9 +60,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     @property
     def other_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
-        if self.dataset_type.has_sample_lookup_table:
-            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
-                sample_lookup_table_path(
+        if self.dataset_type.has_lookup_table:
+            annotation_dependencies['lookup_ht'] = hl.read_table(
+                lookup_table_path(
                     self.reference_genome,
                     self.dataset_type,
                 ),
