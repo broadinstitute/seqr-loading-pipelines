@@ -3,7 +3,7 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.lookup import (
-    compute_callsetlookup_ht,
+    compute_callset_lookup_ht,
     join_lookup_hts,
     remove_new_callset_family_guids,
 )
