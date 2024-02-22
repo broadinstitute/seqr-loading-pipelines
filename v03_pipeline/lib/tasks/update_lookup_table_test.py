@@ -13,6 +13,40 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
+    def test_skip_update_lookup_table_task(self) -> None:
+        worker = luigi.worker.Worker()
+        uslt_task = UpdateLookupTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guid='R0555_seqr_demo', # a project excluded from the lookup table
+            project_remap_path=TEST_REMAP,
+            project_pedigree_path=TEST_PEDIGREE_3,
+            validate=False,
+        )
+        worker.add(uslt_task)
+        worker.run()
+        self.assertTrue(uslt_task.output().exists())
+        self.assertTrue(uslt_task.complete())
+        ht = hl.read_table(uslt_task.output().path)
+        self.assertEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    project_guids=[],
+                    project_families={},
+                    updates={
+                        hl.Struct(callset=TEST_VCF, project_guid='R0555_seqr_demo'),
+                    },
+                ),
+            ],
+        )
+        self.assertEqual(
+            ht.collect(),
+            []
+        )
+
     def test_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateLookupTableTask(
