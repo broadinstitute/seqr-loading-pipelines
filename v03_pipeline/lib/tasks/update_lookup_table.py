@@ -1,12 +1,12 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.family_lookup import (
-    compute_callset_family_lookup_ht,
+from v03_pipeline.lib.misc.lookup import (
+    compute_callset_lookup_ht,
+    join_lookup_hts,
     remove_new_callset_family_guids,
-    join_family_lookup_hts,
 )
-from v03_pipeline.lib.paths import family_lookup_table_path
+from v03_pipeline.lib.paths import lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
-class UpdateFamilyLookupTableTask(BaseUpdateTask):
+class UpdateLookupTableTask(BaseUpdateTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -34,7 +34,7 @@ class UpdateFamilyLookupTableTask(BaseUpdateTask):
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            family_lookup_table_path(
+            lookup_table_path(
                 self.reference_genome,
                 self.dataset_type,
             ),
@@ -88,12 +88,12 @@ class UpdateFamilyLookupTableTask(BaseUpdateTask):
             self.project_guid,
             list(callset_mt.family_samples.collect()[0].keys()),
         )
-        callset_ht = compute_callset_family_lookup_ht(
+        callset_ht = compute_callset_lookup_ht(
             self.dataset_type,
             callset_mt,
             self.project_guid,
         )
-        ht = join_sample_lookup_hts(
+        ht = join_lookup_hts(
             ht,
             callset_ht,
         )

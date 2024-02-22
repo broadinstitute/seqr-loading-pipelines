@@ -320,7 +320,7 @@ class LookupTest(unittest.TestCase):
                 hl.Struct(
                     project_guids=['project_a'],
                     project_families={'project_a': ['1', '2', '3']},
-                )
+                ),
             ],
         )
         self.assertCountEqual(
@@ -345,7 +345,7 @@ class LookupTest(unittest.TestCase):
                                 heteroplasmic_samples=2,
                                 homoplasmic_samples=2,
                             ),
-                        ]
+                        ],
                     ],
                 ),
                 hl.Struct(
@@ -367,7 +367,7 @@ class LookupTest(unittest.TestCase):
                                 heteroplasmic_samples=2,
                                 homoplasmic_samples=2,
                             ),
-                        ]
+                        ],
                     ],
                 ),
             ],
@@ -512,7 +512,7 @@ class LookupTest(unittest.TestCase):
                         'project_b': ['3'],
                         'project_c': ['1', '2'],
                     },
-                )
+                ),
             ],
         )
         self.assertCountEqual(
@@ -538,7 +538,7 @@ class LookupTest(unittest.TestCase):
                                 ref_samples=2,
                                 heteroplasmic_samples=2,
                                 homoplasmic_samples=2,
-                            )
+                            ),
                         ],
                         [
                             hl.Struct(
@@ -574,7 +574,7 @@ class LookupTest(unittest.TestCase):
                                 ref_samples=2,
                                 heteroplasmic_samples=2,
                                 homoplasmic_samples=2,
-                            )
+                            ),
                         ],
                         None,
                     ],
@@ -739,7 +739,7 @@ class LookupTest(unittest.TestCase):
                         'project_a': ['1', '2'],
                         'project_b': ['3', '1', '2'],
                     },
-                )
+                ),
             ],
         )
         self.assertCountEqual(

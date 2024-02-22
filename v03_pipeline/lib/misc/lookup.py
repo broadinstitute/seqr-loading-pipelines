@@ -35,7 +35,7 @@ def compute_callset_lookup_ht(
                         },
                     ),
                 ),
-            ]
+            ],
         ),
     ).rows()
     return globalize_ids(ht, project_guid)
@@ -142,11 +142,11 @@ def join_lookup_hts(
                 ht.project_stats.extend(
                     ht.project_guids_1.map(
                         lambda _: hl.missing(ht.project_stats_1.dtype.element_type),
-                    )
+                    ),
                 ),
             )
             .when(
-                hl.is_missing(ht_project_i), ht.project_stats.extend(ht.project_stats_1)
+                hl.is_missing(ht_project_i), ht.project_stats.extend(ht.project_stats_1),
             )
             .when(
                 hl.is_missing(ht.project_stats),
@@ -157,15 +157,15 @@ def join_lookup_hts(
                     lambda i, p: (
                         hl.or_missing(
                             i == ht_project_i,
-                            ht.project_families[project_guid]
+                            ht.project_families[p]
                             .map(
                                 lambda _: hl.missing(
-                                    ht.project_stats.dtype.element_type.element_type
-                                )
+                                    ht.project_stats.dtype.element_type.element_type,
+                                ),
                             )
                             .extend(ht.project_stats_1[0]),
                         )
-                    )
+                    ),
                 ),
             )
             .when(
@@ -181,12 +181,12 @@ def join_lookup_hts(
                             ps.extend(
                                 ht.project_families_1[project_guid].map(
                                     lambda _: hl.missing(
-                                        ht.project_stats.dtype.element_type.element_type
-                                    )
-                                )
+                                        ht.project_stats.dtype.element_type.element_type,
+                                    ),
+                                ),
                             ),
                         )
-                    )
+                    ),
                 ),
             )
             .default(
@@ -196,7 +196,7 @@ def join_lookup_hts(
                             i != ht_project_i,
                             ps,
                             ht.project_stats[ht_project_i].extend(
-                                ht.project_stats_1[0]
+                                ht.project_stats_1[0],
                             ),
                         )
                     ),
@@ -224,7 +224,7 @@ def join_lookup_hts(
                         (
                             item[0],
                             ht.project_families[project_guid].extend(
-                                ht.project_families_1[project_guid]
+                                ht.project_families_1[project_guid],
                             ),
                         ),
                     ),

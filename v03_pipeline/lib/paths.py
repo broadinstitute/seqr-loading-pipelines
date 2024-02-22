@@ -140,7 +140,7 @@ def remapped_and_subsetted_callset_path(
     )
 
 
-def family_lookup_table_path(
+def lookup_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
