@@ -2,8 +2,8 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.update_sample_lookup_table import (
-    UpdateSampleLookupTableTask,
+from v03_pipeline.lib.tasks.update_lookup_table import (
+    UpdateLookupTableTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -15,7 +15,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 class UpdateSampleLookupTableTest(MockedDatarootTestCase):
     def test_update_sample_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
-        uslt_task = UpdateSampleLookupTableTask(
+        uslt_task = UpdateLookupTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -30,6 +30,7 @@ class UpdateSampleLookupTableTest(MockedDatarootTestCase):
         self.assertTrue(uslt_task.output().exists())
         self.assertTrue(uslt_task.complete())
         ht = hl.read_table(uslt_task.output().path)
+        print(ht.globals.collect())
         self.assertEqual(
             ht.globals.collect(),
             [

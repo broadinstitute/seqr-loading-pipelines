@@ -19,8 +19,8 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
-from v03_pipeline.lib.tasks.update_sample_lookup_table import (
-    UpdateSampleLookupTableTask,
+from v03_pipeline.lib.tasks.update_lookup_table import (
+    UpdateLookupTableTask,
 )
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
@@ -85,11 +85,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ]
         else:
             upstream_table_tasks: list[luigi.Task] = []
-        if self.dataset_type.has_sample_lookup_table:
-            # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
+        if self.dataset_type.has_lookup_table:
+            # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
                 [
-                    UpdateSampleLookupTableTask(
+                    UpdateLookupTableTask(
                         self.reference_genome,
                         self.dataset_type,
                         self.sample_type,
@@ -241,13 +241,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
-        # and annotate with the sample lookup table.
+        # and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
-        if self.dataset_type.has_sample_lookup_table:
+        if self.dataset_type.has_lookup_table:
             ht = ht.annotate(
                 **get_fields(
                     ht,
-                    self.dataset_type.sample_lookup_table_annotation_fns,
+                    self.dataset_type.lookup_table_annotation_fns,
                     **self.rdc_annotation_dependencies,
                     **self.other_annotation_dependencies,
                     **self.param_kwargs,
