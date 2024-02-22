@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.family_lookup import (
     compute_callset_family_lookup_ht,
+    remove_new_callset_family_guids,
 )
 from v03_pipeline.lib.model import DatasetType
 
@@ -21,501 +22,203 @@ class SampleLookupTest(unittest.TestCase):
             },
             globals={'family_samples': {'2': ['a'], '1': ['b', 'c', 'd'], '3': ['e']}},
         )
-        sample_lookup_ht = compute_callset_family_lookup_ht(
+        family_lookup_ht = compute_callset_family_lookup_ht(
             DatasetType.MITO,
             mt,
             'project_a',
         )
         self.assertCountEqual(
-            sample_lookup_ht.globals.collect(),
+            family_lookup_ht.globals.collect(),
             [
                 hl.Struct(
-                    family_samples={'1': ['b', 'c', 'd'], '2': ['a'], '3': ['e']}, 
-                    project_guids=['project_a'], 
-                    project_families={'project_a': ['1', '2', '3']}
-                )
+                    family_samples={'1': ['b', 'c', 'd'], '2': ['a'], '3': ['e']},
+                    project_guids=['project_a'],
+                    project_families={'project_a': ['1', '2', '3']},
+                ),
             ],
         )
         self.assertCountEqual(
-            sample_lookup_ht.collect(),
+            family_lookup_ht.collect(),
             [
                 hl.Struct(
                     row_idx=0,
-                    family_stats=[
-                        hl.Struct(
-                            ref_samples=0,
-                            heteroplasmic_samples=1,
-                            homoplasmic_samples=1,
-                        ),
-                        hl.Struct(
-                            ref_samples=1,
-                            heteroplasmic_samples=0,
-                            homoplasmic_samples=0,
-                        ),
-                        hl.Struct(
-                            ref_samples=0,
-                            heteroplasmic_samples=1,
-                            homoplasmic_samples=0,
-                        ),
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=0,
+                            ),
+                        ],
                     ],
                 ),
                 hl.Struct(
                     row_idx=1,
-                    family_stats=[
-                        hl.Struct(
-                            ref_samples=0,
-                            heteroplasmic_samples=2,
-                            homoplasmic_samples=1,
-                        ),
-                        hl.Struct(
-                            ref_samples=0,
-                            heteroplasmic_samples=1,
-                            homoplasmic_samples=0,
-                        ),
-                        hl.Struct(
-                            ref_samples=0,
-                            heteroplasmic_samples=1,
-                            homoplasmic_samples=0,
-                        ),
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=0,
+                            ),
+                        ],
                     ],
                 ),
             ],
         )
 
-
-    # def test_filter_callset_sample_ids(self) -> None:
-    #    sample_lookup_ht = hl.Table.parallelize(
-    #        [
-    #            {
-    #                'id': 0,
-    #                'ref_samples': hl.Struct(project_1=set()),
-    #                'het_samples': hl.Struct(project_1={'b', 'd', 'f'}),
-    #                'hom_samples': hl.Struct(project_1={'e', 'f'}),
-    #            },
-    #            {
-    #                'id': 1,
-    #                'ref_samples': hl.Struct(project_1={'f'}),
-    #                'het_samples': hl.Struct(project_1={'a'}),
-    #                'hom_samples': hl.Struct(project_1=set()),
-    #            },
-    #        ],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
-    #            het_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
-    #            hom_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
-    #        ),
-    #        key='id',
-    #        globals=hl.Struct(
-    #            updates=hl.set([hl.Struct(callset='abc', project_guid='project_1')]),
-    #        ),
-    #    )
-    #    samples_ht = hl.Table.parallelize(
-    #        [
-    #            {'s': 'd'},
-    #            {'s': 'e'},
-    #            {'s': 'f'},
-    #        ],
-    #        hl.tstruct(
-    #            s=hl.dtype('str'),
-    #        ),
-    #        key='s',
-    #    )
-    #    sample_lookup_ht = filter_callset_sample_ids(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        samples_ht,
-    #        'project_1',
-    #    )
-    #    self.assertListEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(project_1=set()),
-    #                het_samples=hl.Struct(project_1={'b'}),
-    #                hom_samples=hl.Struct(project_1=set()),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(project_1=set()),
-    #                het_samples=hl.Struct(project_1={'a'}),
-    #                hom_samples=hl.Struct(project_1=set()),
-    #            ),
-    #        ],
-    #    )
-    #    samples_ht = hl.Table.parallelize(
-    #        [
-    #            {'s': 'b'},
-    #        ],
-    #        hl.tstruct(
-    #            s=hl.dtype('str'),
-    #        ),
-    #        key='s',
-    #    )
-    #    sample_lookup_ht = filter_callset_sample_ids(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        samples_ht,
-    #        'project_2',
-    #    )
-    #    self.assertListEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(project_1=set()),
-    #                het_samples=hl.Struct(project_1={'b'}),
-    #                hom_samples=hl.Struct(project_1=set()),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(project_1=set()),
-    #                het_samples=hl.Struct(project_1={'a'}),
-    #                hom_samples=hl.Struct(project_1=set()),
-    #            ),
-    #        ],
-    #    )
-
-    # def test_join_sample_lookup_hts(self) -> None:
-    #    sample_lookup_ht = hl.Table.parallelize(
-    #        [],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tstruct(),
-    #            het_samples=hl.tstruct(),
-    #            hom_samples=hl.tstruct(),
-    #        ),
-    #        key='id',
-    #    )
-    #    callset_sample_lookup_ht = hl.Table.parallelize(
-    #        [
-    #            {
-    #                'id': 0,
-    #                'ref_samples': {'a'},
-    #                'het_samples': {'b', 'c'},
-    #                'hom_samples': set(),
-    #            },
-    #            {
-    #                'id': 1,
-    #                'ref_samples': set(),
-    #                'het_samples': set(),
-    #                'hom_samples': {'a', 'b', 'c'},
-    #            },
-    #        ],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tset(hl.tstr),
-    #            het_samples=hl.tset(hl.tstr),
-    #            hom_samples=hl.tset(hl.tstr),
-    #        ),
-    #        key='id',
-    #    )
-    #    sample_lookup_ht = join_sample_lookup_hts(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        callset_sample_lookup_ht,
-    #        'project_1',
-    #    )
-    #    self.assertCountEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(project_1={'a'}),
-    #                het_samples=hl.Struct(project_1={'b', 'c'}),
-    #                hom_samples=hl.Struct(project_1=set()),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(project_1=set()),
-    #                het_samples=hl.Struct(project_1=set()),
-    #                hom_samples=hl.Struct(project_1={'a', 'b', 'c'}),
-    #            ),
-    #        ],
-    #    )
-    #    callset_sample_lookup_ht = hl.Table.parallelize(
-    #        [
-    #            {
-    #                'id': 0,
-    #                'ref_samples': {'a'},
-    #                'het_samples': {'b'},
-    #                'hom_samples': set(),
-    #            },
-    #            {
-    #                'id': 2,
-    #                'ref_samples': set(),
-    #                'het_samples': {'a'},
-    #                'hom_samples': {'b'},
-    #            },
-    #        ],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tset(hl.tstr),
-    #            het_samples=hl.tset(hl.tstr),
-    #            hom_samples=hl.tset(hl.tstr),
-    #        ),
-    #        key='id',
-    #    )
-    #    sample_lookup_ht = join_sample_lookup_hts(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        callset_sample_lookup_ht,
-    #        'project_2',
-    #    )
-    #    self.assertCountEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(
-    #                    project_1={'a'},
-    #                    project_2={'a'},
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1={'b', 'c'},
-    #                    project_2={'b'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1={'a', 'b', 'c'},
-    #                    project_2=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=2,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'a'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'b'},
-    #                ),
-    #            ),
-    #        ],
-    #    )
-    #    callset_sample_lookup_ht = hl.Table.parallelize(
-    #        [
-    #            {
-    #                'id': 0,
-    #                'ref_samples': {'c'},
-    #                'het_samples': {'d'},
-    #                'hom_samples': {'e'},
-    #            },
-    #            {
-    #                'id': 3,
-    #                'ref_samples': set(),
-    #                'het_samples': {'c'},
-    #                'hom_samples': {'d', 'e'},
-    #            },
-    #        ],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tset(hl.tstr),
-    #            het_samples=hl.tset(hl.tstr),
-    #            hom_samples=hl.tset(hl.tstr),
-    #        ),
-    #        key='id',
-    #    )
-    #    sample_lookup_ht = join_sample_lookup_hts(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        callset_sample_lookup_ht,
-    #        'project_3',
-    #    )
-    #    self.assertCountEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(
-    #                    project_1={'a'},
-    #                    project_2={'a'},
-    #                    project_3={'c'},
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1={'b', 'c'},
-    #                    project_2={'b'},
-    #                    project_3={'d'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3={'e'},
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1={'a', 'b', 'c'},
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=2,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'a'},
-    #                    project_3=set(),
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'b'},
-    #                    project_3=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=3,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3={'c'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3={'d', 'e'},
-    #                ),
-    #            ),
-    #        ],
-    #    )
-    #    callset_sample_lookup_ht = hl.Table.parallelize(
-    #        [
-    #            {
-    #                'id': 0,
-    #                'ref_samples': {'a', 'd'},
-    #                'het_samples': {'b', 'f'},
-    #                'hom_samples': {'c'},
-    #            },
-    #        ],
-    #        hl.tstruct(
-    #            id=hl.tint32,
-    #            ref_samples=hl.tset(hl.tstr),
-    #            het_samples=hl.tset(hl.tstr),
-    #            hom_samples=hl.tset(hl.tstr),
-    #        ),
-    #        key='id',
-    #    )
-    #    sample_lookup_ht = join_sample_lookup_hts(
-    #        DatasetType.SNV_INDEL,
-    #        sample_lookup_ht,
-    #        callset_sample_lookup_ht,
-    #        'project_2',
-    #    )
-    #    self.assertCountEqual(
-    #        sample_lookup_ht.collect(),
-    #        [
-    #            hl.Struct(
-    #                id=0,
-    #                ref_samples=hl.Struct(
-    #                    project_1={'a'},
-    #                    project_2={'a', 'd'},
-    #                    project_3={'c'},
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1={'b', 'c'},
-    #                    project_2={'b', 'f'},
-    #                    project_3={'d'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'c'},
-    #                    project_3={'e'},
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=1,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1={'a', 'b', 'c'},
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=2,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'a'},
-    #                    project_3=set(),
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2={'b'},
-    #                    project_3=set(),
-    #                ),
-    #            ),
-    #            hl.Struct(
-    #                id=3,
-    #                ref_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3=set(),
-    #                ),
-    #                het_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3={'c'},
-    #                ),
-    #                hom_samples=hl.Struct(
-    #                    project_1=set(),
-    #                    project_2=set(),
-    #                    project_3={'d', 'e'},
-    #                ),
-    #            ),
-    #        ],
-    #    )
+    def test_remove_new_callset_family_guids(self) -> None:
+        family_lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=2,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=2,
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                },
+                {
+                    'id': 1,
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=2,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=2,
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                project_stats=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            ref_samples=hl.tint32,
+                            heteroplasmic_samples=hl.tint32,
+                            homoplasmic_samples=hl.tint32,
+                        ),
+                    ),
+                ),
+            ),
+            key='id',
+            globals=hl.Struct(
+                project_guids=['project_a', 'project_b'],
+                project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+            ),
+        )
+        family_lookup_ht = remove_new_callset_family_guids(
+            family_lookup_ht,
+            'project_c',
+            ['2'],
+        )
+        family_lookup_ht = remove_new_callset_family_guids(
+            family_lookup_ht,
+            'project_a',
+            ['3', '1'],
+        )
+        family_lookup_ht = remove_new_callset_family_guids(
+            family_lookup_ht,
+            'project_b',
+            ['4'],
+        )
+        self.assertCountEqual(
+            family_lookup_ht.globals.collect(),
+            [
+                hl.Struct(
+                    project_guids=['project_a', 'project_b'],
+                    project_families={'project_a': ['2'], 'project_b': []},
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            family_lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                        ],
+                        [],
+                    ],
+                ),
+                hl.Struct(
+                    id=1,
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                        ],
+                        [],
+                    ],
+                ),
+            ],
+        )

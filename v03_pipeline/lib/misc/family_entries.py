@@ -97,26 +97,23 @@ def remove_new_callset_family_guids(
     ht: hl.Table,
     family_guids: list[str],
 ) -> hl.Table:
+    family_guids = hl.set(family_guids)
     # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
-    family_indexes_to_keep = [
-        i
-        for i, f in enumerate(hl.eval(ht.globals.family_guids))
-        if f not in family_guids
-    ]
+    family_indexes_to_keep = hl.array(
+        hl.enumerate(ht.globals.family_guids)
+        .filter(lambda item: ~family_guids.contains(item[1]))
+        .map(lambda item: item[0]),
+    )
     ht = ht.annotate(
-        family_entries=(
-            hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
-            if len(family_indexes_to_keep) > 0
-            else hl.missing(ht.family_entries.dtype.element_type)
-        ),
+        family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
-            lambda f: ~hl.set(family_guids).contains(f),
+            lambda f: ~family_guids.contains(f),
         ),
         family_samples=hl.dict(
             ht.family_samples.items().filter(
-                lambda i: ~hl.set(family_guids).contains(i[0]),
+                lambda item: ~family_guids.contains(item[0]),
             ),
         ),
     )
