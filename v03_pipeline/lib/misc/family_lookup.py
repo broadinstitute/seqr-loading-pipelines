@@ -16,25 +16,27 @@ def compute_callset_family_lookup_ht(
         },
     )
     ht = mt.select_rows(
-        project_stats=hl.array([
-            hl.agg.collect(
-                hl.Struct(
-                    family_guid=sample_id_to_family_guid[mt.s],
-                    **mt.entry,
+        project_stats=hl.array(
+            [
+                hl.agg.collect(
+                    hl.Struct(
+                        family_guid=sample_id_to_family_guid[mt.s],
+                        **mt.entry,
+                    ),
+                )
+                .group_by(lambda fs: fs.family_guid)
+                .values()
+                .map(
+                    lambda fs: hl.Struct(
+                        family_guid=fs[0].family_guid,
+                        **{
+                            field_name: hl.len(fs.filter(filter_fn))
+                            for field_name, filter_fn in dataset_type.family_lookup_table_fields_and_genotype_filter_fns.items()
+                        },
+                    ),
                 ),
-            )
-            .group_by(lambda fs: fs.family_guid)
-            .values()
-            .map(
-                lambda fs: hl.Struct(
-                    family_guid=fs[0].family_guid,
-                    **{
-                        field_name: hl.len(fs.filter(filter_fn))
-                        for field_name, filter_fn in dataset_type.family_lookup_table_fields_and_genotype_filter_fns.items()
-                    },
-                ),
-            ),
-        ]),
+            ]
+        ),
     ).rows()
     return globalize_ids(ht, project_guid)
 
@@ -93,9 +95,12 @@ def remove_new_callset_family_guids(
                     hl.if_else(
                         item[0] != project_guid,
                         item,
-                        (item[0], ht.project_families[project_guid].filter(
-                            lambda family_guid: ~family_guids.contains(family_guid),
-                        )),
+                        (
+                            item[0],
+                            ht.project_families[project_guid].filter(
+                                lambda family_guid: ~family_guids.contains(family_guid),
+                            ),
+                        ),
                     )
                 ),
             ),
@@ -106,75 +111,122 @@ def remove_new_callset_family_guids(
 def join_family_lookup_hts(
     ht: hl.Table,
     callset_ht: hl.Table,
-    project_guid: str,
 ) -> hl.Table:
-    project_i = ht.project_guids.index(project_guid)
     ht = ht.join(callset_ht, 'outer')
-    ht_empty_project_stats = ht.project_guids.map(
-        lambda _: hl.missing(ht.project_stats.dtype.element_type),
-    )
-    callset_ht_empty_project_stats = ht.project_guids_1.map(
-        lambda _: hl.missing(ht.project_stats_1.dtype.element_type),
-    )
+    project_guid = ht.project_guids_1[0]
+    ht_project_i = ht.project_guids.index(project_guid)
     ht = ht.select(
-        # We have 4 unique cases here.
-        # 1) The row is missing on the left but preset on the right.
-        #   - We populate the left with a missing value for each project
-        #     on the left and extend on the right.
-        # 2) The row is present on the right but missing on the left.
-        #   - We populate the right with a missing value for each project
-        #     on the right (there should only be one), and extend with
-        #     that missing value on the right.
-        # 3) The row is present on both the right and the left, and the
-        #    project has never been seen before on the left.
-        #   - We just extend the array from the left with the project from the right.
-        # 4) The row is present on both the right and the left, and the project
-        #    has been loaded before (there may be either no families present or some that
-        #    are not present in this callset).
-        #   - We keep all entries in project_stats the same "except" at the project index
-        #     and add the new families to that project.
+        # We have 6 unique cases here.
+        # 1) The project has not been loaded before, the row is missing
+        #    on the left but present on the right.
+        # 2) The project has not been loaded before, the row is present
+        #    on the left but missing on the right.
+        # 3) The project as not been loaded before, the row is present on
+        #    both the left and right.
+        # 4) The project has been loaded before, the row is missing on the
+        #    left but present on the right.
+        # 5) The project has been loaded before, the row is present on the
+        #    left but missing on the right.
+        # 6) The project has been loaded before, the row is present on both
+        #    the left and right.
         project_stats=(
             hl.case()
             .when(
+                (hl.is_missing(ht_project_i) & hl.is_missing(ht.project_stats)),
+                ht.project_guids.map(
+                    lambda _: hl.missing(ht.project_stats.dtype.element_type),
+                ).extend(ht.project_stats_1),
+            )
+            .when(
+                (hl.is_missing(ht_project_i) & hl.is_missing(ht.project_stats_1)),
+                ht.project_stats.extend(
+                    ht.project_guids_1.map(
+                        lambda _: hl.missing(ht.project_stats_1.dtype.element_type),
+                    )
+                ),
+            )
+            .when(
+                hl.is_missing(ht_project_i), ht.project_stats.extend(ht.project_stats_1)
+            )
+            .when(
                 hl.is_missing(ht.project_stats),
-                ht_empty_project_stats.extend(ht.project_stats),
+                hl.enumerate(ht.project_guids).starmap(
+                    # Add a missing project_stats value for every loaded project,
+                    # then add a missing value for every family for "this project"
+                    # and extend the new families on the right.
+                    lambda i, p: (
+                        hl.or_missing(
+                            i == ht_project_i,
+                            ht.project_families[project_guid]
+                            .map(
+                                lambda _: hl.missing(
+                                    ht.project_stats.dtype.element_type.element_type
+                                )
+                            )
+                            .extend(ht.project_stats_1[0]),
+                        )
+                    )
+                ),
             )
             .when(
                 hl.is_missing(ht.project_stats_1),
-                ht.project_stats.extend(callset_ht_empty_project_stats),
+                hl.enumerate(ht.project_stats).starmap(
+                    # At the specific index of "this project"
+                    # extend with missing values on the right for every
+                    # newly loaded family.
+                    lambda i, ps: (
+                        hl.if_else(
+                            i != ht_project_i,
+                            ps,
+                            ps.extend(
+                                ht.project_families_1[project_guid].map(
+                                    lambda _: hl.missing(
+                                        ht.project_stats.dtype.element_type.element_type
+                                    )
+                                )
+                            ),
+                        )
+                    )
+                ),
             )
             .default(
-                hl.if_else(
-                    hl.is_missing(project_i),
-                    ht.project_stats.extend(ht.project_stats_1),
-                    hl.enumerate(ht.project_stats).starmap(
-                        lambda i, fs: (
-                            hl.if_else(
-                                i != project_i,
-                                fs,
-                                ht.project_stats[project_i].extend(ht.project_stats[0]),
-                            )
-                        ),
+                hl.enumerate(ht.project_stats).starmap(
+                    lambda i, ps: (
+                        hl.if_else(
+                            i != ht_project_i,
+                            ps,
+                            ht.project_stats[ht_project_i].extend(
+                                ht.project_stats_1[0]
+                            ),
+                        )
                     ),
                 ),
             )
         ),
     )
+    # NB: double reference this because the source ht has changed :/
+    project_guid = ht.project_guids_1[0]
+    ht_project_i = ht.project_guids.index(project_guid)
     return ht.transmute_globals(
         project_guids=hl.if_else(
-            hl.is_missing(project_i),
+            hl.is_missing(ht_project_i),
             ht.project_guids.extend(ht.project_guids_1),
             ht.project_guids,
         ),
         project_families=hl.if_else(
-            hl.is_missing(project_i),
+            hl.is_missing(ht_project_i),
             hl.dict(ht.project_families.items().extend(ht.project_families_1.items())),
             hl.dict(
                 ht.project_families.items().map(
                     lambda item: hl.if_else(
                         item[0] != project_guid,
                         item,
-                        (item[0], ht.project_families[project_guid].extend(ht.project_families_1[project_guid])),
+                        (
+                            item[0],
+                            ht.project_families[project_guid].extend(
+                                ht.project_families_1[project_guid]
+                            ),
+                        ),
                     ),
                 ),
             ),
