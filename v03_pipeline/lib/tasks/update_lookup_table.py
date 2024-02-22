@@ -70,13 +70,21 @@ class UpdateLookupTableTask(BaseUpdateTask):
             [],
             hl.tstruct(
                 **key_type,
-                **{
-                    field: hl.tstruct()
-                    for field in self.dataset_type.sample_lookup_table_fields_and_genotype_filter_fns
-                },
+                project_stats=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            **{
+                                field: hl.tint32
+                                for field in self.dataset_type.lookup_table_fields_and_genotype_filter_fns
+                            }
+                        ),
+                    ),
+                ),
             ),
             key=key_type.fields,
             globals=hl.Struct(
+                project_guids=hl.empty_array(hl.tstr),
+                project_families=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )

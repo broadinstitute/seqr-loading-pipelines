@@ -146,7 +146,8 @@ def join_lookup_hts(
                 ),
             )
             .when(
-                hl.is_missing(ht_project_i), ht.project_stats.extend(ht.project_stats_1),
+                hl.is_missing(ht_project_i),
+                ht.project_stats.extend(ht.project_stats_1),
             )
             .when(
                 hl.is_missing(ht.project_stats),

@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
-    sample_lookup_table_path,
+    lookup_table_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
