@@ -204,7 +204,7 @@ def join_family_lookup_hts(
             )
         ),
     )
-    # NB: double reference this because the source ht has changed :/
+    # NB: double reference these because the source ht has changed :/
     project_guid = ht.project_guids_1[0]
     ht_project_i = ht.project_guids.index(project_guid)
     return ht.transmute_globals(
