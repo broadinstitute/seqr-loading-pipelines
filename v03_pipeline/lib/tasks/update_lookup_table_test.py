@@ -20,7 +20,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
-            project_guid='R0555_seqr_demo', # a project excluded from the lookup table
+            project_guid='R0555_seqr_demo',  # a project excluded from the lookup table
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             validate=False,
@@ -42,10 +42,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                 ),
             ],
         )
-        self.assertEqual(
-            ht.collect(),
-            []
-        )
+        self.assertEqual(ht.collect(), [])
 
     def test_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
