@@ -3,7 +3,7 @@ import hail as hl
 from v03_pipeline.lib.model import DatasetType
 
 
-def compute_callset_family_lookup_ht(
+def compute_callset_lookup_ht(
     dataset_type: DatasetType,
     mt: hl.MatrixTable,
     project_guid: str,
@@ -31,7 +31,7 @@ def compute_callset_family_lookup_ht(
                         family_guid=fs[0].family_guid,
                         **{
                             field_name: hl.len(fs.filter(filter_fn))
-                            for field_name, filter_fn in dataset_type.family_lookup_table_fields_and_genotype_filter_fns.items()
+                            for field_name, filter_fn in dataset_type.lookup_table_fields_and_genotype_filter_fns.items()
                         },
                     ),
                 ),
@@ -108,7 +108,7 @@ def remove_new_callset_family_guids(
     )
 
 
-def join_family_lookup_hts(
+def join_lookup_hts(
     ht: hl.Table,
     callset_ht: hl.Table,
 ) -> hl.Table:

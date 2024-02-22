@@ -113,7 +113,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def has_sample_lookup_table(self) -> bool:
+    def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
     @property
@@ -143,7 +143,7 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def family_lookup_table_fields_and_genotype_filter_fns(
+    def lookup_table_fields_and_genotype_filter_fns(
         self,
     ) -> dict[str, Callable[[hl.StructExpression], hl.Expression]]:
         return {
@@ -269,7 +269,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: [
                 snv_indel.gt_stats,

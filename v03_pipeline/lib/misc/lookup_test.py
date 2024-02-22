@@ -2,16 +2,16 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.misc.family_lookup import (
-    compute_callset_family_lookup_ht,
-    join_family_lookup_hts,
+from v03_pipeline.lib.misc.lookup import (
+    compute_callsetlookup_ht,
+    join_lookup_hts,
     remove_new_callset_family_guids,
 )
 from v03_pipeline.lib.model import DatasetType
 
 
-class SampleLookupTest(unittest.TestCase):
-    def test_compute_callset_family_lookup_ht(self) -> None:
+class LookupTest(unittest.TestCase):
+    def test_compute_callset_lookup_ht(self) -> None:
         mt = hl.MatrixTable.from_parts(
             rows={'variants': [1, 2]},
             cols={'s': ['a', 'b', 'c', 'd', 'e']},
@@ -23,13 +23,13 @@ class SampleLookupTest(unittest.TestCase):
             },
             globals={'family_samples': {'2': ['a'], '1': ['b', 'c', 'd'], '3': ['e']}},
         )
-        family_lookup_ht = compute_callset_family_lookup_ht(
+        lookup_ht = compute_callset_lookup_ht(
             DatasetType.MITO,
             mt,
             'project_a',
         )
         self.assertCountEqual(
-            family_lookup_ht.globals.collect(),
+            lookup_ht.globals.collect(),
             [
                 hl.Struct(
                     family_samples={'1': ['b', 'c', 'd'], '2': ['a'], '3': ['e']},
@@ -39,7 +39,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
         self.assertCountEqual(
-            family_lookup_ht.collect(),
+            lookup_ht.collect(),
             [
                 hl.Struct(
                     row_idx=0,
@@ -89,7 +89,7 @@ class SampleLookupTest(unittest.TestCase):
         )
 
     def test_remove_new_callset_family_guids(self) -> None:
-        family_lookup_ht = hl.Table.parallelize(
+        lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
@@ -168,23 +168,23 @@ class SampleLookupTest(unittest.TestCase):
                 project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
             ),
         )
-        family_lookup_ht = remove_new_callset_family_guids(
-            family_lookup_ht,
+        lookup_ht = remove_new_callset_family_guids(
+            lookup_ht,
             'project_c',
             ['2'],
         )
-        family_lookup_ht = remove_new_callset_family_guids(
-            family_lookup_ht,
+        lookup_ht = remove_new_callset_family_guids(
+            lookup_ht,
             'project_a',
             ['3', '1'],
         )
-        family_lookup_ht = remove_new_callset_family_guids(
-            family_lookup_ht,
+        lookup_ht = remove_new_callset_family_guids(
+            lookup_ht,
             'project_b',
             ['4'],
         )
         self.assertCountEqual(
-            family_lookup_ht.globals.collect(),
+            lookup_ht.globals.collect(),
             [
                 hl.Struct(
                     project_guids=['project_a', 'project_b'],
@@ -193,7 +193,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
         self.assertCountEqual(
-            family_lookup_ht.collect(),
+            lookup_ht.collect(),
             [
                 hl.Struct(
                     id=0,
@@ -224,7 +224,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
 
-    def test_join_family_lookup_hts_empty_table(self) -> None:
+    def test_join_lookup_hts_empty_table(self) -> None:
         ht = hl.Table.parallelize(
             [],
             hl.tstruct(
@@ -310,7 +310,7 @@ class SampleLookupTest(unittest.TestCase):
                 project_families={'project_a': ['1', '2', '3']},
             ),
         )
-        ht = join_family_lookup_hts(
+        ht = join_lookup_hts(
             ht,
             callset_ht,
         )
@@ -373,7 +373,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
 
-    def test_join_family_lookup_hts_new_project(self) -> None:
+    def test_join_lookup_hts_new_project(self) -> None:
         ht = hl.Table.parallelize(
             [
                 {
@@ -498,7 +498,7 @@ class SampleLookupTest(unittest.TestCase):
                 project_families={'project_c': ['1', '2']},
             ),
         )
-        ht = join_family_lookup_hts(
+        ht = join_lookup_hts(
             ht,
             callset_ht,
         )
@@ -601,7 +601,7 @@ class SampleLookupTest(unittest.TestCase):
             ],
         )
 
-    def test_join_family_lookup_hts_existing_project(self) -> None:
+    def test_join_lookup_hts_existing_project(self) -> None:
         ht = hl.Table.parallelize(
             [
                 {
@@ -726,7 +726,7 @@ class SampleLookupTest(unittest.TestCase):
                 project_families={'project_b': ['1', '2']},
             ),
         )
-        ht = join_family_lookup_hts(
+        ht = join_lookup_hts(
             ht,
             callset_ht,
         )

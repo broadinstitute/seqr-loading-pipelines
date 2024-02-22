@@ -1,12 +1,12 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.sample_lookup import (
-    compute_callset_sample_lookup_ht,
-    filter_callset_sample_ids,
-    join_sample_lookup_hts,
+from v03_pipeline.lib.misc.family_lookup import (
+    compute_callset_family_lookup_ht,
+    remove_new_callset_family_guids,
+    join_family_lookup_hts,
 )
-from v03_pipeline.lib.paths import sample_lookup_table_path
+from v03_pipeline.lib.paths import family_lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
-class UpdateSampleLookupTableTask(BaseUpdateTask):
+class UpdateFamilyLookupTableTask(BaseUpdateTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -34,7 +34,7 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            sample_lookup_table_path(
+            family_lookup_table_path(
                 self.reference_genome,
                 self.dataset_type,
             ),
@@ -83,23 +83,23 @@ class UpdateSampleLookupTableTask(BaseUpdateTask):
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = filter_callset_sample_ids(
-            self.dataset_type,
+        ht = remove_new_callset_family_guids(
             ht,
-            callset_mt.cols(),
             self.project_guid,
+            list(callset_mt.family_samples.collect()[0].keys()),
         )
-        callset_sample_lookup_ht = compute_callset_sample_lookup_ht(
+        callset_ht = compute_callset_family_lookup_ht(
             self.dataset_type,
             callset_mt,
-        )
-        ht = join_sample_lookup_hts(
-            self.dataset_type,
-            ht,
-            callset_sample_lookup_ht,
             self.project_guid,
         )
+        ht = join_sample_lookup_hts(
+            ht,
+            callset_ht,
+        )
         return ht.select_globals(
+            project_guids=ht.project_guids,
+            project_families=ht.project_families,
             updates=ht.updates.add(
                 hl.Struct(callset=self.callset_path, project_guid=self.project_guid),
             ),

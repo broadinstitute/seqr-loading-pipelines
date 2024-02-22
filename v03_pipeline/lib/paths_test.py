@@ -14,7 +14,7 @@ from v03_pipeline.lib.paths import (
     project_table_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
-    sample_lookup_table_path,
+    family_lookup_table_path,
     sex_check_table_path,
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
@@ -83,9 +83,9 @@ class TestPaths(unittest.TestCase):
             '/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
         )
 
-    def test_sample_lookup_table_path(self) -> None:
+    def test_family_lookup_table_path(self) -> None:
         self.assertEqual(
-            sample_lookup_table_path(
+            family_lookup_table_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
