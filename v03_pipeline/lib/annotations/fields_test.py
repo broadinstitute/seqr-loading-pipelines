@@ -93,25 +93,38 @@ class FieldsTest(MockedDatarootTestCase):
                 expected_fields,
             )
 
-    def test_get_sample_lookup_table_fields(
+    def test_get_lookup_table_fields(
         self,
     ) -> None:
-        sample_lookup_ht = hl.Table.parallelize(
+        lookup_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus('chr1', 1, ReferenceGenome.GRCh38.value),
                     'alleles': ['A', 'C'],
-                    'ref_samples': hl.Struct(project_1={'a', 'c'}),
-                    'het_samples': hl.Struct(project_1={'b', 'd'}),
-                    'hom_samples': hl.Struct(project_1={'e', 'f'}),
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=2,
+                                het_samples=2,
+                                hom_samples=2,
+                            ),
+                        ],
+                    ],
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus(ReferenceGenome.GRCh38.value),
                 alleles=hl.tarray(hl.tstr),
-                ref_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
-                het_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
-                hom_samples=hl.tstruct(project_1=hl.tset(hl.tstr)),
+                project_stats=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            **{
+                                field: hl.tint32
+                                for field in DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns
+                            },
+                        ),
+                    ),
+                ),
             ),
             key=('locus', 'alleles'),
             globals=hl.Struct(
@@ -130,8 +143,8 @@ class FieldsTest(MockedDatarootTestCase):
             list(
                 get_fields(
                     ht,
-                    DatasetType.SNV_INDEL.sample_lookup_table_annotation_fns,
-                    sample_lookup_ht=sample_lookup_ht,
+                    DatasetType.SNV_INDEL.lookup_table_annotation_fns,
+                    lookup_ht=lookup_ht,
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
                 ).keys(),
