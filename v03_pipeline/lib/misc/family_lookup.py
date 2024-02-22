@@ -128,7 +128,7 @@ def join_family_lookup_hts(
         # 3) The row is present on both the right and the left, and the
         #    project has never been seen before on the left.
         #   - We just extend the array from the left with the project from the right.
-        # 4) The row is present on both the righ and the left, and the project
+        # 4) The row is present on both the right and the left, and the project
         #    has been loaded before (there may be either no families present or some that
         #    are not present in this callset).
         #   - We keep all entries in project_stats the same "except" at the project index
