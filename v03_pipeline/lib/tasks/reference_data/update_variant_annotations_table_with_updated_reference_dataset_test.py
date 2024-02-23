@@ -388,7 +388,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     clinvar_mito=None,
                     dbnsfp_mito=hl.Struct(
                         SIFT_score=None,
-                        MutationTaster_pred="N",
+                        MutationTaster_pred='N',
                     ),
                     gnomad_mito=None,
                     helix_mito=hl.Struct(
