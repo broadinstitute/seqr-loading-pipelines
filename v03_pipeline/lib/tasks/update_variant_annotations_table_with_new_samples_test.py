@@ -633,7 +633,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     paths=hl.Struct(
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         gnomad_mito='gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
                         helix_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
@@ -657,10 +657,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             pathogenicity=CLINVAR_PATHOGENICITIES,
                         ),
                         dbnsfp_mito=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
-                            fathmm_MKL_coding_pred=['D', 'N'],
                         ),
                         gnomad_mito=hl.Struct(),
                         helix_mito=hl.Struct(),
