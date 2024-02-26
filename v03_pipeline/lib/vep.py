@@ -2,11 +2,13 @@ import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
+
 def validate_vep_config_reference_genome(reference_genome, config: str) -> None:
-    with open(config, 'r') as f:
-        if reference_genome.value not in myfile.read():
+    with open(config) as f:
+        if reference_genome.value not in f.read():
             msg = f'Vep config does not match supplied reference genome {reference_genome.value}'
             raise ValueError(msg)
+
 
 def run_vep(
     ht: hl.Table,

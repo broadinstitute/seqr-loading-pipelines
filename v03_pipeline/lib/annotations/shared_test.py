@@ -12,7 +12,11 @@ from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
 class SharedAnnotationsTest(unittest.TestCase):
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_sorted_transcript_consequences(self, mock_vep: Mock, mock_validate: Mock) -> None:
+    def test_sorted_transcript_consequences(
+        self,
+        mock_vep: Mock,
+        mock_validate: Mock,
+    ) -> None:
         ht = hl.Table.parallelize(
             [
                 {
