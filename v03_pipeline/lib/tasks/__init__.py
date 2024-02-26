@@ -1,3 +1,4 @@
+from v03_pipeline.lib.tasks.delete_old_runs import DeleteOldRunsTask
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_sample_lookup_table import (
     UpdateSampleLookupTableTask,
@@ -11,6 +12,7 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 )
 
 __all__ = [
+    'DeleteOldRunsTask',
     'UpdateProjectTableTask',
     'UpdateSampleLookupTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
