@@ -48,10 +48,5 @@ class DeleteOldRunsTask(BaseHailTableTask):
         # Delete run dirs until we encounter the first of the N successful runs to keep.
         oldest_successful_run_index = run_dir_paths.index(successful_run_dir_paths[-MIN_SUCCESSFUL_RUNS])
         for run_dir_path in run_dir_paths[:oldest_successful_run_index]:
-            # NB: our existing GCSorLocalTarget does not work here because
-            # the LocalTarget API does not support removing directories.
-            if run_dir_path.startswith('gs://'):
-                gcs.GCSTarget(pathname).remove(recursive=True)
-            else:
-                shutil.rmtree(run_dir_path)
+            GCSorLocalTarget(run_dir_path.replace('file:', '')).remove()
         self._complete = True

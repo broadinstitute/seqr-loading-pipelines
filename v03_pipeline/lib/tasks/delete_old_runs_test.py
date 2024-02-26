@@ -103,10 +103,12 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
         )
         self.assertFalse(
             hl.hadoop_exists(
-                runs_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                ),
-                'manual__2024-01-05'
+                os.path.join(
+                    runs_path(
+                        ReferenceGenome.GRCh38,
+                        DatasetType.SNV_INDEL,
+                    ),
+                    'manual__2024-01-05',
+                )
             )
         )
