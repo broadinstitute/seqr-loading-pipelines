@@ -215,6 +215,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
+            self.reference_genome,
             self.vep_config_json_path,
         )
 
