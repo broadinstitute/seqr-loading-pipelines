@@ -51,7 +51,6 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
             7,
         )
 
-
     def test_leave_incomplete_runs(self) -> None:
         for run_dir in [
             'manual__2024-01-05',
