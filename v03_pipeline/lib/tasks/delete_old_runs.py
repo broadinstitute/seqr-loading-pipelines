@@ -1,5 +1,4 @@
 import os
-import shutil
 
 import hail as hl
 
@@ -29,7 +28,7 @@ class DeleteOldRunsTask(BaseHailTableTask):
                     ),
                 )
                 if rd['is_dir']
-            ]
+            ],
         )
         successful_run_dir_paths = [
             run_dir_path

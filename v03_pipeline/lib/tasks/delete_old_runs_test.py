@@ -45,8 +45,8 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
                     runs_path(
                         ReferenceGenome.GRCh38,
                         DatasetType.SNV_INDEL,
-                    )
-                )
+                    ),
+                ),
             ),
             7,
         )
@@ -78,7 +78,7 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
             Path(run_dir_path).mkdir(parents=True, exist_ok=True)
 
             # Force a couple of incomplete runs
-            if run_dir not in set(['manual__2024-01-13', 'manual__2024-01-16']):
+            if run_dir not in {'manual__2024-01-13', 'manual__2024-01-16'}:
                 Path((run_dir_path) / Path('_SUCCESS')).touch()
 
         worker = luigi.worker.Worker()
@@ -96,8 +96,8 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
                     runs_path(
                         ReferenceGenome.GRCh38,
                         DatasetType.SNV_INDEL,
-                    )
-                )
+                    ),
+                ),
             ),
             12,
         )
@@ -109,6 +109,6 @@ class DeleteOldRunsTaskTest(MockedDatarootTestCase):
                         DatasetType.SNV_INDEL,
                     ),
                     'manual__2024-01-05',
-                )
-            )
+                ),
+            ),
         )
