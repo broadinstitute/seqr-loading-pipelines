@@ -25,11 +25,11 @@ CLINVAR_ASSERTIONS = [
 ]
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
-        'no_interpretation_for_the_single_variant': 0,
+        'no_classification_for_the_single_variant': 0,
         'no_assertion_provided': 0,
         'no_assertion_criteria_provided': 0,
         'criteria_provided,_single_submitter': 1,
-        'criteria_provided,_conflicting_interpretations': 1,
+        'criteria_provided,_conflicting_classifications': 1,
         'criteria_provided,_multiple_submitters,_no_conflicts': 2,
         'reviewed_by_expert_panel': 3,
         'practice_guideline': 4,
