@@ -5,10 +5,14 @@ import hail as hl
 from v03_pipeline.lib.misc.family_loading_failures import (
     build_relatedness_check_lookup,
     build_sex_check_lookup,
+    get_families_failed_sex_check,
     passes_all_relatedness_checks,
 )
-from v03_pipeline.lib.misc.pedigree import Sample
+from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.misc.pedigree import Sample, parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import Ploidy
+
+TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 
 
 class FamilyLoadingFailuresTest(unittest.TestCase):
@@ -128,4 +132,34 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         self.assertFalse(
             passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        )
+
+    def test_get_families_failed_sex_check(self):
+        sex_check_ht = hl.Table.parallelize(
+            [
+                {'s': 'ROS_006_18Y03226_D1', 'sex': 'M'},
+                {'s': 'ROS_006_18Y03227_D1', 'sex': 'F'},
+                {'s': 'ROS_006_18Y03228_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05919_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05939_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05987_D1', 'sex': 'F'},
+            ],
+            hl.tstruct(
+                s=hl.tstr,
+                sex=hl.tstr,
+            ),
+            key='s',
+        )
+        pedigree_ht = import_pedigree(TEST_PEDIGREE_6)
+        failed_families = get_families_failed_sex_check(
+            parse_pedigree_ht_to_families(pedigree_ht), sex_check_ht, {},
+        )
+        self.assertCountEqual(
+            failed_families.values(),
+            [
+                [
+                    'Sample ROS_006_18Y03226_D1 has pedigree sex F but imputed sex M',
+                    'Sample ROS_006_18Y03227_D1 has pedigree sex M but imputed sex F',
+                ],
+            ],
         )

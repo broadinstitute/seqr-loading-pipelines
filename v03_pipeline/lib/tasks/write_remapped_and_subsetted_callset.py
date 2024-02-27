@@ -127,9 +127,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
         loadable_families = (
             families
-            - families_failed_missing_samples
-            - families_failed_relatedness_check
-            - families_failed_sex_check
+            - families_failed_missing_samples.keys()
+            - families_failed_relatedness_check.keys()
+            - families_failed_sex_check.keys()
         )
         if not len(loadable_families):
             msg = 'All families failed checks'
