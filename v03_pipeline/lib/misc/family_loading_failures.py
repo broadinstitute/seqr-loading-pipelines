@@ -24,7 +24,7 @@ def passes_relatedness_check(
         relation.coefficients,
         0.1,
     ):
-        return False, f'Sample {sample_id} has expected relation ${relation.value} to ${other_id} but has coefficients ${coefficients}'
+        return False, f'Sample {sample_id} has expected relation "{relation.value}" to {other_id} but has coefficients {coefficients or []}'
     return True, None
 
 
@@ -40,7 +40,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.PARENT,
         )
         if not success:
-            return success, reason
+            return False, reason
 
     for grandparent_id in [
         sample.maternal_grandmother,
@@ -55,7 +55,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.GRANDPARENT,
         )
         if not success:
-            return success, reason
+            return False, reason
 
     for sibling_id in sample.siblings:
         success, reason = passes_relatedness_check(
@@ -65,7 +65,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.SIBLING,
         )
         if not success:
-            return success, reason
+            return False, reason
 
     for half_sibling_id in sample.half_siblings:
         # NB: A "half sibling" parsed from the pedigree may actually be a sibling, so we allow those
@@ -83,7 +83,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.HALF_SIBLING,
         )
         if not success1 or success2:
-            return success, reason
+            return False, reason
 
     for aunt_nephew_id in sample.aunt_nephews:
         success, reason = passes_relatedness_check(
@@ -93,7 +93,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.AUNT_NEPHEW,
         )
         if not success:
-            return success, reason
+            return False, reason
     return True, None
 
 
@@ -151,8 +151,8 @@ def get_families_failed_relatedness_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample in family.samples.values():
-            failed, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
-            if failed:
+            success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+            if not success:
                 failed_families[family].append(reason)
     return failed_families
 

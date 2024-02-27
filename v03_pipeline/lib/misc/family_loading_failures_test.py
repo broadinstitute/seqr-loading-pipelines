@@ -102,9 +102,8 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             half_siblings=['sample_4'],
         )
-        self.assertTrue(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
-        )
+        success, _ = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        self.assertTrue(success)
 
         # Defined grandparent missing in relatedness table
         sample = Sample(
@@ -114,9 +113,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             paternal_grandmother='sample_5',
         )
-        self.assertFalse(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
-        )
+        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        self.assertFalse(success)
+        self.assertEqual(reason, 'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []')
 
         # Sibling is actually a half sibling.
         relatedness_check_lookup = {
@@ -130,9 +129,31 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             siblings=['sample_4'],
         )
-        self.assertFalse(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        self.assertFalse(success)
+        self.assertEqual(reason, 'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]')
+
+        # Sibling is actually a half sibling.
+        relatedness_check_lookup = {
+            **relatedness_check_lookup,
+            ('sample_1', 'sample_2'): [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+            ],
+        }
+        sample = Sample(
+            sex=Ploidy.FEMALE,
+            sample_id='sample_1',
+            mother='sample_2',
+            paternal_grandfather='sample_3',
+            siblings=['sample_4'],
         )
+        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        self.assertFalse(success)
+        self.assertEqual(reason, 'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]')
+
 
     def test_get_families_failed_sex_check(self):
         sex_check_ht = hl.Table.parallelize(
