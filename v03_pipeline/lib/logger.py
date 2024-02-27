@@ -2,7 +2,7 @@ import logging.config
 
 LOG_CONFIG = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'propagate': True,
     'formatters': {
         'default': {
@@ -21,6 +21,12 @@ LOG_CONFIG = {
             'level': 'INFO',
             'handlers': ['default'],
             'propagate': True,
+        },
+        'py4j': {
+            'level': 'CRITICAL',
+        },
+        'urllib3': {
+            'level': 'CRITICAL',
         },
     },
 }
