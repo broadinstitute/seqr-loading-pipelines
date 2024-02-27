@@ -43,7 +43,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                                 # This sample is present in the callset, but intentionally
                                 # mapped away
                                 'samples': ['NA20888_1'],
-                                'reasons': 'abc',
+                                'reasons': ["Missing samples: {'NA20888_1'}"],
                             },
                         },
                         'relatedness_check': {},
