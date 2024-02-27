@@ -40,7 +40,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'}),
             ),
             {
-                ('remapped_id', 'ROS_007_19Y05939_D1'): [
+                ('ROS_007_19Y05939_D1', 'remapped_id'): [
                     0.0,
                     1.0,
                     0.0,

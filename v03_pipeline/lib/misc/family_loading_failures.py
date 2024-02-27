@@ -99,7 +99,9 @@ def build_relatedness_check_lookup(
         j=remap_lookup.get(relatedness_check_ht.j, relatedness_check_ht.j),
     )
     return {
-        (r.i, r.j): list(r.drop('i', 'j').values())
+        # NB: samples are sorted in the original ibd but not necessarily
+        # sorted after remapping
+        (min(r.i, r.j), max(r.i, r.j)): list(r.drop('i', 'j').values())
         for r in relatedness_check_ht.collect()
     }
 
