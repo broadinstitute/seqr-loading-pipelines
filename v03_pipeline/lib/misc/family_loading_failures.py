@@ -162,7 +162,7 @@ def get_families_failed_relatedness_check(
             )
             if not success:
                 failed_families[family].append(reason)
-    return failed_families
+    return dict(failed_families)
 
 
 def get_families_failed_sex_check(
