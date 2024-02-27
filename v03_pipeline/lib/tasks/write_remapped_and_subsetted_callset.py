@@ -106,8 +106,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             callset_mt,
             families,
         )
-        families_failed_relatedness_check = set()
-        families_failed_sex_check = set()
+        families_failed_relatedness_check = {}
+        families_failed_sex_check = {}
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
