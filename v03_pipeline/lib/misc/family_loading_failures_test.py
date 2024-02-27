@@ -113,9 +113,15 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             paternal_grandmother='sample_5',
         )
-        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        success, reason = passes_all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
         self.assertFalse(success)
-        self.assertEqual(reason, 'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []')
+        self.assertEqual(
+            reason,
+            'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []',
+        )
 
         # Sibling is actually a half sibling.
         relatedness_check_lookup = {
@@ -129,9 +135,15 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             siblings=['sample_4'],
         )
-        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        success, reason = passes_all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
         self.assertFalse(success)
-        self.assertEqual(reason, 'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]')
+        self.assertEqual(
+            reason,
+            'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
+        )
 
         # Sibling is actually a half sibling.
         relatedness_check_lookup = {
@@ -150,10 +162,15 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             siblings=['sample_4'],
         )
-        success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+        success, reason = passes_all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
         self.assertFalse(success)
-        self.assertEqual(reason, 'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]')
-
+        self.assertEqual(
+            reason,
+            'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]',
+        )
 
     def test_get_families_failed_sex_check(self):
         sex_check_ht = hl.Table.parallelize(
@@ -173,7 +190,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         pedigree_ht = import_pedigree(TEST_PEDIGREE_6)
         failed_families = get_families_failed_sex_check(
-            parse_pedigree_ht_to_families(pedigree_ht), sex_check_ht, {},
+            parse_pedigree_ht_to_families(pedigree_ht),
+            sex_check_ht,
+            {},
         )
         self.assertCountEqual(
             failed_families.values(),

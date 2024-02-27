@@ -39,7 +39,12 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                     'callsets': [TEST_VCF],
                     'failed_family_samples': {
                         'missing_samples': {
-                            'efg_1': ['NA20888_1'],
+                            'efg_1': {
+                                # This sample is present in the callset, but intentionally
+                                # mapped away
+                                'samples': ['NA20888_1'],
+                                'reasons': 'abc',
+                            },
                         },
                         'relatedness_check': {},
                         'sex_check': {},

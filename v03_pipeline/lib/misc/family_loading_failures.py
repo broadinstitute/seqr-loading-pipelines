@@ -24,7 +24,10 @@ def passes_relatedness_check(
         relation.coefficients,
         0.1,
     ):
-        return False, f'Sample {sample_id} has expected relation "{relation.value}" to {other_id} but has coefficients {coefficients or []}'
+        return (
+            False,
+            f'Sample {sample_id} has expected relation "{relation.value}" to {other_id} but has coefficients {coefficients or []}',
+        )
     return True, None
 
 
@@ -129,13 +132,15 @@ def build_sex_check_lookup(
 def get_families_failed_missing_samples(
     mt: hl.MatrixTable,
     families: set[Family],
-) -> dict[Family, str]:
+) -> dict[Family, list[str]]:
     callset_samples = set(mt.cols().s.collect())
     failed_families = {}
     for family in families:
         missing_samples = family.samples.keys() - callset_samples
         if len(missing_samples) > 0:
-            failed_families[family] = f'Missing samples: {missing_samples}'
+            # NB: This is an array of a single element for consistency with
+            # the other checks.
+            failed_families[family] = [f'Missing samples: {missing_samples}']
     return failed_families
 
 
@@ -143,7 +148,7 @@ def get_families_failed_relatedness_check(
     families: set[Family],
     relatedness_check_ht: hl.Table,
     remap_lookup: hl.dict,
-) -> dict[Family, str]:
+) -> dict[Family, list[str]]:
     relatedness_check_lookup = build_relatedness_check_lookup(
         relatedness_check_ht,
         remap_lookup,
@@ -151,7 +156,10 @@ def get_families_failed_relatedness_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample in family.samples.values():
-            success, reason = passes_all_relatedness_checks(relatedness_check_lookup, sample)
+            success, reason = passes_all_relatedness_checks(
+                relatedness_check_lookup,
+                sample,
+            )
             if not success:
                 failed_families[family].append(reason)
     return failed_families
