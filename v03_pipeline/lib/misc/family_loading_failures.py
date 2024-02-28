@@ -31,10 +31,11 @@ def passes_relatedness_check(
     return True, None
 
 
-def passes_all_relatedness_checks(  # noqa: C901
+def all_relatedness_checks(  # noqa: C901
     relatedness_check_lookup: dict[tuple[str, str], list],
     sample: Sample,
-) -> tuple[bool, str | None]:
+) -> list[str]:
+    failure_reasons = []
     for parent_id in [sample.mother, sample.father]:
         success, reason = passes_relatedness_check(
             relatedness_check_lookup,
@@ -43,7 +44,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.PARENT,
         )
         if not success:
-            return False, reason
+            failure_reasons.append(reason)
 
     for grandparent_id in [
         sample.maternal_grandmother,
@@ -58,7 +59,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.GRANDPARENT,
         )
         if not success:
-            return False, reason
+            failure_reasons.append(reason)
 
     for sibling_id in sample.siblings:
         success, reason = passes_relatedness_check(
@@ -68,7 +69,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.SIBLING,
         )
         if not success:
-            return False, reason
+            failure_reasons.append(reason)
 
     for half_sibling_id in sample.half_siblings:
         # NB: A "half sibling" parsed from the pedigree may actually be a sibling, so we allow those
@@ -86,7 +87,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.HALF_SIBLING,
         )
         if not success1 and not success2:
-            return False, reason
+            failure_reasons.append(reason)
 
     for aunt_nephew_id in sample.aunt_nephews:
         success, reason = passes_relatedness_check(
@@ -96,8 +97,8 @@ def passes_all_relatedness_checks(  # noqa: C901
             Relation.AUNT_NEPHEW,
         )
         if not success:
-            return False, reason
-    return True, None
+            failure_reasons.append(reason)
+    return failure_reasons
 
 
 def build_relatedness_check_lookup(
@@ -156,12 +157,12 @@ def get_families_failed_relatedness_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample in family.samples.values():
-            success, reason = passes_all_relatedness_checks(
+            failure_reasons = all_relatedness_checks(
                 relatedness_check_lookup,
                 sample,
             )
-            if not success:
-                failed_families[family].append(reason)
+            if failure_reasons:
+                failed_families[family].extend(failure_reasons)
     return dict(failed_families)
 
 
