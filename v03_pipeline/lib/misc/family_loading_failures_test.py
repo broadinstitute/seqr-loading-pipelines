@@ -3,10 +3,10 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.family_loading_failures import (
+    all_relatedness_checks,
     build_relatedness_check_lookup,
     build_sex_check_lookup,
     get_families_failed_sex_check,
-    all_relatedness_checks,
 )
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import Sample, parse_pedigree_ht_to_families
@@ -119,7 +119,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         self.assertListEqual(
             failure_reasons,
-            ['Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []'],
+            [
+                'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []'
+            ],
         )
 
         # Sibling is actually a half sibling.
@@ -140,7 +142,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         self.assertListEqual(
             failure_reasons,
-            ['Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]'],
+            [
+                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]'
+            ],
         )
 
         relatedness_check_lookup = {
@@ -167,8 +171,8 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertListEqual(
             failure_reasons,
             [
-                'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]', 
-                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]'
+                'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]',
+                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
             ],
         )
 
