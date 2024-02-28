@@ -120,7 +120,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertListEqual(
             failure_reasons,
             [
-                'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []'
+                'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []',
             ],
         )
 
@@ -143,7 +143,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertListEqual(
             failure_reasons,
             [
-                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]'
+                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
             ],
         )
 
