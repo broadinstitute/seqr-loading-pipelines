@@ -85,7 +85,7 @@ def passes_all_relatedness_checks(  # noqa: C901
             half_sibling_id,
             Relation.HALF_SIBLING,
         )
-        if not success1 or success2:
+        if not success1 and not success2:
             return False, reason
 
     for aunt_nephew_id in sample.aunt_nephews:
