@@ -60,8 +60,10 @@ class ReferenceGenome(Enum):
             },
         }[self]
 
-        if include_mt:
+        if include_mt and self == ReferenceGenome.GRCh38:
             recode.update({'MT': 'chrM'})
+        if include_mt and self == ReferenceGenome.GRCh37:
+            recode.update({'chrM': 'MT'})
 
         return recode
 
