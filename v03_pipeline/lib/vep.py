@@ -22,7 +22,7 @@ def run_vep(
     validate_vep_config_reference_genome(reference_genome)
     return hl.vep(
         ht,
-        config=os.environ['VEP_CONFIG_URI'],
+        # We set no config option here to instead use the `VEP_CONFIG_URI` environment variable.
         name='vep',
         block_size=1000,
         tolerate_parse_error=True,
