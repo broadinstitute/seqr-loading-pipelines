@@ -40,7 +40,6 @@ class SharedAnnotationsTest(unittest.TestCase):
             ht,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            None,
         )
         ht = ht.select(
             sorted_transcript_consequences=sorted_transcript_consequences(ht),
