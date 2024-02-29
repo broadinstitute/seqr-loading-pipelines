@@ -98,7 +98,10 @@ frozenlist==1.4.0
 gnomad==0.6.4
     # via -r requirements.in
 google-api-core==2.14.0
-    # via google-api-python-client
+    # via
+    #   google-api-python-client
+    #   google-cloud-core
+    #   google-cloud-storage
 google-api-python-client==2.108.0
     # via -r requirements.in
 google-auth==2.23.4
@@ -107,11 +110,23 @@ google-auth==2.23.4
     #   google-api-python-client
     #   google-auth-httplib2
     #   google-auth-oauthlib
+    #   google-cloud-core
+    #   google-cloud-storage
     #   hail
 google-auth-httplib2==0.1.1
     # via google-api-python-client
 google-auth-oauthlib==0.8.0
     # via hail
+google-cloud-core==2.4.1
+    # via google-cloud-storage
+google-cloud-storage==2.14.0
+    # via -r requirements.in
+google-crc32c==1.5.0
+    # via
+    #   google-cloud-storage
+    #   google-resumable-media
+google-resumable-media==2.7.0
+    # via google-cloud-storage
 googleapis-common-protos==1.61.0
     # via google-api-core
 hail==0.2.128
@@ -263,6 +278,7 @@ requests==2.31.0
     # via
     #   azure-core
     #   google-api-core
+    #   google-cloud-storage
     #   hail
     #   msal
     #   msrest
