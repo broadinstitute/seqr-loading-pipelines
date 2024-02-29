@@ -4,7 +4,6 @@ import math
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
@@ -216,6 +215,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
+            self.reference_genome,
             self.vep_config_json_path,
         )
 
@@ -255,16 +255,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        # 5) Fix up the globals.
-        ht = ht.annotate_globals(
-            paths=hl.Struct(),
-            versions=hl.Struct(),
-            enums=hl.Struct(),
-        )
-        ht = self.annotate_reference_dataset_collection_globals(ht)
-        ht = annotate_enums(ht, self.reference_genome, self.dataset_type)
-
-        # 6) Mark the table as updated with these callset/project pairs.
+        # 5) Fix up the globals and mark the table as updated with these callset/project pairs.
+        ht = self.annotate_globals(ht)
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {

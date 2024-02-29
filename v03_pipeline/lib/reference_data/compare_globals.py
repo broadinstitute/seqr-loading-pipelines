@@ -1,8 +1,8 @@
 import dataclasses
-import logging
 
 import hail as hl
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
@@ -11,12 +11,13 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
+    get_enum_select_fields,
     get_ht_path,
     import_ht_from_config_path,
     parse_dataset_version,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclasses.dataclass
@@ -50,9 +51,13 @@ class Globals:
                 ),
             )
             enums[dataset] = dataset_config.get('enum_select', {})
-            selects[dataset] = set(
-                get_all_select_fields(dataset_ht, dataset_config).keys(),
+            dataset_ht = dataset_ht.select(
+                **get_all_select_fields(dataset_ht, dataset_config),
             )
+            dataset_ht = dataset_ht.transmute(
+                **get_enum_select_fields(dataset_ht, dataset_config),
+            )
+            selects[dataset] = set(dataset_ht.row) - set(dataset_ht.key)
         return cls(paths, versions, enums, selects)
 
     @classmethod
@@ -65,12 +70,18 @@ class Globals:
         rdc_globals_struct = hl.eval(ht.globals)
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
-        enums = dict(rdc_globals_struct.enums)
+        # enums are nested structs
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:
-                selects[dataset] = set(ht[dataset])
+                # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
+                selects[dataset] = (
+                    set(ht[dataset])
+                    if isinstance(ht[dataset], hl.StructExpression)
+                    else set()
+                )
         return cls(paths, versions, enums, selects)
 
 

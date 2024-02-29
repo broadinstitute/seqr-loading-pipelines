@@ -32,7 +32,6 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             hl.read_table(write_family_table_task.output().path)
             for write_family_table_task in write_project_family_tables.dynamic_write_family_table_tasks
         ]
-        print('bensadf', len(hts))
         self.assertCountEqual(
             [ht.globals.sample_ids.collect() for ht in hts],
             [

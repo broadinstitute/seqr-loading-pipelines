@@ -16,8 +16,6 @@ asttokens==2.4.1
     # via stack-data
 async-timeout==4.0.3
     # via aiohttp
-asyncinit==0.2.4
-    # via hail
 attrs==23.1.0
     # via aiohttp
 avro==1.11.3
@@ -119,19 +117,19 @@ google-auth-httplib2==0.1.1
     # via google-api-python-client
 google-auth-oauthlib==0.8.0
     # via hail
-google-cloud-core==2.3.3
+google-cloud-core==2.4.1
     # via google-cloud-storage
-google-cloud-storage==2.13.0
-    # via hail
+google-cloud-storage==2.14.0
+    # via -r requirements.in
 google-crc32c==1.5.0
     # via
     #   google-cloud-storage
     #   google-resumable-media
-google-resumable-media==2.6.0
+google-resumable-media==2.7.0
     # via google-cloud-storage
 googleapis-common-protos==1.61.0
     # via google-api-core
-hail==0.2.122
+hail==0.2.128
     # via -r requirements.in
 hdbscan==0.8.33
     # via gnomad
@@ -204,7 +202,7 @@ numpy==1.26.2
     #   scipy
 oauthlib==3.2.2
     # via requests-oauthlib
-orjson==3.9.15
+orjson==3.9.11
     # via hail
 packaging==23.2
     # via
@@ -254,9 +252,7 @@ pygments==2.17.2
     #   ipython
     #   rich
 pyjwt[crypto]==2.8.0
-    # via
-    #   msal
-    #   pyjwt
+    # via msal
 pyparsing==3.1.1
     # via httplib2
 pyspark==3.3.3

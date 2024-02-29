@@ -5,7 +5,11 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
+    BIOTYPES,
     CLINVAR_PATHOGENICITIES,
+    CONSEQUENCE_TERMS,
+    LOF_FILTERS,
+    MITOTIP_PATHOGENICITIES,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -183,6 +187,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         splice_consequence_id=3,
                     ),
                     topmed=None,
+                    gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
+                    screen=hl.Struct(region_type_ids=[1]),
                     hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 ),
             ],
@@ -266,6 +272,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         hgmd=hl.Struct(
                             **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
                         ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
+                        ),
                     ),
                     updates=set(),
                 ),
@@ -324,7 +335,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                     ),
                     versions=hl.Struct(
@@ -348,12 +359,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             assertion=CLINVAR_ASSERTIONS,
                         ),
                         dbnsfp_mito=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
-                            fathmm_MKL_coding_pred=['D', 'N'],
                         ),
                         high_constraint_region_mito=hl.Struct(),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
+                        ),
+                        mitotip=hl.Struct(
+                            trna_prediction=MITOTIP_PATHOGENICITIES,
+                        ),
                     ),
                     updates=set(),
                 ),
@@ -371,13 +387,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     alleles=['A', 'C'],
                     clinvar_mito=None,
                     dbnsfp_mito=hl.Struct(
-                        REVEL_score=None,
-                        VEST4_score=None,
-                        MutPred_score=None,
-                        SIFT_pred_id=None,
-                        Polyphen2_HVAR_pred_id=None,
-                        MutationTaster_pred_id=None,
-                        fathmm_MKL_coding_pred_id=None,
+                        SIFT_score=None,
+                        MutationTaster_pred_id=2,
                     ),
                     gnomad_mito=None,
                     helix_mito=hl.Struct(
@@ -391,6 +402,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     hmtvar=hl.Struct(score=0.6700000166893005),
                     mitomap=None,
                     mitimpact=hl.Struct(score=0.5199999809265137),
+                    high_constraint_region_mito=True,
                 ),
             ],
         )
@@ -497,6 +509,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         topmed=hl.Struct(),
                         hgmd=hl.Struct(
                             **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
+                        ),
+                        sorted_transcript_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=CONSEQUENCE_TERMS,
+                            lof_filter=LOF_FILTERS,
                         ),
                     ),
                     updates=set(),

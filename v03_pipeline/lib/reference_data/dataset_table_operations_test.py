@@ -244,11 +244,13 @@ class DatasetTableOperationsTest(unittest.TestCase):
             ),
         )
         enum_select_fields = get_enum_select_fields(
-            {
-                'variant': ['1', '2', '3', '4'],
-                'sv_type': ['a', 'b', 'c', 'd'],
-            },
             ht,
+            {
+                'enum_select': {
+                    'variant': ['1', '2', '3', '4'],
+                    'sv_type': ['a', 'b', 'c', 'd'],
+                },
+            },
         )
         mapped_ht = ht.transmute(**enum_select_fields)
         self.assertListEqual(
@@ -262,8 +264,10 @@ class DatasetTableOperationsTest(unittest.TestCase):
         )
 
         enum_select_fields = get_enum_select_fields(
-            {'sv_type': ['d']},
             ht,
+            {
+                'enum_select': {'sv_type': ['d']},
+            },
         )
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
@@ -472,6 +476,7 @@ class DatasetTableOperationsTest(unittest.TestCase):
         )
         self.assertRaises(Exception, ht.globals.collect)
 
+    @mock.patch.dict(f'{PATH_TO_FILE_UNDER_TEST}.CONFIG', MOCK_CONFIG)
     @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.get_dataset_ht')
     @mock.patch(f'{PATH_TO_FILE_UNDER_TEST}.datetime', wraps=datetime)
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
@@ -538,3 +543,43 @@ class DatasetTableOperationsTest(unittest.TestCase):
             EXPECTED_JOINED_DATA,
         )
         self.assertCountEqual(ht.globals.collect(), EXPECTED_GLOBALS)
+
+    @mock.patch.dict(f'{PATH_TO_FILE_UNDER_TEST}.CONFIG', MOCK_CONFIG)
+    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
+    def test_update_or_create_joined_ht_drop_a_dataset(
+        self,
+        mock_reference_dataset_collection_datasets,
+    ):
+        mock_reference_dataset_collection_datasets.return_value = ['b']
+        ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                alleles=hl.tarray(hl.tstr),
+                c=hl.tint32,
+                b=hl.tint32,
+            ),
+            key=('locus', 'alleles'),
+            globals=hl.Struct(
+                paths=hl.Struct(c='abc', b='123'),
+                versions=hl.Struct(c='def', b='456'),
+                enums=hl.Struct(c=hl.Struct(d=['a', 'b'])),
+            ),
+        )
+        ht = update_or_create_joined_ht(
+            ReferenceDatasetCollection.COMBINED,
+            DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+            datasets=['c'],
+            joined_ht=ht,
+        )
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    paths=hl.Struct(b='123'),
+                    versions=hl.Struct(b='456'),
+                    enums=hl.Struct(),
+                ),
+            ],
+        )
