@@ -79,12 +79,10 @@ def metadata_for_run_path(
     run_id: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+        runs_path(
             reference_genome,
             dataset_type,
         ),
-        'runs',
         run_id,
         'metadata.json',
     )
@@ -137,6 +135,20 @@ def remapped_and_subsetted_callset_path(
         'remapped_and_subsetted_callsets',
         project_guid,
         f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
+    )
+
+
+def runs_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'runs',
     )
 
 
