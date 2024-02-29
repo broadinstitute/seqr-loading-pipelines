@@ -31,13 +31,16 @@ class FieldsTest(MockedDatarootTestCase):
             ),
         )
 
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_get_formatting_fields(self, mock_vep: Mock) -> None:
+    def test_get_formatting_fields(self, mock_vep: Mock, mock_validate: Mock) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
         mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
+        mock_validate.return_value = None
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
             None,
         )
         ht = ht.annotate(rsid='abcd')

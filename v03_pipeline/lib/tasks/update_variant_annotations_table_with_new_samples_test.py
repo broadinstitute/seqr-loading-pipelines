@@ -186,14 +186,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_multiple_update_vat(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -504,13 +507,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_update_vat_grch37(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh37,
@@ -551,8 +557,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
 
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_update_vat_without_accessing_private_datasets(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
         mock_update_rdc_task: Mock,
@@ -567,6 +575,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
