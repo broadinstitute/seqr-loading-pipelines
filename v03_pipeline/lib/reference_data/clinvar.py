@@ -109,7 +109,6 @@ def parsed_and_mapped_clnsigconf(ht: hl.Table):
 def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
-    include_mt: bool = False,
 ) -> hl.Table:
     """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
 
@@ -125,23 +124,12 @@ def download_and_import_latest_clinvar_vcf(
             reference_genome=reference_genome.value,
             drop_samples=True,
             skip_invalid_loci=True,
-            contig_recoding=reference_genome.contig_recoding(include_mt),
+            contig_recoding=reference_genome.contig_recoding(include_mt=True),
             min_partitions=2000,
             force_bgz=True,
         )
         mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
         return mt.rows()
-
-
-def download_and_import_latest_clinvar_vcf_mito(
-    clinvar_url: str,
-    reference_genome: ReferenceGenome,
-):
-    return download_and_import_latest_clinvar_vcf(
-        clinvar_url,
-        reference_genome,
-        include_mt=True,
-    )
 
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:
