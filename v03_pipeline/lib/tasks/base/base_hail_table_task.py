@@ -34,7 +34,6 @@ def dependency_missing(task):
     logger.info(f'{task} dependency_missing at {task.output()}')
 
 
-
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_PRESENT)
 def dependency_present(task):
     logger.info(f'{task} dependency_present')
