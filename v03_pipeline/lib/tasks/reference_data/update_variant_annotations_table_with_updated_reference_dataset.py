@@ -1,6 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
