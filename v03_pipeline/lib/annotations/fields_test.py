@@ -41,7 +41,6 @@ class FieldsTest(MockedDatarootTestCase):
             ht,
             DatasetType.SNV_INDEL,
             ReferenceGenome.GRCh38,
-            None,
         )
         ht = ht.annotate(rsid='abcd')
         for reference_genome, expected_fields in [
