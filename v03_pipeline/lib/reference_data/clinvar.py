@@ -65,6 +65,10 @@ def parsed_clnsig(ht: hl.Table):
             'Likely_pathogenic|low_penetrance',
         )
         .replace(
+            '/Pathogenic,_low_penetrance/Established_risk_allele',
+            '/Established_risk_allele|low_penetrance',
+        )
+        .replace(
             '/Pathogenic,_low_penetrance',
             '|low_penetrance',
         )

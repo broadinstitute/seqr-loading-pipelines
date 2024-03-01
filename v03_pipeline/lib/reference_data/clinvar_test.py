@@ -31,6 +31,14 @@ class ClinvarTest(unittest.TestCase):
                 },
                 {'info': hl.Struct(CLNSIG=['Likely_pathogenic', '_low_penetrance'])},
                 {'info': hl.Struct(CLNSIG=['association|protective'])},
+                {
+                    'info': hl.Struct(
+                        CLNSIG=[
+                            'Pathogenic/Likely_pathogenic/Pathogenic',
+                            '_low_penetrance/Established_risk_allele',
+                        ],
+                    ),
+                },
             ],
             hl.tstruct(info=hl.tstruct(CLNSIG=hl.tarray(hl.tstr))),
         )
@@ -42,6 +50,10 @@ class ClinvarTest(unittest.TestCase):
                 ['Likely_pathogenic', 'low_penetrance', 'association', 'protective'],
                 ['Likely_pathogenic', 'low_penetrance'],
                 ['association', 'protective'],
+                [
+                    'Pathogenic/Likely_pathogenic/Established_risk_allele',
+                    'low_penetrance',
+                ],
             ],
         )
 
@@ -66,8 +78,8 @@ class ClinvarTest(unittest.TestCase):
                 None,
                 [
                     hl.Struct(count=9, pathogenicity_id=0),
-                    hl.Struct(count=2, pathogenicity_id=4),
-                    hl.Struct(count=1, pathogenicity_id=11),
+                    hl.Struct(count=2, pathogenicity_id=5),
+                    hl.Struct(count=1, pathogenicity_id=12),
                 ],
             ],
         )
