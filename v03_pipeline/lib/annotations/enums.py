@@ -204,7 +204,7 @@ CLINVAR_PATHOGENICITIES = [
     'Likely_pathogenic/Likely_risk_allele',
     'Established_risk_allele',
     'Likely_risk_allele',
-    'Conflicting_interpretations_of_pathogenicity',
+    'Conflicting_classifications_of_pathogenicity',
     'Uncertain_risk_allele',
     'Uncertain_significance/Uncertain_risk_allele',
     'Uncertain_significance',

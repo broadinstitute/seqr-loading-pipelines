@@ -52,10 +52,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
     )
-    vep_config_json_path = luigi.OptionalParameter(
-        default=None,
-        description='Path of hail vep config .json file',
-    )
 
     @property
     def other_annotation_dependencies(self) -> dict[str, hl.Table]:
@@ -215,7 +211,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         new_variants_ht = run_vep(
             new_variants_ht,
             self.dataset_type,
-            self.vep_config_json_path,
+            self.reference_genome,
         )
 
         # 2) Select down to the formatting annotations fields and

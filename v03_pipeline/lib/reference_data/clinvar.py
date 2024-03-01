@@ -22,14 +22,17 @@ CLINVAR_ASSERTIONS = [
     'other',
     'protective',
     'risk_factor',
+    'no_classification_for_the_single_variant',
+    'no_classifications_from_unflagged_records',
 ]
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
-        'no_interpretation_for_the_single_variant': 0,
-        'no_assertion_provided': 0,
+        'no_classification_for_the_single_variant': 0,
+        'no_classification_provided': 0,
         'no_assertion_criteria_provided': 0,
+        'no_classifications_from_unflagged_records': 0,
         'criteria_provided,_single_submitter': 1,
-        'criteria_provided,_conflicting_interpretations': 1,
+        'criteria_provided,_conflicting_classifications': 1,
         'criteria_provided,_multiple_submitters,_no_conflicts': 2,
         'reviewed_by_expert_panel': 3,
         'practice_guideline': 4,
@@ -108,7 +111,8 @@ def download_and_import_latest_clinvar_vcf(
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = os.path.join(
-            Env.HAIL_TMPDIR, os.path.basename(tmp_file.name),
+            Env.HAIL_TMPDIR,
+            os.path.basename(tmp_file.name),
         )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
