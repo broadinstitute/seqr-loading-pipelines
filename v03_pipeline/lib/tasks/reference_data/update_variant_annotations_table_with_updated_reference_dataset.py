@@ -1,6 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
@@ -9,6 +10,8 @@ from v03_pipeline.lib.reference_data.compare_globals import (
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
+
+logger = get_logger(__name__)
 
 
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -56,6 +59,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     self.dataset_type,
                 ),
             )
+        logger.info(f'Datasets to update: {self._datasets_to_update}')
         return not self._datasets_to_update
 
     def update_table(self, ht: hl.Table) -> hl.Table:
