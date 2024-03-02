@@ -53,7 +53,7 @@ def get_dataset_ht(
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     config = CONFIG[dataset][reference_genome.v02_value]
-    ht = import_ht_from_config_path(config, reference_genome)
+    ht = import_ht_from_config_path(config, dataset, reference_genome)
     if hasattr(ht, 'locus'):
         ht = ht.filter(
             hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
@@ -62,16 +62,6 @@ def get_dataset_ht(
     ht = ht.filter(config['filter'](ht)) if 'filter' in config else ht
     ht = ht.select(**get_all_select_fields(ht, config))
     ht = ht.transmute(**get_enum_select_fields(ht, config))
-    ht = ht.select_globals(
-        path=(config['source_path'] if 'custom_import' in config else config['path']),
-        version=parse_dataset_version(ht, dataset, config),
-        enums=hl.Struct(
-            **config.get(
-                'enum_select',
-                hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr))),
-            ),
-        ),
-    )
     return ht.select(**{dataset: ht.row.drop(*ht.key)}).distinct()
 
 
@@ -81,13 +71,24 @@ def get_ht_path(config: dict) -> str:
 
 def import_ht_from_config_path(
     config: dict,
+    dataset: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     path = get_ht_path(config)
-    return (
+    ht = (
         config['custom_import'](path, reference_genome)
         if 'custom_import' in config
         else hl.read_table(path)
+    )
+    return ht.select_globals(
+        path=path,
+        version=parse_dataset_version(ht, dataset, config),
+        enums=hl.Struct(
+            **config.get(
+                'enum_select',
+                hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr))),
+            ),
+        ),
     )
 
 
