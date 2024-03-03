@@ -12,9 +12,7 @@ from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
     get_enum_select_fields,
-    get_ht_path,
     import_ht_from_config_path,
-    parse_dataset_version,
 )
 
 logger = get_logger(__name__)
