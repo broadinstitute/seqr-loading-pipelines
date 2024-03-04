@@ -12,9 +12,7 @@ from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
     get_enum_select_fields,
-    get_ht_path,
     import_ht_from_config_path,
-    parse_dataset_version,
 )
 
 logger = get_logger(__name__)
@@ -41,16 +39,10 @@ class Globals:
         for dataset in rdc.datasets(dataset_type):
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
             dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-
-            paths[dataset] = get_ht_path(dataset_config)
-            versions[dataset] = hl.eval(
-                parse_dataset_version(
-                    dataset_ht,
-                    dataset,
-                    dataset_config,
-                ),
-            )
-            enums[dataset] = dataset_config.get('enum_select', {})
+            dataset_ht_globals = hl.eval(dataset_ht.globals)
+            paths[dataset] = dataset_ht_globals.path
+            versions[dataset] = dataset_ht_globals.version
+            enums[dataset] = dataset_ht_globals.enums
             dataset_ht = dataset_ht.select(
                 **get_all_select_fields(dataset_ht, dataset_config),
             )
