@@ -65,7 +65,9 @@ class CompareGlobalsTest(unittest.TestCase):
                     test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(
-                    version='a_version', path='a_path', enums={'test_enum': ['A', 'B']},
+                    version='a_version',
+                    path='a_path',
+                    enums={'test_enum': ['A', 'B']},
                 ),
                 key=['locus', 'alleles'],
             ),
@@ -81,7 +83,9 @@ class CompareGlobalsTest(unittest.TestCase):
                     test_enum=hl.tstr,
                 ),
                 globals=hl.Struct(
-                    version='b_version', path='b_path', enums={'test_enum': ['C', 'D']},
+                    version='b_version',
+                    path='b_path',
+                    enums={'test_enum': ['C', 'D']},
                 ),
                 key=['locus', 'alleles'],
             ),
