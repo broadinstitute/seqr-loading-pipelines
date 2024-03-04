@@ -29,6 +29,13 @@ class BaseHailTableTask(luigi.Task):
 
 # NB: these are defined over luigi.Task instead of the BaseHailTableTask so that
 # they work on file dependencies.
+
+
+@luigi.Task.event_handler(luigi.Event.DEPENDENCY_DISCOVERED)
+def dependency_discovered(task, dependency):
+    logger.info(f'{task} dependency_discovered {dependency}')
+
+
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_MISSING)
 def dependency_missing(task):
     logger.info(f'{task} dependency_missing at {task.output()}')

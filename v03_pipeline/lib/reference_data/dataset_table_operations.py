@@ -179,7 +179,7 @@ def parse_dataset_version(
         .when(hl.is_missing(annotated_version), config_version)
         .when(annotated_version == config_version, config_version)
         .or_error(
-            f'found mismatching versions for dataset {dataset}, {config_version}, {hl.eval(annotated_version)}',
+            f'found mismatching versions for dataset {dataset}. config version: {config_version}, ht version: {annotated_version}',
         )
     )
 
