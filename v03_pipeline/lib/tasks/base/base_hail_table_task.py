@@ -31,7 +31,7 @@ class BaseHailTableTask(luigi.Task):
 # they work on file dependencies.
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_MISSING)
 def dependency_missing(task):
-    logger.info(f'{task} dependency_missing')
+    logger.info(f'{task} dependency_missing at {task.output()}')
 
 
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_PRESENT)

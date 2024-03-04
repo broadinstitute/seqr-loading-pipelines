@@ -18,6 +18,8 @@ REFERENCE_DATASETS = os.environ.get(
     'REFERENCE_DATASETS',
     '/seqr-reference-data',
 )
+VEP_CONFIG_PATH = os.environ.get('VEP_CONFIG_PATH', None)
+VEP_CONFIG_URI = os.environ.get('VEP_CONFIG_URI', None)
 
 
 @dataclass
@@ -30,3 +32,5 @@ class Env:
     LOADING_DATASETS: str = LOADING_DATASETS
     PRIVATE_REFERENCE_DATASETS: str = PRIVATE_REFERENCE_DATASETS
     REFERENCE_DATASETS: str = REFERENCE_DATASETS
+    VEP_CONFIG_PATH: str | None = VEP_CONFIG_PATH
+    VEP_CONFIG_URI: str | None = VEP_CONFIG_URI

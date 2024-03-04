@@ -79,12 +79,10 @@ def metadata_for_run_path(
     run_id: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+        runs_path(
             reference_genome,
             dataset_type,
         ),
-        'runs',
         run_id,
         'metadata.json',
     )
@@ -153,6 +151,18 @@ def lookup_table_path(
         'lookup.ht',
     )
 
+def runs_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'runs',
+    )
 
 def sex_check_table_path(
     reference_genome: ReferenceGenome,

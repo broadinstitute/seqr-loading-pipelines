@@ -104,7 +104,7 @@ class TestReferenceGenomeProperties(unittest.TestCase):
             'chr22': '22',
             'chrX': 'X',
             'chrY': 'Y',
-            'MT': 'chrM',
+            'chrM': 'MT',
         }
         self.assertDictEqual(
             ReferenceGenome.GRCh37.contig_recoding(include_mt=True),
@@ -136,8 +136,9 @@ class TestReferenceGenomeProperties(unittest.TestCase):
             '22': 'chr22',
             'X': 'chrX',
             'Y': 'chrY',
+            'MT': 'chrM',
         }
         self.assertDictEqual(
-            ReferenceGenome.GRCh38.contig_recoding(),
+            ReferenceGenome.GRCh38.contig_recoding(include_mt=True),
             expected_38_recode,
         )

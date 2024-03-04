@@ -186,14 +186,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_multiple_update_vat(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -504,13 +507,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_update_vat_grch37(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh37,
@@ -551,8 +557,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
 
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_update_vat_without_accessing_private_datasets(
         self,
+        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
         mock_update_rdc_task: Mock,
@@ -567,6 +575,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -633,7 +642,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     paths=hl.Struct(
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         gnomad_mito='gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
                         helix_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
@@ -657,10 +666,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             pathogenicity=CLINVAR_PATHOGENICITIES,
                         ),
                         dbnsfp_mito=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
-                            fathmm_MKL_coding_pred=['D', 'N'],
                         ),
                         gnomad_mito=hl.Struct(),
                         helix_mito=hl.Struct(),

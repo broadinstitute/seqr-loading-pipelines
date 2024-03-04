@@ -335,7 +335,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.ht',
+                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                     ),
                     versions=hl.Struct(
@@ -359,10 +359,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             assertion=CLINVAR_ASSERTIONS,
                         ),
                         dbnsfp_mito=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
-                            fathmm_MKL_coding_pred=['D', 'N'],
                         ),
                         high_constraint_region_mito=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
@@ -390,13 +387,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     alleles=['A', 'C'],
                     clinvar_mito=None,
                     dbnsfp_mito=hl.Struct(
-                        REVEL_score=None,
-                        VEST4_score=None,
-                        MutPred_score=None,
-                        SIFT_pred_id=None,
-                        Polyphen2_HVAR_pred_id=None,
-                        MutationTaster_pred_id=None,
-                        fathmm_MKL_coding_pred_id=None,
+                        SIFT_score=None,
+                        MutationTaster_pred_id=2,
                     ),
                     gnomad_mito=None,
                     helix_mito=hl.Struct(
