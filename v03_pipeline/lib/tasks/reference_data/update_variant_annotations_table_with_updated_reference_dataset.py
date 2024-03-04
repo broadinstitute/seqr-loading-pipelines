@@ -29,6 +29,9 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         )
 
     def complete(self) -> bool:
+        logger.info(
+            'Checking if UpdateVariantAnnotationsTableWithUpdatedReferenceDataset is complete',
+        )
         self._datasets_to_update = []
 
         if not super().complete():
