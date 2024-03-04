@@ -151,6 +151,7 @@ def lookup_table_path(
         'lookup.ht',
     )
 
+
 def runs_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -163,6 +164,7 @@ def runs_path(
         ),
         'runs',
     )
+
 
 def sex_check_table_path(
     reference_genome: ReferenceGenome,

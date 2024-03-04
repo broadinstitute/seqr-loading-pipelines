@@ -1,5 +1,4 @@
 from v03_pipeline.lib.tasks.delete_old_runs import DeleteOldRunsTask
-from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
