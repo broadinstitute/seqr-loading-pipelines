@@ -51,7 +51,7 @@ class Globals:
             dataset_ht_globals = hl.eval(dataset_ht.globals)
             paths[dataset] = dataset_ht_globals.path
             versions[dataset] = dataset_ht_globals.version
-            enums[dataset] = dataset_ht_globals.enums
+            enums[dataset] = dict(dataset_ht_globals.enums)
             dataset_ht = dataset_ht.select(
                 **get_all_select_fields(dataset_ht, dataset_config),
             )
