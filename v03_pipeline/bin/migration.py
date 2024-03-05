@@ -99,7 +99,7 @@ sample_id_to_family_guid = build_sample_id_to_family_guid()
 for dataset_type, reference_genome in MIGRATIONS:
     ht = initialize_table(dataset_type, reference_genome)
     sample_lookup_ht = hl.read_table(f'gs://seqr-hail-search-data/v03/{reference_genome.value}/{dataset_type.value}/lookup.ht')
-    for project_guid in sample_lookup_ht.ref_samples:
+    for project_guid in sample_lookup_ht.ref_samples[:3]:
         if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
             continue
         if project_guid not in sample_id_to_family_guid:
@@ -168,6 +168,11 @@ for dataset_type, reference_genome in MIGRATIONS:
         project_lookup_ht = project_lookup_ht.select('project_stats')
         ht = join_lookup_hts(ht, project_lookup_ht)
         print(ht.count())
+        print(ht.distinct().count())
+    ht = ht.annotate_globals(
+        updates=sample_lookup_ht.index_globals().updates
+    )
+    import pdb; pdb.set_trace()
     ht.write('gs://seqr-scratch-temp/benlasdkflookup.ht')
 
 
