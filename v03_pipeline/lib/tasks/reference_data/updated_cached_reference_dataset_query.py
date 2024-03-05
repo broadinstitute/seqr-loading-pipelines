@@ -42,7 +42,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             ReferenceDatasetCollection.COMBINED,
             self.dataset_type,
             self.reference_genome,
-            self.crdq.dataset,
+            [self.crdq.dataset],
         )
         return validate_globals_match(
             ReferenceDatasetCollection.COMBINED,
@@ -70,8 +70,6 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                 ReferenceDatasetCollection.COMBINED,
             )
         if self.crdq.query_raw_dataset:
-            # NB: the config contents are not guaranteed to be hail tables/matrix tables.
-            # there's a potential bug here if we ever custom_import an external table.
             return HailTableTask(
                 get_ht_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value]),
             )

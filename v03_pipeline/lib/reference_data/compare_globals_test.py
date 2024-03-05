@@ -125,7 +125,7 @@ class CompareGlobalsTest(unittest.TestCase):
             rdc=ReferenceDatasetCollection.COMBINED,
             dataset_type=DatasetType.SNV_INDEL,
             reference_genome=ReferenceGenome.GRCh38,
-            single_dataset='b',
+            datasets=['b'],
         )
 
         self.assertTrue(
