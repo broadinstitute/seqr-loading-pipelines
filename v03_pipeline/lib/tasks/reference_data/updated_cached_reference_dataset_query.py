@@ -42,6 +42,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             ReferenceDatasetCollection.COMBINED,
             self.dataset_type,
             self.reference_genome,
+            self.crdq.dataset,
         )
         return validate_globals_match(
             ReferenceDatasetCollection.COMBINED,
@@ -87,6 +88,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         if self.crdq.query_raw_dataset:
             query_ht = import_ht_from_config_path(
                 CONFIG[dataset][self.reference_genome.v02_value],
+                dataset,
                 self.reference_genome,
             )
         else:

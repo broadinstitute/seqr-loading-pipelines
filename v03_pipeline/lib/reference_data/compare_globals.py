@@ -34,9 +34,14 @@ class Globals:
         rdc: ReferenceDatasetCollection,
         dataset_type: DatasetType,
         reference_genome: ReferenceGenome,
+        single_dataset: str | None = None,
     ):
         paths, versions, enums, selects = {}, {}, {}, {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in (
+            [single_dataset]
+            if single_dataset is not None
+            else rdc.datasets(dataset_type)
+        ):
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
             dataset_ht = import_ht_from_config_path(
                 dataset_config,
@@ -68,7 +73,6 @@ class Globals:
         versions = dict(rdc_globals_struct.get('versions', {}))
         # enums are nested structs
         enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums', {}).items()}
-
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:

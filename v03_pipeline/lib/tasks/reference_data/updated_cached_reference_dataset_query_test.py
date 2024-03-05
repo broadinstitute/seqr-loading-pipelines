@@ -36,7 +36,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.import_ht_from_config_path',
     )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.Globals',
+        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.Globals.from_dataset_configs',
     )
     @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.HailTableTask',
@@ -44,12 +44,16 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
     def test_gnomad_qc(
         self,
         mock_hailtabletask,
-        mock_globals_class,
+        mock_globals_from_dataset_configs,
         mock_import_raw_dataset,
     ) -> None:
         """
         Given a crdq task for gnomad_qc, expect the crdq table to be created by querying the raw dataset.
         """
+        gnomad_qc_path = (
+            'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
+        )
+
         # raw dataset dependency exists
         mock_hailtabletask.return_value = MockCompleteTask()
 
@@ -63,17 +67,15 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     'alleles': ['A', 'C'],
-                    'af': 0.00823,
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus('GRCh38'),
                 alleles=hl.tarray(hl.tstr),
-                af=hl.tfloat64,
             ),
             key=['locus', 'alleles'],
             globals=hl.Struct(
-                path='gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
+                path=gnomad_qc_path,
                 enums=hl.Struct(),
                 version='v3.1',
             ),
@@ -83,15 +85,12 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         # The first complete() call should return False by super.complete() because the crdq does not exist yet.
         # For the second complete() call, the crdq ht globals should be the same as dataset config
         mock_globals = Globals(
-            paths={
-                'gnomad_qc': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
-            },
+            paths={'gnomad_qc': gnomad_qc_path},
             versions={'gnomad_qc': 'v3.1'},
-            enums={},
-            selects={'gnomad_qc': {'af'}},
+            enums={'gnomad_qc': {}},
+            selects={'gnomad_qc': set()},
         )
-        mock_globals_class.from_ht.return_value = mock_globals
-        mock_globals_class.from_dataset_configs.return_value = mock_globals
+        mock_globals_from_dataset_configs.return_value = mock_globals
 
         worker = luigi.worker.Worker()
         task = UpdatedCachedReferenceDatasetQuery(
@@ -122,9 +121,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    paths=hl.Struct(
-                        gnomad_qc='gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
-                    ),
+                    paths=hl.Struct(gnomad_qc=gnomad_qc_path),
                     versions=hl.Struct(gnomad_qc='v3.1'),
                     enums=hl.Struct(gnomad_qc=hl.Struct()),
                 ),
@@ -150,6 +147,10 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         Given a crdq task where there exists a clinvar crdq table and a clinvar rdc table,
         expect task to replace the clinvar crdq table with new version.
         """
+        clinvar_ftp_path = (
+            'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz'
+        )
+
         # rdc dependency exists
         mock_updated_rdc_task.return_value = MockCompleteTask()
 
@@ -186,9 +187,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         mock_crdq_query.side_effect = _clinvar_path_variants
 
         dataset_globals = Globals(
-            paths={
-                'clinvar': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-            },
+            paths={'clinvar': clinvar_ftp_path},
             versions={'clinvar': '2023-11-26'},  # matches rdc version
             enums={
                 'clinvar': {
@@ -239,9 +238,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    paths=hl.Struct(
-                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-                    ),
+                    paths=hl.Struct(clinvar=clinvar_ftp_path),
                     enums=hl.Struct(
                         clinvar=hl.Struct(
                             pathogenicity=CLINVAR_PATHOGENICITIES,
