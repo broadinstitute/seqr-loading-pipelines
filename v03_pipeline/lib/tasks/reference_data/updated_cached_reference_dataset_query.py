@@ -19,7 +19,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_ht_path,
     import_ht_from_config_path,
 )
-from v03_pipeline.lib.tasks.base.base_update_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
@@ -35,7 +35,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
 
         crdq_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            self.reference_dataset_collection,
+            ReferenceDatasetCollection.COMBINED,
             self.dataset_type,
         )
         dataset_config_globals = Globals.from_dataset_configs(
@@ -55,12 +55,12 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             valid_cached_reference_dataset_query_path(
                 self.reference_genome,
                 self.dataset_type,
-                self.query,
+                self.crdq,
             ),
         )
 
     def requires(self) -> luigi.Task:
-        if Env.REFERENCE_DATA_AUTO_UPDATE:
+        if Env.REFERENCE_DATA_AUTO_UPDATE and not self.crdq.query_raw_dataset:
             return UpdatedReferenceDatasetCollectionTask(
                 self.reference_genome,
                 self.dataset_type,

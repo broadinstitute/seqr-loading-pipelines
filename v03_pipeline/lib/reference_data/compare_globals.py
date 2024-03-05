@@ -20,8 +20,8 @@ logger = get_logger(__name__)
 
 @dataclasses.dataclass
 class Globals:
-    paths: dict[str]
-    versions: dict[str]
+    paths: dict[str, str]
+    versions: dict[str, str]
     enums: dict[str, dict[str, list[str]]]
     selects: dict[str, set[str]]
 
@@ -38,7 +38,11 @@ class Globals:
         paths, versions, enums, selects = {}, {}, {}, {}
         for dataset in rdc.datasets(dataset_type):
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
-            dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
+            dataset_ht = import_ht_from_config_path(
+                dataset_config,
+                dataset,
+                reference_genome,
+            )
             dataset_ht_globals = hl.eval(dataset_ht.globals)
             paths[dataset] = dataset_ht_globals.path
             versions[dataset] = dataset_ht_globals.version
@@ -60,10 +64,10 @@ class Globals:
         dataset_type: DatasetType,
     ):
         rdc_globals_struct = hl.eval(ht.globals)
-        paths = dict(rdc_globals_struct.paths)
-        versions = dict(rdc_globals_struct.versions)
+        paths = dict(rdc_globals_struct.get('paths', {}))
+        versions = dict(rdc_globals_struct.get('versions', {}))
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
+        enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums', {}).items()}
 
         selects = {}
         for dataset in rdc.datasets(dataset_type):
@@ -95,9 +99,13 @@ def validate_globals_match(
     ht1_globals: Globals,
     ht2_globals: Globals,
     dataset: str,
+    validate_selects: bool = True,
 ) -> bool:
     results = []
     for field in dataclasses.fields(Globals):
+        if field.name == 'selects' and not validate_selects:
+            continue
+
         result = ht1_globals[field.name].get(dataset) == ht2_globals[field.name].get(
             dataset,
         )
