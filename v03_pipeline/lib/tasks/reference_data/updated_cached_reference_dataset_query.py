@@ -48,6 +48,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             crdq_globals,
             dataset_config_globals,
             self.crdq.dataset,
+            validate_selects=False,
         )
 
     def output(self) -> luigi.Target:

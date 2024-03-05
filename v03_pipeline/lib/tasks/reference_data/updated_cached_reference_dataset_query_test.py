@@ -1,4 +1,5 @@
 import shutil
+from typing import Any
 from unittest import mock
 
 import hail as hl
@@ -80,7 +81,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         mock_import_raw_dataset.return_value = mock_ht
 
         # The first complete() call should return False by super.complete() because the crdq does not exist yet.
-        # When complete() is called a second time, make the crdq ht globals the same as dataset config.
+        # For the second complete() call, the crdq ht globals should be the same as dataset config
         mock_globals = Globals(
             paths={
                 'gnomad_qc': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
@@ -136,8 +137,12 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
     @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.UpdatedReferenceDatasetCollectionTask',
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CachedReferenceDatasetQuery.query',
+    )
     def test_clinvar(
         self,
+        mock_crdq_query,
         mock_updated_rdc_task,
         mock_globals_from_dataset_configs,
     ) -> None:
@@ -170,11 +175,21 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             ),
         )
 
+        # mock the clinvar_path_variants query
+        def _clinvar_path_variants(table, **_: Any):
+            table = table.select_globals()
+            return table.select(
+                pathogenic=False,
+                likely_pathogenic=True,
+            )
+
+        mock_crdq_query.side_effect = _clinvar_path_variants
+
         dataset_globals = Globals(
             paths={
                 'clinvar': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             },
-            versions={'clinvar': '2023-11-26'},  # new version, matches rdc version
+            versions={'clinvar': '2023-11-26'},  # matches rdc version
             enums={
                 'clinvar': {
                     'pathogenicity': CLINVAR_PATHOGENICITIES,
@@ -233,7 +248,9 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
                             assertion=CLINVAR_ASSERTIONS,
                         ),
                     ),
-                    versions=hl.Struct(clinvar='2023-11-26'),
+                    versions=hl.Struct(
+                        clinvar='2023-11-26',  # crdq table should have new versionr
+                    ),
                 ),
             ],
         )
