@@ -1,8 +1,7 @@
-import logging
-
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.compare_globals import (
@@ -15,7 +14,7 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
@@ -55,7 +54,9 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
                 self.dataset_type,
             ),
         )
-        logger.info(f'Datasets to update: {self._datasets_to_update}')
+        logger.info(
+            f'Datasets to update: {self._datasets_to_update} for {self.reference_dataset_collection}',
+        )
         return not self._datasets_to_update
 
     def output(self) -> luigi.Target:

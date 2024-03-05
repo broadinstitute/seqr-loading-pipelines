@@ -54,7 +54,7 @@ class ReferenceDatasetCollection(Enum):
             (ReferenceDatasetCollection.INTERVAL, DatasetType.MITO): [
                 'high_constraint_region_mito',
             ],
-        }[(self, dataset_type)]
+        }.get((self, dataset_type), [])
 
     def table_key_type(
         self,

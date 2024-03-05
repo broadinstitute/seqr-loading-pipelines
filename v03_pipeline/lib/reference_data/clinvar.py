@@ -1,4 +1,5 @@
 import gzip
+import os
 import subprocess
 import tempfile
 import urllib
@@ -6,6 +7,8 @@ import urllib
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
+from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_ASSERTIONS = [
@@ -19,19 +22,24 @@ CLINVAR_ASSERTIONS = [
     'other',
     'protective',
     'risk_factor',
+    'no_classification_for_the_single_variant',
+    'no_classifications_from_unflagged_records',
 ]
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
-        'no_interpretation_for_the_single_variant': 0,
-        'no_assertion_provided': 0,
+        'no_classification_for_the_single_variant': 0,
+        'no_classification_provided': 0,
         'no_assertion_criteria_provided': 0,
+        'no_classifications_from_unflagged_records': 0,
         'criteria_provided,_single_submitter': 1,
-        'criteria_provided,_conflicting_interpretations': 1,
+        'criteria_provided,_conflicting_classifications': 1,
         'criteria_provided,_multiple_submitters,_no_conflicts': 2,
         'reviewed_by_expert_panel': 3,
         'practice_guideline': 4,
     },
 )
+
+logger = get_logger(__name__)
 
 
 def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
@@ -45,8 +53,8 @@ def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
             ],
             check=True,
         )
-    except subprocess.CalledProcessError as e:
-        print(e)
+    except subprocess.CalledProcessError:
+        logger.exception(f'Failed to move local tmp file {tmp_file_name} to gcs')
 
 
 def parsed_clnsig(ht: hl.Table):
@@ -55,6 +63,10 @@ def parsed_clnsig(ht: hl.Table):
         .replace(
             'Likely_pathogenic,_low_penetrance',
             'Likely_pathogenic|low_penetrance',
+        )
+        .replace(
+            '/Pathogenic,_low_penetrance/Established_risk_allele',
+            '/Established_risk_allele|low_penetrance',
         )
         .replace(
             '/Pathogenic,_low_penetrance',
@@ -102,7 +114,10 @@ def download_and_import_latest_clinvar_vcf(
 
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        gcs_tmp_file_name = f'gs://seqr-scratch-temp{tmp_file.name}'
+        gcs_tmp_file_name = os.path.join(
+            Env.HAIL_TMPDIR,
+            os.path.basename(tmp_file.name),
+        )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
