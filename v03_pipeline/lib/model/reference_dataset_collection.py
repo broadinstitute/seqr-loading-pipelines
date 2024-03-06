@@ -37,6 +37,19 @@ class ReferenceDatasetCollection(Enum):
                 'splice_ai',
                 'topmed',
             ],
+            (ReferenceDatasetCollection.COMBINED, DatasetType.ONT_SNV_INDEL): [
+                'cadd',
+                'clinvar',
+                'dbnsfp',
+                'eigen',
+                'exac',
+                'gnomad_exomes',
+                'gnomad_genomes',
+                'mpc',
+                'primate_ai',
+                'splice_ai',
+                'topmed',
+            ],
             (ReferenceDatasetCollection.COMBINED, DatasetType.MITO): [
                 'clinvar_mito',
                 'dbnsfp_mito',
@@ -47,7 +60,12 @@ class ReferenceDatasetCollection(Enum):
                 'mitimpact',
             ],
             (ReferenceDatasetCollection.HGMD, DatasetType.SNV_INDEL): ['hgmd'],
+            (ReferenceDatasetCollection.HGMD, DatasetType.ONT_SNV_INDEL): ['hgmd'],
             (ReferenceDatasetCollection.INTERVAL, DatasetType.SNV_INDEL): [
+                'gnomad_non_coding_constraint',
+                'screen',
+            ],
+            (ReferenceDatasetCollection.INTERVAL, DatasetType.ONT_SNV_INDEL): [
                 'gnomad_non_coding_constraint',
                 'screen',
             ],
