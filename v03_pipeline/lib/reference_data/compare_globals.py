@@ -31,13 +31,11 @@ class Globals:
     @classmethod
     def from_dataset_configs(
         cls,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
         reference_genome: ReferenceGenome,
-        datasets: list[str] | None = None,
+        datasets: list[str],
     ):
         paths, versions, enums, selects = {}, {}, {}, {}
-        for dataset in datasets if datasets is not None else rdc.datasets(dataset_type):
+        for dataset in datasets:
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
             dataset_ht = import_ht_from_config_path(
                 dataset_config,
@@ -65,10 +63,10 @@ class Globals:
         dataset_type: DatasetType,
     ):
         rdc_globals_struct = hl.eval(ht.globals)
-        paths = dict(rdc_globals_struct.get('paths', {}))
-        versions = dict(rdc_globals_struct.get('versions', {}))
+        paths = dict(rdc_globals_struct.get('paths'))
+        versions = dict(rdc_globals_struct.get('versions'))
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums', {}).items()}
+        enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums').items()}
         selects = {}
         for dataset in rdc.datasets(dataset_type):
             if dataset in ht.row:

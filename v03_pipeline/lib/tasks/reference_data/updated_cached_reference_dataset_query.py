@@ -39,8 +39,6 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             self.dataset_type,
         )
         dataset_config_globals = Globals.from_dataset_configs(
-            ReferenceDatasetCollection.COMBINED,
-            self.dataset_type,
             self.reference_genome,
             [self.crdq.dataset],
         )

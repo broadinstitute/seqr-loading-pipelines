@@ -64,13 +64,10 @@ class CompareGlobalsTest(unittest.TestCase):
     @mock.patch(
         'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
     )
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_create_globals_from_dataset_configs(
         self,
-        mock_rdc_datasets,
         mock_import_dataset_ht,
     ):
-        mock_rdc_datasets.return_value = ['a', 'b']
         mock_import_dataset_ht.side_effect = [
             hl.Table.parallelize(
                 [],
@@ -92,9 +89,8 @@ class CompareGlobalsTest(unittest.TestCase):
             B_TABLE,
         ]
         dataset_config_globals = Globals.from_dataset_configs(
-            rdc=ReferenceDatasetCollection.INTERVAL,
-            dataset_type=DatasetType.SNV_INDEL,
             reference_genome=ReferenceGenome.GRCh38,
+            datasets=['a', 'b'],
         )
         self.assertTrue(
             dataset_config_globals.versions == {'a': 'a_version', 'b': 'b_version'},
@@ -119,11 +115,11 @@ class CompareGlobalsTest(unittest.TestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
     )
     def test_create_globals_from_dataset_configs_single_dataset(self, mock_read_table):
+        # by mocking hl.read_table() (only possible for a dataset without a custom import),
+        # we can test the code inside import_ht_from_config_path()
         mock_read_table.return_value = B_TABLE
 
         dataset_config_globals = Globals.from_dataset_configs(
-            rdc=ReferenceDatasetCollection.COMBINED,
-            dataset_type=DatasetType.SNV_INDEL,
             reference_genome=ReferenceGenome.GRCh38,
             datasets=['b'],
         )
