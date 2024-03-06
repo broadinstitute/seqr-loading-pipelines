@@ -245,7 +245,8 @@ class FamilyEntriesTest(unittest.TestCase):
             ),
         )
         family_entries_ht = remove_new_callset_family_guids(
-            family_entries_ht, hl.set(['012'])
+            family_entries_ht,
+            hl.set(['012']),
         )
         self.assertCountEqual(
             family_entries_ht.globals.collect(),
