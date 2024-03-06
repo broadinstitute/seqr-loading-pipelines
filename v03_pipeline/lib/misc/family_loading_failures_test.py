@@ -3,12 +3,16 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.family_loading_failures import (
+    all_relatedness_checks,
     build_relatedness_check_lookup,
     build_sex_check_lookup,
-    passes_all_relatedness_checks,
+    get_families_failed_sex_check,
 )
-from v03_pipeline.lib.misc.pedigree import Sample
+from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.misc.pedigree import Sample, parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import Ploidy
+
+TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 
 
 class FamilyLoadingFailuresTest(unittest.TestCase):
@@ -40,7 +44,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'}),
             ),
             {
-                ('remapped_id', 'ROS_007_19Y05939_D1'): [
+                ('ROS_007_19Y05939_D1', 'remapped_id'): [
                     0.0,
                     1.0,
                     0.0,
@@ -77,7 +81,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             },
         )
 
-    def test_passes_all_relatedness_checks(self):
+    def test_all_relatedness_checks(self):
         relatedness_check_lookup = {
             # Parent
             ('sample_1', 'sample_2'): [
@@ -98,9 +102,8 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             half_siblings=['sample_4'],
         )
-        self.assertTrue(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
-        )
+        failure_reasons = all_relatedness_checks(relatedness_check_lookup, sample)
+        self.assertListEqual(failure_reasons, [])
 
         # Defined grandparent missing in relatedness table
         sample = Sample(
@@ -110,8 +113,15 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             paternal_grandmother='sample_5',
         )
-        self.assertFalse(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        failure_reasons = all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
+        self.assertListEqual(
+            failure_reasons,
+            [
+                'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []',
+            ],
         )
 
         # Sibling is actually a half sibling.
@@ -126,6 +136,74 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             siblings=['sample_4'],
         )
-        self.assertFalse(
-            passes_all_relatedness_checks(relatedness_check_lookup, sample),
+        failure_reasons = all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
+        self.assertListEqual(
+            failure_reasons,
+            [
+                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
+            ],
+        )
+
+        relatedness_check_lookup = {
+            **relatedness_check_lookup,
+            ('sample_1', 'sample_2'): [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+            ],
+        }
+        sample = Sample(
+            sex=Ploidy.FEMALE,
+            sample_id='sample_1',
+            mother='sample_2',
+            paternal_grandfather='sample_3',
+            siblings=['sample_4'],
+        )
+        failure_reasons = all_relatedness_checks(
+            relatedness_check_lookup,
+            sample,
+        )
+        print('ben', failure_reasons)
+        self.assertListEqual(
+            failure_reasons,
+            [
+                'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]',
+                'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
+            ],
+        )
+
+    def test_get_families_failed_sex_check(self):
+        sex_check_ht = hl.Table.parallelize(
+            [
+                {'s': 'ROS_006_18Y03226_D1', 'sex': 'M'},
+                {'s': 'ROS_006_18Y03227_D1', 'sex': 'F'},
+                {'s': 'ROS_006_18Y03228_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05919_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05939_D1', 'sex': 'F'},
+                {'s': 'ROS_007_19Y05987_D1', 'sex': 'F'},
+            ],
+            hl.tstruct(
+                s=hl.tstr,
+                sex=hl.tstr,
+            ),
+            key='s',
+        )
+        pedigree_ht = import_pedigree(TEST_PEDIGREE_6)
+        failed_families = get_families_failed_sex_check(
+            parse_pedigree_ht_to_families(pedigree_ht),
+            sex_check_ht,
+            {},
+        )
+        self.assertCountEqual(
+            failed_families.values(),
+            [
+                [
+                    'Sample ROS_006_18Y03226_D1 has pedigree sex F but imputed sex M',
+                    'Sample ROS_006_18Y03227_D1 has pedigree sex M but imputed sex F',
+                ],
+            ],
         )
