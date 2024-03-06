@@ -167,7 +167,6 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             relatedness_check_lookup,
             sample,
         )
-        print('ben', failure_reasons)
         self.assertListEqual(
             failure_reasons,
             [
