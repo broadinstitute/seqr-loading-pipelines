@@ -171,17 +171,17 @@ class LookupTest(unittest.TestCase):
         lookup_ht = remove_new_callset_family_guids(
             lookup_ht,
             'project_c',
-            ['2'],
+            hl.set(['2']),
         )
         lookup_ht = remove_new_callset_family_guids(
             lookup_ht,
             'project_a',
-            ['3', '1'],
+            hl.set(['3', '1']),
         )
         lookup_ht = remove_new_callset_family_guids(
             lookup_ht,
             'project_b',
-            ['4'],
+            hl.set(['4']),
         )
         self.assertCountEqual(
             lookup_ht.globals.collect(),

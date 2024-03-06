@@ -95,9 +95,8 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
 
 def remove_new_callset_family_guids(
     ht: hl.Table,
-    family_guids: list[str],
+    family_guids: hl.SetExpression,
 ) -> hl.Table:
-    family_guids = hl.set(family_guids)
     # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
     family_indexes_to_keep = hl.array(
         hl.enumerate(ht.globals.family_guids)

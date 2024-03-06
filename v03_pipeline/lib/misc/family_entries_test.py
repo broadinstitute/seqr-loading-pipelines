@@ -244,7 +244,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        family_entries_ht = remove_new_callset_family_guids(family_entries_ht, ['012'])
+        family_entries_ht = remove_new_callset_family_guids(family_entries_ht, hl.set(['012']))
         self.assertCountEqual(
             family_entries_ht.globals.collect(),
             [
@@ -326,7 +326,7 @@ class FamilyEntriesTest(unittest.TestCase):
                 },
             ),
         )
-        ht = remove_new_callset_family_guids(family_entries_ht, ['012', '123'])
+        ht = remove_new_callset_family_guids(family_entries_ht, hl.set(['012', '123']))
         self.assertCountEqual(
             ht.globals.collect(),
             [hl.Struct(family_guids=[], family_samples={})],

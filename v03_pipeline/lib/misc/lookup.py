@@ -62,11 +62,10 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
 def remove_new_callset_family_guids(
     ht: hl.Table,
     project_guid: str,
-    family_guids: list[str],
+    family_guids: hl.SetExpression,
 ) -> hl.Table:
     if project_guid not in hl.eval(ht.globals.project_families):
         return ht
-    family_guids = hl.set(family_guids)
     project_i = ht.project_guids.index(project_guid)
     family_indexes_to_keep = hl.array(
         hl.enumerate(ht.globals.project_families[project_guid])
