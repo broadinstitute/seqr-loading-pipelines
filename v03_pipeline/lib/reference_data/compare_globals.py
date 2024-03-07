@@ -63,8 +63,7 @@ class Globals:
     def from_ht(
         cls,
         ht: hl.Table,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
+        datasets: list[str],
     ):
         rdc_globals_struct = hl.eval(ht.globals)
         paths = dict(rdc_globals_struct.paths)
@@ -73,7 +72,7 @@ class Globals:
         enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
 
         selects = {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in datasets:
             if dataset in ht.row:
                 # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
                 selects[dataset] = (

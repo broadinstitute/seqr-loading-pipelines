@@ -130,7 +130,6 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             dataset_config_globals.paths == {'b': 'b_path'},
         )
-        print(dataset_config_globals.enums)
         self.assertTrue(
             dataset_config_globals.enums == {'b': {'test_enum': ['C', 'D']}},
         )
@@ -170,8 +169,7 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         rdc_globals = Globals.from_ht(
             rdc_ht,
-            rdc=ReferenceDatasetCollection.INTERVAL,
-            dataset_type=DatasetType.SNV_INDEL,
+            ['gnomad_non_coding_constraint', 'screen'],
         )
         self.assertTrue(
             rdc_globals.versions
