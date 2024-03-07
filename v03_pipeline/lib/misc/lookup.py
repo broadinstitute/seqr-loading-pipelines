@@ -47,7 +47,7 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
     ht = ht.annotate_globals(
         project_guids=[project_guid],
         project_families=(
-            {project_guid: [fs.family_guid for fs in ps] for ps in row[0].project_stats}
+            {project_guid: [fs.family_guid for fs in ps] for ps in row.project_stats}
             if has_project_stats
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
