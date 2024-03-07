@@ -55,7 +55,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 CallsetTask(self.filters_path),
             ]
-        if self.validate and self.dataset_type.can_run_validation:
+        if self.validate and self.dataset_type.requires_validation:
             requirements = [
                 *requirements,
                 HailTableTask(
@@ -81,7 +81,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
-        if self.dataset_type.can_run_validation:
+        if self.dataset_type.requires_invalid_contig_filtering:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
             mt = mt.filter_rows(
@@ -89,7 +89,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
-        if self.validate and self.dataset_type.can_run_validation:
+        if self.validate and self.dataset_type.requires_validation:
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
