@@ -104,7 +104,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
         ht = remove_new_callset_family_guids(
             ht,
             self.project_guid,
-            callset_mt.family_samples.key_set(),
+            callset_mt.index_globals().family_samples.key_set(),
         )
         callset_ht = compute_callset_lookup_ht(
             self.dataset_type,
