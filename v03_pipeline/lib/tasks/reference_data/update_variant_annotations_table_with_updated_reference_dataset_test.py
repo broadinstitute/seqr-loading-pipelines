@@ -19,6 +19,7 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
+from v03_pipeline.lib.reference_data.compare_globals import Globals
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
@@ -40,6 +41,9 @@ TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 )
 @mock.patch(
     'v03_pipeline.lib.tasks.base.base_variant_annotations_table.BaseVariantAnnotationsTableTask.initialize_table',
+)
+@mock.patch(
+    'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.Globals.from_dataset_configs',
 )
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def setUp(self) -> None:
@@ -103,6 +107,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
 
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
+        mock_globals_from_dataset_configs,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -130,6 +135,136 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+
+        mock_globals_from_config = Globals(
+            paths={
+                'cadd': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+                'clinvar': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                'dbnsfp': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+                'eigen': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+                'exac': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+                'gnomad_exomes': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+                'gnomad_genomes': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                'mpc': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+                'primate_ai': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+                'splice_ai': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+                'topmed': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                'gnomad_non_coding_constraint': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+                'screen': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+                'hgmd': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
+            },
+            versions={
+                'cadd': 'v1.6',
+                'clinvar': '2023-11-26',
+                'dbnsfp': '2.9.3',
+                'eigen': None,
+                'exac': None,
+                'gnomad_exomes': 'r2.1.1',
+                'gnomad_genomes': 'r2.1.1',
+                'mpc': None,
+                'primate_ai': 'v0.2',
+                'splice_ai': None,
+                'topmed': None,
+                'gnomad_non_coding_constraint': None,
+                'screen': None,
+                'hgmd': None,
+            },
+            enums={
+                'cadd': {},
+                'clinvar': {
+                    'pathogenicity': CLINVAR_PATHOGENICITIES,
+                    'assertion': CLINVAR_ASSERTIONS,
+                },
+                'dbnsfp': {
+                    'SIFT_pred': ['D', 'T'],
+                    'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                    'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                },
+                'eigen': {},
+                'exac': {},
+                'gnomad_exomes': {},
+                'gnomad_genomes': {},
+                'mpc': {},
+                'primate_ai': {},
+                'splice_ai': {
+                    'splice_consequence': [
+                        'Acceptor gain',
+                        'Acceptor loss',
+                        'Donor gain',
+                        'Donor loss',
+                        'No consequence',
+                    ],
+                },
+                'topmed': {},
+                'gnomad_non_coding_constraint': {},
+                'screen': {
+                    'region_type': [
+                        'CTCF-bound',
+                        'CTCF-only',
+                        'DNase-H3K4me3',
+                        'PLS',
+                        'dELS',
+                        'pELS',
+                        'DNase-only',
+                        'low-DNase',
+                    ],
+                },
+                'hgmd': {'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
+            },
+            selects={
+                'cadd': {'PHRED'},
+                'clinvar': {
+                    'assertion_ids',
+                    'pathogenicity_id',
+                    'alleleId',
+                    'conflictingPathogenicities',
+                    'goldStars',
+                },
+                'dbnsfp': {
+                    'REVEL_score',
+                    'SIFT_pred_id',
+                    'Polyphen2_HVAR_pred_id',
+                    'MutationTaster_pred_id',
+                },
+                'eigen': {'Eigen_phred'},
+                'exac': {
+                    'AF_POPMAX',
+                    'AC_Het',
+                    'AC_Adj',
+                    'AC_Hom',
+                    'AF',
+                    'AN_Adj',
+                    'AC_Hemi',
+                },
+                'gnomad_exomes': {
+                    'AC',
+                    'Hemi',
+                    'Hom',
+                    'FAF_AF',
+                    'AF',
+                    'AF_POPMAX_OR_GLOBAL',
+                    'AN',
+                },
+                'gnomad_genomes': {
+                    'AC',
+                    'Hemi',
+                    'Hom',
+                    'FAF_AF',
+                    'AF',
+                    'AF_POPMAX_OR_GLOBAL',
+                    'AN',
+                },
+                'mpc': {'MPC'},
+                'primate_ai': {'score'},
+                'splice_ai': {'splice_consequence_id', 'delta_score'},
+                'topmed': {'AC', 'Hom', 'AF', 'Het', 'AN'},
+                'gnomad_non_coding_constraint': {'z_score'},
+                'screen': {'region_type_ids'},
+                'hgmd': {'accession', 'class_id'},
+            },
+        )
+        mock_globals_from_dataset_configs.return_value = mock_globals_from_config
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -285,6 +420,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
 
     def test_update_vat_with_updated_rdc_mito_38(
         self,
+        mock_globals_from_dataset_configs,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -312,6 +448,62 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+
+        mock_globals_from_config = Globals(
+            paths={
+                'gnomad_mito': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+                'helix_mito': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
+                'hmtvar': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
+                'mitomap': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
+                'mitimpact': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+                'clinvar_mito': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+                'dbnsfp_mito': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
+                'high_constraint_region_mito': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
+            },
+            versions={
+                'gnomad_mito': 'v3.1',
+                'helix_mito': '20200327',
+                'hmtvar': 'Jan. 10 2022',
+                'mitomap': 'Feb. 04 2022',
+                'mitimpact': '3.0.7',
+                'clinvar_mito': '2023-07-22',
+                'dbnsfp_mito': '4.2',
+                'high_constraint_region_mito': 'Feb-15-2022',
+            },
+            enums={
+                'gnomad_mito': {},
+                'helix_mito': {},
+                'hmtvar': {},
+                'mitomap': {},
+                'mitimpact': {},
+                'clinvar_mito': {
+                    'pathogenicity': CLINVAR_PATHOGENICITIES,
+                    'assertion': CLINVAR_ASSERTIONS,
+                },
+                'dbnsfp_mito': {
+                    'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                },
+                'high_constraint_region_mito': {},
+            },
+            selects={
+                'gnomad_mito': {'AF', 'AF_het', 'AC', 'max_hl', 'AC_het', 'AN'},
+                'helix_mito': {'AF', 'AF_het', 'AC', 'max_hl', 'AC_het', 'AN'},
+                'hmtvar': {'score'},
+                'mitomap': {'pathogenic'},
+                'mitimpact': {'score'},
+                'clinvar_mito': {
+                    'goldStars',
+                    'conflictingPathogenicities',
+                    'alleleId',
+                    'assertion_ids',
+                    'pathogenicity_id',
+                },
+                'dbnsfp_mito': {'SIFT_score', 'MutationTaster_pred_id'},
+                'high_constraint_region_mito': set(),
+            },
+        )
+        mock_globals_from_dataset_configs.return_value = mock_globals_from_config
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
@@ -409,6 +601,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
 
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
+        mock_globals_from_dataset_configs,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -436,6 +629,136 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+
+        mock_globals_from_config = Globals(
+            paths={
+                'cadd': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+                'clinvar': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                'dbnsfp': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+                'eigen': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+                'exac': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+                'gnomad_exomes': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+                'gnomad_genomes': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                'mpc': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+                'primate_ai': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+                'splice_ai': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+                'topmed': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+                'gnomad_non_coding_constraint': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+                'screen': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+                'hgmd': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
+            },
+            versions={
+                'cadd': 'v1.6',
+                'clinvar': '2023-11-26',
+                'dbnsfp': '2.9.3',
+                'eigen': None,
+                'exac': None,
+                'gnomad_exomes': 'r2.1.1',
+                'gnomad_genomes': 'r2.1.1',
+                'mpc': None,
+                'primate_ai': 'v0.2',
+                'splice_ai': None,
+                'topmed': None,
+                'gnomad_non_coding_constraint': None,
+                'screen': None,
+                'hgmd': None,
+            },
+            enums={
+                'cadd': {},
+                'clinvar': {
+                    'pathogenicity': CLINVAR_PATHOGENICITIES,
+                    'assertion': CLINVAR_ASSERTIONS,
+                },
+                'dbnsfp': {
+                    'SIFT_pred': ['D', 'T'],
+                    'Polyphen2_HVAR_pred': ['D', 'P', 'B'],
+                    'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+                },
+                'eigen': {},
+                'exac': {},
+                'gnomad_exomes': {},
+                'gnomad_genomes': {},
+                'mpc': {},
+                'primate_ai': {},
+                'splice_ai': {
+                    'splice_consequence': [
+                        'Acceptor gain',
+                        'Acceptor loss',
+                        'Donor gain',
+                        'Donor loss',
+                        'No consequence',
+                    ],
+                },
+                'topmed': {},
+                'gnomad_non_coding_constraint': {},
+                'screen': {
+                    'region_type': [
+                        'CTCF-bound',
+                        'CTCF-only',
+                        'DNase-H3K4me3',
+                        'PLS',
+                        'dELS',
+                        'pELS',
+                        'DNase-only',
+                        'low-DNase',
+                    ],
+                },
+                'hgmd': {'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
+            },
+            selects={
+                'cadd': {'PHRED'},
+                'clinvar': {
+                    'assertion_ids',
+                    'pathogenicity_id',
+                    'alleleId',
+                    'conflictingPathogenicities',
+                    'goldStars',
+                },
+                'dbnsfp': {
+                    'REVEL_score',
+                    'SIFT_pred_id',
+                    'Polyphen2_HVAR_pred_id',
+                    'MutationTaster_pred_id',
+                },
+                'eigen': {'Eigen_phred'},
+                'exac': {
+                    'AF_POPMAX',
+                    'AC_Het',
+                    'AC_Adj',
+                    'AC_Hom',
+                    'AF',
+                    'AN_Adj',
+                    'AC_Hemi',
+                },
+                'gnomad_exomes': {
+                    'AC',
+                    'Hemi',
+                    'Hom',
+                    'FAF_AF',
+                    'AF',
+                    'AF_POPMAX_OR_GLOBAL',
+                    'AN',
+                },
+                'gnomad_genomes': {
+                    'AC',
+                    'Hemi',
+                    'Hom',
+                    'FAF_AF',
+                    'AF',
+                    'AF_POPMAX_OR_GLOBAL',
+                    'AN',
+                },
+                'mpc': {'MPC'},
+                'primate_ai': {'score'},
+                'splice_ai': {'splice_consequence_id', 'delta_score'},
+                'topmed': {'AC', 'Hom', 'AF', 'Het', 'AN'},
+                'gnomad_non_coding_constraint': {'z_score'},
+                'screen': {'region_type_ids'},
+                'hgmd': {'accession', 'class_id'},
+            },
+        )
+        mock_globals_from_dataset_configs.return_value = mock_globals_from_config
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,

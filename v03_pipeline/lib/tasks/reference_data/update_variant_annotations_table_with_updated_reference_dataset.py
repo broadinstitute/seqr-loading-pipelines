@@ -49,16 +49,15 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 rdc,
                 self.dataset_type,
             )
-            rdc_ht_globals = Globals.from_ht(
-                self.rdc_annotation_dependencies[f'{rdc.value}_ht'],
-                rdc,
-                self.dataset_type,
+            dataset_config_globals = Globals.from_dataset_configs(
+                self.reference_genome,
+                rdc.datasets(self.dataset_type),
             )
             self._datasets_to_update.extend(
                 get_datasets_to_update(
                     rdc,
                     annotations_ht_globals,
-                    rdc_ht_globals,
+                    dataset_config_globals,
                     self.dataset_type,
                 ),
             )

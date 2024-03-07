@@ -22,8 +22,8 @@ logger = get_logger(__name__)
 
 @dataclasses.dataclass
 class Globals:
-    paths: dict[str]
-    versions: dict[str]
+    paths: dict[str, str]
+    versions: dict[str, str]
     enums: dict[str, dict[str, list[str]]]
     selects: dict[str, set[str]]
 
@@ -33,12 +33,11 @@ class Globals:
     @classmethod
     def from_dataset_configs(
         cls,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
         reference_genome: ReferenceGenome,
+        datasets: list[str],
     ):
         paths, versions, enums, selects = {}, {}, {}, {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in datasets:
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
             dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
 

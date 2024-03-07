@@ -13,46 +13,61 @@ from v03_pipeline.lib.reference_data.compare_globals import (
     get_datasets_to_update,
 )
 
+CONFIG = {
+    'a': {
+        '38': {
+            'custom_import': None,
+            'source_path': 'a_path',  # 'a' has a custom import
+            'select': {
+                'test_select': 'info.test_select',
+                'test_enum': 'test_enum',
+            },
+            'version': 'a_version',
+            'enum_select': {'test_enum': ['A', 'B']},
+        },
+    },
+    'b': {  # b is missing version
+        '38': {
+            'path': 'b_path',
+            'select': {
+                'test_select': 'info.test_select',
+                'test_enum': 'test_enum',
+            },
+            'enum_select': {'test_enum': ['C', 'D']},
+            'custom_select': lambda ht: {'field2': ht.info.test_select_2},
+        },
+    },
+}
+
+B_TABLE = hl.Table.parallelize(
+    [],
+    schema=hl.tstruct(
+        locus=hl.tlocus('GRCh38'),
+        alleles=hl.tarray(hl.tstr),
+        info=hl.tstruct(
+            test_select=hl.tint,
+            test_select_2=hl.tint,
+        ),
+        test_enum=hl.tstr,
+    ),
+    globals=hl.Struct(
+        version='b_version',
+        path='b_path',
+        enums=hl.Struct(test_enum=['C', 'D']),
+    ),
+    key=['locus', 'alleles'],
+)
+
 
 class CompareGlobalsTest(unittest.TestCase):
-    @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
-        {
-            'a': {
-                '38': {
-                    'custom_import': None,
-                    'source_path': 'a_path',  # 'a' has a custom import
-                    'select': {
-                        'test_select': 'info.test_select',
-                        'test_enum': 'test_enum',
-                    },
-                    'version': 'a_version',
-                    'enum_select': {'test_enum': ['A', 'B']},
-                },
-            },
-            'b': {  # b is missing version
-                '38': {
-                    'path': 'b_path',
-                    'select': {
-                        'test_select': 'info.test_select',
-                        'test_enum': 'test_enum',
-                    },
-                    'enum_select': {'test_enum': ['C', 'D']},
-                    'custom_select': lambda ht: {'field2': ht.info.test_select_2},
-                },
-            },
-        },
-    )
+    @mock.patch.dict('v03_pipeline.lib.reference_data.compare_globals.CONFIG', CONFIG)
     @mock.patch(
         'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
     )
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_create_globals_from_dataset_ht_configs(
+    def test_create_globals_from_dataset_configs(
         self,
-        mock_rdc_datasets,
         mock_import_dataset_ht,
     ):
-        mock_rdc_datasets.return_value = ['a', 'b']
         mock_import_dataset_ht.side_effect = [
             hl.Table.parallelize(
                 [],
@@ -64,28 +79,18 @@ class CompareGlobalsTest(unittest.TestCase):
                     ),
                     test_enum=hl.tstr,
                 ),
-                globals=hl.Struct(version='a_version'),
-                key=['locus', 'alleles'],
-            ),
-            hl.Table.parallelize(
-                [],
-                schema=hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
-                    info=hl.tstruct(
-                        test_select=hl.tint,
-                        test_select_2=hl.tint,
-                    ),
-                    test_enum=hl.tstr,
+                globals=hl.Struct(
+                    version='a_version',
+                    path='a_path',
+                    enums=hl.Struct(test_enum=['A', 'B']),
                 ),
-                globals=hl.Struct(version='b_version'),
                 key=['locus', 'alleles'],
             ),
+            B_TABLE,
         ]
         dataset_config_globals = Globals.from_dataset_configs(
-            rdc=ReferenceDatasetCollection.INTERVAL,
-            dataset_type=DatasetType.SNV_INDEL,
             reference_genome=ReferenceGenome.GRCh38,
+            datasets=['a', 'b'],
         )
         self.assertTrue(
             dataset_config_globals.versions == {'a': 'a_version', 'b': 'b_version'},
@@ -101,6 +106,37 @@ class CompareGlobalsTest(unittest.TestCase):
             dataset_config_globals.selects
             == {
                 'a': {'test_select', 'test_enum_id'},
+                'b': {'test_select', 'field2', 'test_enum_id'},
+            },
+        )
+
+    @mock.patch.dict('v03_pipeline.lib.reference_data.compare_globals.CONFIG', CONFIG)
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.dataset_table_operations.hl.read_table',
+    )
+    def test_create_globals_from_dataset_configs_single_dataset(self, mock_read_table):
+        # by mocking hl.read_table() (only possible for a dataset without a custom import),
+        # we can test the code inside import_ht_from_config_path()
+        mock_read_table.return_value = B_TABLE
+
+        dataset_config_globals = Globals.from_dataset_configs(
+            reference_genome=ReferenceGenome.GRCh38,
+            datasets=['b'],
+        )
+
+        self.assertTrue(
+            dataset_config_globals.versions == {'b': 'b_version'},
+        )
+        self.assertTrue(
+            dataset_config_globals.paths == {'b': 'b_path'},
+        )
+        print(dataset_config_globals.enums)
+        self.assertTrue(
+            dataset_config_globals.enums == {'b': {'test_enum': ['C', 'D']}},
+        )
+        self.assertTrue(
+            dataset_config_globals.selects
+            == {
                 'b': {'test_select', 'field2', 'test_enum_id'},
             },
         )

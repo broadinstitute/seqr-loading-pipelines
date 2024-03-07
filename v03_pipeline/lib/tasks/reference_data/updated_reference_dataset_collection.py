@@ -42,9 +42,8 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.dataset_type,
         )
         dataset_config_globals = Globals.from_dataset_configs(
-            self.reference_dataset_collection,
-            self.dataset_type,
             self.reference_genome,
+            self.reference_dataset_collection.datasets(self.dataset_type),
         )
         self._datasets_to_update.extend(
             get_datasets_to_update(
