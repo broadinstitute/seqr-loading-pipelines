@@ -55,16 +55,16 @@ def compute_callset_family_entries_ht(
 
 
 def globalize_ids(ht: hl.Table) -> hl.Table:
-    row = ht.take(1)
-    has_family_entries = row and len(row[0].family_entries) > 0
+    row = ht.take(1)[0] if ht.count() > 0 else None
+    has_family_entries = row and len(row.family_entries) > 0
     ht = ht.annotate_globals(
         family_guids=(
-            [fe[0].family_guid for fe in row[0].family_entries]
+            [fe[0].family_guid for fe in row.family_entries]
             if has_family_entries
             else hl.empty_array(hl.tstr)
         ),
         family_samples=(
-            {fe[0].family_guid: [e.s for e in fe] for fe in row[0].family_entries}
+            {fe[0].family_guid: [e.s for e in fe] for fe in row.family_entries}
             if has_family_entries
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
@@ -141,7 +141,7 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
             .default(ht.family_entries.extend(ht.family_entries_1))
         ),
     )
-    # NB: transume because we want to drop the *_1 fields, but preserve other globals
+    # NB: transmute because we want to drop the *_1 fields, but preserve other globals
     return ht.transmute_globals(
         family_guids=ht.family_guids.extend(ht.family_guids_1),
         family_samples=hl.dict(

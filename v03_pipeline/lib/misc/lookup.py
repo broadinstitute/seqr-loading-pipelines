@@ -42,8 +42,8 @@ def compute_callset_lookup_ht(
 
 
 def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
-    row = ht.take(1)
-    has_project_stats = row and len(row[0].project_stats) > 0
+    row = ht.take(1)[0] if ht.count() > 0 else None
+    has_project_stats = row and len(row.project_stats) > 0
     ht = ht.annotate_globals(
         project_guids=[project_guid],
         project_families=(
