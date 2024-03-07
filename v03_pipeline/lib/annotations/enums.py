@@ -198,6 +198,7 @@ CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 CLINVAR_PATHOGENICITIES = [
     'Pathogenic',
     'Pathogenic/Likely_pathogenic',
+    'Pathogenic/Likely_pathogenic/Established_risk_allele',
     'Pathogenic/Likely_pathogenic/Likely_risk_allele',
     'Pathogenic/Likely_risk_allele',
     'Likely_pathogenic',
