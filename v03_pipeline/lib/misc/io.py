@@ -147,7 +147,8 @@ def select_relevant_fields(
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     optional_row_fields = [
-        row_field for row_field in dataset_type.optional_row_fields
+        row_field
+        for row_field in dataset_type.optional_row_fields
         if hasattr(mt, row_field)
     ]
     mt = mt.select_rows([*dataset_type.row_fields, *optional_row_fields])
