@@ -88,7 +88,7 @@ def remove_family_guids(
         ),
     )
     project_i = ht.project_guids.index(
-        project_guid
+        project_guid,
     )  # double reference because new expression
     return ht.annotate_globals(
         project_families=hl.dict(
