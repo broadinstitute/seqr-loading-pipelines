@@ -4,7 +4,7 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
-    remove_new_callset_family_guids,
+    remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
 from v03_pipeline.lib.paths import lookup_table_path
@@ -101,7 +101,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 ),
             )
         callset_mt = hl.read_matrix_table(self.input().path)
-        ht = remove_new_callset_family_guids(
+        ht = remove_family_guids(
             ht,
             self.project_guid,
             callset_mt.index_globals().family_samples.key_set(),

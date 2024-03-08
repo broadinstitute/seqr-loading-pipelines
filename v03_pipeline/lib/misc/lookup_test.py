@@ -5,7 +5,7 @@ import hail as hl
 from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
-    remove_new_callset_family_guids,
+    remove_family_guids,
 )
 from v03_pipeline.lib.model import DatasetType
 
@@ -168,17 +168,17 @@ class LookupTest(unittest.TestCase):
                 project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
             ),
         )
-        lookup_ht = remove_new_callset_family_guids(
+        lookup_ht = remove_family_guids(
             lookup_ht,
             'project_c',
             hl.set(['2']),
         )
-        lookup_ht = remove_new_callset_family_guids(
+        lookup_ht = remove_family_guids(
             lookup_ht,
             'project_a',
             hl.set(['3', '1']),
         )
-        lookup_ht = remove_new_callset_family_guids(
+        lookup_ht = remove_family_guids(
             lookup_ht,
             'project_b',
             hl.set(['4']),

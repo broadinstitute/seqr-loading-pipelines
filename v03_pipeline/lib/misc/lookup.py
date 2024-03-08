@@ -59,7 +59,7 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
     )
 
 
-def remove_new_callset_family_guids(
+def remove_family_guids(
     ht: hl.Table,
     project_guid: str,
     family_guids: hl.SetExpression,
@@ -89,10 +89,10 @@ def remove_new_callset_family_guids(
     )
     return ht.annotate_globals(
         project_families=hl.dict(
-            ht.project_families.items().map(
-                lambda item: (
+            hl.enumerate(ht.project_families.items()).starmap(
+                lambda i, item: (
                     hl.if_else(
-                        item[0] != project_guid,
+                        i != project_i,
                         item,
                         (
                             item[0],

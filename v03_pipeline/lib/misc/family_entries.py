@@ -93,7 +93,7 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('family_guids', 'family_samples')
 
 
-def remove_new_callset_family_guids(
+def remove_family_guids(
     ht: hl.Table,
     family_guids: hl.SetExpression,
 ) -> hl.Table:
