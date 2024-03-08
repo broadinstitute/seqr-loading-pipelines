@@ -37,7 +37,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     check_sex_and_relatedness = luigi.BoolParameter(
-        default=True,
+        default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
