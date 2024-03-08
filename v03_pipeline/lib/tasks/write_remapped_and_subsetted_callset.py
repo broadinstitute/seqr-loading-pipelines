@@ -9,7 +9,6 @@ from v03_pipeline.lib.misc.family_loading_failures import (
 from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
@@ -35,6 +34,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     )
     validate = luigi.BoolParameter(
         default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    check_sex_and_relatedness = luigi.BoolParameter(
+        default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
 
@@ -64,7 +67,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             RawFileTask(self.project_pedigree_path),
         ]
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            self.check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
@@ -109,7 +112,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            self.check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)

@@ -24,6 +24,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
             validate=False,
+            check_sex_and_relatedness=False,
             run_id='run_123456',
         )
         worker.add(write_metadata_for_run_task)
