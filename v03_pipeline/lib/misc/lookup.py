@@ -87,7 +87,9 @@ def remove_family_guids(
             )
         ),
     )
-    project_i = ht.project_guids.index(project_guid) # double reference because new expression
+    project_i = ht.project_guids.index(
+        project_guid
+    )  # double reference because new expression
     return ht.annotate_globals(
         project_families=hl.dict(
             hl.enumerate(ht.project_families.items()).starmap(
