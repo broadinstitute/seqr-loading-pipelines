@@ -67,7 +67,9 @@ class Globals:
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
+        enums = {
+            k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in datasets
+        }
 
         selects = {}
         for dataset in datasets:
@@ -91,15 +93,6 @@ def get_datasets_to_update(
         datasets_to_update.update(
             ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
-        if field.name == 'enums':
-            for annotation in [
-                'sorted_transcript_consequences',
-                'mitotip',
-                'sv_type_id',
-                'sv_type_detail_id',
-                'sorted_gene_consequences',
-            ]:
-                datasets_to_update.discard(annotation)
 
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
             if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
