@@ -88,12 +88,11 @@ def get_datasets_to_update(
     ht2_globals: Globals,
 ) -> list[str]:
     datasets_to_update = set()
-
+    
     for field in dataclasses.fields(Globals):
         datasets_to_update.update(
             ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
-
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
             if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
                 dataset,
