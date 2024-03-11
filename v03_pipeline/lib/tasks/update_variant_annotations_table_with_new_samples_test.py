@@ -494,7 +494,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         ),
                         topmed=hl.Struct(),
                         hgmd=hl.Struct(
-                            **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
+                            **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
                         ),
                         gnomad_non_coding_constraint=hl.Struct(),
                         screen=hl.Struct(
