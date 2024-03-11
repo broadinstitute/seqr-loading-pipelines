@@ -93,11 +93,10 @@ def get_datasets_to_update(
     datasets_to_update = set()
 
     for field in dataclasses.fields(Globals):
-        ht1_datasets = set(ht1_globals[field.name].keys())
-        ht2_datasets = set(ht2_globals[field.name].keys())
-        datasets_to_update.update(ht1_datasets.symmetric_difference(ht2_datasets))
-
-        for dataset in ht1_datasets.intersection(ht2_datasets):
+        datasets_to_update.update(
+            ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
+        )
+        for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
             if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
                 dataset,
             ):
