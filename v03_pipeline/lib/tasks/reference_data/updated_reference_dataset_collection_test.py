@@ -67,17 +67,19 @@ MOCK_CONFIG = {
     'primate_ai': {
         '38': {
             'version': 'v0.3',
-            'path': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
+            'source_path': 'gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
             'select': {
                 'score': 'info.score',
             },
+            'custom_import': lambda *_: MOCK_PRIMATE_AI_DATASET_HT,
         },
     },
     'cadd': {
         '38': {
             'version': 'v1.6',
-            'path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+            'source_path': 'gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
             'select': ['PHRED'],
+            'custom_import': lambda *_: MOCK_CADD_DATASET_HT,
         },
     },
 }
@@ -92,33 +94,16 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
         MOCK_CONFIG,
     )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
-    )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.import_ht_from_config_path',
-    )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_task_with_empty_reference_data_table(
         self,
         mock_rdc_datasets,
-        mock_import_ht_from_config_path_1,
-        mock_import_ht_from_config_path_2,
     ) -> None:
         """
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai']
-        mock_import_ht_from_config_path_1.side_effect = [
-            MOCK_CADD_DATASET_HT,
-            MOCK_PRIMATE_AI_DATASET_HT,
-        ]
-        mock_import_ht_from_config_path_2.side_effect = [
-            MOCK_CADD_DATASET_HT,
-            MOCK_PRIMATE_AI_DATASET_HT,
-        ]
-
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -172,18 +157,10 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
         MOCK_CONFIG,
     )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.compare_globals.import_ht_from_config_path',
-    )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.import_ht_from_config_path',
-    )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_task_with_existing_reference_dataset_collection_table(
         self,
         mock_rdc_datasets,
-        mock_import_ht_from_config_path_1,
-        mock_import_ht_from_config_path_2,
     ) -> None:
         """
         Given an existing reference dataset collection which contains only the primate_ai dataset and has globals:
@@ -205,17 +182,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         )
 
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai']
-        mock_import_ht_from_config_path_1.side_effect = [
-            MOCK_CADD_DATASET_HT,
-            MOCK_PRIMATE_AI_DATASET_HT,
-        ]
-        mock_import_ht_from_config_path_2.side_effect = [
-            MOCK_CADD_DATASET_HT,
-            MOCK_PRIMATE_AI_DATASET_HT,
-            MOCK_CADD_DATASET_HT,
-            MOCK_PRIMATE_AI_DATASET_HT,
-        ]
-
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
