@@ -107,7 +107,7 @@ def remove_new_callset_family_guids(
         family_entries=(
             hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
             if len(family_indexes_to_keep) > 0
-            else hl.missing(ht.family_entries.dtype.element_type)
+            else hl.missing(ht.family_entries.dtype)
         ),
     )
     return ht.annotate_globals(
