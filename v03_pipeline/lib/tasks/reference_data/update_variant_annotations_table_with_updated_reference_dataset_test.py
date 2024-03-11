@@ -35,64 +35,221 @@ TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 
+MOCK_CADD_CONFIG = {
+    'version': 'v1.6',
+    'select': ['PHRED'],
+    'source_path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            PHRED=hl.tint32,
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(
+            version='v1.6',
+        ),
+    ),
+}
+MOCK_CLINVAR_CONFIG = {
+    **CONFIG['clinvar']['38'],
+    'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                ALLELEID=hl.tint32,
+                CLNSIG=hl.tarray(hl.tstr),
+                CLNSIGCONF=hl.tarray(hl.tstr),
+                CLNREVSTAT=hl.tarray(hl.tstr),
+            ),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(
+            version='2023-11-26',
+        ),
+    ),
+}
 
-# [
-#                 'cadd',
-#                 'clinvar',
-#                 'dbnsfp',
-#                 'eigen',
-#                 'exac',
-#                 'gnomad_exomes',
-#                 'gnomad_genomes',
-#                 'mpc',
-#                 'primate_ai',
-#                 'splice_ai',
-#                 'topmed',
-#             ],
+MOCK_EIGEN_CONFIG = {
+    'select': {'Eigen_phred': 'info.Eigen-phred'},
+    'source_path': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(**{'Eigen-phred': hl.tfloat32}),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(),
+    ),
+}
+
+MOCK_EXAC_CONFIG = {
+    **CONFIG['exac']['38'],
+    'source_path': 'gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                AF_POPMAX=hl.tfloat64,
+                AF=hl.tarray(hl.tfloat64),
+                AC_Adj=hl.tarray(hl.tint32),
+                AC_Het=hl.tarray(hl.tint32),
+                AC_Hom=hl.tarray(hl.tint32),
+                AC_Hemi=hl.tarray(hl.tint32),
+                AN_Adj=hl.tint32,
+            ),
+            a_index=hl.tint32,
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(),
+    ),
+}
+MOCK_GNOMAD_EXOMES_CONFIG = {
+    **CONFIG['gnomad_exomes']['38'],
+    'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            freq=hl.tarray(
+                hl.tstruct(
+                    AF=hl.tfloat64,
+                    AN=hl.tint32,
+                    AC=hl.tint32,
+                    homozygote_count=hl.tint32,
+                ),
+            ),
+            popmax=hl.tarray(
+                hl.tstruct(
+                    AF=hl.tfloat64,
+                    AN=hl.tint32,
+                    AC=hl.tint32,
+                    homozygote_count=hl.tint32,
+                    pop=hl.tstr,
+                ),
+            ),
+            faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(
+            freq_index_dict={'gnomad': 0, 'gnomad_male': 1},
+            popmax_index_dict={'gnomad': 0},
+        ),
+    ),
+}
+
+MOCK_MPC_CONFIG = {
+    **CONFIG['mpc']['38'],
+    'source_path': 'gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                MPC=hl.tstr,
+            ),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(),
+    ),
+}
+
+MOCK_PRIMATE_AI_CONFIG = {
+    'version': 'v0.2',
+    'select': {'score': 'info.score'},
+    'source_path': 'gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                score=hl.tfloat64,
+            ),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(
+            version='v0.2',
+        ),
+    ),
+}
+MOCK_SPLICE_AI_CONFIG = {
+    **CONFIG['splice_ai']['38'],
+    'source_path': 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                max_DS=hl.tfloat64,
+                splice_consequence=hl.tstr,
+            ),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(),
+    ),
+}
+MOCK_TOPMED_CONFIG = {
+    **CONFIG['topmed']['38'],
+    'source_path': 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+    'custom_import': lambda *_: hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            locus=hl.tlocus('GRCh38'),
+            alleles=hl.tarray(hl.tstr),
+            info=hl.tstruct(
+                AC=hl.tint32,
+                AN=hl.tint32,
+                AF=hl.tfloat64,
+                Hom=hl.tint32,
+                Het=hl.tint32,
+            ),
+        ),
+        key=['locus', 'alleles'],
+        globals=hl.Struct(),
+    ),
+}
 MOCK_CONFIG = {
     'cadd': {
-        '38': {
-            'version': 'v1.6',
-            'select': ['PHRED'],
-            'source_path': 'gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
-            'custom_import': lambda *_: hl.Table.parallelize(
-                [],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
-                    PHRED=hl.tint32,
-                ),
-                key=['locus', 'alleles'],
-                globals=hl.Struct(
-                    version='v1.6',
-                ),
-            ),
-        },
+        '37': MOCK_CADD_CONFIG,
+        '38': MOCK_CADD_CONFIG,
     },
     'clinvar': {
-        '38': {
-            **CONFIG['clinvar']['38'],
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+        '37': MOCK_CLINVAR_CONFIG,
+        '38': MOCK_CLINVAR_CONFIG,
+    },
+    'dbnsfp': {
+        '37': {
+            **CONFIG['dbnsfp']['37'],
+            'version': '2.9.3',
+            'source_path': 'gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
-                    info=hl.tstruct(
-                        ALLELEID=hl.tint32,
-                        CLNSIG=hl.tarray(hl.tstr),
-                        CLNSIGCONF=hl.tarray(hl.tstr),
-                        CLNREVSTAT=hl.tarray(hl.tstr),
-                    ),
+                    REVEL_score=hl.tstr,
+                    SIFT_score=hl.tstr,
+                    Polyphen2_HVAR_score=hl.tstr,
+                    MutationTaster_pred=hl.tstr,
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
-                    version='2023-11-26',
+                    version='2.9.3',
                 ),
             ),
         },
-    },
-    'dbnsfp': {
         '38': {
             **CONFIG['dbnsfp']['38'],
             'version': '2.9.3',
@@ -118,17 +275,314 @@ MOCK_CONFIG = {
         },
     },
     'eigen': {
-        '38': {
-            'select': {'Eigen_phred': 'info.Eigen-phred'},
-            'source_path': 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+        '37': MOCK_EIGEN_CONFIG,
+        '38': MOCK_EIGEN_CONFIG,
+    },
+    'exac': {
+        '37': MOCK_EXAC_CONFIG,
+        '38': MOCK_EXAC_CONFIG,
+    },
+    'gnomad_exomes': {
+        '37': MOCK_GNOMAD_EXOMES_CONFIG,
+        '38': MOCK_GNOMAD_EXOMES_CONFIG,
+    },
+    'gnomad_genomes': {
+        '37': {
+            **CONFIG['gnomad_genomes']['37'],
+            'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
-                    info=hl.tstruct(**{'Eigen-phred': 'hl.tfloat32'}),
+                    freq=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                        ),
+                    ),
+                    popmax=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                            pop=hl.tstr,
+                        ),
+                    ),
+                    faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
                 ),
                 key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    freq_index_dict={'gnomad': 0, 'gnomad_male': 1},
+                    popmax_index_dict={'gnomad': 0},
+                ),
+            ),
+        },
+        '38': {
+            **CONFIG['gnomad_genomes']['38'],
+            'version': 'r2.1.1',
+            'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    freq=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                        ),
+                    ),
+                    popmax=hl.tstruct(
+                        AF=hl.tfloat64,
+                        AN=hl.tint32,
+                        AC=hl.tint32,
+                        homozygote_count=hl.tint32,
+                        pop=hl.tstr,
+                    ),
+                    faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    freq_index_dict={'adj': 0, 'XY-adj': 1},
+                    faf_index_dict={'adj': 0},
+                ),
+            ),
+        },
+    },
+    'mpc': {
+        '37': MOCK_MPC_CONFIG,
+        '38': MOCK_MPC_CONFIG,
+    },
+    'primate_ai': {
+        '37': MOCK_PRIMATE_AI_CONFIG,
+        '38': MOCK_PRIMATE_AI_CONFIG,
+    },
+    'splice_ai': {
+        '37': MOCK_SPLICE_AI_CONFIG,
+        '38': MOCK_SPLICE_AI_CONFIG,
+    },
+    'topmed': {
+        '37': MOCK_TOPMED_CONFIG,
+        '38': MOCK_TOPMED_CONFIG,
+    },
+    'hgmd': {
+        '37': {
+            **CONFIG['hgmd']['37'],
+            'source_path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    rsid=hl.tstr,
+                    info=hl.tstruct(
+                        CLASS=hl.tstr,
+                    ),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+        '38': {
+            **CONFIG['hgmd']['38'],
+            'source_path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    rsid=hl.tstr,
+                    info=hl.tstruct(
+                        CLASS=hl.tstr,
+                    ),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'gnomad_non_coding_constraint': {
+        '38': {
+            'select': {'z_score': 'target'},
+            'source_path': 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    target=hl.tfloat64,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'screen': {
+        '38': {
+            **CONFIG['screen']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    target=hl.tarray(hl.tstr),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+}
+MOCK_CONFIG_MITO = {
+    'clinvar_mito': {
+        '38': {
+            **CONFIG['clinvar_mito']['38'],
+            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    info=hl.tstruct(
+                        ALLELEID=hl.tint32,
+                        CLNSIG=hl.tarray(hl.tstr),
+                        CLNSIGCONF=hl.tarray(hl.tstr),
+                        CLNREVSTAT=hl.tarray(hl.tstr),
+                    ),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    version='2023-07-22',
+                ),
+            ),
+        },
+    },
+    'dbnsfp_mito': {
+        '38': {
+            **CONFIG['dbnsfp_mito']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    SIFT_score=hl.tstr,
+                    MutationTaster_pred=hl.tstr,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    version='4.2',
+                ),
+            ),
+        },
+    },
+    'gnomad_mito': {
+        '38': {
+            **CONFIG['gnomad_mito']['38'],
+            'source_path': 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    AN=hl.tint64,
+                    AC_hom=hl.tint64,
+                    AC_het=hl.tint64,
+                    AF_hom=hl.tfloat32,
+                    AF_het=hl.tfloat32,
+                    max_hl=hl.tfloat64,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'helix_mito': {
+        '38': {
+            **CONFIG['helix_mito']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    counts_hom=hl.tint32,
+                    counts_het=hl.tint32,
+                    AF_hom=hl.tfloat64,
+                    AF_het=hl.tfloat64,
+                    AN=hl.tint32,
+                    max_ARF=hl.tfloat64,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'hmtvar': {
+        '38': {
+            **CONFIG['hmtvar']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    disease_score=hl.tfloat64,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'mitomap': {
+        '38': {
+            **CONFIG['mitomap']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    pathogenic=hl.tbool,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'mitimpact': {
+        '38': {
+            **CONFIG['mitimpact']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    APOGEE_score=hl.tfloat64,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
+    'high_constraint_region_mito': {
+        '38': {
+            **CONFIG['high_constraint_region_mito']['38'],
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    interval=hl.tstr,
+                ),
+                key=['interval'],
                 globals=hl.Struct(),
             ),
         },
@@ -247,7 +701,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         self.assertTrue(task.complete())
 
         ht = hl.read_table(task.output().path)
-        # self.assertFalse(True)
         self.assertCountEqual(
             ht.collect(),
             [
@@ -261,10 +714,13 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     cadd=hl.Struct(PHRED=2),
                     clinvar=None,
                     dbnsfp=hl.Struct(
-                        REVEL_score=0.0430000014603138,
-                        SIFT_pred_id=None,
-                        Polyphen2_HVAR_pred_id=None,
+                        REVEL_score=0.043,
+                        SIFT_score=None,
+                        Polyphen2_HVAR_score=None,
                         MutationTaster_pred_id=0,
+                        VEST4_score=None,
+                        MutPred_score=None,
+                        fathmm_MKL_coding_score=None,
                     ),
                     eigen=hl.Struct(Eigen_phred=1.5880000591278076),
                     exac=hl.Struct(
@@ -342,8 +798,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             assertion=CLINVAR_ASSERTIONS,
                         ),
                         dbnsfp=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
                         ),
                         eigen=hl.Struct(),
@@ -376,7 +830,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ],
                         ),
                         hgmd=hl.Struct(
-                            **{'class': ['DFP', 'DM', 'DM?', 'DP', 'FP', 'R']},
+                            **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
                         ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
@@ -389,6 +843,10 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch.dict(
+        'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
+        MOCK_CONFIG_MITO,
+    )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
         mock_initialize_table,
@@ -496,14 +954,21 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         SIFT_score=None,
                         MutationTaster_pred_id=2,
                     ),
-                    gnomad_mito=None,
-                    helix_mito=hl.Struct(
-                        AC=1,
-                        AF=5.102483555674553e-06,
+                    gnomad_mito=hl.Struct(
                         AC_het=0,
                         AF_het=0.0,
                         AN=195982,
                         max_hl=None,
+                        AC_hom=0,
+                        AF_hom=0,
+                    ),
+                    helix_mito=hl.Struct(
+                        AC_het=0,
+                        AF_het=0.0,
+                        AN=195982,
+                        max_hl=None,
+                        AC_hom=0,
+                        AF_hom=0,
                     ),
                     hmtvar=hl.Struct(score=0.6700000166893005),
                     mitomap=None,
@@ -513,6 +978,10 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch.dict(
+        'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
+        MOCK_CONFIG,
+    )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
         mock_initialize_table,
@@ -593,8 +1062,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             assertion=CLINVAR_ASSERTIONS,
                         ),
                         dbnsfp=hl.Struct(
-                            SIFT_pred=['D', 'T'],
-                            Polyphen2_HVAR_pred=['D', 'P', 'B'],
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
                         ),
                         eigen=hl.Struct(),
@@ -626,6 +1093,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ),
             ],
         )
+
         self.assertCountEqual(
             ht.collect(),
             [
@@ -639,9 +1107,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     cadd=hl.Struct(PHRED=9.699999809265137),
                     clinvar=None,
                     dbnsfp=hl.Struct(
-                        REVEL_score=0.0430000014603138,
-                        SIFT_pred_id=None,
-                        Polyphen2_HVAR_pred_id=None,
+                        REVEL_score=0.043,
+                        SIFT_score=None,
+                        Polyphen2_HVAR_score=None,
                         MutationTaster_pred_id=0,
                     ),
                     eigen=hl.Struct(Eigen_phred=1.5880000591278076),

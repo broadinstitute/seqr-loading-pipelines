@@ -49,7 +49,6 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             for rdc in self.reference_dataset_collections
             for dataset in rdc.datasets(self.dataset_type)
         ]
-        print(datasets_to_check)
         annotations_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
             datasets_to_check,
