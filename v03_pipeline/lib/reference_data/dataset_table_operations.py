@@ -80,7 +80,7 @@ def import_ht_from_config_path(
         if 'custom_import' in config
         else hl.read_table(path)
     )
-    return ht.select_globals(
+    return ht.annotate_globals(
         path=path,
         version=parse_dataset_version(ht, dataset, config),
         enums=hl.Struct(
