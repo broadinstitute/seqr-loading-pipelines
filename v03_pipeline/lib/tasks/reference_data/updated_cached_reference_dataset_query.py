@@ -12,7 +12,7 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
-    validate_globals_match,
+    get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
@@ -33,20 +33,18 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         if not super().complete():
             return False
 
+        datasets_to_check = [self.crdq.dataset]
         crdq_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            ReferenceDatasetCollection.COMBINED,
-            self.dataset_type,
+            datasets_to_check,
         )
         dataset_config_globals = Globals.from_dataset_configs(
             self.reference_genome,
-            [self.crdq.dataset],
+            datasets_to_check,
         )
-        return validate_globals_match(
-            ReferenceDatasetCollection.COMBINED,
+        return not get_datasets_to_update(
             crdq_globals,
             dataset_config_globals,
-            self.crdq.dataset,
             validate_selects=False,
         )
 
