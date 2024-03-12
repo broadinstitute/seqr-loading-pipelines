@@ -4,8 +4,6 @@ import hail as hl
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
-    DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
@@ -59,16 +57,15 @@ class Globals:
     def from_ht(
         cls,
         ht: hl.Table,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
+        datasets: list[str],
     ):
         rdc_globals_struct = hl.eval(ht.globals)
         paths = dict(rdc_globals_struct.get('paths'))
         versions = dict(rdc_globals_struct.get('versions'))
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums').items()}
+        enums = {k: dict(v) for k, v in rdc_globals_struct.get('enums').items() if k in paths}
         selects = {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in datasets:
             if dataset in ht.row:
                 # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
                 selects[dataset] = (
@@ -80,34 +77,24 @@ class Globals:
 
 
 def get_datasets_to_update(
-    rdc: ReferenceDatasetCollection,
     ht1_globals: Globals,
     ht2_globals: Globals,
-    dataset_type: DatasetType,
-) -> list[str]:
-    return [
-        dataset
-        for dataset in rdc.datasets(dataset_type)
-        if not validate_globals_match(rdc, ht1_globals, ht2_globals, dataset)
-    ]
-
-
-def validate_globals_match(
-    rdc: ReferenceDatasetCollection,
-    ht1_globals: Globals,
-    ht2_globals: Globals,
-    dataset: str,
     validate_selects: bool = True,
-) -> bool:
-    results = []
+) -> list[str]:
+    datasets_to_update = set()
+
     for field in dataclasses.fields(Globals):
         if field.name == 'selects' and not validate_selects:
             continue
 
-        result = ht1_globals[field.name].get(dataset) == ht2_globals[field.name].get(
-            dataset,
+        datasets_to_update.update(
+            ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
-        if result is False:
-            logger.info(f'{field.name} mismatch for {dataset}, {rdc.value}')
-        results.append(result)
-    return all(results)
+        for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
+            if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
+                dataset,
+            ):
+                logger.info(f'{field.name} mismatch for {dataset}')
+                datasets_to_update.add(dataset)
+
+    return sorted(datasets_to_update)

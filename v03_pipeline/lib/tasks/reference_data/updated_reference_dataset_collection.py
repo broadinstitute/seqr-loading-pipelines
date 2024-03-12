@@ -26,6 +26,7 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
 
     def complete(self) -> bool:
         self._datasets_to_update = []
+        datasets = self.reference_dataset_collection.datasets(self.dataset_type)
 
         if not super().complete():
             logger.info('Creating a new reference dataset collection')
@@ -38,19 +39,16 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
 
         joined_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            self.reference_dataset_collection,
-            self.dataset_type,
+            datasets,
         )
         dataset_config_globals = Globals.from_dataset_configs(
             self.reference_genome,
-            self.reference_dataset_collection.datasets(self.dataset_type),
+            datasets,
         )
         self._datasets_to_update.extend(
             get_datasets_to_update(
-                self.reference_dataset_collection,
                 joined_ht_globals,
                 dataset_config_globals,
-                self.dataset_type,
             ),
         )
         logger.info(

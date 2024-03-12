@@ -20,7 +20,7 @@ LOG_CONFIG = {
         '': {
             'level': 'INFO',
             'handlers': ['default'],
-            'propagate': True,
+            'propagate': False,
         },
         'py4j': {
             'level': 'CRITICAL',

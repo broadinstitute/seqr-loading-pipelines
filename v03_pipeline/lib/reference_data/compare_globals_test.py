@@ -4,8 +4,6 @@ from unittest import mock
 import hail as hl
 
 from v03_pipeline.lib.model import (
-    DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.reference_data.compare_globals import (
@@ -130,7 +128,6 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             dataset_config_globals.paths == {'b': 'b_path'},
         )
-        print(dataset_config_globals.enums)
         self.assertTrue(
             dataset_config_globals.enums == {'b': {'test_enum': ['C', 'D']}},
         )
@@ -170,8 +167,7 @@ class CompareGlobalsTest(unittest.TestCase):
         )
         rdc_globals = Globals.from_ht(
             rdc_ht,
-            rdc=ReferenceDatasetCollection.INTERVAL,
-            dataset_type=DatasetType.SNV_INDEL,
+            ['gnomad_non_coding_constraint', 'screen'],
         )
         self.assertTrue(
             rdc_globals.versions
@@ -195,11 +191,8 @@ class CompareGlobalsTest(unittest.TestCase):
             },
         )
 
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_get_datasets_to_update_version_different(self, mock_rdc_datasets):
-        mock_rdc_datasets.return_value = ['a', 'b', 'c']
+    def test_get_datasets_to_update_version_different(self):
         result = get_datasets_to_update(
-            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 # 'a' has a different version, 'c' is missing version in ht2_globals
@@ -213,15 +206,11 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': set(), 'b': set()},
             ),
-            dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertTrue(result == ['a', 'c'])
 
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_get_datasets_to_update_path_different(self, mock_rdc_datasets):
-        mock_rdc_datasets.return_value = ['a', 'b', 'c']
+    def test_get_datasets_to_update_path_different(self):
         result = get_datasets_to_update(
-            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 # 'b' has a different path, 'c' is missing path in ht2_globals
                 paths={'a': 'a_path', 'b': 'old_b_path', 'c': 'extra_c_path'},
@@ -235,15 +224,11 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': set(), 'b': set()},
             ),
-            dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertTrue(result == ['b', 'c'])
 
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_get_datasets_to_update_enum_different(self, mock_rdc_datasets):
-        mock_rdc_datasets.return_value = ['a', 'b', 'c']
+    def test_get_datasets_to_update_enum_different(self):
         result = get_datasets_to_update(
-            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
@@ -261,15 +246,11 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums={'a': {'test_enum': ['C', 'D']}, 'b': {'enum_key_2': []}},
                 selects={'a': set(), 'b': set()},
             ),
-            dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertTrue(result == ['a', 'b', 'c'])
 
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_get_datasets_to_update_select_different(self, mock_rdc_datasets):
-        mock_rdc_datasets.return_value = ['a', 'b', 'c']
+    def test_get_datasets_to_update_select_different(self):
         result = get_datasets_to_update(
-            rdc=ReferenceDatasetCollection.INTERVAL,
             ht1_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
@@ -287,6 +268,5 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 selects={'a': {'field1'}, 'b': {'test_select_2'}},
             ),
-            dataset_type=DatasetType.SNV_INDEL,
         )
         self.assertTrue(result == ['a', 'b', 'c'])

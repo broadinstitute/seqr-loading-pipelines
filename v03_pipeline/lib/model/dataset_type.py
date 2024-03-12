@@ -5,7 +5,6 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -66,18 +65,22 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def optional_row_fields(
+        self,
+    ) -> list[str]:
+        return {
+            DatasetType.SNV_INDEL: ['info'],
+            DatasetType.MITO: [],
+            DatasetType.SV: [],
+            DatasetType.GCNV: [],
+        }[self]
+
+    @property
     def row_fields(
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: (
-                # The "info" field is used by one of the relatedness
-                # check methods and not by an annotation method.  We
-                # only want to keep the field for callsets that require it.
-                ['rsid', 'filters', 'info']
-                if Env.CHECK_SEX_AND_RELATEDNESS
-                else ['rsid', 'filters']
-            ),
+            DatasetType.SNV_INDEL: ['rsid', 'filters'],
             DatasetType.MITO: [
                 'rsid',
                 'filters',
