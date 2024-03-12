@@ -67,10 +67,7 @@ class Globals:
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {
-            k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in datasets
-        }
-
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in paths}
         selects = {}
         for dataset in datasets:
             if dataset in ht.row:
