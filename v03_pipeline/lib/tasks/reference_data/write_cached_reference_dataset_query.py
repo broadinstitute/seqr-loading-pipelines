@@ -17,19 +17,18 @@ class WriteCachedReferenceDatasetQuery(luigi.Task):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.checked_for_tasks = False
         self.dynamic_crdq_tasks = set()
 
     def complete(self) -> bool:
-        return len(self.dynamic_crdq_tasks) >= 1 and all(
-            crdq_task.complete() for crdq_task in self.dynamic_crdq_tasks
-        )
+        return self.checked_for_tasks
 
     def run(self):
+        self.checked_for_tasks = True
         for crdq in CachedReferenceDatasetQuery.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
         ):
-            print(crdq)
             self.dynamic_crdq_tasks.add(
                 UpdatedCachedReferenceDatasetQuery(
                     **self.param_kwargs,

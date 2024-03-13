@@ -117,3 +117,16 @@ class WriteCachedReferenceDatasetQueryTest(unittest.TestCase):
                 ),
             ],
         )
+
+    def test_38_sv(self, mock_crdq_task):
+        mock_crdq_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteCachedReferenceDatasetQuery(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SV,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.complete())
+        # assert no crdq tasks for this reference genome and dataset type
+        mock_crdq_task.assert_has_calls([])
