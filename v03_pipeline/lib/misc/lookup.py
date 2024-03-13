@@ -42,12 +42,12 @@ def compute_callset_lookup_ht(
 
 
 def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
-    row = ht.take(1)
-    has_project_stats = row and len(row[0].project_stats) > 0
+    row = ht.take(1)[0] if ht.count() > 0 else None
+    has_project_stats = row and len(row.project_stats) > 0
     ht = ht.annotate_globals(
         project_guids=[project_guid],
         project_families=(
-            {project_guid: [fs.family_guid for fs in ps] for ps in row[0].project_stats}
+            {project_guid: [fs.family_guid for fs in ps] for ps in row.project_stats}
             if has_project_stats
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
@@ -59,14 +59,13 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
     )
 
 
-def remove_new_callset_family_guids(
+def remove_family_guids(
     ht: hl.Table,
     project_guid: str,
-    family_guids: list[str],
+    family_guids: hl.SetExpression,
 ) -> hl.Table:
     if project_guid not in hl.eval(ht.globals.project_families):
         return ht
-    family_guids = hl.set(family_guids)
     project_i = ht.project_guids.index(project_guid)
     family_indexes_to_keep = hl.array(
         hl.enumerate(ht.globals.project_families[project_guid])
@@ -88,12 +87,15 @@ def remove_new_callset_family_guids(
             )
         ),
     )
+    project_i = ht.project_guids.index(
+        project_guid,
+    )  # double reference because new expression
     return ht.annotate_globals(
         project_families=hl.dict(
-            ht.project_families.items().map(
-                lambda item: (
+            hl.enumerate(ht.project_families.items()).starmap(
+                lambda i, item: (
                     hl.if_else(
-                        item[0] != project_guid,
+                        i != project_i,
                         item,
                         (
                             item[0],

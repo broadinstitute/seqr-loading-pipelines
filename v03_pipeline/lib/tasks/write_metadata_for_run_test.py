@@ -24,6 +24,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
             validate=False,
+            check_sex_and_relatedness=False,
             run_id='run_123456',
         )
         worker.add(write_metadata_for_run_task)
@@ -39,7 +40,12 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                     'callsets': [TEST_VCF],
                     'failed_family_samples': {
                         'missing_samples': {
-                            'efg_1': ['NA20888_1'],
+                            'efg_1': {
+                                # This sample is present in the callset, but intentionally
+                                # mapped away
+                                'samples': ['NA20888_1'],
+                                'reasons': ["Missing samples: {'NA20888_1'}"],
+                            },
                         },
                         'relatedness_check': {},
                         'sex_check': {},

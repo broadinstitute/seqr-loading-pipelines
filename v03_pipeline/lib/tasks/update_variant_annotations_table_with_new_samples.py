@@ -89,25 +89,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                         self.reference_genome,
                         self.dataset_type,
                         self.sample_type,
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                        self.ignore_missing_samples_when_subsetting,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                    )
-                    for (
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                    ) in callset_project_pairs(
                         self.callset_paths,
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
-                    )
+                        self.ignore_missing_samples_when_subsetting,
+                        self.ignore_missing_samples_when_remapping,
+                        self.validate,
+                    ),
                 ],
             )
         else:

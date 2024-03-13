@@ -372,10 +372,12 @@ CONFIG = {
     },
     'gnomad_qc': {
         '37': {
+            'version': 'v2',
             'custom_import': import_matrix_table,
             'source_path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
+            'version': 'v3.1',
             'custom_import': import_matrix_table,
             'source_path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
         },

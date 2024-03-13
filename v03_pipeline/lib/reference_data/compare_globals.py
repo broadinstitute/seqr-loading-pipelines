@@ -4,17 +4,13 @@ import hail as hl
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
-    DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
     get_enum_select_fields,
-    get_ht_path,
     import_ht_from_config_path,
-    parse_dataset_version,
 )
 
 logger = get_logger(__name__)
@@ -22,8 +18,8 @@ logger = get_logger(__name__)
 
 @dataclasses.dataclass
 class Globals:
-    paths: dict[str]
-    versions: dict[str]
+    paths: dict[str, str]
+    versions: dict[str, str]
     enums: dict[str, dict[str, list[str]]]
     selects: dict[str, set[str]]
 
@@ -33,24 +29,21 @@ class Globals:
     @classmethod
     def from_dataset_configs(
         cls,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
         reference_genome: ReferenceGenome,
+        datasets: list[str],
     ):
         paths, versions, enums, selects = {}, {}, {}, {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in datasets:
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
-            dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-
-            paths[dataset] = get_ht_path(dataset_config)
-            versions[dataset] = hl.eval(
-                parse_dataset_version(
-                    dataset_ht,
-                    dataset,
-                    dataset_config,
-                ),
+            dataset_ht = import_ht_from_config_path(
+                dataset_config,
+                dataset,
+                reference_genome,
             )
-            enums[dataset] = dataset_config.get('enum_select', {})
+            dataset_ht_globals = hl.eval(dataset_ht.globals)
+            paths[dataset] = dataset_ht_globals.path
+            versions[dataset] = dataset_ht_globals.version
+            enums[dataset] = dict(dataset_ht_globals.enums)
             dataset_ht = dataset_ht.select(
                 **get_all_select_fields(dataset_ht, dataset_config),
             )
@@ -64,17 +57,15 @@ class Globals:
     def from_ht(
         cls,
         ht: hl.Table,
-        rdc: ReferenceDatasetCollection,
-        dataset_type: DatasetType,
+        datasets: list[str],
     ):
         rdc_globals_struct = hl.eval(ht.globals)
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
-
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in paths}
         selects = {}
-        for dataset in rdc.datasets(dataset_type):
+        for dataset in datasets:
             if dataset in ht.row:
                 # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
                 selects[dataset] = (
@@ -86,30 +77,24 @@ class Globals:
 
 
 def get_datasets_to_update(
-    rdc: ReferenceDatasetCollection,
     ht1_globals: Globals,
     ht2_globals: Globals,
-    dataset_type: DatasetType,
+    validate_selects: bool = True,
 ) -> list[str]:
-    return [
-        dataset
-        for dataset in rdc.datasets(dataset_type)
-        if not validate_globals_match(rdc, ht1_globals, ht2_globals, dataset)
-    ]
+    datasets_to_update = set()
 
-
-def validate_globals_match(
-    rdc: ReferenceDatasetCollection,
-    ht1_globals: Globals,
-    ht2_globals: Globals,
-    dataset: str,
-) -> bool:
-    results = []
     for field in dataclasses.fields(Globals):
-        result = ht1_globals[field.name].get(dataset) == ht2_globals[field.name].get(
-            dataset,
+        if field.name == 'selects' and not validate_selects:
+            continue
+
+        datasets_to_update.update(
+            ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
-        if result is False:
-            logger.info(f'{field.name} mismatch for {dataset}, {rdc.value}')
-        results.append(result)
-    return all(results)
+        for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
+            if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
+                dataset,
+            ):
+                logger.info(f'{field.name} mismatch for {dataset}')
+                datasets_to_update.add(dataset)
+
+    return sorted(datasets_to_update)

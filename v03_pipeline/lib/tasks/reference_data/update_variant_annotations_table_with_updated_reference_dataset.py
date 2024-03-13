@@ -7,6 +7,7 @@ from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
     get_datasets_to_update,
 )
+from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -43,34 +44,37 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
             return False
 
-        for rdc in self.reference_dataset_collections:
-            annotations_ht_globals = Globals.from_ht(
-                hl.read_table(self.output().path),
-                rdc,
-                self.dataset_type,
-            )
-            rdc_ht_globals = Globals.from_ht(
-                self.rdc_annotation_dependencies[f'{rdc.value}_ht'],
-                rdc,
-                self.dataset_type,
-            )
-            self._datasets_to_update.extend(
-                get_datasets_to_update(
-                    rdc,
-                    annotations_ht_globals,
-                    rdc_ht_globals,
-                    self.dataset_type,
-                ),
-            )
+        datasets_to_check = [
+            dataset
+            for rdc in self.reference_dataset_collections
+            for dataset in rdc.datasets(self.dataset_type)
+        ]
+        annotations_ht_globals = Globals.from_ht(
+            hl.read_table(self.output().path),
+            datasets_to_check,
+        )
+        rdc_ht_globals = Globals.from_dataset_configs(
+            self.reference_genome,
+            datasets_to_check,
+        )
+        self._datasets_to_update.extend(
+            get_datasets_to_update(
+                annotations_ht_globals,
+                rdc_ht_globals,
+            ),
+        )
         logger.info(f'Datasets to update: {self._datasets_to_update}')
         return not self._datasets_to_update
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         for dataset in self._datasets_to_update:
-            rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             if dataset in ht.row:
                 ht = ht.drop(dataset)
+            if dataset not in CONFIG:
+                continue
+
+            rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             if rdc.requires_annotation:
                 formatting_fn = next(
                     x
