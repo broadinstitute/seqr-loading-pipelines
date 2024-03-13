@@ -25,6 +25,7 @@ class WriteCachedReferenceDatasetQueryTest(unittest.TestCase):
         task = WriteCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -64,6 +65,7 @@ class WriteCachedReferenceDatasetQueryTest(unittest.TestCase):
         task = WriteCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -103,6 +105,7 @@ class WriteCachedReferenceDatasetQueryTest(unittest.TestCase):
         task = WriteCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -124,6 +127,7 @@ class WriteCachedReferenceDatasetQueryTest(unittest.TestCase):
         task = WriteCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
+            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()

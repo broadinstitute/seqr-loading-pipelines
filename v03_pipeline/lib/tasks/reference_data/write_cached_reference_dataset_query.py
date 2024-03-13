@@ -14,6 +14,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 class WriteCachedReferenceDatasetQuery(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
+    sample_type = luigi.EnumParameter(enum=SampleType)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,7 +33,6 @@ class WriteCachedReferenceDatasetQuery(luigi.Task):
             self.dynamic_crdq_tasks.add(
                 UpdatedCachedReferenceDatasetQuery(
                     **self.param_kwargs,
-                    sample_type=SampleType.WGS,
                     crdq=crdq,
                 ),
             )
