@@ -52,10 +52,10 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_path=[TEST_VCF],
-            project_guid=['R0113_test_project'],
-            project_remap_path=[TEST_REMAP],
-            project_pedigree_path=[TEST_PEDIGREE_3],
+            callset_paths=[TEST_VCF],
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
         )
         worker.add(uslt_task)
