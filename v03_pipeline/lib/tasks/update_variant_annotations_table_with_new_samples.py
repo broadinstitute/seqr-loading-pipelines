@@ -49,15 +49,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     liftover_ref_path = luigi.OptionalParameter(
-        default="gs://hail-common/references/grch38_to_grch37.over.chain.gz",
-        description="Path to GRCh38 to GRCh37 coordinates file",
+        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
+        description='Path to GRCh38 to GRCh37 coordinates file',
     )
 
     @property
     def other_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
         if self.dataset_type.has_lookup_table:
-            annotation_dependencies["lookup_ht"] = hl.read_table(
+            annotation_dependencies['lookup_ht'] = hl.read_table(
                 lookup_table_path(
                     self.reference_genome,
                     self.dataset_type,
@@ -65,8 +65,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             )
 
         if self.dataset_type.has_gencode_mapping:
-            annotation_dependencies["gencode_mapping"] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ""),
+            annotation_dependencies['gencode_mapping'] = hl.literal(
+                load_gencode(GENCODE_RELEASE, ''),
             )
         return annotation_dependencies
 
@@ -222,8 +222,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ):
             if rdc.requires_annotation:
                 continue
-            rdc_ht = self.rdc_annotation_dependencies[f"{rdc.value}_ht"]
-            new_variants_ht = new_variants_ht.join(rdc_ht, "left")
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
+            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
         # and annotate with the lookup table.
