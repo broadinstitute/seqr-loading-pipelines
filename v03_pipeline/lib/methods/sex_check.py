@@ -13,6 +13,7 @@ IMPUTE_SEX_ANNOTATIONS = [
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
+BIALLELIC: int = 2
 XX_FSTAT_THRESHOLD: float = (
     0.5  # F-stat threshold below which a sample will be called XX
 )
@@ -25,7 +26,7 @@ def call_sex(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just in case.
     mt = mt.filter_rows(
-        ((hl.len(mt.alleles) == 2) & hl.is_snp(mt.alleles[0], mt.alleles[1]))
+        (hl.len(mt.alleles) == BIALLELIC) & hl.is_snp(mt.alleles[0], mt.alleles[1]),
     )
 
     # Filter to PASS variants only (variants with empty or missing filter set)
