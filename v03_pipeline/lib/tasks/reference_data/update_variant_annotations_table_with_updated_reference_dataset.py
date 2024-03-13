@@ -44,22 +44,25 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
             return False
 
-        for rdc in self.reference_dataset_collections:
-            datasets = rdc.datasets(self.dataset_type)
-            annotations_ht_globals = Globals.from_ht(
-                hl.read_table(self.output().path),
-                datasets,
-            )
-            rdc_ht_globals = Globals.from_ht(
-                self.rdc_annotation_dependencies[f'{rdc.value}_ht'],
-                datasets,
-            )
-            self._datasets_to_update.extend(
-                get_datasets_to_update(
-                    annotations_ht_globals,
-                    rdc_ht_globals,
-                ),
-            )
+        datasets_to_check = [
+            dataset
+            for rdc in self.reference_dataset_collections
+            for dataset in rdc.datasets(self.dataset_type)
+        ]
+        annotations_ht_globals = Globals.from_ht(
+            hl.read_table(self.output().path),
+            datasets_to_check,
+        )
+        rdc_ht_globals = Globals.from_dataset_configs(
+            self.reference_genome,
+            datasets_to_check,
+        )
+        self._datasets_to_update.extend(
+            get_datasets_to_update(
+                annotations_ht_globals,
+                rdc_ht_globals,
+            ),
+        )
         logger.info(f'Datasets to update: {self._datasets_to_update}')
         return not self._datasets_to_update
 
