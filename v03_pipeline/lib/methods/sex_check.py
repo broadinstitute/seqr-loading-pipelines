@@ -24,7 +24,9 @@ XY_FSTAT_THRESHOLD: float = (
 def call_sex(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just in case.
-    mt = mt.filter_rows(hl.is_snp(mt.alleles[0], mt.alleles[1]))
+    mt = mt.filter_rows(
+        ((hl.len(mt.alleles) == 2) & hl.is_snp(mt.alleles[0], mt.alleles[1]))
+    )
 
     # Filter to PASS variants only (variants with empty or missing filter set)
     mt = mt.filter_rows(
