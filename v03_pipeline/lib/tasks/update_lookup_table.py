@@ -163,8 +163,8 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(
-                        callset=self.callset_path,
-                        project_guid=self.project_guid,
+                        callset=callset_path,
+                        project_guid=project_guid,
                     ),
                 ),
             )
