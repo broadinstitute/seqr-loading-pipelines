@@ -10,9 +10,7 @@ from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
     get_enum_select_fields,
-    get_ht_path,
     import_ht_from_config_path,
-    parse_dataset_version,
 )
 
 logger = get_logger(__name__)
@@ -37,17 +35,15 @@ class Globals:
         paths, versions, enums, selects = {}, {}, {}, {}
         for dataset in datasets:
             dataset_config = CONFIG[dataset][reference_genome.v02_value]
-            dataset_ht = import_ht_from_config_path(dataset_config, reference_genome)
-
-            paths[dataset] = get_ht_path(dataset_config)
-            versions[dataset] = hl.eval(
-                parse_dataset_version(
-                    dataset_ht,
-                    dataset,
-                    dataset_config,
-                ),
+            dataset_ht = import_ht_from_config_path(
+                dataset_config,
+                dataset,
+                reference_genome,
             )
-            enums[dataset] = dataset_config.get('enum_select', {})
+            dataset_ht_globals = hl.eval(dataset_ht.globals)
+            paths[dataset] = dataset_ht_globals.path
+            versions[dataset] = dataset_ht_globals.version
+            enums[dataset] = dict(dataset_ht_globals.enums)
             dataset_ht = dataset_ht.select(
                 **get_all_select_fields(dataset_ht, dataset_config),
             )
@@ -67,13 +63,7 @@ class Globals:
         paths = dict(rdc_globals_struct.paths)
         versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items()}
-
-        for global_dict in [paths, versions, enums]:
-            for dataset in list(global_dict.keys()):
-                if dataset not in datasets:
-                    global_dict.pop(dataset)
-
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in paths}
         selects = {}
         for dataset in datasets:
             if dataset in ht.row:
@@ -89,10 +79,14 @@ class Globals:
 def get_datasets_to_update(
     ht1_globals: Globals,
     ht2_globals: Globals,
+    validate_selects: bool = True,
 ) -> list[str]:
     datasets_to_update = set()
 
     for field in dataclasses.fields(Globals):
+        if field.name == 'selects' and not validate_selects:
+            continue
+
         datasets_to_update.update(
             ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
