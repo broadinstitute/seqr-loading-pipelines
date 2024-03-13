@@ -60,12 +60,10 @@ class Globals:
         datasets: list[str],
     ):
         rdc_globals_struct = hl.eval(ht.globals)
-        paths = dict(rdc_globals_struct.get('paths'))
-        versions = dict(rdc_globals_struct.get('versions'))
+        paths = dict(rdc_globals_struct.paths)
+        versions = dict(rdc_globals_struct.versions)
         # enums are nested structs
-        enums = {
-            k: dict(v) for k, v in rdc_globals_struct.get('enums').items() if k in paths
-        }
+        enums = {k: dict(v) for k, v in rdc_globals_struct.enums.items() if k in paths}
         selects = {}
         for dataset in datasets:
             if dataset in ht.row:
