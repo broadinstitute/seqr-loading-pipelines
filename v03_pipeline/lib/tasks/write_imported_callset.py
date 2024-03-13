@@ -84,10 +84,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.dataset_type.has_haploid_calls:
             mt = mt.annotate_entries(
                 GT = hl.if_else(
-                    mt.GT.ploidy == 1, 
+                    mt.GT.ploidy == 1,
                     hl.call(mt.GT[0], mt.GT[0]),
-                    mt.GT
-                )
+                    mt.GT,
+                ),
             )
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
