@@ -131,7 +131,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
-            )
+            ),
         ):
             if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
                 ht = ht.annotate_globals(
@@ -163,7 +163,8 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(
-                        callset=self.callset_path, project_guid=self.project_guid
+                        callset=self.callset_path,
+                        project_guid=self.project_guid,
                     ),
                 ),
             )
