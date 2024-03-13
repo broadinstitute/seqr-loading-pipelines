@@ -83,7 +83,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             mt = split_multi_hts(mt)
         if self.dataset_type.has_haploid_calls:
             mt = mt.annotate_entries(
-                GT = hl.if_else(
+                GT=hl.if_else(
                     mt.GT.ploidy == 1,
                     hl.call(mt.GT[0], mt.GT[0]),
                     mt.GT,
