@@ -172,7 +172,6 @@ for dataset_type, reference_genome in MIGRATIONS:
     ht = ht.annotate_globals(
         updates=sample_lookup_ht.index_globals().updates
     )
-    import pdb; pdb.set_trace()
-    ht.write('gs://seqr-scratch-temp/benlasdkflookup.ht')
+    ht.write('gs://seqr-scratch-temp/mito_new_lookup.ht')
 
 
