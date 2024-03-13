@@ -81,6 +81,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
+        if self.dataset_type.has_haploid_calls:
+            mt = mt.annotate_entries(
+                GT = hl.if_else(
+                    mt.GT.ploidy == 1, 
+                    hl.call(mt.GT[0], mt.GT[0]),
+                    mt.GT
+                )
+            )
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
