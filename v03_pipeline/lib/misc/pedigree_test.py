@@ -229,7 +229,7 @@ class PedigreesTest(unittest.TestCase):
                     paternal_s=None,
                     sex='F',
                 ),
-                 hl.Struct(
+                hl.Struct(
                     s='sample_5',
                     maternal_s='sample_3',
                     paternal_s=None,
@@ -305,9 +305,8 @@ class PedigreesTest(unittest.TestCase):
                     half_siblings=[],
                     aunt_nephews=[],
                 ),
-            }
+            },
         )
-
 
     def test_parse_project(self) -> None:
         pedigree_ht = import_pedigree(TEST_PEDIGREE_2)

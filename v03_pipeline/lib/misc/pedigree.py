@@ -55,24 +55,21 @@ class Sample:
         )
 
     def is_in_direct_lineage(self: 'Sample', other: 'Sample') -> bool:
-        return (
-            self.sample_id in {
-                other.mother,
-                other.father,
-                other.maternal_grandmother,
-                other.maternal_grandfather,
-                other.paternal_grandmother,
-                other.paternal_grandfather,
-            }
-            or other.sample_id in {
-                self.mother,
-                self.father,
-                self.maternal_grandmother,
-                self.maternal_grandfather,
-                self.paternal_grandmother,
-                self.paternal_grandfather,
-            }
-        )
+        return self.sample_id in {
+            other.mother,
+            other.father,
+            other.maternal_grandmother,
+            other.maternal_grandfather,
+            other.paternal_grandmother,
+            other.paternal_grandfather,
+        } or other.sample_id in {
+            self.mother,
+            self.father,
+            self.maternal_grandmother,
+            self.maternal_grandfather,
+            self.paternal_grandmother,
+            self.paternal_grandfather,
+        }
 
 
 @dataclass
@@ -143,12 +140,8 @@ class Family:
                 continue
 
             # If only a single parent is identified and the same, samples are half siblings
-            if (
-                sample_i.mother
-                and sample_i.mother == sample_j.mother
-            ) or (
-                sample_i.father
-                and sample_i.father == sample_j.father
+            if (sample_i.mother and sample_i.mother == sample_j.mother) or (
+                sample_i.father and sample_i.father == sample_j.father
             ):
                 sample_i.half_siblings.append(sample_j.sample_id)
                 continue
@@ -157,7 +150,7 @@ class Family:
             # they're aunt/uncle related
             # NB: because we will only check an i, j pair of samples a single time, (itertools.combinations)
             # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
-            if (sample_i.is_aunt_nephew(sample_j) or sample_j.is_aunt_nephew(sample_i)):
+            if sample_i.is_aunt_nephew(sample_j) or sample_j.is_aunt_nephew(sample_i):
                 sample_i.aunt_nephews.append(sample_j.sample_id)
         return samples
 
