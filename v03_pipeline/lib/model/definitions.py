@@ -8,7 +8,7 @@ class AccessControl(Enum):
     PRIVATE = 'private'
 
 
-class Ploidy(Enum):
+class Sex(Enum):
     FEMALE = 'F'
     MALE = 'M'
     UNKNOWN = 'U'

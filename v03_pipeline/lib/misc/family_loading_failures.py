@@ -4,7 +4,7 @@ import hail as hl
 import numpy as np
 
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
-from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.model import Sex
 
 
 def passes_relatedness_check(
@@ -121,13 +121,13 @@ def build_relatedness_check_lookup(
 def build_sex_check_lookup(
     sex_check_ht: hl.Table,
     remap_lookup: hl.dict,
-) -> dict[str, Ploidy]:
+) -> dict[str, Sex]:
     # Build sex check lookup
     sex_check_ht = sex_check_ht.key_by(
         s=remap_lookup.get(sex_check_ht.s, sex_check_ht.s),
     )
     sex_check_ht = sex_check_ht.select('sex')
-    return {r.s: Ploidy(r.sex) for r in sex_check_ht.collect()}
+    return {r.s: Sex(r.sex) for r in sex_check_ht.collect()}
 
 
 def get_families_failed_missing_samples(
