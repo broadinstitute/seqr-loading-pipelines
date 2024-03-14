@@ -22,7 +22,7 @@ def passes_relatedness_check(
     if not coefficients or not np.allclose(
         coefficients,
         relation.coefficients,
-        0.1,
+        atol=0.1,
     ):
         return (
             False,
