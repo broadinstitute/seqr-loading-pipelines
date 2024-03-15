@@ -4,7 +4,7 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.model import Sex
 
 
 class Relation(Enum):
@@ -28,7 +28,7 @@ class Relation(Enum):
 @dataclass
 class Sample:
     sample_id: str
-    sex: Ploidy
+    sex: Sex
     mother: str = None
     father: str = None
     maternal_grandmother: str = None
@@ -69,7 +69,7 @@ class Family:
         for row in rows:
             samples[row.s] = Sample(
                 sample_id=row.s,
-                sex=Ploidy(row.sex),
+                sex=Sex(row.sex),
                 mother=row.maternal_s,
                 father=row.paternal_s,
             )
