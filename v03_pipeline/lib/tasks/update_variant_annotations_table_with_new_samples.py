@@ -177,7 +177,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 remapped_and_subsetted_callset_path(
                     self.reference_genome,
                     self.dataset_type,
-                    callset_path,ca
+                    callset_path,
                     project_guid,
                 ),
             ).rows()
