@@ -5,7 +5,6 @@ from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
     PipelineVersion,
-    Sex,
     ReferenceGenome,
     SampleType,
     Sex,
