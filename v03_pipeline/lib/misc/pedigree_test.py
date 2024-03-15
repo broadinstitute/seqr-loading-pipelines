@@ -11,8 +11,6 @@ TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
 
 
 class PedigreesTest(unittest.TestCase):
-    maxDiff = None
-
     def test_empty_pedigree(self) -> None:
         with self.assertRaises(ValueError):
             _ = import_pedigree(TEST_PEDIGREE_1)
