@@ -33,7 +33,7 @@ def clinvar_path_variants(
     clinvar_field = 'clinvar_mito' if dataset_type == DatasetType.MITO else 'clinvar'
     ht = ht.select_globals()
     ht = ht.select(
-        pathogenic=(
+        is_pathogenic=(
             (
                 ht[clinvar_field].pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
@@ -43,7 +43,7 @@ def clinvar_path_variants(
                 <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
         ),
-        likely_pathogenic=(
+        is_likely_pathogenic=(
             (
                 ht[clinvar_field].pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
@@ -54,7 +54,7 @@ def clinvar_path_variants(
             )
         ),
     )
-    return ht.filter(ht.pathogenic | ht.likely_pathogenic)
+    return ht.filter(ht.is_pathogenic | ht.is_likely_pathogenic)
 
 
 def gnomad_coding_and_noncoding_variants(
