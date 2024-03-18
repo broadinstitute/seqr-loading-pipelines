@@ -118,12 +118,14 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             relatedness_check_ht = hl.read_table(self.input()[2].path)
             sex_check_ht = hl.read_table(self.input()[3].path)
             families_failed_relatedness_check = get_families_failed_relatedness_check(
-                families,
+                families - families_failed_missing_samples.keys(),
                 relatedness_check_ht,
                 remap_lookup,
             )
             families_failed_sex_check = get_families_failed_sex_check(
-                families,
+                families
+                - families_failed_missing_samples.keys()
+                - families_failed_relatedness_check.keys(),
                 sex_check_ht,
                 remap_lookup,
             )

@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.family_loading_failures import (
 )
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import Sample, parse_pedigree_ht_to_families
-from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.model import Sex
 
 TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 
@@ -72,12 +72,12 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertEqual(
             build_sex_check_lookup(ht, hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'})),
             {
-                'remapped_id': Ploidy.MALE,
-                'ROS_006_18Y03227_D1': Ploidy.MALE,
-                'ROS_006_18Y03228_D1': Ploidy.MALE,
-                'ROS_007_19Y05919_D1': Ploidy.MALE,
-                'ROS_007_19Y05939_D1': Ploidy.FEMALE,
-                'ROS_007_19Y05987_D1': Ploidy.MALE,
+                'remapped_id': Sex.MALE,
+                'ROS_006_18Y03227_D1': Sex.MALE,
+                'ROS_006_18Y03228_D1': Sex.MALE,
+                'ROS_007_19Y05919_D1': Sex.MALE,
+                'ROS_007_19Y05939_D1': Sex.FEMALE,
+                'ROS_007_19Y05987_D1': Sex.MALE,
             },
         )
 
@@ -96,7 +96,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             ('sample_1', 'sample_4'): [0.25, 0.5, 0.25, 0.5],
         }
         sample = Sample(
-            sex=Ploidy.FEMALE,
+            sex=Sex.FEMALE,
             sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',
@@ -107,7 +107,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
 
         # Defined grandparent missing in relatedness table
         sample = Sample(
-            sex=Ploidy.FEMALE,
+            sex=Sex.FEMALE,
             sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',
@@ -130,7 +130,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             ('sample_1', 'sample_4'): [0.5, 0.5, 0, 0.25],
         }
         sample = Sample(
-            sex=Ploidy.FEMALE,
+            sex=Sex.FEMALE,
             sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',
@@ -157,7 +157,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             ],
         }
         sample = Sample(
-            sex=Ploidy.FEMALE,
+            sex=Sex.FEMALE,
             sample_id='sample_1',
             mother='sample_2',
             paternal_grandfather='sample_3',

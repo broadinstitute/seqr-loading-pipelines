@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import Family, Sample, parse_pedigree_ht_to_families
-from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.model import Sex
 
 TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
 TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
@@ -74,7 +74,7 @@ class PedigreesTest(unittest.TestCase):
             {
                 'sample_1': Sample(
                     sample_id='sample_1',
-                    sex=Ploidy.FEMALE,
+                    sex=Sex.FEMALE,
                     mother=None,
                     father=None,
                     maternal_grandmother=None,
@@ -87,7 +87,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_2': Sample(
                     sample_id='sample_2',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother='sample_3',
                     father=None,
                     maternal_grandmother=None,
@@ -100,7 +100,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_3': Sample(
                     sample_id='sample_3',
-                    sex=Ploidy.FEMALE,
+                    sex=Sex.FEMALE,
                     mother=None,
                     father='sample_7',
                     maternal_grandmother=None,
@@ -113,7 +113,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_4': Sample(
                     sample_id='sample_4',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother='sample_3',
                     father='sample_8',
                     maternal_grandmother=None,
@@ -126,7 +126,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_5': Sample(
                     sample_id='sample_5',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother='sample_3',
                     father='sample_8',
                     maternal_grandmother=None,
@@ -139,7 +139,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_6': Sample(
                     sample_id='sample_6',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother='sample_9',
                     father='sample_10',
                     maternal_grandmother=None,
@@ -152,7 +152,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_7': Sample(
                     sample_id='sample_7',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother=None,
                     father=None,
                     maternal_grandmother=None,
@@ -165,7 +165,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_8': Sample(
                     sample_id='sample_8',
-                    sex=Ploidy.FEMALE,
+                    sex=Sex.FEMALE,
                     mother='sample_9',
                     father='sample_10',
                     maternal_grandmother=None,
@@ -178,7 +178,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_9': Sample(
                     sample_id='sample_9',
-                    sex=Ploidy.FEMALE,
+                    sex=Sex.FEMALE,
                     mother=None,
                     father=None,
                     maternal_grandmother=None,
@@ -191,7 +191,7 @@ class PedigreesTest(unittest.TestCase):
                 ),
                 'sample_10': Sample(
                     sample_id='sample_10',
-                    sex=Ploidy.MALE,
+                    sex=Sex.MALE,
                     mother=None,
                     father=None,
                     maternal_grandmother=None,
@@ -215,7 +215,7 @@ class PedigreesTest(unittest.TestCase):
                     samples={
                         'BBL_BC1-000345_01_D1': Sample(
                             sample_id='BBL_BC1-000345_01_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother='BBL_BC1-000345_03_D1',
                             father='BBL_BC1-000345_02_D1',
                             maternal_grandmother=None,
@@ -228,7 +228,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_BC1-000345_02_D1': Sample(
                             sample_id='BBL_BC1-000345_02_D1',
-                            sex=Ploidy.MALE,
+                            sex=Sex.MALE,
                             mother=None,
                             father=None,
                             maternal_grandmother=None,
@@ -241,7 +241,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_BC1-000345_03_D1': Sample(
                             sample_id='BBL_BC1-000345_03_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother=None,
                             father=None,
                             maternal_grandmother=None,
@@ -259,7 +259,7 @@ class PedigreesTest(unittest.TestCase):
                     samples={
                         'BBL_HT-007-5195_01_D1': Sample(
                             sample_id='BBL_HT-007-5195_01_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
                             maternal_grandmother=None,
@@ -276,7 +276,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_HT-007-5195_02_D1': Sample(
                             sample_id='BBL_HT-007-5195_02_D1',
-                            sex=Ploidy.MALE,
+                            sex=Sex.MALE,
                             mother=None,
                             father=None,
                             maternal_grandmother=None,
@@ -289,7 +289,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_HT-007-5195_03_D1': Sample(
                             sample_id='BBL_HT-007-5195_03_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother=None,
                             father=None,
                             maternal_grandmother=None,
@@ -302,7 +302,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_HT-007-5195_04_D1': Sample(
                             sample_id='BBL_HT-007-5195_04_D1',
-                            sex=Ploidy.MALE,
+                            sex=Sex.MALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
                             maternal_grandmother=None,
@@ -315,7 +315,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_HT-007-5195_05_D1': Sample(
                             sample_id='BBL_HT-007-5195_05_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
                             maternal_grandmother=None,
@@ -328,7 +328,7 @@ class PedigreesTest(unittest.TestCase):
                         ),
                         'BBL_HT-007-5195_06_D1': Sample(
                             sample_id='BBL_HT-007-5195_06_D1',
-                            sex=Ploidy.MALE,
+                            sex=Sex.MALE,
                             mother='BBL_HT-007-5195_03_D1',
                             father='BBL_HT-007-5195_02_D1',
                             maternal_grandmother=None,
@@ -346,7 +346,7 @@ class PedigreesTest(unittest.TestCase):
                     samples={
                         'BBL_SDS1-000178_01_D1': Sample(
                             sample_id='BBL_SDS1-000178_01_D1',
-                            sex=Ploidy.FEMALE,
+                            sex=Sex.FEMALE,
                             mother=None,
                             father=None,
                             maternal_grandmother=None,
