@@ -205,6 +205,107 @@ class PedigreesTest(unittest.TestCase):
             },
         )
 
+    def test_parse_parent_not_aunt_uncle(self) -> None:
+        samples = Family.parse_direct_lineage(
+            [
+                hl.Struct(s='sample_1', maternal_s=None, paternal_s=None, sex='F'),
+                hl.Struct(
+                    s='sample_2',
+                    maternal_s=None,
+                    paternal_s=None,
+                    sex='M',
+                ),
+                hl.Struct(
+                    s='sample_3',
+                    maternal_s='sample_1',
+                    paternal_s='sample_2',
+                    sex='F',
+                ),
+                hl.Struct(
+                    s='sample_4',
+                    maternal_s='sample_3',
+                    paternal_s=None,
+                    sex='F',
+                ),
+                hl.Struct(
+                    s='sample_5',
+                    maternal_s='sample_3',
+                    paternal_s=None,
+                    sex='F',
+                ),
+            ],
+        )
+        self.assertEqual(
+            Family.parse_collateral_lineage(samples),
+            {
+                'sample_1': Sample(
+                    sample_id='sample_1',
+                    sex=Sex.FEMALE,
+                    mother=None,
+                    father=None,
+                    maternal_grandmother=None,
+                    maternal_grandfather=None,
+                    paternal_grandmother=None,
+                    paternal_grandfather=None,
+                    siblings=[],
+                    half_siblings=[],
+                    aunt_nephews=[],
+                ),
+                'sample_2': Sample(
+                    sample_id='sample_2',
+                    sex=Sex.MALE,
+                    mother=None,
+                    father=None,
+                    maternal_grandmother=None,
+                    maternal_grandfather=None,
+                    paternal_grandmother=None,
+                    paternal_grandfather=None,
+                    siblings=[],
+                    half_siblings=[],
+                    aunt_nephews=[],
+                ),
+                'sample_3': Sample(
+                    sample_id='sample_3',
+                    sex=Sex.FEMALE,
+                    mother='sample_1',
+                    father='sample_2',
+                    maternal_grandmother=None,
+                    maternal_grandfather=None,
+                    paternal_grandmother=None,
+                    paternal_grandfather=None,
+                    siblings=[],
+                    half_siblings=[],
+                    aunt_nephews=[],
+                ),
+                'sample_4': Sample(
+                    sample_id='sample_4',
+                    sex=Sex.FEMALE,
+                    mother='sample_3',
+                    father=None,
+                    maternal_grandmother='sample_1',
+                    maternal_grandfather='sample_2',
+                    paternal_grandmother=None,
+                    paternal_grandfather=None,
+                    siblings=[],
+                    half_siblings=['sample_5'],
+                    aunt_nephews=[],
+                ),
+                'sample_5': Sample(
+                    sample_id='sample_5',
+                    sex=Sex.FEMALE,
+                    mother='sample_3',
+                    father=None,
+                    maternal_grandmother='sample_1',
+                    maternal_grandfather='sample_2',
+                    paternal_grandmother=None,
+                    paternal_grandfather=None,
+                    siblings=[],
+                    half_siblings=[],
+                    aunt_nephews=[],
+                ),
+            },
+        )
+
     def test_parse_project(self) -> None:
         pedigree_ht = import_pedigree(TEST_PEDIGREE_2)
         self.assertCountEqual(
