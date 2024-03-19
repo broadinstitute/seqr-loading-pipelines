@@ -3,8 +3,6 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.constants import PROJECTS_EXCLUDED_FROM_GT_STATS
-
 N_ALT_REF = 0
 N_ALT_HET = 1
 N_ALT_HOM = 2
@@ -33,24 +31,16 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def gt_stats(
     ht: hl.Table,
-    sample_lookup_ht: hl.Table,
+    lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    row = sample_lookup_ht[ht.key]
-    AC, AN, hom = 0, 0, 0
-    for project_guid in row.ref_samples:
-        if project_guid in PROJECTS_EXCLUDED_FROM_GT_STATS:
-            continue
-        ref_samples_length = row.ref_samples[project_guid].length()
-        het_samples_length = row.het_samples[project_guid].length()
-        hom_samples_length = row.hom_samples[project_guid].length()
-        AC += (
-            ref_samples_length * N_ALT_REF
-            + het_samples_length * N_ALT_HET
-            + hom_samples_length * N_ALT_HOM
-        )
-        AN += 2 * (ref_samples_length + het_samples_length + hom_samples_length)
-        hom += hom_samples_length
+    row = lookup_ht[ht.key]
+    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
+    het_samples = hl.sum(hl.flatten(row.project_stats.het_samples))
+    hom_samples = hl.sum(hl.flatten(row.project_stats.hom_samples))
+    AC = ref_samples * N_ALT_REF + het_samples * N_ALT_HET + hom_samples * N_ALT_HOM
+    AN = 2 * (ref_samples + het_samples + hom_samples)
+    hom = hom_samples
     return hl.Struct(
         AC=AC,
         AN=AN,

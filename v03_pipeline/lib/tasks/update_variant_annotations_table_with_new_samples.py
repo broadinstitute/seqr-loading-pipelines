@@ -9,8 +9,8 @@ from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
+    lookup_table_path,
     remapped_and_subsetted_callset_path,
-    sample_lookup_table_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
@@ -19,8 +19,8 @@ from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
-from v03_pipeline.lib.tasks.update_sample_lookup_table import (
-    UpdateSampleLookupTableTask,
+from v03_pipeline.lib.tasks.update_lookup_table import (
+    UpdateLookupTableTask,
 )
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
@@ -56,9 +56,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     @property
     def other_annotation_dependencies(self) -> dict[str, hl.Table]:
         annotation_dependencies = {}
-        if self.dataset_type.has_sample_lookup_table:
-            annotation_dependencies['sample_lookup_ht'] = hl.read_table(
-                sample_lookup_table_path(
+        if self.dataset_type.has_lookup_table:
+            annotation_dependencies['lookup_ht'] = hl.read_table(
+                lookup_table_path(
                     self.reference_genome,
                     self.dataset_type,
                 ),
@@ -81,33 +81,22 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             ]
         else:
             upstream_table_tasks: list[luigi.Task] = []
-        if self.dataset_type.has_sample_lookup_table:
-            # NB: the sample lookup table task has remapped and subsetted callset tasks as dependencies.
+        if self.dataset_type.has_lookup_table:
+            # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(
                 [
-                    UpdateSampleLookupTableTask(
+                    UpdateLookupTableTask(
                         self.reference_genome,
                         self.dataset_type,
                         self.sample_type,
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                        self.ignore_missing_samples_when_subsetting,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                    )
-                    for (
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                    ) in callset_project_pairs(
                         self.callset_paths,
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
-                    )
+                        self.ignore_missing_samples_when_subsetting,
+                        self.ignore_missing_samples_when_remapping,
+                        self.validate,
+                    ),
                 ],
             )
         else:
@@ -244,13 +233,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # 4) Union with the existing variant annotations table
-        # and annotate with the sample lookup table.
+        # and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
-        if self.dataset_type.has_sample_lookup_table:
+        if self.dataset_type.has_lookup_table:
             ht = ht.annotate(
                 **get_fields(
                     ht,
-                    self.dataset_type.sample_lookup_table_annotation_fns,
+                    self.dataset_type.lookup_table_annotation_fns,
                     **self.rdc_annotation_dependencies,
                     **self.other_annotation_dependencies,
                     **self.param_kwargs,
