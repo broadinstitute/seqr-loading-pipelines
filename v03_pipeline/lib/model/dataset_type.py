@@ -120,6 +120,10 @@ class DatasetType(Enum):
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
     @property
+    def has_haploid_calls(self) -> bool:
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def has_gencode_mapping(self) -> dict[str, str]:
         return self == DatasetType.SV
 
