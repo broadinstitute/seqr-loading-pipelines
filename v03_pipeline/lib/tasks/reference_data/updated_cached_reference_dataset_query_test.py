@@ -187,8 +187,8 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         def _clinvar_path_variants(table, **_: Any):
             table = table.select_globals()
             return table.select(
-                pathogenic=False,
-                likely_pathogenic=True,
+                is_pathogenic=False,
+                is_likely_pathogenic=True,
             )
 
         mock_crdq_query.side_effect = _clinvar_path_variants
@@ -215,8 +215,8 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    pathogenic=False,
-                    likely_pathogenic=True,
+                    is_pathogenic=False,
+                    is_likely_pathogenic=True,
                 ),
             ],
         )
