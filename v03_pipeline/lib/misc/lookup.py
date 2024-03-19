@@ -38,7 +38,18 @@ def compute_callset_lookup_ht(
             ],
         ),
     ).rows()
-    return globalize_ids(ht, project_guid)
+    ht = globalize_ids(ht, project_guid)
+    return ht.annotate(
+        project_stats=[
+            # Set a family to missing if all values are 0
+            ht.project_stats[0].map(
+                lambda ps: hl.or_missing(
+                    hl.sum(list(ps.values())) > 0,
+                    ps,
+                ),
+            ),
+        ],
+    )
 
 
 def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:

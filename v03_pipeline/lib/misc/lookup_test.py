@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import DatasetType
 
 
 class LookupTest(unittest.TestCase):
+    maxDiff = None
     def test_compute_callset_lookup_ht(self) -> None:
         mt = hl.MatrixTable.from_parts(
             rows={'variants': [1, 2]},

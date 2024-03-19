@@ -19,14 +19,14 @@ sc.addPyFile('gs://seqr-luigi/releases/dev/latest/pyscripts.zip')
 Env.HAIL_TMPDIR = 'gs://seqr-scratch-temp'
 
 MIGRATIONS = [
-    (
-        DatasetType.MITO,
-        ReferenceGenome.GRCh38,
-    ),
     #(
-    #    DatasetType.SNV_INDEL,
-    #    ReferenceGenome.GRCh37,
+    #    DatasetType.MITO,
+    #    ReferenceGenome.GRCh38,
     #),
+    (
+        DatasetType.SNV_INDEL,
+        ReferenceGenome.GRCh37,
+    ),
     #(
     #    DatasetType.SNV_INDEL,
     #    ReferenceGenome.GRCh38,
@@ -99,7 +99,9 @@ sample_id_to_family_guid = build_sample_id_to_family_guid()
 for dataset_type, reference_genome in MIGRATIONS:
     ht = initialize_table(dataset_type, reference_genome)
     sample_lookup_ht = hl.read_table(f'gs://seqr-hail-search-data/v03/{reference_genome.value}/{dataset_type.value}/lookup.ht')
-    for project_guid in sample_lookup_ht.ref_samples[:3]:
+    sample_lookup_ht = sample_lookup_ht.repartition(400)
+    sample_lookup_ht = sample_lookup_ht.checkpoint('gs://seqr-scratch-temp/asdlkfj0.ht')
+    for project_guid in sample_lookup_ht.ref_samples:
         if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
             continue
         if project_guid not in sample_id_to_family_guid:
@@ -111,9 +113,8 @@ for dataset_type, reference_genome in MIGRATIONS:
                 ref_samples=hl.array(sample_lookup_ht.ref_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
                 heteroplasmic_samples=hl.array(sample_lookup_ht.heteroplasmic_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
                 homoplasmic_samples=hl.array(sample_lookup_ht.homoplasmic_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
-                family_guids=hl.sorted(list(sample_id_to_family_guid[project_guid].keys())),
+                family_guids=hl.sorted(set(sample_id_to_family_guid[project_guid].values())),
             )
-            project_lookup_ht = project_lookup_ht.filter(hl.len(project_lookup_ht.family_guids) > 0)
             project_lookup_ht = project_lookup_ht.select(
                 project_stats = project_lookup_ht.family_guids.map(
                     lambda family_guid: hl.Struct(
@@ -125,22 +126,22 @@ for dataset_type, reference_genome in MIGRATIONS:
                 family_guids=project_lookup_ht.family_guids,
             )
             project_lookup_ht = project_lookup_ht.annotate(
-                project_stats = [project_lookup_ht.project_stats.map(
-                    lambda x: hl.or_missing(
-                        ((x.ref_samples > 0) | (x.heteroplasmic_samples > 0) | (x.homoplasmic_samples > 0)),
-                        x
+                project_stats=[
+                    # Set a family to missing if all values are 0
+                    project_lookup_ht.project_stats.map(
+                        lambda ps: hl.or_missing(
+                            hl.sum(list(ps.values())) > 0,
+                            ps,
+                        ),
                     ),
-                )]
+                ],
             )
         else:
             project_lookup_ht = sample_lookup_ht.select(
                 ref_samples=hl.array(sample_lookup_ht.ref_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
                 het_samples=hl.array(sample_lookup_ht.het_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
                 hom_samples=hl.array(sample_lookup_ht.hom_samples[project_guid]).map(lambda sample_id: hl.dict(sample_id_to_family_guid[project_guid])[sample_id]),
-                family_guids=hl.sorted(list(sample_id_to_family_guid[project_guid].keys())),
-            )
-            project_lookup_ht = project_lookup_ht.filter(
-                hl.len(project_lookup_ht.family_guids) > 0
+                family_guids=hl.sorted(set(sample_id_to_family_guid[project_guid].values())),
             )
             project_lookup_ht = project_lookup_ht.select(
                 project_stats=project_lookup_ht.family_guids.map(
@@ -153,12 +154,15 @@ for dataset_type, reference_genome in MIGRATIONS:
                 family_guids=project_lookup_ht.family_guids,
             )
             project_lookup_ht = project_lookup_ht.annotate(
-                project_stats = [project_lookup_ht.project_stats.map(
-                    lambda x: hl.or_missing(
-                        ((x.ref_samples > 0) | (x.het_samples > 0) | (x.hom_samples > 0)),
-                        x
+                project_stats=[
+                    # Set a family to missing if all values are 0
+                    project_lookup_ht.project_stats.map(
+                        lambda ps: hl.or_missing(
+                            hl.sum(list(ps.values())) > 0,
+                            ps,
+                        ),
                     ),
-                )]
+                ],
             )
         family_guids = project_lookup_ht.family_guids.take(1)
         project_lookup_ht = project_lookup_ht.select_globals(
@@ -167,11 +171,9 @@ for dataset_type, reference_genome in MIGRATIONS:
         )
         project_lookup_ht = project_lookup_ht.select('project_stats')
         ht = join_lookup_hts(ht, project_lookup_ht)
-        print(ht.count())
-        print(ht.distinct().count())
     ht = ht.annotate_globals(
         updates=sample_lookup_ht.index_globals().updates
     )
-    ht.write('gs://seqr-scratch-temp/mito_new_lookup.ht')
+    ht.write('gs://seqr-scratch-temp/37_new_lookup.ht', overwrite=True)
 
 
