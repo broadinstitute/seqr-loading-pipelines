@@ -138,6 +138,20 @@ def remapped_and_subsetted_callset_path(
     )
 
 
+def lookup_table_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'lookup.ht',
+    )
+
+
 def runs_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -149,20 +163,6 @@ def runs_path(
             dataset_type,
         ),
         'runs',
-    )
-
-
-def sample_lookup_table_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    return os.path.join(
-        _v03_pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
-            reference_genome,
-            dataset_type,
-        ),
-        'lookup.ht',
     )
 
 
