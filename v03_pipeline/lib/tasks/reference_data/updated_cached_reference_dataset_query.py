@@ -33,7 +33,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         if not super().complete():
             return False
 
-        datasets_to_check = [self.crdq.dataset]
+        datasets_to_check = [self.crdq.dataset(self.dataset_type)]
         crdq_globals = Globals.from_ht(
             hl.read_table(self.output().path),
             datasets_to_check,
@@ -67,7 +67,11 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             )
         if self.crdq.query_raw_dataset:
             return HailTableTask(
-                get_ht_path(CONFIG[self.crdq.dataset][self.reference_genome.v02_value]),
+                get_ht_path(
+                    CONFIG[self.crdq.dataset(self.dataset_type)][
+                        self.reference_genome.v02_value
+                    ],
+                ),
             )
         return HailTableTask(
             valid_reference_dataset_collection_path(
@@ -78,7 +82,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         )
 
     def create_table(self) -> hl.Table:
-        dataset: str = self.crdq.dataset
+        dataset: str = self.crdq.dataset(self.dataset_type)
         if self.crdq.query_raw_dataset:
             query_ht = import_ht_from_config_path(
                 CONFIG[dataset][self.reference_genome.v02_value],
