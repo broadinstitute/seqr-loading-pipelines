@@ -1,6 +1,5 @@
 import gzip
 import os
-import shutil
 import subprocess
 import tempfile
 import urllib
@@ -161,10 +160,10 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
 def download_and_import_clinvar_submission_summary() -> hl.Table:
     logger.info('Downloading and importing clinvar submission summary')
     with tempfile.NamedTemporaryFile(
-            suffix='.txt.gz', delete=False
+        suffix='.txt.gz',
+        delete=False,
     ) as tmp_file:
-        urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_gzip_file.name)  # noqa: S310
-
+        urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
         ht = hl.import_table(
             tmp_file.name,
             force=True,
@@ -172,26 +171,33 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             impute=True,
             types={'#VariationID': hl.tstr},
             missing='-',
+            # min_partitions=?
         )
-        ht = ht.key_by('#VariationID')
-        return ht.select('#VariationID', 'Submitter')
+        ht = ht.rename({'#VariationID': 'VariationID'})
+        ht = ht.select('#VariationID', 'Submitter')
+        ht = ht.group_by('VariationID').aggregate(
+            Submitters=hl.agg.collect_as_set(ht.Submitter)
+        )
+        return ht.key_by('VariationID')
 
 
 def download_and_import_clinvar_variant_summary() -> hl.Table:
     logger.info('Downloading and importing clinvar submission summary')
     with tempfile.NamedTemporaryFile(
-            suffix='.txt.gz', delete=False
+        suffix='.txt.gz',
+        delete=False,
     ) as tmp_file:
         urllib.request.urlretrieve(CLINVAR_VARIANT_SUMMARY_URL, tmp_file.name)  # noqa: S310
-
         ht = hl.import_table(
             tmp_file.name,
             force=True,
             impute=True,
             types={'VariationID': hl.tstr},
             missing='-',
+            # min_partitions=?
         )
         ht = ht.select('VariationID', 'RCVaccession', 'PhenotypeList')
-#         key by these things and then deduplicate
-
-
+        ht = ht.group_by('VariationID', 'RCVaccession').aggregate(
+            Phenotypes=hl.agg.collect_as_set(ht.PhenotypeList)
+        )
+        return ht.key_by('VariationID')
