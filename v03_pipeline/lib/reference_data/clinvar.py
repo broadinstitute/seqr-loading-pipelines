@@ -1,5 +1,6 @@
 import gzip
 import os
+import shutil
 import subprocess
 import tempfile
 import urllib
@@ -38,7 +39,12 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         'practice_guideline': 4,
     },
 )
-
+CLINVAR_SUBMISSION_SUMMARY_URL = (
+    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
+)
+CLINVAR_VARIANT_SUMMARY_URL = (
+    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz'
+)
 logger = get_logger(__name__)
 
 
@@ -150,3 +156,42 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
                 return None
 
     return None
+
+
+def download_and_import_clinvar_submission_summary() -> hl.Table:
+    logger.info('Downloading and importing clinvar submission summary')
+    with tempfile.NamedTemporaryFile(
+            suffix='.txt.gz', delete=False
+    ) as tmp_file:
+        urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_gzip_file.name)  # noqa: S310
+
+        ht = hl.import_table(
+            tmp_file.name,
+            force=True,
+            filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
+            impute=True,
+            types={'#VariationID': hl.tstr},
+            missing='-',
+        )
+        ht = ht.key_by('#VariationID')
+        return ht.select('#VariationID', 'Submitter')
+
+
+def download_and_import_clinvar_variant_summary() -> hl.Table:
+    logger.info('Downloading and importing clinvar submission summary')
+    with tempfile.NamedTemporaryFile(
+            suffix='.txt.gz', delete=False
+    ) as tmp_file:
+        urllib.request.urlretrieve(CLINVAR_VARIANT_SUMMARY_URL, tmp_file.name)  # noqa: S310
+
+        ht = hl.import_table(
+            tmp_file.name,
+            force=True,
+            impute=True,
+            types={'VariationID': hl.tstr},
+            missing='-',
+        )
+        ht = ht.select('VariationID', 'RCVaccession', 'PhenotypeList')
+#         key by these things and then deduplicate
+
+

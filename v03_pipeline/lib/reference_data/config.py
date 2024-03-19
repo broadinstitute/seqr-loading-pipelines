@@ -11,9 +11,10 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
+    download_and_import_clinvar_submission_summary,
     download_and_import_latest_clinvar_vcf,
     parsed_and_mapped_clnsigconf,
-    parsed_clnsig,
+    parsed_clnsig, download_and_import_clinvar_variant_summary,
 )
 from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 
@@ -53,6 +54,19 @@ def clinvar_custom_select(ht):
     # so there's a hidden enum-mapping inside this clinvar function.
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
     selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
+
+    # Join to submission and variant summary tables to get submitter and condition
+    submission_ht = download_and_import_clinvar_submission_summary()
+    variant_ht = download_and_import_clinvar_variant_summary()
+    ht = ht.key_by('rsid').join(submission_ht.key_by('#VariationID'))
+    ht = ht.join(variant_ht.key_by('VariationID'))
+
+    # VariationID in col 31, the RCVAccession in col 12 and a PhenotypeList in col 14. The PhenotypeList is essentially the unique list of conditions names separated with pipe(|) symbols. If any one condition is comprised of multiple diseases/phenotypes then it will have semi-colon(;) separated delimiters. If there are more than 5? disease/phenotypes in one condition then clinvar simply puts (n conditions) for the name where n is the exact number of disease/phenotypes in the set - this is different than the explicit listing on the UI.
+    # You will need to extract the 3 col values above and then aggregate on the RCV accessions, since there can and will be multiple occurrences across the rows in this file. You can be confident (but check) that when the RCVAccession is the same the phenotypelist should be the same.
+
+    ht = ht.key_by('locus', 'alleles')  # set the key back
+    selects['submitter'] = ht.Submitter
+    selects['condition'] = ht.Condition
     return selects
 
 

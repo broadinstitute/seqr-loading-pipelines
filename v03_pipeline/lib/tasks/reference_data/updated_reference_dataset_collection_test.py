@@ -12,6 +12,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
@@ -82,6 +83,29 @@ MOCK_CONFIG = {
             'custom_import': lambda *_: MOCK_CADD_DATASET_HT,
         },
     },
+    'clinvar': {
+        '38': {
+            **CONFIG['clinvar']['38'],
+            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    info=hl.tstruct(
+                        ALLELEID=hl.tint32,
+                        CLNSIG=hl.tarray(hl.tstr),
+                        CLNSIGCONF=hl.tarray(hl.tstr),
+                        CLNREVSTAT=hl.tarray(hl.tstr),
+                    ),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    version='2023-11-26',
+                ),
+            ),
+        },
+    },
 }
 
 
@@ -103,7 +127,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
-        mock_rdc_datasets.return_value = ['cadd', 'primate_ai']
+        mock_rdc_datasets.return_value = ['cadd', 'primate_ai', 'clinvar']
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -116,6 +140,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self.assertTrue(task.complete())
 
         ht = hl.read_table(task.output().path)
+        print(ht.collect())
         self.assertCountEqual(
             ht.collect(),
             [
