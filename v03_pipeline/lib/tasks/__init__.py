@@ -1,8 +1,11 @@
 from v03_pipeline.lib.tasks.delete_old_runs import DeleteOldRunsTask
-from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
-from v03_pipeline.lib.tasks.update_sample_lookup_table import (
-    UpdateSampleLookupTableTask,
+from v03_pipeline.lib.tasks.reference_data.write_cached_reference_dataset_query import (
+    WriteCachedReferenceDatasetQuery,
 )
+from v03_pipeline.lib.tasks.update_lookup_table import (
+    UpdateLookupTableTask,
+)
+from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -14,8 +17,9 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 __all__ = [
     'DeleteOldRunsTask',
     'UpdateProjectTableTask',
-    'UpdateSampleLookupTableTask',
+    'UpdateLookupTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
+    'WriteCachedReferenceDatasetQuery',
     'WriteMetadataForRunTask',
     'WriteProjectFamilyTablesTask',
 ]

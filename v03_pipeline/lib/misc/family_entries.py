@@ -20,7 +20,7 @@ def compute_callset_family_entries_ht(
         family_entries=(
             # NB: we're sorted by both family and sample when this runs.
             # However, the sort is not guaranteed once the entries
-            # table is editted and families are spliced out and re-appended.
+            # table is edited and families are spliced out and re-appended.
             hl.sorted(
                 hl.agg.collect(
                     hl.Struct(
@@ -55,16 +55,16 @@ def compute_callset_family_entries_ht(
 
 
 def globalize_ids(ht: hl.Table) -> hl.Table:
-    row = ht.take(1)
-    has_family_entries = row and len(row[0].family_entries) > 0
+    row = ht.take(1)[0] if ht.count() > 0 else None
+    has_family_entries = row and len(row.family_entries) > 0
     ht = ht.annotate_globals(
         family_guids=(
-            [fe[0].family_guid for fe in row[0].family_entries]
+            [fe[0].family_guid for fe in row.family_entries]
             if has_family_entries
             else hl.empty_array(hl.tstr)
         ),
         family_samples=(
-            {fe[0].family_guid: [e.s for e in fe] for fe in row[0].family_entries}
+            {fe[0].family_guid: [e.s for e in fe] for fe in row.family_entries}
             if has_family_entries
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
@@ -93,30 +93,26 @@ def deglobalize_ids(ht: hl.Table) -> hl.Table:
     return ht.drop('family_guids', 'family_samples')
 
 
-def remove_new_callset_family_guids(
+def remove_family_guids(
     ht: hl.Table,
-    family_guids: list[str],
+    family_guids: hl.SetExpression,
 ) -> hl.Table:
     # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
-    family_indexes_to_keep = [
-        i
-        for i, f in enumerate(hl.eval(ht.globals.family_guids))
-        if f not in family_guids
-    ]
+    family_indexes_to_keep = hl.array(
+        hl.enumerate(ht.globals.family_guids)
+        .filter(lambda item: ~family_guids.contains(item[1]))
+        .map(lambda item: item[0]),
+    )
     ht = ht.annotate(
-        family_entries=(
-            hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
-            if len(family_indexes_to_keep) > 0
-            else hl.missing(ht.family_entries.dtype)
-        ),
+        family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
-            lambda f: ~hl.set(family_guids).contains(f),
+            lambda f: ~family_guids.contains(f),
         ),
         family_samples=hl.dict(
             ht.family_samples.items().filter(
-                lambda i: ~hl.set(family_guids).contains(i[0]),
+                lambda item: ~family_guids.contains(item[0]),
             ),
         ),
     )
@@ -145,7 +141,7 @@ def join_family_entries_hts(ht: hl.Table, callset_ht: hl.Table) -> hl.Table:
             .default(ht.family_entries.extend(ht.family_entries_1))
         ),
     )
-    # NB: transume because we want to drop the *_1 fields, but preserve other globals
+    # NB: transmute because we want to drop the *_1 fields, but preserve other globals
     return ht.transmute_globals(
         family_guids=ht.family_guids.extend(ht.family_guids_1),
         family_samples=hl.dict(

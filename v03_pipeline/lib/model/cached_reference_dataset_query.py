@@ -26,10 +26,11 @@ class CachedReferenceDatasetQuery(Enum):
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
-    @property
-    def dataset(self) -> str | None:
+    def dataset(self, dataset_type: DatasetType) -> str | None:
         return {
-            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: 'clinvar',
+            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: 'clinvar_mito'
+            if dataset_type == DatasetType.MITO
+            else 'clinvar',
             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: 'gnomad_genomes',
             CachedReferenceDatasetQuery.GNOMAD_QC: 'gnomad_qc',
             CachedReferenceDatasetQuery.HIGH_AF_VARIANTS: 'gnomad_genomes',
