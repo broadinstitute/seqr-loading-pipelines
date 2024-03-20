@@ -182,7 +182,7 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
     ht = ht.group_by('VariationID').aggregate(
-        Submitters=hl.agg.collect_as_set(ht.Submitter),
-        Phenotypes=hl.agg.collect_as_set(ht.ReportedPhenotypeInfo),
+        Submitters=hl.agg.collect(ht.Submitter),
+        Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
     )
     return ht.key_by('VariationID')

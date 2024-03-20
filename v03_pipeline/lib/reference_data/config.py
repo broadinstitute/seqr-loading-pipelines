@@ -59,16 +59,13 @@ def clinvar_custom_select(ht):
 
 
 def join_clinvar_to_submission_summary(ht, selects: dict):
-    # Join to submission summary table to get submitter and condition
     submission_ht = download_and_import_clinvar_submission_summary()
     ht = ht.info.annotate(
         submitters=submission_ht[ht.rsid].Submitters,
-        phenotypes=submission_ht[ht.rsid].Phenotypes,
+        conditions=submission_ht[ht.rsid].Conditions,
     )
     selects['submitters'] = ht.submitters
-    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.phenotypes).filter(
-        lambda p: p != 'not provided',
-    )
+    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.conditions)
     return ht
 
 

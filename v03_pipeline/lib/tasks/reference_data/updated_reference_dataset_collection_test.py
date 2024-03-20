@@ -200,7 +200,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self.assertTrue(task.complete())
 
         ht = hl.read_table(task.output().path)
-        print(ht.collect())
         self.assertCountEqual(
             ht.collect(),
             [
@@ -215,17 +214,18 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     cadd=hl.Struct(PHRED=1),
                     clinvar=hl.Struct(
                         alleleId=1,
-                        submitters={
+                        submitters=[
                             'OMIM',
                             'Broad Institute Rare Disease Group, Broad Institute',
                             'PreventionGenetics, part of Exact Sciences',
                             'Invitae',
-                        },
-                        conditions={
+                        ],
+                        conditions=[
+                            'not provided',
                             'Leigh syndrome',
                             'FOXRED1-related condition',
                             'Mitochondrial complex 1 deficiency, nuclear type 19',
-                        },
+                        ],
                         conflictingPathogenicities=[
                             hl.Struct(pathogenicity_id=0, count=9),
                             hl.Struct(pathogenicity_id=5, count=2),
