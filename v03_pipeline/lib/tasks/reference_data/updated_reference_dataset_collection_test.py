@@ -110,6 +110,18 @@ MOCK_CONFIG = {
                             ],
                             CLNREVSTAT=['no_classifications_from_unflagged_records'],
                         ),
+                        'submitters': [
+                            'OMIM',
+                            'Broad Institute Rare Disease Group, Broad Institute',
+                            'PreventionGenetics, part of Exact Sciences',
+                            'Invitae',
+                        ],
+                        'conditions': [
+                            'C3661900:not provided',
+                            'C0023264:Leigh syndrome',
+                            'na:FOXRED1-related condition',
+                            'C4748791:Mitochondrial complex 1 deficiency, nuclear type 19',
+                        ],
                     },
                 ],
                 hl.tstruct(
@@ -122,6 +134,8 @@ MOCK_CONFIG = {
                         CLNSIGCONF=hl.tarray(hl.tstr),
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
+                    submitters=hl.tarray(hl.tstr),
+                    conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
@@ -142,52 +156,16 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
         MOCK_CONFIG,
     )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.clinvar.download_and_import_clinvar_txt_file',
-    )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_task_with_empty_reference_data_table(
         self,
         mock_rdc_datasets,
-        mock_download_and_import_clinvar_txt_file,
     ) -> None:
         """
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai', 'clinvar']
-
-        mock_download_and_import_clinvar_txt_file.return_value = hl.Table.parallelize(
-            [
-                {
-                    '#VariationID': '5',
-                    'Submitter': 'OMIM',
-                    'ReportedPhenotypeInfo': 'C3661900:not provided',
-                },
-                {
-                    '#VariationID': '5',
-                    'Submitter': 'Broad Institute Rare Disease Group, Broad Institute',
-                    'ReportedPhenotypeInfo': 'C0023264:Leigh syndrome',
-                },
-                {
-                    '#VariationID': '5',
-                    'Submitter': 'PreventionGenetics, part of Exact Sciences',
-                    'ReportedPhenotypeInfo': 'na:FOXRED1-related condition',
-                },
-                {
-                    '#VariationID': '5',
-                    'Submitter': 'Invitae',
-                    'ReportedPhenotypeInfo': 'C4748791:Mitochondrial complex 1 deficiency, nuclear type 19',
-                },
-            ],
-            hl.tstruct(
-                **{
-                    '#VariationID': hl.tstr,
-                    'Submitter': hl.tstr,
-                    'ReportedPhenotypeInfo': hl.tstr,
-                },
-            ),
-        )
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,

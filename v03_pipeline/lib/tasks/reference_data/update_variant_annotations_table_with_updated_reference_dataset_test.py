@@ -35,6 +35,8 @@ TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 
+# TODO update these tables so selects match TEST_COMBINED_1,TEST_COMBINED_MITO_1,TEST_COMBINED_37
+
 MOCK_CADD_CONFIG = {
     'version': 'v1.6',
     'select': ['PHRED'],
@@ -66,6 +68,8 @@ MOCK_CLINVAR_CONFIG = {
                 CLNSIGCONF=hl.tarray(hl.tstr),
                 CLNREVSTAT=hl.tarray(hl.tstr),
             ),
+            submitters=hl.tarray(hl.tstr),
+            conditions=hl.tarray(hl.tstr),
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
@@ -456,6 +460,8 @@ MOCK_CONFIG_MITO = {
                         CLNSIGCONF=hl.tarray(hl.tstr),
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
+                    submitters=hl.tarray(hl.tstr),
+                    conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
@@ -590,10 +596,6 @@ MOCK_CONFIG_MITO = {
 }
 
 
-def mock_join_clinvar_to_submission_summary(ht, _):
-    return ht.info
-
-
 @mock.patch(
     'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
@@ -660,16 +662,12 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
-    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
-        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -697,8 +695,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
-        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
-
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -853,16 +849,12 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
-    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG_MITO,
     )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
-        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -890,7 +882,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
-        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
 
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
@@ -994,16 +985,12 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
-    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
-        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -1031,8 +1018,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
-        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
-
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,

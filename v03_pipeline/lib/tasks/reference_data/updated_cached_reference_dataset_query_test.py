@@ -70,6 +70,8 @@ MOCK_CONFIG = {
                         CLNSIGCONF=hl.tarray(hl.tstr),
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
+                    submitters=hl.tarray(hl.tstr),
+                    conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
@@ -144,9 +146,6 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         MOCK_CONFIG,
     )
     @mock.patch(
-        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
-    )
-    @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.UpdatedReferenceDatasetCollectionTask',
     )
     @mock.patch(
@@ -156,7 +155,6 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         self,
         mock_crdq_query,
         mock_updated_rdc_task,
-        mock_clinvar_join,
     ) -> None:
         """
         Given a crdq task where there exists a clinvar crdq table and a clinvar rdc table,
@@ -196,7 +194,6 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             )
 
         mock_crdq_query.side_effect = _clinvar_path_variants
-        mock_clinvar_join.side_effect = lambda clinvar_ht, _: clinvar_ht.info
 
         worker = luigi.worker.Worker()
         task = UpdatedCachedReferenceDatasetQuery(

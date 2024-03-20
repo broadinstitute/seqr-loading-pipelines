@@ -61,7 +61,7 @@ def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
 
 def parsed_clnsig(ht: hl.Table):
     return (
-        hl.delimit(ht.CLNSIG)
+        hl.delimit(ht.info.CLNSIG)
         .replace(
             'Likely_pathogenic,_low_penetrance',
             'Likely_pathogenic|low_penetrance',
@@ -90,7 +90,7 @@ def parse_to_count(entry: str):
 
 def parsed_and_mapped_clnsigconf(ht: hl.Table):
     return (
-        hl.delimit(ht.CLNSIGCONF)
+        hl.delimit(ht.info.CLNSIGCONF)
         .replace(',_low_penetrance', '')
         .split(r'\|')
         .map(parse_to_count)
@@ -131,7 +131,7 @@ def download_and_import_latest_clinvar_vcf(
             force_bgz=True,
         )
         mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
-        return mt.rows()
+        return join_to_submission_summary_ht(mt.rows())
 
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:
@@ -154,35 +154,38 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
     return None
 
 
-def download_and_import_clinvar_txt_file(url: str, types: dict, hl_filter: str | None):
-    with tempfile.NamedTemporaryFile(
-        suffix='.txt.gz',
-        delete=False,
-    ) as tmp_file:
-        urllib.request.urlretrieve(url, tmp_file.name)  # noqa: S310
-        return hl.import_table(
-            tmp_file.name,
-            force=True,
-            filter=hl_filter,
-            impute=True,
-            types=types,
-            missing='-',
-            min_partitions=3,  # recommended 2-4 partitions per core
-        )
-
-
-def download_and_import_clinvar_submission_summary() -> hl.Table:
+def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
     logger.info('Getting clinvar submission summary')
-    ht = download_and_import_clinvar_txt_file(
-        url=CLINVAR_SUBMISSION_SUMMARY_URL,
-        types={'#VariationID': hl.tstr},
-        hl_filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
-    )
+    ht = download_and_import_clinvar_submission_summary()
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect(ht.Submitter),
         Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
     )
-    return ht.key_by('VariationID')
+    ht = ht.key_by('VariationID')
+    return vcf_ht.annotate(
+        submitters=ht[vcf_ht.rsid].Submitters,
+        conditions=ht[vcf_ht.rsid].Conditions,
+    )
+
+
+def download_and_import_clinvar_submission_summary() -> hl.Table:
+    with tempfile.NamedTemporaryFile(
+        suffix='.txt.gz',
+        delete=False,
+    ) as tmp_file:
+        urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
+        return hl.import_table(
+            tmp_file.name,
+            force=True,
+            filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
+            types={
+                '#VariationID': hl.tstr,
+                'Submitter': hl.tstr,
+                'ReportedPhenotypeInfo': hl.tstr,
+            },
+            missing='-',
+            min_partitions=3,  # recommended 2-4 partitions per core
+        )

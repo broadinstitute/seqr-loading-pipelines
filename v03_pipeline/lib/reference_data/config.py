@@ -11,7 +11,6 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
-    download_and_import_clinvar_submission_summary,
     download_and_import_latest_clinvar_vcf,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
@@ -39,7 +38,6 @@ def predictor_parse(field: hl.StringExpression):
 
 def clinvar_custom_select(ht):
     selects = {}
-    ht = join_clinvar_to_submission_summary(ht, selects)
     clnsigs = parsed_clnsig(ht)
     selects['pathogenicity'] = hl.if_else(
         CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
@@ -54,19 +52,13 @@ def clinvar_custom_select(ht):
     # NB: the `enum_select` does not support mapping a list of tuples
     # so there's a hidden enum-mapping inside this clinvar function.
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
-    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.CLNREVSTAT))
-    return selects
-
-
-def join_clinvar_to_submission_summary(ht, selects: dict):
-    submission_ht = download_and_import_clinvar_submission_summary()
-    ht = ht.info.annotate(
-        submitters=submission_ht[ht.rsid].Submitters,
-        conditions=submission_ht[ht.rsid].Conditions,
-    )
+    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
     selects['submitters'] = ht.submitters
-    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.conditions)
-    return ht
+    selects['conditions'] = hl.map(
+        lambda p: p.split(r':')[1],
+        ht.conditions,
+    )  # assumes the format 'MedGen#:condition', e.g.'C0023264:Leigh syndrome'
+    return selects
 
 
 def dbnsfp_custom_select(ht):
