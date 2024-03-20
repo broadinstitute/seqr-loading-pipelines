@@ -88,7 +88,28 @@ MOCK_CONFIG = {
             **CONFIG['clinvar']['38'],
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
-                [],
+                [
+                    {
+                        'locus': hl.Locus(
+                            contig='chr1',
+                            position=871269,
+                            reference_genome='GRCh38',
+                        ),
+                        'alleles': ['A', 'C'],
+                        'info': hl.Struct(
+                            ALLELEID=1,
+                            CLNSIG=[
+                                'Pathogenic/Likely_pathogenic/Pathogenic',
+                                '_low_penetrance',
+                            ],
+                            CLNSIGCONF=[
+                                'Pathogenic(8)|Likely_pathogenic(2)|Pathogenic',
+                                '_low_penetrance(1)|Uncertain_significance(1)',
+                            ],
+                            CLNREVSTAT=['no_classifications_from_unflagged_records'],
+                        ),
+                    },
+                ],
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
@@ -110,6 +131,7 @@ MOCK_CONFIG = {
 
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
+
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
@@ -118,16 +140,34 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
         MOCK_CONFIG,
     )
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.clinvar.download_and_import_clinvar_txt_file',
+    )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     def test_update_task_with_empty_reference_data_table(
         self,
         mock_rdc_datasets,
+        mock_download_and_import_clinvar_txt_file,
     ) -> None:
         """
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai', 'clinvar']
+
+        mock_download_and_import_clinvar_txt_file.side_effect = [
+            hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    *{'#VariationID': hl.tstr,
+                      'ClinicalSignificance': hl.tstr,
+                      'DateLastEvaluated': hl.tstr,
+                      }
+                ),
+            )
+            # table1 = submission summary
+            # table2 = variant summary
+        ]
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
