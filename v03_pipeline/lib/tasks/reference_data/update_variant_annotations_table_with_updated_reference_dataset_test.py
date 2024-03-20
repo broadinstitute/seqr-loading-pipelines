@@ -54,6 +54,7 @@ MOCK_CADD_CONFIG = {
 }
 MOCK_CLINVAR_CONFIG = {
     **CONFIG['clinvar']['38'],
+    'custom_select': None,
     'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
     'custom_import': lambda *_: hl.Table.parallelize(
         [],
@@ -444,6 +445,7 @@ MOCK_CONFIG_MITO = {
     'clinvar_mito': {
         '38': {
             **CONFIG['clinvar_mito']['38'],
+            'custom_select': None,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],

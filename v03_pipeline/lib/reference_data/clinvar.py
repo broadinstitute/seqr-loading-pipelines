@@ -64,7 +64,7 @@ def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
 
 def parsed_clnsig(ht: hl.Table):
     return (
-        hl.delimit(ht.info.CLNSIG)
+        hl.delimit(ht.CLNSIG)
         .replace(
             'Likely_pathogenic,_low_penetrance',
             'Likely_pathogenic|low_penetrance',
@@ -93,7 +93,7 @@ def parse_to_count(entry: str):
 
 def parsed_and_mapped_clnsigconf(ht: hl.Table):
     return (
-        hl.delimit(ht.info.CLNSIGCONF)
+        hl.delimit(ht.CLNSIGCONF)
         .replace(',_low_penetrance', '')
         .split(r'\|')
         .map(parse_to_count)
@@ -178,27 +178,13 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
     logger.info('Getting clinvar submission summary')
     ht = download_and_import_clinvar_txt_file(
         url=CLINVAR_SUBMISSION_SUMMARY_URL,
-        types={'#VariationID': hl.tstr},
+        types={'#VariationID': hl.tstr},  # coerce
         hl_filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line,
     )
     ht = ht.rename({'#VariationID': 'VariationID'})
-    ht = ht.select('#VariationID', 'Submitter')
+    ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect_as_set(ht.Submitter),
+        Phenotypes=hl.agg.collect_as_set(ht.ReportedPhenotypeInfo),
     )
     return ht.key_by('VariationID')
-# 
-#
-# def download_and_import_clinvar_variant_summary() -> hl.Table:
-#     logger.info('Getting clinvar variant summary')
-#     ht = download_and_import_clinvar_txt_file(
-#         url=CLINVAR_VARIANT_SUMMARY_URL,
-#         types={'VariationID': hl.tstr},
-#         hl_filter=None,
-#     )
-#     ht = ht.select('VariationID', 'RCVaccession', 'PhenotypeList')
-#     ht = ht.group_by('VariationID').aggregate(
-#         Phenotypes=hl.agg.collect_as_set(ht.PhenotypeList),
-#         RCVaccessions=hl.agg.collect_as_set(ht.RCVaccession),
-#     )
-#     return ht.key_by('VariationID')

@@ -12,7 +12,6 @@ from v03_pipeline.lib.reference_data.clinvar import (
     CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
     download_and_import_clinvar_submission_summary,
-    download_and_import_clinvar_variant_summary,
     download_and_import_latest_clinvar_vcf,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
@@ -38,13 +37,19 @@ def predictor_parse(field: hl.StringExpression):
     return field.split(';').find(lambda p: p != '.')
 
 
-def parse_set_field(field: hl.StringExpression) -> hl.StringExpression:
-    # Expect field {'A|B|C', 'D|E'}, return ['A', 'B', 'C', 'D', 'E']
-    return hl.delimit(field).replace(',', '|').split(r'\|')
-
-
 def clinvar_custom_select(ht):
     selects = {}
+    # Join to submission summary table to get submitter and condition
+    submission_ht = download_and_import_clinvar_submission_summary()
+    ht = ht.info.annotate(
+        submitters=submission_ht[ht.rsid].Submitters,
+        phenotypes=submission_ht[ht.rsid].Phenotypes,
+    )
+    selects['submitters'] = ht.submitters
+    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.phenotypes).filter(
+        lambda p: p != 'not provided',
+    )
+
     clnsigs = parsed_clnsig(ht)
     selects['pathogenicity'] = hl.if_else(
         CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
@@ -59,19 +64,7 @@ def clinvar_custom_select(ht):
     # NB: the `enum_select` does not support mapping a list of tuples
     # so there's a hidden enum-mapping inside this clinvar function.
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
-    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
-
-    # Join to submission and variant summary tables to get submitter and condition
-    submission_ht = download_and_import_clinvar_submission_summary()
-    variant_ht = download_and_import_clinvar_variant_summary()
-    ht = ht.key_by('rsid')  # key by variant identifier
-    ht = ht.join(submission_ht)
-    ht = ht.join(variant_ht)
-    ht = ht.key_by('locus', 'alleles')  # set the key back
-    selects['submitters'] = parse_set_field(ht.Submitters)
-    selects['conditions'] = parse_set_field(ht.Phenotypes)
-    # we can use the values of the clinvar accessions to link to the clinvar website in seqr ui
-    selects['clinvar_accessions'] = parse_set_field(ht.RCVaccessions)
+    selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.CLNREVSTAT))
     return selects
 
 

@@ -5,6 +5,7 @@ from unittest.mock import ANY
 import hail as hl
 import luigi.worker
 
+from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
@@ -12,6 +13,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
@@ -86,7 +88,6 @@ MOCK_CONFIG = {
     'clinvar': {
         '38': {
             **CONFIG['clinvar']['38'],
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [
                     {
@@ -96,6 +97,7 @@ MOCK_CONFIG = {
                             reference_genome='GRCh38',
                         ),
                         'alleles': ['A', 'C'],
+                        'rsid': '5',
                         'info': hl.Struct(
                             ALLELEID=1,
                             CLNSIG=[
@@ -113,6 +115,7 @@ MOCK_CONFIG = {
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
+                    rsid=hl.tstr,
                     info=hl.tstruct(
                         ALLELEID=hl.tint32,
                         CLNSIG=hl.tarray(hl.tstr),
@@ -131,7 +134,6 @@ MOCK_CONFIG = {
 
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
-
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
@@ -155,19 +157,37 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         """
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai', 'clinvar']
 
-        mock_download_and_import_clinvar_txt_file.side_effect = [
-            hl.Table.parallelize(
-                [],
-                hl.tstruct(
-                    *{'#VariationID': hl.tstr,
-                      'ClinicalSignificance': hl.tstr,
-                      'DateLastEvaluated': hl.tstr,
-                      }
-                ),
-            )
-            # table1 = submission summary
-            # table2 = variant summary
-        ]
+        mock_download_and_import_clinvar_txt_file.return_value = hl.Table.parallelize(
+            [
+                {
+                    '#VariationID': '5',
+                    'Submitter': 'OMIM',
+                    'ReportedPhenotypeInfo': 'C3661900:not provided',
+                },
+                {
+                    '#VariationID': '5',
+                    'Submitter': 'Broad Institute Rare Disease Group, Broad Institute',
+                    'ReportedPhenotypeInfo': 'C0023264:Leigh syndrome',
+                },
+                {
+                    '#VariationID': '5',
+                    'Submitter': 'PreventionGenetics, part of Exact Sciences',
+                    'ReportedPhenotypeInfo': 'na:FOXRED1-related condition',
+                },
+                {
+                    '#VariationID': '5',
+                    'Submitter': 'Invitae',
+                    'ReportedPhenotypeInfo': 'C4748791:Mitochondrial complex 1 deficiency, nuclear type 19',
+                },
+            ],
+            hl.tstruct(
+                **{
+                    '#VariationID': hl.tstr,
+                    'Submitter': hl.tstr,
+                    'ReportedPhenotypeInfo': hl.tstr,
+                },
+            ),
+        )
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -193,6 +213,28 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     alleles=['A', 'C'],
                     primate_ai=hl.Struct(score=0.25),
                     cadd=hl.Struct(PHRED=1),
+                    clinvar=hl.Struct(
+                        alleleId=1,
+                        submitters={
+                            'OMIM',
+                            'Broad Institute Rare Disease Group, Broad Institute',
+                            'PreventionGenetics, part of Exact Sciences',
+                            'Invitae',
+                        },
+                        conditions={
+                            'Leigh syndrome',
+                            'FOXRED1-related condition',
+                            'Mitochondrial complex 1 deficiency, nuclear type 19',
+                        },
+                        conflictingPathogenicities=[
+                            hl.Struct(pathogenicity_id=0, count=9),
+                            hl.Struct(pathogenicity_id=5, count=2),
+                            hl.Struct(pathogenicity_id=12, count=1),
+                        ],
+                        goldStars=0,
+                        pathogenicity_id=1,
+                        assertion_ids=[5],
+                    ),
                 ),
             ],
         )
@@ -203,11 +245,20 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     paths=hl.Struct(
                         primate_ai='gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
                         cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
+                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                     ),
-                    versions=hl.Struct(primate_ai='v0.3', cadd='v1.6'),
+                    versions=hl.Struct(
+                        primate_ai='v0.3',
+                        cadd='v1.6',
+                        clinvar='2023-11-26',
+                    ),
                     enums=hl.Struct(
                         primate_ai=hl.Struct(),
                         cadd=hl.Struct(),
+                        clinvar=hl.Struct(
+                            pathogenicity=CLINVAR_PATHOGENICITIES,
+                            assertion=CLINVAR_ASSERTIONS,
+                        ),
                     ),
                     date=ANY,
                 ),
