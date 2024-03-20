@@ -167,7 +167,7 @@ def download_and_import_clinvar_txt_file(url: str, types: dict, hl_filter: str |
             impute=True,
             types=types,
             missing='-',
-            # min_partitions=?
+            min_partitions=3,  # recommended 2-4 partitions per core
         )
 
 
