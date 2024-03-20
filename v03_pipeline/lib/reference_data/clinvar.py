@@ -41,9 +41,6 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
 CLINVAR_SUBMISSION_SUMMARY_URL = (
     'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
 )
-CLINVAR_VARIANT_SUMMARY_URL = (
-    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz'
-)
 logger = get_logger(__name__)
 
 
