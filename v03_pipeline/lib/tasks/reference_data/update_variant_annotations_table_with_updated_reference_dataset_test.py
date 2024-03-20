@@ -54,7 +54,6 @@ MOCK_CADD_CONFIG = {
 }
 MOCK_CLINVAR_CONFIG = {
     **CONFIG['clinvar']['38'],
-    'custom_select': None,
     'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
     'custom_import': lambda *_: hl.Table.parallelize(
         [],
@@ -445,7 +444,6 @@ MOCK_CONFIG_MITO = {
     'clinvar_mito': {
         '38': {
             **CONFIG['clinvar_mito']['38'],
-            'custom_select': None,
             'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
@@ -592,6 +590,10 @@ MOCK_CONFIG_MITO = {
 }
 
 
+def mock_join_clinvar_to_submission_summary(ht, _):
+    return ht.info
+
+
 @mock.patch(
     'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
@@ -658,12 +660,16 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
+    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
+        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -691,6 +697,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
@@ -845,12 +853,16 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
+    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG_MITO,
     )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
+        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -878,6 +890,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
@@ -980,12 +994,16 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ],
         )
 
+    @mock.patch(
+        'v03_pipeline.lib.reference_data.config.join_clinvar_to_submission_summary',
+    )
     @mock.patch.dict(
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
+        mock_clinvar_join,
         mock_initialize_table,
         mock_update_rdc_task,
     ):
@@ -1013,6 +1031,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
+        mock_clinvar_join.side_effect = mock_join_clinvar_to_submission_summary
+
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,

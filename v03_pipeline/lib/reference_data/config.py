@@ -39,17 +39,7 @@ def predictor_parse(field: hl.StringExpression):
 
 def clinvar_custom_select(ht):
     selects = {}
-    # Join to submission summary table to get submitter and condition
-    submission_ht = download_and_import_clinvar_submission_summary()
-    ht = ht.info.annotate(
-        submitters=submission_ht[ht.rsid].Submitters,
-        phenotypes=submission_ht[ht.rsid].Phenotypes,
-    )
-    selects['submitters'] = ht.submitters
-    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.phenotypes).filter(
-        lambda p: p != 'not provided',
-    )
-
+    ht = join_clinvar_to_submission_summary(ht, selects)
     clnsigs = parsed_clnsig(ht)
     selects['pathogenicity'] = hl.if_else(
         CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
@@ -66,6 +56,20 @@ def clinvar_custom_select(ht):
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
     selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.CLNREVSTAT))
     return selects
+
+
+def join_clinvar_to_submission_summary(ht, selects: dict):
+    # Join to submission summary table to get submitter and condition
+    submission_ht = download_and_import_clinvar_submission_summary()
+    ht = ht.info.annotate(
+        submitters=submission_ht[ht.rsid].Submitters,
+        phenotypes=submission_ht[ht.rsid].Phenotypes,
+    )
+    selects['submitters'] = ht.submitters
+    selects['conditions'] = hl.map(lambda p: p.split(r':')[1], ht.phenotypes).filter(
+        lambda p: p != 'not provided',
+    )
+    return ht
 
 
 def dbnsfp_custom_select(ht):
