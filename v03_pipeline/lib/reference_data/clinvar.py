@@ -172,11 +172,12 @@ def download_and_import_clinvar_txt_file(url: str, types: dict, hl_filter: str |
 
 
 def download_and_import_clinvar_submission_summary() -> hl.Table:
+    # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
     logger.info('Getting clinvar submission summary')
     ht = download_and_import_clinvar_txt_file(
         url=CLINVAR_SUBMISSION_SUMMARY_URL,
-        types={'#VariationID': hl.tstr},  # coerce
-        hl_filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line,
+        types={'#VariationID': hl.tstr},
+        hl_filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
     )
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
