@@ -718,7 +718,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     cadd=hl.Struct(PHRED=2),
-                    clinvar=None,
+                    clinvar=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp=hl.Struct(
                         REVEL_score=0.043,
                         SIFT_score=None,
@@ -882,7 +890,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
             ),
         )
-
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
@@ -956,7 +963,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    clinvar_mito=None,
+                    clinvar_mito=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp_mito=hl.Struct(
                         SIFT_score=None,
                         MutationTaster_pred_id=2,
@@ -1100,7 +1115,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ),
             ],
         )
-
         self.assertCountEqual(
             ht.collect(),
             [
@@ -1112,7 +1126,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     cadd=hl.Struct(PHRED=9.699999809265137),
-                    clinvar=None,
+                    clinvar=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp=hl.Struct(
                         REVEL_score=0.043,
                         SIFT_score=None,
