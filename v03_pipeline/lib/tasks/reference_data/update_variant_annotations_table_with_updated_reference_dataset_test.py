@@ -35,7 +35,6 @@ TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 
-# TODO update these tables so selects match TEST_COMBINED_1,TEST_COMBINED_MITO_1,TEST_COMBINED_37
 
 MOCK_CADD_CONFIG = {
     'version': 'v1.6',
