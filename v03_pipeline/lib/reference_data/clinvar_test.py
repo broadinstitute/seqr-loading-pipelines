@@ -90,6 +90,17 @@ class ClinvarTest(unittest.TestCase):
         'v03_pipeline.lib.reference_data.clinvar.download_and_import_clinvar_submission_summary',
     )
     def test_join_to_submission_summary_ht(self, mock_download):
+        clinvar_enums_struct = hl.Struct(
+            CLNSIG=[
+                'Pathogenic/Likely_pathogenic/Pathogenic',
+                '_low_penetrance',
+            ],
+            CLNSIGCONF=[
+                'Pathogenic(8)|Likely_pathogenic(2)|Pathogenic',
+                '_low_penetrance(1)|Uncertain_significance(1)',
+            ],
+            CLNREVSTAT=['no_classifications_from_unflagged_records'],
+        )
         vcf_ht = hl.Table.parallelize(
             [
                 {
@@ -100,18 +111,17 @@ class ClinvarTest(unittest.TestCase):
                     ),
                     'alleles': ['A', 'C'],
                     'rsid': '5',
-                    'info': hl.Struct(
-                        ALLELEID=1,
-                        CLNSIG=[
-                            'Pathogenic/Likely_pathogenic/Pathogenic',
-                            '_low_penetrance',
-                        ],
-                        CLNSIGCONF=[
-                            'Pathogenic(8)|Likely_pathogenic(2)|Pathogenic',
-                            '_low_penetrance(1)|Uncertain_significance(1)',
-                        ],
-                        CLNREVSTAT=['no_classifications_from_unflagged_records'],
+                    'info': hl.Struct(ALLELEID=1, **clinvar_enums_struct),
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
                     ),
+                    'alleles': ['A', 'AC'],
+                    'rsid': '7',
+                    'info': hl.Struct(ALLELEID=1, **clinvar_enums_struct),
                 },
             ],
             hl.tstruct(
@@ -174,18 +184,7 @@ class ClinvarTest(unittest.TestCase):
                     ),
                     alleles=['A', 'C'],
                     rsid='5',
-                    info=hl.Struct(
-                        ALLELEID=1,
-                        CLNSIG=[
-                            'Pathogenic/Likely_pathogenic/Pathogenic',
-                            '_low_penetrance',
-                        ],
-                        CLNSIGCONF=[
-                            'Pathogenic(8)|Likely_pathogenic(2)|Pathogenic',
-                            '_low_penetrance(1)|Uncertain_significance(1)',
-                        ],
-                        CLNREVSTAT=['no_classifications_from_unflagged_records'],
-                    ),
+                    info=hl.Struct(ALLELEID=1, **clinvar_enums_struct),
                     submitters=[
                         'OMIM',
                         'Broad Institute Rare Disease Group, Broad Institute',
@@ -198,6 +197,18 @@ class ClinvarTest(unittest.TestCase):
                         'na:FOXRED1-related condition',
                         'C4748791:Mitochondrial complex 1 deficiency, nuclear type 19',
                     ],
+                ),
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'AC'],
+                    rsid='7',
+                    info=hl.Struct(ALLELEID=1, **clinvar_enums_struct),
+                    submitters=None,
+                    conditions=None,
                 ),
             ],
         )
