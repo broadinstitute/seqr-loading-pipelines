@@ -177,8 +177,13 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
         delete=False,
     ) as tmp_file:
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
+        gcs_tmp_file_name = os.path.join(
+            Env.HAIL_TMPDIR,
+            os.path.basename(tmp_file.name),
+        )
+        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         return hl.import_table(
-            tmp_file.name,
+            gcs_tmp_file_name,
             force=True,
             filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
             types={
