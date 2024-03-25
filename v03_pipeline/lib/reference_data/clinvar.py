@@ -183,7 +183,7 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
         )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         return hl.import_table(
-            tmp_file.name,
+            gcs_tmp_file_name,
             force=True,
             filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
             types={
