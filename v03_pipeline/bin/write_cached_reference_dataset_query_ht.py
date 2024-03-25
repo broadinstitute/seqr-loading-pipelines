@@ -26,9 +26,11 @@ def get_ht(
     query: CachedReferenceDatasetQuery,
 ) -> hl.Table:
     # If the query is defined over an uncombined reference dataset, use the combiner config.
-    if query.reference_dataset:
-        config = CONFIG[query.reference_dataset][reference_genome.v02_value]
-        return import_ht_from_config_path(config, reference_genome)
+    if query.query_raw_dataset:
+        config = CONFIG[query.datagset(dataset_type)][reference_genome.v02_value]
+        return import_ht_from_config_path(
+            config, query.dataset(dataset_type), reference_genome,
+        )
     return hl.read_table(
         valid_reference_dataset_collection_path(
             reference_genome,
