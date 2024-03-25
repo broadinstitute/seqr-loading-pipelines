@@ -29,7 +29,9 @@ def get_ht(
     if query.query_raw_dataset:
         config = CONFIG[query.dataset(dataset_type)][reference_genome.v02_value]
         return import_ht_from_config_path(
-            config, query.dataset(dataset_type), reference_genome,
+            config,
+            query.dataset(dataset_type),
+            reference_genome,
         )
     return hl.read_table(
         valid_reference_dataset_collection_path(
