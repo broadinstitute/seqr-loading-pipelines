@@ -35,6 +35,7 @@ TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 
+
 MOCK_CADD_CONFIG = {
     'version': 'v1.6',
     'select': ['PHRED'],
@@ -66,6 +67,8 @@ MOCK_CLINVAR_CONFIG = {
                 CLNSIGCONF=hl.tarray(hl.tstr),
                 CLNREVSTAT=hl.tarray(hl.tstr),
             ),
+            submitters=hl.tarray(hl.tstr),
+            conditions=hl.tarray(hl.tstr),
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
@@ -456,6 +459,8 @@ MOCK_CONFIG_MITO = {
                         CLNSIGCONF=hl.tarray(hl.tstr),
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
+                    submitters=hl.tarray(hl.tstr),
+                    conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
@@ -712,7 +717,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     cadd=hl.Struct(PHRED=2),
-                    clinvar=None,
+                    clinvar=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp=hl.Struct(
                         REVEL_score=0.043,
                         SIFT_score=None,
@@ -949,7 +962,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     alleles=['A', 'C'],
-                    clinvar_mito=None,
+                    clinvar_mito=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp_mito=hl.Struct(
                         SIFT_score=None,
                         MutationTaster_pred_id=2,
@@ -1093,7 +1114,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ),
             ],
         )
-
         self.assertCountEqual(
             ht.collect(),
             [
@@ -1105,7 +1125,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     cadd=hl.Struct(PHRED=9.699999809265137),
-                    clinvar=None,
+                    clinvar=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     dbnsfp=hl.Struct(
                         REVEL_score=0.043,
                         SIFT_score=None,
