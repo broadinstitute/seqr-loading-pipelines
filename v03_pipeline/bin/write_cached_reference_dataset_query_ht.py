@@ -27,7 +27,7 @@ def get_ht(
 ) -> hl.Table:
     # If the query is defined over an uncombined reference dataset, use the combiner config.
     if query.query_raw_dataset:
-        config = CONFIG[query.datagset(dataset_type)][reference_genome.v02_value]
+        config = CONFIG[query.dataset(dataset_type)][reference_genome.v02_value]
         return import_ht_from_config_path(
             config, query.dataset(dataset_type), reference_genome,
         )
