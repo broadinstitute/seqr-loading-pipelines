@@ -30,14 +30,3 @@ def register_alleles(hgvs_expressions: list[str], login: str, password: str) -> 
         message = response['message']
         error = f'\nAPI URL: {URL}\nTYPE: {error_type}\nDESCRIPTION: {description}\nMESSAGE: {message}'
         logger.error(error)
-
-
-register_alleles(
-    [
-        'NC_000001.10:g.865625G>A',
-        'NC_000001.10:g.865627T>C',
-        'NC_000001.10:g.865628G>A',
-    ],
-    'jklugherz_gmail',
-    'XVRJ4NzTC8YrM!t',
-)
