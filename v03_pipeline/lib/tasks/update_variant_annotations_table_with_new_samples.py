@@ -1,10 +1,12 @@
 import functools
 import math
+from itertools import chain
 
 import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.misc.clingen_allele_registry import register_alleles
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
@@ -48,6 +50,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    allele_registry_password = luigi.Parameter()
     liftover_ref_path = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
@@ -232,7 +235,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        # 4) Union with the existing variant annotations table
+        # 4) Register the new variant alleles to the Clingen Allele Registry
+        hgvs_expressions = list(
+            chain.from_iterable(new_variants_ht.info.CLNHGVS.collect()),
+        )
+        register_alleles(
+            hgvs_expressions,
+            'some seqr username constant',
+            self.allele_registry_password,
+        )
+
+        # 5) Union with the existing variant annotations table
         # and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         if self.dataset_type.has_lookup_table:
@@ -246,7 +259,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 ),
             )
 
-        # 5) Fix up the globals and mark the table as updated with these callset/project pairs.
+        # 6) Fix up the globals and mark the table as updated with these callset/project pairs.
         ht = self.annotate_globals(ht)
         return ht.annotate_globals(
             updates=ht.updates.union(
