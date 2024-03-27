@@ -142,7 +142,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         if not len(loadable_families):
             msg = (
                 f'families_failed_missing_samples: {families_failed_missing_samples}\n'
-                f'families_failed_relatedness_check: {families_failed_missing_samples}\n'
+                f'families_failed_relatedness_check: {families_failed_relatedness_check}\n'
                 f'families_failed_sex_check: {families_failed_sex_check}'
             )
             logger.info(
