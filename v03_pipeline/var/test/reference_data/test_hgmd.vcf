@@ -1,0 +1,20 @@
+##fileformat=VCFv4.2
+##note=VCF file is compatible with VCFv4.3 if required by updating fileformat parameter to v4.3
+##source=HGMD_PRO_2023.1
+##reference=GRCh38
+##comment="REF and ALT sequences are both on forward strand of reference assembly"
+##INFO=<ID=CLASS,Number=1,Type=String>
+##INFO=<ID=MUT,Number=1,Type=String>
+##INFO=<ID=GENE,Number=1,Type=String>
+##INFO=<ID=STRAND,Number=1,Type=String>
+##INFO=<ID=DNA,Number=1,Type=String>
+##INFO=<ID=PROT,Number=1,Type=String>
+##INFO=<ID=DB,Number=1,Type=String>
+##INFO=<ID=PHEN,Number=1,Type=String>
+##INFO=<ID=RANKSCORE,Number=1,Type=Float>
+##INFO=<ID=SVTYPE,Number=1,Type=String>
+##INFO=<ID=END,Number=1,Type=Integer>
+##INFO=<ID=SVLEN,Number=1,Type=Integer>
+##ALT=<ID=DEL>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+1	925942	CM2039807	A	G	.	.	CLASS=DM?;MUT=ALT;GENE=SAMD11;STRAND=+;DNA=NM_152486.4%3Ac.1A>G;PROT=NP_689699.3%3Ap.M1?;DB=rs1403306757;PHEN="Retinitis_pigmentosa";RANKSCORE=0.57
