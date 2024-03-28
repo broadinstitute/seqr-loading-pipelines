@@ -53,6 +53,11 @@ def clinvar_custom_select(ht):
     # so there's a hidden enum-mapping inside this clinvar function.
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
     selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
+    selects['submitters'] = ht.submitters
+    selects['conditions'] = hl.map(
+        lambda p: p.split(r':')[1],
+        ht.conditions,
+    )  # assumes the format 'MedGen#:condition', e.g.'C0023264:Leigh syndrome'
     return selects
 
 

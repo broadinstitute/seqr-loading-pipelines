@@ -17,6 +17,7 @@ class BaseHailTableTask(luigi.Task):
         raise NotImplementedError
 
     def complete(self) -> bool:
+        logger.info(f'BaseHailTableTask: checking if {self.output().path} exists')
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def init_hail(self):
@@ -33,7 +34,7 @@ class BaseHailTableTask(luigi.Task):
 
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_DISCOVERED)
 def dependency_discovered(task, dependency):
-    logger.info(f'{task} dependency_discovered {dependency}')
+    logger.info(f'{task} dependency_discovered {dependency} at {task.output()}')
 
 
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_MISSING)
@@ -43,7 +44,7 @@ def dependency_missing(task):
 
 @luigi.Task.event_handler(luigi.Event.DEPENDENCY_PRESENT)
 def dependency_present(task):
-    logger.info(f'{task} dependency_present')
+    logger.info(f'{task} dependency_present at {task.output()}')
 
 
 @luigi.Task.event_handler(luigi.Event.START)
