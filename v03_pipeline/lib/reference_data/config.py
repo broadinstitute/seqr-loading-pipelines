@@ -239,6 +239,7 @@ CONFIG = {
     'hgmd': {
         '37': {
             'custom_import': download_and_import_hgmd_vcf,
+            'version': 'HGMD_Pro_2023',
             'source_path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
@@ -254,6 +255,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': download_and_import_hgmd_vcf,
+            'version': 'HGMD_Pro_2023',
             'source_path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {

@@ -789,7 +789,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         topmed=None,
                         gnomad_non_coding_constraint=None,
                         screen=None,
-                        hgmd=None,
+                        hgmd='HGMD_Pro_2023',
                     ),
                     enums=hl.Struct(
                         cadd=hl.Struct(),
@@ -1053,7 +1053,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         primate_ai='v0.2',
                         splice_ai=None,
                         topmed=None,
-                        hgmd=None,
+                        hgmd='HGMD_Pro_2023',
                     ),
                     enums=hl.Struct(
                         cadd=hl.Struct(),
