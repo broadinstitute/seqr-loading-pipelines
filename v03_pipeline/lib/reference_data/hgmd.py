@@ -13,6 +13,6 @@ def download_and_import_hgmd_vcf(
         force=True,
         min_partitions=100,
         skip_invalid_loci=True,
-        contig_recoding=reference_genome.contig_recoding()
+        contig_recoding=reference_genome.contig_recoding(),
     )
     return mt.rows()
