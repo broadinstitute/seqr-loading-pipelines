@@ -344,7 +344,15 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     ),
                     alleles=['A', 'C'],
                     cadd=hl.Struct(PHRED=2),
-                    clinvar=None,
+                    clinvar=hl.Struct(
+                        alleleId=None,
+                        conflictingPathogenicities=None,
+                        goldStars=None,
+                        pathogenicity_id=None,
+                        assertion_ids=None,
+                        submitters=None,
+                        conditions=None,
+                    ),
                     hgmd=hl.Struct(
                         accession='abcdefg',
                         class_id=3,
