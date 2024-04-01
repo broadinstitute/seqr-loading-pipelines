@@ -3,7 +3,9 @@ import functools
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.annotations_utils import get_annotation_dependencies
+from v03_pipeline.lib.annotations.annotations_utils import (
+    get_rdc_annotation_dependencies,
+)
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
@@ -52,8 +54,8 @@ class WriteNewVariantsTable(BaseWriteTask):
     )
 
     @property
-    def annotation_dependencies(self) -> dict[str, hl.Table]:
-        return get_annotation_dependencies(self.dataset_type, self.reference_genome)
+    def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
+        return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -201,7 +203,7 @@ class WriteNewVariantsTable(BaseWriteTask):
         ):
             if rdc.requires_annotation:
                 continue
-            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             ht = ht.join(rdc_ht, 'left')
 
         return ht.annotate_globals(

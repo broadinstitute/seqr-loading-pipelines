@@ -8,14 +8,17 @@ from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
+    lookup_table_path,
     new_variants_table_path,
 )
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTable
 from v03_pipeline.lib.vep import run_vep
 
+GENCODE_RELEASE = 42
 VARIANTS_PER_VEP_PARTITION = 1e3
 
 
@@ -40,6 +43,22 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
     )
+
+    @property
+    def other_annotation_dependencies(self) -> dict[str, hl.Table]:
+        annotation_dependencies = {}
+        if self.dataset_type.has_lookup_table:
+            annotation_dependencies['lookup_ht'] = hl.read_table(
+                lookup_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
+            )
+        if self.dataset_type.has_gencode_mapping:
+            annotation_dependencies['gencode_mapping'] = hl.literal(
+                load_gencode(GENCODE_RELEASE, ''),
+            )
+        return annotation_dependencies
 
     def requires(self) -> list[luigi.Task]:
         return [
@@ -131,7 +150,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **get_fields(
                     new_variants_ht,
                     self.dataset_type.formatting_annotation_fns(self.reference_genome),
-                    **self.annotation_dependencies,
+                    **self.rdc_annotation_dependencies,
+                    **self.other_annotation_dependencies,
                     **self.param_kwargs,
                 ),
             )
@@ -143,7 +163,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 **get_fields(
                     ht,
                     self.dataset_type.lookup_table_annotation_fns,
-                    **self.annotation_dependencies,
+                    **self.other_annotation_dependencies,
                     **self.param_kwargs,
                 ),
             )

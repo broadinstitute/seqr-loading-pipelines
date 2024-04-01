@@ -1,7 +1,9 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.annotations_utils import get_annotation_dependencies
+from v03_pipeline.lib.annotations.annotations_utils import (
+    get_rdc_annotation_dependencies,
+)
 from v03_pipeline.lib.annotations.enums import annotate_enums
 from v03_pipeline.lib.model import (
     Env,
@@ -20,8 +22,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     @property
-    def annotation_dependencies(self) -> dict[str, hl.Table]:
-        return get_annotation_dependencies(self.dataset_type, self.reference_genome)
+    def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
+        return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -85,7 +87,7 @@ class BaseVariantAnnotationsTableTask(BaseUpdateTask):
             self.reference_genome,
             self.dataset_type,
         ):
-            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
             ht = ht.select_globals(
                 paths=hl.Struct(

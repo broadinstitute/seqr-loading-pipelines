@@ -14,7 +14,7 @@ from v03_pipeline.lib.paths import (
 GENCODE_RELEASE = 42
 
 
-def get_annotation_dependencies(
+def get_rdc_annotation_dependencies(
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
 ) -> dict[str, hl.Table]:
@@ -29,16 +29,5 @@ def get_annotation_dependencies(
                 dataset_type,
                 rdc,
             ),
-        )
-    if dataset_type.has_lookup_table:
-        deps['lookup_ht'] = hl.read_table(
-            lookup_table_path(
-                reference_genome,
-                dataset_type,
-            ),
-        )
-    if dataset_type.has_gencode_mapping:
-        deps['gencode_mapping'] = hl.literal(
-            load_gencode(GENCODE_RELEASE, ''),
         )
     return deps
