@@ -3,7 +3,7 @@ import functools
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.annotations_utils import (
+from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
 from v03_pipeline.lib.misc.util import callset_project_pairs

@@ -1,17 +1,13 @@
 import hail as hl
 
-from hail_scripts.utils.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import (
-    lookup_table_path,
     valid_reference_dataset_collection_path,
 )
-
-GENCODE_RELEASE = 42
 
 
 def get_rdc_annotation_dependencies(
