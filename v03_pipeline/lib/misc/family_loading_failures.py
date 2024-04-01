@@ -6,6 +6,8 @@ import numpy as np
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
 from v03_pipeline.lib.model import Sex
 
+RELATEDNESS_TOLERANCE = 0.2
+
 
 def passes_relatedness_check(
     relatedness_check_lookup: dict[tuple[str, str], list],
@@ -22,7 +24,7 @@ def passes_relatedness_check(
     if not coefficients or not np.allclose(
         coefficients,
         relation.coefficients,
-        atol=0.1,
+        atol=,
     ):
         return (
             False,
