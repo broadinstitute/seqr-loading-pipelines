@@ -197,7 +197,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
         'v03_pipeline.lib.tasks.write_imported_callset.validate_expected_contig_frequency',
@@ -534,7 +534,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
@@ -652,7 +652,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_mito_update_vat(
         self,

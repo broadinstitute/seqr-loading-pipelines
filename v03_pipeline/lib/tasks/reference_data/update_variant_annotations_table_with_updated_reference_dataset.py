@@ -74,7 +74,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 continue
 
             rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
+            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             if rdc.requires_annotation:
                 formatting_fn = next(
                     x
@@ -87,7 +87,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     **get_fields(
                         ht,
                         [formatting_fn],
-                        **self.rdc_annotation_dependencies,
+                        **self.annotation_dependencies,
                         **self.param_kwargs,
                     ),
                 )

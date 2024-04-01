@@ -1,35 +1,21 @@
-import functools
 import math
-from itertools import chain
 
 import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.clingen_allele_registry import register_alleles
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
-    lookup_table_path,
-    remapped_and_subsetted_callset_path,
+    new_variants_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
-    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
-)
-from v03_pipeline.lib.tasks.update_lookup_table import (
-    UpdateLookupTableTask,
-)
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
+from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTable
 from v03_pipeline.lib.vep import run_vep
 
-GENCODE_RELEASE = 42
 VARIANTS_PER_VEP_PARTITION = 1e3
 
 
@@ -50,89 +36,27 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    allele_registry_password = luigi.Parameter()
     liftover_ref_path = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
     )
 
-    @property
-    def other_annotation_dependencies(self) -> dict[str, hl.Table]:
-        annotation_dependencies = {}
-        if self.dataset_type.has_lookup_table:
-            annotation_dependencies['lookup_ht'] = hl.read_table(
-                lookup_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            )
-
-        if self.dataset_type.has_gencode_mapping:
-            annotation_dependencies['gencode_mapping'] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ''),
-            )
-        return annotation_dependencies
-
     def requires(self) -> list[luigi.Task]:
-        if Env.REFERENCE_DATA_AUTO_UPDATE:
-            upstream_table_tasks: list[luigi.Task] = [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                ),
-            ]
-        else:
-            upstream_table_tasks: list[luigi.Task] = []
-        if self.dataset_type.has_lookup_table:
-            # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
-            upstream_table_tasks.extend(
-                [
-                    UpdateLookupTableTask(
-                        self.reference_genome,
-                        self.dataset_type,
-                        self.sample_type,
-                        self.callset_paths,
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                        self.ignore_missing_samples_when_subsetting,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                    ),
-                ],
-            )
-        else:
-            upstream_table_tasks.extend(
-                [
-                    WriteRemappedAndSubsettedCallsetTask(
-                        self.reference_genome,
-                        self.dataset_type,
-                        self.sample_type,
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                        self.ignore_missing_samples_when_subsetting,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                    )
-                    for (
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                    ) in callset_project_pairs(
-                        self.callset_paths,
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                    )
-                ],
-            )
         return [
             *super().requires(),
-            *upstream_table_tasks,
+            WriteNewVariantsTable(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                self.callset_paths,
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+                self.ignore_missing_samples_when_subsetting,
+                self.ignore_missing_samples_when_remapping,
+                self.validate,
+                self.liftover_ref_path,
+            ),
         ]
 
     def complete(self) -> bool:
@@ -164,102 +88,67 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        callset_hts = [
-            hl.read_matrix_table(
-                remapped_and_subsetted_callset_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    callset_path,
-                    project_guid,
-                ),
-            ).rows()
-            for (callset_path, project_guid, _, _) in callset_project_pairs(
-                self.callset_paths,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-            )
-        ]
-
-        # Drop any fields potentially unshared/unused by the annotations.
-        for i, callset_ht in enumerate(callset_hts):
-            for row_field in self.dataset_type.optional_row_fields:
-                if hasattr(callset_ht, row_field):
-                    callset_hts[i] = callset_ht.drop(row_field)
-
-        callset_ht = functools.reduce(
-            (lambda ht1, ht2: ht1.union(ht2, unify=True)),
-            callset_hts,
+        new_variants_ht = hl.read_table(
+            new_variants_table_path(
+                self.reference_genome,
+                self.dataset_type,
+            ),
         )
-        callset_ht = callset_ht.distinct()
+        new_variants_count = new_variants_ht.count()
 
-        # 1) Get new rows and annotate with vep
+        # Get new rows and annotate with vep.
         # Note about the repartition: our work here is cpu/memory bound and
         # proportional to the number of new variants.  Our default partitioning
         # will under-partition in that regard, so we split up our work
         # with a partitioning scheme local to this task.
-        new_variants_ht = callset_ht.anti_join(ht)
-        new_variants_count = new_variants_ht.count()
-        new_variants_ht = new_variants_ht.repartition(
-            constrain(
-                math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
-                10,
-                10000,
-            ),
-        )
-        new_variants_ht = run_vep(
-            new_variants_ht,
-            self.dataset_type,
-            self.reference_genome,
-        )
-
-        # 2) Select down to the formatting annotations fields and
-        # any reference dataset collection annotations.
-        new_variants_ht = new_variants_ht.select(
-            **get_fields(
+        if new_variants_count > 0:
+            new_variants_ht = new_variants_ht.repartition(
+                constrain(
+                    math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+                    10,
+                    10000,
+                ),
+            )
+            new_variants_ht = run_vep(
                 new_variants_ht,
-                self.dataset_type.formatting_annotation_fns(self.reference_genome),
-                **self.rdc_annotation_dependencies,
-                **self.other_annotation_dependencies,
-                **self.param_kwargs,
-            ),
-        )
+                self.dataset_type,
+                self.reference_genome,
+            )
 
-        # 3) Join against the reference dataset collections that are not "annotated".
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            if rdc.requires_annotation:
-                continue
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+            # Select down to the formatting annotations fields and
+            # any reference dataset collection annotations.
+            rdc_annotations = [
+                annotation
+                for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                    self.reference_genome,
+                    self.dataset_type,
+                )
+                for annotation in rdc.datasets(self.dataset_type)
+                if not rdc.requires_annotation
+            ]
+            new_variants_ht = new_variants_ht.select(
+                *rdc_annotations,
+                **get_fields(
+                    new_variants_ht,
+                    self.dataset_type.formatting_annotation_fns(self.reference_genome),
+                    **self.annotation_dependencies,
+                    **self.param_kwargs,
+                ),
+            )
 
-        # 4) Register the new variant alleles to the Clingen Allele Registry
-        hgvs_expressions = list(
-            chain.from_iterable(new_variants_ht.info.CLNHGVS.collect()),
-        )
-        register_alleles(
-            hgvs_expressions,
-            'some seqr username constant',
-            self.allele_registry_password,
-        )
-
-        # 5) Union with the existing variant annotations table
-        # and annotate with the lookup table.
+        # Union with the new variants table and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         if self.dataset_type.has_lookup_table:
             ht = ht.annotate(
                 **get_fields(
                     ht,
                     self.dataset_type.lookup_table_annotation_fns,
-                    **self.rdc_annotation_dependencies,
-                    **self.other_annotation_dependencies,
+                    **self.annotation_dependencies,
                     **self.param_kwargs,
                 ),
             )
 
-        # 6) Fix up the globals and mark the table as updated with these callset/project pairs.
+        # Fix up the globals and mark the table as updated with these callset/project pairs.
         ht = self.annotate_globals(ht)
         return ht.annotate_globals(
             updates=ht.updates.union(
