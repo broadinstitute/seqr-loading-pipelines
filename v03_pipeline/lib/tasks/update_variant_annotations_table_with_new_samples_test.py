@@ -138,7 +138,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_missing_pedigree(
         self,
@@ -164,7 +164,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_missing_interval_reference(
         self,
@@ -916,7 +916,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
+        'v03_pipeline.lib.annotations.annotations_utils.load_gencode',
     )
     def test_sv_update_vat(
         self,
