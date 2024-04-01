@@ -31,7 +31,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 VARIANTS_PER_VEP_PARTITION = 1e3
 
 
-class WriteNewVariantsTable(BaseWriteTask):
+class WriteNewVariantsTableTask(BaseWriteTask):
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -66,21 +66,22 @@ class WriteNewVariantsTable(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        upstream_table_tasks = [
-            BaseVariantAnnotationsTableTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-            ),
-        ]
         if Env.REFERENCE_DATA_AUTO_UPDATE:
-            upstream_table_tasks.append(
+            upstream_table_tasks = [
                 UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
                 ),
-            )
+            ]
+        else:
+            upstream_table_tasks = [
+                BaseVariantAnnotationsTableTask(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                ),
+            ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             upstream_table_tasks.extend(

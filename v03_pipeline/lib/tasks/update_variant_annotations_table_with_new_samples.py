@@ -15,7 +15,7 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencod
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTable
+from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 from v03_pipeline.lib.vep import run_vep
 
 GENCODE_RELEASE = 42
@@ -63,7 +63,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
-            WriteNewVariantsTable(
+            WriteNewVariantsTableTask(
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
