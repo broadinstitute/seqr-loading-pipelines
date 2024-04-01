@@ -113,48 +113,47 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
                 self.dataset_type,
             ),
         )
-        new_variants_count = new_variants_ht.count()
 
         # Get new rows and annotate with vep.
         # Note about the repartition: our work here is cpu/memory bound and
         # proportional to the number of new variants.  Our default partitioning
         # will under-partition in that regard, so we split up our work
         # with a partitioning scheme local to this task.
-        if new_variants_count > 0:
-            new_variants_ht = new_variants_ht.repartition(
-                constrain(
-                    math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
-                    10,
-                    10000,
-                ),
-            )
-            new_variants_ht = run_vep(
-                new_variants_ht,
-                self.dataset_type,
-                self.reference_genome,
-            )
+        new_variants_count = new_variants_ht.count()
+        new_variants_ht = new_variants_ht.repartition(
+            constrain(
+                math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+                10,
+                10000,
+            ),
+        )
+        new_variants_ht = run_vep(
+            new_variants_ht,
+            self.dataset_type,
+            self.reference_genome,
+        )
 
-            # Select down to the formatting annotations fields and
-            # any reference dataset collection annotations.
-            rdc_annotations = [
-                annotation
-                for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-                for annotation in rdc.datasets(self.dataset_type)
-                if not rdc.requires_annotation
-            ]
-            new_variants_ht = new_variants_ht.select(
-                *rdc_annotations,
-                **get_fields(
-                    new_variants_ht,
-                    self.dataset_type.formatting_annotation_fns(self.reference_genome),
-                    **self.rdc_annotation_dependencies,
-                    **self.other_annotation_dependencies,
-                    **self.param_kwargs,
-                ),
+        # Select down to the formatting annotations fields and
+        # any reference dataset collection annotations.
+        rdc_annotations = [
+            annotation
+            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                self.reference_genome,
+                self.dataset_type,
             )
+            for annotation in rdc.datasets(self.dataset_type)
+            if not rdc.requires_annotation
+        ]
+        new_variants_ht = new_variants_ht.select(
+            *rdc_annotations,
+            **get_fields(
+                new_variants_ht,
+                self.dataset_type.formatting_annotation_fns(self.reference_genome),
+                **self.rdc_annotation_dependencies,
+                **self.other_annotation_dependencies,
+                **self.param_kwargs,
+            ),
+        )
 
         # Union with the new variants table and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
