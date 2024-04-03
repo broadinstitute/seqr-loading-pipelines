@@ -15,7 +15,6 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
@@ -27,9 +26,11 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
-    variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
+from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
+    BaseVariantAnnotationsTableTask,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -75,31 +76,6 @@ GENE_ID_MAPPING = {
 }
 
 TEST_RUN_ID = 'manual__2024-04-03'
-
-
-def create_blank_annotations_table(
-    dataset_type: DatasetType,
-    reference_genome: ReferenceGenome,
-):
-    key_type = dataset_type.table_key_type(reference_genome)
-    ht = hl.Table.parallelize(
-        [],
-        key_type,
-        key=key_type.fields,
-        globals=hl.Struct(
-            paths=hl.Struct(),
-            versions=hl.Struct(),
-            enums=hl.Struct(),
-            updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
-        ),
-    )
-    write(
-        ht,
-        variant_annotations_table_path(
-            reference_genome,
-            dataset_type,
-        ),
-    )
 
 
 @patch(
@@ -245,9 +221,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.side_effect = create_blank_annotations_table(
-            dataset_type=DatasetType.SNV_INDEL,
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
@@ -581,9 +558,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.side_effect = create_blank_annotations_table(
-            dataset_type=DatasetType.SNV_INDEL,
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
@@ -641,9 +619,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.side_effect = create_blank_annotations_table(
-            dataset_type=DatasetType.SNV_INDEL,
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
         )
         shutil.rmtree(
             valid_reference_dataset_collection_path(
@@ -703,9 +682,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.side_effect = create_blank_annotations_table(
-            dataset_type=DatasetType.MITO,
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.MITOr,
+            sample_type=SampleType.WGS,
         )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
