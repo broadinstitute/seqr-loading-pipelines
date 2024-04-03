@@ -684,7 +684,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.MITOr,
+            dataset_type=DatasetType.MITO,
             sample_type=SampleType.WGS,
         )
         worker = luigi.worker.Worker()
