@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class UpdateLookupTableTask(BaseUpdateTask):
-    callset_paths = luigi.Parameter()
+    callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()

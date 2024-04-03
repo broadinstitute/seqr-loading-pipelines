@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
     Env,
@@ -25,12 +26,17 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
     UpdatedReferenceDatasetCollectionTask,
 )
 
+logger = get_logger(__name__)
+
 
 class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
     crdq = luigi.EnumParameter(enum=CachedReferenceDatasetQuery)
 
     def complete(self) -> bool:
         if not super().complete():
+            logger.info(
+                f'UpdatedCachedReferenceDatasetQuery: {self.output().path} does not exist',
+            )
             return False
 
         datasets_to_check = [self.crdq.dataset(self.dataset_type)]

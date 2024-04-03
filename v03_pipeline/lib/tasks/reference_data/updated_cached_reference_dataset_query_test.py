@@ -70,6 +70,8 @@ MOCK_CONFIG = {
                         CLNSIGCONF=hl.tarray(hl.tstr),
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
+                    submitters=hl.tarray(hl.tstr),
+                    conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
