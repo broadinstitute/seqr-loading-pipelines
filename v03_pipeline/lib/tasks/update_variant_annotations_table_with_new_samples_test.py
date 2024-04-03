@@ -74,6 +74,8 @@ GENE_ID_MAPPING = {
     'XPR1': 'ENSG00000143324',
 }
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 
 def create_blank_annotations_table(
     dataset_type: DatasetType,
@@ -183,6 +185,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=['bad_pedigree'],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -216,6 +219,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -296,6 +300,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=True,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
         worker.run()
@@ -345,6 +350,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_4],
             validate=True,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_4)
         worker.run()
@@ -592,6 +598,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
         worker.run()
@@ -659,6 +666,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
         worker.run()
@@ -711,6 +719,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)
@@ -954,7 +963,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode',
     )
     def test_sv_update_vat(
         self,
@@ -975,6 +984,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)
@@ -1536,6 +1546,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)

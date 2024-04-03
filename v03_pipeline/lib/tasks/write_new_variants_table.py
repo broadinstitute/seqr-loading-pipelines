@@ -1,11 +1,14 @@
 import functools
+import math
 
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
+from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
@@ -13,6 +16,7 @@ from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     variant_annotations_table_path,
 )
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
     BaseVariantAnnotationsTableTask,
 )
@@ -27,8 +31,10 @@ from v03_pipeline.lib.tasks.update_lookup_table import (
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
+from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
+GENCODE_RELEASE = 42
 
 
 class WriteNewVariantsTableTask(BaseWriteTask):
@@ -52,16 +58,23 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
     )
+    run_id = luigi.Parameter()
 
     @property
-    def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
-        return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
+    def annotation_dependencies(self) -> dict[str, hl.Table]:
+        deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
+        if self.dataset_type.has_gencode_mapping:
+            deps['gencode_mapping'] = hl.literal(
+                load_gencode(GENCODE_RELEASE, ''),
+            )
+        return deps
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             new_variants_table_path(
                 self.reference_genome,
                 self.dataset_type,
+                self.run_id,
             ),
         )
 
@@ -188,26 +201,67 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
         callset_ht = callset_ht.distinct()
 
-        # Identify new variants.
+        # 1) Identify new variants.
         annotations_ht = hl.read_table(
             variant_annotations_table_path(
                 self.reference_genome,
                 self.dataset_type,
             ),
         )
-        ht = callset_ht.anti_join(annotations_ht)
+        new_variants_ht = callset_ht.anti_join(annotations_ht)
 
-        # Join new variants against the reference dataset collections that are not "annotated".
+        # 2) Join new variants against the reference dataset collections that are not "annotated".
         for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
         ):
             if rdc.requires_annotation:
                 continue
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-            ht = ht.join(rdc_ht, 'left')
+            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
+            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        return ht.annotate_globals(
+        # 3) TODO: Send to clingen allele registry.
+
+        # 4) Annotate new variants with VEP.
+        # Note about the repartition: our work here is cpu/memory bound and
+        # proportional to the number of new variants.  Our default partitioning
+        # will under-partition in that regard, so we split up our work
+        # with a partitioning scheme local to this task.
+        new_variants_count = new_variants_ht.count()
+        new_variants_ht = new_variants_ht.repartition(
+            constrain(
+                math.ceil(new_variants_count / VARIANTS_PER_VEP_PARTITION),
+                10,
+                10000,
+            ),
+        )
+        new_variants_ht = run_vep(
+            new_variants_ht,
+            self.dataset_type,
+            self.reference_genome,
+        )
+
+        # 5) Select down to the formatting annotations fields and any reference dataset collection annotations.
+        rdc_annotations = [
+            annotation
+            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                self.reference_genome,
+                self.dataset_type,
+            )
+            for annotation in rdc.datasets(self.dataset_type)
+            if not rdc.requires_annotation
+        ]
+        new_variants_ht = new_variants_ht.select(
+            *rdc_annotations,
+            **get_fields(
+                new_variants_ht,
+                self.dataset_type.formatting_annotation_fns(self.reference_genome),
+                **self.annotation_dependencies,
+                **self.param_kwargs,
+            ),
+        )
+
+        return new_variants_ht.annotate_globals(
             updates={
                 hl.Struct(callset=callset_path, project_guid=project_guid)
                 for (

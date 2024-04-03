@@ -241,12 +241,13 @@ def variant_annotations_table_path(
 def new_variants_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    run_id: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+        runs_path(
             reference_genome,
             dataset_type,
         ),
+        run_id,
         'new_variants.ht',
     )
