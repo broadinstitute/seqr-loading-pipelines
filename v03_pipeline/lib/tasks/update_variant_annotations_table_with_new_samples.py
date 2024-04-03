@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.util import callset_project_pairs
+from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
@@ -95,22 +95,34 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         # Union with the new variants table and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
         if self.dataset_type.has_lookup_table:
-            lookup_annotation_dependencies = {
-                'lookup_ht': hl.read_table(
-                    lookup_table_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                    ),
-                ),
-            }
-            ht = ht.annotate(
+            callset_ht = get_callset_ht(
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_paths,
+                self.project_guids,
+                self.project_remap_paths,
+                self.project_pedigree_paths,
+            )
+            # new_variants_ht consists of variants present in the new callset, fully annotated,
+            # but NOT present in the existing annotations table.
+            # callset_variants_ht consists of variants present in the new callset, fully annotated,
+            # and either present or not present in the existing annotations table.
+            callset_variants_ht = ht.semi_join(callset_ht)
+            ht = ht.anti_join(callset_ht)
+            callset_variants_ht = callset_variants_ht.annotate(
                 **get_fields(
-                    ht,
+                    callset_variants_ht,
                     self.dataset_type.lookup_table_annotation_fns,
-                    **lookup_annotation_dependencies,
+                    lookup_ht=hl.read_table(
+                        lookup_table_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                        ),
+                    ),
                     **self.param_kwargs,
                 ),
             )
+            ht = ht.union(callset_variants_ht, unify=True)
 
         # Fix up the globals and mark the table as updated with these callset/project pairs.
         ht = self.annotate_globals(ht)

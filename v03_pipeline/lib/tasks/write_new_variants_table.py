@@ -1,4 +1,3 @@
-import functools
 import math
 
 import hail as hl
@@ -8,12 +7,11 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
+from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
-    remapped_and_subsetted_callset_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
@@ -172,34 +170,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
     def create_table(self) -> hl.Table:
-        callset_hts = [
-            hl.read_matrix_table(
-                remapped_and_subsetted_callset_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    callset_path,
-                    project_guid,
-                ),
-            ).rows()
-            for (callset_path, project_guid, _, _) in callset_project_pairs(
-                self.callset_paths,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-            )
-        ]
-
-        # Drop any fields potentially unshared/unused by the annotations.
-        for i, callset_ht in enumerate(callset_hts):
-            for row_field in self.dataset_type.optional_row_fields:
-                if hasattr(callset_ht, row_field):
-                    callset_hts[i] = callset_ht.drop(row_field)
-
-        callset_ht = functools.reduce(
-            (lambda ht1, ht2: ht1.union(ht2, unify=True)),
-            callset_hts,
+        callset_ht = get_callset_ht(
+            self.reference_genome,
+            self.dataset_type,
+            self.callset_paths,
+            self.project_guids,
+            self.project_remap_paths,
+            self.project_pedigree_paths,
         )
-        callset_ht = callset_ht.distinct()
 
         # 1) Identify new variants.
         annotations_ht = hl.read_table(
