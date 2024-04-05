@@ -3,7 +3,7 @@ import json
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.util import callset_project_pairs
+from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_hail_table_task import BaseHailTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -47,7 +47,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
     def complete(self) -> bool:
         return GCSorLocalTarget(self.output().path).exists()
 
-    def requires(self) -> luigi.Task:
+    def requires(self) -> list[luigi.Task]:
         return [
             WriteRemappedAndSubsettedCallsetTask(
                 self.reference_genome,

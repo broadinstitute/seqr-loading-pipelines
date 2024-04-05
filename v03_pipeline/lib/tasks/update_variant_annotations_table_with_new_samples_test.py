@@ -28,6 +28,9 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
+from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
+    BaseVariantAnnotationsTableTask,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
@@ -53,7 +56,6 @@ TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
 
-
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
     'PLEKHG4B': 'ENSG00000153404',
@@ -72,6 +74,8 @@ GENE_ID_MAPPING = {
     'STX6': 'ENSG00000135823',
     'XPR1': 'ENSG00000143324',
 }
+
+TEST_RUN_ID = 'manual__2024-04-03'
 
 
 @patch(
@@ -138,7 +142,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_missing_pedigree(
         self,
@@ -157,6 +161,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=['bad_pedigree'],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -164,7 +169,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_missing_interval_reference(
         self,
@@ -190,6 +195,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
         worker.add(uvatwns_task)
@@ -197,7 +203,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
         'v03_pipeline.lib.tasks.write_imported_callset.validate_expected_contig_frequency',
@@ -215,7 +221,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+        )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
         mock_standard_contigs.return_value = {'chr1'}
@@ -267,6 +277,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=True,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
         worker.run()
@@ -316,6 +327,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_4],
             validate=True,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_4)
         worker.run()
@@ -534,7 +546,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
@@ -546,7 +558,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
+            reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+        )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
@@ -560,6 +576,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
         worker.run()
@@ -588,7 +605,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(hasattr(ht, 'rg37_locus'))
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
@@ -602,7 +619,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+        )
         shutil.rmtree(
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
@@ -624,6 +645,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_pedigree_paths=[TEST_PEDIGREE_3],
             validate=False,
             liftover_ref_path=TEST_LIFTOVER,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
         worker.run()
@@ -652,7 +674,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
+        'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_mito_update_vat(
         self,
@@ -660,7 +682,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rdc_task.return_value = BaseVariantAnnotationsTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
+        )
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -673,6 +699,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)
@@ -916,7 +943,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples.load_gencode',
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode',
     )
     def test_sv_update_vat(
         self,
@@ -937,6 +964,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)
@@ -1498,6 +1526,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
+                run_id=TEST_RUN_ID,
             )
         )
         worker.add(update_variant_annotations_task)

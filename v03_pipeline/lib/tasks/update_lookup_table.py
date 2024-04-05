@@ -1,12 +1,12 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.misc.util import callset_project_pairs
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
 from v03_pipeline.lib.paths import lookup_table_path
 from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
