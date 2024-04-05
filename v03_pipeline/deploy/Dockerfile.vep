@@ -11,4 +11,3 @@ RUN cpanm DBD::SQLite
 COPY --from=build /usr/local/bin/samtools /usr/local/bin/samtools
 # semantics of mv vs COPY are different such that we don't need the '*' when moving files.
 COPY --from=build /loftee/ /plugins
-RUN echo hi
