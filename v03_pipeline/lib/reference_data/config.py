@@ -244,6 +244,7 @@ CONFIG = {
     'hgmd': {
         '37': {
             'custom_import': download_and_import_hgmd_vcf,
+            'version': 'HGMD_Pro_2023',
             'source_path': 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
@@ -259,6 +260,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': download_and_import_hgmd_vcf,
+            'version': 'HGMD_Pro_2023',
             'source_path': 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
             'select': {'accession': 'rsid', 'class': 'info.CLASS'},
             'enum_select': {
@@ -379,12 +381,14 @@ CONFIG = {
         '37': {
             'version': 'v2',
             'custom_import': import_matrix_table,
-            'source_path': 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
+            # Note: copied from 'gs://gnomad/sample_qc/mt/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt'
+            'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh37/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
             'version': 'v3.1',
             'custom_import': import_matrix_table,
-            'source_path': 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
+            # Note: copied from 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
+            'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh38/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
         },
     },
     'exac': {

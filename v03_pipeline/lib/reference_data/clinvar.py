@@ -41,6 +41,7 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
 CLINVAR_SUBMISSION_SUMMARY_URL = (
     'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
 )
+MIN_HT_PARTITIONS = 2000
 logger = get_logger(__name__)
 
 
@@ -127,7 +128,7 @@ def download_and_import_latest_clinvar_vcf(
             drop_samples=True,
             skip_invalid_loci=True,
             contig_recoding=reference_genome.contig_recoding(include_mt=True),
-            min_partitions=2000,
+            min_partitions=MIN_HT_PARTITIONS,
             force_bgz=True,
         )
         mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
@@ -177,8 +178,13 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
         delete=False,
     ) as tmp_file:
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
+        gcs_tmp_file_name = os.path.join(
+            Env.HAIL_TMPDIR,
+            os.path.basename(tmp_file.name),
+        )
+        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         return hl.import_table(
-            tmp_file.name,
+            gcs_tmp_file_name,
             force=True,
             filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
             types={
@@ -187,5 +193,5 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
                 'ReportedPhenotypeInfo': hl.tstr,
             },
             missing='-',
-            min_partitions=3,  # recommended 2-4 partitions per core
+            min_partitions=MIN_HT_PARTITIONS,
         )
