@@ -1,4 +1,6 @@
 import math
+import tempfile
+from itertools import chain
 
 import hail as hl
 import luigi
@@ -7,6 +9,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
+from v03_pipeline.lib.misc.allele_registry import register_alleles
 from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
@@ -198,9 +201,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        # 3) TODO: Send to clingen allele registry.
-
-        # 4) Annotate new variants with VEP.
+        # 3) Annotate new variants with VEP.
         # Note about the repartition: our work here is cpu/memory bound and
         # proportional to the number of new variants.  Our default partitioning
         # will under-partition in that regard, so we split up our work
@@ -238,6 +239,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 **self.param_kwargs,
             ),
         )
+        # hl.Table.write(new_variants_ht, 'new_variants.ht', overwrite=True)
 
         return new_variants_ht.annotate_globals(
             updates={

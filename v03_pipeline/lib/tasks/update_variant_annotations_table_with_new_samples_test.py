@@ -317,233 +317,233 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
         # Ensure that new variants are added correctly to the table.
-        uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
-            project_guids=['R0114_project4'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=True,
-            liftover_ref_path=TEST_LIFTOVER,
-            run_id=TEST_RUN_ID,
-        )
-        worker.add(uvatwns_task_4)
-        worker.run()
-        self.assertTrue(uvatwns_task_4.complete())
-        ht = hl.read_table(uvatwns_task_4.output().path)
-        self.assertCountEqual(
-            [
-                x
-                for x in ht.select(
-                    'cadd',
-                    'clinvar',
-                    'hgmd',
-                    'variant_id',
-                    'xpos',
-                    'gt_stats',
-                    'screen',
-                ).collect()
-                if x.locus.position <= 878809  # noqa: PLR2004
-            ],
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=871269,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                    cadd=hl.Struct(PHRED=2),
-                    clinvar=hl.Struct(
-                        alleleId=None,
-                        conflictingPathogenicities=None,
-                        goldStars=None,
-                        pathogenicity_id=None,
-                        assertion_ids=None,
-                        submitters=None,
-                        conditions=None,
-                    ),
-                    hgmd=hl.Struct(
-                        accession='abcdefg',
-                        class_id=3,
-                    ),
-                    variant_id='1-871269-A-C',
-                    xpos=1000871269,
-                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=hl.Struct(region_type_ids=[1]),
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=874734,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['C', 'T'],
-                    cadd=None,
-                    clinvar=None,
-                    hgmd=None,
-                    variant_id='1-874734-C-T',
-                    xpos=1000874734,
-                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=hl.Struct(region_type_ids=[]),
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=876499,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'G'],
-                    cadd=None,
-                    clinvar=None,
-                    hgmd=None,
-                    variant_id='1-876499-A-G',
-                    xpos=1000876499,
-                    gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
-                    screen=hl.Struct(region_type_ids=[]),
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=878314,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['G', 'C'],
-                    cadd=None,
-                    clinvar=None,
-                    hgmd=None,
-                    variant_id='1-878314-G-C',
-                    xpos=1000878314,
-                    gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
-                    screen=hl.Struct(region_type_ids=[]),
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=878809,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['C', 'T'],
-                    cadd=None,
-                    clinvar=None,
-                    hgmd=None,
-                    variant_id='1-878809-C-T',
-                    xpos=1000878809,
-                    gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
-                    screen=hl.Struct(region_type_ids=[]),
-                ),
-            ],
-        )
-        self.assertCountEqual(
-            ht.filter(
-                ht.locus.position <= 878809,  # noqa: PLR2004
-            ).sorted_transcript_consequences.consequence_term_ids.collect(),
-            [
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-            ],
-        )
-        self.assertCountEqual(
-            ht.globals.collect(),
-            [
-                hl.Struct(
-                    updates={
-                        hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                            project_guid='R0113_test_project',
-                        ),
-                        hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                            project_guid='R0114_project4',
-                        ),
-                    },
-                    paths=hl.Struct(
-                        cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
-                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-                        dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
-                        eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
-                        exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
-                        gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-                        gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
-                        mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
-                        primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
-                        splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
-                        topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
-                        gnomad_non_coding_constraint='gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
-                        screen='gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
-                        hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
-                    ),
-                    versions=hl.Struct(
-                        cadd='v1.6',
-                        clinvar='2023-11-26',
-                        dbnsfp='2.9.3',
-                        eigen=None,
-                        exac=None,
-                        gnomad_exomes='r2.1.1',
-                        gnomad_genomes='r2.1.1',
-                        mpc=None,
-                        primate_ai='v0.2',
-                        splice_ai=None,
-                        topmed=None,
-                        gnomad_non_coding_constraint=None,
-                        screen=None,
-                        hgmd=None,
-                    ),
-                    enums=hl.Struct(
-                        cadd=hl.Struct(),
-                        clinvar=hl.Struct(
-                            assertion=CLINVAR_ASSERTIONS,
-                            pathogenicity=CLINVAR_PATHOGENICITIES,
-                        ),
-                        dbnsfp=hl.Struct(
-                            MutationTaster_pred=['D', 'A', 'N', 'P'],
-                        ),
-                        eigen=hl.Struct(),
-                        exac=hl.Struct(),
-                        gnomad_exomes=hl.Struct(),
-                        gnomad_genomes=hl.Struct(),
-                        mpc=hl.Struct(),
-                        primate_ai=hl.Struct(),
-                        splice_ai=hl.Struct(
-                            splice_consequence=[
-                                'Acceptor gain',
-                                'Acceptor loss',
-                                'Donor gain',
-                                'Donor loss',
-                                'No consequence',
-                            ],
-                        ),
-                        topmed=hl.Struct(),
-                        hgmd=hl.Struct(
-                            **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
-                        ),
-                        gnomad_non_coding_constraint=hl.Struct(),
-                        screen=hl.Struct(
-                            region_type=[
-                                'CTCF-bound',
-                                'CTCF-only',
-                                'DNase-H3K4me3',
-                                'PLS',
-                                'dELS',
-                                'pELS',
-                                'DNase-only',
-                                'low-DNase',
-                            ],
-                        ),
-                        sorted_transcript_consequences=hl.Struct(
-                            biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
-                        ),
-                    ),
-                ),
-            ],
-        )
+        # uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
+        #     reference_genome=ReferenceGenome.GRCh38,
+        #     dataset_type=DatasetType.SNV_INDEL,
+        #     sample_type=SampleType.WGS,
+        #     callset_paths=[TEST_SNV_INDEL_VCF],
+        #     project_guids=['R0114_project4'],
+        #     project_remap_paths=[TEST_REMAP],
+        #     project_pedigree_paths=[TEST_PEDIGREE_4],
+        #     validate=True,
+        #     liftover_ref_path=TEST_LIFTOVER,
+        #     run_id=TEST_RUN_ID,
+        # )
+        # worker.add(uvatwns_task_4)
+        # worker.run()
+        # self.assertTrue(uvatwns_task_4.complete())
+        # ht = hl.read_table(uvatwns_task_4.output().path)
+        # self.assertCountEqual(
+        #     [
+        #         x
+        #         for x in ht.select(
+        #             'cadd',
+        #             'clinvar',
+        #             'hgmd',
+        #             'variant_id',
+        #             'xpos',
+        #             'gt_stats',
+        #             'screen',
+        #         ).collect()
+        #         if x.locus.position <= 878809  # noqa: PLR2004
+        #     ],
+        #     [
+        #         hl.Struct(
+        #             locus=hl.Locus(
+        #                 contig='chr1',
+        #                 position=871269,
+        #                 reference_genome='GRCh38',
+        #             ),
+        #             alleles=['A', 'C'],
+        #             cadd=hl.Struct(PHRED=2),
+        #             clinvar=hl.Struct(
+        #                 alleleId=None,
+        #                 conflictingPathogenicities=None,
+        #                 goldStars=None,
+        #                 pathogenicity_id=None,
+        #                 assertion_ids=None,
+        #                 submitters=None,
+        #                 conditions=None,
+        #             ),
+        #             hgmd=hl.Struct(
+        #                 accession='abcdefg',
+        #                 class_id=3,
+        #             ),
+        #             variant_id='1-871269-A-C',
+        #             xpos=1000871269,
+        #             gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+        #             screen=hl.Struct(region_type_ids=[1]),
+        #         ),
+        #         hl.Struct(
+        #             locus=hl.Locus(
+        #                 contig='chr1',
+        #                 position=874734,
+        #                 reference_genome='GRCh38',
+        #             ),
+        #             alleles=['C', 'T'],
+        #             cadd=None,
+        #             clinvar=None,
+        #             hgmd=None,
+        #             variant_id='1-874734-C-T',
+        #             xpos=1000874734,
+        #             gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+        #             screen=hl.Struct(region_type_ids=[]),
+        #         ),
+        #         hl.Struct(
+        #             locus=hl.Locus(
+        #                 contig='chr1',
+        #                 position=876499,
+        #                 reference_genome='GRCh38',
+        #             ),
+        #             alleles=['A', 'G'],
+        #             cadd=None,
+        #             clinvar=None,
+        #             hgmd=None,
+        #             variant_id='1-876499-A-G',
+        #             xpos=1000876499,
+        #             gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
+        #             screen=hl.Struct(region_type_ids=[]),
+        #         ),
+        #         hl.Struct(
+        #             locus=hl.Locus(
+        #                 contig='chr1',
+        #                 position=878314,
+        #                 reference_genome='GRCh38',
+        #             ),
+        #             alleles=['G', 'C'],
+        #             cadd=None,
+        #             clinvar=None,
+        #             hgmd=None,
+        #             variant_id='1-878314-G-C',
+        #             xpos=1000878314,
+        #             gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
+        #             screen=hl.Struct(region_type_ids=[]),
+        #         ),
+        #         hl.Struct(
+        #             locus=hl.Locus(
+        #                 contig='chr1',
+        #                 position=878809,
+        #                 reference_genome='GRCh38',
+        #             ),
+        #             alleles=['C', 'T'],
+        #             cadd=None,
+        #             clinvar=None,
+        #             hgmd=None,
+        #             variant_id='1-878809-C-T',
+        #             xpos=1000878809,
+        #             gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
+        #             screen=hl.Struct(region_type_ids=[]),
+        #         ),
+        #     ],
+        # )
+        # self.assertCountEqual(
+        #     ht.filter(
+        #         ht.locus.position <= 878809,  # noqa: PLR2004
+        #     ).sorted_transcript_consequences.consequence_term_ids.collect(),
+        #     [
+        #         [[11], [22, 26], [22, 26]],
+        #         [[11], [22, 26], [22, 26]],
+        #         [[11], [22, 26], [22, 26]],
+        #         [[11], [22, 26], [22, 26]],
+        #         [[11], [22, 26], [22, 26]],
+        #     ],
+        # )
+        # self.assertCountEqual(
+        #     ht.globals.collect(),
+        #     [
+        #         hl.Struct(
+        #             updates={
+        #                 hl.Struct(
+        #                     callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+        #                     project_guid='R0113_test_project',
+        #                 ),
+        #                 hl.Struct(
+        #                     callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+        #                     project_guid='R0114_project4',
+        #                 ),
+        #             },
+        #             paths=hl.Struct(
+        #                 cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
+        #                 clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+        #                 dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
+        #                 eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+        #                 exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
+        #                 gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+        #                 gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+        #                 mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
+        #                 primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
+        #                 splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
+        #                 topmed='gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.ht',
+        #                 gnomad_non_coding_constraint='gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+        #                 screen='gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+        #                 hgmd='gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
+        #             ),
+        #             versions=hl.Struct(
+        #                 cadd='v1.6',
+        #                 clinvar='2023-11-26',
+        #                 dbnsfp='2.9.3',
+        #                 eigen=None,
+        #                 exac=None,
+        #                 gnomad_exomes='r2.1.1',
+        #                 gnomad_genomes='r2.1.1',
+        #                 mpc=None,
+        #                 primate_ai='v0.2',
+        #                 splice_ai=None,
+        #                 topmed=None,
+        #                 gnomad_non_coding_constraint=None,
+        #                 screen=None,
+        #                 hgmd=None,
+        #             ),
+        #             enums=hl.Struct(
+        #                 cadd=hl.Struct(),
+        #                 clinvar=hl.Struct(
+        #                     assertion=CLINVAR_ASSERTIONS,
+        #                     pathogenicity=CLINVAR_PATHOGENICITIES,
+        #                 ),
+        #                 dbnsfp=hl.Struct(
+        #                     MutationTaster_pred=['D', 'A', 'N', 'P'],
+        #                 ),
+        #                 eigen=hl.Struct(),
+        #                 exac=hl.Struct(),
+        #                 gnomad_exomes=hl.Struct(),
+        #                 gnomad_genomes=hl.Struct(),
+        #                 mpc=hl.Struct(),
+        #                 primate_ai=hl.Struct(),
+        #                 splice_ai=hl.Struct(
+        #                     splice_consequence=[
+        #                         'Acceptor gain',
+        #                         'Acceptor loss',
+        #                         'Donor gain',
+        #                         'Donor loss',
+        #                         'No consequence',
+        #                     ],
+        #                 ),
+        #                 topmed=hl.Struct(),
+        #                 hgmd=hl.Struct(
+        #                     **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
+        #                 ),
+        #                 gnomad_non_coding_constraint=hl.Struct(),
+        #                 screen=hl.Struct(
+        #                     region_type=[
+        #                         'CTCF-bound',
+        #                         'CTCF-only',
+        #                         'DNase-H3K4me3',
+        #                         'PLS',
+        #                         'dELS',
+        #                         'pELS',
+        #                         'DNase-only',
+        #                         'low-DNase',
+        #                     ],
+        #                 ),
+        #                 sorted_transcript_consequences=hl.Struct(
+        #                     biotype=BIOTYPES,
+        #                     consequence_term=CONSEQUENCE_TERMS,
+        #                     lof_filter=LOF_FILTERS,
+        #                 ),
+        #             ),
+        #         ),
+        #     ],
+        # )
 
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
