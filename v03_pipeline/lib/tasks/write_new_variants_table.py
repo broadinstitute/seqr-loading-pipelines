@@ -194,19 +194,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
         new_variants_ht = callset_ht.anti_join(annotations_ht)
 
-        # 2) Join new variants against the reference dataset collections that are not "annotated".
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            if rdc.requires_annotation:
-                continue
-            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
-            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
-
-        # 3) TODO: Send to clingen allele registry.
-
-        # 4) Annotate new variants with VEP.
+        # Annotate new variants with VEP.
         # Note about the repartition: our work here is cpu/memory bound and
         # proportional to the number of new variants.  Our default partitioning
         # will under-partition in that regard, so we split up our work
@@ -225,18 +213,9 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.reference_genome,
         )
 
-        # 5) Select down to the formatting annotations fields and any reference dataset collection annotations.
-        rdc_annotations = [
-            annotation
-            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                self.reference_genome,
-                self.dataset_type,
-            )
-            for annotation in rdc.datasets(self.dataset_type)
-            if not rdc.requires_annotation
-        ]
+        # Select down to the formatting annotations fields and
+        # any reference dataset collection annotations.
         new_variants_ht = new_variants_ht.select(
-            *rdc_annotations,
             **get_fields(
                 new_variants_ht,
                 self.dataset_type.formatting_annotation_fns(self.reference_genome),
@@ -244,6 +223,16 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 **self.param_kwargs,
             ),
         )
+
+        # Join new variants against the reference dataset collections that are not "annotated".
+        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            if rdc.requires_annotation:
+                continue
+            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
+            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         return new_variants_ht.annotate_globals(
             updates={
