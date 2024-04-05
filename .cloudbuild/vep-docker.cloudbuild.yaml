@@ -5,7 +5,7 @@ steps:
 - name: 'gcr.io/kaniko-project/executor:v1.3.0'
   args:
   - --destination=gcr.io/seqr-project/vep-docker-image:${_VEP_VERSION}
-  - --dockerfile=deploy/Docker.vep
+  - --dockerfile=deploy/Dockerfile.vep
   - --cache=true
   - --cache-ttl=168h
 
