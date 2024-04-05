@@ -33,6 +33,10 @@ class UpdateLookupTableTask(BaseUpdateTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -43,7 +47,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return super().complete() and hl.eval(
+        return not self.force and super().complete() and hl.eval(
             hl.bind(
                 lambda updates: hl.all(
                     [
@@ -83,6 +87,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
+                self.force,
             )
             for (
                 callset_path,

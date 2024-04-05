@@ -28,6 +28,10 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         description='Is this a fully joint-called callset.',
@@ -38,7 +42,7 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         self.dynamic_write_family_table_tasks = set()
 
     def complete(self) -> bool:
-        return len(self.dynamic_write_family_table_tasks) >= 1 and all(
+        return not self.force and len(self.dynamic_write_family_table_tasks) >= 1 and all(
             write_family_table_task.complete()
             for write_family_table_task in self.dynamic_write_family_table_tasks
         )
@@ -56,6 +60,7 @@ class WriteProjectFamilyTablesTask(luigi.Task):
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
+            self.force,
         )
         callset_mt = hl.read_matrix_table(rmsct_output.path)
         family_samples = hl.eval(callset_mt.globals.family_samples)

@@ -32,6 +32,10 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         description='Is this a fully joint-called callset.',
@@ -47,7 +51,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return super().complete() and hl.eval(
+        return not self.force and super().complete() and hl.eval(
             hl.read_table(self.output().path).updates.contains(
                 self.callset_path,
             ),
@@ -65,6 +69,7 @@ class UpdateProjectTableTask(BaseUpdateTask):
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
+            self.force,
         )
 
     def initialize_table(self) -> hl.Table:
