@@ -61,31 +61,35 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseVariantAnnotationsTabl
         ]
 
     def complete(self) -> bool:
-        return not self.force and super().complete() and hl.eval(
-            hl.bind(
-                lambda updates: hl.all(
-                    [
-                        updates.contains(
-                            hl.Struct(
-                                callset=callset_path,
-                                project_guid=project_guid,
-                            ),
-                        )
-                        for (
-                            callset_path,
-                            project_guid,
-                            _,
-                            _,
-                        ) in callset_project_pairs(
-                            self.callset_paths,
-                            self.project_guids,
-                            self.project_remap_paths,
-                            self.project_pedigree_paths,
-                        )
-                    ],
+        return (
+            not self.force
+            and super().complete()
+            and hl.eval(
+                hl.bind(
+                    lambda updates: hl.all(
+                        [
+                            updates.contains(
+                                hl.Struct(
+                                    callset=callset_path,
+                                    project_guid=project_guid,
+                                ),
+                            )
+                            for (
+                                callset_path,
+                                project_guid,
+                                _,
+                                _,
+                            ) in callset_project_pairs(
+                                self.callset_paths,
+                                self.project_guids,
+                                self.project_remap_paths,
+                                self.project_pedigree_paths,
+                            )
+                        ],
+                    ),
+                    hl.read_table(self.output().path).updates,
                 ),
-                hl.read_table(self.output().path).updates,
-            ),
+            )
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:

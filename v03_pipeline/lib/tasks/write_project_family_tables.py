@@ -42,9 +42,13 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         self.dynamic_write_family_table_tasks = set()
 
     def complete(self) -> bool:
-        return not self.force and len(self.dynamic_write_family_table_tasks) >= 1 and all(
-            write_family_table_task.complete()
-            for write_family_table_task in self.dynamic_write_family_table_tasks
+        return (
+            not self.force
+            and len(self.dynamic_write_family_table_tasks) >= 1
+            and all(
+                write_family_table_task.complete()
+                for write_family_table_task in self.dynamic_write_family_table_tasks
+            )
         )
 
     def run(self):
