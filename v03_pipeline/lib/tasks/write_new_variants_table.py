@@ -230,7 +230,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
         # Register the new variant alleles to the Clingen Allele Registry.
-        if self.dataset_type.should_register_with_clingen:
+        if self.dataset_type.should_send_to_allele_registry:
             hgvs_expressions = hl.eval(
                 hl.flatten(
                     new_variants_ht.sorted_transcript_consequences.hgvsc.collect(),

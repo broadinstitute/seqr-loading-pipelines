@@ -283,5 +283,5 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def should_register_with_clingen(self):
-        return self == DatasetType.SNV_INDEL or self == DatasetType.MITO
+    def should_send_to_allele_registry(self):
+        return self in (DatasetType.SNV_INDEL, DatasetType.MITO)
