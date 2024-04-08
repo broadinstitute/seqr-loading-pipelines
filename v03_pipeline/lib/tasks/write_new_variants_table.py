@@ -149,7 +149,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def complete(self) -> bool:
         return (
-            not self.force
             and super().complete()
             and hl.eval(
                 hl.bind(
