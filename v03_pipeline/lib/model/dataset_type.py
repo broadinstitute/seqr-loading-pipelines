@@ -281,3 +281,7 @@ class DatasetType(Enum):
                 mito.gt_stats,
             ],
         }[self]
+
+    @property
+    def should_register_with_clingen(self):
+        return self == DatasetType.SNV_INDEL or self == DatasetType.MITO

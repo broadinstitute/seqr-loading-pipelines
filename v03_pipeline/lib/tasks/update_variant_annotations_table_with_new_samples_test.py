@@ -345,7 +345,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         #             'gt_stats',
         #             'screen',
         #         ).collect()
-        #         if x.locus.position <= 878809  # noqa: PLR2004
+        #         if x.locus.position <= 878809
         #     ],
         #     [
         #         hl.Struct(
@@ -438,7 +438,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         # )
         # self.assertCountEqual(
         #     ht.filter(
-        #         ht.locus.position <= 878809,  # noqa: PLR2004
+        #         ht.locus.position <= 878809,
         #     ).sorted_transcript_consequences.consequence_term_ids.collect(),
         #     [
         #         [[11], [22, 26], [22, 26]],
