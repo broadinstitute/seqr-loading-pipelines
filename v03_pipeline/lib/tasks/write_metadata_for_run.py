@@ -29,6 +29,10 @@ class WriteMetadataForRunTask(BaseHailTableTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     check_sex_and_relatedness = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -60,6 +64,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
+                self.force,
                 self.check_sex_and_relatedness,
             )
             for (

@@ -39,10 +39,17 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     check_sex_and_relatedness = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+
+    def complete(self) -> luigi.Target:
+        return not self.force and super().complete()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -66,6 +73,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 # Only the primary import task itself should be aware of it.
                 None,
                 self.validate,
+                self.force,
             ),
             RawFileTask(self.project_pedigree_path),
         ]

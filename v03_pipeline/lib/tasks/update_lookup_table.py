@@ -33,6 +33,10 @@ class UpdateLookupTableTask(BaseUpdateTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -43,31 +47,35 @@ class UpdateLookupTableTask(BaseUpdateTask):
         )
 
     def complete(self) -> bool:
-        return super().complete() and hl.eval(
-            hl.bind(
-                lambda updates: hl.all(
-                    [
-                        updates.contains(
-                            hl.Struct(
-                                callset=callset_path,
-                                project_guid=project_guid,
-                            ),
-                        )
-                        for (
-                            callset_path,
-                            project_guid,
-                            _,
-                            _,
-                        ) in callset_project_pairs(
-                            self.callset_paths,
-                            self.project_guids,
-                            self.project_remap_paths,
-                            self.project_pedigree_paths,
-                        )
-                    ],
+        return (
+            not self.force
+            and super().complete()
+            and hl.eval(
+                hl.bind(
+                    lambda updates: hl.all(
+                        [
+                            updates.contains(
+                                hl.Struct(
+                                    callset=callset_path,
+                                    project_guid=project_guid,
+                                ),
+                            )
+                            for (
+                                callset_path,
+                                project_guid,
+                                _,
+                                _,
+                            ) in callset_project_pairs(
+                                self.callset_paths,
+                                self.project_guids,
+                                self.project_remap_paths,
+                                self.project_pedigree_paths,
+                            )
+                        ],
+                    ),
+                    hl.read_table(self.output().path).updates,
                 ),
-                hl.read_table(self.output().path).updates,
-            ),
+            )
         )
 
     def requires(self) -> list[luigi.Task]:
@@ -83,6 +91,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
+                self.force,
             )
             for (
                 callset_path,
