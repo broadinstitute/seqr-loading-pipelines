@@ -31,22 +31,17 @@ class AlleleRegistryError:
         )
 
 
-def register_alleles(hgvs_expressions: list[str]) -> None:
-    if len(hgvs_expressions) == 0:
-        logger.info('No alleles to register to the Clingen Allele Registry')
-        return
-
+def register_alleles(hgvs_expressions: list[str], url: str = URL) -> None:
     logger.info(
         f'Registering {len(hgvs_expressions)} alleles to the Clingen Allele Registry',
     )
-
-    # adapted from https://reg.clinicalgenome.org/doc/scripts/request_with_payload.py
     login = Env.ALLELE_REGISTRY_LOGIN
     password = Env.ALLELE_REGISTRY_PASSWORD
+    # adapted from https://reg.clinicalgenome.org/doc/scripts/request_with_payload.py
     identity = hashlib.sha1((login + password).encode('utf-8')).hexdigest()  # noqa: S324
     gb_time = str(int(time.time()))
-    token = hashlib.sha1((URL + identity + gb_time).encode('utf-8')).hexdigest()  # noqa: S324
-    request = URL + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
+    token = hashlib.sha1((url + identity + gb_time).encode('utf-8')).hexdigest()  # noqa: S324
+    request = url + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
 
     for i in range(0, len(hgvs_expressions), MAX_REQUEST_SIZE):
         chunk = hgvs_expressions[i : i + MAX_REQUEST_SIZE]
@@ -59,7 +54,7 @@ def register_alleles(hgvs_expressions: list[str]) -> None:
         if not res.ok:
             error = AlleleRegistryError.from_api_response(response)
             logger.error(
-                f'\nAPI URL: {URL}\nTYPE: {error.error_type}'
+                f'\nAPI URL: {url}\nTYPE: {error.error_type}'
                 f'\nDESCRIPTION: {error.description}r\nMESSAGE: {error.message}',
             )
             res.raise_for_status()
@@ -70,7 +65,9 @@ def register_alleles(hgvs_expressions: list[str]) -> None:
             if 'errorType' in allele_response
         ]
         if errors:
+            messages = ', '.join(
+                [error.input_line + ': ' + error.message for error in errors],
+            )
             logger.warning(
-                f'{len(errors)} failed to register to {URL}: '
-                f'[{", ".join([error.input_line for error in errors])}]',
+                f'{len(errors)} alleles failed to register to {url}. {messages}',
             )
