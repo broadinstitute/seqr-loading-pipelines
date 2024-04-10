@@ -53,26 +53,26 @@ wait
 
 cat > /vep_data/vep110-${ASSEMBLY}.json <<EOF
 {
-	"command": [
-    	"/vep",
-    	"--format", "vcf",
-    	"__OUTPUT_FORMAT_FLAG__",
-    	"--everything",
-    	"--allele_number",
-    	"--no_stats",
-    	"--cache", "--offline",
-    	"--minimal",
-    	"--assembly", "${ASSEMBLY}",
-    	"--merged",
-    	"--fasta", "/opt/vep/.vep/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz",
-    	"--plugin", "LoF,loftee_path:/plugins,gerp_bigwig:/opt/vep/.vep/gerp_conservation_scores.homo_sapiens.${ASSEMBLY}.bw,human_ancestor_fa:/opt/vep/.vep/human_ancestor.fa.gz,conservation_file:/opt/vep/.vep/loftee.sql",
-    	"--dir_plugins", "/plugins",
-    	"-o", "STDOUT"
-	],
- 	"env": {
+  "command": [
+      "/vep",
+      "--format", "vcf",
+      "__OUTPUT_FORMAT_FLAG__",
+      "--everything",
+      "--minimal",
+      "--allele_number",
+      "--no_stats",
+      "--cache", 
+      "--offline",
+      "--assembly", "${ASSEMBLY}",
+      "--fasta", "/opt/vep/.vep/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz",
+      "--plugin", "LoF,loftee_path:/plugins,gerp_bigwig:/opt/vep/.vep/gerp_conservation_scores.homo_sapiens.${ASSEMBLY}.bw,human_ancestor_fa:/opt/vep/.vep/human_ancestor.fa.gz,conservation_file:/opt/vep/.vep/loftee.sql",
+      "--dir_plugins", "/plugins",
+      "-o", "STDOUT"
+  ],
+  "env": {
       "PERL5LIB": "/plugins"
   },
-	"vep_json_schema": "Struct{allele_string:String,colocated_variants:Array[Struct{allele_string:String,clin_sig:Array[String],clin_sig_allele:String,end:Int32,id:String,phenotype_or_disease:Int32,pubmed:Array[Int32],somatic:Int32,start:Int32,strand:Int32}],end:Int32,id:String,input:String,intergenic_consequences:Array[Struct{allele_num:Int32,ancestral:String,consequence_terms:Array[String],context:String,impact:String,variant_allele:String}],minimised:Int32,most_severe_consequence:String,motif_feature_consequences:Array[Struct{allele_num:Int32,ancestral:String,consequence_terms:Array[String],context:String,high_inf_pos:String,impact:String,motif_feature_id:String,motif_name:String,motif_pos:Int32,motif_score_change:Float64,transcription_factors:Array[String],strand:Int32,variant_allele:String}],regulatory_feature_consequences:Array[Struct{allele_num:Int32,ancestral:String,biotype:String,consequence_terms:Array[String],context:String,impact:String,regulatory_feature_id:String,variant_allele:String}],seq_region_name:String,start:Int32,strand:Int32,transcript_consequences:Array[Struct{allele_num:Int32,amino_acids:String,ancestral:String,appris:String,biotype:String,canonical:Int32,ccds:String,cdna_start:Int32,cdna_end:Int32,cds_end:Int32,cds_start:Int32,codons:String,consequence_terms:Array[String],context:String,distance:Int32,domains:Array[Struct{db:String,name:String}],exon:String,flags:String,gene_id:String,gene_pheno:Int32,gene_symbol:String,gene_symbol_source:String,hgnc_id:String,hgvsc:String,hgvsp:String,hgvs_offset:Int32,impact:String,intron:String,lof:String,lof_flags:String,lof_filter:String,lof_info:String,mane_select:String,mane_plus_clinical:String,mirna:Array[String],polyphen_prediction:String,polyphen_score:Float64,protein_end:Int32,protein_start:Int32,protein_id:String,sift_prediction:String,sift_score:Float64,source:String,strand:Int32,swissprot:Array[String],transcript_id:String,trembl:Array[String],tsl:Int32,uniparc:Array[String],uniprot_isoform:Array[String],variant_allele:String}],variant_class:String}"
+  "vep_json_schema": "Struct{allele_string:String,colocated_variants:Array[Struct{allele_string:String,clin_sig:Array[String],clin_sig_allele:String,end:Int32,id:String,phenotype_or_disease:Int32,pubmed:Array[Int32],somatic:Int32,start:Int32,strand:Int32}],end:Int32,id:String,input:String,intergenic_consequences:Array[Struct{allele_num:Int32,ancestral:String,consequence_terms:Array[String],context:String,impact:String,variant_allele:String}],minimised:Int32,most_severe_consequence:String,motif_feature_consequences:Array[Struct{allele_num:Int32,ancestral:String,consequence_terms:Array[String],context:String,high_inf_pos:String,impact:String,motif_feature_id:String,motif_name:String,motif_pos:Int32,motif_score_change:Float64,transcription_factors:Array[String],strand:Int32,variant_allele:String}],regulatory_feature_consequences:Array[Struct{allele_num:Int32,ancestral:String,biotype:String,consequence_terms:Array[String],context:String,impact:String,regulatory_feature_id:String,variant_allele:String}],seq_region_name:String,start:Int32,strand:Int32,transcript_consequences:Array[Struct{allele_num:Int32,amino_acids:String,ancestral:String,appris:String,biotype:String,canonical:Int32,ccds:String,cdna_start:Int32,cdna_end:Int32,cds_end:Int32,cds_start:Int32,codons:String,consequence_terms:Array[String],context:String,distance:Int32,domains:Array[Struct{db:String,name:String}],exon:String,flags:String,gene_id:String,gene_pheno:Int32,gene_symbol:String,gene_symbol_source:String,hgnc_id:String,hgvsc:String,hgvsp:String,hgvs_offset:Int32,impact:String,intron:String,lof:String,lof_flags:String,lof_filter:String,lof_info:String,mane_select:String,mane_plus_clinical:String,mirna:Array[String],polyphen_prediction:String,polyphen_score:Float64,protein_end:Int32,protein_start:Int32,protein_id:String,sift_prediction:String,sift_score:Float64,source:String,strand:Int32,swissprot:Array[String],transcript_id:String,trembl:Array[String],tsl:Int32,uniparc:Array[String],uniprot_isoform:Array[String],variant_allele:String}],variant_class:String}"
 }
 EOF
 
