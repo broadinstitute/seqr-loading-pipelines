@@ -161,7 +161,10 @@ def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     ht = download_and_import_clinvar_submission_summary()
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select(
-        'VariationID', 'Submitter', 'ClinicalSignificance', 'ReportedPhenotypeInfo',
+        'VariationID',
+        'Submitter',
+        'ClinicalSignificance',
+        'ReportedPhenotypeInfo',
     )
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect(ht.Submitter),

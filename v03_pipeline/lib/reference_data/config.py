@@ -54,6 +54,7 @@ def clinvar_custom_select(ht):
     selects['conflictingPathogenicities'] = parsed_and_mapped_clnsigconf(ht)
     selects['goldStars'] = CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT))
     selects['submitters'] = ht.submitters
+    selects['clinical_significances'] = ht.clinical_significances
     selects['conditions'] = hl.map(
         lambda p: p.split(r':')[1],
         ht.conditions,
