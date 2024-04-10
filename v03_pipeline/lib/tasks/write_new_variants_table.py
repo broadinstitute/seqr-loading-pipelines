@@ -1,5 +1,4 @@
 import math
-from itertools import chain
 
 import hail as hl
 import luigi
@@ -232,12 +231,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         # Register the new variant alleles to the Clingen Allele Registry.
         if self.dataset_type.should_send_to_allele_registry:
-            hgvs_ht = new_variants_ht.filter(
-                hl.is_defined(new_variants_ht.sorted_transcript_consequences.hgvsc),
-            )
-            hgvs_expressions = hgvs_ht.sorted_transcript_consequences.hgvsc.collect()
-            if hgvs_expressions:
-                register_alleles(list(chain.from_iterable(hgvs_expressions)))
+            register_alleles(new_variants_ht.variant_id.collect())
 
         return new_variants_ht.annotate_globals(
             updates={
