@@ -116,6 +116,12 @@ MOCK_CONFIG = {
                             'PreventionGenetics, part of Exact Sciences',
                             'Invitae',
                         ],
+                        'clinical_significances': [
+                            'Pathogenic',
+                            'Uncertain significance',
+                            'Likely benign',
+                            'not provided',
+                        ],
                         'conditions': [
                             'C3661900:not provided',
                             'C0023264:Leigh syndrome',
@@ -135,6 +141,7 @@ MOCK_CONFIG = {
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
                     submitters=hl.tarray(hl.tstr),
+                    clinical_significances=hl.tarray(hl.tstr),
                     conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
@@ -197,6 +204,12 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                             'Broad Institute Rare Disease Group, Broad Institute',
                             'PreventionGenetics, part of Exact Sciences',
                             'Invitae',
+                        ],
+                        clinical_significances=[
+                            'Pathogenic',
+                            'Uncertain significance',
+                            'Likely benign',
+                            'not provided',
                         ],
                         conditions=[
                             'not provided',

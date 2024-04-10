@@ -141,26 +141,31 @@ class ClinvarTest(unittest.TestCase):
                 {
                     '#VariationID': '5',
                     'Submitter': 'OMIM',
+                    'ClinicalSignificance': 'Pathogenic',
                     'ReportedPhenotypeInfo': 'C3661900:not provided',
                 },
                 {
                     '#VariationID': '5',
                     'Submitter': 'Broad Institute Rare Disease Group, Broad Institute',
+                    'ClinicalSignificance': 'Uncertain significance',
                     'ReportedPhenotypeInfo': 'C0023264:Leigh syndrome',
                 },
                 {
                     '#VariationID': '5',
                     'Submitter': 'PreventionGenetics, part of Exact Sciences',
+                    'ClinicalSignificance': 'Likely benign',
                     'ReportedPhenotypeInfo': 'na:FOXRED1-related condition',
                 },
                 {
                     '#VariationID': '5',
                     'Submitter': 'Invitae',
+                    'ClinicalSignificance': 'not provided',
                     'ReportedPhenotypeInfo': 'C4748791:Mitochondrial complex 1 deficiency, nuclear type 19',
                 },
                 {
                     '#VariationID': '6',
                     'Submitter': 'A',
+                    'ClinicalSignificance': None,
                     'ReportedPhenotypeInfo': 'na:B',
                 },
             ],
@@ -168,6 +173,7 @@ class ClinvarTest(unittest.TestCase):
                 **{
                     '#VariationID': hl.tstr,
                     'Submitter': hl.tstr,
+                    'ClinicalSignificance': hl.tstr,
                     'ReportedPhenotypeInfo': hl.tstr,
                 },
             ),
@@ -191,6 +197,12 @@ class ClinvarTest(unittest.TestCase):
                         'PreventionGenetics, part of Exact Sciences',
                         'Invitae',
                     ],
+                    clinical_significances=[
+                        'Pathogenic',
+                        'Uncertain significance',
+                        'Likely benign',
+                        'not provided',
+                    ],
                     conditions=[
                         'C3661900:not provided',
                         'C0023264:Leigh syndrome',
@@ -208,6 +220,7 @@ class ClinvarTest(unittest.TestCase):
                     rsid='7',
                     info=hl.Struct(ALLELEID=1, **clinvar_enums_struct),
                     submitters=None,
+                    clinical_significances=None,
                     conditions=None,
                 ),
             ],

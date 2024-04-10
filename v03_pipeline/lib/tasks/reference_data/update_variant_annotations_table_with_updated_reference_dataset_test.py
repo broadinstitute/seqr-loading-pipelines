@@ -68,6 +68,7 @@ MOCK_CLINVAR_CONFIG = {
                 CLNREVSTAT=hl.tarray(hl.tstr),
             ),
             submitters=hl.tarray(hl.tstr),
+            clinical_significances=hl.tarray(hl.tstr),
             conditions=hl.tarray(hl.tstr),
         ),
         key=['locus', 'alleles'],
@@ -460,6 +461,7 @@ MOCK_CONFIG_MITO = {
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
                     submitters=hl.tarray(hl.tstr),
+                    clinical_significances=hl.tarray(hl.tstr),
                     conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
@@ -724,6 +726,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         pathogenicity_id=None,
                         assertion_ids=None,
                         submitters=None,
+                        clinical_significances=None,
                         conditions=None,
                     ),
                     dbnsfp=hl.Struct(
@@ -969,6 +972,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         pathogenicity_id=None,
                         assertion_ids=None,
                         submitters=None,
+                        clinical_significances=None,
                         conditions=None,
                     ),
                     dbnsfp_mito=hl.Struct(
@@ -1132,6 +1136,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         pathogenicity_id=None,
                         assertion_ids=None,
                         submitters=None,
+                        clinical_significances=None,
                         conditions=None,
                     ),
                     dbnsfp=hl.Struct(

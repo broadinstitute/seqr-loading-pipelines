@@ -160,14 +160,18 @@ def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     logger.info('Getting clinvar submission summary')
     ht = download_and_import_clinvar_submission_summary()
     ht = ht.rename({'#VariationID': 'VariationID'})
-    ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
+    ht = ht.select(
+        'VariationID', 'Submitter', 'ClinicalSignificance', 'ReportedPhenotypeInfo',
+    )
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect(ht.Submitter),
+        ClinicalSignificances=hl.agg.collect(ht.ClinicalSignificance),
         Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
     )
     ht = ht.key_by('VariationID')
     return vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
+        clinical_significances=ht[vcf_ht.rsid].ClinicalSignificances,
         conditions=ht[vcf_ht.rsid].Conditions,
     )
 
@@ -190,6 +194,7 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             types={
                 '#VariationID': hl.tstr,
                 'Submitter': hl.tstr,
+                'ClinicalSignificance': hl.tstr,
                 'ReportedPhenotypeInfo': hl.tstr,
             },
             missing='-',

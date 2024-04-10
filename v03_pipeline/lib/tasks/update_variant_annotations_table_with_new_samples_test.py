@@ -363,6 +363,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         pathogenicity_id=None,
                         assertion_ids=None,
                         submitters=None,
+                        clinical_significances=None,
                         conditions=None,
                     ),
                     hgmd=hl.Struct(

@@ -71,6 +71,7 @@ MOCK_CONFIG = {
                         CLNREVSTAT=hl.tarray(hl.tstr),
                     ),
                     submitters=hl.tarray(hl.tstr),
+                    clinical_significances=hl.tarray(hl.tstr),
                     conditions=hl.tarray(hl.tstr),
                 ),
                 key=['locus', 'alleles'],
