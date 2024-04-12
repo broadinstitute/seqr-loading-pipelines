@@ -73,7 +73,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 # Only the primary import task itself should be aware of it.
                 None,
                 self.validate,
-                self.force,
+                False,
             ),
             RawFileTask(self.project_pedigree_path),
         ]

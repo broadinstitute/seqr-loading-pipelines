@@ -67,7 +67,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
-            self.force,
+            False,
         )
 
     def create_table(self) -> hl.Table:

@@ -91,7 +91,7 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
-                self.force,
+                False,
             )
             for (
                 callset_path,
