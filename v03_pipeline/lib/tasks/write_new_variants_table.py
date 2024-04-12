@@ -7,7 +7,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
-from v03_pipeline.lib.misc.allele_registry import register_alleles
+from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
@@ -231,7 +231,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         # Register the new variant alleles to the Clingen Allele Registry.
         if self.dataset_type.should_send_to_allele_registry:
-            register_alleles(new_variants_ht.variant_id.collect())
+            register_alleles_in_chunks(new_variants_ht, self.reference_genome)
 
         return new_variants_ht.annotate_globals(
             updates={

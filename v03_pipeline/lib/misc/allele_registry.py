@@ -56,7 +56,7 @@ def register_alleles_in_chunks(
     num_rows = ht.count()
     num_chunks = math.ceil(num_rows / chunk_size)
     logger.info(
-        f'Registering {num_rows} alleles in chunks of {chunk_size} in {num_chunks} requests.',
+        f'Registering {num_rows} allele(s) in chunks of {chunk_size} in {num_chunks} request(s).',
     )
     for start_idx in range(0, num_rows, chunk_size):
         end_idx = start_idx + chunk_size
@@ -74,23 +74,19 @@ def register_alleles(
     ) as raw_vcf, tempfile.NamedTemporaryFile(suffix='.vcf') as formatted_vcf:
         hl.export_vcf(ht, raw_vcf.name)
 
-        # Reformat the VCF created by hail's 'export_vcf' function: replace the header and remove 'chr' prefix
-        with open(raw_vcf.name) as vcf_in:
-            formatted_vcf.writelines(
-                [
-                    line.encode('utf-8')
-                    for line in reference_genome.allele_registry_vcf_header
-                ],
-            )
+        # Reformat the VCF created by hail's 'export_vcf' function: replace the header and remove any 'chr' prefix
+        with open(raw_vcf.name) as vcf_in, open(formatted_vcf.name, 'w') as vcf_out:
+            vcf_out.writelines(reference_genome.allele_registry_vcf_header)
             for line in vcf_in:
                 if not line.startswith('#'):
-                    formatted_vcf.write(line.replace('chr', '').encode('utf-8'))
+                    vcf_out.write(line.replace('chr', ''))
 
-        logger.info('Registering to the Clingen Allele Registry')
+        logger.info('Calling the Clingen Allele Registry.')
         with open(formatted_vcf.name) as vcf_in:
+            data = vcf_in.read()
             res = requests.put(
-                build_url(base_url),
-                data=vcf_in.read(),
+                url=build_url(base_url),
+                data=data,
                 timeout=HTTP_REQUEST_TIMEOUT,
             )
             handle_api_response(res, base_url)
@@ -100,7 +96,7 @@ def build_url(base_url: str) -> str:
     login = Env.ALLELE_REGISTRY_LOGIN
     password = Env.ALLELE_REGISTRY_PASSWORD
 
-    if not login or not password:
+    if login is None or password is None:
         msg = 'Please set the ALLELE_REGISTRY_LOGIN and ALLELE_REGISTRY_PASSWORD environment variables.'
         raise ValueError(msg)
 
@@ -124,10 +120,9 @@ def handle_api_response(res: requests.Response, base_url: str) -> None:
         if 'errorType' in allele_response
     ]
     logger.info(
-        f'{len(response) - len(errors)} alleles out of {len(response)} returned CAIDs.',
+        f'{len(response) - len(errors)} out of {len(response)} returned CAID(s).',
     )
     if errors:
-        error = errors[0]
         logger.warning(
-            f'{len(errors)} alleles failed to register. First error: {error.loggable_message}',
+            f'{len(errors)} failed. First error: {errors[0].loggable_message}',
         )

@@ -1,208 +1,109 @@
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
+import hail as hl
 import requests
 
+from v03_pipeline.lib.misc.allele_registry import (
+    HTTP_REQUEST_TIMEOUT as ALLELE_REGISTRY_TIMEOUT,
+)
 from v03_pipeline.lib.misc.allele_registry import register_alleles
+from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_SERVER_URL = 'http://reg.test.genome.network/alleles?file=hgvs'
-VALID_HGVS_EXPRESSIONS = [
-    'ENST00000450305.2:n.182+58G>A',
-    'ENST00000327044.6:c.1667C>T',
-    'ENST00000477976.5:n.3114C>T',
-]
-INVALID_HGVS_EXPRESSIONS = [
-    'ENST00000387314.1:n.1G>C',
-    'ENST00000387314.1:n.51dup',
-    'ENST00000387314.1:n.51_52insA',
-]
+TEST_SERVER_URL = 'http://reg.test.genome.network/alleles?file=vcf&fields=none+@id'
 
 
 class AlleleRegistryTest(MockedDatarootTestCase):
     @patch.object(requests, 'put')
+    @patch('v03_pipeline.lib.misc.allele_registry.Env')
     @patch('v03_pipeline.lib.misc.allele_registry.logger')
-    def test_allele_registry(
+    def test_register_alleles_38(
         self,
         mock_logger: Mock,
+        mock_env: Mock,
         mock_put_request: Mock,
     ):
-        self.mock_env.ALLELE_REGISTRY_LOGIN = ''
-        self.mock_env.ALLELE_REGISTRY_PASSWORD = ''
+        mock_env.ALLELE_REGISTRY_LOGIN = 'test'
+        mock_env.ALLELE_REGISTRY_PASSWORD = 'test'  # noqa: S105
+
+        new_variants_ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=874734,
+                        reference_genome='GRCh38',
+                    ),
+                    'alleles': ['C', 'T'],
+                    'rsid': 'rs370233997',
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    'alleles': ['A', 'G'],
+                    'rsid': 'rs370233999',
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=878314,
+                        reference_genome='GRCh38',
+                    ),
+                    'alleles': ['G', 'C'],
+                    'rsid': 'rs370234000',
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=10469,
+                        reference_genome='GRCh38',
+                    ),
+                    'alleles': ['C', 'G'],
+                    'rsid': 'rs370233998',
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                alleles=hl.tarray(hl.tstr),
+                rsid=hl.tstr,
+            ),
+            key=('locus', 'alleles'),
+        )
+
         mock_response = Mock()
         mock_put_request.return_value = mock_response
         mock_response.ok = True
         mock_response.json.return_value = [
+            {'@id': 'http://reg.genome.network/allele/CA997563840'},
+            {'@id': 'http://reg.genome.network/allele/CA16716503'},
+            {'@id': 'http://reg.genome.network/allele/CA997563845'},
             {
-                '@context': 'http://reg.genome.network/schema/allele.jsonld',
-                '@id': 'http://reg.genome.network/allele/CA887895211',
-                'communityStandardTitle': ['NC_000001.11:g.12755G>A'],
-                'externalRecords': {},
-                'genomicAlleles': [
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 12755,
-                                'referenceAllele': 'G',
-                                'start': 12754,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.11:g.12755G>A', 'CM000663.2:g.12755G>A'],
-                        'referenceGenome': 'GRCh38',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000049',
-                    },
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 2618,
-                                'referenceAllele': 'G',
-                                'start': 2617,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.9:g.2618G>A'],
-                        'referenceGenome': 'NCBI36',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000001',
-                    },
-                ],
-                'transcriptAlleles': [],
-                'type': 'nucleotide',
-            },
-            {
-                '@context': 'http://reg.genome.network/schema/allele.jsonld',
-                '@id': 'http://reg.genome.network/allele/CA503883',
-                'communityStandardTitle': [
-                    'NM_015658.4(NOC2L):c.1667C>T (p.Ser556Leu)',
-                ],
-                'externalRecords': {},
-                'genomicAlleles': [
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 946538,
-                                'referenceAllele': 'G',
-                                'start': 946537,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.11:g.946538G>A', 'CM000663.2:g.946538G>A'],
-                        'referenceGenome': 'GRCh38',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000049',
-                    },
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 881918,
-                                'referenceAllele': 'G',
-                                'start': 881917,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.10:g.881918G>A', 'CM000663.1:g.881918G>A'],
-                        'referenceGenome': 'GRCh37',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000025',
-                    },
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 871781,
-                                'referenceAllele': 'G',
-                                'start': 871780,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.9:g.871781G>A'],
-                        'referenceGenome': 'NCBI36',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000001',
-                    },
-                ],
-                'transcriptAlleles': [],
-                'type': 'nucleotide',
-            },
-            {
-                '@context': 'http://reg.genome.network/schema/allele.jsonld',
-                '@id': 'http://reg.genome.network/allele/CA503883',
-                'communityStandardTitle': [
-                    'NM_015658.4(NOC2L):c.1667C>T (p.Ser556Leu)',
-                ],
-                'externalRecords': {},
-                'genomicAlleles': [
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 946538,
-                                'referenceAllele': 'G',
-                                'start': 946537,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.11:g.946538G>A', 'CM000663.2:g.946538G>A'],
-                        'referenceGenome': 'GRCh38',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000049',
-                    },
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 881918,
-                                'referenceAllele': 'G',
-                                'start': 881917,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.10:g.881918G>A', 'CM000663.1:g.881918G>A'],
-                        'referenceGenome': 'GRCh37',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000025',
-                    },
-                    {
-                        'chromosome': '1',
-                        'coordinates': [
-                            {
-                                'allele': 'A',
-                                'end': 871781,
-                                'referenceAllele': 'G',
-                                'start': 871780,
-                            },
-                        ],
-                        'hgvs': ['NC_000001.9:g.871781G>A'],
-                        'referenceGenome': 'NCBI36',
-                        'referenceSequence': 'http://reg.genome.network/refseq/RS000001',
-                    },
-                ],
-                'transcriptAlleles': [],
-                'type': 'nucleotide',
-            },
-            {
-                'description': 'Internal error occurred. Please, report it as an error.',
+                'description': 'Given allele cannot be mapped in consistent way to reference genome.',
                 'errorType': 'InternalServerError',
-                'inputLine': 'ENST00000387314.1:n.1G>C',
-                'message': 'Unknown reference: ENST00000387314.1',
-            },
-            {
-                'description': 'Internal error occurred. Please, report it as an error.',
-                'errorType': 'InternalServerError',
-                'inputLine': 'ENST00000387314.1:n.51dup',
-                'message': 'Unknown reference: ENST00000387314.1',
-            },
-            {
-                'description': 'Internal error occurred. Please, report it as an error.',
-                'errorType': 'InternalServerError',
-                'inputLine': 'ENST00000387314.1:n.51_52insA',
-                'message': 'Unknown reference: ENST00000387314.1',
+                'inputLine': 'Cannot align NC_000001.10 [10468,10469).',
+                'message': '1	10469	rs370233998	C	G	.	.	.',
             },
         ]
 
-        register_alleles(
-            VALID_HGVS_EXPRESSIONS + INVALID_HGVS_EXPRESSIONS,
-            TEST_SERVER_URL,
+        register_alleles(new_variants_ht, ReferenceGenome.GRCh38, TEST_SERVER_URL)
+        mock_put_request.assert_called_once_with(
+            url=ANY,
+            data=f'{"".join(ReferenceGenome.GRCh38.allele_registry_vcf_header)}'
+            f'1\t10469\trs370233998\tC\tG\t.\t.\t.\n'
+            f'1\t874734\trs370233997\tC\tT\t.\t.\t.\n'
+            f'1\t876499\trs370233999\tA\tG\t.\t.\t.\n'
+            f'1\t878314\trs370234000\tG\tC\t.\t.\t.\n',
+            timeout=ALLELE_REGISTRY_TIMEOUT,
         )
 
         mock_logger.warning.assert_called_once_with(
-            '3 alleles failed to register to http://reg.test.genome.network/alleles?file=hgvs. ENST00000387314.1:n.1G>C: Unknown reference: ENST00000387314.1, ENST00000387314.1:n.51dup: Unknown reference: ENST00000387314.1, ENST00000387314.1:n.51_52insA: Unknown reference: ENST00000387314.1',
+            '1 allele(s) failed to register. First error: \n'
+            'API URL: http://reg.test.genome.network/alleles?file=vcf&fields=none+@id\n'
+            'TYPE: InternalServerError\n'
+            'DESCRIPTION: Given allele cannot be mapped in consistent way to reference genome.\n'
+            'MESSAGE: 1\t10469\trs370233998\tC\tG\t.\t.\t.\n'
+            'INPUT_LINE: Cannot align NC_000001.10 [10468,10469).',
         )
