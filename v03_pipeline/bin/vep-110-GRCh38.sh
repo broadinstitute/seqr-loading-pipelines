@@ -35,6 +35,7 @@ apt-get install -y --allow-unauthenticated docker-ce
 sleep 60
 sudo service docker restart
 
+# Copied from the repo at v03_pipeline/var/vep_config
 gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/vep-${ASSEMBLY}.json $VEP_CONFIG_PATH
 
 # Copied from the UTRAnnotator repo (https://github.com/ImperialCardioGenetics/UTRannotator/tree/master)
