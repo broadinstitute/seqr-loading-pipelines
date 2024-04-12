@@ -28,6 +28,10 @@ class WriteFamilyTableTask(BaseWriteTask):
     validate = luigi.BoolParameter(
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     is_new_gcnv_joint_call = luigi.BoolParameter(
         description='Is this a fully joint-called callset.',
     )
@@ -43,8 +47,12 @@ class WriteFamilyTableTask(BaseWriteTask):
         )
 
     def complete(self) -> bool:
-        return super().complete() and hl.eval(
-            hl.read_table(self.output().path).updates.contains(self.callset_path),
+        return (
+            not self.force
+            and super().complete()
+            and hl.eval(
+                hl.read_table(self.output().path).updates.contains(self.callset_path),
+            )
         )
 
     def requires(self) -> luigi.Task:
@@ -59,6 +67,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
+            self.force,
         )
 
     def create_table(self) -> hl.Table:

@@ -2,7 +2,13 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.enums import annotate_enums
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.annotations.rdc_dependencies import (
+    get_rdc_annotation_dependencies,
+)
+from v03_pipeline.lib.model import (
+    Env,
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
@@ -17,19 +23,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 class BaseVariantAnnotationsTableTask(BaseUpdateTask):
     @property
     def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
-        annotation_dependencies = {}
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            annotation_dependencies[f'{rdc.value}_ht'] = hl.read_table(
-                valid_reference_dataset_collection_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                ),
-            )
-        return annotation_dependencies
+        return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

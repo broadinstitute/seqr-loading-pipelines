@@ -1,4 +1,3 @@
-from v03_pipeline.lib.tasks.delete_old_runs import DeleteOldRunsTask
 from v03_pipeline.lib.tasks.reference_data.write_cached_reference_dataset_query import (
     WriteCachedReferenceDatasetQuery,
 )
@@ -15,7 +14,6 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 )
 
 __all__ = [
-    'DeleteOldRunsTask',
     'UpdateProjectTableTask',
     'UpdateLookupTableTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
