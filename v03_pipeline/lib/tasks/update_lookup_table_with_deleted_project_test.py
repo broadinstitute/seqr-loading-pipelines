@@ -45,7 +45,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         self.assertEqual(ht.collect(), [])
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project.UpdateLookupTableDeleteProjectTask.initialize_table',
+        'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project.UpdateLookupTableWithDeletedProjectTask.initialize_table',
     )
     def test_delete_project(
         self,
