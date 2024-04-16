@@ -5,9 +5,12 @@ from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
 from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
-    UpdateLookupTableDeleteProjectTask,
+    UpdateLookupTableWithDeletedProjectTask,
 )
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
+from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
+    UpdateVariantAnnotationsTableWithDeletedProjectTask,
+)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
@@ -19,8 +22,9 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 __all__ = [
     'UpdateProjectTableTask',
     'UpdateLookupTableTask',
-    'UpdateLookupTableDeleteProjectTask',
+    'UpdateLookupTableWithDeletedProjectTask',
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
+    'UpdateVariantAnnotationsTableWithDeletedProjectTask',
     'WriteCachedReferenceDatasetQuery',
     'WriteMetadataForRunTask',
     'WriteProjectFamilyTablesTask',

@@ -37,6 +37,10 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
+        if not self.dataset_type.has_lookup_table:
+            return ht.annotate_globals(
+                updates=ht.updates.filter(lambda u: u.project_guid == self.project_guid),
+            )
         lookup_ht = hl.read_table(
             lookup_table_path(
                 self.reference_genome,
@@ -46,25 +50,24 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
         project_i = hl.eval(lookup_ht.globals.project_guids.index(self.project_guid))
         if project_i is None:
             return ht
-        if self.dataset_type.has_lookup_table:
-            lookup_ht = lookup_ht.filter(hl.len(lookup_ht.project_stats[project_i]) > 0)
-            lookup_ht = remove_project(lookup_ht, self.project_guid)
-            project_variants_ht = ht.semi_join(lookup_ht)
-            project_variants_ht = project_variants_ht.annotate(
-                **get_fields(
-                    project_variants_ht,
-                    self.dataset_type.lookup_table_annotation_fns,
-                    lookup_ht=hl.read_table(
-                        lookup_table_path(
-                            self.reference_genome,
-                            self.dataset_type,
-                        ),
+        lookup_ht = lookup_ht.filter(hl.len(lookup_ht.project_stats[project_i]) > 0)
+        lookup_ht = remove_project(lookup_ht, self.project_guid)
+        project_variants_ht = ht.semi_join(lookup_ht)
+        project_variants_ht = project_variants_ht.annotate(
+            **get_fields(
+                project_variants_ht,
+                self.dataset_type.lookup_table_annotation_fns,
+                lookup_ht=hl.read_table(
+                    lookup_table_path(
+                        self.reference_genome,
+                        self.dataset_type,
                     ),
-                    **self.param_kwargs,
                 ),
-            )
-            ht = ht.anti_join(lookup_ht)
-            ht = ht.union(project_variants_ht, unify=True)
+                **self.param_kwargs,
+            ),
+        )
+        ht = ht.anti_join(lookup_ht)
+        ht = ht.union(project_variants_ht, unify=True)
         return ht.annotate_globals(
             updates=ht.updates.filter(lambda u: u.project_guid == self.project_guid),
         )

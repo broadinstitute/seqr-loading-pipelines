@@ -10,7 +10,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_projec
 )
 
 
-class UpdateLookupTableDeleteProjectTask(BaseLookupTableTask):
+class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
     project_guid = luigi.Parameter()
 
     def requires(self) -> luigi.Task:

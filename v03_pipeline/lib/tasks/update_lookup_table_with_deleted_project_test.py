@@ -5,7 +5,7 @@ import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
-    UpdateLookupTableDeleteProjectTask,
+    UpdateLookupTableWithDeletedProjectTask,
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -14,13 +14,13 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 @mock.patch(
     'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project.UpdateVariantAnnotationsTableWithDeletedProjectTask',
 )
-class UpdateLookupTableDeleteProjectTaskTest(MockedDatarootTestCase):
+class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
     def test_delete_project_empty_table(
         self, mock_update_lookup_table_task: mock.Mock,
     ) -> None:
         mock_update_lookup_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
-        task = UpdateLookupTableDeleteProjectTask(
+        task = UpdateLookupTableWithDeletedProjectTask(
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
@@ -134,7 +134,7 @@ class UpdateLookupTableDeleteProjectTaskTest(MockedDatarootTestCase):
             ),
         )
         worker = luigi.worker.Worker()
-        task = UpdateLookupTableDeleteProjectTask(
+        task = UpdateLookupTableWithDeletedProjectTask(
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
