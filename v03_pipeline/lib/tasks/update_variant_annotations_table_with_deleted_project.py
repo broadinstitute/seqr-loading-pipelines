@@ -40,7 +40,7 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
         if not self.dataset_type.has_lookup_table:
             return ht.annotate_globals(
                 updates=ht.updates.filter(
-                    lambda u: u.project_guid == self.project_guid
+                    lambda u: u.project_guid == self.project_guid,
                 ),
             )
         lookup_ht = hl.read_table(
