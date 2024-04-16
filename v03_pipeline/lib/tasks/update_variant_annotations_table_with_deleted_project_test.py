@@ -164,7 +164,8 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
                 # NB: The top two rows, present in the lookup table, are updated
                 # to include only the project_b stats
                 hl.Struct(
-                    id=2, gt_stats=hl.Struct(AC=0, AN=1, AF=0.25, hom=0),
+                    id=2,
+                    gt_stats=hl.Struct(AC=0, AN=1, AF=0.25, hom=0),
                 ),
             ],
         )

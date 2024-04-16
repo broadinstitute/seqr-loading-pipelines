@@ -16,7 +16,8 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 )
 class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
     def test_delete_project_empty_table(
-        self, mock_update_lookup_table_task: mock.Mock,
+        self,
+        mock_update_lookup_table_task: mock.Mock,
     ) -> None:
         mock_update_lookup_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
@@ -47,7 +48,9 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project.UpdateLookupTableDeleteProjectTask.initialize_table',
     )
     def test_delete_project(
-        self, mock_initialize_table: mock.Mock, mock_update_lookup_table_task: mock.Mock,
+        self,
+        mock_initialize_table: mock.Mock,
+        mock_update_lookup_table_task: mock.Mock,
     ) -> None:
         mock_update_lookup_table_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
