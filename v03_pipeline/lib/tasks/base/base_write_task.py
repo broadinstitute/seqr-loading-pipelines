@@ -9,6 +9,9 @@ class BaseWriteTask(BaseHailTableTask):
         self.init_hail()
         ht = self.create_table()
         write(ht, self.output().path)
+        # Set force to false after run, allowing "complete()" to succeeded
+        # when dependencies are re-evaluated.
+        self.force = False
 
     def create_table(self) -> hl.Table:
         raise NotImplementedError

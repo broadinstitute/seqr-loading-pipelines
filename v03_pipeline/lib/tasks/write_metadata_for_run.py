@@ -3,7 +3,7 @@ import json
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.util import callset_project_pairs
+from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_hail_table_task import BaseHailTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -29,6 +29,10 @@ class WriteMetadataForRunTask(BaseHailTableTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     check_sex_and_relatedness = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -47,7 +51,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
     def complete(self) -> bool:
         return GCSorLocalTarget(self.output().path).exists()
 
-    def requires(self) -> luigi.Task:
+    def requires(self) -> list[luigi.Task]:
         return [
             WriteRemappedAndSubsettedCallsetTask(
                 self.reference_genome,
@@ -60,6 +64,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
+                self.force,
                 self.check_sex_and_relatedness,
             )
             for (
