@@ -6,6 +6,7 @@ from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
     remove_family_guids,
+    remove_project,
 )
 from v03_pipeline.lib.model import DatasetType
 
@@ -88,7 +89,134 @@ class LookupTest(unittest.TestCase):
             ],
         )
 
-    def test_remove_new_callset_family_guids(self) -> None:
+    def test_remove_project(self) -> None:
+        lookup_ht = hl.Table.parallelize(
+            [
+                {
+                    'id': 0,
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=2,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=2,
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                },
+                {
+                    'id': 1,
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=0,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                            hl.Struct(
+                                ref_samples=2,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=2,
+                            ),
+                        ],
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                },
+            ],
+            hl.tstruct(
+                id=hl.tint32,
+                project_stats=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            ref_samples=hl.tint32,
+                            heteroplasmic_samples=hl.tint32,
+                            homoplasmic_samples=hl.tint32,
+                        ),
+                    ),
+                ),
+            ),
+            key='id',
+            globals=hl.Struct(
+                project_guids=['project_a', 'project_b'],
+                project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+            ),
+        )
+        lookup_ht = remove_project(
+            lookup_ht,
+            'project_c',
+        )
+        lookup_ht = remove_project(
+            lookup_ht,
+            'project_a',
+        )
+        self.assertCountEqual(
+            lookup_ht.globals.collect(),
+            [
+                hl.Struct(
+                    project_guids=['project_b'],
+                    project_families={'project_b': ['4']},
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            lookup_ht.collect(),
+            [
+                hl.Struct(
+                    id=0,
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                ),
+                hl.Struct(
+                    id=1,
+                    project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=3,
+                                heteroplasmic_samples=3,
+                                homoplasmic_samples=3,
+                            ),
+                        ],
+                    ],
+                ),
+            ],
+        )
+
+    def test_remove_family_guids(self) -> None:
         lookup_ht = hl.Table.parallelize(
             [
                 {
