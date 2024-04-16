@@ -53,6 +53,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     liftover_ref_path = luigi.OptionalParameter(
         default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
         description='Path to GRCh38 to GRCh37 coordinates file',
@@ -109,6 +113,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
+                        self.force,
                     ),
                 ],
             )
@@ -126,6 +131,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
+                        False,
                     )
                     for (
                         callset_path,
@@ -180,7 +186,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.project_pedigree_paths,
         )
 
-        # Identify new variants.
+        # 1) Identify new variants.
         annotations_ht = hl.read_table(
             variant_annotations_table_path(
                 self.reference_genome,

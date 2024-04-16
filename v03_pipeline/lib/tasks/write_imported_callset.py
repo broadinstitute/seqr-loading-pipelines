@@ -30,9 +30,13 @@ class WriteImportedCallsetTask(BaseWriteTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
 
     def complete(self) -> luigi.Target:
-        if super().complete():
+        if not self.force and super().complete():
             mt = hl.read_matrix_table(self.output().path)
             return hasattr(mt, 'sample_type') and hl.eval(
                 self.sample_type.value == mt.sample_type,
