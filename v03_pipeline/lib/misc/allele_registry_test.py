@@ -6,7 +6,10 @@ import requests
 from v03_pipeline.lib.misc.allele_registry import (
     HTTP_REQUEST_TIMEOUT as ALLELE_REGISTRY_TIMEOUT,
 )
-from v03_pipeline.lib.misc.allele_registry import register_alleles
+from v03_pipeline.lib.misc.allele_registry import (
+    register_alleles,
+    register_alleles_in_chunks,
+)
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -107,3 +110,33 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             'MESSAGE: 1\t10469\trs370233998\tC\tG\t.\t.\t.\n'
             'INPUT_LINE: Cannot align NC_000001.10 [10468,10469).',
         )
+
+    @patch('v03_pipeline.lib.misc.allele_registry.register_alleles')
+    def test_register_alleles_in_chunks(self, mock_register_alleles):
+        chunk_size = 10
+        ht = hl.Table.parallelize(
+            [{'x': x} for x in range(chunk_size * 3 + 5)],  # 35 rows, expect 4 chunks
+            hl.tstruct(x=hl.tint32),
+            key='x',
+        )
+
+        # Instead of actually calling register_alleles, capture and assert on
+        # the value of 'x' in the first row of each chunk and number of rows in each chunk
+        first_row_values = []
+        num_rows_per_chunk = []
+
+        def _get_ht_info(chunk_ht: hl.Table, *_) -> None:
+            first_row_values.append(hl.eval(chunk_ht.take(1)[0].x))
+            num_rows_per_chunk.append(chunk_ht.count())
+
+        mock_register_alleles.side_effect = _get_ht_info
+        register_alleles_in_chunks(
+            ht,
+            ReferenceGenome.GRCh38,
+            TEST_SERVER_URL,
+            chunk_size,
+        )
+
+        self.assertEqual(4, mock_register_alleles.call_count)
+        self.assertEqual(first_row_values, [1, 11, 21, 31])
+        self.assertEqual(num_rows_per_chunk, [10, 10, 10, 5])

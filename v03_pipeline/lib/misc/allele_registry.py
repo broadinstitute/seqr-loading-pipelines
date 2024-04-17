@@ -60,8 +60,13 @@ def register_alleles_in_chunks(
     )
     for start_idx in range(0, num_rows, chunk_size):
         end_idx = start_idx + chunk_size
-        # TODO: chunk out ht
-        # register_alleles(chunk_ht, reference_genome, base_url)
+        if end_idx == chunk_size:
+            chunk_ht = ht.head(chunk_size)
+        elif end_idx <= num_rows:
+            chunk_ht = ht.head(end_idx).tail(chunk_size)
+        else:
+            chunk_ht = ht.tail(end_idx - num_rows)
+        register_alleles(chunk_ht, reference_genome, base_url)
 
 
 def register_alleles(
