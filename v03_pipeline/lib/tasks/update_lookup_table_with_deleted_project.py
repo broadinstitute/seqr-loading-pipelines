@@ -30,8 +30,4 @@ class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         ht = remove_project(ht, self.project_guid)
-        return ht.select_globals(
-            project_guids=ht.project_guids,
-            project_families=ht.project_families,
-            updates=ht.updates.filter(lambda u: u.project_guid != self.project_guid),
-        )
+        return ht
