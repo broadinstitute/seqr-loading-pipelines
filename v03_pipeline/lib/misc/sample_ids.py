@@ -83,4 +83,3 @@ def subset_samples(
     print(f'Subsetted to {subset_count} sample ids')
     mt = mt.semi_join_cols(sample_subset_ht)
     return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))
-
