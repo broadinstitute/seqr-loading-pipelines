@@ -26,7 +26,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='R0555_seqr_demo',
-            family_guids=['abc']
+            family_guids=['abc'],
         )
         worker.add(task)
         worker.run()
@@ -143,7 +143,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='project_a',
-            family_guids=['1', '3']
+            family_guids=['1', '3'],
         )
         worker.add(task)
         worker.run()
@@ -156,7 +156,10 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                 hl.Struct(
                     project_guids=['project_a', 'project_b'],
                     project_families={'project_a': ['2'], 'project_b': ['4']},
-                    updates={hl.Struct(project_guid='project_a', callset='abc'), hl.Struct(project_guid='project_b', callset='abc')},
+                    updates={
+                        hl.Struct(project_guid='project_a', callset='abc'),
+                        hl.Struct(project_guid='project_b', callset='abc'),
+                    },
                 ),
             ],
         )

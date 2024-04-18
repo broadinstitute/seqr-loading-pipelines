@@ -154,7 +154,12 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
         self.assertEqual(
             ht.globals.collect(),
             [
-                hl.Struct(updates={hl.Struct(callset='abc', project_guid='project_a'), hl.Struct(callset='123', project_guid='project_b')}),
+                hl.Struct(
+                    updates={
+                        hl.Struct(callset='abc', project_guid='project_a'),
+                        hl.Struct(callset='123', project_guid='project_b'),
+                    },
+                ),
             ],
         )
         self.assertEqual(

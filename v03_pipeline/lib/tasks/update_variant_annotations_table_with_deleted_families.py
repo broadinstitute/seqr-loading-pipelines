@@ -41,15 +41,20 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
         if not self.dataset_type.has_lookup_table:
             return True
         return super().complete() and (
-            self.done or hl.eval(
+            self.done
+            or hl.eval(
                 hl.bind(
                     lambda family_guids: hl.all(
                         hl.array(list(self.family_guids)).map(
-                            lambda family_guid: ~hl.set(family_guids).contains(family_guid),
+                            lambda family_guid: ~hl.set(family_guids).contains(
+                                family_guid,
+                            ),
                         ),
                     ),
-                    hl.read_table(self.input().path).globals.project_families.get(self.project_guid),
-                )
+                    hl.read_table(self.input().path).globals.project_families.get(
+                        self.project_guid,
+                    ),
+                ),
             )
         )
 

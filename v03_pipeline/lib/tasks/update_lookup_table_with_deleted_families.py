@@ -26,16 +26,27 @@ class UpdateLookupTableWithDeletedFamiliesTask(BaseLookupTableTask):
     def complete(self) -> bool:
         return super().complete() and hl.eval(
             hl.bind(
-                lambda family_guids: hl.all(
-                    hl.array(list(self.family_guids)).map(
-                        lambda family_guid: ~hl.set(family_guids).contains(family_guid),
+                lambda family_guids: (
+                    hl.is_missing(family_guids)
+                    | hl.all(
+                        hl.array(list(self.family_guids)).map(
+                            lambda family_guid: ~family_guids.contains(family_guid),
+                        ),
                     ),
                 ),
-                hl.read_table(self.output().path).globals.project_families.get(self.project_guid),
-            )
+                hl.set(
+                    hl.read_table(self.output().path).globals.project_families.get(
+                        self.project_guid,
+                    ),
+                ),
+            ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        if 
-        ht = remove_family_guids(ht, self.project_guid, hl.set(list(self.family_guids)))
-        return ht
+        family_guids = hl.eval(ht.globals.project_families.get(self.project_guid))
+        if family_guids and set(self.family_guids) == set(family_guids):
+            msg = 'Remove project rather than all families in project'
+            raise RuntimeError(msg)
+        return remove_family_guids(
+            ht, self.project_guid, hl.set(list(self.family_guids)),
+        )
