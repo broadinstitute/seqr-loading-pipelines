@@ -101,9 +101,8 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             f'1\t878314\trs370234000\tG\tC\t.\t.\t.\n',
             timeout=ALLELE_REGISTRY_TIMEOUT,
         )
-
         mock_logger.warning.assert_called_once_with(
-            '1 allele(s) failed to register. First error: \n'
+            '1 failed. First error: \n'
             'API URL: http://reg.test.genome.network/alleles?file=vcf&fields=none+@id\n'
             'TYPE: InternalServerError\n'
             'DESCRIPTION: Given allele cannot be mapped in consistent way to reference genome.\n'
@@ -136,7 +135,6 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             TEST_SERVER_URL,
             chunk_size,
         )
-
         self.assertEqual(4, mock_register_alleles.call_count)
-        self.assertEqual(first_row_values, [1, 11, 21, 31])
+        self.assertEqual(first_row_values, [0, 10, 20, 30])
         self.assertEqual(num_rows_per_chunk, [10, 10, 10, 5])
