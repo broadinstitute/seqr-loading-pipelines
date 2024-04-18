@@ -98,7 +98,9 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         ]
 
         id_map = register_alleles(
-            new_variants_ht, ReferenceGenome.GRCh38, TEST_SERVER_URL,
+            new_variants_ht,
+            ReferenceGenome.GRCh38,
+            TEST_SERVER_URL,
         )
         self.assertEqual(
             id_map,
