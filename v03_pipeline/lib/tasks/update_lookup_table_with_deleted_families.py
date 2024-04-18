@@ -48,5 +48,7 @@ class UpdateLookupTableWithDeletedFamiliesTask(BaseLookupTableTask):
             msg = 'Remove project rather than all families in project'
             raise RuntimeError(msg)
         return remove_family_guids(
-            ht, self.project_guid, hl.set(list(self.family_guids)),
+            ht,
+            self.project_guid,
+            hl.set(list(self.family_guids)),
         )
