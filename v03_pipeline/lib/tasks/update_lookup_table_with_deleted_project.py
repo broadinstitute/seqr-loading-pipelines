@@ -22,6 +22,8 @@ class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
         )
 
     def complete(self) -> bool:
+        if super().complete():
+            print(hl.eval(hl.read_table(self.output().path).updates.project_guid))
         return super().complete() and hl.eval(
             ~hl.read_table(self.output().path).updates.project_guid.contains(
                 self.project_guid,
@@ -29,4 +31,7 @@ class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        return remove_project(ht, self.project_guid)
+        ht = remove_project(ht, self.project_guid)
+        return ht.annotate_globals(
+            updates=ht.updates.filter(lambda u: u.project_guid != self.project_guid)
+        )
