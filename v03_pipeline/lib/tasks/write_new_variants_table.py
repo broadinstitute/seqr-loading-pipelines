@@ -235,9 +235,20 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
 
-        # Register the new variant alleles to the Clingen Allele Registry.
+        # Register the new variant alleles to the Clingen Allele Registry
+        # and annotate new_variants table with CAID.
         if self.dataset_type.should_send_to_allele_registry:
-            register_alleles_in_chunks(new_variants_ht, self.reference_genome)
+            for id_map in register_alleles_in_chunks(
+                new_variants_ht,
+                self.reference_genome,
+            ):
+                if id_map:
+                    new_variants_ht = new_variants_ht.annotate(
+                        CAID=id_map.get(
+                            new_variants_ht.variant_id,
+                            hl.missing(hl.tstr),
+                        ),
+                    )
 
         return new_variants_ht.annotate_globals(
             updates={

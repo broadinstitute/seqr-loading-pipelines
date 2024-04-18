@@ -80,9 +80,15 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         mock_put_request.return_value = mock_response
         mock_response.ok = True
         mock_response.json.return_value = [
-            {'@id': 'http://reg.genome.network/allele/CA997563840'},
+            {
+                '@id': 'http://reg.genome.network/allele/CA997563840',
+                'externalRecords': {'gnomAD_4': [{'id': '1-10126-TA-T'}]},
+            },
             {'@id': 'http://reg.genome.network/allele/CA16716503'},
-            {'@id': 'http://reg.genome.network/allele/CA997563845'},
+            {
+                '@id': 'http://reg.genome.network/allele/CA997563845',
+                'externalRecords': {'gnomAD_4': [{'id': '1-10128-A-G'}]},
+            },
             {
                 'description': 'Given allele cannot be mapped in consistent way to reference genome.',
                 'errorType': 'InternalServerError',
@@ -91,7 +97,16 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             },
         ]
 
-        register_alleles(new_variants_ht, ReferenceGenome.GRCh38, TEST_SERVER_URL)
+        id_map = register_alleles(
+            new_variants_ht, ReferenceGenome.GRCh38, TEST_SERVER_URL,
+        )
+        self.assertEqual(
+            id_map,
+            {
+                '1-10126-TA-T': 'CA997563840',
+                '1-10128-A-G': 'CA997563845',
+            },
+        )
         mock_put_request.assert_called_once_with(
             url=ANY,
             data=f'{"".join(ReferenceGenome.GRCh38.allele_registry_vcf_header)}'
@@ -138,3 +153,17 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         self.assertEqual(4, mock_register_alleles.call_count)
         self.assertEqual(first_row_values, [0, 10, 20, 30])
         self.assertEqual(num_rows_per_chunk, [10, 10, 10, 5])
+
+    def test_register_alleles_in_chunks_no_new_variants(self):
+        ht = hl.Table.parallelize(
+            [],
+            hl.tstruct(x=hl.tint32),
+            key='x',
+        )
+        empty_generator = register_alleles_in_chunks(
+            ht,
+            ReferenceGenome.GRCh38,
+            TEST_SERVER_URL,
+        )
+        with self.assertRaises(StopIteration):
+            next(empty_generator)

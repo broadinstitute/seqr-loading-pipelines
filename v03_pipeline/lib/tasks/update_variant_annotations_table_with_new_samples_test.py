@@ -230,7 +230,23 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
-        mock_register_alleles.side_effect = None
+        # make register_alleles return CAIDs for 4 of 30 variants
+        mock_register_alleles.side_effect = [
+            iter(
+                [
+                    {
+                        '1-871269-A-C': 'CA1',
+                        '1-874734-C-T': 'CA2',
+                        '1-876499-A-G': 'CA3',
+                        '1-878314-G-C': 'CA4',
+                    },
+                ],
+            ),
+            iter(
+                [],
+            ),  # for the second call, there are no new variants, return empty iterator
+        ]
+
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -347,6 +363,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     'xpos',
                     'gt_stats',
                     'screen',
+                    'CAID',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -376,6 +393,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000871269,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[1]),
+                    CAID='CA1',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -391,6 +409,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000874734,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA2',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -406,6 +425,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000876499,
                     gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA3',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -421,6 +441,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000878314,
                     gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA4',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -436,6 +457,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000878809,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID=None,
                 ),
             ],
         )

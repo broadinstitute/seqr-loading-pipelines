@@ -12,7 +12,7 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
 
 MAX_VARIANTS_PER_REQUEST = 1000000
-ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id'
+ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.gnomAD_4.id'
 HTTP_REQUEST_TIMEOUT = 300
 
 logger = get_logger(__name__)
@@ -66,14 +66,14 @@ def register_alleles_in_chunks(
             chunk_ht = ht.head(end_idx).tail(chunk_size)
         else:
             chunk_ht = ht.tail(end_idx - num_rows)
-        register_alleles(chunk_ht, reference_genome, base_url)
+        yield register_alleles(chunk_ht, reference_genome, base_url)
 
 
 def register_alleles(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     base_url: str,
-) -> None:
+) -> dict[str, str]:
     with tempfile.NamedTemporaryFile(
         suffix='.vcf',
     ) as raw_vcf, tempfile.NamedTemporaryFile(suffix='.vcf') as formatted_vcf:
@@ -94,7 +94,7 @@ def register_alleles(
                 data=data,
                 timeout=HTTP_REQUEST_TIMEOUT,
             )
-            handle_api_response(res, base_url)
+            return handle_api_response(res, base_url)
 
 
 def build_url(base_url: str) -> str:
@@ -112,18 +112,29 @@ def build_url(base_url: str) -> str:
     return base_url + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
 
 
-def handle_api_response(res: requests.Response, base_url: str) -> None:
+def handle_api_response(res: requests.Response, base_url: str) -> dict[str, str]:
     response = res.json()
     if not res.ok or 'errorType' in response:
         error = AlleleRegistryError.from_api_response(response, base_url)
         logger.error(error.loggable_message)
         raise HTTPError(error.message)
 
-    errors = [
-        AlleleRegistryError.from_api_response(allele_response, base_url)
-        for allele_response in response
-        if 'errorType' in allele_response
-    ]
+    id_map = {}
+    errors = []
+    for allele_response in response:
+        if 'errorType' in allele_response:
+            errors.append(
+                AlleleRegistryError.from_api_response(allele_response, base_url),
+            )
+        else:
+            # Example allele_response:
+            # {'@id': 'http://reg.genome.network/allele/CA520798109',
+            #  'externalRecords': {'gnomAD_4': [{'id': '1-10109-AACCCT-A'}]}}
+            caid = allele_response['@id'].split('/')[-1]
+            if 'externalRecords' in allele_response:
+                gnomad_id = allele_response['externalRecords']['gnomAD_4'][0]['id']
+                id_map[gnomad_id] = caid
+
     logger.info(
         f'{len(response) - len(errors)} out of {len(response)} returned CAID(s).',
     )
@@ -131,3 +142,4 @@ def handle_api_response(res: requests.Response, base_url: str) -> None:
         logger.warning(
             f'{len(errors)} failed. First error: {errors[0].loggable_message}',
         )
+    return id_map
