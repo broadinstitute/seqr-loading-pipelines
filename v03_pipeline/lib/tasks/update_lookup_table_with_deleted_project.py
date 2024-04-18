@@ -22,8 +22,6 @@ class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
         )
 
     def complete(self) -> bool:
-        if super().complete():
-            print(hl.eval(hl.read_table(self.output().path).updates.project_guid))
         return super().complete() and hl.eval(
             ~hl.read_table(self.output().path).updates.project_guid.contains(
                 self.project_guid,
