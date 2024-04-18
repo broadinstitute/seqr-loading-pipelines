@@ -610,18 +610,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
 
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
-    def test_update_vat_without_accessing_private_datasets(
+    def test_update_vat_without_accessing_private_datasets(  # noqa: PLR0913
         self,
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
         mock_update_vat_with_rdc_task: Mock,
+        mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
@@ -640,6 +642,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
+        mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
