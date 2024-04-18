@@ -138,23 +138,19 @@ class AlleleRegistryTest(MockedDatarootTestCase):
 
         # Instead of actually calling register_alleles, capture and assert on
         # the value of 'x' in the first row of each chunk and number of rows in each chunk
-        first_row_values = []
-        num_rows_per_chunk = []
+        def _side_effect(chunk_ht: hl.Table, *_):
+            value_in_first_row = hl.eval(chunk_ht.take(1)[0].x)
+            num_rows_in_chunk = chunk_ht.count()
+            return value_in_first_row, num_rows_in_chunk
 
-        def _get_ht_info(chunk_ht: hl.Table, *_) -> None:
-            first_row_values.append(hl.eval(chunk_ht.take(1)[0].x))
-            num_rows_per_chunk.append(chunk_ht.count())
-
-        mock_register_alleles.side_effect = _get_ht_info
-        register_alleles_in_chunks(
+        mock_register_alleles.side_effect = _side_effect
+        generator = register_alleles_in_chunks(
             ht,
             ReferenceGenome.GRCh38,
             TEST_SERVER_URL,
             chunk_size,
         )
-        self.assertEqual(4, mock_register_alleles.call_count)
-        self.assertEqual(first_row_values, [0, 10, 20, 30])
-        self.assertEqual(num_rows_per_chunk, [10, 10, 10, 5])
+        self.assertEqual(list(generator), [(0, 10), (10, 10), (20, 10), (30, 5)])
 
     def test_register_alleles_in_chunks_no_new_variants(self):
         ht = hl.Table.parallelize(

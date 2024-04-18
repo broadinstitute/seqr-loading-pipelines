@@ -244,10 +244,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ):
                 if id_map:
                     new_variants_ht = new_variants_ht.annotate(
-                        CAID=id_map.get(
+                        CAID=hl.literal(id_map).get(
                             new_variants_ht.variant_id,
                             hl.missing(hl.tstr),
                         ),
+                    )
+                else:
+                    new_variants_ht = new_variants_ht.annotate(
+                        CAID=hl.missing(hl.tstr),
                     )
 
         return new_variants_ht.annotate_globals(

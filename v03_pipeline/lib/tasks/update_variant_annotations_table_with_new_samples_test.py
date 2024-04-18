@@ -308,6 +308,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 x
                 for x in ht.select(
                     'gt_stats',
+                    'CAID',
                 ).collect()
                 if x.locus.position <= 871269  # noqa: PLR2004
             ],
@@ -320,6 +321,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     ),
                     alleles=['A', 'C'],
                     gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
+                    CAID='CA1',
                 ),
             ],
         )
