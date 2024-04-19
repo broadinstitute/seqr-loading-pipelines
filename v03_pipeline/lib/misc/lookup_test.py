@@ -181,6 +181,11 @@ class LookupTest(unittest.TestCase):
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
+            'project_a',
+            hl.set(['1']),
+        )
+        lookup_ht = remove_family_guids(
+            lookup_ht,
             'project_b',
             hl.set(['4']),
         )
