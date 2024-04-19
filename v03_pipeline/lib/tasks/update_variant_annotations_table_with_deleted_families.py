@@ -64,8 +64,6 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
             return ht
         lookup_ht = hl.read_table(self.input().path)
         project_i = hl.eval(lookup_ht.globals.project_guids.index(self.project_guid))
-        if project_i is None:
-            return ht
 
         # Filter lookup table to only the rows where any of the requested families are defined
         # (A family may be set to missing during lookup table construction if all values for a family are 0)

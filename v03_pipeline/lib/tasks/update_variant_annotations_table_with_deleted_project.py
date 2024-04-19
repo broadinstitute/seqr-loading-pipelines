@@ -50,8 +50,6 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
             ),
         )
         project_i = hl.eval(lookup_ht.globals.project_guids.index(self.project_guid))
-        if project_i is None:
-            return ht
         lookup_ht = lookup_ht.filter(hl.is_defined(lookup_ht.project_stats[project_i]))
         lookup_ht = remove_project(lookup_ht, self.project_guid)
         project_variants_ht = ht.semi_join(lookup_ht)
