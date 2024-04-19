@@ -25,8 +25,6 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
         self.done = False
 
     def requires(self) -> luigi.Task:
-        # Do not call super().requires() here to avoid
-        # any reference data requirements.
         return HailTableTask(
             lookup_table_path(
                 self.reference_genome,
@@ -35,12 +33,12 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
         )
 
     def complete(self) -> bool:
-        # We don't have the concept of families being present or
-        # not present in annotations table, thus we check the "lookup"
-        # table OR a done flag to prevent the task from looping over itself.
         if not self.dataset_type.has_lookup_table:
             return True
         return super().complete() and (
+            # We don't have the concept of families being present or
+            # not present in annotations table, thus we check the "lookup"
+            # table OR a done flag to prevent the task from looping over itself.
             self.done
             or hl.eval(
                 hl.bind(

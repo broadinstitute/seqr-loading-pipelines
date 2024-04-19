@@ -27,7 +27,7 @@ class UpdateLookupTableWithDeletedFamiliesTask(BaseLookupTableTask):
         return super().complete() and hl.eval(
             hl.bind(
                 lambda family_guids: (
-                    hl.is_missing(family_guids)
+                    hl.is_missing(family_guids) # The project itself is missing
                     | hl.all(
                         hl.array(list(self.family_guids)).map(
                             lambda family_guid: ~family_guids.contains(family_guid),

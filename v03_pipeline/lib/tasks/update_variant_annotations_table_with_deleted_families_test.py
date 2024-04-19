@@ -55,16 +55,8 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
                                 het_samples=0,
                                 hom_samples=0,
                             ),
-                            hl.Struct(
-                                ref_samples=1,
-                                het_samples=1,
-                                hom_samples=1,
-                            ),
-                            hl.Struct(
-                                ref_samples=2,
-                                het_samples=2,
-                                hom_samples=2,
-                            ),
+                            None,
+                            None,
                         ],
                         [
                             hl.Struct(
@@ -166,7 +158,7 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
             ht.collect(),
             [
                 hl.Struct(id=0, gt_stats=hl.Struct(AC=9, AN=18, AF=0.5, hom=3)),
-                hl.Struct(id=1, gt_stats=hl.Struct(AC=12, AN=24, AF=0.5, hom=4)),
+                hl.Struct(id=1, gt_stats=hl.Struct(AC=0, AN=1, AF=0.25, hom=0)),
                 hl.Struct(
                     id=2,
                     gt_stats=hl.Struct(AC=0, AN=1, AF=0.25, hom=0),
