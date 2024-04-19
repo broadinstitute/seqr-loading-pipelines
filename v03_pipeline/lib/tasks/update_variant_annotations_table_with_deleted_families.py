@@ -42,12 +42,15 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
             self.done
             or hl.eval(
                 hl.bind(
-                    lambda family_guids: hl.all(
-                        hl.array(list(self.family_guids)).map(
-                            lambda family_guid: ~hl.set(family_guids).contains(
-                                family_guid,
+                    lambda family_guids: (
+                        hl.is_missing(family_guids)  # The project itself is missing
+                        | hl.all(
+                            hl.array(list(self.family_guids)).map(
+                                lambda family_guid: ~hl.set(family_guids).contains(
+                                    family_guid,
+                                ),
                             ),
-                        ),
+                        )
                     ),
                     hl.read_table(self.input().path).globals.project_families.get(
                         self.project_guid,
