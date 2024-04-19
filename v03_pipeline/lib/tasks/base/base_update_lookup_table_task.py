@@ -6,7 +6,7 @@ from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class BaseLookupTableTask(BaseUpdateTask):
+class BaseUpdateLookupTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             lookup_table_path(

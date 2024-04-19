@@ -2,10 +2,10 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.family_entries import remove_family_guids
-from v03_pipeline.lib.tasks.base.base_project_table_task import BaseProjectTableTask
+from v03_pipeline.lib.tasks.base.base_project_table_task import BaseUpdateProjectTableTask
 
 
-class UpdateProjectTableWithDeletedFamiliesTask(BaseProjectTableTask):
+class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateProjectTableTask):
     family_guids = luigi.ListParameter()
 
     def complete(self) -> bool:

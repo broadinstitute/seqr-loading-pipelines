@@ -4,13 +4,13 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     remove_project,
 )
-from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseLookupTableTask
+from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseUpdateLookupTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
     UpdateVariantAnnotationsTableWithDeletedProjectTask,
 )
 
 
-class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
+class UpdateLookupTableWithDeletedProjectTask(BaseUpdateLookupTableTask):
     project_guid = luigi.Parameter()
 
     def requires(self) -> luigi.Task:

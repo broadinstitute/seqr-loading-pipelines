@@ -7,13 +7,13 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.tasks.base.base_project_table_task import BaseProjectTableTask
+from v03_pipeline.lib.tasks.base.base_project_table_task import BaseUpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateProjectTableTask(BaseProjectTableTask):
+class UpdateProjectTableTask(BaseUpdateProjectTableTask):
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()

@@ -9,13 +9,13 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
-    BaseVariantAnnotationsTableTask,
+    BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import HailTableTask
 
 
 class UpdateVariantAnnotationsTableWithDeletedProjectTask(
-    BaseVariantAnnotationsTableTask,
+    BaseUpdateVariantAnnotationsTableTask,
 ):
     project_guid = luigi.Parameter()
 

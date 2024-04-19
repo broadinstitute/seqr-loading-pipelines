@@ -4,13 +4,13 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
-from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseLookupTableTask
+from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseUpdateLookupTableTask
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
     UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
 )
 
 
-class UpdateLookupTableWithDeletedFamiliesTask(BaseLookupTableTask):
+class UpdateLookupTableWithDeletedFamiliesTask(BaseUpdateLookupTableTask):
     project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
 

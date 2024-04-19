@@ -9,14 +9,14 @@ from v03_pipeline.lib.reference_data.compare_globals import (
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
-    BaseVariantAnnotationsTableTask,
+    BaseUpdateVariantAnnotationsTableTask,
 )
 
 logger = get_logger(__name__)
 
 
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-    BaseVariantAnnotationsTableTask,
+    BaseUpdateVariantAnnotationsTableTask,
 ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
