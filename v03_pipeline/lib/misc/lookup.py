@@ -70,35 +70,6 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
     )
 
 
-def remove_project(
-    ht: hl.Table,
-    project_guid: str,
-) -> hl.Table:
-    existing_project_guids = hl.eval(ht.globals.project_guids)
-    if project_guid not in existing_project_guids:
-        return ht
-    project_indexes_to_keep = (
-        hl.enumerate(existing_project_guids)
-        .filter(lambda item: item[1] != project_guid)
-        .map(lambda item: item[0])
-    )
-    ht = ht.annotate(
-        project_stats=(
-            project_indexes_to_keep.map(
-                lambda i: ht.project_stats[i],
-            )
-        ),
-    )
-    return ht.annotate_globals(
-        project_guids=project_indexes_to_keep.map(
-            lambda i: ht.project_guids[i],
-        ),
-        project_families=hl.dict(
-            ht.project_families.items().filter(lambda item: item[0] != project_guid),
-        ),
-    )
-
-
 def remove_family_guids(
     ht: hl.Table,
     project_guid: str,
