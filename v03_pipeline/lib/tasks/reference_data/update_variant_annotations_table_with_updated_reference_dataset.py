@@ -8,7 +8,7 @@ from v03_pipeline.lib.reference_data.compare_globals import (
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
 

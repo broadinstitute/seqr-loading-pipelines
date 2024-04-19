@@ -7,7 +7,7 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.tasks.base.base_project_table_task import BaseUpdateProjectTableTask
+from v03_pipeline.lib.tasks.base.base_update_project_table_task import BaseUpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )

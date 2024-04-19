@@ -28,7 +28,7 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
@@ -79,7 +79,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 @patch(
-    'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
+    'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:

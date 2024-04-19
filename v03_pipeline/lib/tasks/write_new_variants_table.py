@@ -15,7 +15,7 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
