@@ -13,7 +13,9 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
-class UpdateVariantAnnotationsTableWithNewSamplesTask(BaseUpdateVariantAnnotationsTableTask):
+class UpdateVariantAnnotationsTableWithNewSamplesTask(
+    BaseUpdateVariantAnnotationsTableTask
+):
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()

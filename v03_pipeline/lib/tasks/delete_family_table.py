@@ -5,7 +5,7 @@ from v03_pipeline.lib.tasks.base.base_delete_task import BaseDeleteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class WriteFamilyTableTask(BaseDeleteTask):
+class DeleteFamilyTableTask(BaseDeleteTask):
     family_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
