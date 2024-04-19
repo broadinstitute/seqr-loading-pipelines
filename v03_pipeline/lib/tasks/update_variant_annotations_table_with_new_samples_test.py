@@ -234,12 +234,52 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_register_alleles.side_effect = [
             iter(
                 [
-                    {
-                        '1-871269-A-C': 'CA1',
-                        '1-874734-C-T': 'CA2',
-                        '1-876499-A-G': 'CA3',
-                        '1-878314-G-C': 'CA4',
-                    },
+                    hl.Table.parallelize(
+                        [
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=871269,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['A', 'C'],
+                                CAID='CA1',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=874734,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['C', 'T'],
+                                CAID='CA2',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=876499,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['A', 'G'],
+                                CAID='CA3',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=878314,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['G', 'C'],
+                                CAID='CA4',
+                            ),
+                        ],
+                        hl.tstruct(
+                            locus=hl.tlocus('GRCh38'),
+                            alleles=hl.tarray(hl.tstr),
+                            CAID=hl.tstr,
+                        ),
+                        key=('locus', 'alleles'),
+                    ),
                 ],
             ),
             iter(

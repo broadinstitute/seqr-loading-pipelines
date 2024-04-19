@@ -73,7 +73,7 @@ def register_alleles(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     base_url: str,
-) -> dict[str, str]:
+) -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.vcf',
     ) as raw_vcf, tempfile.NamedTemporaryFile(suffix='.vcf') as formatted_vcf:
@@ -94,7 +94,7 @@ def register_alleles(
                 data=data,
                 timeout=HTTP_REQUEST_TIMEOUT,
             )
-            return handle_api_response(res, base_url)
+            return handle_api_response(res, base_url, reference_genome)
 
 
 def build_url(base_url: str) -> str:
@@ -112,14 +112,18 @@ def build_url(base_url: str) -> str:
     return base_url + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
 
 
-def handle_api_response(res: requests.Response, base_url: str) -> dict[str, str]:
+def handle_api_response(
+    res: requests.Response,
+    base_url: str,
+    reference_genome: ReferenceGenome,
+) -> hl.Table:
     response = res.json()
     if not res.ok or 'errorType' in response:
         error = AlleleRegistryError.from_api_response(response, base_url)
         logger.error(error.loggable_message)
         raise HTTPError(error.message)
 
-    id_map = {}
+    parsed_structs = []
     errors = []
     for allele_response in response:
         if 'errorType' in allele_response:
@@ -133,7 +137,19 @@ def handle_api_response(res: requests.Response, base_url: str) -> dict[str, str]
             caid = allele_response['@id'].split('/')[-1]
             if 'externalRecords' in allele_response:
                 gnomad_id = allele_response['externalRecords']['gnomAD_4'][0]['id']
-                id_map[gnomad_id] = caid
+                chrom, pos, ref, alt = gnomad_id.split('-')
+                struct = hl.Struct(
+                    locus=hl.Locus(
+                        f'chr{chrom}'
+                        if reference_genome == ReferenceGenome.GRCh38
+                        else chrom,
+                        int(pos),
+                        reference_genome=reference_genome.value,
+                    ),
+                    alleles=[ref, alt],
+                    CAID=caid,
+                )
+                parsed_structs.append(struct)
 
     logger.info(
         f'{len(response) - len(errors)} out of {len(response)} returned CAID(s).',
@@ -142,4 +158,13 @@ def handle_api_response(res: requests.Response, base_url: str) -> dict[str, str]
         logger.warning(
             f'{len(errors)} failed. First error: {errors[0].loggable_message}',
         )
-    return id_map
+
+    return hl.Table.parallelize(
+        parsed_structs,
+        hl.tstruct(
+            locus=hl.tlocus(reference_genome.value),
+            alleles=hl.tarray(hl.tstr),
+            CAID=hl.tstr,
+        ),
+        key=('locus', 'alleles'),
+    )

@@ -97,17 +97,25 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             },
         ]
 
-        id_map = register_alleles(
+        ar_ht = register_alleles(
             new_variants_ht,
             ReferenceGenome.GRCh38,
             TEST_SERVER_URL,
         )
         self.assertEqual(
-            id_map,
-            {
-                '1-10126-TA-T': 'CA997563840',
-                '1-10128-A-G': 'CA997563845',
-            },
+            ar_ht.collect(),
+            [
+                hl.Struct(
+                    locus=hl.Locus('chr1', 10126, 'GRCh38'),
+                    alleles=['TA', 'T'],
+                    CAID='CA997563840',
+                ),
+                hl.Struct(
+                    locus=hl.Locus('chr1', 10128, 'GRCh38'),
+                    alleles=['A', 'G'],
+                    CAID='CA997563845',
+                ),
+            ],
         )
         mock_put_request.assert_called_once_with(
             url=ANY,
