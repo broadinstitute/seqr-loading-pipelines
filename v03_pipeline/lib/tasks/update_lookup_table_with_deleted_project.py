@@ -4,7 +4,9 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     remove_project,
 )
-from v03_pipeline.lib.tasks.base.base_update_lookup_table_task import BaseUpdateLookupTableTask
+from v03_pipeline.lib.tasks.base.base_update_lookup_table_task import (
+    BaseUpdateLookupTableTask,
+)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
     UpdateVariantAnnotationsTableWithDeletedProjectTask,
 )

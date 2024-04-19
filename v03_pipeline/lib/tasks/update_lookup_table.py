@@ -8,7 +8,9 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
-from v03_pipeline.lib.tasks.base.base_update_lookup_table_task import BaseUpdateLookupTableTask
+from v03_pipeline.lib.tasks.base.base_update_lookup_table_task import (
+    BaseUpdateLookupTableTask,
+)
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
