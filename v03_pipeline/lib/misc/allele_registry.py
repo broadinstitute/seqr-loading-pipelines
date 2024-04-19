@@ -36,8 +36,7 @@ class AlleleRegistryError:
             input_line=response.get('inputLine'),
         )
 
-    @property
-    def loggable_message(self) -> str:
+    def __str__(self) -> str:
         msg = (
             f'\nAPI URL: {self.base_url}\nTYPE: {self.error_type}'
             f'\nDESCRIPTION: {self.description}\nMESSAGE: {self.message}'
@@ -120,7 +119,7 @@ def handle_api_response(
     response = res.json()
     if not res.ok or 'errorType' in response:
         error = AlleleRegistryError.from_api_response(response, base_url)
-        logger.error(error.loggable_message)
+        logger.error(error)
         raise HTTPError(error.message)
 
     parsed_structs = []
@@ -156,7 +155,7 @@ def handle_api_response(
     )
     if errors:
         logger.warning(
-            f'{len(errors)} failed. First error: {errors[0].loggable_message}',
+            f'{len(errors)} failed. First error: {errors[0]}',
         )
 
     return hl.Table.parallelize(
