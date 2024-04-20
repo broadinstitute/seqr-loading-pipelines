@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.paths import project_table_path
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
+from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
