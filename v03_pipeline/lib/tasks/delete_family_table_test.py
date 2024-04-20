@@ -51,7 +51,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            family_guid='abc_1'
+            family_guid='abc_1',
         )
         worker.add(task)
         worker.run()

@@ -1,8 +1,7 @@
 import hailtop.fs as hfs
-import luigi
 
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.tasks.base.base_hail_table_task import BaseHailTableTask
+from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 
 logger = get_logger(__name__)
