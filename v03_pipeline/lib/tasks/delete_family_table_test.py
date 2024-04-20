@@ -9,7 +9,7 @@ from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
-class DeleteFamilyTableTaskTest(MockedDatarootTestCase):
+class DeleteTableTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.Table.parallelize(
@@ -51,7 +51,7 @@ class DeleteFamilyTableTaskTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            family_guid='abc_1',
+            family_guid='abc_1'
         )
         worker.add(task)
         worker.run()
@@ -62,6 +62,6 @@ class DeleteFamilyTableTaskTest(MockedDatarootTestCase):
                     ReferenceGenome.GRCh38,
                     DatasetType.SNV_INDEL,
                     'abc_1',
-                )
-            ).exists()
+                ),
+            ).exists(),
         )

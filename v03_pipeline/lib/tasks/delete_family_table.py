@@ -1,11 +1,14 @@
 import luigi
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import family_table_path
-from v03_pipeline.lib.tasks.base.base_delete_task import BaseDeleteTask
+from v03_pipeline.lib.tasks.base.base_delete_table import BaseDeleteTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
+logger = get_logger(__name__)
 
-class DeleteFamilyTableTask(BaseDeleteTask):
+
+class DeleteFamilyTableTask(BaseDeleteTableTask):
     family_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
