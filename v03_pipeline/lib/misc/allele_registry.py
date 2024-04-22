@@ -124,6 +124,7 @@ def handle_api_response(
 
     parsed_structs = []
     errors = []
+    no_external_id_count = 0
     for allele_response in response:
         if 'errorType' in allele_response:
             errors.append(
@@ -149,9 +150,14 @@ def handle_api_response(
                     CAID=caid,
                 )
                 parsed_structs.append(struct)
+            else:
+                no_external_id_count += 1
 
     logger.info(
         f'{len(response) - len(errors)} out of {len(response)} returned CAID(s).',
+    )
+    logger.info(
+        f'{no_external_id_count} registered allele(s) cannot be mapped back to our variants in the annotations table.',
     )
     if errors:
         logger.warning(

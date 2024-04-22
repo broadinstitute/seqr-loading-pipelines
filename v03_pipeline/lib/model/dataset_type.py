@@ -284,4 +284,4 @@ class DatasetType(Enum):
 
     @property
     def should_send_to_allele_registry(self):
-        return self in (DatasetType.SNV_INDEL, DatasetType.MITO)
+        return self == DatasetType.SNV_INDEL
