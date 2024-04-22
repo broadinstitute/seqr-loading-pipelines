@@ -3,6 +3,7 @@ import os
 import subprocess
 import tempfile
 import urllib
+import uuid
 
 import hail as hl
 
@@ -122,17 +123,22 @@ def download_and_import_latest_clinvar_vcf(
             os.path.basename(tmp_file.name),
         )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
-        mt = hl.import_vcf(
-            gcs_tmp_file_name,
-            reference_genome=reference_genome.value,
-            drop_samples=True,
-            skip_invalid_loci=True,
-            contig_recoding=reference_genome.contig_recoding(include_mt=True),
-            min_partitions=MIN_HT_PARTITIONS,
-            force_bgz=True,
-        )
-        mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
-        return join_to_submission_summary_ht(mt.rows())
+    mt = hl.import_vcf(
+        gcs_tmp_file_name,
+        reference_genome=reference_genome.value,
+        drop_samples=True,
+        skip_invalid_loci=True,
+        contig_recoding=reference_genome.contig_recoding(include_mt=True),
+        min_partitions=MIN_HT_PARTITIONS,
+        force_bgz=True,
+    )
+    mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
+    ht = join_to_submission_summary_ht(mt.rows())
+    checkpoint_path = os.path.join(
+        Env.HAIL_TMPDIR,
+        f'{uuid.uuid4()}.ht',
+    )
+    return ht.checkpoint(checkpoint_path)
 
 
 def _parse_clinvar_release_date(local_vcf_path: str) -> str:
@@ -183,15 +189,15 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             os.path.basename(tmp_file.name),
         )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
-        return hl.import_table(
-            gcs_tmp_file_name,
-            force=True,
-            filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
-            types={
-                '#VariationID': hl.tstr,
-                'Submitter': hl.tstr,
-                'ReportedPhenotypeInfo': hl.tstr,
-            },
-            missing='-',
-            min_partitions=MIN_HT_PARTITIONS,
-        )
+    return hl.import_table(
+        gcs_tmp_file_name,
+        force=True,
+        filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
+        types={
+            '#VariationID': hl.tstr,
+            'Submitter': hl.tstr,
+            'ReportedPhenotypeInfo': hl.tstr,
+        },
+        missing='-',
+        min_partitions=MIN_HT_PARTITIONS,
+    )
