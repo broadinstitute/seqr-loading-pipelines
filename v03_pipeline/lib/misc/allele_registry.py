@@ -15,7 +15,7 @@ from v03_pipeline.lib.reference_data.clinvar import safely_move_to_gcs
 
 MAX_VARIANTS_PER_REQUEST = 1000000
 ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.gnomAD_4.id'
-HTTP_REQUEST_TIMEOUT = 300
+HTTP_REQUEST_TIMEOUT = 420
 
 logger = get_logger(__name__)
 

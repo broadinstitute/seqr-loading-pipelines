@@ -238,11 +238,21 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Register the new variant alleles to the Clingen Allele Registry
         # and annotate new_variants table with CAID.
         if self.dataset_type.should_send_to_allele_registry:
-            for ar_ht in register_alleles_in_chunks(
+            ar_ht = hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus(self.reference_genome.value),
+                    alleles=hl.tarray(hl.tstr),
+                    CAID=hl.tstr,
+                ),
+                key=('locus', 'alleles'),
+            )
+            for ar_ht_chunk in register_alleles_in_chunks(
                 new_variants_ht,
                 self.reference_genome,
             ):
-                new_variants_ht = new_variants_ht.join(ar_ht, 'left')
+                ar_ht = ar_ht.union(ar_ht_chunk)
+            new_variants_ht = new_variants_ht.join(ar_ht, 'left')
 
         return new_variants_ht.annotate_globals(
             updates={
