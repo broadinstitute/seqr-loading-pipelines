@@ -101,6 +101,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             new_variants_ht,
             ReferenceGenome.GRCh38,
             TEST_SERVER_URL,
+            use_gcs_filesystem=False,
         )
         self.assertEqual(
             ar_ht.collect(),
@@ -153,10 +154,11 @@ class AlleleRegistryTest(MockedDatarootTestCase):
 
         mock_register_alleles.side_effect = _side_effect
         generator = register_alleles_in_chunks(
-            ht,
-            ReferenceGenome.GRCh38,
-            TEST_SERVER_URL,
-            chunk_size,
+            ht=ht,
+            reference_genome=ReferenceGenome.GRCh38,
+            use_gcs_filesystem=False,
+            base_url=TEST_SERVER_URL,
+            chunk_size=chunk_size,
         )
         self.assertEqual(list(generator), [(0, 10), (10, 10), (20, 10), (30, 5)])
 
@@ -167,9 +169,10 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             key='x',
         )
         empty_generator = register_alleles_in_chunks(
-            ht,
-            ReferenceGenome.GRCh38,
-            TEST_SERVER_URL,
+            ht=ht,
+            reference_genome=ReferenceGenome.GRCh38,
+            use_gcs_filesystem=False,
+            base_url=TEST_SERVER_URL,
         )
         with self.assertRaises(StopIteration):
             next(empty_generator)
