@@ -1,14 +1,11 @@
-import hail as hl
 import luigi
 
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
-from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
-from v03_pipeline.lib.tasks.files import HailTableTask
 
 
-class DeleteProjectFamilyTablesTask(BaseHailTableTask):
-    project_guid = luigi.Parameter()
+class DeleteFamilyTablesTask(BaseHailTableTask):
+    family_guids = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,16 +18,7 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
         )
 
     def run(self):
-        project_table_task: luigi.Target = yield HailTableTask(
-            project_table_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.project_guid,
-            ),
-        )
-        project_ht = hl.read_table(project_table_task.path)
-        family_guids = hl.eval(project_ht.globals.family_guids)
-        for family_guid in family_guids:
+        for family_guid in self.family_guids:
             self.dynamic_delete_family_table_tasks.add(
                 DeleteFamilyTableTask(
                     reference_genome=self.reference_genome,
