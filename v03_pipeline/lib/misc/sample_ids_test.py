@@ -12,9 +12,9 @@ CALLSET_MT = hl.MatrixTable.from_parts(
     rows={'variants': [1, 2]},
     cols={'s': ['HG00731', 'HG00732', 'HG00733']},
     entries={
-        'HL': [
-            [0.0, hl.missing(hl.tfloat), 0.3],
-            [0.1, 0.2, 0.3],
+        'GT': [
+            [hl.Call([0, 1]), hl.missing(hl.tcall), hl.Call([0, 1])],
+            [hl.Call([0, 1]), hl.Call([0, 1]), hl.Call([1, 1])],
         ],
     },
 ).key_cols_by('s')
@@ -165,3 +165,28 @@ class SampleLookupTest(unittest.TestCase):
                 sample_subset_ht,
                 ignore_missing_samples_when_subsetting=False,
             )
+
+    def test_subset_no_defined_gt(self):
+        mt = hl.MatrixTable.from_parts(
+            rows={'variants': [1, 2]},
+            cols={'s': ['HG00731', 'HG00732']},
+            entries={
+                'GT': [
+                    [hl.Call([1, 1]), hl.missing(hl.tcall)],
+                    [hl.Call([1, 1]), hl.Call([1, 1])],
+                ],
+            },
+        ).key_cols_by('s')
+        sample_subset_ht = hl.Table.parallelize(
+            [
+                {'s': 'HG00732'},
+            ],
+            hl.tstruct(s=hl.tstr),
+            key='s',
+        )
+        mt = subset_samples(
+            mt,
+            sample_subset_ht,
+            False,
+        )
+        self.assertEqual(mt.count(), (1, 1))

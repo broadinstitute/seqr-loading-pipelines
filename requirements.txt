@@ -218,7 +218,7 @@ parso==0.8.3
     # via jedi
 pexpect==4.9.0
     # via ipython
-pillow==10.2.0
+pillow==10.3.0
     # via bokeh
 plotly==5.18.0
     # via hail
@@ -252,7 +252,9 @@ pygments==2.17.2
     #   ipython
     #   rich
 pyjwt[crypto]==2.8.0
-    # via msal
+    # via
+    #   msal
+    #   pyjwt
 pyparsing==3.1.1
     # via httplib2
 pyspark==3.3.3

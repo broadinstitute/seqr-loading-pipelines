@@ -64,7 +64,7 @@ class WriteProjectFamilyTablesTask(luigi.Task):
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
-            self.force,
+            False,
         )
         callset_mt = hl.read_matrix_table(rmsct_output.path)
         family_samples = hl.eval(callset_mt.globals.family_samples)
