@@ -1,10 +1,11 @@
 import dataclasses
 import hashlib
 import math
-import tempfile
 import time
+import uuid
 
 import hail as hl
+import hailtop.fs as hfs
 import requests
 from requests import HTTPError
 
@@ -73,22 +74,26 @@ def register_alleles(
     reference_genome: ReferenceGenome,
     base_url: str,
 ) -> hl.Table:
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.vcf', delete=False) as raw_vcf:
-        hl.export_vcf(ht, raw_vcf.name)
+    uuid4 = uuid.uuid4()
+    raw_vcf_file_name = f'{Env.HAIL_TMPDIR}/r_{uuid4}.vcf'
+    formatted_vcf_file_name = f'{Env.HAIL_TMPDIR}/f_{uuid4}.vcf'
 
-    with tempfile.NamedTemporaryFile(
-        mode='w',
-        suffix='.vcf',
-        delete=False,
-    ) as formatted_vcf, open(raw_vcf.name) as vcf_in:
-        formatted_vcf.writelines(reference_genome.allele_registry_vcf_header)
+    # Export the variants to a VCF
+    hl.export_vcf(ht, raw_vcf_file_name)
+
+    # Reformat the VCF created by hail's 'export_vcf' function to be compatible with the Allele Registry
+    with hfs.open(raw_vcf_file_name, 'r') as vcf_in, hfs.open(
+        formatted_vcf_file_name,
+        'w',
+    ) as vcf_out:
+        vcf_out.writelines(reference_genome.allele_registry_vcf_header)
         for line in vcf_in:
             if not line.startswith('#'):
-                # NB: The AR does not accept contigs prefixed with 'chr', even for GRCh38
-                formatted_vcf.write(line.replace('chr', ''))
+                # NB: The Allele Registry does not accept contigs prefixed with 'chr', even for GRCh38
+                vcf_out.write(line.replace('chr', ''))
 
     logger.info('Calling the Clingen Allele Registry.')
-    with open(formatted_vcf.name) as vcf_in:
+    with hfs.open(formatted_vcf_file_name, 'r') as vcf_in:
         data = vcf_in.read()
         res = requests.put(
             url=build_url(base_url),

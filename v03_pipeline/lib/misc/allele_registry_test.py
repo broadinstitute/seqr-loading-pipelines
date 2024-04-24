@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from unittest.mock import ANY, Mock, patch
 
 import hail as hl
@@ -17,6 +19,12 @@ TEST_SERVER_URL = 'http://reg.test.genome.network/alleles?file=vcf&fields=none+@
 
 
 class AlleleRegistryTest(MockedDatarootTestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir.name)
+
     @patch.object(requests, 'put')
     @patch('v03_pipeline.lib.misc.allele_registry.Env')
     @patch('v03_pipeline.lib.misc.allele_registry.logger')
@@ -28,6 +36,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
     ):
         mock_env.ALLELE_REGISTRY_LOGIN = 'test'
         mock_env.ALLELE_REGISTRY_PASSWORD = 'test'  # noqa: S105
+        mock_env.HAIL_TMPDIR = self.temp_dir.name
 
         new_variants_ht = hl.Table.parallelize(
             [
