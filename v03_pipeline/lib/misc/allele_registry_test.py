@@ -4,7 +4,7 @@ import hail as hl
 import requests
 
 from v03_pipeline.lib.misc.allele_registry import (
-    HTTP_REQUEST_TIMEOUT as ALLELE_REGISTRY_TIMEOUT,
+    HTTP_REQUEST_TIMEOUT_S as ALLELE_REGISTRY_TIMEOUT,
 )
 from v03_pipeline.lib.misc.allele_registry import (
     register_alleles,
@@ -101,7 +101,6 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             new_variants_ht,
             ReferenceGenome.GRCh38,
             TEST_SERVER_URL,
-            use_gcs_filesystem=False,
         )
         self.assertEqual(
             ar_ht.collect(),
@@ -156,7 +155,6 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         generator = register_alleles_in_chunks(
             ht=ht,
             reference_genome=ReferenceGenome.GRCh38,
-            use_gcs_filesystem=False,
             base_url=TEST_SERVER_URL,
             chunk_size=chunk_size,
         )
@@ -171,7 +169,6 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         empty_generator = register_alleles_in_chunks(
             ht=ht,
             reference_genome=ReferenceGenome.GRCh38,
-            use_gcs_filesystem=False,
             base_url=TEST_SERVER_URL,
         )
         with self.assertRaises(StopIteration):

@@ -1,7 +1,6 @@
 import dataclasses
 import hashlib
 import math
-import os
 import tempfile
 import time
 
@@ -11,11 +10,10 @@ from requests import HTTPError
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
-from v03_pipeline.lib.reference_data.clinvar import safely_move_to_gcs
 
 MAX_VARIANTS_PER_REQUEST = 1000000
 ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.gnomAD_4.id'
-HTTP_REQUEST_TIMEOUT = 420
+HTTP_REQUEST_TIMEOUT_S = 420
 
 logger = get_logger(__name__)
 
@@ -51,7 +49,6 @@ class AlleleRegistryError:
 def register_alleles_in_chunks(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
-    use_gcs_filesystem: bool = True,
     base_url: str = ALLELE_REGISTRY_URL,
     chunk_size: int = MAX_VARIANTS_PER_REQUEST,
 ):
@@ -68,58 +65,37 @@ def register_alleles_in_chunks(
             chunk_ht = ht.head(end_idx).tail(chunk_size)
         else:
             chunk_ht = ht.tail(end_idx - num_rows)
-        yield register_alleles(chunk_ht, reference_genome, base_url, use_gcs_filesystem)
+        yield register_alleles(chunk_ht, reference_genome, base_url)
 
 
 def register_alleles(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     base_url: str,
-    use_gcs_filesystem: bool,
 ) -> hl.Table:
-    with tempfile.NamedTemporaryFile(
-        suffix='.vcf',
-    ) as raw_vcf, tempfile.NamedTemporaryFile(suffix='.vcf') as formatted_vcf:
-        # Export the variants to a VCF
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.vcf', delete=False) as raw_vcf:
         hl.export_vcf(ht, raw_vcf.name)
 
-        if use_gcs_filesystem:
-            raw_vcf_file_name = os.path.join(
-                Env.HAIL_TMPDIR,
-                os.path.basename(raw_vcf.name),
-            )
-            safely_move_to_gcs(raw_vcf.name, raw_vcf_file_name)
-        else:
-            raw_vcf_file_name = raw_vcf.name
+    with tempfile.NamedTemporaryFile(
+        mode='w',
+        suffix='.vcf',
+        delete=False,
+    ) as formatted_vcf, open(raw_vcf.name) as vcf_in:
+        formatted_vcf.writelines(reference_genome.allele_registry_vcf_header)
+        for line in vcf_in:
+            if not line.startswith('#'):
+                # NB: The AR does not accept contigs prefixed with 'chr', even for GRCh38
+                formatted_vcf.write(line.replace('chr', ''))
 
-        # Reformat the VCF created by hail's 'export_vcf' function: replace the header and remove any 'chr' prefix
-        with open(raw_vcf_file_name) as vcf_in, open(
-            formatted_vcf.name,
-            'w',
-        ) as vcf_out:
-            vcf_out.writelines(reference_genome.allele_registry_vcf_header)
-            for line in vcf_in:
-                if not line.startswith('#'):
-                    vcf_out.write(line.replace('chr', ''))
-
-        if use_gcs_filesystem:
-            formatted_vcf_file_name = os.path.join(
-                Env.HAIL_TMPDIR,
-                os.path.basename(raw_vcf.name),
-            )
-            safely_move_to_gcs(formatted_vcf.name, formatted_vcf_file_name)
-        else:
-            formatted_vcf_file_name = formatted_vcf.name
-
-        logger.info('Calling the Clingen Allele Registry.')
-        with open(formatted_vcf_file_name) as vcf_in:
-            data = vcf_in.read()
-            res = requests.put(
-                url=build_url(base_url),
-                data=data,
-                timeout=HTTP_REQUEST_TIMEOUT,
-            )
-            return handle_api_response(res, base_url, reference_genome)
+    logger.info('Calling the Clingen Allele Registry.')
+    with open(formatted_vcf.name) as vcf_in:
+        data = vcf_in.read()
+        res = requests.put(
+            url=build_url(base_url),
+            data=data,
+            timeout=HTTP_REQUEST_TIMEOUT_S,
+        )
+        return handle_api_response(res, base_url, reference_genome)
 
 
 def build_url(base_url: str) -> str:
