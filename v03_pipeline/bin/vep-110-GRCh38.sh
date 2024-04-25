@@ -41,6 +41,17 @@ gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/ve
 # Copied from the UTRAnnotator repo (https://github.com/ImperialCardioGenetics/UTRannotator/tree/master)
 gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/uORF_5UTR_${ASSEMBLY}_PUBLIC.txt /vep_data/ &
 
+# Copied from the Alphamissense gcs bucket (https://storage.googleapis.com/dm_alphamissense/AlphaMissense_hg38.tsv.gz)
+# Index created with
+# tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
+gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/AlphaMissense_hg38.tsv.*' /vep_data/ &
+
+# Copied from Enformer data page https://ftp.ensembl.org/pub/current_variation/Enformer/
+gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/enformer_grch38.vcf.gz.*' /vep_data/ &
+
+# Copied from Genesplicer docs ftp://ftp.ccb.jhu.edu/pub/software/genesplicer/GeneSplicer.tar.gz
+gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/GeneSplicer.tar.gz | tar -xzf - -C /vep_data/ &
+
 gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar | tar -xf - -C /vep_data/ &
 
 # Copied from ftp://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_merged_vep_110_${ASSEMBLY}.tar.gz
