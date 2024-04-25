@@ -98,7 +98,9 @@ def remove_family_guids(
             )
         ),
     )
-    ht = ht.filter(hl.any(ht.project_stats.map(lambda fs: hl.any(fs.map(hl.is_defined)))))
+    ht = ht.filter(
+        hl.any(ht.project_stats.map(lambda fs: hl.any(fs.map(hl.is_defined))))
+    )
     return ht.annotate_globals(
         project_families=hl.dict(
             ht.project_families.items().map(
