@@ -7,19 +7,14 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families import (
     UpdateLookupTableWithDeletedFamiliesTask,
 )
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
-@mock.patch(
-    'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families.UpdateVariantAnnotationsTableWithDeletedFamiliesTask',
-)
 class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
     def test_delete_project_empty_table(
         self,
         mock_update_lookup_table_task: mock.Mock,
     ) -> None:
-        mock_update_lookup_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = UpdateLookupTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
@@ -53,7 +48,6 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         mock_initialize_table: mock.Mock,
         mock_update_lookup_table_task: mock.Mock,
     ) -> None:
-        mock_update_lookup_table_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
                 {
