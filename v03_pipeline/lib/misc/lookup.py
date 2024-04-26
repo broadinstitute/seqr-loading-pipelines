@@ -98,15 +98,15 @@ def remove_family_guids(
             )
         ),
     )
-    project_i = ht.project_guids.index(
-        project_guid,
-    )  # double reference because new expression
+    ht = ht.filter(
+        hl.any(ht.project_stats.map(lambda fs: hl.any(fs.map(hl.is_defined)))),
+    )
     return ht.annotate_globals(
         project_families=hl.dict(
-            hl.enumerate(ht.project_families.items()).starmap(
-                lambda i, item: (
+            ht.project_families.items().map(
+                lambda item: (
                     hl.if_else(
-                        i != project_i,
+                        item[0] != project_guid,
                         item,
                         (
                             item[0],
@@ -140,6 +140,7 @@ def remove_project(
             )
         ),
     )
+    ht = ht.filter(hl.any(ht.project_stats.map(hl.is_defined)))
     return ht.annotate_globals(
         project_guids=project_indexes_to_keep.map(
             lambda i: ht.project_guids[i],

@@ -4,22 +4,13 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     remove_project,
 )
-from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseLookupTableTask
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
-    UpdateVariantAnnotationsTableWithDeletedProjectTask,
+from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
+    BaseUpdateLookupTableTask,
 )
 
 
-class UpdateLookupTableWithDeletedProjectTask(BaseLookupTableTask):
+class UpdateLookupTableWithDeletedProjectTask(BaseUpdateLookupTableTask):
     project_guid = luigi.Parameter()
-
-    def requires(self) -> luigi.Task:
-        return UpdateVariantAnnotationsTableWithDeletedProjectTask(
-            dataset_type=self.dataset_type,
-            sample_type=self.sample_type,
-            reference_genome=self.reference_genome,
-            project_guid=self.project_guid,
-        )
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(

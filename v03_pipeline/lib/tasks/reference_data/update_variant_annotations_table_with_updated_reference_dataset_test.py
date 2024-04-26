@@ -596,10 +596,10 @@ MOCK_CONFIG_MITO = {
 
 
 @mock.patch(
-    'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
+    'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
 @mock.patch(
-    'v03_pipeline.lib.tasks.base.base_variant_annotations_table.BaseVariantAnnotationsTableTask.initialize_table',
+    'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
 )
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def setUp(self) -> None:

@@ -6,13 +6,13 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_project import (
-    UpdateVariantAnnotationsTableWithDeletedProjectTask,
+from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
+    UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
-class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
+class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.Table.parallelize(
@@ -55,16 +55,8 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
                                 het_samples=0,
                                 hom_samples=0,
                             ),
-                            hl.Struct(
-                                ref_samples=1,
-                                het_samples=1,
-                                hom_samples=1,
-                            ),
-                            hl.Struct(
-                                ref_samples=2,
-                                het_samples=2,
-                                hom_samples=2,
-                            ),
+                            None,
+                            None,
                         ],
                         [
                             hl.Struct(
@@ -145,11 +137,12 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
 
     def test_update_annotations_with_deleted_project(self) -> None:
         worker = luigi.worker.Worker()
-        task = UpdateVariantAnnotationsTableWithDeletedProjectTask(
+        task = UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
-            project_guid='project_b',
+            project_guid='project_a',
+            family_guids=['2', '3'],
         )
         worker.add(task)
         worker.run()
@@ -157,13 +150,18 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
         self.assertEqual(
             ht.globals.collect(),
             [
-                hl.Struct(updates={hl.Struct(callset='abc', project_guid='project_a')}),
+                hl.Struct(
+                    updates={
+                        hl.Struct(callset='abc', project_guid='project_a'),
+                        hl.Struct(callset='123', project_guid='project_b'),
+                    },
+                ),
             ],
         )
         self.assertEqual(
             ht.collect(),
             [
                 hl.Struct(id=0, gt_stats=hl.Struct(AC=9, AN=18, AF=0.5, hom=3)),
-                hl.Struct(id=1, gt_stats=hl.Struct(AC=9, AN=18, AF=0.5, hom=3)),
+                hl.Struct(id=1, gt_stats=hl.Struct(AC=12, AN=24, AF=0.5, hom=4)),
             ],
         )

@@ -16,7 +16,7 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_cached_reference_dataset_query_path,
 )
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 
 
