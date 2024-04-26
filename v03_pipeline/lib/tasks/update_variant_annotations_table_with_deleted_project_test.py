@@ -92,6 +92,10 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
             globals=hl.Struct(
                 project_guids=['project_a', 'project_b'],
                 project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+                updates={
+                    hl.Struct(callset='abc', project_guid='project_a'),
+                    hl.Struct(callset='123', project_guid='project_b'),
+                },
             ),
         )
         ht.write(
@@ -161,11 +165,5 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
             [
                 hl.Struct(id=0, gt_stats=hl.Struct(AC=9, AN=18, AF=0.5, hom=3)),
                 hl.Struct(id=1, gt_stats=hl.Struct(AC=9, AN=18, AF=0.5, hom=3)),
-                # NB: The top two rows, present in the lookup table, are updated
-                # to include only the project_b stats
-                hl.Struct(
-                    id=2,
-                    gt_stats=hl.Struct(AC=0, AN=1, AF=0.25, hom=0),
-                ),
             ],
         )

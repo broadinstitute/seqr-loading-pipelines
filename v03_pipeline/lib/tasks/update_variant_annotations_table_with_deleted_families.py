@@ -41,7 +41,7 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
             return ht
         lookup_ht = hl.read_table(self.input().path)
         ht = ht.semi_join(lookup_ht)
-        ht.annotate(
+        ht = ht.annotate(
             **get_fields(
                 ht,
                 self.dataset_type.lookup_table_annotation_fns,
