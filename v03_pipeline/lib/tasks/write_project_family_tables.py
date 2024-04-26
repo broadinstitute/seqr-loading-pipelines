@@ -2,10 +2,8 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
 
 
 class WriteProjectFamilyTablesTask(BaseHailTableTask):
@@ -50,22 +48,23 @@ class WriteProjectFamilyTablesTask(BaseHailTableTask):
 
     def run(self):
         # https://luigi.readthedocs.io/en/stable/tasks.html#dynamic-dependencies
-        rmsct_output: luigi.Target = yield WriteRemappedAndSubsettedCallsetTask(
+        update_project_table_task: luigi.Target = yield UpdateProjectTableTask(
             self.reference_genome,
             self.dataset_type,
             self.sample_type,
-            self.callset_path,
             self.project_guid,
+            self.callset_path,
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
             False,
+            self.is_new_gcnv_joint_call,
         )
-        callset_mt = hl.read_matrix_table(rmsct_output.path)
-        family_samples = hl.eval(callset_mt.globals.family_samples)
-        for family_guid in family_samples:
+        project_ht = hl.read_table(update_project_table_task.path)
+        family_guids = hl.eval(project_ht.globals.family_guids)
+        for family_guid in family_guids:
             self.dynamic_write_family_table_tasks.add(
                 WriteFamilyTableTask(
                     **self.param_kwargs,
