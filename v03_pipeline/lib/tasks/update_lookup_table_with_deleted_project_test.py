@@ -13,7 +13,6 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
     def test_delete_project_empty_table(
         self,
-        mock_update_lookup_table_task: mock.Mock,
     ) -> None:
         worker = luigi.worker.Worker()
         task = UpdateLookupTableWithDeletedProjectTask(
@@ -45,7 +44,6 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
     def test_delete_project(
         self,
         mock_initialize_table: mock.Mock,
-        mock_update_lookup_table_task: mock.Mock,
     ) -> None:
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
