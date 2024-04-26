@@ -130,6 +130,13 @@ class ReferenceGenome(Enum):
             ],
         }[self]
 
+    @property
+    def allele_registry_gnomad_id(self) -> str:
+        return {
+            ReferenceGenome.GRCh37: 'gnomAD_2',
+            ReferenceGenome.GRCh38: 'gnomAD_4',
+        }[self]
+
 
 class SampleType(Enum):
     WES = 'WES'

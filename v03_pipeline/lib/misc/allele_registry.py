@@ -13,7 +13,9 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
 
 MAX_VARIANTS_PER_REQUEST = 1000000
-ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.gnomAD_4.id'
+ALLELE_REGISTRY_URL = (
+    'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.{}.id'
+)
 HTTP_REQUEST_TIMEOUT_S = 420
 
 logger = get_logger(__name__)
@@ -96,20 +98,23 @@ def register_alleles(
     with hfs.open(formatted_vcf_file_name, 'r') as vcf_in:
         data = vcf_in.read()
         res = requests.put(
-            url=build_url(base_url),
+            url=build_url(base_url, reference_genome),
             data=data,
             timeout=HTTP_REQUEST_TIMEOUT_S,
         )
         return handle_api_response(res, base_url, reference_genome)
 
 
-def build_url(base_url: str) -> str:
+def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
     login = Env.ALLELE_REGISTRY_LOGIN
     password = Env.ALLELE_REGISTRY_PASSWORD
 
     if login is None or password is None:
         msg = 'Please set the ALLELE_REGISTRY_LOGIN and ALLELE_REGISTRY_PASSWORD environment variables.'
         raise ValueError(msg)
+
+    # NB: Use the correct external IDs (gnomAD_2 for 37 and gnomad_4 for 38) to map CAIDs back to our variants.
+    base_url = base_url.format(reference_genome.allele_registry_gnomad_id)
 
     # adapted from https://reg.clinicalgenome.org/doc/scripts/request_with_payload.py
     identity = hashlib.sha1((login + password).encode('utf-8')).hexdigest()  # noqa: S324
@@ -143,7 +148,9 @@ def handle_api_response(
             #  'externalRecords': {'gnomAD_4': [{'id': '1-10109-AACCCT-A'}]}}
             caid = allele_response['@id'].split('/')[-1]
             if 'externalRecords' in allele_response:
-                gnomad_id = allele_response['externalRecords']['gnomAD_4'][0]['id']
+                gnomad_id = allele_response['externalRecords'][
+                    reference_genome.allele_registry_gnomad_id
+                ][0]['id']
                 chrom, pos, ref, alt = gnomad_id.split('-')
                 struct = hl.Struct(
                     locus=hl.Locus(
