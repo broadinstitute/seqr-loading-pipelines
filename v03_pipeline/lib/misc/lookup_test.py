@@ -89,7 +89,7 @@ class LookupTest(unittest.TestCase):
             ],
         )
 
-    def test_remove_new_callset_family_guids(self) -> None:
+    def test_remove_family_guids(self) -> None:
         lookup_ht = hl.Table.parallelize(
             [
                 {
@@ -178,6 +178,11 @@ class LookupTest(unittest.TestCase):
             lookup_ht,
             'project_a',
             hl.set(['3', '1']),
+        )
+        lookup_ht = remove_family_guids(
+            lookup_ht,
+            'project_a',
+            hl.set(['1']),
         )
         lookup_ht = remove_family_guids(
             lookup_ht,

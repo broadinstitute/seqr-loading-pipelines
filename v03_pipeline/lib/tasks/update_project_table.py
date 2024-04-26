@@ -7,17 +7,14 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.paths import project_table_path
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.base.base_project_table_task import BaseProjectTableTask
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateProjectTableTask(BaseUpdateTask):
+class UpdateProjectTableTask(BaseProjectTableTask):
     callset_path = luigi.Parameter()
-    project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
@@ -40,15 +37,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
         default=False,
         description='Is this a fully joint-called callset.',
     )
-
-    def output(self) -> luigi.Target:
-        return GCSorLocalTarget(
-            project_table_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.project_guid,
-            ),
-        )
 
     def complete(self) -> bool:
         return (
@@ -74,24 +62,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
             self.ignore_missing_samples_when_remapping,
             self.validate,
             False,
-        )
-
-    def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                **key_type,
-                filters=hl.tset(hl.tstr),
-                # NB: entries is missing here because it is untyped
-                # until we read the type off of the first callset aggregation.
-            ),
-            key=key_type.fields,
-            globals=hl.Struct(
-                family_guids=hl.empty_array(hl.tstr),
-                family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(hl.tstr),
-            ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
