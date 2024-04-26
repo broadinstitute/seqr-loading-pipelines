@@ -7,26 +7,11 @@ from v03_pipeline.lib.misc.lookup import (
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
-    UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
-)
 
 
 class UpdateLookupTableWithDeletedFamiliesTask(BaseUpdateLookupTableTask):
     project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
-
-    def requires(self) -> luigi.Task:
-        # We require updating the annotations table first so that
-        # we are able to use the lookup table to determine which rows
-        # of the annotations table require re-annotation.
-        return UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
-            dataset_type=self.dataset_type,
-            sample_type=self.sample_type,
-            reference_genome=self.reference_genome,
-            project_guid=self.project_guid,
-            family_guids=self.family_guids,
-        )
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(

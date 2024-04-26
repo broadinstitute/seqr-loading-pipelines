@@ -2,16 +2,12 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.lookup import (
-    remove_project,
-)
-from v03_pipeline.lib.paths import (
-    lookup_table_path,
-)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.files import HailTableTask
+from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
+    UpdateLookupTableWithDeletedProjectTask,
+)
 
 
 class UpdateVariantAnnotationsTableWithDeletedProjectTask(
@@ -20,13 +16,11 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
     project_guid = luigi.Parameter()
 
     def requires(self) -> luigi.Task:
-        # Do not call super().requires() here to avoid
-        # any reference data requirements.
-        return HailTableTask(
-            lookup_table_path(
-                self.reference_genome,
-                self.dataset_type,
-            ),
+        return UpdateLookupTableWithDeletedProjectTask(
+            dataset_type=self.dataset_type,
+            sample_type=self.sample_type,
+            reference_genome=self.reference_genome,
+            project_guid=self.project_guid,
         )
 
     def complete(self) -> bool:
@@ -43,26 +37,16 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
                     lambda u: u.project_guid != self.project_guid,
                 ),
             )
-        lookup_ht = hl.read_table(
-            lookup_table_path(
-                self.reference_genome,
-                self.dataset_type,
-            ),
-        )
-        project_i = hl.eval(lookup_ht.globals.project_guids.index(self.project_guid))
-        lookup_ht = lookup_ht.filter(hl.is_defined(lookup_ht.project_stats[project_i]))
-        lookup_ht = remove_project(lookup_ht, self.project_guid)
-        project_variants_ht = ht.semi_join(lookup_ht)
-        project_variants_ht = project_variants_ht.annotate(
+        lookup_ht = hl.read_table(self.input().path)
+        ht = ht.semi_join(lookup_ht)
+        ht = ht.annotate(
             **get_fields(
-                project_variants_ht,
+                ht,
                 self.dataset_type.lookup_table_annotation_fns,
                 lookup_ht=lookup_ht,
                 **self.param_kwargs,
             ),
         )
-        ht = ht.anti_join(lookup_ht)
-        ht = ht.union(project_variants_ht)
         return ht.annotate_globals(
             updates=ht.updates.filter(lambda u: u.project_guid != self.project_guid),
         )
