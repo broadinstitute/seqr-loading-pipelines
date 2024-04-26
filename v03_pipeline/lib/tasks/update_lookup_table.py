@@ -8,13 +8,15 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
-from v03_pipeline.lib.tasks.base.base_lookup_table_task import BaseLookupTableTask
+from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
+    BaseUpdateLookupTableTask,
+)
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateLookupTableTask(BaseLookupTableTask):
+class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()

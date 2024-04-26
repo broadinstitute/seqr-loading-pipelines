@@ -11,8 +11,8 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
-    BaseVariantAnnotationsTableTask,
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
+    BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
@@ -52,11 +52,11 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.base.base_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
     )
     def test_should_create_initialized_table(self, mock_update_rdc_task) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
-        vat_task = BaseVariantAnnotationsTableTask(
+        vat_task = BaseUpdateVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,

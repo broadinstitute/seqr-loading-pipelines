@@ -15,10 +15,10 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
-    BaseVariantAnnotationsTableTask,
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
+    BaseUpdateVariantAnnotationsTableTask,
 )
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
@@ -91,7 +91,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ]
         else:
             upstream_table_tasks = [
-                BaseVariantAnnotationsTableTask(
+                BaseUpdateVariantAnnotationsTableTask(
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,

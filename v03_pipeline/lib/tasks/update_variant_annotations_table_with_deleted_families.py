@@ -8,14 +8,14 @@ from v03_pipeline.lib.misc.lookup import (
 from v03_pipeline.lib.paths import (
     lookup_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_variant_annotations_table import (
-    BaseVariantAnnotationsTableTask,
+from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
+    BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.files import HailTableTask
 
 
 class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
-    BaseVariantAnnotationsTableTask,
+    BaseUpdateVariantAnnotationsTableTask,
 ):
     project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
