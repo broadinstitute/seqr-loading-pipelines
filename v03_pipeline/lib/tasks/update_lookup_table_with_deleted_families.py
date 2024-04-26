@@ -17,6 +17,9 @@ class UpdateLookupTableWithDeletedFamiliesTask(BaseUpdateLookupTableTask):
     family_guids = luigi.ListParameter()
 
     def requires(self) -> luigi.Task:
+        # We require updating the annotations table first so that
+        # we are able to use the lookup table to determine which rows
+        # of the annotations table require re-annotation.
         return UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
             dataset_type=self.dataset_type,
             sample_type=self.sample_type,
