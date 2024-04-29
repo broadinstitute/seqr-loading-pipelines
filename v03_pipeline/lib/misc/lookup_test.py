@@ -89,23 +89,15 @@ class LookupTest(unittest.TestCase):
             ],
         )
 
-    def test_remove_new_callset_family_guids(self) -> None:
+    def test_remove_family_guids(self) -> None:
         lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
                     'project_stats': [
                         [
-                            hl.Struct(
-                                ref_samples=0,
-                                heteroplasmic_samples=0,
-                                homoplasmic_samples=0,
-                            ),
-                            hl.Struct(
-                                ref_samples=1,
-                                heteroplasmic_samples=1,
-                                homoplasmic_samples=1,
-                            ),
+                            None,
+                            None,
                             hl.Struct(
                                 ref_samples=2,
                                 heteroplasmic_samples=2,
@@ -125,11 +117,7 @@ class LookupTest(unittest.TestCase):
                     'id': 1,
                     'project_stats': [
                         [
-                            hl.Struct(
-                                ref_samples=0,
-                                heteroplasmic_samples=0,
-                                homoplasmic_samples=0,
-                            ),
+                            None,
                             hl.Struct(
                                 ref_samples=1,
                                 heteroplasmic_samples=1,
@@ -181,6 +169,11 @@ class LookupTest(unittest.TestCase):
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
+            'project_a',
+            hl.set(['1']),
+        )
+        lookup_ht = remove_family_guids(
+            lookup_ht,
             'project_b',
             hl.set(['4']),
         )
@@ -196,19 +189,6 @@ class LookupTest(unittest.TestCase):
         self.assertCountEqual(
             lookup_ht.collect(),
             [
-                hl.Struct(
-                    id=0,
-                    project_stats=[
-                        [
-                            hl.Struct(
-                                ref_samples=1,
-                                heteroplasmic_samples=1,
-                                homoplasmic_samples=1,
-                            ),
-                        ],
-                        [],
-                    ],
-                ),
                 hl.Struct(
                     id=1,
                     project_stats=[
@@ -248,13 +228,7 @@ class LookupTest(unittest.TestCase):
                                 homoplasmic_samples=2,
                             ),
                         ],
-                        [
-                            hl.Struct(
-                                ref_samples=3,
-                                heteroplasmic_samples=3,
-                                homoplasmic_samples=3,
-                            ),
-                        ],
+                        None,
                     ],
                 },
                 {
@@ -325,18 +299,6 @@ class LookupTest(unittest.TestCase):
         self.assertCountEqual(
             lookup_ht.collect(),
             [
-                hl.Struct(
-                    id=0,
-                    project_stats=[
-                        [
-                            hl.Struct(
-                                ref_samples=3,
-                                heteroplasmic_samples=3,
-                                homoplasmic_samples=3,
-                            ),
-                        ],
-                    ],
-                ),
                 hl.Struct(
                     id=1,
                     project_stats=[

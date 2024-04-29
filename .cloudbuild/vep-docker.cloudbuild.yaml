@@ -1,0 +1,12 @@
+# Run locally with:
+#
+# gcloud builds submit --quiet --substitutions='_VEP_VERSION=110' --config .cloudbuild/vep-docker.cloudbuild.yaml v03_pipeline/
+steps:
+- name: 'gcr.io/kaniko-project/executor:v1.3.0'
+  args:
+  - --destination=gcr.io/seqr-project/vep-docker-image:${_VEP_VERSION}
+  - --dockerfile=deploy/Dockerfile.vep
+  - --cache=true
+  - --cache-ttl=168h
+
+timeout: 1800s

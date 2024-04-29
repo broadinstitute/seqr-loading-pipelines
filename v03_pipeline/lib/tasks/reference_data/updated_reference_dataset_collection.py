@@ -11,7 +11,7 @@ from v03_pipeline.lib.reference_data.compare_globals import (
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_or_create_joined_ht,
 )
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
+from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 logger = get_logger(__name__)

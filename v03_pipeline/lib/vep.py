@@ -24,4 +24,5 @@ def run_vep(
         name='vep',
         block_size=1000,
         tolerate_parse_error=True,
+        csq=False,
     )

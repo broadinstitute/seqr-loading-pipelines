@@ -4,8 +4,8 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
-    UpdateLookupTableWithDeletedProjectTask,
+from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families import (
+    UpdateLookupTableWithDeletedFamiliesTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -15,11 +15,12 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         self,
     ) -> None:
         worker = luigi.worker.Worker()
-        task = UpdateLookupTableWithDeletedProjectTask(
+        task = UpdateLookupTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='R0555_seqr_demo',
+            family_guids=['abc'],
         )
         worker.add(task)
         worker.run()
@@ -39,7 +40,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         self.assertEqual(ht.collect(), [])
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project.UpdateLookupTableWithDeletedProjectTask.initialize_table',
+        'v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families.UpdateLookupTableWithDeletedFamiliesTask.initialize_table',
     )
     def test_delete_project(
         self,
@@ -129,11 +130,12 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
             ),
         )
         worker = luigi.worker.Worker()
-        task = UpdateLookupTableWithDeletedProjectTask(
+        task = UpdateLookupTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='project_a',
+            family_guids=['1', '3'],
         )
         worker.add(task)
         worker.run()
@@ -144,9 +146,12 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_b'],
-                    project_families={'project_b': ['4']},
-                    updates={hl.Struct(project_guid='project_b', callset='abc')},
+                    project_guids=['project_a', 'project_b'],
+                    project_families={'project_a': ['2'], 'project_b': ['4']},
+                    updates={
+                        hl.Struct(project_guid='project_a', callset='abc'),
+                        hl.Struct(project_guid='project_b', callset='abc'),
+                    },
                 ),
             ],
         )
@@ -156,6 +161,13 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                 hl.Struct(
                     id=0,
                     project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                        ],
                         [
                             hl.Struct(
                                 ref_samples=3,
@@ -168,6 +180,13 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                 hl.Struct(
                     id=1,
                     project_stats=[
+                        [
+                            hl.Struct(
+                                ref_samples=1,
+                                heteroplasmic_samples=1,
+                                homoplasmic_samples=1,
+                            ),
+                        ],
                         [
                             hl.Struct(
                                 ref_samples=3,
