@@ -11,7 +11,7 @@ version = {attr = "v03_pipeline.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["v03_pipeline*"]
-exclude = ["v03_pipeline.bin", "v03_pipeline*test*"]
+exclude = ["v03_pipeline.bin", "v03_pipeline.deploy", "v03_pipeline*test*"]
 namespaces = false
 
 [tool.mypy]
