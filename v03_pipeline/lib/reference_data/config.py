@@ -362,7 +362,7 @@ CONFIG = {
         },
         '38': {
             'version': 'r2.1.1',
-            'path': 'gs://gcp-public-data--gnomad/release/4.0/ht/exomes/gnomad.exomes.v4.0.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
             'custom_select': custom_gnomad_select_v4,
         },
     },
@@ -374,7 +374,7 @@ CONFIG = {
         },
         '38': {
             'version': 'v3.1.2',
-            'path': 'gs://gcp-public-data--gnomad/release/4.0/ht/genomes/gnomad.genomes.v4.0.sites.ht',
+            'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_select': custom_gnomad_select_v4,
         },
     },
