@@ -635,6 +635,7 @@ MOCK_CONFIG_MITO = {
 )
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     maxDiff = None
+
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
