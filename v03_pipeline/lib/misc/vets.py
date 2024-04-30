@@ -1,5 +1,6 @@
 import hail as hl
 
+PASS_FILTER = 'PASS'
 VETS_SNP_CUTOFF = 0.997
 VETS_INDEL_CUTOFF = 0.99
 VETS_SNP_FILTER = 'high_CALIBRATION_SENSITIVITY_SNP'
@@ -17,7 +18,7 @@ def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
                     is_snp & (split_cs > VETS_SNP_CUTOFF),
                     hl.if_else(
                         hl.is_defined(mt.filters),
-                        mt.filters.add(VETS_SNP_FILTER),
+                        mt.filters.add(VETS_SNP_FILTER).remove(PASS_FILTER),
                         hl.set([VETS_SNP_FILTER]),
                     ),
                 )
@@ -25,7 +26,7 @@ def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
                     ~is_snp & (split_cs > VETS_INDEL_CUTOFF),
                     hl.if_else(
                         hl.is_defined(mt.filters),
-                        mt.filters.add(VETS_INDEL_FILTER),
+                        mt.filters.add(VETS_INDEL_FILTER).remove(PASS_FILTER),
                         hl.set([VETS_INDEL_FILTER]),
                     ),
                 )

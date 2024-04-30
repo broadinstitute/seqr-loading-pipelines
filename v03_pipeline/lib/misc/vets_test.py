@@ -94,7 +94,7 @@ class VetsTest(unittest.TestCase):
         self.assertListEqual(
             dragen_mt.filters.collect(),
             [
-                {'high_CALIBRATION_SENSITIVITY_SNP', 'PASS'},
+                {'high_CALIBRATION_SENSITIVITY_SNP'},
                 set(),
                 {'high_CALIBRATION_SENSITIVITY_SNP'},
                 {'PASS'},
