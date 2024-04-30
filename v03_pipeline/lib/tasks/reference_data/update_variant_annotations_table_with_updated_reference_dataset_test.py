@@ -117,7 +117,7 @@ MOCK_EXAC_CONFIG = {
 }
 MOCK_GNOMAD_EXOMES_CONFIG = {
     **CONFIG['gnomad_exomes']['38'],
-    'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+    'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
     'custom_import': lambda *_: hl.Table.parallelize(
         [],
         hl.tstruct(
@@ -144,7 +144,7 @@ MOCK_GNOMAD_EXOMES_CONFIG = {
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
-            freq_index_dict={'gnomad': 0, 'gnomad_male': 1},
+            freq_index_dict={'gnomad': 0, 'gnomad_male': 1, 'adj': 0},
             popmax_index_dict={'gnomad': 0},
         ),
     ),
