@@ -145,6 +145,7 @@ MOCK_GNOMAD_EXOMES_CONFIG = {
         key=['locus', 'alleles'],
         globals=hl.Struct(
             freq_index_dict={'adj': 0, 'XY_adj': 1},
+            faf_index_dict={'adj': 0},
         ),
     ),
 }
