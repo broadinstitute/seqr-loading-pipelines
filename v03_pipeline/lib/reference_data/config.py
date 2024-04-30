@@ -373,7 +373,7 @@ CONFIG = {
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
-            'version': 'v3.1.2',
+            'version': 'v4.1',
             'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_select': custom_gnomad_select_v4,
         },
@@ -386,7 +386,7 @@ CONFIG = {
             'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh37/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
-            'version': 'v3.1',
+            'version': 'v4.1',
             'custom_import': import_matrix_table,
             # Note: copied from 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
             'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh38/gnomad_v3.1_qc_mt_v2_sites_dense.mt',

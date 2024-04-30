@@ -326,8 +326,8 @@ MOCK_CONFIG = {
         },
         '38': {
             **CONFIG['gnomad_genomes']['38'],
-            'version': 'r2.1.1',
-            'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'version': 'v4.1',
+            'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
