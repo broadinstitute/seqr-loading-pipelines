@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import (
+    annotate_vets,
     import_callset,
     select_relevant_fields,
     split_multi_hts,
@@ -85,6 +86,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
+        mt = annotate_vets(mt)
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
