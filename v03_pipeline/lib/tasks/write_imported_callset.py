@@ -2,7 +2,6 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.io import (
-    annotate_vets,
     import_callset,
     select_relevant_fields,
     split_multi_hts,
@@ -12,6 +11,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
+from v03_pipeline.lib.misc.vets import annotate_vets
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     imported_callset_path,
