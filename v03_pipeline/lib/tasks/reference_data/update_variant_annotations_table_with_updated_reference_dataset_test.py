@@ -131,7 +131,7 @@ MOCK_GNOMAD_EXOMES_CONFIG = {
                     homozygote_count=hl.tint32,
                 ),
             ),
-            popmax=hl.tarray(
+            grpmax=hl.tarray(
                 hl.tstruct(
                     AF=hl.tfloat64,
                     AN=hl.tint32,
@@ -341,7 +341,7 @@ MOCK_CONFIG = {
                             homozygote_count=hl.tint32,
                         ),
                     ),
-                    popmax=hl.tstruct(
+                    grpmax=hl.tstruct(
                         AF=hl.tfloat64,
                         AN=hl.tint32,
                         AC=hl.tint32,
