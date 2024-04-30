@@ -12,7 +12,6 @@ B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
 
 
-
 def does_file_exist(path: str) -> bool:
     if path.startswith('gs://'):
         return hl.hadoop_exists(path)
