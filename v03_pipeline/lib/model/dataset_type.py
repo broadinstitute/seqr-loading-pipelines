@@ -5,7 +5,6 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -66,18 +65,22 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def optional_row_fields(
+        self,
+    ) -> list[str]:
+        return {
+            DatasetType.SNV_INDEL: ['info'],
+            DatasetType.MITO: [],
+            DatasetType.SV: [],
+            DatasetType.GCNV: [],
+        }[self]
+
+    @property
     def row_fields(
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: (
-                # The "info" field is used by one of the relatedness
-                # check methods and not by an annotation method.  We
-                # only want to keep the field for callsets that require it.
-                ['rsid', 'filters', 'info']
-                if Env.CHECK_SEX_AND_RELATEDNESS
-                else ['rsid', 'filters']
-            ),
+            DatasetType.SNV_INDEL: ['rsid', 'filters'],
             DatasetType.MITO: [
                 'rsid',
                 'filters',
@@ -113,7 +116,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def has_sample_lookup_table(self) -> bool:
+    def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
     @property
@@ -125,7 +128,7 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def sample_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
+    def family_entries_filter_fn(self) -> Callable[[hl.StructExpression], bool]:
         return {
             DatasetType.GCNV: lambda e: hl.is_defined(e.GT),
         }.get(self, lambda e: e.GT.is_non_ref())
@@ -143,21 +146,21 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
-    def sample_lookup_table_fields_and_genotype_filter_fns(
+    def lookup_table_fields_and_genotype_filter_fns(
         self,
-    ) -> dict[str, Callable[[hl.MatrixTable], hl.Expression]]:
+    ) -> dict[str, Callable[[hl.StructExpression], hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: {
-                'ref_samples': lambda mt: mt.GT.is_hom_ref(),
-                'het_samples': lambda mt: mt.GT.is_het(),
-                'hom_samples': lambda mt: mt.GT.is_hom_var(),
+                'ref_samples': lambda s: s.GT.is_hom_ref(),
+                'het_samples': lambda s: s.GT.is_het(),
+                'hom_samples': lambda s: s.GT.is_hom_var(),
             },
             DatasetType.MITO: {
-                'ref_samples': lambda mt: hl.is_defined(mt.HL) & (mt.HL == ZERO),
-                'heteroplasmic_samples': lambda mt: (
-                    (mt.HL < MITO_MIN_HOM_THRESHOLD) & (mt.HL > ZERO)
+                'ref_samples': lambda s: hl.is_defined(s.HL) & (s.HL == ZERO),
+                'heteroplasmic_samples': lambda s: (
+                    (s.HL < MITO_MIN_HOM_THRESHOLD) & (s.HL > ZERO)
                 ),
-                'homoplasmic_samples': lambda mt: mt.HL >= MITO_MIN_HOM_THRESHOLD,
+                'homoplasmic_samples': lambda s: s.HL >= MITO_MIN_HOM_THRESHOLD,
             },
         }[self]
 
@@ -175,7 +178,7 @@ class DatasetType(Enum):
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
                 mito.haplogroup,
-                mito.high_constraint_region,
+                mito.high_constraint_region_mito,
                 mito.mitotip,
                 mito.rsid,
                 shared.sorted_transcript_consequences,
@@ -269,7 +272,7 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def sample_lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: [
                 snv_indel.gt_stats,

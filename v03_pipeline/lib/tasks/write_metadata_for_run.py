@@ -3,16 +3,16 @@ import json
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.util import callset_project_pairs
+from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.paths import metadata_for_run_path
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class WriteMetadataForRunTask(BaseWriteTask):
+class WriteMetadataForRunTask(BaseHailTableTask):
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -26,6 +26,14 @@ class WriteMetadataForRunTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     validate = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    check_sex_and_relatedness = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
@@ -43,7 +51,7 @@ class WriteMetadataForRunTask(BaseWriteTask):
     def complete(self) -> bool:
         return GCSorLocalTarget(self.output().path).exists()
 
-    def requires(self) -> luigi.Task:
+    def requires(self) -> list[luigi.Task]:
         return [
             WriteRemappedAndSubsettedCallsetTask(
                 self.reference_genome,
@@ -56,6 +64,8 @@ class WriteMetadataForRunTask(BaseWriteTask):
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
+                self.force,
+                self.check_sex_and_relatedness,
             )
             for (
                 callset_path,
@@ -75,14 +85,25 @@ class WriteMetadataForRunTask(BaseWriteTask):
             'callsets': self.callset_paths,
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
-            'families': {},
+            'family_samples': {},
+            'failed_family_samples': {
+                'missing_samples': {},
+                'relatedness_check': {},
+                'sex_check': {},
+            },
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
-            metadata_json['families'] = {
-                **callset_mt.families.collect()[0],
-                **metadata_json['families'],
+            collected_globals = callset_mt.globals.collect()[0]
+            metadata_json['family_samples'] = {
+                **collected_globals['family_samples'],
+                **metadata_json['family_samples'],
             }
+            for key in ['missing_samples', 'relatedness_check', 'sex_check']:
+                metadata_json['failed_family_samples'][key] = {
+                    **collected_globals['failed_family_samples'][key],
+                    **metadata_json['failed_family_samples'][key],
+                }
 
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

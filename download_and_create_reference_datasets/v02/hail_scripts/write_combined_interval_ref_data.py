@@ -3,7 +3,7 @@ import logging
 
 import hail as hl
 
-from v03_pipeline.lib.reference_data.combine import join_hts
+from v03_pipeline.lib.reference_data.dataset_table_operations import join_hts
 
 VERSION = '2.0.5'
 OUTPUT_PATH = "gs://seqr-reference-data/GRCh38/combined_interval_reference_data/combined_interval_reference_data.ht"

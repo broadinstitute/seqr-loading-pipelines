@@ -10,11 +10,12 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     family_table_path,
     imported_callset_path,
+    lookup_table_path,
     metadata_for_run_path,
+    new_variants_table_path,
     project_table_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
-    sample_lookup_table_path,
     sex_check_table_path,
     valid_cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
@@ -83,9 +84,9 @@ class TestPaths(unittest.TestCase):
             '/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
         )
 
-    def test_sample_lookup_table_path(self) -> None:
+    def test_lookup_table_path(self) -> None:
         self.assertEqual(
-            sample_lookup_table_path(
+            lookup_table_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
@@ -159,4 +160,14 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
             ),
             '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+        )
+
+    def test_new_variants_table_path(self) -> None:
+        self.assertEqual(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                'manual__2023-06-26T18:30:09.349671+00:00',
+            ),
+            '/hail-search-data/v03/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )

@@ -3,6 +3,7 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.annotations.mito import gt_stats
+from v03_pipeline.lib.model import DatasetType
 
 
 class MITOTest(unittest.TestCase):
@@ -21,51 +22,55 @@ class MITOTest(unittest.TestCase):
             ),
             key='id',
         )
-        sample_lookup_ht = hl.Table.parallelize(
+        lookup_ht = hl.Table.parallelize(
             [
                 {
                     'id': 0,
-                    'ref_samples': hl.Struct(project_1={'a', 'c'}, project_2=set()),
-                    'heteroplasmic_samples': hl.Struct(
-                        project_1={'b', 'd'},
-                        project_2=set(),
-                    ),
-                    'homoplasmic_samples': hl.Struct(
-                        project_1={'e', 'f'},
-                        project_2=set(),
-                    ),
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=2,
+                                heteroplasmic_samples=2,
+                                homoplasmic_samples=2,
+                            ),
+                        ],
+                        [],
+                    ],
                 },
                 {
                     'id': 1,
-                    'ref_samples': hl.Struct(
-                        project_1={'a', 'b', 'c', 'd', 'e', 'f'},
-                        project_2=set(),
-                    ),
-                    'heteroplasmic_samples': hl.Struct(
-                        project_1=set(),
-                        project_2=set(),
-                    ),
-                    'homoplasmic_samples': hl.Struct(project_1=set(), project_2=set()),
+                    'project_stats': [
+                        [
+                            hl.Struct(
+                                ref_samples=6,
+                                heteroplasmic_samples=0,
+                                homoplasmic_samples=0,
+                            ),
+                        ],
+                        [],
+                    ],
                 },
             ],
             hl.tstruct(
                 id=hl.tint32,
-                ref_samples=hl.tstruct(
-                    project_1=hl.tset(hl.tstr),
-                    project_2=hl.tset(hl.tstr),
-                ),
-                heteroplasmic_samples=hl.tstruct(
-                    project_1=hl.tset(hl.tstr),
-                    project_2=hl.tset(hl.tstr),
-                ),
-                homoplasmic_samples=hl.tstruct(
-                    project_1=hl.tset(hl.tstr),
-                    project_2=hl.tset(hl.tstr),
+                project_stats=hl.tarray(
+                    hl.tarray(
+                        hl.tstruct(
+                            **{
+                                field: hl.tint32
+                                for field in DatasetType.MITO.lookup_table_fields_and_genotype_filter_fns
+                            },
+                        ),
+                    ),
                 ),
             ),
             key='id',
+            globals=hl.Struct(
+                project_guids=['project_1', 'project_2'],
+                project_families={'project_1': ['a'], 'project_2': []},
+            ),
         )
-        ht = ht.select(gt_stats=gt_stats(ht, sample_lookup_ht))
+        ht = ht.select(gt_stats=gt_stats(ht, lookup_ht))
         self.assertCountEqual(
             ht.collect(),
             [

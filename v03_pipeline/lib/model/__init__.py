@@ -5,9 +5,9 @@ from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
     PipelineVersion,
-    Ploidy,
     ReferenceGenome,
     SampleType,
+    Sex,
 )
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.model.reference_dataset_collection import (
@@ -19,7 +19,7 @@ __all__ = [
     'CachedReferenceDatasetQuery',
     'DatasetType',
     'Env',
-    'Ploidy',
+    'Sex',
     'PipelineVersion',
     'ReferenceDatasetCollection',
     'ReferenceGenome',

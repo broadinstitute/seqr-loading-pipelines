@@ -44,10 +44,15 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 
 def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
+    # split_multi_hts filters star alleles by default, but we
+    # need that behavior for bi-allelic variants in addition to
+    # multi-allelics
+    bi = bi.filter_rows(~bi.alleles.contains('*'))
     bi = bi.annotate_rows(a_index=1, was_split=False)
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(multi)
-    return split.union_rows(bi)
+    mt = split.union_rows(bi)
+    return mt.distinct_by_row()
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
@@ -107,8 +112,12 @@ def import_vcf(
         skip_invalid_loci=True,
         contig_recoding=reference_genome.contig_recoding(),
         force_bgz=True,
-        find_replace=('nul', '.'),
+        find_replace=(
+            'nul',
+            '.',
+        ),  # Required for internal exome callsets (+ some AnVIL requests)
         array_elements_required=False,
+        call_fields=[],  # PGT is unused downstream, but is occasionally present in old VCFs!
     )
 
 
@@ -137,7 +146,12 @@ def select_relevant_fields(
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
-    mt = mt.select_rows(*dataset_type.row_fields)
+    optional_row_fields = [
+        row_field
+        for row_field in dataset_type.optional_row_fields
+        if hasattr(mt, row_field)
+    ]
+    mt = mt.select_rows(*dataset_type.row_fields, *optional_row_fields)
     mt = mt.select_cols(*dataset_type.col_fields)
     return mt.select_entries(*dataset_type.entries_fields)
 
@@ -175,5 +189,8 @@ def write(
     # not using checkpoint to read/write here because the checkpoint codec is different, leading to a different on disk size.
     t.write(checkpoint_path)
     t = read_fn(checkpoint_path)
-    t = t.naive_coalesce(compute_hail_n_partitions(file_size_bytes(checkpoint_path)))
+    t = t.repartition(
+        compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
+        shuffle=False,
+    )
     return t.write(destination_path, overwrite=True)

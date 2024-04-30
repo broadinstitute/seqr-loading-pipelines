@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
     validate_sample_type,
 )
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
@@ -15,7 +16,7 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_cached_reference_dataset_query_path,
 )
-from v03_pipeline.lib.tasks.base.base_write_task import BaseWriteTask
+from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 
 
@@ -29,6 +30,18 @@ class WriteImportedCallsetTask(BaseWriteTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+
+    def complete(self) -> luigi.Target:
+        if not self.force and super().complete():
+            mt = hl.read_matrix_table(self.output().path)
+            return hasattr(mt, 'sample_type') and hl.eval(
+                self.sample_type.value == mt.sample_type,
+            )
+        return False
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -81,6 +94,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             )
         if self.validate and self.dataset_type.can_run_validation:
+            validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
                 valid_cached_reference_dataset_query_path(
@@ -95,4 +109,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.reference_genome,
                 self.sample_type,
             )
-        return mt
+        return mt.annotate_globals(
+            callset_path=self.callset_path,
+            filters_path=self.filters_path or hl.missing(hl.tstr),
+            sample_type=self.sample_type.value,
+        )

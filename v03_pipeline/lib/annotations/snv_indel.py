@@ -1,3 +1,4 @@
+# ruff: noqa: N806
 from typing import Any
 
 import hail as hl
@@ -7,45 +8,13 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
-def _AC(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return sum(
-        (
-            row.ref_samples[project_guid].length() * N_ALT_REF
-            + row.het_samples[project_guid].length() * N_ALT_HET
-            + row.hom_samples[project_guid].length() * N_ALT_HOM
-        )
-        for project_guid in row.ref_samples
-    )
-
-
-def _AF(row: hl.StructExpression) -> hl.Float32Expression:  # noqa: N802
-    return hl.float32(_AC(row) / _AN(row))
-
-
-def _AN(row: hl.StructExpression) -> hl.Int32Expression:  # noqa: N802
-    return 2 * sum(
-        (
-            row.ref_samples[project_guid].length()
-            + row.het_samples[project_guid].length()
-            + row.hom_samples[project_guid].length()
-        )
-        for project_guid in row.ref_samples
-    )
-
-
-def _hom(row: hl.StructExpression) -> hl.Int32Expression:
-    return sum(
-        row.hom_samples[project_guid].length() for project_guid in row.hom_samples
-    )
-
-
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.bind(
         lambda total: hl.if_else(
             (is_called) & (total != 0) & (hl.len(mt.AD) > 1),
-            hl.float(mt.AD[1] / total),
-            hl.missing(hl.tfloat),
+            hl.float32(mt.AD[1] / total),
+            hl.missing(hl.tfloat32),
         ),
         hl.sum(mt.AD),
     )
@@ -55,22 +24,28 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.if_else(
         is_called & hl.is_defined(mt.AD),
-        hl.int(hl.min(hl.sum(mt.AD), 32000)),
-        hl.missing(hl.tint),
+        hl.int32(hl.min(hl.sum(mt.AD), 32000)),
+        hl.missing(hl.tint32),
     )
 
 
 def gt_stats(
     ht: hl.Table,
-    sample_lookup_ht: hl.Table,
+    lookup_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    row = sample_lookup_ht[ht.key]
+    row = lookup_ht[ht.key]
+    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
+    het_samples = hl.sum(hl.flatten(row.project_stats.het_samples))
+    hom_samples = hl.sum(hl.flatten(row.project_stats.hom_samples))
+    AC = ref_samples * N_ALT_REF + het_samples * N_ALT_HET + hom_samples * N_ALT_HOM
+    AN = 2 * (ref_samples + het_samples + hom_samples)
+    hom = hom_samples
     return hl.Struct(
-        AC=_AC(row),
-        AN=_AN(row),
-        AF=_AF(row),
-        hom=_hom(row),
+        AC=AC,
+        AN=AN,
+        AF=hl.float32(AC / AN),
+        hom=hom,
     )
 
 

@@ -5,6 +5,7 @@ import hail as hl
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     validate_expected_contig_frequency,
+    validate_no_duplicate_variants,
     validate_sample_type,
 )
 from v03_pipeline.lib.model import ReferenceGenome, SampleType
@@ -28,6 +29,37 @@ def _mt_from_contigs(contigs):
 
 
 class ValidationTest(unittest.TestCase):
+    def test_validate_no_duplicate_variants(self) -> None:
+        mt = hl.MatrixTable.from_parts(
+            rows={
+                'locus': [
+                    hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                ],
+            },
+            cols={'s': ['sample_1']},
+            entries={'HL': [[0.0], [0.0], [0.0]]},
+        ).key_rows_by('locus')
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'Variants are present multiple times in the callset',
+            validate_no_duplicate_variants,
+            mt,
+        )
+
     def test_validate_expected_contig_frequency(self) -> None:
         mt = _mt_from_contigs(ReferenceGenome.GRCh38.standard_contigs)
         self.assertIsNone(

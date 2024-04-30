@@ -54,7 +54,7 @@ class ReferenceDatasetCollection(Enum):
             (ReferenceDatasetCollection.INTERVAL, DatasetType.MITO): [
                 'high_constraint_region_mito',
             ],
-        }[(self, dataset_type)]
+        }.get((self, dataset_type), [])
 
     def table_key_type(
         self,
@@ -94,3 +94,16 @@ class ReferenceDatasetCollection(Enum):
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs
+
+    @classmethod
+    def for_dataset(
+        cls,
+        dataset: str,
+        dataset_type: DatasetType,
+    ) -> 'ReferenceDatasetCollection':
+        for rdc in cls:
+            if dataset in rdc.datasets(dataset_type):
+                return rdc
+
+        err_msg = f'Dataset "{dataset}" not found in any reference dataset collection'
+        raise ValueError(err_msg)

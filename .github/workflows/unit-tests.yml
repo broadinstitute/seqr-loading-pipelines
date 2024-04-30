@@ -30,14 +30,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-      - name: Check Import Sort
-        run: isort . --check --diff
-      - name: Check Black
-        run: black . --check --diff
+      - name: Check Ruff Format
+        run: ruff format --check v03_pipeline --diff
       - name: Check Ruff
         run: ruff . --output-format github
       - name: Unit Tests
         run: |
+          export REFERENCE_DATA_AUTO_UPDATE=1
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib

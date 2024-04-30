@@ -1,17 +1,12 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
 
 
-class WriteProjectFamilyTablesTask(luigi.Task):
-    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
-    dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
+class WriteProjectFamilyTablesTask(BaseHailTableTask):
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -28,6 +23,10 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     is_new_gcnv_joint_call = luigi.BoolParameter(
         default=False,
         description='Is this a fully joint-called callset.',
@@ -38,28 +37,34 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         self.dynamic_write_family_table_tasks = set()
 
     def complete(self) -> bool:
-        return len(self.dynamic_write_family_table_tasks) > 1 and all(
-            write_family_table_task.complete()
-            for write_family_table_task in self.dynamic_write_family_table_tasks
+        return (
+            not self.force
+            and len(self.dynamic_write_family_table_tasks) >= 1
+            and all(
+                write_family_table_task.complete()
+                for write_family_table_task in self.dynamic_write_family_table_tasks
+            )
         )
 
     def run(self):
         # https://luigi.readthedocs.io/en/stable/tasks.html#dynamic-dependencies
-        rmsct_output: luigi.Target = yield WriteRemappedAndSubsettedCallsetTask(
+        update_project_table_task: luigi.Target = yield UpdateProjectTableTask(
             self.reference_genome,
             self.dataset_type,
             self.sample_type,
-            self.callset_path,
             self.project_guid,
+            self.callset_path,
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
+            False,
+            self.is_new_gcnv_joint_call,
         )
-        callset_mt = hl.read_matrix_table(rmsct_output.path)
-        families = hl.eval(callset_mt.globals.families)
-        for family_guid in families:
+        project_ht = hl.read_table(update_project_table_task.path)
+        family_guids = hl.eval(project_ht.globals.family_guids)
+        for family_guid in family_guids:
             self.dynamic_write_family_table_tasks.add(
                 WriteFamilyTableTask(
                     **self.param_kwargs,

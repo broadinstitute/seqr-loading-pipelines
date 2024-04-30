@@ -31,7 +31,10 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    sample_ids=['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                    family_guids=['abc_1'],
+                    family_samples={
+                        'abc_1': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                    },
                     sample_type=SampleType.WGS.value,
                     updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
                 ),
@@ -49,25 +52,27 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'G'],
                     filters=set(),
-                    entries=[
-                        hl.Struct(
-                            GQ=21,
-                            AB=1.0,
-                            DP=7,
-                            GT=hl.Call(alleles=[1, 1], phased=False),
-                        ),
-                        hl.Struct(
-                            GQ=24,
-                            AB=1.0,
-                            DP=8,
-                            GT=hl.Call(alleles=[1, 1], phased=False),
-                        ),
-                        hl.Struct(
-                            GQ=12,
-                            AB=1.0,
-                            DP=4,
-                            GT=hl.Call(alleles=[1, 1], phased=False),
-                        ),
+                    family_entries=[
+                        [
+                            hl.Struct(
+                                GQ=21,
+                                AB=1.0,
+                                DP=7,
+                                GT=hl.Call(alleles=[1, 1], phased=False),
+                            ),
+                            hl.Struct(
+                                GQ=24,
+                                AB=1.0,
+                                DP=8,
+                                GT=hl.Call(alleles=[1, 1], phased=False),
+                            ),
+                            hl.Struct(
+                                GQ=12,
+                                AB=1.0,
+                                DP=4,
+                                GT=hl.Call(alleles=[1, 1], phased=False),
+                            ),
+                        ],
                     ],
                 ),
                 hl.Struct(
@@ -78,25 +83,27 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                     ),
                     alleles=['G', 'C'],
                     filters=set(),
-                    entries=[
-                        hl.Struct(
-                            GQ=30,
-                            AB=0.3333333333333333,
-                            DP=3,
-                            GT=hl.Call(alleles=[0, 1], phased=False),
-                        ),
-                        hl.Struct(
-                            GQ=6,
-                            AB=0.0,
-                            DP=2,
-                            GT=hl.Call(alleles=[0, 0], phased=False),
-                        ),
-                        hl.Struct(
-                            GQ=61,
-                            AB=0.6,
-                            DP=5,
-                            GT=hl.Call(alleles=[0, 1], phased=False),
-                        ),
+                    family_entries=[
+                        [
+                            hl.Struct(
+                                GQ=30,
+                                AB=hl.eval(hl.float32(0.3333333333333333)),
+                                DP=3,
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                            ),
+                            hl.Struct(
+                                GQ=6,
+                                AB=0.0,
+                                DP=2,
+                                GT=hl.Call(alleles=[0, 0], phased=False),
+                            ),
+                            hl.Struct(
+                                GQ=61,
+                                AB=hl.eval(hl.float32(0.6)),
+                                DP=5,
+                                GT=hl.Call(alleles=[0, 1], phased=False),
+                            ),
+                        ],
                     ],
                 ),
             ],

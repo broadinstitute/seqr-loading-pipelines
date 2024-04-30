@@ -4,7 +4,7 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.model import Ploidy
+from v03_pipeline.lib.model import Sex
 
 
 class Relation(Enum):
@@ -28,7 +28,7 @@ class Relation(Enum):
 @dataclass
 class Sample:
     sample_id: str
-    sex: Ploidy
+    sex: Sex
     mother: str = None
     father: str = None
     maternal_grandmother: str = None
@@ -54,6 +54,23 @@ class Sample:
             and (self.paternal_grandfather == other.father)
         )
 
+    def is_in_direct_lineage(self: 'Sample', other: 'Sample') -> bool:
+        return self.sample_id in {
+            other.mother,
+            other.father,
+            other.maternal_grandmother,
+            other.maternal_grandfather,
+            other.paternal_grandmother,
+            other.paternal_grandfather,
+        } or other.sample_id in {
+            self.mother,
+            self.father,
+            self.maternal_grandmother,
+            self.maternal_grandfather,
+            self.paternal_grandmother,
+            self.paternal_grandfather,
+        }
+
 
 @dataclass
 class Family:
@@ -69,7 +86,7 @@ class Family:
         for row in rows:
             samples[row.s] = Sample(
                 sample_id=row.s,
-                sex=Ploidy(row.sex),
+                sex=Sex(row.sex),
                 mother=row.maternal_s,
                 father=row.paternal_s,
             )
@@ -107,56 +124,34 @@ class Family:
         # A sample_i that is siblings with sample_j, will list sample_j as as sibling, but
         # sample_j will not list sample_i as a sibling.  Relationships only appear in the
         # ibd table a single time, so we only need to check the pairing once.
-        for sample_i, sample_j in itertools.combinations(samples.keys(), 2):
-            # If other sample is already related, continue
-            if sample_j in {
-                samples[sample_i].mother,
-                samples[sample_i].father,
-                samples[sample_i].maternal_grandmother,
-                samples[sample_i].maternal_grandfather,
-                samples[sample_i].paternal_grandmother,
-                samples[sample_i].paternal_grandfather,
-            }:
+        for sample_i, sample_j in itertools.combinations(samples.values(), 2):
+            # If sample is already related from direct relationships, continue
+            if sample_i.is_in_direct_lineage(sample_j):
                 continue
 
             # If both parents are identified and the same, samples are siblings.
             if (
-                samples[sample_i].mother
-                and samples[sample_i].father
-                and (samples[sample_i].mother == samples[sample_j].mother)
-                and (samples[sample_i].father == samples[sample_j].father)
+                sample_i.mother
+                and sample_i.father
+                and (sample_i.mother == sample_j.mother)
+                and (sample_i.father == sample_j.father)
             ):
-                samples[sample_i].siblings.append(
-                    sample_j,
-                )
+                sample_i.siblings.append(sample_j.sample_id)
                 continue
 
             # If only a single parent is identified and the same, samples are half siblings
-            if (
-                samples[sample_i].mother
-                and samples[sample_i].mother == samples[sample_j].mother
-            ) or (
-                samples[sample_i].father
-                and samples[sample_i].father == samples[sample_j].father
+            if (sample_i.mother and sample_i.mother == sample_j.mother) or (
+                sample_i.father and sample_i.father == sample_j.father
             ):
-                samples[sample_i].half_siblings.append(
-                    sample_j,
-                )
+                sample_i.half_siblings.append(sample_j.sample_id)
                 continue
 
             # If either set of one's grandparents is identified and equal to the other's parents,
             # they're aunt/uncle related
-            # NB: because we will only check an  i, j pair of samples a single time, (itertools.combinations)
+            # NB: because we will only check an i, j pair of samples a single time, (itertools.combinations)
             # we need to check both grandparents_i == parents_j and parents_i == grandparents_j.
-            # fmt: off
-            if (
-                samples[sample_i].is_aunt_nephew(samples[sample_j])
-                or samples[sample_j].is_aunt_nephew(samples[sample_i])
-            ):
-                samples[sample_i].aunt_nephews.append(
-                    sample_j,
-                )
-            # fmt: on
+            if sample_i.is_aunt_nephew(sample_j) or sample_j.is_aunt_nephew(sample_i):
+                sample_i.aunt_nephews.append(sample_j.sample_id)
         return samples
 
     @classmethod

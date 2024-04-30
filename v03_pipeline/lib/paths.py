@@ -79,12 +79,10 @@ def metadata_for_run_path(
     run_id: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+        runs_path(
             reference_genome,
             dataset_type,
         ),
-        'runs',
         run_id,
         'metadata.json',
     )
@@ -140,7 +138,7 @@ def remapped_and_subsetted_callset_path(
     )
 
 
-def sample_lookup_table_path(
+def lookup_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
@@ -151,6 +149,20 @@ def sample_lookup_table_path(
             dataset_type,
         ),
         'lookup.ht',
+    )
+
+
+def runs_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'runs',
     )
 
 
@@ -223,4 +235,19 @@ def variant_annotations_table_path(
             dataset_type,
         ),
         'annotations.ht',
+    )
+
+
+def new_variants_table_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'new_variants.ht',
     )

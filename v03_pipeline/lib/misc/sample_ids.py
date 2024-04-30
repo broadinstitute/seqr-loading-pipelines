@@ -20,6 +20,7 @@ def remap_sample_ids(
     ignore_missing_samples_when_remapping: bool,
 ) -> hl.MatrixTable:
     mt = vcf_remap(mt)
+
     collected_remap = project_remap_ht.collect()
     s_dups = [k for k, v in Counter([r.s for r in collected_remap]).items() if v > 1]
     seqr_dups = [
@@ -46,7 +47,7 @@ def remap_sample_ids(
             raise MatrixTableSampleSetError(message, missing_samples)
 
     mt = mt.annotate_cols(**project_remap_ht[mt.s])
-    remap_expr = hl.cond(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
+    remap_expr = hl.if_else(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
     mt = mt.annotate_cols(seqr_id=remap_expr, vcf_id=mt.s)
     mt = mt.key_cols_by(s=mt.seqr_id)
     print(f'Remapped {remap_count} sample ids...')
@@ -80,4 +81,5 @@ def subset_samples(
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
     print(f'Subsetted to {subset_count} sample ids')
-    return mt.semi_join_cols(sample_subset_ht)
+    mt = mt.semi_join_cols(sample_subset_ht)
+    return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))

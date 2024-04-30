@@ -10,6 +10,17 @@ class SeqrValidationError(Exception):
     pass
 
 
+def validate_no_duplicate_variants(
+    mt: hl.MatrixTable,
+) -> None:
+    ht = mt.rows()
+    ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
+    ht = ht.filter(ht.n > 1)
+    if ht.count() > 0:
+        msg = f'Variants are present multiple times in the callset: {ht.collect()}'
+        raise SeqrValidationError(msg)
+
+
 def validate_expected_contig_frequency(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
