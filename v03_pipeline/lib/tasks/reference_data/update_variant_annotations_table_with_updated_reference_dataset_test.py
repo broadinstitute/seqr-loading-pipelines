@@ -131,8 +131,8 @@ MOCK_GNOMAD_EXOMES_CONFIG = {
                     homozygote_count=hl.tint32,
                 ),
             ),
-            grpmax=hl.tarray(
-                hl.tstruct(
+            grpmax=hl.tstruct(
+                gnomad=hl.tstruct(
                     AF=hl.tfloat64,
                     AN=hl.tint32,
                     AC=hl.tint32,
@@ -144,8 +144,7 @@ MOCK_GNOMAD_EXOMES_CONFIG = {
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
-            freq_index_dict={'gnomad': 0, 'gnomad_male': 1, 'adj': 0},
-            popmax_index_dict={'gnomad': 0},
+            freq_index_dict={'adj': 0, 'XY_adj': 1},
         ),
     ),
 }
