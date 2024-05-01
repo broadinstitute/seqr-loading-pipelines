@@ -57,7 +57,7 @@ class VetsTest(unittest.TestCase):
                     ),
                     hl.Locus(
                         contig='chr1',
-                        position=5,
+                        position=6,
                         reference_genome='GRCh38',
                     ),
                 ],
@@ -98,7 +98,7 @@ class VetsTest(unittest.TestCase):
                 set(),
                 {'high_CALIBRATION_SENSITIVITY_SNP'},
                 {'PASS'},
-                {'PASS'},
+                set(),
                 {'high_CALIBRATION_SENSITIVITY_INDEL'},
             ],
         )
