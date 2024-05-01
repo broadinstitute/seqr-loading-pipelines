@@ -11,6 +11,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
+from v03_pipeline.lib.misc.vets import annotate_vets
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     imported_callset_path,
@@ -85,6 +86,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(mt, self.dataset_type)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
+        # Special handling of variant-level filter annotation for VETs filters.
+        # The annotations are present on the sample-level FT field but are
+        # expected upstream on "filters".
+        mt = annotate_vets(mt)
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.
             # This happens fairly often for AnVIL requests.
