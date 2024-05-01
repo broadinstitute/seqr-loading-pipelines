@@ -89,7 +89,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         ):
             rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
             rdc_globals = rdc_ht.index_globals()
-            print('ben', ht.globals.paths.collect(), rdc_globals.paths.collect())
             ht = ht.select_globals(
                 paths=hl.Struct(
                     **ht.globals.paths,
