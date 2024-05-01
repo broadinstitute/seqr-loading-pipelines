@@ -634,7 +634,6 @@ MOCK_CONFIG_MITO = {
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
 )
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
-    maxDiff = None
 
     def setUp(self) -> None:
         super().setUp()
