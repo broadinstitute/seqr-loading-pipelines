@@ -66,8 +66,8 @@ class VetsTest(unittest.TestCase):
                     ['A', 'T'],
                     ['A', 'T'],
                     ['AC', 'T'],
-                    ['AT', 'TC'],
-                    ['AG', 'TG'],
+                    ['AT', 'ATC'],
+                    ['AG', 'ATG'],
                 ],
                 'filters': [
                     hl.set(['PASS']),
