@@ -1,4 +1,5 @@
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 
 from v03_pipeline.lib.logger import get_logger
@@ -7,7 +8,7 @@ from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_relatedness_check,
     get_families_failed_sex_check,
 )
-from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
+from v03_pipeline.lib.misc.io import import_pedigree, import_remap
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
@@ -104,7 +105,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
         # Remap, but only if the remap file is present!
         remap_lookup = hl.empty_dict(hl.tstr, hl.tstr)
-        if does_file_exist(self.project_remap_path):
+        if hfs.exists(self.project_remap_path):
             project_remap_ht = import_remap(self.project_remap_path)
             callset_mt = remap_sample_ids(
                 callset_mt,
