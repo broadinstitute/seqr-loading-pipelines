@@ -20,14 +20,16 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
         super().__init__(*args, **kwargs)
         self.done = False
 
-    def requires(self) -> luigi.Task:
-        return UpdateLookupTableWithDeletedFamiliesTask(
-            dataset_type=self.dataset_type,
-            sample_type=self.sample_type,
-            reference_genome=self.reference_genome,
-            project_guid=self.project_guid,
-            family_guids=self.family_guids,
-        )
+    def requires(self) -> luigi.Task | None:
+        if self.dataset_type.has_lookup_table:
+            return UpdateLookupTableWithDeletedFamiliesTask(
+                dataset_type=self.dataset_type,
+                sample_type=self.sample_type,
+                reference_genome=self.reference_genome,
+                project_guid=self.project_guid,
+                family_guids=self.family_guids,
+            )
+        return None
 
     def complete(self) -> bool:
         if not self.dataset_type.has_lookup_table:

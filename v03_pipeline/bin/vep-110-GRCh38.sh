@@ -12,7 +12,7 @@ export PROJECT="$(gcloud config get-value project)"
 export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CONFIG_PATH)"
 export VEP_REPLICATE="$(/usr/share/google/get_metadata_value attributes/VEP_REPLICATE)"
 export ASSEMBLY=GRCh38
-export VEP_DOCKER_IMAGE=gcr.io/seqr-project/vep-docker-image
+export VEP_DOCKER_IMAGE=gcr.io/seqr-project/vep-docker-image:110
 
 mkdir -p /vep_data
 
@@ -61,7 +61,7 @@ gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/h
 # gzip -d Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
 # bgzip Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa
 # samtools faidx Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
-gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*' /vep_data/ &
+gcloud storage cp --billing-project $PROJECT "gs://seqr-reference-data/vep/110/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*" /vep_data/ &
 docker pull ${VEP_DOCKER_IMAGE} &
 wait
 

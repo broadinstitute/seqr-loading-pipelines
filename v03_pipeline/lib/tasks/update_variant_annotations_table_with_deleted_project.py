@@ -15,13 +15,15 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
 ):
     project_guid = luigi.Parameter()
 
-    def requires(self) -> luigi.Task:
-        return UpdateLookupTableWithDeletedProjectTask(
-            dataset_type=self.dataset_type,
-            sample_type=self.sample_type,
-            reference_genome=self.reference_genome,
-            project_guid=self.project_guid,
-        )
+    def requires(self) -> luigi.Task | None:
+        if self.dataset_type.has_lookup_table:
+            return UpdateLookupTableWithDeletedProjectTask(
+                dataset_type=self.dataset_type,
+                sample_type=self.sample_type,
+                reference_genome=self.reference_genome,
+                project_guid=self.project_guid,
+            )
+        return None
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
