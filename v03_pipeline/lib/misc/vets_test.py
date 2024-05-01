@@ -20,7 +20,7 @@ class VetsTest(unittest.TestCase):
                     ),
                 ],
                 'filters': [
-                    hl.set(['PASS']),
+                    hl.set(['NO_HQ_GENOTYPES']),
                 ],
             },
             cols={'s': ['sample_1']},
@@ -70,12 +70,12 @@ class VetsTest(unittest.TestCase):
                     ['AG', 'ATG'],
                 ],
                 'filters': [
-                    hl.set(['PASS']),
+                    hl.set(['NO_HQ_GENOTYPES']),
                     hl.empty_set(hl.tstr),
                     hl.missing(hl.tset(hl.tstr)),
-                    hl.set(['PASS']),
+                    hl.set(['NO_HQ_GENOTYPES']),
                     hl.empty_set(hl.tstr),
-                    hl.set(['PASS']),
+                    hl.set(['NO_HQ_GENOTYPES']),
                 ],
                 'info': [
                     hl.Struct(CALIBRATION_SENSITIVITY=['0.999']),
@@ -94,11 +94,11 @@ class VetsTest(unittest.TestCase):
         self.assertListEqual(
             dragen_mt.filters.collect(),
             [
-                {'high_CALIBRATION_SENSITIVITY_SNP'},
+                {'NO_HQ_GENOTYPES', 'high_CALIBRATION_SENSITIVITY_SNP'},
                 set(),
                 {'high_CALIBRATION_SENSITIVITY_SNP'},
-                {'PASS'},
+                {'NO_HQ_GENOTYPES'},
                 set(),
-                {'high_CALIBRATION_SENSITIVITY_INDEL'},
+                {'NO_HQ_GENOTYPES', 'high_CALIBRATION_SENSITIVITY_INDEL'},
             ],
         )

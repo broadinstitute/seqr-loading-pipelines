@@ -18,7 +18,7 @@ def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
                     is_snp & (split_cs > VETS_SNP_CUTOFF),
                     hl.if_else(
                         hl.is_defined(mt.filters),
-                        mt.filters.add(VETS_SNP_FILTER).remove(PASS_FILTER),
+                        mt.filters.add(VETS_SNP_FILTER),
                         hl.set([VETS_SNP_FILTER]),
                     ),
                 )
@@ -26,7 +26,7 @@ def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
                     ~is_snp & (split_cs > VETS_INDEL_CUTOFF),
                     hl.if_else(
                         hl.is_defined(mt.filters),
-                        mt.filters.add(VETS_INDEL_FILTER).remove(PASS_FILTER),
+                        mt.filters.add(VETS_INDEL_FILTER),
                         hl.set([VETS_INDEL_FILTER]),
                     ),
                 )
