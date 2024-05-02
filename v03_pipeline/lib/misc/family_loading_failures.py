@@ -107,7 +107,6 @@ def build_relatedness_check_lookup(
     relatedness_check_ht: hl.Table,
     remap_lookup: hl.dict,
 ) -> dict[tuple[str, str], list]:
-    # Build relatedness check lookup
     relatedness_check_ht = relatedness_check_ht.key_by(
         i=remap_lookup.get(relatedness_check_ht.i, relatedness_check_ht.i),
         j=remap_lookup.get(relatedness_check_ht.j, relatedness_check_ht.j),
@@ -124,11 +123,10 @@ def build_sex_check_lookup(
     sex_check_ht: hl.Table,
     remap_lookup: hl.dict,
 ) -> dict[str, Sex]:
-    # Build sex check lookup
     sex_check_ht = sex_check_ht.key_by(
         s=remap_lookup.get(sex_check_ht.s, sex_check_ht.s),
     )
-    sex_check_ht = sex_check_ht.select('sex')
+    sex_check_ht = sex_check_ht.select('predicted_sex')
     return {r.s: Sex(r.sex) for r in sex_check_ht.collect()}
 
 

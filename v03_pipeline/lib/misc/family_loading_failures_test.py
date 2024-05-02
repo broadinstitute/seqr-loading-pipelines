@@ -56,16 +56,16 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
     def test_build_sex_check_lookup(self):
         ht = hl.Table.parallelize(
             [
-                {'s': 'remapped_id', 'sex': 'M'},
-                {'s': 'ROS_006_18Y03227_D1', 'sex': 'M'},
-                {'s': 'ROS_006_18Y03228_D1', 'sex': 'M'},
-                {'s': 'ROS_007_19Y05919_D1', 'sex': 'M'},
-                {'s': 'ROS_007_19Y05939_D1', 'sex': 'F'},
-                {'s': 'ROS_007_19Y05987_D1', 'sex': 'M'},
+                {'s': 'remapped_id', 'predicted_sex': 'M'},
+                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'M'},
             ],
             hl.tstruct(
                 s=hl.tstr,
-                sex=hl.tstr,
+                predicted_sex=hl.tstr,
             ),
             key='s',
         )
@@ -178,16 +178,16 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
     def test_get_families_failed_sex_check(self):
         sex_check_ht = hl.Table.parallelize(
             [
-                {'s': 'ROS_006_18Y03226_D1', 'sex': 'M'},
-                {'s': 'ROS_006_18Y03227_D1', 'sex': 'F'},
-                {'s': 'ROS_006_18Y03228_D1', 'sex': 'F'},
-                {'s': 'ROS_007_19Y05919_D1', 'sex': 'F'},
-                {'s': 'ROS_007_19Y05939_D1', 'sex': 'F'},
-                {'s': 'ROS_007_19Y05987_D1', 'sex': 'F'},
+                {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'F'},
             ],
             hl.tstruct(
                 s=hl.tstr,
-                sex=hl.tstr,
+                predicted_sex=hl.tstr,
             ),
             key='s',
         )

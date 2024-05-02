@@ -161,22 +161,20 @@ def select_relevant_fields(
 
 
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
-    def parse_sex(sex_expr: hl.StringExpression) -> hl.StringExpression:
-        return (
-            hl.case()
-            .when(sex_expr == FEMALE, Sex.FEMALE.value)
-            .when(sex_expr == MALE, Sex.MALE.value)
-            .default(Sex.UNKNOWN.value)
-        )
     ht = hl.import_table(imputed_sex_path)
     ht = ht.select(
         s=ht.collaborator_sample_id,
-        predicted_sex=parse_sex(ht.predicted_sex),
-        reported_sex=parse_sex(ht.reported_sex),
+        predicted_sex=(
+            hl.case()
+            .when(ht.predicted_sex == FEMALE, Sex.FEMALE.value)
+            .when(ht.predicted_sex == MALE, Sex.MALE.value)
+            .default(Sex.UNKNOWN.value)
+        ),
     )
     ht = ht.key_by(ht.s)
     validate_ambiguous_sex(ht)
     return ht
+
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)

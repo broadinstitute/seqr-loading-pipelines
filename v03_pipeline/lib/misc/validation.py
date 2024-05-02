@@ -10,6 +10,7 @@ SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 class SeqrValidationError(Exception):
     pass
 
+
 def validate_ambiguous_sex(ht: hl.Table) -> None:
     ambiguous_perc = ht.aggregate(
         hl.agg.fraction(ht.predicted_sex == Sex.UNKNOWN.value),

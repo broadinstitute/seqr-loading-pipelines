@@ -12,6 +12,7 @@ XY_FSTAT_THRESHOLD: float = (
     0.75  # F-stat threshold above which a sample will be called XY.
 )
 
+
 def impute_sex(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just in case.
