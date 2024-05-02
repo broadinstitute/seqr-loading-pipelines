@@ -16,31 +16,31 @@ class SexCheckTest(unittest.TestCase):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         ht = impute_sex(mt)
         self.assertCountEqual(
-            ht.drop('expected_homs').collect(),
+            ht.collect(),
             [
                 hl.Struct(
                     s='ROS_006_18Y03226_D1',
-                    sex='M',
+                    predicted_sex='M',
                 ),
                 hl.Struct(
                     s='ROS_006_18Y03227_D1',
-                    sex='M',
+                    predicted_sex='M',
                 ),
                 hl.Struct(
                     s='ROS_006_18Y03228_D1',
-                    sex='M',
+                    predicted_sex='M',
                 ),
                 hl.Struct(
                     s='ROS_007_19Y05919_D1',
-                    sex='M',
+                    predicted_sex='M',
                 ),
                 hl.Struct(
                     s='ROS_007_19Y05939_D1',
-                    sex='F',
+                    predicted_sex='F',
                 ),
                 hl.Struct(
                     s='ROS_007_19Y05987_D1',
-                    sex='M',
+                    predicted_sex='M',
                 ),
             ],
         )

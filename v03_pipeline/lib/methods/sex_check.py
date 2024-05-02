@@ -1,22 +1,16 @@
 import hail as hl
 
 from v03_pipeline.lib.model import Sex
+from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
 
-AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
 BIALLELIC: int = 2
-SEX_FIELD = 'sex'
 XX_FSTAT_THRESHOLD: float = (
     0.5  # F-stat threshold below which a sample will be called XX
 )
 XY_FSTAT_THRESHOLD: float = (
     0.75  # F-stat threshold above which a sample will be called XY.
 )
-
-
-def import_imputed_sex_table() -> hl.Table:
-    pass
-
 
 def impute_sex(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
@@ -37,18 +31,13 @@ def impute_sex(mt: hl.MatrixTable) -> hl.Table:
         aaf_threshold=AAF_THRESHOLD,
     )
     ht = mt.annotate_cols(**impute_sex_ht[mt.col_key]).cols()
-    ht = ht.annotate(
-        sex=(
+    ht = ht.select(
+        predicted_sex=(
             hl.case()
             .when(hl.is_missing(ht.is_female), Sex.UNKNOWN.value)
             .when(ht.is_female, Sex.FEMALE.value)
             .default(Sex.MALE.value)
         ),
     )
-    ambiguous_perc = ht.aggregate(
-        hl.agg.fraction(ht.sex == Sex.UNKNOWN.value),
-    )
-    if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
-        msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
-        raise ValueError(msg)
-    return ht.select(SEX_FIELD)
+    validate_ambiguous_sex(ht)
+    return ht

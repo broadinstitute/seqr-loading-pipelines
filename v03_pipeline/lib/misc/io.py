@@ -4,12 +4,16 @@ import uuid
 
 import hail as hl
 
+from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
+
+MALE = 'Male'
+FEMALE = 'Female'
 
 
 def does_file_exist(path: str) -> bool:
@@ -155,6 +159,24 @@ def select_relevant_fields(
     mt = mt.select_cols(*dataset_type.col_fields)
     return mt.select_entries(*dataset_type.entries_fields)
 
+
+def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
+    def parse_sex(sex_expr: hl.StringExpression) -> hl.StringExpression:
+        return (
+            hl.case()
+            .when(sex_expr == FEMALE, Sex.FEMALE.value)
+            .when(sex_expr == MALE, Sex.MALE.value)
+            .default(Sex.UNKNOWN.value)
+        )
+    ht = hl.import_table(imputed_sex_path)
+    ht = ht.select(
+        s=ht.collaborator_sample_id,
+        predicted_sex=parse_sex(ht.predicted_sex),
+        reported_sex=parse_sex(ht.reported_sex),
+    )
+    ht = ht.key_by(ht.s)
+    validate_ambiguous_sex(ht)
+    return ht
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)
