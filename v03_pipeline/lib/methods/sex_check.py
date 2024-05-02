@@ -2,13 +2,10 @@ import hail as hl
 
 from v03_pipeline.lib.model import Sex
 
-IMPUTE_SEX_ANNOTATIONS = [
-    'sex',
-]
-
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
 BIALLELIC: int = 2
+SEX_FIELD = 'sex'
 XX_FSTAT_THRESHOLD: float = (
     0.5  # F-stat threshold below which a sample will be called XX
 )
@@ -17,7 +14,11 @@ XY_FSTAT_THRESHOLD: float = (
 )
 
 
-def call_sex(mt: hl.MatrixTable) -> hl.Table:
+def import_imputed_sex_table() -> hl.Table:
+    pass
+
+
+def impute_sex(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just in case.
     mt = mt.filter_rows(
@@ -50,4 +51,4 @@ def call_sex(mt: hl.MatrixTable) -> hl.Table:
     if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
         msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
         raise ValueError(msg)
-    return ht.select(*IMPUTE_SEX_ANNOTATIONS)
+    return ht.select(SEX_FIELD)

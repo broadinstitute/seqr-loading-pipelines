@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 
-from v03_pipeline.lib.methods.sex_check import call_sex
+from v03_pipeline.lib.methods.sex_check import impute_sex
 
 TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
     'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
@@ -12,9 +12,9 @@ TEST_PEDIGREE = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
 
 
 class SexCheckTest(unittest.TestCase):
-    def test_call_sex(self):
+    def test_impute_sex(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
-        ht = call_sex(mt)
+        ht = impute_sex(mt)
         self.assertCountEqual(
             ht.drop('expected_homs').collect(),
             [
@@ -45,11 +45,11 @@ class SexCheckTest(unittest.TestCase):
             ],
         )
 
-    def test_call_sex_ambiguous(self):
+    def test_impute_sex_ambiguous(self):
         mt = hl.read_matrix_table(TEST_SEX_AND_RELATEDNESS_CALLSET_MT)
         with patch('v03_pipeline.lib.methods.sex_check.XY_FSTAT_THRESHOLD', 0.95):
             self.assertRaises(
                 ValueError,
-                call_sex,
+                impute_sex,
                 mt,
             )
