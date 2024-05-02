@@ -3,11 +3,6 @@ import hail as hl
 from v03_pipeline.lib.model import Sex
 
 IMPUTE_SEX_ANNOTATIONS = [
-    'is_female',
-    'f_stat',
-    'n_called',
-    'expected_homs',
-    'observed_homs',
     'sex',
 ]
 
