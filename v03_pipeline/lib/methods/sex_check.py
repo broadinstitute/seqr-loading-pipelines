@@ -1,7 +1,7 @@
 import hail as hl
 
-from v03_pipeline.lib.model import Sex
 from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
+from v03_pipeline.lib.model import Sex
 
 AAF_THRESHOLD: float = 0.05  # Alternate allele frequency threshold for `hl.impute_sex`.
 BIALLELIC: int = 2

@@ -30,8 +30,8 @@ class IOTest(unittest.TestCase):
         self.assertListEqual(
             ht.collect(),
             [
-                hl.Struct(s='abc_1', predicted_sex='M', reported_sex='M'), 
-                hl.Struct(s='abc_2', predicted_sex='F', reported_sex='F'), 
-                hl.Struct(s='abc_3', predicted_sex='M', reported_sex='M')]
+                hl.Struct(s='abc_1', predicted_sex='M', reported_sex='M'),
+                hl.Struct(s='abc_2', predicted_sex='F', reported_sex='F'),
+                hl.Struct(s='abc_3', predicted_sex='M', reported_sex='M')],
         )
 

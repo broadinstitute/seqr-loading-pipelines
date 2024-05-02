@@ -4,8 +4,8 @@ import uuid
 
 import hail as hl
 
-from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
+from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
