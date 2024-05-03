@@ -127,7 +127,7 @@ def build_sex_check_lookup(
         s=remap_lookup.get(sex_check_ht.s, sex_check_ht.s),
     )
     sex_check_ht = sex_check_ht.select('predicted_sex')
-    return {r.s: Sex(r.sex) for r in sex_check_ht.collect()}
+    return {r.s: Sex(r.predicted_sex) for r in sex_check_ht.collect()}
 
 
 def get_families_failed_missing_samples(
