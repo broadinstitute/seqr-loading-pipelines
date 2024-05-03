@@ -81,4 +81,5 @@ def subset_samples(
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
     print(f'Subsetted to {subset_count} sample ids')
-    return mt.semi_join_cols(sample_subset_ht)
+    mt = mt.semi_join_cols(sample_subset_ht)
+    return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))

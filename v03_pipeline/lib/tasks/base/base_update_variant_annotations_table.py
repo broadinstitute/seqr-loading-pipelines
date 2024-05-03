@@ -13,14 +13,14 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
+from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
 
 
-class BaseVariantAnnotationsTableTask(BaseUpdateTask):
+class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
     @property
     def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
         return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)

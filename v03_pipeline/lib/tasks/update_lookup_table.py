@@ -8,15 +8,15 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
-from v03_pipeline.lib.paths import lookup_table_path
-from v03_pipeline.lib.tasks.base.base_update_task import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
+    BaseUpdateLookupTableTask,
+)
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-class UpdateLookupTableTask(BaseUpdateTask):
+class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
@@ -37,14 +37,6 @@ class UpdateLookupTableTask(BaseUpdateTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-
-    def output(self) -> luigi.Target:
-        return GCSorLocalTarget(
-            lookup_table_path(
-                self.reference_genome,
-                self.dataset_type,
-            ),
-        )
 
     def complete(self) -> bool:
         return (
@@ -105,31 +97,6 @@ class UpdateLookupTableTask(BaseUpdateTask):
                 self.project_pedigree_paths,
             )
         ]
-
-    def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                **key_type,
-                project_stats=hl.tarray(
-                    hl.tarray(
-                        hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in self.dataset_type.lookup_table_fields_and_genotype_filter_fns
-                            },
-                        ),
-                    ),
-                ),
-            ),
-            key=key_type.fields,
-            globals=hl.Struct(
-                project_guids=hl.empty_array(hl.tstr),
-                project_families=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
-            ),
-        )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         # NB: there's a chance this many hail operations blows the DAG compute stack
