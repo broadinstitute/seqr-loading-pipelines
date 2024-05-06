@@ -37,6 +37,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    imputed_sex_path = luigi.Parameter(default=None)
     run_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
@@ -66,6 +67,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.validate,
                 self.force,
                 self.check_sex_and_relatedness,
+                self.imputed_sex_path,
             )
             for (
                 callset_path,

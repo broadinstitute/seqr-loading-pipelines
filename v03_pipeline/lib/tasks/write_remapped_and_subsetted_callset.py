@@ -47,6 +47,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
+    imputed_sex_path = luigi.Parameter(default=None)
 
     def complete(self) -> luigi.Target:
         return not self.force and super().complete()
@@ -93,7 +94,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                     self.reference_genome,
                     self.dataset_type,
                     self.sample_type,
-                    self.callset_path,
+                    self.imputed_sex_path,
                 ),
             ]
         return requirements
