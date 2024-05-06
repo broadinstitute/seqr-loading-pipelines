@@ -8,6 +8,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 
 
 class WriteSexCheckTableTask(BaseWriteTask):
+    callset_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter()
 
     def output(self) -> luigi.Target:
