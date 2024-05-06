@@ -13,9 +13,7 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
 
 MAX_VARIANTS_PER_REQUEST = 1000000
-ALLELE_REGISTRY_URL = (
-    'https://reg.genome.network/alleles?file=vcf&fields=none+@id+externalRecords.{}.id'
-)
+ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+genomicAlleles+externalRecords.{}.id'
 HTTP_REQUEST_TIMEOUT_S = 420
 
 logger = get_logger(__name__)
@@ -94,7 +92,7 @@ def register_alleles(
                 # NB: The Allele Registry does not accept contigs prefixed with 'chr', even for GRCh38
                 vcf_out.write(line.replace('chr', ''))
 
-    logger.info('Calling the Clingen Allele Registry.')
+    logger.info('Calling the ClinGen Allele Registry')
     with hfs.open(formatted_vcf_file_name, 'r') as vcf_in:
         data = vcf_in.read()
         res = requests.put(
@@ -110,10 +108,10 @@ def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
     password = Env.ALLELE_REGISTRY_PASSWORD
 
     if login is None or password is None:
-        msg = 'Please set the ALLELE_REGISTRY_LOGIN and ALLELE_REGISTRY_PASSWORD environment variables.'
+        msg = 'Please set the ALLELE_REGISTRY_LOGIN and ALLELE_REGISTRY_PASSWORD environment variables'
         raise ValueError(msg)
 
-    # NB: Use the correct external IDs (gnomAD_2 for 37 and gnomad_4 for 38) to map CAIDs back to our variants.
+    # Request a gnomad ID for the correct reference genome
     base_url = base_url.format(reference_genome.allele_registry_gnomad_id)
 
     # adapted from https://reg.clinicalgenome.org/doc/scripts/request_with_payload.py
@@ -136,48 +134,58 @@ def handle_api_response(
 
     parsed_structs = []
     errors = []
-    no_external_id_count = 0
+    variant_not_mappable = 0
     for allele_response in response:
         if 'errorType' in allele_response:
             errors.append(
                 AlleleRegistryError.from_api_response(allele_response, base_url),
             )
-        else:
-            # Example allele_response:
-            # {'@id': 'http://reg.genome.network/allele/CA520798109',
-            #  'externalRecords': {'gnomAD_4': [{'id': '1-10109-AACCCT-A'}]}}
-            caid = allele_response['@id'].split('/')[-1]
+            continue
+
+        # Extract CAID and allele info
+        caid = allele_response['@id'].split('/')[-1]
+        allele_info = next(
+            record
+            for record in allele_response['genomicAlleles']
+            if record['referenceGenome'] == reference_genome.value
+        )
+        chrom = allele_info['chromosome']
+        pos = allele_info['coordinates'][0]['end']
+        ref = allele_info['coordinates'][0]['referenceAllele']
+        alt = allele_info['coordinates'][0]['allele']
+
+        if ref == '' or alt == '':
+            # AR will turn alleles like ["A","ATT"] to ["", "TT"] so try using gnomad IDs instead
             if 'externalRecords' in allele_response:
                 gnomad_id = allele_response['externalRecords'][
                     reference_genome.allele_registry_gnomad_id
                 ][0]['id']
                 chrom, pos, ref, alt = gnomad_id.split('-')
-                struct = hl.Struct(
-                    locus=hl.Locus(
-                        f'chr{chrom}'
-                        if reference_genome == ReferenceGenome.GRCh38
-                        else chrom,
-                        int(pos),
-                        reference_genome=reference_genome.value,
-                    ),
-                    alleles=[ref, alt],
-                    CAID=caid,
-                )
-                parsed_structs.append(struct)
             else:
-                no_external_id_count += 1
+                variant_not_mappable += 1
+                continue
+
+        struct = hl.Struct(
+            locus=hl.Locus(
+                f'chr{chrom}' if reference_genome == ReferenceGenome.GRCh38 else chrom,
+                int(pos),
+                reference_genome=reference_genome.value,
+            ),
+            alleles=[ref, alt],
+            CAID=caid,
+        )
+        parsed_structs.append(struct)
 
     logger.info(
-        f'{len(response) - len(errors)} out of {len(response)} returned CAID(s).',
+        f'{len(response) - len(errors)} out of {len(response)} variants returned CAID(s)',
     )
     logger.info(
-        f'{no_external_id_count} registered allele(s) cannot be mapped back to our variants in the annotations table.',
+        f'{variant_not_mappable} registered variant(s) cannot be mapped back to ours',
     )
     if errors:
         logger.warning(
             f'{len(errors)} failed. First error: {errors[0]}',
         )
-
     return hl.Table.parallelize(
         parsed_structs,
         hl.tstruct(

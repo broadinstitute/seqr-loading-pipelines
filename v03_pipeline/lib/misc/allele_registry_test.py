@@ -43,28 +43,28 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=874734,
+                        position=10126,
                         reference_genome='GRCh38',
                     ),
-                    'alleles': ['C', 'T'],
-                    'rsid': 'rs370233997',
-                },
-                {
-                    'locus': hl.Locus(
-                        contig='chr1',
-                        position=876499,
-                        reference_genome='GRCh38',
-                    ),
-                    'alleles': ['A', 'G'],
+                    'alleles': ['TA', 'T'],
                     'rsid': 'rs370233999',
                 },
                 {
                     'locus': hl.Locus(
                         contig='chr1',
-                        position=878314,
+                        position=10129,
                         reference_genome='GRCh38',
                     ),
-                    'alleles': ['G', 'C'],
+                    'alleles': ['T', 'TC'],
+                    'rsid': 'rs370233997',
+                },
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=10128,
+                        reference_genome='GRCh38',
+                    ),
+                    'alleles': ['A', 'G'],
                     'rsid': 'rs370234000',
                 },
                 {
@@ -91,11 +91,57 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         mock_response.json.return_value = [
             {
                 '@id': 'http://reg.genome.network/allele/CA997563840',
-                'externalRecords': {'gnomAD_4': [{'id': '1-10126-TA-T'}]},
+                'genomicAlleles': [
+                    {
+                        'chromosome': '1',
+                        'coordinates': [
+                            {
+                                'allele': '',  # alt allele is ''
+                                'end': 10128,
+                                'referenceAllele': 'A',
+                                'start': 10127,
+                            },
+                        ],
+                        'referenceGenome': 'GRCh38',
+                    },
+                ],
+                'externalRecords': {
+                    'gnomAD_4': [{'id': '1-10126-TA-T'}],
+                },  # has gnomad ID
             },
-            {'@id': 'http://reg.genome.network/allele/CA16716503'},
+            {
+                '@id': 'http://reg.genome.network/allele/CA16716503',
+                'genomicAlleles': [
+                    {
+                        'chromosome': '1',
+                        'coordinates': [
+                            {
+                                'allele': 'C',
+                                'end': 10131,
+                                'referenceAllele': '',  # ref allele is '' and does not have a gnomad ID
+                                'start': 10131,
+                            },
+                        ],
+                        'referenceGenome': 'GRCh38',
+                    },
+                ],
+            },
             {
                 '@id': 'http://reg.genome.network/allele/CA997563845',
+                'genomicAlleles': [
+                    {
+                        'chromosome': '1',
+                        'coordinates': [
+                            {
+                                'allele': 'G',
+                                'end': 10128,
+                                'referenceAllele': 'A',
+                                'start': 10127,
+                            },
+                        ],
+                        'referenceGenome': 'GRCh38',
+                    },
+                ],
                 'externalRecords': {'gnomAD_4': [{'id': '1-10128-A-G'}]},
             },
             {
@@ -129,10 +175,10 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         mock_put_request.assert_called_once_with(
             url=ANY,
             data=f'{"".join(ReferenceGenome.GRCh38.allele_registry_vcf_header)}'
-            f'1\t10469\trs370233998\tC\tG\t.\t.\t.\n'
-            f'1\t874734\trs370233997\tC\tT\t.\t.\t.\n'
-            f'1\t876499\trs370233999\tA\tG\t.\t.\t.\n'
-            f'1\t878314\trs370234000\tG\tC\t.\t.\t.\n',
+            f'1\t10126\trs370233999\tTA\tT\t.\t.\t.\n'
+            f'1\t10128\trs370234000\tA\tG\t.\t.\t.\n'
+            f'1\t10129\trs370233997\tT\tTC\t.\t.\t.\n'
+            f'1\t10469\trs370233998\tC\tG\t.\t.\t.\n',
             timeout=ALLELE_REGISTRY_TIMEOUT,
         )
         mock_logger.warning.assert_called_once_with(
