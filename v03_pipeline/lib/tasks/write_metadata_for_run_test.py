@@ -20,7 +20,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             callset_paths=[TEST_VCF],
-            imputed_sex_paths=['not_a_path'],
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],

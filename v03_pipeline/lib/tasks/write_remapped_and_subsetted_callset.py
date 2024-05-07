@@ -24,10 +24,10 @@ logger = get_logger(__name__)
 
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
-    imputed_sex_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter(default=None)
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,

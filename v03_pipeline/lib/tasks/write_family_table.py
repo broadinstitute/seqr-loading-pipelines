@@ -11,6 +11,7 @@ from v03_pipeline.lib.tasks.update_project_table import (
 
 class WriteFamilyTableTask(BaseWriteTask):
     callset_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
@@ -57,6 +58,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             self.sample_type,
             self.project_guid,
             self.callset_path,
+            self.imputed_sex_path,
             self.project_remap_path,
             self.project_pedigree_path,
             self.ignore_missing_samples_when_subsetting,
