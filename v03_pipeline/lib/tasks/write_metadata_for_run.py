@@ -14,6 +14,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 class WriteMetadataForRunTask(BaseHailTableTask):
     callset_paths = luigi.ListParameter()
+    imputed_sex_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
@@ -37,7 +38,6 @@ class WriteMetadataForRunTask(BaseHailTableTask):
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    imputed_sex_path = luigi.Parameter(default=None)
     run_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
@@ -59,6 +59,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.dataset_type,
                 self.sample_type,
                 callset_path,
+                imputed_sex_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
@@ -67,15 +68,16 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.validate,
                 self.force,
                 self.check_sex_and_relatedness,
-                self.imputed_sex_path,
             )
             for (
                 callset_path,
+                imputed_sex_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
             ) in callset_project_pairs(
                 self.callset_paths,
+                self.imputed_sex_paths,
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,

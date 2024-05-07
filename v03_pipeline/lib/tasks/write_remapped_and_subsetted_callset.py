@@ -24,6 +24,7 @@ logger = get_logger(__name__)
 
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
@@ -47,7 +48,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    imputed_sex_path = luigi.Parameter(default=None)
 
     def complete(self) -> luigi.Target:
         return not self.force and super().complete()
