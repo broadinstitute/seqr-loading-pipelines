@@ -24,12 +24,12 @@ def get_callset_ht(  # noqa: PLR0913
                 project_guid,
             ),
         ).rows()
-        for (callset_path, _, project_guid, _, _) in callset_project_pairs(
+        for (callset_path, project_guid, _, _, _) in callset_project_pairs(
             callset_paths,
-            imputed_sex_paths,
             project_guids,
             project_remap_paths,
             project_pedigree_paths,
+            imputed_sex_paths,
         )
     ]
 
