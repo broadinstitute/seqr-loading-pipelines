@@ -59,7 +59,9 @@ def callset_project_pairs(
             project_guids,
             project_remap_paths,
             project_pedigree_paths,
-            imputed_sex_paths if imputed_sex_paths is not None else [None] * len(callset_paths),
+            imputed_sex_paths
+            if imputed_sex_paths is not None
+            else [None] * len(callset_paths),
             strict=True,
         )
     return (
@@ -72,7 +74,9 @@ def callset_project_pairs(
         )
         for callset_path, imputed_sex_path in zip(
             callset_paths,
-            imputed_sex_paths if imputed_sex_paths is not None else [None] * len(callset_paths),
+            imputed_sex_paths
+            if imputed_sex_paths is not None
+            else [None] * len(callset_paths),
             strict=False,
         )
         for (project_guid, project_remap_path, project_pedigree_path) in zip(
