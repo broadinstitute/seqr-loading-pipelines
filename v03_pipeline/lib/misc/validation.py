@@ -1,13 +1,23 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome, SampleType
+from v03_pipeline.lib.model import ReferenceGenome, SampleType, Sex
 
+AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
 SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
 
 class SeqrValidationError(Exception):
     pass
+
+
+def validate_ambiguous_sex(ht: hl.Table) -> None:
+    ambiguous_perc = ht.aggregate(
+        hl.agg.fraction(ht.predicted_sex == Sex.UNKNOWN.value),
+    )
+    if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
+        msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
+        raise ValueError(msg)
 
 
 def validate_no_duplicate_variants(

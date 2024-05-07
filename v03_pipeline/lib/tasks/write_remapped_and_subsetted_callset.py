@@ -27,6 +27,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter(default=None)
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -94,6 +95,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                     self.dataset_type,
                     self.sample_type,
                     self.callset_path,
+                    self.imputed_sex_path,
                 ),
             ]
         return requirements

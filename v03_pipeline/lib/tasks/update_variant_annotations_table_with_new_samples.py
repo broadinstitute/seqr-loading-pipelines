@@ -20,6 +20,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
+    imputed_sex_paths = luigi.ListParameter(default=None)
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -53,6 +54,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
+                self.imputed_sex_paths,
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
@@ -81,11 +83,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                                 project_guid,
                                 _,
                                 _,
+                                _,
                             ) in callset_project_pairs(
                                 self.callset_paths,
                                 self.project_guids,
                                 self.project_remap_paths,
                                 self.project_pedigree_paths,
+                                self.imputed_sex_paths,
                             )
                         ],
                     ),
@@ -113,6 +117,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
+                self.imputed_sex_paths,
             )
             # new_variants_ht consists of variants present in the new callset, fully annotated,
             # but NOT present in the existing annotations table.
@@ -146,11 +151,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                         project_guid,
                         _,
                         _,
+                        _,
                     ) in callset_project_pairs(
                         self.callset_paths,
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
+                        self.imputed_sex_paths,
                     )
                 },
             ),
