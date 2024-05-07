@@ -22,7 +22,7 @@ class WriteSexCheckTableTask(BaseWriteTask):
 
     def requires(self) -> luigi.Task:
         return [
-            RawFileTask(self.project_pedigree_path),
+            RawFileTask(self.imputed_sex_path),
         ]
 
     def create_table(self) -> hl.Table:
