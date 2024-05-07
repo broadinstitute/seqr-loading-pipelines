@@ -247,8 +247,8 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 hl.Struct(callset=callset_path, project_guid=project_guid)
                 for (
                     callset_path,
-                    _,
                     project_guid,
+                    _,
                     _,
                     _,
                 ) in callset_project_pairs(
