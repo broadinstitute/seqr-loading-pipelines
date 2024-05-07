@@ -20,7 +20,6 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             callset_paths=[TEST_VCF],
-            imputed_sex_paths=['not_a_real_path'],
             project_guids=[
                 'R0555_seqr_demo',
             ],  # a project excluded from the lookup table
@@ -54,7 +53,6 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
             callset_paths=[TEST_VCF],
-            imputed_sex_paths=['not_a_real_path'],
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],

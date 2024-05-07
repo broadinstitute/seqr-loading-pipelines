@@ -59,10 +59,10 @@ class WriteMetadataForRunTask(BaseHailTableTask):
                 self.dataset_type,
                 self.sample_type,
                 callset_path,
-                imputed_sex_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
+                imputed_sex_path,
                 self.ignore_missing_samples_when_subsetting,
                 self.ignore_missing_samples_when_remapping,
                 self.validate,
@@ -71,10 +71,10 @@ class WriteMetadataForRunTask(BaseHailTableTask):
             )
             for (
                 callset_path,
-                imputed_sex_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
+                imputed_sex_path,
             ) in callset_project_pairs(
                 self.callset_paths,
                 self.project_guids,

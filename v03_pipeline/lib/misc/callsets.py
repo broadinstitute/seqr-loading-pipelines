@@ -56,19 +56,19 @@ def callset_project_pairs(
     if len(callset_paths) == len(project_guids):
         return zip(
             callset_paths,
-            imputed_sex_paths if imputed_sex_paths is not None else [None] * len(callset_paths),
             project_guids,
             project_remap_paths,
             project_pedigree_paths,
+            imputed_sex_paths if imputed_sex_paths is not None else [None] * len(callset_paths),
             strict=True,
         )
     return (
         (
             callset_path,
-            imputed_sex_path,
             project_guid,
             project_remap_path,
             project_pedigree_path,
+            imputed_sex_path,
         )
         for callset_path, imputed_sex_path in zip(
             callset_paths,

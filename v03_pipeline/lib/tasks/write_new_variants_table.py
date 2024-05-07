@@ -37,10 +37,10 @@ GENCODE_RELEASE = 42
 
 class WriteNewVariantsTableTask(BaseWriteTask):
     callset_paths = luigi.ListParameter()
-    imputed_sex_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
+    imputed_sex_paths = luigi.ListParameter(default=None)
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -107,10 +107,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         self.dataset_type,
                         self.sample_type,
                         self.callset_paths,
-                        self.imputed_sex_paths,
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
+                        self.imputed_sex_paths,
                         self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
@@ -126,10 +126,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         self.dataset_type,
                         self.sample_type,
                         callset_path,
-                        imputed_sex_path,
                         project_guid,
                         project_remap_path,
                         project_pedigree_path,
+                        imputed_sex_path,
                         self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
@@ -137,16 +137,16 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     )
                     for (
                         callset_path,
-                        imputed_sex_path,
                         project_guid,
                         project_remap_path,
                         project_pedigree_path,
+                        imputed_sex_path,
                     ) in callset_project_pairs(
                         self.callset_paths,
-                        self.imputed_sex_paths,
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
+                        self.imputed_sex_paths,
                     )
                 ],
             )
@@ -165,16 +165,16 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         )
                         for (
                             callset_path,
-                            _,
                             project_guid,
+                            _,
                             _,
                             _,
                         ) in callset_project_pairs(
                             self.callset_paths,
-                            self.imputed_sex_paths,
                             self.project_guids,
                             self.project_remap_paths,
                             self.project_pedigree_paths,
+                            self.imputed_sex_paths,
                         )
                     ],
                 ),
@@ -187,10 +187,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.reference_genome,
             self.dataset_type,
             self.callset_paths,
-            self.imputed_sex_paths,
             self.project_guids,
             self.project_remap_paths,
             self.project_pedigree_paths,
+            self.imputed_sex_paths,
         )
 
         # 1) Identify new variants.
@@ -253,10 +253,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     _,
                 ) in callset_project_pairs(
                     self.callset_paths,
-                    self.imputed_sex_paths,
                     self.project_guids,
                     self.project_remap_paths,
                     self.project_pedigree_paths,
+                    self.imputed_sex_paths,
                 )
             },
         )
