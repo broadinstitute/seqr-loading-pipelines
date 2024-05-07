@@ -71,7 +71,9 @@ def callset_project_pairs(
             project_pedigree_path,
         )
         for callset_path, imputed_sex_path in zip(
-            callset_paths, imputed_sex_paths, strict=False
+            callset_paths,
+            imputed_sex_paths,
+            strict=False,
         )
         for (project_guid, project_remap_path, project_pedigree_path) in zip(
             project_guids,
