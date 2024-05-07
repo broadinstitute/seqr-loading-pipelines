@@ -107,12 +107,13 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         # NB: there's a chance this many hail operations blows the DAG compute stack
         # in an unfortunate way.  Please keep an eye out!
-        for i, (callset_path, project_guid, _, _) in enumerate(
+        for i, (callset_path, project_guid, _, _, _) in enumerate(
             callset_project_pairs(
                 self.callset_paths,
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
+                self.imputed_sex_paths,
             ),
         ):
             if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
