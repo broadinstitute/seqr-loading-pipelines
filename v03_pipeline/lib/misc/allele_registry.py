@@ -104,11 +104,12 @@ def register_alleles(
 
 
 def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
-    login = Env.ALLELE_REGISTRY_LOGIN
-    password = Env.ALLELE_REGISTRY_PASSWORD
-
+    login, password = Env.ALLELE_REGISTRY_CREDENTIALS
     if login is None or password is None:
-        msg = 'Please set the ALLELE_REGISTRY_LOGIN and ALLELE_REGISTRY_PASSWORD environment variables'
+        msg = (
+            'SHOULD_REGISTER_ALLELES is True but cannot get allele registry credentials. '
+            'Did you forget to set the os environment variable ALLELE_REGISTRY_SECRET_NAME?'
+        )
         raise ValueError(msg)
 
     # Request a gnomad ID for the correct reference genome
