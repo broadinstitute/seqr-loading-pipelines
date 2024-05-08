@@ -151,7 +151,7 @@ def handle_api_response(
 
     parsed_structs = []
     errors = []
-    variant_not_mappable = 0
+    unmappable_variants = []
     for allele_response in response:
         if 'errorType' in allele_response:
             errors.append(
@@ -179,7 +179,7 @@ def handle_api_response(
                 ][0]['id']
                 chrom, pos, ref, alt = gnomad_id.split('-')
             else:
-                variant_not_mappable += 1
+                unmappable_variants.append(allele_response)
                 continue
 
         struct = hl.Struct(
@@ -197,7 +197,8 @@ def handle_api_response(
         f'{len(response) - len(errors)} out of {len(response)} variants returned CAID(s)',
     )
     logger.info(
-        f'{variant_not_mappable} registered variant(s) cannot be mapped back to ours',
+        f'{len(unmappable_variants)} registered variant(s) cannot be mapped back to ours. '
+        f'\nFirst unmappable variant:\n{unmappable_variants[0]}',
     )
     if errors:
         logger.warning(
