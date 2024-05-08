@@ -237,7 +237,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         # Register the new variant alleles to the Clingen Allele Registry
         # and annotate new_variants table with CAID.
-        if self.dataset_type.should_send_to_allele_registry:
+        if (
+            Env.SHOULD_REGISTER_ALLELES
+            and self.dataset_type.should_send_to_allele_registry
+        ):
             ar_ht = hl.Table.parallelize(
                 [],
                 hl.tstruct(

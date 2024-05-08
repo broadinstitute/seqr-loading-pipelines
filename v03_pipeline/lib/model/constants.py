@@ -1,3 +1,4 @@
+SEQR_GCP_PROJECT_ID = 'seqr-project'
 PROJECTS_EXCLUDED_FROM_LOOKUP = {
     'R0555_seqr_demo',
     'R0607_gregor_training_project_',
