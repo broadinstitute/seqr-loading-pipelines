@@ -26,16 +26,19 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         shutil.rmtree(self.temp_dir.name)
 
     @patch.object(requests, 'put')
+    @patch(
+        'v03_pipeline.lib.misc.allele_registry._get_ar_credentials_from_secret_manager',
+    )
     @patch('v03_pipeline.lib.misc.allele_registry.Env')
     @patch('v03_pipeline.lib.misc.allele_registry.logger')
     def test_register_alleles_38(
         self,
         mock_logger: Mock,
         mock_env: Mock,
+        mock_get_credentials: Mock,
         mock_put_request: Mock,
     ):
-        mock_env.ALLELE_REGISTRY_LOGIN = 'test'
-        mock_env.ALLELE_REGISTRY_PASSWORD = 'test'  # noqa: S105
+        mock_get_credentials.return_value = ('', '')
         mock_env.HAIL_TMPDIR = self.temp_dir.name
 
         new_variants_ht = hl.Table.parallelize(
