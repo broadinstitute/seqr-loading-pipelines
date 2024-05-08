@@ -10,6 +10,7 @@ from v03_pipeline.lib.misc.validation import (
 )
 from v03_pipeline.lib.model import ReferenceGenome, SampleType
 
+TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 
 def _mt_from_contigs(contigs):
     return hl.MatrixTable.from_parts(
@@ -29,6 +30,9 @@ def _mt_from_contigs(contigs):
 
 
 class ValidationTest(unittest.TestCase):
+    def test_validate_imputed_sex_ploidy(self) -> None:
+        sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
+
     def test_validate_no_duplicate_variants(self) -> None:
         mt = hl.MatrixTable.from_parts(
             rows={

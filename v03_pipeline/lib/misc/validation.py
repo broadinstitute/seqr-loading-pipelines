@@ -56,6 +56,13 @@ def validate_expected_contig_frequency(
             raise SeqrValidationError(msg)
 
 
+def validate_imputed_sex_ploidy(
+    mt: hl.MatrixTable,
+    sex_check_ht: hl.Table,
+) -> None:
+    pass
+
+
 def validate_sample_type(
     mt: hl.MatrixTable,
     coding_and_noncoding_variants_ht: hl.Table,
