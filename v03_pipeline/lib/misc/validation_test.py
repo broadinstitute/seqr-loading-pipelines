@@ -83,7 +83,6 @@ class ValidationTest(unittest.TestCase):
             sex_check_ht,
         )
 
-
     def test_validate_no_duplicate_variants(self) -> None:
         mt = hl.MatrixTable.from_parts(
             rows={
