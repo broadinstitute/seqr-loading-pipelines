@@ -136,7 +136,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.reference_genome,
                 self.sample_type,
             )
-        if self.check_sex_and_relatedness and self.dataset_type.check_sex_and_relatedness:
+        if (
+            self.check_sex_and_relatedness
+            and self.dataset_type.check_sex_and_relatedness
+        ):
             sex_check_ht = hl.read_table(
                 sex_check_table_path(
                     self.reference_genome,
