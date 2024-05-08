@@ -1,5 +1,6 @@
 import dataclasses
 import hashlib
+import json
 import math
 import time
 import uuid
@@ -7,10 +8,12 @@ import uuid
 import hail as hl
 import hailtop.fs as hfs
 import requests
+from google.cloud import secretmanager
 from requests import HTTPError
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
+from v03_pipeline.lib.model.constants import SEQR_GCP_PROJECT_ID
 
 MAX_VARIANTS_PER_REQUEST = 1000000
 ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+genomicAlleles+externalRecords.{}.id'
@@ -104,13 +107,7 @@ def register_alleles(
 
 
 def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
-    login, password = Env.ALLELE_REGISTRY_CREDENTIALS
-    if login is None or password is None:
-        msg = (
-            'SHOULD_REGISTER_ALLELES is True but cannot get allele registry credentials. '
-            'Did you forget to set the os environment variable ALLELE_REGISTRY_SECRET_NAME?'
-        )
-        raise ValueError(msg)
+    login, password = _get_ar_credentials_from_secret_manager()
 
     # Request a gnomad ID for the correct reference genome
     base_url = base_url.format(reference_genome.allele_registry_gnomad_id)
@@ -120,6 +117,25 @@ def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
     gb_time = str(int(time.time()))
     token = hashlib.sha1((base_url + identity + gb_time).encode('utf-8')).hexdigest()  # noqa: S324
     return base_url + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
+
+
+def _get_ar_credentials_from_secret_manager() -> tuple[str, str]:
+    if Env.ALLELE_REGISTRY_SECRET_NAME is None:
+        msg = (
+            'SHOULD_REGISTER_ALLELES is True but cannot get allele registry credentials '
+            'because ALLELE_REGISTRY_SECRET_NAME is not set'
+        )
+        raise ValueError(msg)
+
+    client = secretmanager.SecretManagerServiceClient()
+    name = client.secret_version_path(
+        SEQR_GCP_PROJECT_ID,
+        Env.ALLELE_REGISTRY_SECRET_NAME,
+        'latest',
+    )
+    response = client.access_secret_version(request={'name': name})
+    payload_dict = json.loads(response.payload.data.decode('UTF-8'))
+    return payload_dict['login'], payload_dict['password']
 
 
 def handle_api_response(

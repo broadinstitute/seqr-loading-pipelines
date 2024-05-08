@@ -1,10 +1,5 @@
-import json
 import os
 from dataclasses import dataclass
-
-from google.cloud import secretmanager
-
-from v03_pipeline.lib.model.constants import SEQR_GCP_PROJECT_ID
 
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
 ACCESS_PRIVATE_REFERENCE_DATASETS = (
@@ -40,18 +35,4 @@ class Env:
     VEP_CONFIG_PATH: str | None = VEP_CONFIG_PATH
     VEP_CONFIG_URI: str | None = VEP_CONFIG_URI
     SHOULD_REGISTER_ALLELES: bool = SHOULD_REGISTER_ALLELES
-
-    @property
-    def ALLELE_REGISTRY_CREDENTIALS(self) -> tuple[str | None, str | None]:  # noqa: N802
-        if not SHOULD_REGISTER_ALLELES or ALLELE_REGISTRY_SECRET_NAME is None:
-            return None, None
-
-        client = secretmanager.SecretManagerServiceClient()
-        name = client.secret_version_path(
-            SEQR_GCP_PROJECT_ID,
-            ALLELE_REGISTRY_SECRET_NAME,
-            'latest',
-        )
-        response = client.access_secret_version(request={'name': name})
-        payload_dict = json.loads(response.payload.data.decode('UTF-8'))
-        return payload_dict['login'], payload_dict['password']
+    ALLELE_REGISTRY_SECRET_NAME: str | None = ALLELE_REGISTRY_SECRET_NAME
