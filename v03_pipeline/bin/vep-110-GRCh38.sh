@@ -61,11 +61,7 @@ gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/h
 # gzip -d Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
 # bgzip Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa
 # samtools faidx Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
-<<<<<<< HEAD
 gcloud storage cp --billing-project $PROJECT "gs://seqr-reference-data/vep/110/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*" /vep_data/ &
-=======
-gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*' /vep_data/ &
->>>>>>> d4af227e6148536cd0b51809d7f3e8a9f029b789
 docker pull ${VEP_DOCKER_IMAGE} &
 wait
 
