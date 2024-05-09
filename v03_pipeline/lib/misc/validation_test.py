@@ -59,7 +59,7 @@ class ValidationTest(unittest.TestCase):
             rows={
                 'locus': [
                     hl.Locus(
-                        contig='chr1',
+                        contig='chrX',
                         position=1,
                         reference_genome='GRCh38',
                     ),
