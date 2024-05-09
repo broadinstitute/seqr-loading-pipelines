@@ -5,7 +5,6 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.misc.validation import validate_ambiguous_sex
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -168,13 +167,10 @@ def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
             hl.case()
             .when(ht.predicted_sex == FEMALE, Sex.FEMALE.value)
             .when(ht.predicted_sex == MALE, Sex.MALE.value)
-            .default(Sex.UNKNOWN.value)
+            .or_error(hl.format('Found unexpected value %s in imputed sex file', ht.predicted_sex))
         ),
     )
-    ht = ht.key_by(ht.s)
-    validate_ambiguous_sex(ht)
-    return ht
-
+    return ht.key_by(ht.s)
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)

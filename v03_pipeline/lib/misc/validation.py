@@ -11,15 +11,6 @@ class SeqrValidationError(Exception):
     pass
 
 
-def validate_ambiguous_sex(ht: hl.Table) -> None:
-    ambiguous_perc = ht.aggregate(
-        hl.agg.fraction(ht.predicted_sex == Sex.UNKNOWN.value),
-    )
-    if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
-        msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
-        raise SeqrValidationError(msg)
-
-
 def validate_no_duplicate_variants(
     mt: hl.MatrixTable,
 ) -> None:
