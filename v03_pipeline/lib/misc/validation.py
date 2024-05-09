@@ -54,20 +54,20 @@ def validate_imputed_sex_ploidy(
     mt = mt.select_cols(
         discrepant=(
             (
-                # All calls are diploid but the sex is Male/Unknown
+                # All calls are diploid but the sex is Male
                 hl.agg.all(mt.GT.is_diploid())
-                & (sex_check_ht[mt.s].predicted_sex != Sex.FEMALE.value)
+                & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
             )
             | (
-                # At least one call is haploid but the sex is Female/Unknown
+                # At least one call is haploid but the sex is Female
                 hl.agg.any(~mt.GT.is_diploid())
-                & (sex_check_ht[mt.s].predicted_sex != Sex.MALE.value)
+                & (sex_check_ht[mt.s].predicted_sex == Sex.FEMALE.value)
             )
         ),
     )
     discrepant_rate = mt.aggregate_cols(hl.agg.fraction(mt.discrepant))
     if discrepant_rate:
-        msg = f'{discrepant_rate:.2%} of samples have misaligned ploidy with their provided imputed sex.  Contact the methods team to investigate.'
+        msg = f'{discrepant_rate:.2%} of samples have misaligned ploidy with their provided imputed sex.'
         raise SeqrValidationError(msg)
 
 
