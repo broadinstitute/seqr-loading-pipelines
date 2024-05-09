@@ -361,7 +361,7 @@ CONFIG = {
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
-            'version': 'v4.1',
+            'version': '4.1',
             'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
             'custom_select': custom_gnomad_select_v4,
         },
@@ -373,7 +373,7 @@ CONFIG = {
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
-            'version': 'v4.1',
+            'version': '4.1',
             'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_select': custom_gnomad_select_v4,
         },
