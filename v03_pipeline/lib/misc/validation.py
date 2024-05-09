@@ -11,15 +11,6 @@ class SeqrValidationError(Exception):
     pass
 
 
-def validate_ambiguous_sex(ht: hl.Table) -> None:
-    ambiguous_perc = ht.aggregate(
-        hl.agg.fraction(ht.predicted_sex == Sex.UNKNOWN.value),
-    )
-    if ambiguous_perc > AMBIGUOUS_THRESHOLD_PERC:
-        msg = f'{ambiguous_perc:.2%} of samples identified as ambiguous.  Please contact the methods team to investigate the callset.'
-        raise ValueError(msg)
-
-
 def validate_no_duplicate_variants(
     mt: hl.MatrixTable,
 ) -> None:
@@ -54,6 +45,30 @@ def validate_expected_contig_frequency(
         if count < min_rows_per_contig:
             msg = f'Contig {contig} has {count} rows, which is lower than expected minimum count {min_rows_per_contig}.'
             raise SeqrValidationError(msg)
+
+
+def validate_imputed_sex_ploidy(
+    mt: hl.MatrixTable,
+    sex_check_ht: hl.Table,
+) -> None:
+    mt = mt.select_cols(
+        discrepant=(
+            (
+                # All calls are diploid but the sex is Male
+                hl.agg.all(mt.GT.is_diploid())
+                & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
+            )
+            | (
+                # At least one call is haploid but the sex is Female
+                hl.agg.any(~mt.GT.is_diploid())
+                & (sex_check_ht[mt.s].predicted_sex == Sex.FEMALE.value)
+            )
+        ),
+    )
+    discrepant_rate = mt.aggregate_cols(hl.agg.fraction(mt.discrepant))
+    if discrepant_rate:
+        msg = f'{discrepant_rate:.2%} of samples have misaligned ploidy with their provided imputed sex.'
+        raise SeqrValidationError(msg)
 
 
 def validate_sample_type(

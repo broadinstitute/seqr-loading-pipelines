@@ -9,6 +9,9 @@ from v03_pipeline.lib.misc.io import (
 )
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
+TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
+    'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
@@ -34,4 +37,12 @@ class IOTest(unittest.TestCase):
                 hl.Struct(s='abc_2', predicted_sex='F'),
                 hl.Struct(s='abc_3', predicted_sex='M'),
             ],
+        )
+
+    def test_import_imputed_sex_unexpected_value(self) -> None:
+        ht = import_imputed_sex(TEST_IMPUTED_SEX_UNEXPECTED_VALUE)
+        self.assertRaisesRegex(
+            hl.utils.java.HailUserError,
+            'Found unexpected value Unknown in imputed sex file',
+            ht.collect,
         )
