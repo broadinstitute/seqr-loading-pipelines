@@ -167,10 +167,15 @@ def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
             hl.case()
             .when(ht.predicted_sex == FEMALE, Sex.FEMALE.value)
             .when(ht.predicted_sex == MALE, Sex.MALE.value)
-            .or_error(hl.format('Found unexpected value %s in imputed sex file', ht.predicted_sex))
+            .or_error(
+                hl.format(
+                    'Found unexpected value %s in imputed sex file', ht.predicted_sex,
+                ),
+            )
         ),
     )
     return ht.key_by(ht.s)
+
 
 def import_remap(remap_path: str) -> hl.Table:
     ht = hl.import_table(remap_path)

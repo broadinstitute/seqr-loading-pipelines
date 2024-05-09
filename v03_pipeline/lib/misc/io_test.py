@@ -9,7 +9,9 @@ from v03_pipeline.lib.misc.io import (
 )
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
-TEST_IMPUTED_SEX_UNEXPECTED_VALUE = 'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
+TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
+    'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
