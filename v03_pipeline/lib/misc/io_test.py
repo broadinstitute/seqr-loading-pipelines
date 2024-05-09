@@ -1,7 +1,17 @@
 import unittest
 
-from v03_pipeline.lib.misc.io import compute_hail_n_partitions, file_size_bytes
+import hail as hl
 
+from v03_pipeline.lib.misc.io import (
+    compute_hail_n_partitions,
+    file_size_bytes,
+    import_imputed_sex,
+)
+
+TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
+TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
+    'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
@@ -17,3 +27,22 @@ class IOTest(unittest.TestCase):
         self.assertEqual(compute_hail_n_partitions(23), 1)
         self.assertEqual(compute_hail_n_partitions(191310), 1)
         self.assertEqual(compute_hail_n_partitions(1913100000), 15)
+
+    def test_import_imputed_sex(self) -> None:
+        ht = import_imputed_sex(TEST_IMPUTED_SEX)
+        self.assertListEqual(
+            ht.collect(),
+            [
+                hl.Struct(s='abc_1', predicted_sex='M'),
+                hl.Struct(s='abc_2', predicted_sex='F'),
+                hl.Struct(s='abc_3', predicted_sex='M'),
+            ],
+        )
+
+    def test_import_imputed_sex_unexpected_value(self) -> None:
+        ht = import_imputed_sex(TEST_IMPUTED_SEX_UNEXPECTED_VALUE)
+        self.assertRaisesRegex(
+            hl.utils.java.HailUserError,
+            'Found unexpected value Unknown in imputed sex file',
+            ht.collect,
+        )

@@ -1,7 +1,8 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome, SampleType
+from v03_pipeline.lib.model import ReferenceGenome, SampleType, Sex
 
+AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
 SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
@@ -44,6 +45,30 @@ def validate_expected_contig_frequency(
         if count < min_rows_per_contig:
             msg = f'Contig {contig} has {count} rows, which is lower than expected minimum count {min_rows_per_contig}.'
             raise SeqrValidationError(msg)
+
+
+def validate_imputed_sex_ploidy(
+    mt: hl.MatrixTable,
+    sex_check_ht: hl.Table,
+) -> None:
+    mt = mt.select_cols(
+        discrepant=(
+            (
+                # All calls are diploid but the sex is Male
+                hl.agg.all(mt.GT.is_diploid())
+                & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
+            )
+            | (
+                # At least one call is haploid but the sex is Female
+                hl.agg.any(~mt.GT.is_diploid())
+                & (sex_check_ht[mt.s].predicted_sex == Sex.FEMALE.value)
+            )
+        ),
+    )
+    discrepant_rate = mt.aggregate_cols(hl.agg.fraction(mt.discrepant))
+    if discrepant_rate:
+        msg = f'{discrepant_rate:.2%} of samples have misaligned ploidy with their provided imputed sex.'
+        raise SeqrValidationError(msg)
 
 
 def validate_sample_type(
