@@ -169,7 +169,8 @@ def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
             .when(ht.predicted_sex == MALE, Sex.MALE.value)
             .or_error(
                 hl.format(
-                    'Found unexpected value %s in imputed sex file', ht.predicted_sex,
+                    'Found unexpected value %s in imputed sex file',
+                    ht.predicted_sex,
                 ),
             )
         ),
