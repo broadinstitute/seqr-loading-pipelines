@@ -203,6 +203,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -219,6 +220,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
+        mock_env: Mock,
         mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
@@ -233,6 +235,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
         # make register_alleles return CAIDs for 4 of 30 variants
+        mock_env.SHOULD_REGISTER_ALLELES = True
         mock_register_alleles.side_effect = [
             iter(
                 [
