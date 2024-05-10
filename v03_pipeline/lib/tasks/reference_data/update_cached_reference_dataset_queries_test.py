@@ -16,7 +16,7 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 
 
 @mock.patch(
-    'v03_pipeline.lib.tasks.reference_data.write_cached_reference_dataset_query.UpdatedCachedReferenceDatasetQuery',
+    'v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries.UpdatedCachedReferenceDatasetQuery',
 )
 class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
     def test_37_snv_indel(self, mock_crdq_task):
