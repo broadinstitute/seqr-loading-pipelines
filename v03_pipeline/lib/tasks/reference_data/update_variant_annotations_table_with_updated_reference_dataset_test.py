@@ -288,6 +288,7 @@ MOCK_CONFIG = {
         },
         '38': {
             **CONFIG['gnomad_exomes']['38'],
+            'version': '4.1',
             'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
@@ -358,7 +359,7 @@ MOCK_CONFIG = {
         },
         '38': {
             **CONFIG['gnomad_genomes']['38'],
-            'version': 'v4.1',
+            'version': '4.1',
             'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
@@ -826,8 +827,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         dbnsfp='2.9.3',
                         eigen=None,
                         exac=None,
-                        gnomad_exomes='v4.1',
-                        gnomad_genomes='v4.1',
+                        gnomad_exomes='4.1',
+                        gnomad_genomes='4.1',
                         mpc=None,
                         primate_ai='v0.2',
                         splice_ai=None,
