@@ -1,5 +1,5 @@
-from v03_pipeline.lib.tasks.reference_data.write_cached_reference_dataset_query import (
-    WriteCachedReferenceDatasetQuery,
+from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
+    UpdateCachedReferenceDatasetQueries,
 )
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
@@ -33,7 +33,7 @@ __all__ = [
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'UpdateVariantAnnotationsTableWithDeletedProjectTask',
     'UpdateVariantAnnotationsTableWithDeletedFamiliesTask',
-    'WriteCachedReferenceDatasetQuery',
+    'UpdateCachedReferenceDatasetQueries',
     'WriteMetadataForRunTask',
     'WriteProjectFamilyTablesTask',
 ]

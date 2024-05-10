@@ -9,6 +9,9 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
+    UpdatedCachedReferenceDatasetQuery,
+)
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 
 
@@ -36,12 +39,21 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
         if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             requirements = [
                 *requirements,
-                HailTableTask(
-                    valid_cached_reference_dataset_query_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                        CachedReferenceDatasetQuery.GNOMAD_QC,
-                    ),
+                (
+                    UpdatedCachedReferenceDatasetQuery(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=self.sample_type,
+                        crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
+                    )
+                    if Env.REFERENCE_DATA_AUTO_UPDATE
+                    else HailTableTask(
+                        valid_cached_reference_dataset_query_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                            CachedReferenceDatasetQuery.GNOMAD_QC,
+                        ),
+                    )
                 ),
             ]
         return requirements
