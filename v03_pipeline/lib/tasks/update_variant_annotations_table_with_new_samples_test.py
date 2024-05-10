@@ -233,6 +233,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
+        # NB: This is the one and only place validation is enabled in the task tests!
         coding_and_noncoding_variants_ht = hl.Table.parallelize(
             [
                 {
@@ -260,6 +261,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 noncoding=hl.tbool,
             ),
             key='locus',
+            globals=hl.Struct(
+                paths=hl.Struct(
+                    gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht'
+                ), 
+                versions=hl.Struct(
+                    gnomad_genomes='4.1'
+                ),
+                enums=hl.Struct(
+                    gnomad_genomes=hl.Struct(),
+                )
+            ),
         )
         coding_and_noncoding_variants_ht.write(
             valid_cached_reference_dataset_query_path(
