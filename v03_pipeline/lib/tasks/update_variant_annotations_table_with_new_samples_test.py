@@ -263,14 +263,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             key='locus',
             globals=hl.Struct(
                 paths=hl.Struct(
-                    gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht'
-                ), 
+                    gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
+                ),
                 versions=hl.Struct(
-                    gnomad_genomes='4.1'
+                    gnomad_genomes='4.1',
                 ),
                 enums=hl.Struct(
                     gnomad_genomes=hl.Struct(),
-                )
+                ),
             ),
         )
         coding_and_noncoding_variants_ht.write(
