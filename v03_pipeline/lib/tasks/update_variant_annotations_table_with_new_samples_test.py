@@ -203,6 +203,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery'
+    )
+    @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
@@ -219,7 +222,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
         mock_update_rdc_task: Mock,
+        mock_updated_cached_reference_dataset_query,
     ) -> None:
+        mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
