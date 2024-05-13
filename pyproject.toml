@@ -63,6 +63,7 @@ inline-quotes = "single"
 '*test*' = [
     'ARG002', # allow unused method arguments
     'SLF001', # allow private access
+    'PLR0913', # allow high arity functions
 ]
 
 [tool.ruff.pylint]

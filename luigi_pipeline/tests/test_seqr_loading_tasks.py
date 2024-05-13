@@ -14,7 +14,7 @@ class TestSeqrLoadingTasks(unittest.TestCase):
         # Create a temporary directory
         self.test_mt = hl.import_vcf(TEST_DATA_MT_1KG)
 
-    def _sample_type_stats_return_value(  # noqa: PLR0913
+    def _sample_type_stats_return_value(
         self,
         nc_match_count,
         nc_total_count,

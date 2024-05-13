@@ -203,7 +203,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertFalse(uvatwns_task.complete())
 
     @patch(
-        'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery'
+        'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery',
     )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
