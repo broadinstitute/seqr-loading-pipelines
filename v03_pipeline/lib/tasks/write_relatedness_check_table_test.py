@@ -74,7 +74,7 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CONFIG',
         MOCK_CONFIG,
     )
-    def test_relatedness_check_table_task(
+    def test_relatedness_check_table_task_gnomad_qc_updated(
         self,
     ) -> None:
         ht = hl.read_table(
