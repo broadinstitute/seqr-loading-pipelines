@@ -11,7 +11,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 
 
-class WriteCachedReferenceDatasetQuery(luigi.Task):
+class UpdateCachedReferenceDatasetQueries(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
     sample_type = luigi.EnumParameter(enum=SampleType)

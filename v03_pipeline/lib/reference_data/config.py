@@ -386,8 +386,8 @@ CONFIG = {
             'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh37/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
-            'version': 'v4.0',
-            'source_path': 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
+            'version': '4.0',
+            'path': 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
         },
     },
     'exac': {
