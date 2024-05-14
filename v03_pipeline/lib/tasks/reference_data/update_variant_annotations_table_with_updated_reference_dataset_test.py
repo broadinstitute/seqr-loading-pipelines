@@ -115,40 +115,6 @@ MOCK_EXAC_CONFIG = {
         globals=hl.Struct(),
     ),
 }
-MOCK_GNOMAD_EXOMES_CONFIG = {
-    **CONFIG['gnomad_exomes']['38'],
-    'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-    'custom_import': lambda *_: hl.Table.parallelize(
-        [],
-        hl.tstruct(
-            locus=hl.tlocus('GRCh38'),
-            alleles=hl.tarray(hl.tstr),
-            freq=hl.tarray(
-                hl.tstruct(
-                    AF=hl.tfloat64,
-                    AN=hl.tint32,
-                    AC=hl.tint32,
-                    homozygote_count=hl.tint32,
-                ),
-            ),
-            popmax=hl.tarray(
-                hl.tstruct(
-                    AF=hl.tfloat64,
-                    AN=hl.tint32,
-                    AC=hl.tint32,
-                    homozygote_count=hl.tint32,
-                    pop=hl.tstr,
-                ),
-            ),
-            faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
-        ),
-        key=['locus', 'alleles'],
-        globals=hl.Struct(
-            freq_index_dict={'gnomad': 0, 'gnomad_male': 1},
-            popmax_index_dict={'gnomad': 0},
-        ),
-    ),
-}
 
 MOCK_MPC_CONFIG = {
     **CONFIG['mpc']['38'],
@@ -286,8 +252,75 @@ MOCK_CONFIG = {
         '38': MOCK_EXAC_CONFIG,
     },
     'gnomad_exomes': {
-        '37': MOCK_GNOMAD_EXOMES_CONFIG,
-        '38': MOCK_GNOMAD_EXOMES_CONFIG,
+        '37': {
+            **CONFIG['gnomad_exomes']['37'],
+            'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    freq=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                        ),
+                    ),
+                    popmax=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                            pop=hl.tstr,
+                        ),
+                    ),
+                    faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    freq_index_dict={'gnomad': 0, 'gnomad_male': 1},
+                    popmax_index_dict={'gnomad': 0},
+                ),
+            ),
+        },
+        '38': {
+            **CONFIG['gnomad_exomes']['38'],
+            'version': '4.1',
+            'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    freq=hl.tarray(
+                        hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                        ),
+                    ),
+                    grpmax=hl.tstruct(
+                        gnomad=hl.tstruct(
+                            AF=hl.tfloat64,
+                            AN=hl.tint32,
+                            AC=hl.tint32,
+                            homozygote_count=hl.tint32,
+                            pop=hl.tstr,
+                        ),
+                    ),
+                    faf=hl.tarray(hl.tstruct(faf95=hl.tfloat64)),
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(
+                    freq_index_dict={'adj': 0, 'XY_adj': 1},
+                    faf_index_dict={'adj': 0},
+                ),
+            ),
+        },
     },
     'gnomad_genomes': {
         '37': {
@@ -326,8 +359,8 @@ MOCK_CONFIG = {
         },
         '38': {
             **CONFIG['gnomad_genomes']['38'],
-            'version': 'r2.1.1',
-            'source_path': 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            'version': '4.1',
+            'source_path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
@@ -341,7 +374,7 @@ MOCK_CONFIG = {
                             homozygote_count=hl.tint32,
                         ),
                     ),
-                    popmax=hl.tstruct(
+                    grpmax=hl.tstruct(
                         AF=hl.tfloat64,
                         AN=hl.tint32,
                         AC=hl.tint32,
@@ -352,7 +385,7 @@ MOCK_CONFIG = {
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(
-                    freq_index_dict={'adj': 0, 'XY-adj': 1},
+                    freq_index_dict={'adj': 0, 'XY_adj': 1},
                     faf_index_dict={'adj': 0},
                 ),
             ),
@@ -778,8 +811,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
                         eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
                         exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
-                        gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-                        gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                        gnomad_exomes='gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
+                        gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
                         mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
                         primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
                         splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
@@ -794,8 +827,8 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         dbnsfp='2.9.3',
                         eigen=None,
                         exac=None,
-                        gnomad_exomes='r2.1.1',
-                        gnomad_genomes='r2.1.1',
+                        gnomad_exomes='4.1',
+                        gnomad_genomes='4.1',
                         mpc=None,
                         primate_ai='v0.2',
                         splice_ai=None,

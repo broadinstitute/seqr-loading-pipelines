@@ -172,10 +172,8 @@ def get_expr_for_vep_sorted_transcript_consequences_array(
                 'lof_filter',
                 'lof_flags',
                 'lof_info',
-                'polyphen_prediction',
                 'protein_id',
                 'protein_start',
-                'sift_prediction',
             ],
         )
 
@@ -302,9 +300,7 @@ def get_expr_for_worst_transcript_consequence_annotations_struct(
                 'lof_flags': hl.tstr,
                 'lof_filter': hl.tstr,
                 'lof_info': hl.tstr,
-                'polyphen_prediction': hl.tstr,
                 'protein_id': hl.tstr,
-                'sift_prediction': hl.tstr,
             },
         )
 

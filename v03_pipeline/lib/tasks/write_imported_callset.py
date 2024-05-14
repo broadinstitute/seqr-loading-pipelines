@@ -8,21 +8,29 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.validation import (
     validate_expected_contig_frequency,
+    validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     imported_callset_path,
+    sex_check_table_path,
     valid_cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
+    UpdatedCachedReferenceDatasetQuery,
+)
+from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
     callset_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter(default=None)
     filters_path = luigi.OptionalParameter(
         default=None,
         description='Optional path to part two outputs from callset (VCF shards containing filter information)',
@@ -32,6 +40,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     force = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    check_sex_and_relatedness = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
@@ -63,12 +75,35 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.validate and self.dataset_type.can_run_validation:
             requirements = [
                 *requirements,
-                HailTableTask(
-                    valid_cached_reference_dataset_query_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                        CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                (
+                    UpdatedCachedReferenceDatasetQuery(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=self.sample_type,
+                        crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                    )
+                    if Env.REFERENCE_DATA_AUTO_UPDATE
+                    else HailTableTask(
+                        valid_cached_reference_dataset_query_path(
+                            self.reference_genome,
+                            self.dataset_type,
+                            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                        ),
                     ),
+                ),
+            ]
+        if (
+            self.check_sex_and_relatedness
+            and self.dataset_type.check_sex_and_relatedness
+        ):
+            requirements = [
+                *requirements,
+                WriteSexCheckTableTask(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.callset_path,
+                    self.imputed_sex_path,
                 ),
             ]
         return [
@@ -113,6 +148,21 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 coding_and_noncoding_ht,
                 self.reference_genome,
                 self.sample_type,
+            )
+        if (
+            self.check_sex_and_relatedness
+            and self.dataset_type.check_sex_and_relatedness
+        ):
+            sex_check_ht = hl.read_table(
+                sex_check_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                ),
+            )
+            validate_imputed_sex_ploidy(
+                mt,
+                sex_check_ht,
             )
         return mt.annotate_globals(
             callset_path=self.callset_path,

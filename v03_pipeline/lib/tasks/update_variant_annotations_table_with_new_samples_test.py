@@ -205,6 +205,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
+        'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery',
+    )
+    @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
@@ -223,7 +226,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_env: Mock,
         mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
+        mock_updated_cached_reference_dataset_query,
     ) -> None:
+        mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
@@ -295,6 +300,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
+        # NB: This is the one and only place validation is enabled in the task tests!
         coding_and_noncoding_variants_ht = hl.Table.parallelize(
             [
                 {
@@ -322,6 +328,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 noncoding=hl.tbool,
             ),
             key='locus',
+            globals=hl.Struct(
+                paths=hl.Struct(
+                    gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
+                ),
+                versions=hl.Struct(
+                    gnomad_genomes='4.1',
+                ),
+                enums=hl.Struct(
+                    gnomad_genomes=hl.Struct(),
+                ),
+            ),
         )
         coding_and_noncoding_variants_ht.write(
             valid_cached_reference_dataset_query_path(
@@ -540,8 +557,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
                         eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
                         exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
-                        gnomad_exomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/exomes/gnomad.exomes.r2.1.1.sites.ht',
-                        gnomad_genomes='gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+                        gnomad_exomes='gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
+                        gnomad_genomes='gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
                         mpc='gs://seqr-reference-data/GRCh37/MPC/fordist_constraint_official_mpc_values.ht',
                         primate_ai='gs://seqr-reference-data/GRCh37/primate_ai/PrimateAI_scores_v0.2.ht',
                         splice_ai='gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.ht',
@@ -556,8 +573,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         dbnsfp='2.9.3',
                         eigen=None,
                         exac=None,
-                        gnomad_exomes='r2.1.1',
-                        gnomad_genomes='r2.1.1',
+                        gnomad_exomes='4.1',
+                        gnomad_genomes='4.1',
                         mpc=None,
                         primate_ai='v0.2',
                         splice_ai=None,
@@ -743,8 +760,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     dbnsfp='2.9.3',
                     eigen=None,
                     exac=None,
-                    gnomad_exomes='r2.1.1',
-                    gnomad_genomes='r2.1.1',
+                    gnomad_exomes='4.1',
+                    gnomad_genomes='4.1',
                     mpc=None,
                     primate_ai='v0.2',
                     splice_ai=None,

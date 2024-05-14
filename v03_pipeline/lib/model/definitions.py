@@ -11,7 +11,6 @@ class AccessControl(Enum):
 class Sex(Enum):
     FEMALE = 'F'
     MALE = 'M'
-    UNKNOWN = 'U'
 
 
 class PipelineVersion(Enum):

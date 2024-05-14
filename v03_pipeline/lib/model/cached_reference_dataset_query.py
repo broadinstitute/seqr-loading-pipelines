@@ -22,8 +22,6 @@ class CachedReferenceDatasetQuery(Enum):
 
     @property
     def access_control(self) -> AccessControl:
-        if self == CachedReferenceDatasetQuery.GNOMAD_QC:
-            return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
     def dataset(self, dataset_type: DatasetType) -> str | None:

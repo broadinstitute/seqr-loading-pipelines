@@ -27,6 +27,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
+    imputed_sex_path = luigi.Parameter(default=None)
     ignore_missing_samples_when_subsetting = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -64,16 +65,18 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [
             WriteImportedCallsetTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.callset_path,
+                reference_genome=self.reference_genome,
+                dataset_type=self.dataset_type,
+                sample_type=self.sample_type,
+                callset_path=self.callset_path,
+                imputed_sex_path=self.imputed_sex_path,
                 # NB: filters_path is explicitly passed as None here
                 # to avoid carrying it throughout the rest of the pipeline.
                 # Only the primary import task itself should be aware of it.
-                None,
-                self.validate,
-                False,
+                filters_path=None,
+                validate=self.validate,
+                force=False,
+                check_sex_and_relatedness=self.check_sex_and_relatedness,
             ),
             RawFileTask(self.project_pedigree_path),
         ]
@@ -94,6 +97,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                     self.dataset_type,
                     self.sample_type,
                     self.callset_path,
+                    self.imputed_sex_path,
                 ),
             ]
         return requirements

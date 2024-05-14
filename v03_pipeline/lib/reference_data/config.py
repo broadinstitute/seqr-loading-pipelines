@@ -127,9 +127,9 @@ def custom_gnomad_select_v2(ht):
     return selects
 
 
-def custom_gnomad_select_v3(ht):
+def custom_gnomad_select_v4(ht):
     """
-    Custom select for public gnomad v3 dataset (which we did not generate). Extracts fields like
+    Custom select for public gnomad v4 dataset (which we did not generate). Extracts fields like
     'AF', 'AN', and generates 'hemi'.
     :param ht: hail table
     :return: select expression dict
@@ -141,14 +141,15 @@ def custom_gnomad_select_v3(ht):
     selects['AC'] = ht.freq[global_idx].AC
     selects['Hom'] = ht.freq[global_idx].homozygote_count
 
+    grpmax_af = ht.grpmax['gnomad'].AF if hasattr(ht.grpmax, 'gnomad') else ht.grpmax.AF
     selects['AF_POPMAX_OR_GLOBAL'] = hl.float32(
-        hl.or_else(ht.popmax.AF, ht.freq[global_idx].AF),
+        hl.or_else(grpmax_af, ht.freq[global_idx].AF),
     )
     selects['FAF_AF'] = hl.float32(ht.faf[ht.globals.faf_index_dict['adj']].faf95)
     selects['Hemi'] = hl.if_else(
         ht.locus.in_autosome_or_par(),
         0,
-        ht.freq[ht.globals.freq_index_dict['XY-adj']].AC,
+        ht.freq[ht.globals.freq_index_dict['XY_adj']].AC,
     )
     return selects
 
@@ -360,9 +361,9 @@ CONFIG = {
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
-            'version': 'r2.1.1',
-            'path': 'gs://gcp-public-data--gnomad/release/2.1.1/liftover_grch38/ht/exomes/gnomad.exomes.r2.1.1.sites.liftover_grch38.ht',
-            'custom_select': custom_gnomad_select_v2,
+            'version': '4.1',
+            'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
+            'custom_select': custom_gnomad_select_v4,
         },
     },
     'gnomad_genomes': {
@@ -372,9 +373,9 @@ CONFIG = {
             'custom_select': custom_gnomad_select_v2,
         },
         '38': {
-            'version': 'v3.1.2',
-            'path': 'gs://gcp-public-data--gnomad/release/3.1.2/ht/genomes/gnomad.genomes.v3.1.2.sites.ht',
-            'custom_select': custom_gnomad_select_v3,
+            'version': '4.1',
+            'path': 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
+            'custom_select': custom_gnomad_select_v4,
         },
     },
     'gnomad_qc': {
@@ -385,10 +386,8 @@ CONFIG = {
             'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh37/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         '38': {
-            'version': 'v3.1',
-            'custom_import': import_matrix_table,
-            # Note: copied from 'gs://gnomad/sample_qc/mt/genomes_v3.1/gnomad_v3.1_qc_mt_v2_sites_dense.mt'
-            'source_path': 'gs://seqr-reference-data/gnomad_qc/GRCh38/gnomad_v3.1_qc_mt_v2_sites_dense.mt',
+            'version': '4.0',
+            'path': 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
         },
     },
     'exac': {
