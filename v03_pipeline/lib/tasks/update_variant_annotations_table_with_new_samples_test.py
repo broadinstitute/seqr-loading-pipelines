@@ -223,10 +223,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
+        mock_updated_cached_reference_dataset_query,
         mock_env: Mock,
         mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
-        mock_updated_cached_reference_dataset_query,
     ) -> None:
         mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
