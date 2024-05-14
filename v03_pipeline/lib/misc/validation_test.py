@@ -59,7 +59,7 @@ class ValidationTest(unittest.TestCase):
                     # but are eventually filtered out upstream.
                     ['A', '*'],
                     ['A', '-'],
-                ]
+                ],
             },
             cols={'s': ['sample_1']},
             entries={'HL': [[0.0], [0.0], [0.0]]},
@@ -70,6 +70,7 @@ class ValidationTest(unittest.TestCase):
             validate_allele_type,
             mt,
         )
+
     def test_validate_imputed_sex_ploidy(self) -> None:
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
         mt = hl.MatrixTable.from_parts(

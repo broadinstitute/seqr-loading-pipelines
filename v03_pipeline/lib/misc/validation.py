@@ -16,7 +16,8 @@ def validate_allele_type(
 ) -> None:
     ht = mt.rows()
     ht = ht.filter(
-        hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]) == hl.genetics.allele_type.AlleleType.UNKNOWN
+        hl.numeric_allele_type(ht.alleles[0], ht.alleles[1])
+        == hl.genetics.allele_type.AlleleType.UNKNOWN,
     )
     if ht.count() > 0:
         msg = f'Alleles with Unknown AlleleType are present in the callset: {ht.alleles.collect()}'
