@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
+    validate_allele_type,
     validate_expected_contig_frequency,
     validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
@@ -32,6 +33,43 @@ def _mt_from_contigs(contigs):
 
 
 class ValidationTest(unittest.TestCase):
+    def test_validate_allele_type(self) -> None:
+        mt = hl.MatrixTable.from_parts(
+            rows={
+                'locus': [
+                    hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=3,
+                        reference_genome='GRCh38',
+                    ),
+                ],
+                'alleles': [
+                    ['A', 'T'],
+                    # NB: star alleles should pass through this validation just fine,
+                    # but are eventually filtered out upstream.
+                    ['A', '*'],
+                    ['A', '-'],
+                ]
+            },
+            cols={'s': ['sample_1']},
+            entries={'HL': [[0.0], [0.0], [0.0]]},
+        ).key_rows_by('locus', 'alleles')
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "Alleles with Unknown AlleleType are present in the callset: \\[\\['A', '-'\\]\\]",
+            validate_allele_type,
+            mt,
+        )
     def test_validate_imputed_sex_ploidy(self) -> None:
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
         mt = hl.MatrixTable.from_parts(
