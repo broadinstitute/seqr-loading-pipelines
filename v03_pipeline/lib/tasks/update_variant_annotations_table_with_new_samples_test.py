@@ -217,7 +217,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
-    def test_multiple_update_vat(  # noqa: PLR0913
+    def test_multiple_update_vat(
         self,
         mock_vep_validate: Mock,
         mock_vep: Mock,
@@ -705,7 +705,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
-    def test_update_vat_without_accessing_private_datasets(  # noqa: PLR0913
+    def test_update_vat_without_accessing_private_datasets(
         self,
         mock_vep_validate: Mock,
         mock_vep: Mock,
