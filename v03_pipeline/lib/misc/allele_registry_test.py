@@ -27,7 +27,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
 
     @patch.object(requests, 'put')
     @patch(
-        'v03_pipeline.lib.misc.allele_registry._get_ar_credentials_from_secret_manager',
+        'v03_pipeline.lib.misc.allele_registry.get_ar_credentials_from_secret_manager',
     )
     @patch('v03_pipeline.lib.misc.allele_registry.Env')
     @patch('v03_pipeline.lib.misc.allele_registry.logger')
