@@ -3,7 +3,7 @@ from enum import Enum
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
+from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv, vep
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MITO_MIN_HOM_THRESHOLD = 0.95
@@ -171,9 +171,9 @@ class DatasetType(Enum):
         GRCh37_fns = {  # noqa: N806
             DatasetType.SNV_INDEL: [
                 shared.rsid,
-                shared.sorted_transcript_consequences,
                 shared.variant_id,
                 shared.xpos,
+                vep.sorted_transcript_consequences,
             ],
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
@@ -181,9 +181,9 @@ class DatasetType(Enum):
                 mito.high_constraint_region_mito,
                 mito.mitotip,
                 mito.rsid,
-                shared.sorted_transcript_consequences,
                 shared.variant_id,
                 shared.xpos,
+                vep.sorted_transcript_consequences,
             ],
             DatasetType.SV: [
                 sv.algorithms,
