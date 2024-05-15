@@ -13,7 +13,6 @@ from requests import HTTPError
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
-from v03_pipeline.lib.model.constants import SEQR_GCP_PROJECT_ID
 
 MAX_VARIANTS_PER_REQUEST = 1000000
 ALLELE_REGISTRY_URL = 'https://reg.genome.network/alleles?file=vcf&fields=none+@id+genomicAlleles+externalRecords.{}.id'
@@ -107,7 +106,7 @@ def register_alleles(
 
 
 def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
-    login, password = _get_ar_credentials_from_secret_manager()
+    login, password = get_ar_credentials_from_secret_manager()
 
     # Request a gnomad ID for the correct reference genome
     base_url = base_url.format(reference_genome.allele_registry_gnomad_id)
@@ -119,7 +118,7 @@ def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
     return base_url + '&gbLogin=' + login + '&gbTime=' + gb_time + '&gbToken=' + token
 
 
-def _get_ar_credentials_from_secret_manager() -> tuple[str, str]:
+def get_ar_credentials_from_secret_manager() -> tuple[str, str]:
     if Env.ALLELE_REGISTRY_SECRET_NAME is None:
         msg = (
             'SHOULD_REGISTER_ALLELES is True but cannot get allele registry credentials '
@@ -129,7 +128,7 @@ def _get_ar_credentials_from_secret_manager() -> tuple[str, str]:
 
     client = secretmanager.SecretManagerServiceClient()
     name = client.secret_version_path(
-        SEQR_GCP_PROJECT_ID,
+        Env.PROJECT_ID,
         Env.ALLELE_REGISTRY_SECRET_NAME,
         'latest',
     )
