@@ -14,7 +14,9 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))
 FIVEUTR_CONSEQUENCES_LOOKUP = hl.dict(
-    hl.enumerate(FIVEUTR_CONSEQUENCES, index_first=False),
+    hl.enumerate(FIVEUTR_CONSEQUENCES, index_first=False).extend(
+        [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
+    ),
 )
 LOF_FILTERS_LOOKUP = hl.dict(hl.enumerate(LOF_FILTERS, index_first=False))
 

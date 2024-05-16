@@ -577,6 +577,7 @@ MOCK_37_VEP_DATA = hl.struct(
 
 MOCK_38_VEP_DATA = hl.struct(
     most_severe_consequence='missense_variant',
+    check_ref=hl.missing(hl.tstr),
     transcript_consequences=hl.array(
         [
             hl.struct(
@@ -599,13 +600,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000327044',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -627,13 +629,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000341065',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -655,13 +658,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000342066',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -683,13 +687,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000455979',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -711,13 +716,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000464948',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -739,13 +745,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000466827',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -767,13 +774,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005221.2',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000474461',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -800,13 +808,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005277.1',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000477976',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -828,13 +837,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select='NM_001005277.1',
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000478729',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -861,13 +871,22 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000483767',
-
                 # UTRAnnotator
-                existing_inframe_oorfs=hl.missing(hl.tint32),
-                existing_outofframe_oorfs=hl.missing(hl.tint32),
-                existing_uorfs=hl.missing(hl.tint32),
-                fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                existing_inframe_oorfs=0,
+                existing_outofframe_oorfs=1,
+                existing_uorfs=0,
+                fiveutr_consequence='5_prime_UTR_premature_start_codon_loss_variant',
+                fiveutr_annotation={
+                    '1': {
+                        'Evidence': 'False',
+                        'KozakContext': 'TTTATGC',
+                        'CapDistanceToStart': '20',
+                        'DistanceToCDS': '40',
+                        'DistanceToStop': '75',
+                        'type': 'OutOfFrame_oORF',
+                        'KozakStrength': 'Weak',
+                    },
+                },
             ),
             hl.struct(
                 amino_acids=hl.null('str'),
@@ -889,13 +908,14 @@ MOCK_38_VEP_DATA = hl.struct(
                 mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
                 transcript_id='ENST00000496938',
-
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
                 existing_outofframe_oorfs=hl.missing(hl.tint32),
                 existing_uorfs=hl.missing(hl.tint32),
                 fiveutr_consequence=hl.missing(hl.tstr),
-                fiveutr_annotation=hl.missing(hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr))),
+                fiveutr_annotation=hl.missing(
+                    hl.tdict(hl.tstr, hl.tdict(hl.tstr, hl.tstr)),
+                ),
             ),
         ],
     ),
