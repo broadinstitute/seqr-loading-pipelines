@@ -37,7 +37,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
-from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -233,7 +233,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 sample_type=SampleType.WGS,
             )
         )
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_vep_validate.return_value = None
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
@@ -584,7 +584,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 sample_type=SampleType.WGS,
             )
         )
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -655,7 +655,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_vep_validate.return_value = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(

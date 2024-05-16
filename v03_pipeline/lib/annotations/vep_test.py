@@ -6,7 +6,7 @@ import hail as hl
 from v03_pipeline.lib.annotations.vep import sorted_transcript_consequences
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
-from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA
 
 
 class VepAnnotationsTest(unittest.TestCase):
@@ -34,7 +34,7 @@ class VepAnnotationsTest(unittest.TestCase):
             ),
             key=['locus', 'alleles'],
         )
-        mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.return_value = ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_validate.return_value = None
         ht = run_vep(
             ht,

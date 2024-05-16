@@ -12,7 +12,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
-from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
@@ -35,7 +35,7 @@ class FieldsTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock, mock_validate: Mock) -> None:
         ht = hl.read_table(TEST_COMBINED_1)
-        mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.return_value = ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_validate.return_value = None
         ht = run_vep(
             ht,

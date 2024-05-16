@@ -1,6 +1,6 @@
 import hail as hl
 
-MOCK_VEP_DATA = hl.struct(
+MOCK_37_VEP_DATA = hl.struct(
     allele_string='G/A',
     ancestral=hl.null('str'),
     assembly_name='GRCh37',
