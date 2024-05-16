@@ -95,13 +95,12 @@ def _transcript_consequences_select(
                 fiveutr_annotation=c.fiveutr_annotation,
             ),
         )
-    print('ben')
     return lambda c: c.select(
         *SELECTED_ANNOTATIONS,
-        #biotype_id=BIOTYPE_LOOKUP[c.biotype],
-        #consequence_term_ids=_consequence_term_ids(c),
-        #is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
-        #lof_filter_ids=_lof_filter_ids(c),
+        biotype_id=BIOTYPE_LOOKUP[c.biotype],
+        consequence_term_ids=_consequence_term_ids(c),
+        is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
+        lof_filter_ids=_lof_filter_ids(c),
     )
 
 

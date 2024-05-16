@@ -21,7 +21,7 @@ class VepAnnotationsTest(unittest.TestCase):
             [
                 {
                     'locus': hl.Locus(
-                        contig='chr1',
+                        contig='1',
                         position=871269,
                         reference_genome=ReferenceGenome.GRCh37.value,
                     ),
@@ -43,7 +43,8 @@ class VepAnnotationsTest(unittest.TestCase):
         )
         ht = ht.select(
             sorted_transcript_consequences=sorted_transcript_consequences(
-                ht, ReferenceGenome.GRCh37,
+                ht,
+                ReferenceGenome.GRCh37,
             ),
         )
         self.assertCountEqual(
@@ -52,44 +53,44 @@ class VepAnnotationsTest(unittest.TestCase):
                 [
                     hl.Struct(
                         amino_acids='S/L',
-                        biotype_id=39,
                         canonical=1,
                         codons='tCg/tTg',
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000327044.6:c.1667C>T',
                         hgvsp='ENSP00000317992.6:p.Ser556Leu',
+                        transcript_id='ENST00000327044',
+                        biotype_id=39,
+                        consequence_term_ids=[12],
                         is_lof_nagnag=None,
                         lof_filter_ids=[0, 1],
-                        transcript_id='ENST00000327044',
-                        consequence_term_ids=[11],
                         transcript_rank=0,
                     ),
                     hl.Struct(
                         amino_acids=None,
-                        biotype_id=38,
                         canonical=None,
                         codons=None,
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000477976.1:n.3114C>T',
                         hgvsp=None,
+                        transcript_id='ENST00000477976',
+                        biotype_id=38,
+                        consequence_term_ids=[26, 29],
                         is_lof_nagnag=None,
                         lof_filter_ids=None,
-                        transcript_id='ENST00000477976',
-                        consequence_term_ids=[22, 26],
                         transcript_rank=1,
                     ),
                     hl.Struct(
                         amino_acids=None,
-                        biotype_id=38,
                         canonical=None,
                         codons=None,
                         gene_id='ENSG00000188976',
                         hgvsc='ENST00000483767.1:n.523C>T',
                         hgvsp=None,
+                        transcript_id='ENST00000483767',
+                        biotype_id=38,
+                        consequence_term_ids=[26, 29],
                         is_lof_nagnag=None,
                         lof_filter_ids=None,
-                        transcript_id='ENST00000483767',
-                        consequence_term_ids=[22, 26],
                         transcript_rank=2,
                     ),
                 ],
