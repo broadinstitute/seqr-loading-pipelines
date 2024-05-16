@@ -198,7 +198,7 @@ CONFIG = {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
                 'assertion': CLINVAR_ASSERTIONS,
             },
-            'filter': lambda ht: ~(ht.locus.contig == 'MT'),
+            'filter': lambda ht: ht.locus.contig != 'MT',
         },
         '38': {
             'custom_import': download_and_import_latest_clinvar_vcf,
@@ -209,7 +209,7 @@ CONFIG = {
                 'pathogenicity': CLINVAR_PATHOGENICITIES,
                 'assertion': CLINVAR_ASSERTIONS,
             },
-            'filter': lambda ht: ~(ht.locus.contig == 'chrM'),
+            'filter': lambda ht: ht.locus.contig != 'chrM',
         },
     },
     'dbnsfp': {
