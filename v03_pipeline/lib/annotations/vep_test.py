@@ -97,125 +97,135 @@ class VepAnnotationsTest(unittest.TestCase):
             ],
         )
 
-        @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
-        @patch('v03_pipeline.lib.vep.hl.vep')
-        def test_sorted_transcript_consequences_38(
-            self,
-            mock_vep: Mock,
-            mock_validate: Mock,
-        ) -> None:
-            ht = hl.Table.parallelize(
-                [
-                    {
-                        'locus': hl.Locus(
-                            contig='chr1',
-                            position=871269,
-                            reference_genome=ReferenceGenome.GRCh38.value,
-                        ),
-                        'alleles': ['A', 'C'],
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tlocus(ReferenceGenome.GRCh38.value),
-                    alleles=hl.tarray(hl.tstr),
-                ),
-                key=['locus', 'alleles'],
-            )
-            mock_vep.return_value = ht.annotate(vep=MOCK_38_VEP_DATA)
-            mock_validate.return_value = None
-            ht = run_vep(
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_sorted_transcript_consequences_38(
+        self,
+        mock_vep: Mock,
+        mock_validate: Mock,
+    ) -> None:
+        ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome=ReferenceGenome.GRCh38.value,
+                    ),
+                    'alleles': ['A', 'C'],
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            key=['locus', 'alleles'],
+        )
+        mock_vep.return_value = ht.annotate(vep=MOCK_38_VEP_DATA)
+        mock_validate.return_value = None
+        ht = run_vep(
+            ht,
+            DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+        )
+        ht = ht.select(
+            sorted_transcript_consequences=sorted_transcript_consequences(
                 ht,
-                DatasetType.SNV_INDEL,
                 ReferenceGenome.GRCh38,
-            )
-            ht = ht.select(
-                sorted_transcript_consequences=sorted_transcript_consequences(
-                    ht,
-                    ReferenceGenome.GRCh38,
-                ),
-            )
-            self.assertCountEqual(
-                ht.sorted_transcript_consequences.collect(),
+            ),
+        )
+        self.assertCountEqual(
+            ht.sorted_transcript_consequences.collect(),
+            [
                 [
-                    [
-                        hl.Struct(
-                            amino_acids='S/L',
-                            canonical=1,
-                            codons='tCg/tTg',
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000327044.6:c.1667C>T',
-                            hgvsp='ENSP00000317992.6:p.Ser556Leu',
-                            transcript_id='ENST00000327044',
-                            mane_select='NM_001005221.2',
-                            mane_plus_clinical=None,
-                            biotype_id=39,
-                            consequence_term_ids=[12],
-                            exon=[15, 19],
-                            intron=None,
-                            is_lof_nagnag=None,
-                            lof_filter_ids=[0, 1],
-                            alphamissense=hl.Struct(pathogenicity=0.10000000149011612),
-                            utrrannotator=hl.Struct(
-                                existing_inframe_oorfs=None,
-                                existing_outofframe_oorfs=None,
-                                existing_uorfs=None,
-                                fiveutr_consequence_id=None,
-                                fiveutr_annotation=None,
-                            ),
-                            transcript_rank=0,
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=1,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000327044.6:c.1667C>T',
+                        hgvsp='ENSP00000317992.6:p.Ser556Leu',
+                        transcript_id='ENST00000327044',
+                        mane_select='NM_001005221.2',
+                        mane_plus_clinical=None,
+                        biotype_id=39,
+                        consequence_term_ids=[12],
+                        exon=[15, 19],
+                        intron=None,
+                        is_lof_nagnag=None,
+                        lof_filter_ids=[0, 1],
+                        alphamissense=hl.Struct(pathogenicity=0.10000000149011612),
+                        utrrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_consequence_id=None,
+                            fiveutr_annotation=None,
                         ),
-                        hl.Struct(
-                            amino_acids=None,
-                            canonical=None,
-                            codons=None,
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000477976.1:n.3114C>T',
-                            hgvsp=None,
-                            transcript_id='ENST00000477976',
-                            mane_select='NM_001005277.1',
-                            mane_plus_clinical=None,
-                            biotype_id=38,
-                            consequence_term_ids=[26, 29],
-                            exon=[13, 17],
-                            intron=None,
-                            is_lof_nagnag=None,
-                            lof_filter_ids=None,
-                            alphamissense=hl.Struct(pathogenicity=0.9700000286102295),
-                            utrrannotator=hl.Struct(
-                                existing_inframe_oorfs=None,
-                                existing_outofframe_oorfs=None,
-                                existing_uorfs=None,
-                                fiveutr_consequence_id=None,
-                                fiveutr_annotation=None,
-                            ),
-                            transcript_rank=1,
+                        transcript_rank=0,
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000477976.1:n.3114C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000477976',
+                        mane_select='NM_001005277.1',
+                        mane_plus_clinical=None,
+                        biotype_id=38,
+                        consequence_term_ids=[26, 29],
+                        exon=[13, 17],
+                        intron=None,
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                        alphamissense=hl.Struct(pathogenicity=0.9700000286102295),
+                        utrrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_consequence_id=None,
+                            fiveutr_annotation=None,
                         ),
-                        hl.Struct(
-                            amino_acids=None,
-                            canonical=None,
-                            codons=None,
-                            gene_id='ENSG00000188976',
-                            hgvsc='ENST00000483767.1:n.523C>T',
-                            hgvsp=None,
-                            transcript_id='ENST00000483767',
-                            mane_select=None,
-                            mane_plus_clinical=None,
-                            biotype_id=38,
-                            consequence_term_ids=[26, 29],
-                            exon=[1, 5],
-                            intron=None,
-                            is_lof_nagnag=None,
-                            lof_filter_ids=None,
-                            alphamissense=hl.Struct(pathogenicity=None),
-                            utrrannotator=hl.Struct(
-                                existing_inframe_oorfs=None,
-                                existing_outofframe_oorfs=None,
-                                existing_uorfs=None,
-                                fiveutr_consequence_id=None,
-                                fiveutr_annotation=None,
-                            ),
-                            transcript_rank=2,
+                        transcript_rank=1,
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000483767.1:n.523C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000483767',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        biotype_id=38,
+                        consequence_term_ids=[26, 29],
+                        exon=[1, 5],
+                        intron=None,
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                        alphamissense=hl.Struct(pathogenicity=None),
+                        utrrannotator=hl.Struct(
+                            existing_inframe_oorfs=0,
+                            existing_outofframe_oorfs=1,
+                            existing_uorfs=0,
+                            fiveutr_consequence_id=1,
+                            fiveutr_annotation={
+                                '1': {
+                                    'CapDistanceToStart': '20',
+                                    'DistanceToCDS': '40',
+                                    'DistanceToStop': '75',
+                                    'Evidence': 'False',
+                                    'KozakContext': 'TTTATGC',
+                                    'KozakStrength': 'Weak',
+                                    'type': 'OutOfFrame_oORF',
+                                },
+                            },
                         ),
-                    ],
+                        transcript_rank=2,
+                    ),
                 ],
-            )
+            ],
+        )

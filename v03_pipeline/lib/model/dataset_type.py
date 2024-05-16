@@ -218,6 +218,7 @@ class DatasetType(Enum):
                 snv_indel.gnomad_non_coding_constraint,
                 snv_indel.screen,
                 shared.rg37_locus,
+                vep.check_ref,
             ],
             DatasetType.MITO: [
                 *GRCh37_fns[DatasetType.MITO],
