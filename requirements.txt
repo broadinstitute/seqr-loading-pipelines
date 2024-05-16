@@ -146,7 +146,7 @@ grpcio==1.63.0
     #   grpcio-status
 grpcio-status==1.48.2
     # via google-api-core
-hail==0.2.128
+hail==0.2.130
     # via -r requirements.in
 hdbscan==0.8.33
     # via gnomad
@@ -219,7 +219,7 @@ numpy==1.26.2
     #   scipy
 oauthlib==3.2.2
     # via requests-oauthlib
-orjson==3.9.11
+orjson==3.9.10
     # via hail
 packaging==23.2
     # via
@@ -252,7 +252,6 @@ protobuf==3.20.2
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
-    #   hail
     #   proto-plus
 ptyprocess==0.7.0
     # via pexpect

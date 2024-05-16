@@ -7,6 +7,7 @@ from v03_pipeline.lib.misc.io import (
     split_multi_hts,
 )
 from v03_pipeline.lib.misc.validation import (
+    validate_allele_type,
     validate_expected_contig_frequency,
     validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
@@ -134,6 +135,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             )
         if self.validate and self.dataset_type.can_run_validation:
+            validate_allele_type(mt)
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
