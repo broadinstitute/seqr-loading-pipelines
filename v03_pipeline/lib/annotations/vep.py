@@ -4,7 +4,6 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
-    ALPHAMISSENSE_CLASSES,
     BIOTYPES,
     CONSEQUENCE_TERMS,
     FIVEUTR_CONSEQUENCES,
@@ -12,9 +11,6 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-ALPHAMISSENSE_CLASSES_LOOKUP = hl.dict(
-    hl.enumerate(ALPHAMISSENSE_CLASSES, index_first=False),
-)
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))
 FIVEUTR_CONSEQUENCES_LOOKUP = hl.dict(
@@ -73,16 +69,14 @@ def _transcript_consequences_select(
             consequence_term_ids=_consequence_term_ids(c),
             exon=c.exon.split('/').map(hl.parse_int32),
             intron=c.intron.split('/').map(hl.parse_int32),
-            # Plugins
+            # Loftee
+            is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
+            lof_filter_ids=_lof_filter_ids(c),
+            # AlphaMissense
             alphamissense=hl.struct(
-                class_id=ALPHAMISSENSE_CLASSES_LOOKUP[c.am_class],
                 pathogenicity=c.am_pathogenicity,
             ),
-            loftee=hl.struct(
-                is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
-                lof_filter_ids=_lof_filter_ids(c),
-            ),
-            # utrannotator annotations
+            # UTRAnnotator
             utrrannotator=hl.struct(
                 existing_inframe_oorfs=c.existing_inframe_oorfs,
                 existing_outofframe_oorfs=c.existing_outofframe_oorfs,

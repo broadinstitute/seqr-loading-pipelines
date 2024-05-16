@@ -1,11 +1,5 @@
 import hail as hl
 
-ALPHAMISSENSE_CLASSES = [
-    'likely_pathogenic',
-    'ambiguous',
-    'likely_benign',
-]
-
 BIOTYPES = [
     'IG_C_gene',
     'IG_D_gene',

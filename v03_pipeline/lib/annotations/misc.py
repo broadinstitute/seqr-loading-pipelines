@@ -1,7 +1,6 @@
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
-    ALPHAMISSENSE_CLASSES,
     BIOTYPES,
     CONSEQUENCE_TERMS,
     FIVEUTR_CONSEQUENCES,
@@ -31,7 +30,6 @@ def annotate_enums(
                     consequence_term=CONSEQUENCE_TERMS,
                     lof_filter=LOF_FILTERS,
                     **{
-                        'alphamissense_class': ALPHAMISSENSE_CLASSES,
                         'fiveutr_consequence': FIVEUTR_CONSEQUENCES,
                     }
                     if reference_genome == ReferenceGenome.GRCh38
