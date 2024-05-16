@@ -7,5 +7,5 @@
   "env": {
     "PERL5LIB": "/plugins"
   },
-  "vep_json_schema": "Struct{check_ref:String,most_severe_consequence:String,transcript_consequences:Array[Struct{amino_acids:String,biotype:String,canonical:Int32,codons:String,consequence_terms:Array[String],exon:String,gene_id:String,hgvsc:String,hgvsp:String,intron:String,mane_select:String,mane_plus_clinical:String,transcript_id:String,lof:String,lof_flags:String,lof_filter:String,lof_info:String,existing_inframe_oorfs: Int32,existing_outofframe_oorfs: Int32,existing_uorfs: Int32,fiveutr_consequence: String,fiveutr_annotation: Dict[String, Dict[String, String]],spliceregion: Array[String],am_pathogenicity: Float32,am_class: String}]}"
+  "vep_json_schema": "Struct{check_ref:String,most_severe_consequence:String,transcript_consequences:Array[Struct{amino_acids:String,biotype:String,canonical:Int32,codons:String,consequence_terms:Array[String],exon:String,gene_id:String,hgvsc:String,hgvsp:String,intron:String,mane_select:String,mane_plus_clinical:String,transcript_id:String,lof:String,lof_flags:String,lof_filter:String,lof_info:String,existing_inframe_oorfs: Int32,existing_outofframe_oorfs: Int32,existing_uorfs: Int32,fiveutr_consequence: String,fiveutr_annotation: Dict[String, Dict[String, String]],am_pathogenicity: Float32,am_class: String}]}"
 }

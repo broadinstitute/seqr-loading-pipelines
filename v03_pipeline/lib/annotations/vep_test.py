@@ -23,13 +23,13 @@ class VepAnnotationsTest(unittest.TestCase):
                     'locus': hl.Locus(
                         contig='chr1',
                         position=871269,
-                        reference_genome=ReferenceGenome.GRCh38.value,
+                        reference_genome=ReferenceGenome.GRCh37.value,
                     ),
                     'alleles': ['A', 'C'],
                 },
             ],
             hl.tstruct(
-                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                locus=hl.tlocus(ReferenceGenome.GRCh37.value),
                 alleles=hl.tarray(hl.tstr),
             ),
             key=['locus', 'alleles'],
@@ -39,10 +39,12 @@ class VepAnnotationsTest(unittest.TestCase):
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
-            ReferenceGenome.GRCh38,
+            ReferenceGenome.GRCh37,
         )
         ht = ht.select(
-            sorted_transcript_consequences=sorted_transcript_consequences(ht),
+            sorted_transcript_consequences=sorted_transcript_consequences(
+                ht, ReferenceGenome.GRCh37,
+            ),
         )
         self.assertCountEqual(
             ht.sorted_transcript_consequences.collect(),
