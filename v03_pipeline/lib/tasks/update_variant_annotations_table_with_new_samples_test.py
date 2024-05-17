@@ -202,6 +202,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         worker.run()
         self.assertFalse(uvatwns_task.complete())
 
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
         'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery',
     )
@@ -221,8 +223,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
-        mock_update_rdc_task: Mock,
         mock_updated_cached_reference_dataset_query,
+        mock_env: Mock,
+        mock_register_alleles: Mock,
+        mock_update_rdc_task: Mock,
     ) -> None:
         mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
@@ -235,6 +239,64 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
+        # make register_alleles return CAIDs for 4 of 30 variants
+        mock_env.SHOULD_REGISTER_ALLELES = True
+        mock_register_alleles.side_effect = [
+            iter(
+                [
+                    hl.Table.parallelize(
+                        [
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=871269,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['A', 'C'],
+                                CAID='CA1',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=874734,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['C', 'T'],
+                                CAID='CA2',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=876499,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['A', 'G'],
+                                CAID='CA3',
+                            ),
+                            hl.Struct(
+                                locus=hl.Locus(
+                                    contig='chr1',
+                                    position=878314,
+                                    reference_genome='GRCh38',
+                                ),
+                                alleles=['G', 'C'],
+                                CAID='CA4',
+                            ),
+                        ],
+                        hl.tstruct(
+                            locus=hl.tlocus('GRCh38'),
+                            alleles=hl.tarray(hl.tstr),
+                            CAID=hl.tstr,
+                        ),
+                        key=('locus', 'alleles'),
+                    ),
+                ],
+            ),
+            iter(
+                [],
+            ),  # for the second call, there are no new variants, return empty iterator
+        ]
+
         mock_standard_contigs.return_value = {'chr1'}
         # This creates a mock validation table with 1 coding and 1 non-coding variant
         # explicitly chosen from the VCF.
@@ -308,6 +370,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 x
                 for x in ht.select(
                     'gt_stats',
+                    'CAID',
                 ).collect()
                 if x.locus.position <= 871269  # noqa: PLR2004
             ],
@@ -320,6 +383,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     ),
                     alleles=['A', 'C'],
                     gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
+                    CAID='CA1',
                 ),
             ],
         )
@@ -363,6 +427,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     'xpos',
                     'gt_stats',
                     'screen',
+                    'CAID',
                 ).collect()
                 if x.locus.position <= 878809  # noqa: PLR2004
             ],
@@ -392,6 +457,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000871269,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[1]),
+                    CAID='CA1',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -407,6 +473,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000874734,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA2',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -422,6 +489,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000876499,
                     gt_stats=hl.Struct(AC=31, AN=32, AF=0.96875, hom=15),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA3',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -437,6 +505,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000878314,
                     gt_stats=hl.Struct(AC=3, AN=32, AF=0.09375, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID='CA4',
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -452,6 +521,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     xpos=1000878809,
                     gt_stats=hl.Struct(AC=1, AN=32, AF=0.03125, hom=0),
                     screen=hl.Struct(region_type_ids=[]),
+                    CAID=None,
                 ),
             ],
         )
@@ -564,6 +634,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -574,6 +645,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_update_vat_with_rdc_task: Mock,
+        mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
@@ -586,6 +658,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
+        mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh37,
@@ -625,6 +698,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
 
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -637,6 +711,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_rdc_env: Mock,
         mock_update_vat_with_rdc_task: Mock,
+        mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
@@ -657,6 +732,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
         mock_vep_validate.return_value = None
+        mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -696,12 +772,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
 
+    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_mito_update_vat(
         self,
         mock_update_vat_with_rdc_task: Mock,
+        mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
@@ -712,6 +790,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 sample_type=SampleType.WGS,
             )
         )
+        mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
