@@ -44,6 +44,7 @@ MANE_SELECT_ANNOTATIONS = [
     'mane_plus_clinical',
 ]
 
+EXTENDED_INTRONIC_SPLICE_REGION_VARIANT = 'extended_intronic_splice_region_variant'
 NAGNAG_SITE = 'NAGNAG_SITE'
 
 
@@ -69,16 +70,35 @@ def _transcript_consequences_select(
             *MANE_SELECT_ANNOTATIONS,
             biotype_id=BIOTYPE_LOOKUP[c.biotype],
             consequence_term_ids=_consequence_term_ids(c),
-            exon=c.exon.split('/').map(hl.parse_int32),
-            intron=c.intron.split('/').map(hl.parse_int32),
-            # Loftee
-            is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
-            lof_filter_ids=_lof_filter_ids(c),
-            # AlphaMissense
+            exon=hl.bind(
+                lambda split: hl.or_missing(
+                    hl.is_defined(split),
+                    hl.Struct(index=split[0], total=split[1]),
+                ),
+                c.exon.split('/').map(hl.parse_int32),
+            ),
+            intron=hl.bind(
+                lambda split: hl.or_missing(
+                    hl.is_defined(split),
+                    hl.Struct(index=split[0], total=split[1]),
+                ),
+                c.intron.split('/').map(hl.parse_int32),
+            ),
             alphamissense=hl.struct(
                 pathogenicity=c.am_pathogenicity,
             ),
-            # UTRAnnotator
+            loftee=hl.struct(
+                is_lof_nagnag=c.lof_flags == NAGNAG_SITE,
+                lof_filter_ids=_lof_filter_ids(c),
+            ),
+            spliceregion=hl.struct(
+                extended_intronic_splice_region_variant=(
+                    hl.is_defined(c.spliceregion)
+                    & c.spliceregion.contains(
+                        EXTENDED_INTRONIC_SPLICE_REGION_VARIANT,
+                    )
+                ),
+            ),
             utrrannotator=hl.struct(
                 existing_inframe_oorfs=c.existing_inframe_oorfs,
                 existing_outofframe_oorfs=c.existing_outofframe_oorfs,

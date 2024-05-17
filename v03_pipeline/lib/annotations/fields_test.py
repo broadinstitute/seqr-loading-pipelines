@@ -61,7 +61,11 @@ class FieldsTest(MockedDatarootTestCase):
                 ],
             ),
         ]:
-            mock_vep.return_value = ht.annotate(vep=MOCK_37_VEP_DATA if reference_genome == ReferenceGenome.GRCh37 else MOCK_38_VEP_DATA)
+            mock_vep.return_value = ht.annotate(
+                vep=MOCK_37_VEP_DATA
+                if reference_genome == ReferenceGenome.GRCh37
+                else MOCK_38_VEP_DATA,
+            )
             ht = run_vep(
                 ht,
                 DatasetType.SNV_INDEL,

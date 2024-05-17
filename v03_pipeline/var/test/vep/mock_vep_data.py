@@ -597,8 +597,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter='END_TRUNC,INCOMPLETE_CDS',
                 lof_flags=hl.null('str'),
                 lof_info='INTRON_END:881781,EXON_END:881925,EXON_START:881782,DE_NOVO_DONOR_MES:-7.36719797135343,DE_NOVO_DONOR_PROB:0.261170618766552,DE_NOVO_DONOR_POS:-138,INTRON_START:881667,DE_NOVO_DONOR_MES_POS:-138,MUTANT_DONOR_MES:4.93863747168278',
-                mane_select='NM_001005221.2',
+                mane_select='NM_015658.4',
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000327044',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -626,8 +627,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000341065',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -655,8 +657,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000342066',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -684,8 +687,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000455979',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -713,8 +717,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000464948',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -742,8 +747,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000466827',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -771,8 +777,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005221.2',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000474461',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -805,8 +812,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005277.1',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000477976',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -834,8 +842,9 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_filter=hl.null('str'),
                 lof_flags=hl.null('str'),
                 lof_info=hl.null('str'),
-                mane_select='NM_001005277.1',
+                mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000478729',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
@@ -856,6 +865,7 @@ MOCK_38_VEP_DATA = hl.struct(
                 consequence_terms=hl.array(
                     [
                         'non_coding_transcript_exon_variant',
+                        'splice_donor_region_variant',
                         'non_coding_transcript_variant',
                     ],
                 ),
@@ -870,6 +880,7 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_info=hl.null('str'),
                 mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.array(['extended_intronic_splice_region_variant']),
                 transcript_id='ENST00000483767',
                 # UTRAnnotator
                 existing_inframe_oorfs=0,
@@ -907,6 +918,7 @@ MOCK_38_VEP_DATA = hl.struct(
                 lof_info=hl.null('str'),
                 mane_select=hl.null('str'),
                 mane_plus_clinical=hl.null('str'),
+                spliceregion=hl.missing(hl.tarray(hl.tstr)),
                 transcript_id='ENST00000496938',
                 # UTRAnnotator
                 existing_inframe_oorfs=hl.missing(hl.tint32),
