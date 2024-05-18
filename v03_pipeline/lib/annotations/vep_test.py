@@ -10,7 +10,6 @@ from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VE
 
 
 class VepAnnotationsTest(unittest.TestCase):
-    maxDiff = None
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_sorted_transcript_consequences_37(
