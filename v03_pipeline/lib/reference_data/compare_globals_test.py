@@ -103,8 +103,15 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             dataset_config_globals.selects
             == {
-                'a': {'test_select', 'test_enum_id'},
-                'b': {'test_select', 'field2', 'test_enum_id'},
+                'a': {
+                    'test_select': hl.tint32,
+                    'test_enum_id': hl.tint32,
+                },
+                'b': {
+                    'test_select': hl.tint32,
+                    'field2': hl.tint32,
+                    'test_enum_id': hl.tint32,
+                },
             },
         )
 
@@ -134,7 +141,11 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             dataset_config_globals.selects
             == {
-                'b': {'test_select', 'field2', 'test_enum_id'},
+                'b': {
+                    'test_select': hl.tint32,
+                    'field2': hl.tint32,
+                    'test_enum_id': hl.tint32,
+                },
             },
         )
 
@@ -183,11 +194,12 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             rdc_globals.enums == {'screen': {'region_type': ['C', 'D']}},
         )
+        print(rdc_globals.selects)
         self.assertTrue(
             rdc_globals.selects
             == {
-                'gnomad_non_coding_constraint': {'z_score'},
-                'screen': {'region_type_ids'},
+                'gnomad_non_coding_constraint': {'z_score': hl.tfloat32},
+                'screen': {'region_type_ids': hl.tarray(hl.tint32)},
             },
         )
 
@@ -198,13 +210,13 @@ class CompareGlobalsTest(unittest.TestCase):
                 # 'a' has a different version, 'c' is missing version in ht2_globals
                 versions={'a': 'v2', 'b': 'v2', 'c': 'v1'},
                 enums={'a': {}, 'b': {}, 'c': {}},
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {}, 'b': {}},
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
         )
         self.assertTrue(result == ['a', 'c'])
@@ -216,13 +228,13 @@ class CompareGlobalsTest(unittest.TestCase):
                 paths={'a': 'a_path', 'b': 'old_b_path', 'c': 'extra_c_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {}, 'b': {}},
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {}, 'b': {}},
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
         )
         self.assertTrue(result == ['b', 'c'])
@@ -238,13 +250,13 @@ class CompareGlobalsTest(unittest.TestCase):
                     'b': {'enum_key_1': []},
                     'c': {},
                 },
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {'test_enum': ['C', 'D']}, 'b': {'enum_key_2': []}},
-                selects={'a': set(), 'b': set()},
+                selects={'a': {}, 'b': {}},
             ),
         )
         self.assertTrue(result == ['a', 'b', 'c'])
@@ -257,16 +269,74 @@ class CompareGlobalsTest(unittest.TestCase):
                 enums={'a': {}, 'b': {}},
                 # 'a' has extra select, 'b' has different select, 'c' is missing select in ht2_globals
                 selects={
-                    'a': {'field1', 'field2'},
-                    'b': {'test_select'},
-                    'c': set('test_select'),
+                    'a': {'field1': hl.tint32, 'field2': hl.tint32},
+                    'b': {'test_select': hl.tint32},
+                    'c': {'test_select': hl.tint32},
                 },
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path', 'b': 'b_path'},
                 versions={'a': 'v1', 'b': 'v2'},
                 enums={'a': {}, 'b': {}},
-                selects={'a': {'field1'}, 'b': {'test_select_2'}},
+                selects={'a': {'field1': hl.tint32}, 'b': {'test_select_2': hl.tint32}},
             ),
         )
         self.assertTrue(result == ['a', 'b', 'c'])
+
+    def test_get_datasets_to_update_select_type_validation(self):
+        self.assertRaisesRegex(
+            ValueError,
+            "Unexpected field types detected in a: {\\('field1', dtype\\('int32'\\)\\)}",
+            get_datasets_to_update,
+            ht1_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v1'},
+                enums={'a': {}},
+                selects={
+                    # field1 is an array in ht1 but an int in ht2.
+                    'a': {'field1': hl.tarray(hl.tint32)},
+                },
+            ),
+            ht2_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v1'},
+                enums={'a': {}},
+                selects={'a': {'field1': hl.tint32}},
+            ),
+        )
+        result = get_datasets_to_update(
+            ht1_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v1'},
+                enums={'a': {}},
+                selects={
+                    'a': {'field1': hl.tarray(hl.tint32)},
+                },
+            ),
+            ht2_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v1'},
+                enums={'a': {}},
+                # additional field
+                selects={'a': {'field1': hl.tint32, 'field2': hl.tint32}},
+            ),
+        )
+        self.assertTrue(result == ['a'])
+        result = get_datasets_to_update(
+            ht1_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v1'},
+                enums={'a': {}},
+                selects={
+                    'a': {'field1': hl.tarray(hl.tint32)},
+                },
+            ),
+            ht2_globals=Globals(
+                paths={'a': 'a_path'},
+                versions={'a': 'v2'}, # version bump
+                enums={'a': {}},
+                selects={'a': {'field1': hl.tint32}},
+            ),
+        )
+        self.assertTrue(result == ['a'])
+
