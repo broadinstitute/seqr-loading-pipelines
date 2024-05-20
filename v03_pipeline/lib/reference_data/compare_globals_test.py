@@ -333,10 +333,9 @@ class CompareGlobalsTest(unittest.TestCase):
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path'},
-                versions={'a': 'v2'}, # version bump
+                versions={'a': 'v2'},  # version bump
                 enums={'a': {}},
                 selects={'a': {'field1': hl.tint32}},
             ),
         )
         self.assertTrue(result == ['a'])
-

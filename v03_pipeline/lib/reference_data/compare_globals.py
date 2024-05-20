@@ -109,11 +109,13 @@ def get_datasets_to_update(
             # that the dataset isn't already "to_update", this must run
             # after all other fields have been validated.
             if (
-                dataset not in datasets_to_update and
-                (ht1_selects.get(dataset).keys() == ht2_selects.get(dataset).keys()) and
-                (ht1_selects.get(dataset) != ht2_selects.get(dataset))
+                dataset not in datasets_to_update
+                and (ht1_selects.get(dataset).keys() == ht2_selects.get(dataset).keys())
+                and (ht1_selects.get(dataset) != ht2_selects.get(dataset))
             ):
-                differing_items = ht2_selects.get(dataset).items() - ht1_selects.get(dataset).items()
+                differing_items = (
+                    ht2_selects.get(dataset).items() - ht1_selects.get(dataset).items()
+                )
                 msg = f'Unexpected field types detected in {dataset}: {differing_items}'
                 raise ValueError(msg)
             if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
