@@ -45,7 +45,7 @@ MOCK_CADD_CONFIG = {
         hl.tstruct(
             locus=hl.tlocus('GRCh38'),
             alleles=hl.tarray(hl.tstr),
-            PHRED=hl.tint32,
+            PHRED=hl.tfloat32,
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
