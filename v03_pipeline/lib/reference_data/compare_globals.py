@@ -80,6 +80,27 @@ class Globals:
         return cls(paths, versions, enums, selects)
 
 
+def validate_selects_types(
+    ht1_globals: Globals, ht2_globals: Globals, dataset: str
+) -> None:
+    # Assert that all shared annotations have identical types
+    shared_selects = (
+        ht1_globals['selects'][dataset].keys()
+        & ht2_globals['selects'].get(dataset).keys()
+    )
+    mismatched_select_types = [
+        (select, ht2_globals['selects'][dataset][select])
+        for select in shared_selects
+        if (
+            ht1_globals['selects'][dataset][select]
+            != ht2_globals['selects'][dataset][select]
+        )
+    ]
+    if mismatched_select_types:
+        msg = f'Unexpected field types detected in {dataset}: {mismatched_select_types}'
+        raise ValueError(msg)
+
+
 def get_datasets_to_update(
     ht1_globals: Globals,
     ht2_globals: Globals,
@@ -94,22 +115,7 @@ def get_datasets_to_update(
         )
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
             if field.name == 'selects':
-                # Assert that all shared annotations have identical types
-                shared_annotations = (
-                    ht1_globals['selects'][dataset].keys()
-                    & ht2_globals['selects'].get(dataset).keys()
-                )
-                mismatched_annotations = [
-                    (annotation, ht2_globals['selects'][dataset][annotation])
-                    for annotation in shared_annotations
-                    if (
-                        ht1_globals['selects'][dataset][annotation]
-                        != ht2_globals['selects'][dataset][annotation]
-                    )
-                ]
-                if mismatched_annotations:
-                    msg = f'Unexpected field types detected in {dataset}: {mismatched_annotations}'
-                    raise ValueError(msg)
+                validate_selects_types(ht1_globals, ht2_globals, dataset)
             if ht1_globals[field.name][dataset] != ht2_globals[field.name][dataset]:
                 logger.info(f'{field.name} mismatch for {dataset}')
                 datasets_to_update.add(dataset)
