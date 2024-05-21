@@ -95,11 +95,18 @@ def get_datasets_to_update(
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
             if field.name == 'selects':
                 # Assert that all shared annotations have identical types
-                shared_annotations = ht1_globals['selects'][dataset].keys() & ht2_globals['selects'].get(dataset).keys()
-                mismatched_annotations = []
-                for annotation in shared_annotations:
-                    if ht1_globals['selects'][dataset][annotation] != ht2_globals['selects'][dataset][annotation]:
-                        mismatched_annotations.append((annotation, ht2_globals['selects'][dataset][annotation]))
+                shared_annotations = (
+                    ht1_globals['selects'][dataset].keys()
+                    & ht2_globals['selects'].get(dataset).keys()
+                )
+                mismatched_annotations = [
+                    (annotation, ht2_globals['selects'][dataset][annotation])
+                    for annotation in shared_annotations
+                    if (
+                        ht1_globals['selects'][dataset][annotation]
+                        != ht2_globals['selects'][dataset][annotation]
+                    )
+                ]
                 if mismatched_annotations:
                     msg = f'Unexpected field types detected in {dataset}: {mismatched_annotations}'
                     raise ValueError(msg)
