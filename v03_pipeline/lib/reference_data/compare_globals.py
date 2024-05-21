@@ -81,7 +81,9 @@ class Globals:
 
 
 def validate_selects_types(
-    ht1_globals: Globals, ht2_globals: Globals, dataset: str
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset: str,
 ) -> None:
     # Assert that all shared annotations have identical types
     shared_selects = (
