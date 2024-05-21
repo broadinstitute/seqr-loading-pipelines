@@ -87,40 +87,23 @@ def get_datasets_to_update(
 ) -> list[str]:
     datasets_to_update = set()
     for field in dataclasses.fields(Globals):
-        if field.name == 'selects':
+        if field.name == 'selects' and not validate_selects:
             continue
         datasets_to_update.update(
             ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
-            if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
-                dataset,
-            ):
-                logger.info(f'{field.name} mismatch for {dataset}')
-                datasets_to_update.add(dataset)
-
-    # Selects are a special case and are handled separately
-    if validate_selects:
-        ht1_selects, ht2_selects = ht1_globals['selects'], ht2_globals['selects']
-        datasets_to_update.update(ht1_selects.keys() ^ ht2_globals[field.name].keys())
-        for dataset in ht1_selects.keys() & ht2_selects.keys():
-            # Special integrity check to ensure that fields do not change
-            # without an explicit configuration change.  Because we check
-            # that the dataset isn't already "to_update", this must run
-            # after all other fields have been validated.
-            if (
-                dataset not in datasets_to_update
-                and (ht1_selects.get(dataset).keys() == ht2_selects.get(dataset).keys())
-                and (ht1_selects.get(dataset) != ht2_selects.get(dataset))
-            ):
-                differing_items = (
-                    ht2_selects.get(dataset).items() - ht1_selects.get(dataset).items()
-                )
-                msg = f'Unexpected field types detected in {dataset}: {differing_items}'
-                raise ValueError(msg)
-            if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
-                dataset,
-            ):
+            if field.name == 'selects':
+                # Assert that all shared annotations have identical types
+                shared_annotations = ht1_globals['selects'][dataset].keys() & ht2_globals['selects'].get(dataset).keys()
+                mismatched_annotations = []
+                for annotation in shared_annotations:
+                    if ht1_globals['selects'][dataset][annotation] != ht2_globals['selects'][dataset][annotation]:
+                        mismatched_annotations.append((annotation, ht2_globals['selects'][dataset][annotation]))
+                if mismatched_annotations:
+                    msg = f'Unexpected field types detected in {dataset}: {mismatched_annotations}'
+                    raise ValueError(msg)
+            if ht1_globals[field.name][dataset] != ht2_globals[field.name][dataset]:
                 logger.info(f'{field.name} mismatch for {dataset}')
                 datasets_to_update.add(dataset)
     return sorted(datasets_to_update)

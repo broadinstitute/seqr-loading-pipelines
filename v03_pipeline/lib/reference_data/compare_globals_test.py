@@ -286,14 +286,13 @@ class CompareGlobalsTest(unittest.TestCase):
     def test_get_datasets_to_update_select_type_validation(self):
         self.assertRaisesRegex(
             ValueError,
-            "Unexpected field types detected in a: {\\('field1', dtype\\('int32'\\)\\)}",
+            "Unexpected field types detected in a: \\[\\('field1', dtype\\('int32'\\)\\)\\]",
             get_datasets_to_update,
             ht1_globals=Globals(
                 paths={'a': 'a_path'},
                 versions={'a': 'v1'},
                 enums={'a': {}},
                 selects={
-                    # field1 is an array in ht1 but an int in ht2.
                     'a': {'field1': hl.tarray(hl.tint32)},
                 },
             ),
@@ -301,27 +300,9 @@ class CompareGlobalsTest(unittest.TestCase):
                 paths={'a': 'a_path'},
                 versions={'a': 'v1'},
                 enums={'a': {}},
-                selects={'a': {'field1': hl.tint32}},
-            ),
-        )
-        result = get_datasets_to_update(
-            ht1_globals=Globals(
-                paths={'a': 'a_path'},
-                versions={'a': 'v1'},
-                enums={'a': {}},
-                selects={
-                    'a': {'field1': hl.tarray(hl.tint32)},
-                },
-            ),
-            ht2_globals=Globals(
-                paths={'a': 'a_path'},
-                versions={'a': 'v1'},
-                enums={'a': {}},
-                # additional field
                 selects={'a': {'field1': hl.tint32, 'field2': hl.tint32}},
             ),
         )
-        self.assertTrue(result == ['a'])
         result = get_datasets_to_update(
             ht1_globals=Globals(
                 paths={'a': 'a_path'},
@@ -333,9 +314,9 @@ class CompareGlobalsTest(unittest.TestCase):
             ),
             ht2_globals=Globals(
                 paths={'a': 'a_path'},
-                versions={'a': 'v2'},  # version bump
+                versions={'a': 'v1'},
                 enums={'a': {}},
-                selects={'a': {'field1': hl.tint32}},
+                selects={'a': {'field1': hl.tarray(hl.tint32), 'field2': hl.tint32}},
             ),
         )
         self.assertTrue(result == ['a'])

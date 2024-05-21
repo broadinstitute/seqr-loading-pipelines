@@ -760,7 +760,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         conditions=None,
                     ),
                     dbnsfp=hl.Struct(
-                        REVEL_score=0.043,
+                        REVEL_score=hl.eval(hl.float32(0.043)),
                         SIFT_score=None,
                         Polyphen2_HVAR_score=None,
                         MutationTaster_pred_id=0,
