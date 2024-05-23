@@ -21,7 +21,7 @@ class Globals:
     paths: dict[str, str]
     versions: dict[str, str]
     enums: dict[str, dict[str, list[str]]]
-    selects: dict[str, set[str]]
+    selects: dict[str, dict[str, hl.dtype]]
 
     def __getitem__(self, name: str):
         return getattr(self, name)
@@ -50,7 +50,11 @@ class Globals:
             dataset_ht = dataset_ht.transmute(
                 **get_enum_select_fields(dataset_ht, dataset_config),
             )
-            selects[dataset] = set(dataset_ht.row) - set(dataset_ht.key)
+            selects[dataset] = {
+                k: v.dtype
+                for k, v in dict(dataset_ht.row).items()
+                if k not in set(dataset_ht.key)
+            }
         return cls(paths, versions, enums, selects)
 
     @classmethod
@@ -69,11 +73,34 @@ class Globals:
             if dataset in ht.row:
                 # NB: handle an edge case (mito high constraint) where we annotate a bool from the reference dataset collection
                 selects[dataset] = (
-                    set(ht[dataset])
+                    {k: v.dtype for k, v in dict(ht[dataset]).items()}
                     if isinstance(ht[dataset], hl.StructExpression)
-                    else set()
+                    else {}
                 )
         return cls(paths, versions, enums, selects)
+
+
+def validate_selects_types(
+    ht1_globals: Globals,
+    ht2_globals: Globals,
+    dataset: str,
+) -> None:
+    # Assert that all shared annotations have identical types
+    shared_selects = (
+        ht1_globals['selects'][dataset].keys()
+        & ht2_globals['selects'].get(dataset).keys()
+    )
+    mismatched_select_types = [
+        (select, ht2_globals['selects'][dataset][select])
+        for select in shared_selects
+        if (
+            ht1_globals['selects'][dataset][select]
+            != ht2_globals['selects'][dataset][select]
+        )
+    ]
+    if mismatched_select_types:
+        msg = f'Unexpected field types detected in {dataset}: {mismatched_select_types}'
+        raise ValueError(msg)
 
 
 def get_datasets_to_update(
@@ -82,19 +109,16 @@ def get_datasets_to_update(
     validate_selects: bool = True,
 ) -> list[str]:
     datasets_to_update = set()
-
     for field in dataclasses.fields(Globals):
         if field.name == 'selects' and not validate_selects:
             continue
-
         datasets_to_update.update(
             ht1_globals[field.name].keys() ^ ht2_globals[field.name].keys(),
         )
         for dataset in ht1_globals[field.name].keys() & ht2_globals[field.name].keys():
-            if ht1_globals[field.name].get(dataset) != ht2_globals[field.name].get(
-                dataset,
-            ):
+            if field.name == 'selects':
+                validate_selects_types(ht1_globals, ht2_globals, dataset)
+            if ht1_globals[field.name][dataset] != ht2_globals[field.name][dataset]:
                 logger.info(f'{field.name} mismatch for {dataset}')
                 datasets_to_update.add(dataset)
-
     return sorted(datasets_to_update)

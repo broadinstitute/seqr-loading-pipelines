@@ -282,3 +282,7 @@ class DatasetType(Enum):
                 mito.gt_stats,
             ],
         }[self]
+
+    @property
+    def should_send_to_allele_registry(self):
+        return self == DatasetType.SNV_INDEL

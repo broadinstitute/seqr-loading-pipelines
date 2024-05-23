@@ -7,6 +7,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
+from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
@@ -241,6 +242,28 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 continue
             rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
             new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+
+        # Register the new variant alleles to the Clingen Allele Registry
+        # and annotate new_variants table with CAID.
+        if (
+            Env.SHOULD_REGISTER_ALLELES
+            and self.dataset_type.should_send_to_allele_registry
+        ):
+            ar_ht = hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus(self.reference_genome.value),
+                    alleles=hl.tarray(hl.tstr),
+                    CAID=hl.tstr,
+                ),
+                key=('locus', 'alleles'),
+            )
+            for ar_ht_chunk in register_alleles_in_chunks(
+                new_variants_ht,
+                self.reference_genome,
+            ):
+                ar_ht = ar_ht.union(ar_ht_chunk)
+            new_variants_ht = new_variants_ht.join(ar_ht, 'left')
 
         return new_variants_ht.annotate_globals(
             updates={

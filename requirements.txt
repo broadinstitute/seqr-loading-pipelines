@@ -97,10 +97,11 @@ frozenlist==1.4.0
     #   hail
 gnomad==0.6.4
     # via -r requirements.in
-google-api-core==2.14.0
+google-api-core[grpc]==2.14.0
     # via
     #   google-api-python-client
     #   google-cloud-core
+    #   google-cloud-secret-manager
     #   google-cloud-storage
 google-api-python-client==2.108.0
     # via -r requirements.in
@@ -111,6 +112,7 @@ google-auth==2.23.4
     #   google-auth-httplib2
     #   google-auth-oauthlib
     #   google-cloud-core
+    #   google-cloud-secret-manager
     #   google-cloud-storage
     #   hail
 google-auth-httplib2==0.1.1
@@ -119,6 +121,8 @@ google-auth-oauthlib==0.8.0
     # via hail
 google-cloud-core==2.4.1
     # via google-cloud-storage
+google-cloud-secret-manager==2.20.0
+    # via -r requirements.in
 google-cloud-storage==2.14.0
     # via -r requirements.in
 google-crc32c==1.5.0
@@ -127,9 +131,22 @@ google-crc32c==1.5.0
     #   google-resumable-media
 google-resumable-media==2.7.0
     # via google-cloud-storage
-googleapis-common-protos==1.61.0
+googleapis-common-protos[grpc]==1.61.0
+    # via
+    #   google-api-core
+    #   grpc-google-iam-v1
+    #   grpcio-status
+grpc-google-iam-v1==0.13.0
+    # via google-cloud-secret-manager
+grpcio==1.63.0
+    # via
+    #   google-api-core
+    #   googleapis-common-protos
+    #   grpc-google-iam-v1
+    #   grpcio-status
+grpcio-status==1.48.2
     # via google-api-core
-hail==0.2.128
+hail==0.2.130
     # via -r requirements.in
 hdbscan==0.8.33
     # via gnomad
@@ -202,7 +219,7 @@ numpy==1.26.2
     #   scipy
 oauthlib==3.2.2
     # via requests-oauthlib
-orjson==3.9.11
+orjson==3.9.10
     # via hail
 packaging==23.2
     # via
@@ -226,11 +243,16 @@ portalocker==2.8.2
     # via msal-extensions
 prompt-toolkit==3.0.41
     # via ipython
+proto-plus==1.23.0
+    # via google-cloud-secret-manager
 protobuf==3.20.2
     # via
     #   google-api-core
+    #   google-cloud-secret-manager
     #   googleapis-common-protos
-    #   hail
+    #   grpc-google-iam-v1
+    #   grpcio-status
+    #   proto-plus
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
