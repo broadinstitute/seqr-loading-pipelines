@@ -194,7 +194,6 @@ class CompareGlobalsTest(unittest.TestCase):
         self.assertTrue(
             rdc_globals.enums == {'screen': {'region_type': ['C', 'D']}},
         )
-        print(rdc_globals.selects)
         self.assertTrue(
             rdc_globals.selects
             == {
