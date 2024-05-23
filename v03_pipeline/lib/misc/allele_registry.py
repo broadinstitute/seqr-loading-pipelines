@@ -195,10 +195,11 @@ def handle_api_response(
     logger.info(
         f'{len(response) - len(errors)} out of {len(response)} variants returned CAID(s)',
     )
-    logger.info(
-        f'{len(unmappable_variants)} registered variant(s) cannot be mapped back to ours. '
-        f'\nFirst unmappable variant:\n{unmappable_variants[0]}',
-    )
+    if unmappable_variants:
+        logger.info(
+            f'{len(unmappable_variants)} registered variant(s) cannot be mapped back to ours. '
+            f'\nFirst unmappable variant:\n{unmappable_variants[0]}',
+        )
     if errors:
         logger.warning(
             f'{len(errors)} failed. First error: {errors[0]}',
