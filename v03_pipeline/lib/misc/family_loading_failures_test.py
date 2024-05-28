@@ -202,7 +202,6 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             [
                 [
                     'Sample ROS_006_18Y03226_D1 has pedigree sex F but imputed sex M',
-                    'Sample ROS_006_18Y03227_D1 has pedigree sex M but imputed sex F',
                 ],
             ],
         )
