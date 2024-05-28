@@ -41,7 +41,6 @@ ignore = [
     "FBT",   # flake-boolean-trap... disallows boolean args to functions... fixing this code will require refactors.
     "ANN",   # flake8-annotations is for typed code
     "DJ",    # django specific
-    "T20",   # forbids print, we print quite a bit
     "PYI",   # pyi is typing stub files
     "PT",    # pytest specific
     "PTH",   # pathlib is preferred, but we're not using it yet

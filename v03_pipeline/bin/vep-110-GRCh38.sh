@@ -42,12 +42,6 @@ gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/ve
 gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/uORF_5UTR_${ASSEMBLY}_PUBLIC.txt /vep_data/ &
 
 # Raw data files copied from the bucket (https://console.cloud.google.com/storage/browser/dm_alphamissense;tab=objects?prefix=&forceOnObjectsSortingFiltering=false)
-# Some investigation led us to want to combine the canonical and non-canonical transcript tsvs (run inside the VEP docker container):
-# cat AlphaMissense_hg38.tsv.gz | gunzip | grep -v '#' | awk 'BEGIN { OFS = "\t" };{$6=""; print $0}' > AlphaMissense_combined_hg38.tsv
-# cat AlphaMissense_isoforms_hg38.tsv.gz | gunzip | grep -v '#' >> AlphaMissense_combined_hg38.tsv
-# cat AlphaMissense_combined_hg38.tsv | sort --parallel=12 --buffer-size=20G -k1,1 -k2,2n > AlphaMissense_combined_sorted_hg38.tsv
-# cat AlphaMissense_combined_sorted_hg38.tsv | sed '1i #CHROM\tPOS\tREF\tALT\tgenome\ttranscript_id\tprotein_variant\tam_pathogenicity\tam_class' > AlphaMissense_hg38.tsv
-# bgzip AlphaMissense_hg38.tsv
 # tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
 gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/AlphaMissense_hg38.tsv.*' /vep_data/ &
 

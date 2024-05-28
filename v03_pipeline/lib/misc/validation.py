@@ -11,6 +11,19 @@ class SeqrValidationError(Exception):
     pass
 
 
+def validate_allele_type(
+    mt: hl.MatrixTable,
+) -> None:
+    ht = mt.rows()
+    ht = ht.filter(
+        hl.numeric_allele_type(ht.alleles[0], ht.alleles[1])
+        == hl.genetics.allele_type.AlleleType.UNKNOWN,
+    )
+    if ht.count() > 0:
+        msg = f'Alleles with Unknown AlleleType are present in the callset: {ht.alleles.collect()}'
+        raise SeqrValidationError(msg)
+
+
 def validate_no_duplicate_variants(
     mt: hl.MatrixTable,
 ) -> None:

@@ -2,6 +2,10 @@ from collections import Counter
 
 import hail as hl
 
+from v03_pipeline.lib.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class MatrixTableSampleSetError(Exception):
     def __init__(self, message, missing_samples):
@@ -42,7 +46,7 @@ def remap_sample_ids(
             f'All callset sample IDs:{mt.s.collect()}'
         )
         if ignore_missing_samples_when_remapping:
-            print(message)
+            logger.info(message)
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
 
@@ -50,7 +54,7 @@ def remap_sample_ids(
     remap_expr = hl.if_else(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
     mt = mt.annotate_cols(seqr_id=remap_expr, vcf_id=mt.s)
     mt = mt.key_cols_by(s=mt.seqr_id)
-    print(f'Remapped {remap_count} sample ids...')
+    logger.info(f'Remapped {remap_count} sample ids...')
     return mt
 
 
@@ -77,9 +81,9 @@ def subset_samples(
         if (
             subset_count > anti_join_ht_count
         ) and ignore_missing_samples_when_subsetting:
-            print(message)
+            logger.info(message)
         else:
             raise MatrixTableSampleSetError(message, missing_samples)
-    print(f'Subsetted to {subset_count} sample ids')
+    logger.info(f'Subsetted to {subset_count} sample ids')
     mt = mt.semi_join_cols(sample_subset_ht)
     return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))

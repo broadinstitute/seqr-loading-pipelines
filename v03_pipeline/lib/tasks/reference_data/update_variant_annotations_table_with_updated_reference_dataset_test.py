@@ -45,7 +45,7 @@ MOCK_CADD_CONFIG = {
         hl.tstruct(
             locus=hl.tlocus('GRCh38'),
             alleles=hl.tarray(hl.tstr),
-            PHRED=hl.tint32,
+            PHRED=hl.tfloat32,
         ),
         key=['locus', 'alleles'],
         globals=hl.Struct(
@@ -760,7 +760,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         conditions=None,
                     ),
                     dbnsfp=hl.Struct(
-                        REVEL_score=0.043,
+                        REVEL_score=0.0430000014603138,
                         SIFT_score=None,
                         Polyphen2_HVAR_score=None,
                         MutationTaster_pred_id=0,
@@ -1168,7 +1168,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         conditions=None,
                     ),
                     dbnsfp=hl.Struct(
-                        REVEL_score=0.043,
+                        REVEL_score=0.0430000014603138,
                         SIFT_score=None,
                         Polyphen2_HVAR_score=None,
                         MutationTaster_pred_id=0,
