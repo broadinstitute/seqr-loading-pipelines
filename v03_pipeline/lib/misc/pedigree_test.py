@@ -316,7 +316,7 @@ class PedigreesTest(unittest.TestCase):
                     samples={
                         'BBL_BC1-000345_01_D1': Sample(
                             sample_id='BBL_BC1-000345_01_D1',
-                            sex=Sex.FEMALE,
+                            sex=Sex.UNKNOWN,
                             mother='BBL_BC1-000345_03_D1',
                             father='BBL_BC1-000345_02_D1',
                             maternal_grandmother=None,
