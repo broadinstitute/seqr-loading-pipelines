@@ -578,7 +578,11 @@ MOCK_37_VEP_DATA = hl.struct(
 MOCK_38_VEP_DATA = hl.struct(
     most_severe_consequence='missense_variant',
     check_ref=hl.missing(hl.tstr),
-    motif_feature_consequences=hl.missing(hl.tarray(hl.tstruct(consequence_terms=hl.tarray(hl.tstr), motif_feature_id=hl.tstr))),
+    motif_feature_consequences=hl.missing(
+        hl.tarray(
+            hl.tstruct(consequence_terms=hl.tarray(hl.tstr), motif_feature_id=hl.tstr)
+        )
+    ),
     regulatory_feature_consequences=hl.array(
         [
             hl.struct(
