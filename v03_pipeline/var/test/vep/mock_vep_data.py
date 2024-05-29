@@ -580,8 +580,8 @@ MOCK_38_VEP_DATA = hl.struct(
     check_ref=hl.missing(hl.tstr),
     motif_feature_consequences=hl.missing(
         hl.tarray(
-            hl.tstruct(consequence_terms=hl.tarray(hl.tstr), motif_feature_id=hl.tstr)
-        )
+            hl.tstruct(consequence_terms=hl.tarray(hl.tstr), motif_feature_id=hl.tstr),
+        ),
     ),
     regulatory_feature_consequences=hl.array(
         [
