@@ -3,7 +3,11 @@ from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.vep import sorted_transcript_consequences
+from v03_pipeline.lib.annotations.vep import (
+    sorted_motif_feature_consequences,
+    sorted_regulatory_feature_consequences,
+    sorted_transcript_consequences,
+)
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
@@ -134,7 +138,6 @@ class VepAnnotationsTest(unittest.TestCase):
                 ReferenceGenome.GRCh38,
             ),
         )
-        print(ht.sorted_transcript_consequences.collect()[0])
         self.assertCountEqual(
             ht.sorted_transcript_consequences.collect()[0],
             [
@@ -244,10 +247,69 @@ class VepAnnotationsTest(unittest.TestCase):
                             alt_type_length=None,
                             ref_StartDistanceToCDS=None,
                             ref_type=None,
-                            ref_type_length=None
+                            ref_type_length=None,
                         ),
                     ),
                     transcript_rank=2,
+                ),
+            ],
+        )
+
+    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch('v03_pipeline.lib.vep.hl.vep')
+    def test_sorted_other_feature_consequences(
+        self,
+        mock_vep: Mock,
+        mock_validate: Mock,
+    ) -> None:
+        ht = hl.Table.parallelize(
+            [
+                {
+                    'locus': hl.Locus(
+                        contig='chr1',
+                        position=871269,
+                        reference_genome=ReferenceGenome.GRCh38.value,
+                    ),
+                    'alleles': ['A', 'C'],
+                },
+            ],
+            hl.tstruct(
+                locus=hl.tlocus(ReferenceGenome.GRCh38.value),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            key=['locus', 'alleles'],
+        )
+        mock_vep.return_value = ht.annotate(vep=MOCK_38_VEP_DATA)
+        mock_validate.return_value = None
+        ht = run_vep(
+            ht,
+            DatasetType.SNV_INDEL,
+            ReferenceGenome.GRCh38,
+        )
+        ht = ht.select(
+            sorted_motif_feature_consequences=sorted_motif_feature_consequences(ht),
+            sorted_regulatory_feature_consequences=sorted_regulatory_feature_consequences(
+                ht,
+            ),
+        )
+        self.assertCountEqual(
+            ht.sorted_motif_feature_consequences.collect()[0],
+            [None],
+        )
+        self.assertCountEqual(
+            ht.sorted_regulatory_feature_consequences.collect()[0],
+            [
+                hl.Struct(
+                    biotype_id=53,
+                    consequence_term_ids=[0],
+                    regulatory_feature_id='regulatory_2',
+                    transcript_rank=0,
+                ),
+                hl.Struct(
+                    biotype_id=53,
+                    consequence_term_ids=[2],
+                    regulatory_feature_id='regulatory_1',
+                    transcript_rank=1,
                 ),
             ],
         )

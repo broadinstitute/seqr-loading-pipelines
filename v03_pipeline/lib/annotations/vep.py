@@ -122,24 +122,43 @@ def _transcript_consequences_select(
                 ],
                 # Annotation documentation here:
                 # https://github.com/ImperialCardioGenetics/UTRannotator?tab=readme-ov-file#the-detailed-annotation-for-each-consequence
-                # NB: 
+                # NB:
                 fiveutr_annotation=c.fiveutr_annotation['1'].annotate(
-                    AltStopDistanceToCDS=hl.parse_int32(c.fiveutr_annotation['1'].AltStopDistanceToCDS),
-                    CapDistanceToStart=hl.parse_int32(c.fiveutr_annotation['1'].CapDistanceToStart),
-                    DistanceToCDS=hl.parse_int32(c.fiveutr_annotation['1'].DistanceToCDS),
-                    DistanceToStop=hl.parse_int32(c.fiveutr_annotation['1'].DistanceToStop),
+                    AltStopDistanceToCDS=hl.parse_int32(
+                        c.fiveutr_annotation['1'].AltStopDistanceToCDS,
+                    ),
+                    CapDistanceToStart=hl.parse_int32(
+                        c.fiveutr_annotation['1'].CapDistanceToStart,
+                    ),
+                    DistanceToCDS=hl.parse_int32(
+                        c.fiveutr_annotation['1'].DistanceToCDS,
+                    ),
+                    DistanceToStop=hl.parse_int32(
+                        c.fiveutr_annotation['1'].DistanceToStop,
+                    ),
                     Evidence=hl.or_missing(
                         # Just in case a weird value ("NA" or anything else) propagates
                         (
-                            (c.fiveutr_annotation['1'].Evidence == 'True') | (c.fiveutr_annotation['1'].Evidence == 'False')
+                            (c.fiveutr_annotation['1'].Evidence == 'True')
+                            | (c.fiveutr_annotation['1'].Evidence == 'False')
                         ),
                         hl.bool(c.fiveutr_annotation['1'].Evidence),
                     ),
-                    StartDistanceToCDS=hl.parse_int32(c.fiveutr_annotation['1'].StartDistanceToCDS),
-                    newSTOPDistanceToCDS=hl.parse_int32(c.fiveutr_annotation['1'].newSTOPDistanceToCDS),
-                    alt_type_length=hl.parse_int32(c.fiveutr_annotation['1'].alt_type_length),
-                    ref_StartDistanceToCDS=hl.parse_int32(c.fiveutr_annotation['1'].ref_StartDistanceToCDS),
-                    ref_type_length=hl.parse_int32(c.fiveutr_annotation['1'].ref_type_length),
+                    StartDistanceToCDS=hl.parse_int32(
+                        c.fiveutr_annotation['1'].StartDistanceToCDS,
+                    ),
+                    newSTOPDistanceToCDS=hl.parse_int32(
+                        c.fiveutr_annotation['1'].newSTOPDistanceToCDS,
+                    ),
+                    alt_type_length=hl.parse_int32(
+                        c.fiveutr_annotation['1'].alt_type_length,
+                    ),
+                    ref_StartDistanceToCDS=hl.parse_int32(
+                        c.fiveutr_annotation['1'].ref_StartDistanceToCDS,
+                    ),
+                    ref_type_length=hl.parse_int32(
+                        c.fiveutr_annotation['1'].ref_type_length,
+                    ),
                 ),
             ),
         )
@@ -167,9 +186,9 @@ def sorted_motif_feature_consequences(
                     lambda t: MOTIF_CONSEQUENCE_TERMS_LOOKUP[t],
                 ),
                 motif_feature_id=c.motif_feature_id,
-            ).filter(lambda c: c.consequence_term_ids.size() > 0),
-            lambda c: hl.min(c.consequence_term_ids),
-        ),
+            ),
+        ).filter(lambda c: c.consequence_term_ids.size() > 0),
+        lambda c: hl.min(c.consequence_term_ids),
     )
     return _add_transcript_rank(result)
 
@@ -186,9 +205,9 @@ def sorted_regulatory_feature_consequences(
                     lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
                 ),
                 regulatory_feature_id=c.regulatory_feature_id,
-            ).filter(lambda c: c.consequence_term_ids.size() > 0),
-            lambda c: hl.min(c.consequence_term_ids),
-        ),
+            ),
+        ).filter(lambda c: c.consequence_term_ids.size() > 0),
+        lambda c: hl.min(c.consequence_term_ids),
     )
     return _add_transcript_rank(result)
 
