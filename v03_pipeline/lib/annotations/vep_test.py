@@ -134,6 +134,7 @@ class VepAnnotationsTest(unittest.TestCase):
                 ReferenceGenome.GRCh38,
             ),
         )
+        print(ht.sorted_transcript_consequences.collect()[0])
         self.assertCountEqual(
             ht.sorted_transcript_consequences.collect()[0],
             [
@@ -226,17 +227,25 @@ class VepAnnotationsTest(unittest.TestCase):
                         existing_outofframe_oorfs=1,
                         existing_uorfs=0,
                         fiveutr_consequence_id=1,
-                        fiveutr_annotation={
-                            '1': {
-                                'CapDistanceToStart': '20',
-                                'DistanceToCDS': '40',
-                                'DistanceToStop': '75',
-                                'Evidence': 'False',
-                                'KozakContext': 'TTTATGC',
-                                'KozakStrength': 'Weak',
-                                'type': 'OutOfFrame_oORF',
-                            },
-                        },
+                        fiveutr_annotation=hl.Struct(
+                            type='OutOfFrame_oORF',
+                            KozakContext='TTTATGC',
+                            KozakStrength='Weak',
+                            DistanceToCDS=40,
+                            CapDistanceToStart=20,
+                            DistanceToStop=75,
+                            Evidence=False,
+                            AltStop=None,
+                            AltStopDistanceToCDS=None,
+                            FrameWithCDS=None,
+                            StartDistanceToCDS=None,
+                            newSTOPDistanceToCDS=None,
+                            alt_type=None,
+                            alt_type_length=None,
+                            ref_StartDistanceToCDS=None,
+                            ref_type=None,
+                            ref_type_length=None
+                        ),
                     ),
                     transcript_rank=2,
                 ),
