@@ -219,6 +219,8 @@ class DatasetType(Enum):
                 snv_indel.screen,
                 shared.rg37_locus,
                 vep.check_ref,
+                vep.sorted_regulatory_feature_consequences,
+                vep.sorted_motif_feature_consequences,
             ],
             DatasetType.MITO: [
                 *GRCh37_fns[DatasetType.MITO],
