@@ -7,9 +7,9 @@ import luigi.worker
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CLINVAR_PATHOGENICITIES,
-    CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -880,7 +880,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                     ),
@@ -974,7 +974,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         high_constraint_region_mito=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                         mitotip=hl.Struct(
@@ -1139,7 +1139,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                     ),

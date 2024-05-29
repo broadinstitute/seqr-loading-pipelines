@@ -1,14 +1,14 @@
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import CONSEQUENCE_TERMS
+from v03_pipeline.lib.annotations.enums import TRANSCRIPT_CONSEQUENCE_TERMS
 
-CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
-    hl.enumerate(CONSEQUENCE_TERMS, index_first=False),
+TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
+    hl.enumerate(TRANSCRIPT_CONSEQUENCE_TERMS, index_first=False),
 )
 HGVSC_CONSEQUENCES = hl.set(
     ['splice_donor_variant', 'splice_acceptor_variant', 'splice_region_variant'],
 )
-OMIT_CONSEQUENCE_TERMS = [
+OMIT_TRANSCRIPT_CONSEQUENCE_TERMS = [
     'upstream_gene_variant',
     'downstream_gene_variant',
 ]
@@ -124,7 +124,7 @@ def get_expr_for_xpos(locus: hl.expr.LocusExpression) -> hl.expr.Int64Expression
 def get_expr_for_vep_sorted_transcript_consequences_array(
     vep_root,
     include_coding_annotations=True,
-    omit_consequences=OMIT_CONSEQUENCE_TERMS,
+    omit_consequences=OMIT_TRANSCRIPT_CONSEQUENCE_TERMS,
 ):
     """Sort transcripts by 3 properties:
 
@@ -193,7 +193,7 @@ def get_expr_for_vep_sorted_transcript_consequences_array(
                     c.consequence_terms.size() > 0,
                     hl.sorted(
                         c.consequence_terms,
-                        key=lambda t: CONSEQUENCE_TERM_RANK_LOOKUP.get(t),
+                        key=lambda t: TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(t),
                     )[0],
                     hl.null(hl.tstr),
                 ),
@@ -205,24 +205,24 @@ def get_expr_for_vep_sorted_transcript_consequences_array(
                 category=(
                     hl.case()
                     .when(
-                        CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= CONSEQUENCE_TERM_RANK_LOOKUP.get('frameshift_variant'),
+                        TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('frameshift_variant'),
                         'lof',
                     )
                     .when(
-                        CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= CONSEQUENCE_TERM_RANK_LOOKUP.get('missense_variant'),
+                        TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('missense_variant'),
                         'missense',
                     )
                     .when(
-                        CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'),
+                        TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'),
                         'synonymous',
                     )
                     .default('other')
                 ),
                 hgvs=_get_expr_for_formatted_hgvs(c),
-                major_consequence_rank=CONSEQUENCE_TERM_RANK_LOOKUP.get(
+                major_consequence_rank=TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(
                     c.major_consequence,
                 ),
             ),

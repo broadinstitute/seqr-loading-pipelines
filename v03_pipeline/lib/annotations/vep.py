@@ -5,30 +5,32 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
-    CONSEQUENCE_TERMS,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
-CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(CONSEQUENCE_TERMS, index_first=False))
+EXTENDED_INTRONIC_SPLICE_REGION_VARIANT = 'extended_intronic_splice_region_variant'
 FIVEUTR_CONSEQUENCES_LOOKUP = hl.dict(
     hl.enumerate(FIVEUTR_CONSEQUENCES, index_first=False).extend(
         [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
     ),
 )
 LOF_FILTERS_LOOKUP = hl.dict(hl.enumerate(LOF_FILTERS, index_first=False))
-
-PROTEIN_CODING_ID = BIOTYPE_LOOKUP['protein_coding']
-
-OMIT_CONSEQUENCE_TERMS = hl.set(
+MANE_SELECT_ANNOTATIONS = [
+    'mane_select',
+    'mane_plus_clinical',
+]
+NAGNAG_SITE = 'NAGNAG_SITE'
+OMIT_TRANSCRIPT_CONSEQUENCE_TERMS = hl.set(
     [
         'upstream_gene_variant',
         'downstream_gene_variant',
     ],
 )
-
+PROTEIN_CODING_ID = BIOTYPE_LOOKUP['protein_coding']
 SELECTED_ANNOTATIONS = [
     'amino_acids',
     'canonical',
@@ -38,14 +40,7 @@ SELECTED_ANNOTATIONS = [
     'hgvsp',
     'transcript_id',
 ]
-
-MANE_SELECT_ANNOTATIONS = [
-    'mane_select',
-    'mane_plus_clinical',
-]
-
-EXTENDED_INTRONIC_SPLICE_REGION_VARIANT = 'extended_intronic_splice_region_variant'
-NAGNAG_SITE = 'NAGNAG_SITE'
+TRANSCRIPT_CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(TRANSCRIPT_CONSEQUENCE_TERMS, index_first=False))
 
 
 def _lof_filter_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
@@ -57,8 +52,8 @@ def _lof_filter_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
 
 def _consequence_term_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
     return c.consequence_terms.filter(
-        lambda t: ~OMIT_CONSEQUENCE_TERMS.contains(t),
-    ).map(lambda t: CONSEQUENCE_TERMS_LOOKUP[t])
+        lambda t: ~OMIT_TRANSCRIPT_CONSEQUENCE_TERMS.contains(t),
+    ).map(lambda t: TRANSCRIPT_CONSEQUENCE_TERMS_LOOKUP[t])
 
 
 def _transcript_consequences_select(
@@ -108,7 +103,7 @@ def _transcript_consequences_select(
                 ],
                 # Annotation documentation here:
                 # https://github.com/ImperialCardioGenetics/UTRannotator?tab=readme-ov-file#the-detailed-annotation-for-each-consequence
-                fiveutr_annotation=c.fiveutr_annotation,
+                fiveutr_annotation=c.fiveutr_annotation['1'],
             ),
         )
     return lambda c: c.select(
@@ -152,7 +147,7 @@ def sorted_transcript_consequences(
                 ),
                 c.biotype_id == PROTEIN_CODING_ID,
                 hl.set(c.consequence_term_ids).contains(
-                    CONSEQUENCE_TERMS_LOOKUP[ht.vep.most_severe_consequence],
+                    TRANSCRIPT_CONSEQUENCE_TERMS_LOOKUP[ht.vep.most_severe_consequence],
                 ),
                 hl.or_else(c.canonical, 0) == 1,
             )

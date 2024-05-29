@@ -8,12 +8,12 @@ import luigi.worker
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CLINVAR_PATHOGENICITIES,
-    CONSEQUENCE_TERMS,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
     SV_TYPES,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
@@ -626,7 +626,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                     ),
@@ -851,7 +851,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         mitimpact=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                         mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),

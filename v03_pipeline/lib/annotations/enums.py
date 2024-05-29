@@ -74,7 +74,7 @@ BIOTYPES = [
     '3prime_overlapping_ncrna',
 ]
 
-CONSEQUENCE_TERMS = [
+TRANSCRIPT_CONSEQUENCE_TERMS = [
     'transcript_ablation',
     'splice_acceptor_variant',
     'splice_donor_variant',
@@ -89,10 +89,10 @@ CONSEQUENCE_TERMS = [
     'inframe_deletion',
     'missense_variant',
     'protein_altering_variant',
-    'splice_donor_5th_base_variant',  # From SpliceRegion
+    'splice_donor_5th_base_variant',
     'splice_region_variant',
-    'splice_donor_region_variant',  # From SpliceRegion
-    'splice_polypyrimidine_tract_variant',  # From SpliceRegion
+    'splice_donor_region_variant',
+    'splice_polypyrimidine_tract_variant',
     'incomplete_terminal_codon_variant',
     'start_retained_variant',
     'stop_retained_variant',

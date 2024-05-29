@@ -2,13 +2,13 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
-    CONSEQUENCE_TERMS,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
     SV_TYPES,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
@@ -27,7 +27,7 @@ def annotate_enums(
             enums=ht.enums.annotate(
                 sorted_transcript_consequences=hl.Struct(
                     biotype=BIOTYPES,
-                    consequence_term=CONSEQUENCE_TERMS,
+                    consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                     lof_filter=LOF_FILTERS,
                     **{
                         'fiveutr_consequence': FIVEUTR_CONSEQUENCES,
