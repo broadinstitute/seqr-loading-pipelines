@@ -22,6 +22,22 @@ def annotate_enums(
     formatting_annotation_names = {
         fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
     }
+    if 'sorted_motif_feature_consequences' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(
+                sorted_motif_feature_consequences=hl.Struct(
+                    consequence_term=MOTIF_CONSEQUENCE_TERMS,
+                ),
+            ),
+        )
+    if 'sorted_regulatory_feature_consequences' in formatting_annotation_names:
+        ht = ht.annotate_globals(
+            enums=ht.enums.annotate(
+                sorted_regulatory_feature_consequences=hl.Struct(
+                    consequence_term=REGULATORY_CONSEQUENCE_TERMS,
+                ),
+            ),
+        )
     if 'sorted_transcript_consequences' in formatting_annotation_names:
         ht = ht.annotate_globals(
             enums=ht.enums.annotate(

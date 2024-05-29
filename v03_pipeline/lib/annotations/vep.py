@@ -7,6 +7,8 @@ from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
+    MOTIF_CONSEQUENCE_TERMS,
+    REGULATORY_CONSEQUENCE_TERMS,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
@@ -23,6 +25,9 @@ MANE_SELECT_ANNOTATIONS = [
     'mane_select',
     'mane_plus_clinical',
 ]
+MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
+    hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),
+)
 NAGNAG_SITE = 'NAGNAG_SITE'
 OMIT_TRANSCRIPT_CONSEQUENCE_TERMS = hl.set(
     [
@@ -31,6 +36,9 @@ OMIT_TRANSCRIPT_CONSEQUENCE_TERMS = hl.set(
     ],
 )
 PROTEIN_CODING_ID = BIOTYPE_LOOKUP['protein_coding']
+REGULATORY_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
+    hl.enumerate(REGULATORY_CONSEQUENCE_TERMS, index_first=False),
+)
 SELECTED_ANNOTATIONS = [
     'amino_acids',
     'canonical',
@@ -40,7 +48,18 @@ SELECTED_ANNOTATIONS = [
     'hgvsp',
     'transcript_id',
 ]
-TRANSCRIPT_CONSEQUENCE_TERMS_LOOKUP = hl.dict(hl.enumerate(TRANSCRIPT_CONSEQUENCE_TERMS, index_first=False))
+TRANSCRIPT_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
+    hl.enumerate(TRANSCRIPT_CONSEQUENCE_TERMS, index_first=False),
+)
+
+
+def _add_transcript_rank(result: hl.ArrayExpression) -> hl.ArrayExpression:
+    # Adds a "transcript_rank" field to a sorted array of transcripts
+    return hl.zip_with_index(result).map(
+        lambda csq_with_index: csq_with_index[1].annotate(
+            transcript_rank=csq_with_index[0],
+        ),
+    )
 
 
 def _lof_filter_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
@@ -119,6 +138,43 @@ def check_ref(ht: hl.Table, **_: Any) -> hl.BooleanExpression:
     return hl.is_defined(ht.vep.check_ref)
 
 
+def sorted_motif_feature_consequences(
+    ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    result = hl.sorted(
+        ht.vep.motif_feature_consequences.map(
+            lambda c: c.select(
+                consequence_term_ids=c.consequence_terms.map(
+                    lambda t: MOTIF_CONSEQUENCE_TERMS_LOOKUP[t],
+                ),
+                motif_feature_id=c.motif_feature_id,
+            ).filter(lambda c: c.consequence_term_ids.size() > 0),
+            lambda c: hl.min(c.consequence_term_ids),
+        ),
+    )
+    return _add_transcript_rank(result)
+
+
+def sorted_regulatory_feature_consequences(
+    ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    result = hl.sorted(
+        ht.vep.regulatory_feature_consequences.map(
+            lambda c: c.select(
+                biotype_id=BIOTYPE_LOOKUP[c.biotype],
+                consequence_term_ids=c.consequence_terms.map(
+                    lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
+                ),
+                regulatory_feature_id=c.regulatory_feature_id,
+            ).filter(lambda c: c.consequence_term_ids.size() > 0),
+            lambda c: hl.min(c.consequence_term_ids),
+        ),
+    )
+    return _add_transcript_rank(result)
+
+
 def sorted_transcript_consequences(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
@@ -153,8 +209,4 @@ def sorted_transcript_consequences(
             )
         ),
     )
-    return hl.zip_with_index(result).map(
-        lambda csq_with_index: csq_with_index[1].annotate(
-            transcript_rank=csq_with_index[0],
-        ),
-    )
+    return _add_transcript_rank(result)

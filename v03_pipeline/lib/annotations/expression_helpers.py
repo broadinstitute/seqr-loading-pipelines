@@ -206,17 +206,23 @@ def get_expr_for_vep_sorted_transcript_consequences_array(
                     hl.case()
                     .when(
                         TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('frameshift_variant'),
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(
+                            'frameshift_variant',
+                        ),
                         'lof',
                     )
                     .when(
                         TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('missense_variant'),
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(
+                            'missense_variant',
+                        ),
                         'missense',
                     )
                     .when(
                         TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(c.major_consequence)
-                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get('synonymous_variant'),
+                        <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP.get(
+                            'synonymous_variant',
+                        ),
                         'synonymous',
                     )
                     .default('other')

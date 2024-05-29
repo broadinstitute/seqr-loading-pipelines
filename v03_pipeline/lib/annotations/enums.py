@@ -108,14 +108,23 @@ TRANSCRIPT_CONSEQUENCE_TERMS = [
     'coding_transcript_variant',
     'upstream_gene_variant',
     'downstream_gene_variant',
+    'intergenic_variant',
+    'sequence_variant',
+]
+
+MOTIF_CONSEQUENCE_TERMS = [
     'TFBS_ablation',
     'TFBS_amplification',
     'TF_binding_site_variant',
+    'TFBS_fusion',
+    'TFBS_translocation',
+]
+
+REGULATORY_CONSEQUENCE_TERMS = [
     'regulatory_region_ablation',
     'regulatory_region_amplification',
     'regulatory_region_variant',
-    'intergenic_variant',
-    'sequence_variant',
+    'regulatory_region_fusion',
 ]
 
 FIVEUTR_CONSEQUENCES = [
