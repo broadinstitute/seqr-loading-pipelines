@@ -293,7 +293,7 @@ class VepAnnotationsTest(unittest.TestCase):
             ),
         )
         self.assertCountEqual(
-            ht.sorted_motif_feature_consequences.collect()[0],
+            ht.sorted_motif_feature_consequences.collect(),
             [None],
         )
         self.assertCountEqual(

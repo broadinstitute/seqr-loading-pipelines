@@ -46,6 +46,8 @@ class FieldsTest(MockedDatarootTestCase):
                     'gnomad_non_coding_constraint',
                     'rg37_locus',
                     'rsid',
+                    'sorted_motif_feature_consequences',
+                    'sorted_regulatory_feature_consequences',
                     'sorted_transcript_consequences',
                     'variant_id',
                     'xpos',

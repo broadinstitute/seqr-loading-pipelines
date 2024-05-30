@@ -179,16 +179,21 @@ def sorted_motif_feature_consequences(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    result = hl.sorted(
-        ht.vep.motif_feature_consequences.map(
-            lambda c: c.select(
-                consequence_term_ids=c.consequence_terms.map(
-                    lambda t: MOTIF_CONSEQUENCE_TERMS_LOOKUP[t],
+    # NB: hl.min() doesn't work correctly in the "sorted" key expression.
+    # hail bug report incoming.
+    result = hl.or_missing(
+        hl.is_defined(ht.vep.motif_feature_consequences),
+        hl.sorted(
+            ht.vep.motif_feature_consequences.map(
+                lambda c: c.select(
+                    consequence_term_ids=c.consequence_terms.map(
+                        lambda t: MOTIF_CONSEQUENCE_TERMS_LOOKUP[t],
+                    ),
+                    motif_feature_id=c.motif_feature_id,
                 ),
-                motif_feature_id=c.motif_feature_id,
-            ),
-        ).filter(lambda c: c.consequence_term_ids.size() > 0),
-        lambda c: hl.min(c.consequence_term_ids),
+            ).filter(lambda c: c.consequence_term_ids.size() > 0),
+            lambda c: hl.min(c.consequence_term_ids),
+        ),
     )
     return _add_transcript_rank(result)
 
@@ -197,17 +202,20 @@ def sorted_regulatory_feature_consequences(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    result = hl.sorted(
-        ht.vep.regulatory_feature_consequences.map(
-            lambda c: c.select(
-                biotype_id=BIOTYPE_LOOKUP[c.biotype],
-                consequence_term_ids=c.consequence_terms.map(
-                    lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
+    result = hl.or_missing(
+        hl.is_defined(ht.vep.regulatory_feature_consequences),
+        hl.sorted(
+            ht.vep.regulatory_feature_consequences.map(
+                lambda c: c.select(
+                    biotype_id=BIOTYPE_LOOKUP[c.biotype],
+                    consequence_term_ids=c.consequence_terms.map(
+                        lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
+                    ),
+                    regulatory_feature_id=c.regulatory_feature_id,
                 ),
-                regulatory_feature_id=c.regulatory_feature_id,
-            ),
-        ).filter(lambda c: c.consequence_term_ids.size() > 0),
-        lambda c: hl.min(c.consequence_term_ids),
+            ).filter(lambda c: c.consequence_term_ids.size() > 0),
+            lambda c: hl.min(c.consequence_term_ids),
+        ),
     )
     return _add_transcript_rank(result)
 
