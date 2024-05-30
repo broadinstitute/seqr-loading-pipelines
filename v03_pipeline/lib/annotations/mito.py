@@ -15,11 +15,11 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
 
 
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
-    return ht.common_low_heteroplasmy
+    return hl.bool(ht.common_low_heteroplasmy)
 
 
 def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return mt.contamination
+    return hl.parse_float64(mt.contamination)
 
 
 def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -29,7 +29,7 @@ def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def GQ(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
-    return hl.if_else(is_called, mt.MQ, 0)
+    return hl.if_else(is_called, hl.int32(mt.MQ), 0)
 
 
 def haplogroup(ht: hl.Table, **_: Any) -> hl.Expression:
