@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.vep import (
+from v03_pipeline.lib.annotations.snv_indel import (
     sorted_motif_feature_consequences,
     sorted_regulatory_feature_consequences,
     sorted_transcript_consequences,

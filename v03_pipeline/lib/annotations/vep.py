@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
@@ -152,8 +154,10 @@ def vep_85_transcript_consequences_select(
     )
 
 
-def transcript_consequences_sort(c: hl.StructExpression) -> hl.Expression:
-    return hl.bind(
+def transcript_consequences_sort(
+    ht: hl.Table,
+) -> Callable[[hl.StructExpression], hl.StructExpression]:
+    return lambda c: hl.bind(
         lambda is_coding, is_most_severe, is_canonical: (
             hl.cond(
                 is_coding,
