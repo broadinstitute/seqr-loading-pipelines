@@ -7,8 +7,11 @@ import luigi.worker
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CLINVAR_PATHOGENICITIES,
+    FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    MOTIF_CONSEQUENCE_TERMS,
+    REGULATORY_CONSEQUENCE_TERMS,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model import (
@@ -878,10 +881,22 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         hgmd=hl.Struct(
                             **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
                         ),
+                        sorted_motif_feature_consequences=hl.Struct(
+                            consequence_term=MOTIF_CONSEQUENCE_TERMS,
+                        ),
+                        sorted_regulatory_feature_consequences=hl.Struct(
+                            biotype=BIOTYPES,
+                            consequence_term=REGULATORY_CONSEQUENCE_TERMS,
+                        ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
                             consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
+                            loftee=hl.Struct(
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            utrannotator=hl.Struct(
+                                fiveutr_consequence=FIVEUTR_CONSEQUENCES,
+                            ),
                         ),
                     ),
                     updates=set(),
