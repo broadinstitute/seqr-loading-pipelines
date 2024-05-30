@@ -36,6 +36,7 @@ def annotate_enums(
         ht = ht.annotate_globals(
             enums=ht.enums.annotate(
                 sorted_regulatory_feature_consequences=hl.Struct(
+                    biotype=BIOTYPES,
                     consequence_term=REGULATORY_CONSEQUENCE_TERMS,
                 ),
             ),

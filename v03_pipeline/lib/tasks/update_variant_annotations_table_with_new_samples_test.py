@@ -85,6 +85,8 @@ TEST_RUN_ID = 'manual__2024-04-03'
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
+    maxDiff = None
+
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
@@ -640,7 +642,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             loftee=hl.Struct(
                                 lof_filter=LOF_FILTERS,
                             ),
-                            utrrannotator=hl.Struct(
+                            utrannotator=hl.Struct(
                                 fiveutr_consequence=FIVEUTR_CONSEQUENCES,
                             ),
                         ),

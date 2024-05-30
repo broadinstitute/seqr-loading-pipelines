@@ -49,6 +49,7 @@ class VepAnnotationsTest(unittest.TestCase):
             sorted_transcript_consequences=sorted_transcript_consequences(
                 ht,
                 ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
             ),
         )
         self.assertCountEqual(
@@ -136,6 +137,7 @@ class VepAnnotationsTest(unittest.TestCase):
             sorted_transcript_consequences=sorted_transcript_consequences(
                 ht,
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
             ),
         )
         self.assertCountEqual(

@@ -11,7 +11,7 @@ from v03_pipeline.lib.annotations.enums import (
     REGULATORY_CONSEQUENCE_TERMS,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import DatasetType, ReferenceGenome
 
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 EXTENDED_INTRONIC_SPLICE_REGION_VARIANT = 'extended_intronic_splice_region_variant'
@@ -77,8 +77,12 @@ def _consequence_term_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
 
 def _transcript_consequences_select(
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ) -> Callable[[hl.StructExpression], hl.StructExpression]:
-    if reference_genome == ReferenceGenome.GRCh38:
+    if (
+        reference_genome == ReferenceGenome.GRCh38
+        and dataset_type == DatasetType.SNV_INDEL
+    ):
         return lambda c: c.select(
             *SELECTED_ANNOTATIONS,
             *MANE_SELECT_ANNOTATIONS,
@@ -223,11 +227,12 @@ def sorted_regulatory_feature_consequences(
 def sorted_transcript_consequences(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     **_: Any,
 ) -> hl.Expression:
     result = hl.sorted(
         ht.vep.transcript_consequences.map(
-            _transcript_consequences_select(reference_genome),
+            _transcript_consequences_select(reference_genome, dataset_type),
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         lambda c: (
             hl.bind(
