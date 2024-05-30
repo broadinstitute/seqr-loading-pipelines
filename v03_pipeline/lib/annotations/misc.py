@@ -46,12 +46,21 @@ def annotate_enums(
                 sorted_transcript_consequences=hl.Struct(
                     biotype=BIOTYPES,
                     consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
-                    lof_filter=LOF_FILTERS,
-                    **{
-                        'fiveutr_consequence': FIVEUTR_CONSEQUENCES,
-                    }
-                    if reference_genome == ReferenceGenome.GRCh38
-                    else {},
+                    **(
+                        {
+                            'loftee': hl.Struct(
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            'utrannotator': hl.Struct(
+                                fiveutr_consequence=FIVEUTR_CONSEQUENCES,
+                            ),
+                        }
+                        if reference_genome == ReferenceGenome.GRCh38
+                        and dataset_type == DatasetType.SNV_INDEL
+                        else {
+                            'lof_filter': LOF_FILTERS,
+                        }
+                    ),
                 ),
             ),
         )
