@@ -218,9 +218,9 @@ class DatasetType(Enum):
                 snv_indel.gnomad_non_coding_constraint,
                 snv_indel.screen,
                 shared.rg37_locus,
-                shared.check_ref,
-                shared.sorted_regulatory_feature_consequences,
-                shared.sorted_motif_feature_consequences,
+                snv_indel.check_ref,
+                snv_indel.sorted_regulatory_feature_consequences,
+                snv_indel.sorted_motif_feature_consequences,
             ],
             DatasetType.MITO: [
                 *GRCh37_fns[DatasetType.MITO],

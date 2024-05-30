@@ -103,6 +103,10 @@ def screen(
     )
 
 
+def check_ref(ht: hl.Table, **_: Any) -> hl.BooleanExpression:
+    return hl.is_defined(ht.vep.check_ref)
+
+
 def sorted_motif_feature_consequences(
     ht: hl.Table,
     **_: Any,

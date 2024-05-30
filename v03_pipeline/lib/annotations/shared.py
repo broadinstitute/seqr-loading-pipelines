@@ -41,7 +41,3 @@ def xpos(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def variant_id(ht: hl.Table, **_: Any) -> hl.Expression:
     return expression_helpers.get_expr_for_variant_id(ht)
-
-
-def check_ref(ht: hl.Table, **_: Any) -> hl.BooleanExpression:
-    return hl.is_defined(ht.vep.check_ref)
