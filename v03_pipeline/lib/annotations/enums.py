@@ -70,6 +70,7 @@ BIOTYPES = [
     'disrupted_domain',
     'vaultRNA/vault_RNA',
     'vaultRNA',
+    'vault_RNA',
     'bidirectional_promoter_lncRNA',
     '3prime_overlapping_ncrna',
 ]
