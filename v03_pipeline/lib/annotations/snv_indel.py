@@ -142,7 +142,7 @@ def sorted_regulatory_feature_consequences(
         hl.sorted(
             ht.vep.regulatory_feature_consequences.map(
                 lambda c: c.select(
-                    biotype_id=REGULATORY_BIOTYPES[c.biotype],
+                    biotype_id=REGULATORY_BIOTYPE_LOOKUP[c.biotype],
                     consequence_term_ids=c.consequence_terms.map(
                         lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
                     ),

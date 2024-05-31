@@ -586,12 +586,12 @@ MOCK_38_VEP_DATA = hl.struct(
     regulatory_feature_consequences=hl.array(
         [
             hl.struct(
-                biotype='retrotransposed',
+                biotype='enhancer',
                 consequence_terms=['regulatory_region_variant'],
                 regulatory_feature_id='regulatory_1',
             ),
             hl.struct(
-                biotype='retrotransposed',
+                biotype='enhancer',
                 consequence_terms=['regulatory_region_ablation'],
                 regulatory_feature_id='regulatory_2',
             ),

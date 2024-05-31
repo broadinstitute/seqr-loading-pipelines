@@ -300,13 +300,13 @@ class VepAnnotationsTest(unittest.TestCase):
             ht.sorted_regulatory_feature_consequences.collect()[0],
             [
                 hl.Struct(
-                    biotype_id=53,
+                    biotype_id=0,
                     consequence_term_ids=[0],
                     regulatory_feature_id='regulatory_2',
                     transcript_rank=0,
                 ),
                 hl.Struct(
-                    biotype_id=53,
+                    biotype_id=0,
                     consequence_term_ids=[2],
                     regulatory_feature_id='regulatory_1',
                     transcript_rank=1,
