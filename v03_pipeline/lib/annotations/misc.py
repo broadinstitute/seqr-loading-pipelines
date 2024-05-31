@@ -2,6 +2,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    REGULATORY_BIOTYPES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
@@ -36,7 +37,7 @@ def annotate_enums(
         ht = ht.annotate_globals(
             enums=ht.enums.annotate(
                 sorted_regulatory_feature_consequences=hl.Struct(
-                    biotype=BIOTYPES,
+                    biotype=REGULATORY_BIOTYPES,
                     consequence_term=REGULATORY_CONSEQUENCE_TERMS,
                 ),
             ),

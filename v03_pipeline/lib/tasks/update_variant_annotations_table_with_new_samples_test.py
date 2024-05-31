@@ -7,6 +7,7 @@ import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    REGULATORY_BIOTYPES,
     CLINVAR_PATHOGENICITIES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
@@ -633,7 +634,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             consequence_term=MOTIF_CONSEQUENCE_TERMS,
                         ),
                         sorted_regulatory_feature_consequences=hl.Struct(
-                            biotype=BIOTYPES,
+                            biotype=REGULATORY_BIOTYPES,
                             consequence_term=REGULATORY_CONSEQUENCE_TERMS,
                         ),
                         sorted_transcript_consequences=hl.Struct(

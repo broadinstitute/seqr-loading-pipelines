@@ -75,6 +75,14 @@ BIOTYPES = [
     '3prime_overlapping_ncrna',
 ]
 
+REGULATORY_BIOTYPES = [
+    'enhancer',
+    'promoter',
+    'CTCF_binding_site',
+    'TF_binding_site',
+    'open_chromatin_region',
+]
+
 TRANSCRIPT_CONSEQUENCE_TERMS = [
     'transcript_ablation',
     'splice_acceptor_variant',

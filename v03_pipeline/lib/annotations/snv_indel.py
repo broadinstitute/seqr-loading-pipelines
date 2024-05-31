@@ -6,6 +6,7 @@ import hail as hl
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     MOTIF_CONSEQUENCE_TERMS,
+    REGULATORY_BIOTYPES,
     REGULATORY_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.annotations.vep import (
@@ -19,6 +20,9 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 BIOTYPE_LOOKUP = hl.dict(hl.enumerate(BIOTYPES, index_first=False))
 MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),
+)
+REGULATORY_BIOTYPE_LOOKUP = hl.dict(
+    hl.enumerate(REGULATORY_BIOTYPES, index_first=False)
 )
 REGULATORY_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(REGULATORY_CONSEQUENCE_TERMS, index_first=False),
@@ -140,7 +144,7 @@ def sorted_regulatory_feature_consequences(
         hl.sorted(
             ht.vep.regulatory_feature_consequences.map(
                 lambda c: c.select(
-                    biotype_id=BIOTYPE_LOOKUP[c.biotype],
+                    biotype_id=REGULATORY_BIOTYPES[c.biotype],
                     consequence_term_ids=c.consequence_terms.map(
                         lambda t: REGULATORY_CONSEQUENCE_TERMS_LOOKUP[t],
                     ),
