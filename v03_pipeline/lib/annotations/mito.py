@@ -19,7 +19,11 @@ def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def contamination(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return hl.parse_float64(mt.contamination)
+    return (
+        hl.parse_float64(mt.contamination)
+        if mt.contamination.dtype == hl.tstr
+        else mt.contamination
+    )
 
 
 def DP(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
