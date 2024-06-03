@@ -5,6 +5,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
+from v03_pipeline.lib.misc.nested_attribute import parse_nested_attribute
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -149,14 +150,15 @@ def select_relevant_fields(
     dataset_type: DatasetType,
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
-    optional_row_fields = [
-        row_field
-        for row_field in dataset_type.optional_row_fields
-        if hasattr(mt, row_field)
-    ]
-    mt = mt.select_rows(*dataset_type.row_fields, *optional_row_fields)
-    mt = mt.select_cols(*dataset_type.col_fields)
-    return mt.select_entries(*dataset_type.entries_fields)
+    mt = mt.select_rows(
+        *[parse_nested_attribute(mt, field) for field in dataset_type.row_fields]
+    )
+    mt = mt.select_cols(
+        *[parse_nested_attribute(mt, field) for field in dataset_type.col_fields]
+    )
+    return mt.select_entries(
+        *[parse_nested_attribute(mt, field) for field in dataset_type.entries_fields]
+    )
 
 
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:

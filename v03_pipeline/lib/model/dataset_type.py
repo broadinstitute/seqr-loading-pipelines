@@ -65,17 +65,6 @@ class DatasetType(Enum):
         }[self]
 
     @property
-    def optional_row_fields(
-        self,
-    ) -> list[str]:
-        return {
-            DatasetType.SNV_INDEL: ['info'],
-            DatasetType.MITO: [],
-            DatasetType.SV: [],
-            DatasetType.GCNV: [],
-        }[self]
-
-    @property
     def row_fields(
         self,
     ) -> list[str]:
@@ -87,9 +76,28 @@ class DatasetType(Enum):
                 'common_low_heteroplasmy',
                 'hap_defining_variant',
                 'mitotip_trna_prediction',
-                'vep',
+                'vep.transcript_consequences',
+                'vep.most_severe_consequence',
             ],
-            DatasetType.SV: ['locus', 'alleles', 'filters', 'info'],
+            DatasetType.SV: [
+                'locus',
+                'alleles',
+                'filters',
+                'info.AC',
+                'info.AF',
+                'info.ALGORITHMS',
+                'info.AN',
+                'info.CHR2',
+                'info.CPX_INTERVALS',
+                'info.CPX_TYPE',
+                'info.END',
+                'info.END2',
+                'info.gnomAD_V2_AF',
+                'info.gnomAD_V2_SVID',
+                'info.N_HET',
+                'info.N_HOMALT',
+                'info.StrVCTVRE',
+            ],
             DatasetType.GCNV: [
                 'cg_genes',
                 'chr',
