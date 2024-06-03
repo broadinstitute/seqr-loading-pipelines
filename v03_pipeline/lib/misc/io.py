@@ -148,16 +148,18 @@ def import_callset(
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
+    additional_row_fields: list[str],
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.row_fields]
+        *[parse_nested_attribute(mt, field) for field in dataset_type.row_fields],
+        *[parse_nested_attribute(mt, field) for field in additional_row_fields],
     )
     mt = mt.select_cols(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.col_fields]
+        *[parse_nested_attribute(mt, field) for field in dataset_type.col_fields],
     )
     return mt.select_entries(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.entries_fields]
+        *[parse_nested_attribute(mt, field) for field in dataset_type.entries_fields],
     )
 
 

@@ -119,7 +119,26 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.filters_path,
         )
-        mt = select_relevant_fields(mt, self.dataset_type)
+        mt = select_relevant_fields(
+            mt,
+            self.dataset_type,
+            [
+                *(
+                    ['info.AF']
+                    if (
+                        self.check_sex_and_relatedness
+                        and self.dataset_type.check_sex_and_relatedness
+                    )
+                    else []
+                ),
+                *(
+                    ['info.CALIBRATION_SENSITIVITY']
+                    if hasattr(mt, 'info')
+                    or not hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
+                    else []
+                ),
+            ],
+        )
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
         # Special handling of variant-level filter annotation for VETs filters.
