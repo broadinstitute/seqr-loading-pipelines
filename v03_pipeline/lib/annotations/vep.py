@@ -93,7 +93,7 @@ def vep_110_transcript_consequences_select(
                 )
             ),
         ),
-        utrrannotator=hl.struct(
+        utrannotator=hl.struct(
             existing_inframe_oorfs=c.existing_inframe_oorfs,
             existing_outofframe_oorfs=c.existing_outofframe_oorfs,
             existing_uorfs=c.existing_uorfs,
