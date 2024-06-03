@@ -153,13 +153,19 @@ def select_relevant_fields(
     mt = mt.select_globals()
     mt = mt.select_rows(
         **{field: parse_nested_field(mt, field) for field in dataset_type.row_fields},
-        **{field: parse_nested_field(mt, field) for field in (additional_row_fields or [])},
+        **{
+            field: parse_nested_field(mt, field)
+            for field in (additional_row_fields or [])
+        },
     )
     mt = mt.select_cols(
         **{field: parse_nested_field(mt, field) for field in dataset_type.col_fields},
     )
     return mt.select_entries(
-        **{field: parse_nested_field(mt, field) for field in dataset_type.entries_fields},
+        **{
+            field: parse_nested_field(mt, field)
+            for field in dataset_type.entries_fields
+        },
     )
 
 
