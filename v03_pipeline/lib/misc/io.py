@@ -5,7 +5,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
-from v03_pipeline.lib.misc.nested_attribute import parse_nested_attribute
+from v03_pipeline.lib.misc.nested_field import parse_nested_field
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -152,14 +152,14 @@ def select_relevant_fields(
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.row_fields],
-        *[parse_nested_attribute(mt, field) for field in additional_row_fields],
+        *[parse_nested_field(mt, field) for field in dataset_type.row_fields],
+        *[parse_nested_field(mt, field) for field in additional_row_fields],
     )
     mt = mt.select_cols(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.col_fields],
+        *[parse_nested_field(mt, field) for field in dataset_type.col_fields],
     )
     return mt.select_entries(
-        *[parse_nested_attribute(mt, field) for field in dataset_type.entries_fields],
+        *[parse_nested_field(mt, field) for field in dataset_type.entries_fields],
     )
 
 
