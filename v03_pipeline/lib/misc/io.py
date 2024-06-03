@@ -152,14 +152,14 @@ def select_relevant_fields(
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(
-        *[parse_nested_field(mt, field) for field in dataset_type.row_fields],
-        *[parse_nested_field(mt, field) for field in (additional_row_fields or [])],
+        **{field: parse_nested_field(mt, field) for field in dataset_type.row_fields},
+        **{field: parse_nested_field(mt, field) for field in (additional_row_fields or [])},
     )
     mt = mt.select_cols(
-        *[parse_nested_field(mt, field) for field in dataset_type.col_fields],
+        **{field: parse_nested_field(mt, field) for field in dataset_type.col_fields},
     )
     return mt.select_entries(
-        *[parse_nested_field(mt, field) for field in dataset_type.entries_fields],
+        **{field: parse_nested_field(mt, field) for field in dataset_type.entries_fields},
     )
 
 

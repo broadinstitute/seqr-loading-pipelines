@@ -76,8 +76,7 @@ class DatasetType(Enum):
                 'common_low_heteroplasmy',
                 'hap_defining_variant',
                 'mitotip_trna_prediction',
-                'vep.transcript_consequences',
-                'vep.most_severe_consequence',
+                'vep',
             ],
             DatasetType.SV: [
                 'locus',
@@ -97,6 +96,7 @@ class DatasetType(Enum):
                 'info.N_HET',
                 'info.N_HOMALT',
                 'info.StrVCTVRE',
+                *sv.CONSEQ_PREDICTED_GENE_COLS,
             ],
             DatasetType.GCNV: [
                 'cg_genes',

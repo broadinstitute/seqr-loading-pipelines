@@ -11,7 +11,6 @@ from v03_pipeline.lib.misc.io import (
     does_file_exist,
     import_pedigree,
     import_remap,
-    select_relevant_fields,
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
@@ -181,9 +180,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ),
             self.ignore_missing_samples_when_subsetting,
         )
-        # An extra "select" which will remove any "additional" fields
-        # not used by the rest of the pipeline
-        mt = select_relevant_fields(mt, self.dataset_type)
+        # Drop additional fields imported onto the intermediate callsets but
+        # not used at annotation time.
+        for field in mt.row_value:
+            if field not in self.dataset_type.row_fields:
+                mt = mt.drop(field)
         return mt.select_globals(
             family_samples=(
                 {
