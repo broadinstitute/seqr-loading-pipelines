@@ -35,8 +35,8 @@ def get_callset_ht(  # noqa: PLR0913
 
     # Drop any fields potentially unshared/unused by the annotations.
     for i, callset_ht in enumerate(callset_hts):
-        for row_field in dataset_type.optional_row_fields:
-            if hasattr(callset_ht, row_field):
+        for field in callset_ht.row_value:
+            if field not in dataset_type.row_fields:
                 callset_hts[i] = callset_ht.drop(row_field)
 
     callset_ht = functools.reduce(
