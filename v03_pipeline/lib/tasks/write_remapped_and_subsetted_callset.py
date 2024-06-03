@@ -7,7 +7,12 @@ from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_relatedness_check,
     get_families_failed_sex_check,
 )
-from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
+from v03_pipeline.lib.misc.io import (
+    does_file_exist,
+    import_pedigree,
+    import_remap,
+    select_relevant_fields,
+)
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
@@ -176,6 +181,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ),
             self.ignore_missing_samples_when_subsetting,
         )
+        # An extra "select" which will remove any "additional" fields
+        # not used by the rest of the pipeline
+        mt = select_relevant_fields(mt, self.dataset_type)
         return mt.select_globals(
             family_samples=(
                 {

@@ -32,13 +32,6 @@ def get_callset_ht(  # noqa: PLR0913
             imputed_sex_paths,
         )
     ]
-
-    # Drop any fields potentially unshared/unused by the annotations.
-    for i, callset_ht in enumerate(callset_hts):
-        for field in callset_ht.row_value:
-            if field not in dataset_type.row_fields:
-                callset_hts[i] = callset_ht.drop(row_field)
-
     callset_ht = functools.reduce(
         (lambda ht1, ht2: ht1.union(ht2, unify=True)),
         callset_hts,
