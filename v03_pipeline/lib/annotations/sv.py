@@ -10,7 +10,7 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
-CONSEQ_PREDICTED_PREFIX = 'PREDICTED_'
+CONSEQ_PREDICTED_PREFIX = 'info.PREDICTED_'
 CONSEQ_PREDICTED_GENE_COLS = [
     'info.PREDICTED_BREAKEND_EXONIC',
     'info.PREDICTED_COPY_GAIN',
