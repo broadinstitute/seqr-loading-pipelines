@@ -124,6 +124,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             [
                 *(
+                    # info.AF is "required" if the relatedness check
+                    # is expected to run.
                     ['info.AF']
                     if (
                         self.check_sex_and_relatedness
@@ -132,9 +134,12 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     else []
                 ),
                 *(
+                    # this field is never required, the pipeline
+                    # will run smoothly even in its absence, but
+                    # will trigger special handling if it is present.
                     ['info.CALIBRATION_SENSITIVITY']
                     if hasattr(mt, 'info')
-                    or not hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
+                    and hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
                     else []
                 ),
             ],
