@@ -134,7 +134,7 @@ def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
         ),
         hl.locus(ht['info.CHR2'], ht['info.END2'], ReferenceGenome.GRCh38.value),
         hl.or_missing(
-            (rg38_lengths[ht.locus.contig] >= ht.info.END),
+            (rg38_lengths[ht.locus.contig] >= ht['info.END']),
             hl.locus(ht.locus.contig, ht['info.END'], ReferenceGenome.GRCh38.value),
         ),
     )
