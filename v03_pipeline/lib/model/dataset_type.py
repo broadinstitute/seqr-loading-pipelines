@@ -34,10 +34,13 @@ class DatasetType(Enum):
         self,
     ) -> list[str]:
         return {
-            DatasetType.SNV_INDEL: [],
-            DatasetType.MITO: ['contamination', 'mito_cn'],
-            DatasetType.SV: [],
-            DatasetType.GCNV: [],
+            DatasetType.SNV_INDEL: {},
+            DatasetType.MITO: {
+                'contamination': {hl.tstr, hl.tfloat64},
+                'mito_cn': {hl.tfloat64},
+            },
+            DatasetType.SV: {},
+            DatasetType.GCNV: {},
         }[self]
 
     @property
@@ -46,7 +49,12 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV_INDEL: ['GT', 'AD', 'GQ'],
-            DatasetType.MITO: ['GT', 'DP', 'MQ', 'HL'],
+            DatasetType.MITO: {
+                'GT': {hl.tcall},
+                'DP': {hl.tint32},
+                'MQ': {hl.tfloat64, hl.tint32},
+                'HL': {hl.tfloat64},
+            },
             DatasetType.SV: ['GT', 'CONC_ST', 'GQ', 'RD_CN'],
             DatasetType.GCNV: [
                 'any_ovl',
@@ -70,14 +78,14 @@ class DatasetType(Enum):
     ) -> list[str]:
         return {
             DatasetType.SNV_INDEL: ['rsid', 'filters'],
-            DatasetType.MITO: [
-                'rsid',
-                'filters',
-                'common_low_heteroplasmy',
-                'hap_defining_variant',
-                'mitotip_trna_prediction',
-                'vep',
-            ],
+            DatasetType.MITO: {
+                'rsid': {hl.tset(hl.tstr)},
+                'filters': {hl.tset(hl.tstr)},
+                'common_low_heteroplasmy': {hl.tbool},
+                'hap_defining_variant': {hl.tbool},
+                'mitotip_trna_prediction': {hl.tstr},
+                'vep': {hl.tstruct},
+            },
             DatasetType.SV: [
                 'locus',
                 'alleles',
