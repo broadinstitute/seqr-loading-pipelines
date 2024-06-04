@@ -181,7 +181,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             self.ignore_missing_samples_when_subsetting,
         )
         # Drop additional fields imported onto the intermediate callsets but
-        # not used at annotation time.
+        # not used when creating the downstream optimized tables.
         for field in mt.row_value:
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
