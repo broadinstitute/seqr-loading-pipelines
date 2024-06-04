@@ -65,17 +65,9 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     ht = hl.import_table(
         callset_path,
         types={
-            'start': hl.tint32,
-            'end': hl.tint32,
-            'CN': hl.tint32,
-            'QS': hl.tint32,
-            'defragmented': hl.tbool,
-            'sf': hl.tfloat64,
-            'sc': hl.tint32,
-            'genes_any_overlap_totalExons': hl.tint32,
-            'genes_strict_overlap_totalExons': hl.tint32,
-            'no_ovl': hl.tbool,
-            'is_latest': hl.tbool,
+            **DatasetType.GCNV.col_fields,
+            **DatasetType.GCNV.entries_fields,
+            **DatasetType.GCNV.row_fields,
         },
         force=callset_path.endswith('gz'),
     )
