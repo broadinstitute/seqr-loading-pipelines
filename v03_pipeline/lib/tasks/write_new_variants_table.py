@@ -265,7 +265,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 ar_ht = ar_ht.union(ar_ht_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
 
-        return new_variants_ht.annotate_globals(
+        return new_variants_ht.select_globals(
             updates={
                 hl.Struct(callset=callset_path, project_guid=project_guid)
                 for (
