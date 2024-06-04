@@ -163,7 +163,7 @@ class VepAnnotationsTest(unittest.TestCase):
                     spliceregion=hl.Struct(
                         extended_intronic_splice_region_variant=False,
                     ),
-                    utrrannotator=hl.Struct(
+                    utrannotator=hl.Struct(
                         existing_inframe_oorfs=None,
                         existing_outofframe_oorfs=None,
                         existing_uorfs=None,
@@ -194,7 +194,7 @@ class VepAnnotationsTest(unittest.TestCase):
                     spliceregion=hl.Struct(
                         extended_intronic_splice_region_variant=False,
                     ),
-                    utrrannotator=hl.Struct(
+                    utrannotator=hl.Struct(
                         existing_inframe_oorfs=None,
                         existing_outofframe_oorfs=None,
                         existing_uorfs=None,
@@ -225,7 +225,7 @@ class VepAnnotationsTest(unittest.TestCase):
                     spliceregion=hl.Struct(
                         extended_intronic_splice_region_variant=True,
                     ),
-                    utrrannotator=hl.Struct(
+                    utrannotator=hl.Struct(
                         existing_inframe_oorfs=0,
                         existing_outofframe_oorfs=1,
                         existing_uorfs=0,
