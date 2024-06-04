@@ -2,7 +2,7 @@
   "command": [
     "bash",
     "-c",
-    "/vep --format vcf -json --hgvs --biotype --canonical --mane --minimal --numbers --regulatory --allele_number --no_stats --cache --offline --assembly GRCh38 --fasta /opt/vep/.vep/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz --check_ref --dont_skip --plugin LoF,loftee_path:/plugins,gerp_bigwig:/opt/vep/.vep/gerp_conservation_scores.homo_sapiens.GRCh38.bw,human_ancestor_fa:/opt/vep/.vep/human_ancestor.fa.gz,conservation_file:/opt/vep/.vep/loftee.sql --plugin UTRAnnotator,file=/opt/vep/.vep/uORF_5UTR_GRCh38_PUBLIC.txt --plugin SpliceRegion,Extended --plugin AlphaMissense,file=/opt/vep/.vep/AlphaMissense_hg38.tsv.gz --dir_plugins /plugins -o STDOUT | sed s/5utr/fiveutr/g"
+    "/vep --format vcf -json --hgvs --biotype --canonical --mane --merged --minimal --numbers --regulatory --allele_number --no_stats --cache --offline --assembly GRCh38 --fasta /opt/vep/.vep/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz --check_ref --dont_skip --plugin LoF,loftee_path:/plugins,gerp_bigwig:/opt/vep/.vep/gerp_conservation_scores.homo_sapiens.GRCh38.bw,human_ancestor_fa:/opt/vep/.vep/human_ancestor.fa.gz,conservation_file:/opt/vep/.vep/loftee.sql --plugin UTRAnnotator,file=/opt/vep/.vep/uORF_5UTR_GRCh38_PUBLIC.txt --plugin SpliceRegion,Extended --plugin AlphaMissense,file=/opt/vep/.vep/AlphaMissense_hg38.tsv.gz --dir_plugins /plugins -o STDOUT | sed s/5utr/fiveutr/g"
   ],
   "env": {
     "PERL5LIB": "/plugins"

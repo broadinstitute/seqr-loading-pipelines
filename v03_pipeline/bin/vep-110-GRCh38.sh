@@ -48,7 +48,7 @@ gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/A
 gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar | tar -xf - -C /vep_data/ &
 
 # Copied from ftp://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_merged_vep_110_${ASSEMBLY}.tar.gz
-gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
+gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/homo_sapiens_merged_vep_110_${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
 
 # Generated with:
 # curl -O ftp://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/dna/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz > Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
