@@ -84,13 +84,16 @@ def validate_imported_field_types(
             return f'{field}: {mt_fields[field].dtype}'
         return None
 
-    unexpected_field_types = []
-    for field, dtype in dataset_type.col_fields:
-        unexpected_field_types += _validate_field(mt.col, field, dtype)
-    for field, dtype in dataset_type.entries_fields:
-        unexpected_field_types += _validate_field(mt.entry, field, dtype)
-    for field, dtype in {**dataset_type.row_fields, **additional_row_fields}:
-        unexpected_field_types += _validate_field(mt.row, field, dtype)
+    unexpected_field_types = [
+        _validate_field(mt.col, field, dtype)
+        for field, dtype in {
+            **dataset_type.col_fields,
+            **dataset_type.entries_fields,
+            **dataset_type.row_fields,
+            **additional_row_fields,
+        }.items()
+    ]
+    unexpected_field_types = [x for x in unexpected_field_types if x is not None]
     if unexpected_field_types:
         msg = f'Found unexpected field types on MatrixTable after import: {unexpected_field_types}'
         raise SeqrValidationError(msg)

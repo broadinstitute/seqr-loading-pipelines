@@ -125,7 +125,7 @@ class ValidationTest(unittest.TestCase):
         )
 
     def test_validate_imported_field_types(self) -> None:
-        mt = hl.import_matrix_table(TEST_MITO_MT)
+        mt = hl.read_matrix_table(TEST_MITO_MT)
         validate_imported_field_types(mt, DatasetType.MITO, {})
 
     def test_validate_no_duplicate_variants(self) -> None:

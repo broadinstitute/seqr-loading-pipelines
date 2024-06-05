@@ -146,7 +146,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
         # This validation isn't override-able.  If a field is the wrong
         # type, the pipeline will likely hard-fail downstream.
         validate_imported_field_types(
-            mt, self.dataset_type, self.additional_row_fields(mt)
+            mt,
+            self.dataset_type,
+            self.additional_row_fields(mt),
         )
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
