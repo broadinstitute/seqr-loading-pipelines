@@ -9,6 +9,7 @@ from v03_pipeline.lib.misc.io import (
 from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_expected_contig_frequency,
+    validate_imported_field_types,
     validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
     validate_sample_type,
@@ -144,6 +145,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             ],
         )
+        validate_imported_field_types(mt)
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
         # Special handling of variant-level filter annotation for VETs filters.

@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome, SampleType, Sex
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType, Sex
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
@@ -58,6 +58,42 @@ def validate_expected_contig_frequency(
         if count < min_rows_per_contig:
             msg = f'Contig {contig} has {count} rows, which is lower than expected minimum count {min_rows_per_contig}.'
             raise SeqrValidationError(msg)
+
+
+def validate_imported_field_types(
+    mt: hl.MatrixTable,
+    dataset_type: DatasetType,
+    additional_row_fields: dict[str, hl.expr.types.HailType | set],
+) -> None:
+    def _validate_field(
+        mt_fields: hl.StructExpression,
+        field: str,
+        dtype: hl.expr.types.HailType,
+    ) -> str | None:
+        if field not in mt_fields:
+            return f'{field}: missing'
+        if (
+            (
+                dtype == hl.struct
+                and type(mt_fields[field])
+                != hl.expr.expressions.typed_expressions.StructExpression
+            )
+            or (isinstance(dtype, set) and mt_fields[field].dtype not in dtype)
+            or (mt_fields[field].dtype != dtype)
+        ):
+            return f'{field}: {mt_fields[field].dtype}'
+        return None
+
+    unexpected_field_types = []
+    for field, dtype in dataset_type.col_fields:
+        unexpected_field_types += _validate_field(mt.col, field, dtype)
+    for field, dtype in dataset_type.entries_fields:
+        unexpected_field_types += _validate_field(mt.entry, field, dtype)
+    for field, dtype in {**dataset_type.row_fields, **additional_row_fields}:
+        unexpected_field_types += _validate_field(mt.row, field, dtype)
+    if unexpected_field_types:
+        msg = f'Found unexpected field types on MatrixTable after import: {unexpected_field_types}'
+        raise SeqrValidationError(msg)
 
 
 def validate_imputed_sex_ploidy(

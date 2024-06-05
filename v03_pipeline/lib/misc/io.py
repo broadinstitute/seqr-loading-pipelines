@@ -140,7 +140,7 @@ def import_callset(
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
-    additional_row_fields: None | list[str] = None,
+    additional_row_fields: None | dict[str, hl.expr.types.HailType | set] = None,
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
     mt = mt.select_rows(
