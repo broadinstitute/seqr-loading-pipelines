@@ -170,7 +170,7 @@ def start_locus(ht: hl.Table, **_: Any):
 
 def sorted_gene_consequences(
     ht: hl.Table,
-    gencode_gene_symbol_to_gene_id_mapping: dict[str, str],
+    gencode_gene_symbol_to_gene_id_mapping: hl.tdict(hl.tstr, hl.tstr),
     **_: Any,
 ) -> hl.Expression:
     # In lieu of sorted_transcript_consequences seen on SNV/MITO.

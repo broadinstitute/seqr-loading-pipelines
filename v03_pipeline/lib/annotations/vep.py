@@ -57,9 +57,9 @@ def _consequence_term_ids(c: hl.StructExpression) -> hl.ArrayNumericExpression:
 
 
 def vep_110_transcript_consequences_select(
-    c: hl.StructExpression,
+    gencode_ensembl_to_refseq_id_mapping: hl.tdict(hl.tstr, hl.tstr),
 ) -> hl.StructExpression:
-    return c.select(
+    return lambda c: c.select(
         *SELECTED_ANNOTATIONS,
         *MANE_SELECT_ANNOTATIONS,
         biotype_id=BIOTYPE_LOOKUP[c.biotype],
@@ -78,6 +78,7 @@ def vep_110_transcript_consequences_select(
             ),
             c.intron.split('/').map(hl.parse_int32),
         ),
+        refseq_transcript_id=gencode_ensembl_to_refseq_id_mapping.get(c.transcript_id),
         alphamissense=hl.struct(
             pathogenicity=c.am_pathogenicity,
         ),

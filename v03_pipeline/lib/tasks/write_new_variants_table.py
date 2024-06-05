@@ -70,11 +70,11 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
-        if self.dataset_type.has_gencode_ensembl_to_refseq_mapping(
+        if self.dataset_type.has_gencode_ensembl_to_refseq_id_mapping(
             self.reference_genome,
         ):
-            deps['gencode_ensembl_to_refseq_id'] = hl.literal(
-                load_gencode_ensembl_to_refseq_id(GENCODE_RELEASE, ''),
+            deps['gencode_ensembl_to_refseq_id_mapping'] = hl.literal(
+                load_gencode_ensembl_to_refseq_id(GENCODE_RELEASE),
             )
         if self.dataset_type.has_gencode_gene_symbol_to_gene_id_mapping:
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(

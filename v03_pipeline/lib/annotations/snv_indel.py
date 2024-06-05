@@ -11,10 +11,8 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.annotations.vep import (
     add_transcript_rank,
     transcript_consequences_sort,
-    vep_85_transcript_consequences_select,
     vep_110_transcript_consequences_select,
 )
-from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),
@@ -157,14 +155,14 @@ def sorted_regulatory_feature_consequences(
 
 def sorted_transcript_consequences(
     ht: hl.Table,
-    reference_genome: ReferenceGenome,
+    gencode_ensembl_to_refseq_id_mapping: hl.tdict(hl.tstr, hl.tstr),
     **_: Any,
 ) -> hl.Expression:
     result = hl.sorted(
         ht.vep.transcript_consequences.map(
-            vep_85_transcript_consequences_select
-            if reference_genome == ReferenceGenome.GRCh37
-            else vep_110_transcript_consequences_select,
+            vep_110_transcript_consequences_select(
+                gencode_ensembl_to_refseq_id_mapping,
+            ),
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         transcript_consequences_sort(ht),
     )
