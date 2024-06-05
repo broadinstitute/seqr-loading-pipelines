@@ -112,7 +112,7 @@ class DatasetType(Enum):
                 'info.END': hl.tint32,
                 'info.END2': hl.tint32,
                 'info.gnomAD_V2_AF': hl.tfloat64,
-                'info.gnomAD_V2_SVID': hl.tfloat64,
+                'info.gnomAD_V2_SVID': hl.tstr,
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
                 'info.StrVCTVRE': hl.tstr,
