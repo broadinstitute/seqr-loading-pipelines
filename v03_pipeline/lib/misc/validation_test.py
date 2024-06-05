@@ -127,6 +127,17 @@ class ValidationTest(unittest.TestCase):
     def test_validate_imported_field_types(self) -> None:
         mt = hl.read_matrix_table(TEST_MITO_MT)
         validate_imported_field_types(mt, DatasetType.MITO, {})
+        mt = mt.annotate_cols(contamination=hl.int32(mt.contamination))
+        mt = mt.annotate_entries(DP=hl.float32(mt.DP))
+        mt = mt.annotate_rows(vep=hl.dict({'t': '1'}))
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "Found unexpected field types on MatrixTable after import: \\['contamination: int32', 'DP: float32', 'vep: dict<str, str>', 'tester: missing'\\]",
+            validate_imported_field_types,
+            mt,
+            DatasetType.MITO,
+            {'tester': hl.tfloat32},
+        )
 
     def test_validate_no_duplicate_variants(self) -> None:
         mt = hl.MatrixTable.from_parts(

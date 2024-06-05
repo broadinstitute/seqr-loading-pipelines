@@ -78,7 +78,7 @@ def validate_imported_field_types(
                 and type(mt_schema[field])
                 == hl.expr.expressions.typed_expressions.StructExpression
             )
-            or ((isinstance(dtype, set) and mt_schema[field].dtype in dtype))
+            or (isinstance(dtype, set) and mt_schema[field].dtype in dtype)
             or (mt_schema[field].dtype == dtype)
         ):
             return None
