@@ -119,8 +119,16 @@ class DatasetType(Enum):
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
+    def has_gencode_ensembl_to_refseq_mapping(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> bool:
+        return (
+            self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
+        )
+
     @property
-    def has_gencode_mapping(self) -> dict[str, str]:
+    def has_gencode_gene_symbol_to_gene_id_mapping(self) -> bool:
         return self == DatasetType.SV
 
     @property

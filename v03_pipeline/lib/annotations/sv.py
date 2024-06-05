@@ -170,7 +170,7 @@ def start_locus(ht: hl.Table, **_: Any):
 
 def sorted_gene_consequences(
     ht: hl.Table,
-    gencode_mapping: dict[str, str],
+    gencode_gene_symbol_to_gene_id_mapping: dict[str, str],
     **_: Any,
 ) -> hl.Expression:
     # In lieu of sorted_transcript_consequences seen on SNV/MITO.
@@ -183,7 +183,7 @@ def sorted_gene_consequences(
     mapped_genes = [
         ht.info[gene_col].map(
             lambda gene: hl.struct(
-                gene_id=gencode_mapping.get(gene),
+                gene_id=gencode_gene_symbol_to_gene_id_mapping.get(gene),
                 major_consequence_id=SV_CONSEQUENCE_RANKS_LOOKUP[
                     gene_col.replace(CONSEQ_PREDICTED_PREFIX, '', 1)  # noqa: B023
                 ],

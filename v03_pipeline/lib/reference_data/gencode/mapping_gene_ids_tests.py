@@ -1,7 +1,10 @@
+import gzip
 import unittest
 from unittest import mock
 
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode_genesymbols_to_gene_ids
+import responses
+
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode_ensembl_to_refseq_id, load_gencode_gene_symbol_to_gene_id, GENCODE_ENSEMBL_TO_REFSEQ_URL
 
 DOWNLOAD_PATH = 'test/path'
 GS_DOWNLOAD_PATH ='gs://test-bucket/test/path'
@@ -17,6 +20,11 @@ GTF_DATA = [
 GENE_ID_MAPPING = {"DDX11L1": "ENSG00000223972", "OR4F16": "ENSG00000284662", "AC018692.2": "ENSG00000279783"}
 
 
+ENSEMBL_TO_REFSEQ_DATA = b'''ENST00000424215.1\tNR_121638.1
+ENST00000378391.6\tNM_199454.3\tNP_955533.2
+ENST00000270722.10\tNM_022114.4\tNP_071397.3
+ENST00000288774.8\tNM_001374425.1\tNP_001361354.1'''
+
 class LoadGencodeTestCase(unittest.TestCase):
 
     @mock.patch('v03_pipeline.lib.reference_data.gencode.mapping_gene_ids.logger')
@@ -31,7 +39,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         # test using saved file
         mock_path_exists.side_effect = [True]
         mock_pickle.load.return_value = GENE_ID_MAPPING
-        gene_id_mapping = load_gencode_genesymbols_to_gene_ids(23, download_path=DOWNLOAD_PATH)
+        gene_id_mapping = load_gencode_gene_symbol_to_gene_id(23, download_path=DOWNLOAD_PATH)
         mock_file_writer.assert_not_called()
         mock_download_file.assert_not_called()
         mock_gopen.assert_not_called()
@@ -54,7 +62,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_gopen.return_value.__iter__.return_value = GTF_DATA
         mock_f = mock.MagicMock()
         mock_file_writer.return_value.__enter__.return_value = mock_f, None
-        gene_id_mapping = load_gencode_genesymbols_to_gene_ids(24, download_path=DOWNLOAD_PATH)
+        gene_id_mapping = load_gencode_gene_symbol_to_gene_id(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_path_exists.assert_has_calls([
             mock.call('test/path/gencode.v24.annotation.gtf.pickle'),
@@ -83,7 +91,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_pickle.reset_mock()
         mock_path_exists.side_effect = [False, True]
         mock_gopen.return_value.__iter__.return_value = GTF_DATA
-        gene_id_mapping = load_gencode_genesymbols_to_gene_ids(24, download_path=DOWNLOAD_PATH)
+        gene_id_mapping = load_gencode_gene_symbol_to_gene_id(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_path_exists.assert_has_calls([
             mock.call('test/path/gencode.v24.annotation.gtf.pickle'),
@@ -106,7 +114,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_path_exists.side_effect = [False, False]
         mock_gopen.return_value.__iter__.return_value = ['bad data']
         with self.assertRaises(ValueError) as ve:
-            _ = load_gencode_genesymbols_to_gene_ids(24, download_path=DOWNLOAD_PATH)
+            _ = load_gencode_gene_symbol_to_gene_id(24, download_path=DOWNLOAD_PATH)
         self.assertEqual(str(ve.exception), "Unexpected number of fields on line #0: ['bad data']")
 
     @mock.patch('v03_pipeline.lib.reference_data.gencode.mapping_gene_ids.gzip')
@@ -121,7 +129,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         # test using saved file.
         mock_path_exists.side_effect = [True]
         mock_pickle.loads.return_value = GENE_ID_MAPPING
-        gene_id_mapping = load_gencode_genesymbols_to_gene_ids(25, download_path=GS_DOWNLOAD_PATH)
+        gene_id_mapping = load_gencode_gene_symbol_to_gene_id(25, download_path=GS_DOWNLOAD_PATH)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_path_exists.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle')
         mock_logger.info.assert_has_calls([
@@ -138,7 +146,7 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_gzip.decompress.return_value = ''.join(GTF_DATA).encode()
         mock_f = mock.MagicMock()
         mock_file_writer.return_value.__enter__.return_value = mock_f, None
-        gene_id_mapping = load_gencode_genesymbols_to_gene_ids(25, download_path=GS_DOWNLOAD_PATH)
+        gene_id_mapping = load_gencode_gene_symbol_to_gene_id(25, download_path=GS_DOWNLOAD_PATH)
         self.assertEqual(gene_id_mapping, GENE_ID_MAPPING)
         mock_path_exists.assert_has_calls([
             mock.call('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle'),
@@ -148,3 +156,20 @@ class LoadGencodeTestCase(unittest.TestCase):
         mock_gzip.decompress.assert_called_with(mock_stream_gs_file.return_value)
         mock_file_writer.assert_called_with('gs://test-bucket/test/path/gencode.v25.annotation.gtf.pickle')
         mock_pickle.dump.assert_called_with(GENE_ID_MAPPING, mock_f, protocol=mock.ANY)
+
+
+    @responses.activate
+    def test_load_gencode_ensembl_to_refseq_id(self):
+        url = GENCODE_ENSEMBL_TO_REFSEQ_URL.format(gencode_release=20)
+        responses.add(responses.GET, url, body=gzip.compress(ENSEMBL_TO_REFSEQ_DATA))
+        mapping = load_gencode_ensembl_to_refseq_id(20)
+        self.assertDictEqual(
+            mapping,
+            {
+                'ENST00000424215': 'NR_121638.1',
+                'ENST00000378391': 'NM_199454.3',
+                'ENST00000270722': 'NM_022114.4',
+                'ENST00000288774': 'NM_001374425.1',
+            }
+        )
+

@@ -3,6 +3,8 @@ import logging
 import os
 import pickle
 
+import requests
+
 from v03_pipeline.lib.reference_data.gencode.download_utils import (
     download_file,
     file_writer,
@@ -17,6 +19,7 @@ GENOME_VERSION_GRCh38 = '38'
 logger = logging.getLogger(__name__)
 
 GENCODE_GTF_URL = 'http://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.annotation.gtf.gz'
+GENCODE_ENSEMBL_TO_REFSEQ_URL = 'https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_{gencode_release}/gencode.v{gencode_release}.metadata.RefSeq.gz'
 
 # expected GTF file header
 GENCODE_FILE_HEADER = [
@@ -112,7 +115,7 @@ def _parse_gtf_data(gencode_gtf_path):
     return gene_id_mapping
 
 
-def load_gencode_genesymbols_to_gene_ids(gencode_release, download_path=''):
+def load_gencode_gene_symbol_to_gene_id(gencode_release, download_path=''):
     """Load Gencode to create a gene symbols to gene ids mapping table.
 
     Args:
@@ -129,3 +132,16 @@ def load_gencode_genesymbols_to_gene_ids(gencode_release, download_path=''):
 
     logger.info(f'Got {len(gene_id_mapping)} gene id mapping records')
     return gene_id_mapping
+
+def load_gencode_ensembl_to_refseq_id(gencode_release: int):
+    url = GENCODE_ENSEMBL_TO_REFSEQ_URL.format(gencode_release=gencode_release)
+    response = requests.get(url, stream=True)
+    ensembl_to_refseq_ids = {}
+    for line in gzip.GzipFile(fileobj=response.raw):
+        line = line.decode('ascii').strip().split('\t')
+        if len(line) > 3:
+            raise ValueError(
+                'Unexpected number of fields on line in ensemble_to_refseq mapping',
+            )
+        ensembl_to_refseq_ids[line[0].split('.')[0]] = line[1]
+    return ensembl_to_refseq_ids
