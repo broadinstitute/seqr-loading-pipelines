@@ -66,33 +66,31 @@ def validate_imported_field_types(
     additional_row_fields: dict[str, hl.expr.types.HailType | set],
 ) -> None:
     def _validate_field(
-        mt_fields: hl.StructExpression,
+        mt_schema: hl.StructExpression,
         field: str,
         dtype: hl.expr.types.HailType,
     ) -> str | None:
-        if field not in mt_fields:
+        if field not in mt_schema:
             return f'{field}: missing'
         if (
             (
-                dtype == hl.struct
-                and type(mt_fields[field])
-                != hl.expr.expressions.typed_expressions.StructExpression
+                dtype == hl.tstruct
+                and type(mt_schema[field])
+                == hl.expr.expressions.typed_expressions.StructExpression
             )
-            or (isinstance(dtype, set) and mt_fields[field].dtype not in dtype)
-            or (mt_fields[field].dtype != dtype)
+            or ((isinstance(dtype, set) and mt_schema[field].dtype in dtype))
+            or (mt_schema[field].dtype == dtype)
         ):
-            return f'{field}: {mt_fields[field].dtype}'
-        return None
+            return None
+        return f'{field}: {mt_schema[field].dtype}'
 
-    unexpected_field_types = [
-        _validate_field(mt.col, field, dtype)
-        for field, dtype in {
-            **dataset_type.col_fields,
-            **dataset_type.entries_fields,
-            **dataset_type.row_fields,
-            **additional_row_fields,
-        }.items()
-    ]
+    unexpected_field_types = []
+    for field, dtype in dataset_type.col_fields.items():
+        unexpected_field_types.append(_validate_field(mt.col, field, dtype))
+    for field, dtype in dataset_type.entries_fields.items():
+        unexpected_field_types.append(_validate_field(mt.entry, field, dtype))
+    for field, dtype in {**dataset_type.row_fields, **additional_row_fields}.items():
+        unexpected_field_types.append(_validate_field(mt.row, field, dtype))
     unexpected_field_types = [x for x in unexpected_field_types if x is not None]
     if unexpected_field_types:
         msg = f'Found unexpected field types on MatrixTable after import: {unexpected_field_types}'
