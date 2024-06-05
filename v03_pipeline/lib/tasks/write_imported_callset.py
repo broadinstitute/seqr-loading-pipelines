@@ -143,6 +143,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.additional_row_fields(mt),
         )
+        # This validation isn't override-able.  If a field is the wrong
+        # type, the pipeline will likely hard-fail downstream.
         validate_imported_field_types(
             mt, self.dataset_type, self.additional_row_fields(mt)
         )
