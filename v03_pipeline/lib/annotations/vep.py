@@ -179,12 +179,3 @@ def transcript_consequences_sort(
         ),
         hl.or_else(c.canonical, 0) == 1,
     )
-
-
-def add_transcript_rank(result: hl.ArrayExpression) -> hl.ArrayExpression:
-    # Adds a "transcript_rank" field to a sorted array of transcripts
-    return hl.zip_with_index(result).map(
-        lambda csq_with_index: csq_with_index[1].annotate(
-            transcript_rank=csq_with_index[0],
-        ),
-    )

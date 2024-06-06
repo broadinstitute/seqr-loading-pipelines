@@ -141,7 +141,6 @@ class SNVTest(unittest.TestCase):
                         consequence_term_ids=[12],
                         is_lof_nagnag=None,
                         lof_filter_ids=[0, 1],
-                        transcript_rank=0,
                     ),
                     hl.Struct(
                         amino_acids=None,
@@ -155,7 +154,6 @@ class SNVTest(unittest.TestCase):
                         consequence_term_ids=[26, 29],
                         is_lof_nagnag=None,
                         lof_filter_ids=None,
-                        transcript_rank=1,
                     ),
                     hl.Struct(
                         amino_acids=None,
@@ -169,7 +167,6 @@ class SNVTest(unittest.TestCase):
                         consequence_term_ids=[26, 29],
                         is_lof_nagnag=None,
                         lof_filter_ids=None,
-                        transcript_rank=2,
                     ),
                 ],
             ],
@@ -244,7 +241,6 @@ class SNVTest(unittest.TestCase):
                         fiveutr_consequence_id=None,
                         fiveutr_annotation=None,
                     ),
-                    transcript_rank=0,
                 ),
                 hl.Struct(
                     amino_acids=None,
@@ -275,7 +271,6 @@ class SNVTest(unittest.TestCase):
                         fiveutr_consequence_id=None,
                         fiveutr_annotation=None,
                     ),
-                    transcript_rank=1,
                 ),
                 hl.Struct(
                     amino_acids=None,
@@ -324,7 +319,6 @@ class SNVTest(unittest.TestCase):
                             ref_type_length=None,
                         ),
                     ),
-                    transcript_rank=2,
                 ),
             ],
         )
@@ -377,13 +371,11 @@ class SNVTest(unittest.TestCase):
                     biotype_id=0,
                     consequence_term_ids=[0],
                     regulatory_feature_id='regulatory_2',
-                    transcript_rank=0,
                 ),
                 hl.Struct(
                     biotype_id=0,
                     consequence_term_ids=[2],
                     regulatory_feature_id='regulatory_1',
-                    transcript_rank=1,
                 ),
             ],
         )

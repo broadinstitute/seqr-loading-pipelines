@@ -9,7 +9,6 @@ from v03_pipeline.lib.annotations.enums import (
     REGULATORY_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.annotations.vep import (
-    add_transcript_rank,
     transcript_consequences_sort,
     vep_85_transcript_consequences_select,
     vep_110_transcript_consequences_select,
@@ -116,7 +115,7 @@ def sorted_motif_feature_consequences(
     # NB: hl.min() doesn't work correctly in the "sorted" key expression, so we have an additional
     # is_defined check, even though the expression should work on missing on its own.
     # hail bug report incoming.
-    result = hl.or_missing(
+    return hl.or_missing(
         hl.is_defined(ht.vep.motif_feature_consequences),
         hl.sorted(
             ht.vep.motif_feature_consequences.map(
@@ -130,14 +129,12 @@ def sorted_motif_feature_consequences(
             lambda c: hl.min(c.consequence_term_ids),
         ),
     )
-    return add_transcript_rank(result)
-
 
 def sorted_regulatory_feature_consequences(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    result = hl.or_missing(
+    return hl.or_missing(
         hl.is_defined(ht.vep.regulatory_feature_consequences),
         hl.sorted(
             ht.vep.regulatory_feature_consequences.map(
@@ -152,15 +149,13 @@ def sorted_regulatory_feature_consequences(
             lambda c: hl.min(c.consequence_term_ids),
         ),
     )
-    return add_transcript_rank(result)
-
 
 def sorted_transcript_consequences(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     **_: Any,
 ) -> hl.Expression:
-    result = hl.sorted(
+    return hl.sorted(
         ht.vep.transcript_consequences.map(
             vep_85_transcript_consequences_select
             if reference_genome == ReferenceGenome.GRCh37
@@ -168,4 +163,3 @@ def sorted_transcript_consequences(
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         transcript_consequences_sort(ht),
     )
-    return add_transcript_rank(result)
