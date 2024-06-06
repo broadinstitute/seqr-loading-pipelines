@@ -130,6 +130,7 @@ def sorted_motif_feature_consequences(
         ),
     )
 
+
 def sorted_regulatory_feature_consequences(
     ht: hl.Table,
     **_: Any,
@@ -149,6 +150,7 @@ def sorted_regulatory_feature_consequences(
             lambda c: hl.min(c.consequence_term_ids),
         ),
     )
+
 
 def sorted_transcript_consequences(
     ht: hl.Table,
