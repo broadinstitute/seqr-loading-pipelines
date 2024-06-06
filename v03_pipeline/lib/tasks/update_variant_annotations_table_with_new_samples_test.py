@@ -86,8 +86,6 @@ TEST_RUN_ID = 'manual__2024-04-03'
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
-    maxDiff = None
-
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
@@ -223,8 +221,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
+    )
     def test_multiple_update_vat(
         self,
+        mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
@@ -245,6 +247,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_vep_validate.return_value = None
+        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
+            {'ENST00000327044': 'NM_015658.4'}
+        )
         # make register_alleles return CAIDs for 4 of 30 variants
         mock_env.SHOULD_REGISTER_ALLELES = True
         mock_register_alleles.side_effect = [
@@ -723,8 +728,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
+    )
     def test_update_vat_without_accessing_private_datasets(
         self,
+        mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
@@ -732,6 +741,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
+        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
+            {'ENST00000327044': 'NM_015658.4'}
+        )
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
