@@ -3,10 +3,6 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import MITOTIP_PATHOGENICITIES
-from v03_pipeline.lib.annotations.vep import (
-    transcript_consequences_sort,
-    vep_85_transcript_consequences_select,
-)
 
 MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(MITOTIP_PATHOGENICITIES, index_first=False).extend(
@@ -93,16 +89,4 @@ def gt_stats(
         AC_hom=AC_hom,
         AF_hom=hl.float32(AC_hom / AN),
         AN=AN,
-    )
-
-
-def sorted_transcript_consequences(
-    ht: hl.Table,
-    **_: Any,
-) -> hl.Expression:
-    return hl.sorted(
-        ht.vep.transcript_consequences.map(
-            vep_85_transcript_consequences_select,
-        ).filter(lambda c: c.consequence_term_ids.size() > 0),
-        transcript_consequences_sort(ht),
     )

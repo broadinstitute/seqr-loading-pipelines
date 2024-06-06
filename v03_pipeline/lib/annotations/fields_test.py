@@ -94,6 +94,15 @@ class FieldsTest(MockedDatarootTestCase):
                             )
                             if rdc.requires_annotation
                         },
+                        **(
+                            {
+                                'gencode_ensembl_to_refseq_id_mapping': hl.dict(
+                                    {'a': 'b'},
+                                ),
+                            }
+                            if reference_genome == ReferenceGenome.GRCh38
+                            else {}
+                        ),
                         dataset_type=DatasetType.SNV_INDEL,
                         reference_genome=reference_genome,
                         liftover_ref_path=LIFTOVER,
