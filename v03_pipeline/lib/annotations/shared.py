@@ -4,7 +4,6 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import expression_helpers
 from v03_pipeline.lib.annotations.vep import (
-    add_transcript_rank,
     transcript_consequences_sort,
     vep_85_transcript_consequences_select,
 )
@@ -52,10 +51,9 @@ def sorted_transcript_consequences(
     ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    result = hl.sorted(
+    return hl.sorted(
         ht.vep.transcript_consequences.map(
             vep_85_transcript_consequences_select,
         ).filter(lambda c: c.consequence_term_ids.size() > 0),
         transcript_consequences_sort(ht),
     )
-    return add_transcript_rank(result)
