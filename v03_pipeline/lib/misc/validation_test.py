@@ -6,13 +6,15 @@ from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     validate_allele_type,
     validate_expected_contig_frequency,
+    validate_imported_field_types,
     validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.model import ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
+TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 
 
 def _mt_from_contigs(contigs):
@@ -120,6 +122,21 @@ class ValidationTest(unittest.TestCase):
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,
+        )
+
+    def test_validate_imported_field_types(self) -> None:
+        mt = hl.read_matrix_table(TEST_MITO_MT)
+        validate_imported_field_types(mt, DatasetType.MITO, {})
+        mt = mt.annotate_cols(contamination=hl.int32(mt.contamination))
+        mt = mt.annotate_entries(DP=hl.float32(mt.DP))
+        mt = mt.annotate_rows(vep=hl.dict({'t': '1'}))
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "Found unexpected field types on MatrixTable after import: \\['contamination: int32', 'DP: float32', 'vep: dict<str, str>', 'tester: missing'\\]",
+            validate_imported_field_types,
+            mt,
+            DatasetType.MITO,
+            {'tester': hl.tfloat32},
         )
 
     def test_validate_no_duplicate_variants(self) -> None:
