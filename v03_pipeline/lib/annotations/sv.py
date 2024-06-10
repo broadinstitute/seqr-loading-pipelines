@@ -11,21 +11,21 @@ from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CONSEQ_PREDICTED_PREFIX = 'info.PREDICTED_'
-CONSEQ_PREDICTED_GENE_COLS = [
-    'info.PREDICTED_BREAKEND_EXONIC',
-    'info.PREDICTED_COPY_GAIN',
-    'info.PREDICTED_DUP_PARTIAL',
-    'info.PREDICTED_INTRAGENIC_EXON_DUP',
-    'info.PREDICTED_INTRONIC',
-    'info.PREDICTED_INV_SPAN',
-    'info.PREDICTED_LOF',
-    'info.PREDICTED_MSV_EXON_OVERLAP',
-    'info.PREDICTED_NEAREST_TSS',
-    'info.PREDICTED_PARTIAL_EXON_DUP',
-    'info.PREDICTED_PROMOTER',
-    'info.PREDICTED_TSS_DUP',
-    'info.PREDICTED_UTR',
-]
+CONSEQ_PREDICTED_GENE_COLS = {
+    'info.PREDICTED_BREAKEND_EXONIC': hl.tarray(hl.tstr),
+    'info.PREDICTED_COPY_GAIN': hl.tarray(hl.tstr),
+    'info.PREDICTED_DUP_PARTIAL': hl.tarray(hl.tstr),
+    'info.PREDICTED_INTRAGENIC_EXON_DUP': hl.tarray(hl.tstr),
+    'info.PREDICTED_INTRONIC': hl.tarray(hl.tstr),
+    'info.PREDICTED_INV_SPAN': hl.tarray(hl.tstr),
+    'info.PREDICTED_LOF': hl.tarray(hl.tstr),
+    'info.PREDICTED_MSV_EXON_OVERLAP': hl.tarray(hl.tstr),
+    'info.PREDICTED_NEAREST_TSS': hl.tarray(hl.tstr),
+    'info.PREDICTED_PARTIAL_EXON_DUP': hl.tarray(hl.tstr),
+    'info.PREDICTED_PROMOTER': hl.tarray(hl.tstr),
+    'info.PREDICTED_TSS_DUP': hl.tarray(hl.tstr),
+    'info.PREDICTED_UTR': hl.tarray(hl.tstr),
+}
 
 PREVIOUS_GENOTYPE_N_ALT_ALLELES = hl.dict(
     {
