@@ -159,6 +159,5 @@ class SampleLookupTest(unittest.TestCase):
         mt = subset_samples(
             mt,
             sample_subset_ht,
-            False,
         )
         self.assertEqual(mt.count(), (1, 1))
