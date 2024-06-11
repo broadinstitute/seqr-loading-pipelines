@@ -4,6 +4,7 @@ from types import FunctionType
 import hail as hl
 import pytz
 
+from v03_pipeline.lib.misc.nested_field import parse_nested_field
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
@@ -109,14 +110,7 @@ def get_select_fields(selects: list | dict | None, base_ht: hl.Table) -> dict:
         select_fields = {selection: base_ht[selection] for selection in selects}
     elif isinstance(selects, dict):
         for key, val in selects.items():
-            # Grab the field and continually select it from the hail table.
-            expression = base_ht
-            for attr in val.split('.'):
-                # Select from multi-allelic list.
-                if attr.endswith('#'):
-                    expression = expression[attr[:-1]][base_ht.a_index - 1]
-                else:
-                    expression = expression[attr]
+            expression = parse_nested_field(base_ht, val)
             # Parse float64s into float32s to save space!
             if expression.dtype == hl.tfloat64:
                 expression = hl.float32(expression)

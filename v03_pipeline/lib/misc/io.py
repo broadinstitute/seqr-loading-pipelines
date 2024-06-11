@@ -5,6 +5,7 @@ import uuid
 import hail as hl
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
+from v03_pipeline.lib.misc.nested_field import parse_nested_field
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -64,17 +65,9 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     ht = hl.import_table(
         callset_path,
         types={
-            'start': hl.tint32,
-            'end': hl.tint32,
-            'CN': hl.tint32,
-            'QS': hl.tint32,
-            'defragmented': hl.tbool,
-            'sf': hl.tfloat64,
-            'sc': hl.tint32,
-            'genes_any_overlap_totalExons': hl.tint32,
-            'genes_strict_overlap_totalExons': hl.tint32,
-            'no_ovl': hl.tbool,
-            'is_latest': hl.tbool,
+            **DatasetType.GCNV.col_fields,
+            **DatasetType.GCNV.entries_fields,
+            **DatasetType.GCNV.row_fields,
         },
         force=callset_path.endswith('gz'),
     )
@@ -147,16 +140,25 @@ def import_callset(
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
+    additional_row_fields: None | dict[str, hl.expr.types.HailType | set] = None,
 ) -> hl.MatrixTable:
     mt = mt.select_globals()
-    optional_row_fields = [
-        row_field
-        for row_field in dataset_type.optional_row_fields
-        if hasattr(mt, row_field)
-    ]
-    mt = mt.select_rows(*dataset_type.row_fields, *optional_row_fields)
-    mt = mt.select_cols(*dataset_type.col_fields)
-    return mt.select_entries(*dataset_type.entries_fields)
+    mt = mt.select_rows(
+        **{field: parse_nested_field(mt, field) for field in dataset_type.row_fields},
+        **{
+            field: parse_nested_field(mt, field)
+            for field in (additional_row_fields or [])
+        },
+    )
+    mt = mt.select_cols(
+        **{field: parse_nested_field(mt, field) for field in dataset_type.col_fields},
+    )
+    return mt.select_entries(
+        **{
+            field: parse_nested_field(mt, field)
+            for field in dataset_type.entries_fields
+        },
+    )
 
 
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
