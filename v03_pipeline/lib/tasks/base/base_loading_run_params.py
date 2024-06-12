@@ -3,7 +3,7 @@ import luigi
 from v03_pipeline.lib.model import SampleType
 
 
-class BaseLoadingParams(luigi.Task):
+class BaseLoadingRunParams(luigi.Task):
     # NB:
     # These params are "inherited" with the special
     # luigi.util.inherits function, copying params

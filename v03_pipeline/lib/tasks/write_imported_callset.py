@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.misc.io import (
     import_callset,
@@ -22,7 +23,7 @@ from v03_pipeline.lib.paths import (
     imported_callset_path,
     sex_check_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_loading_params import BaseLoadingParams
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
@@ -31,7 +32,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 
-@luigi.util.inherits(BaseLoadingParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteImportedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
         if not self.force and super().complete():

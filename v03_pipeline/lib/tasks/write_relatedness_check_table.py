@@ -2,11 +2,12 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env, SampleType
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     relatedness_check_table_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
@@ -15,10 +16,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteRelatednessCheckTableTask(BaseWriteTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_path = luigi.Parameter()
-
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             relatedness_check_table_path(
@@ -30,21 +29,13 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
 
     def requires(self) -> luigi.Task:
         requirements = [
-            WriteImportedCallsetTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.callset_path,
-            ),
+            self.clone(WriteImportedCallsetTask),
         ]
         if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             requirements = [
                 *requirements,
                 (
-                    UpdatedCachedReferenceDatasetQuery(
-                        reference_genome=self.reference_genome,
-                        dataset_type=self.dataset_type,
-                        crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
-                    )
+                    self.clone(UpdatedCachedReferenceDatasetQuery, crdq=CachedReferenceDatasetQuery.GNOMAD_QC)
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
                         cached_reference_dataset_query_path(
