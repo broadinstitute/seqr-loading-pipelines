@@ -54,8 +54,8 @@ class WriteFamilyTableTask(BaseWriteTask):
         return UpdateProjectTableTask(
             self.reference_genome,
             self.dataset_type,
-            self.sample_type,
             self.project_guid,
+            self.sample_type,
             self.callset_path,
             self.project_remap_path,
             self.project_pedigree_path,
