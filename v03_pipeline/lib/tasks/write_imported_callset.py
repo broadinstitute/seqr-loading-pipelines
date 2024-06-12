@@ -30,9 +30,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
-luigi.util.inherits(BaseLoadingParams)
 
-
+@luigi.util.inherits(BaseLoadingParams)
 class WriteImportedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
         if not self.force and super().complete():
