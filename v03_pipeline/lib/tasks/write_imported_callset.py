@@ -34,10 +34,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter(default=None)
-    filters_path = luigi.OptionalParameter(
-        default=None,
-        description='Optional path to part two outputs from callset (VCF shards containing filter information)',
-    )
+    filters_path = luigi.OptionalParameter(default=None)
     validate = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -79,11 +76,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             requirements = [
                 *requirements,
                 (
-                    UpdatedCachedReferenceDatasetQuery(
-                        reference_genome=self.reference_genome,
-                        dataset_type=self.dataset_type,
-                        crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                    )
+                    self.clone(UpdatedCachedReferenceDatasetQuery, crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS),
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
                         cached_reference_dataset_query_path(
@@ -100,12 +93,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         ):
             requirements = [
                 *requirements,
-                WriteSexCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                    self.imputed_sex_path,
-                ),
+                self.clone(WriteSexCheckTableTask),
             ]
         return [
             *requirements,
