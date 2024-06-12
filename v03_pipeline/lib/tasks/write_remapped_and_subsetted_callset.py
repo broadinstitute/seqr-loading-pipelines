@@ -97,7 +97,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 WriteSexCheckTableTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                     self.callset_path,
                     self.imputed_sex_path,
                 ),
