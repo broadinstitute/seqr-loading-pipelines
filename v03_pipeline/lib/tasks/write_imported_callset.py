@@ -15,13 +15,14 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, SampleType
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     imported_callset_path,
     sex_check_table_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_params import BaseLoadingParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
@@ -29,25 +30,10 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
+luigi.util.inherits(BaseLoadingParams)
+
 
 class WriteImportedCallsetTask(BaseWriteTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_path = luigi.Parameter()
-    imputed_sex_path = luigi.Parameter(default=None)
-    filters_path = luigi.OptionalParameter(default=None)
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    check_sex_and_relatedness = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-
     def complete(self) -> luigi.Target:
         if not self.force and super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -76,7 +62,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
             requirements = [
                 *requirements,
                 (
-                    self.clone(UpdatedCachedReferenceDatasetQuery, crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS),
+                    self.clone(
+                        UpdatedCachedReferenceDatasetQuery,
+                        crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                    )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
                         cached_reference_dataset_query_path(

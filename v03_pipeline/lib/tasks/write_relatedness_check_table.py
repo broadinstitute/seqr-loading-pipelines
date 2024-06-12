@@ -33,7 +33,6 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
             WriteImportedCallsetTask(
                 self.reference_genome,
                 self.dataset_type,
-                self.sample_type,
                 self.callset_path,
             ),
         ]

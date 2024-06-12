@@ -21,9 +21,7 @@ class WriteSexCheckTableTask(BaseWriteTask):
         )
 
     def requires(self) -> luigi.Task:
-        return [
-            RawFileTask(self.imputed_sex_path),
-        ]
+        return RawFileTask(self.imputed_sex_path)
 
     def create_table(self) -> hl.Table:
-        return import_imputed_sex(self.input()[0].path)
+        return import_imputed_sex(self.input().path)
