@@ -30,6 +30,10 @@ logger = get_logger(__name__)
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
+    project_guid = luigi.Parameter()
+    project_remap_path = luigi.Parameter()
+    project_pedigree_path = luigi.Parameter()
+
     def complete(self) -> luigi.Target:
         return not self.force and super().complete()
 
