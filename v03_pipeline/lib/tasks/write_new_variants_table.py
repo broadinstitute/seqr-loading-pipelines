@@ -85,7 +85,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                 ),
             ]
         else:
@@ -93,7 +92,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 BaseUpdateVariantAnnotationsTableTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                 ),
             ]
         if self.dataset_type.has_lookup_table:
