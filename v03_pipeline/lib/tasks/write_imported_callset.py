@@ -18,9 +18,9 @@ from v03_pipeline.lib.misc.vets import annotate_vets
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     imported_callset_path,
     sex_check_table_path,
-    cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask

@@ -5,7 +5,6 @@ import hail as hl
 
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.reference_data.queries import (
     clinvar_path_variants,
     gnomad_coding_and_noncoding_variants,

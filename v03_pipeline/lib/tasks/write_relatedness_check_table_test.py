@@ -12,9 +12,9 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     imported_callset_path,
     relatedness_check_table_path,
-    cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.write_relatedness_check_table import (
     WriteRelatednessCheckTableTask,

@@ -4,8 +4,8 @@ import luigi
 from v03_pipeline.lib.methods.relatedness import call_relatedness
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
 from v03_pipeline.lib.paths import (
-    relatedness_check_table_path,
     cached_reference_dataset_query_path,
+    relatedness_check_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask

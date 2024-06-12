@@ -8,6 +8,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     family_table_path,
     imported_callset_path,
     lookup_table_path,
@@ -17,7 +18,6 @@ from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
-    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )

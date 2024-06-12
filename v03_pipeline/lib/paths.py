@@ -40,6 +40,7 @@ def _v03_reference_data_prefix(
         reference_genome.value,
     )
 
+
 def cached_reference_dataset_query_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
