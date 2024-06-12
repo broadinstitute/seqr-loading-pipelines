@@ -50,8 +50,8 @@ class WriteProjectFamilyTablesTask(BaseHailTableTask):
         update_project_table_task: luigi.Target = yield UpdateProjectTableTask(
             self.reference_genome,
             self.dataset_type,
-            self.sample_type,
             self.project_guid,
+            self.sample_type,
             self.callset_path,
             self.project_remap_path,
             self.project_pedigree_path,
