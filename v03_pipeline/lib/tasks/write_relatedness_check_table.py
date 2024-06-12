@@ -35,7 +35,10 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
             requirements = [
                 *requirements,
                 (
-                    self.clone(UpdatedCachedReferenceDatasetQuery, crdq=CachedReferenceDatasetQuery.GNOMAD_QC)
+                    self.clone(
+                        UpdatedCachedReferenceDatasetQuery,
+                        crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
+                    )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
                         cached_reference_dataset_query_path(
