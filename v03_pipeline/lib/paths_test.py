@@ -17,7 +17,7 @@ from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
@@ -26,7 +26,7 @@ from v03_pipeline.lib.paths import (
 class TestPaths(unittest.TestCase):
     def test_cached_reference_dataset_query_path(self) -> None:
         self.assertEqual(
-            valid_cached_reference_dataset_query_path(
+            cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,

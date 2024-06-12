@@ -20,7 +20,7 @@ from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     sex_check_table_path,
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
@@ -86,7 +86,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
-                        valid_cached_reference_dataset_query_path(
+                        cached_reference_dataset_query_path(
                             self.reference_genome,
                             self.dataset_type,
                             CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
@@ -169,7 +169,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
-                valid_cached_reference_dataset_query_path(
+                cached_reference_dataset_query_path(
                     self.reference_genome,
                     self.dataset_type,
                     CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,

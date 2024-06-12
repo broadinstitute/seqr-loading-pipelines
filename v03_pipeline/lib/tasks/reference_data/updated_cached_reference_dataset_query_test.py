@@ -14,7 +14,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -167,7 +167,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         # clinvar has version '2022-01-01'
         shutil.copytree(
             CLINVAR_CRDQ_PATH,
-            valid_cached_reference_dataset_query_path(
+            cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,

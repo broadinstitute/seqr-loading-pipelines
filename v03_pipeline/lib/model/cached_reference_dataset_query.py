@@ -4,7 +4,7 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.reference_data.queries import (
     clinvar_path_variants,
@@ -19,10 +19,6 @@ class CachedReferenceDatasetQuery(Enum):
     GNOMAD_CODING_AND_NONCODING_VARIANTS = 'gnomad_coding_and_noncoding_variants'
     GNOMAD_QC = 'gnomad_qc'
     HIGH_AF_VARIANTS = 'high_af_variants'
-
-    @property
-    def access_control(self) -> AccessControl:
-        return AccessControl.PUBLIC
 
     def dataset(self, dataset_type: DatasetType) -> str | None:
         return {
@@ -56,15 +52,10 @@ class CachedReferenceDatasetQuery(Enum):
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
     ) -> list['CachedReferenceDatasetQuery']:
-        crdqs = {
+        return {
             (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL): list(cls),
             (ReferenceGenome.GRCh38, DatasetType.MITO): [
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ],
             (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL): list(cls),
         }.get((reference_genome, dataset_type), [])
-        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
-            return [
-                crdq for crdq in crdqs if crdq.access_control == AccessControl.PUBLIC
-            ]
-        return crdqs

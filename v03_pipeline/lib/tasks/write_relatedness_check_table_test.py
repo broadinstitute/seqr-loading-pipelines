@@ -14,7 +14,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     relatedness_check_table_path,
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.write_relatedness_check_table import (
     WriteRelatednessCheckTableTask,
@@ -45,7 +45,7 @@ MOCK_CONFIG = {
 class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.gnomad_qc_path = valid_cached_reference_dataset_query_path(
+        self.gnomad_qc_path = cached_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             CachedReferenceDatasetQuery.GNOMAD_QC,
