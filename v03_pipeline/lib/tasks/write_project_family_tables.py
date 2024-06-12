@@ -12,10 +12,6 @@ class WriteProjectFamilyTablesTask(BaseHailTableTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter(default=None)
-    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -58,7 +54,6 @@ class WriteProjectFamilyTablesTask(BaseHailTableTask):
             self.project_remap_path,
             self.project_pedigree_path,
             self.imputed_sex_path,
-            self.ignore_missing_samples_when_subsetting,
             self.ignore_missing_samples_when_remapping,
             self.validate,
             False,

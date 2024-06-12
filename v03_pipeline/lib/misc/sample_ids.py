@@ -61,7 +61,6 @@ def remap_sample_ids(
 def subset_samples(
     mt: hl.MatrixTable,
     sample_subset_ht: hl.Table,
-    ignore_missing_samples_when_subsetting: bool,
 ) -> hl.MatrixTable:
     subset_count = sample_subset_ht.count()
     anti_join_ht = sample_subset_ht.anti_join(mt.cols())
@@ -78,12 +77,7 @@ def subset_samples(
             f"IDs that aren't in the callset: {missing_samples}\n"
             f'All callset sample IDs:{mt.s.collect()}'
         )
-        if (
-            subset_count > anti_join_ht_count
-        ) and ignore_missing_samples_when_subsetting:
-            logger.info(message)
-        else:
-            raise MatrixTableSampleSetError(message, missing_samples)
+        raise MatrixTableSampleSetError(message, missing_samples)
     logger.info(f'Subsetted to {subset_count} sample ids')
     mt = mt.semi_join_cols(sample_subset_ht)
     return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))

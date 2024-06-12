@@ -106,32 +106,6 @@ class SampleLookupTest(unittest.TestCase):
                 ignore_missing_samples_when_remapping=False,
             )
 
-    def test_subset_samples(self):
-        # subset 2 of 3 samples in callset
-        sample_subset_ht = hl.Table.parallelize(
-            [
-                {'s': 'HG00731'},
-                {'s': 'HG00732'},
-            ],
-            hl.tstruct(s=hl.tstr),
-            key='s',
-        )
-
-        subset_mt = subset_samples(
-            CALLSET_MT,
-            sample_subset_ht,
-            ignore_missing_samples_when_subsetting=True,
-        )
-
-        self.assertEqual(subset_mt.cols().count(), 2)
-        self.assertEqual(
-            subset_mt.cols().collect(),
-            [
-                hl.Struct(col_idx=0, s='HG00731'),
-                hl.Struct(col_idx=1, s='HG00732'),
-            ],
-        )
-
     def test_subset_samples_zero_samples(self):
         # subset 0 of 3 samples in callset
         sample_subset_ht = hl.Table.parallelize(
@@ -144,7 +118,6 @@ class SampleLookupTest(unittest.TestCase):
             subset_samples(
                 CALLSET_MT,
                 sample_subset_ht,
-                ignore_missing_samples_when_subsetting=True,
             )
 
     def test_subset_samples_missing_samples(self):
@@ -163,7 +136,6 @@ class SampleLookupTest(unittest.TestCase):
             subset_samples(
                 CALLSET_MT,
                 sample_subset_ht,
-                ignore_missing_samples_when_subsetting=False,
             )
 
     def test_subset_no_defined_gt(self):
@@ -187,6 +159,5 @@ class SampleLookupTest(unittest.TestCase):
         mt = subset_samples(
             mt,
             sample_subset_ht,
-            False,
         )
         self.assertEqual(mt.count(), (1, 1))

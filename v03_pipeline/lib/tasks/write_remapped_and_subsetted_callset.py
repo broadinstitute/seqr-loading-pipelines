@@ -32,10 +32,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter(default=None)
-    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -178,7 +174,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',
             ),
-            self.ignore_missing_samples_when_subsetting,
         )
         # Drop additional fields imported onto the intermediate callsets but
         # not used when creating the downstream optimized tables.
