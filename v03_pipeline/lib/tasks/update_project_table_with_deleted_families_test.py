@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.update_project_table_with_deleted_families import (
     UpdateProjectTableWithDeletedFamiliesTask,
@@ -128,7 +128,6 @@ class UpdateProjectTableWithDeletedFamiliesTaskTest(MockedDatarootTestCase):
         worker = luigi.worker.Worker()
         task = UpdateProjectTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='project_a',
             family_guids=['family_b'],

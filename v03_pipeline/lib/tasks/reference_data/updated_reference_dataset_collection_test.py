@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -170,7 +169,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
         )
         worker.add(task)
@@ -280,7 +278,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         task = UpdatedReferenceDatasetCollectionTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
         )
         worker.add(task)

@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env, SampleType
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     relatedness_check_table_path,
@@ -16,6 +16,7 @@ from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTa
 
 
 class WriteRelatednessCheckTableTask(BaseWriteTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
 
     def output(self) -> luigi.Target:

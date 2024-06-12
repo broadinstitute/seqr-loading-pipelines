@@ -1,12 +1,14 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 
 class WriteProjectFamilyTablesTask(BaseHailTableTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()

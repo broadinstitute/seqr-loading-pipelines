@@ -15,7 +15,6 @@ class DeleteProjectTableTask(BaseDeleteTableTask):
         return DeleteProjectFamilyTablesTask(
             self.reference_genome,
             self.dataset_type,
-            self.sample_type,
             self.project_guid,
         )
 

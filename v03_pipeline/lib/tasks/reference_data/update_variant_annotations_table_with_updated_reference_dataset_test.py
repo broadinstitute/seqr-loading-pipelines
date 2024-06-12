@@ -15,7 +15,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -730,7 +729,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -925,7 +923,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
-            sample_type=SampleType.WGS,
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -1068,7 +1065,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
         )
         worker = luigi.worker.Worker()
         worker.add(task)

@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 logger = get_logger(__name__)
@@ -11,7 +11,6 @@ logger = get_logger(__name__)
 class BaseHailTableTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
 
     def output(self) -> luigi.Target:
         raise NotImplementedError

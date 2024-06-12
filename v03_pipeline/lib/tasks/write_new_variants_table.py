@@ -10,7 +10,7 @@ from v03_pipeline.lib.annotations.rdc_dependencies import (
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection, SampleType
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
@@ -37,6 +37,7 @@ GENCODE_RELEASE = 42
 
 
 class WriteNewVariantsTableTask(BaseWriteTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()

@@ -3,7 +3,7 @@ from unittest import mock
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_families import (
     UpdateLookupTableWithDeletedFamiliesTask,
 )
@@ -17,7 +17,6 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         worker = luigi.worker.Worker()
         task = UpdateLookupTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='R0555_seqr_demo',
             family_guids=['abc'],
@@ -132,7 +131,6 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
         worker = luigi.worker.Worker()
         task = UpdateLookupTableWithDeletedFamiliesTask(
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='project_a',
             family_guids=['1', '3'],

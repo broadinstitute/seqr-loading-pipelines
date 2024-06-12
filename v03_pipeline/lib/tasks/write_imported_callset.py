@@ -15,7 +15,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, SampleType
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
@@ -31,6 +31,7 @@ from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 
 class WriteImportedCallsetTask(BaseWriteTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter(default=None)
     filters_path = luigi.OptionalParameter(
@@ -81,7 +82,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     UpdatedCachedReferenceDatasetQuery(
                         reference_genome=self.reference_genome,
                         dataset_type=self.dataset_type,
-                        sample_type=self.sample_type,
                         crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
@@ -103,7 +103,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 WriteSexCheckTableTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                     self.callset_path,
                     self.imputed_sex_path,
                 ),
