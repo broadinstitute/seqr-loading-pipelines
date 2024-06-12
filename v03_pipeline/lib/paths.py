@@ -48,7 +48,7 @@ def cached_reference_dataset_query_path(
 ) -> str:
     return os.path.join(
         _v03_reference_data_prefix(
-            cached_reference_dataset_query.access_control,
+            AccessControl.PUBLIC,
             reference_genome,
         ),
         dataset_type.value,
