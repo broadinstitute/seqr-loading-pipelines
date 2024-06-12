@@ -44,7 +44,6 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
                     UpdatedCachedReferenceDatasetQuery(
                         reference_genome=self.reference_genome,
                         dataset_type=self.dataset_type,
-                        sample_type=self.sample_type,
                         crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
                     )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
