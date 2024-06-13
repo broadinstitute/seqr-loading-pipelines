@@ -2,7 +2,6 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
@@ -53,6 +52,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                 project_guid=project_guid,
                 project_remap_path=project_remap_path,
                 project_pedigree_path=project_pedigree_path,
+                force=False,
             )
             for (
                 project_guid,
@@ -69,15 +69,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     def update_table(self, ht: hl.Table) -> hl.Table:
         # NB: there's a chance this many hail operations blows the DAG compute stack
         # in an unfortunate way.  Please keep an eye out!
-        for i, (callset_path, project_guid, _, _, _) in enumerate(
-            callset_project_pairs(
-                self.callset_paths,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                self.imputed_sex_paths,
-            ),
-        ):
+        for i, project_guid in enumerate(self.project_guids):
             if project_guid in PROJECTS_EXCLUDED_FROM_LOOKUP:
                 ht = ht.annotate_globals(
                     updates=ht.updates.add(
