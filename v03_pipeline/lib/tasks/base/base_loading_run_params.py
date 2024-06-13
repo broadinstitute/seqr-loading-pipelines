@@ -18,6 +18,10 @@ class BaseLoadingRunParams(luigi.Task):
         default=None,
         description='Optional path to part two outputs from callset (VCF shards containing filter information)',
     )
+    ignore_missing_samples_when_remapping = luigi.BoolParameter(
+        default=False,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
     validate = luigi.BoolParameter(
         default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
