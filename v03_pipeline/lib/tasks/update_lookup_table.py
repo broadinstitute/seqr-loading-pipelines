@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.misc.lookup import (
@@ -7,8 +8,8 @@ from v03_pipeline.lib.misc.lookup import (
     join_lookup_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
@@ -17,25 +18,11 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateLookupTableTask(BaseUpdateLookupTableTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    imputed_sex_paths = luigi.ListParameter(default=None)
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
 
     def complete(self) -> bool:
         return (
@@ -47,23 +34,11 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                         [
                             updates.contains(
                                 hl.Struct(
-                                    callset=callset_path,
+                                    callset=self.callset_path,
                                     project_guid=project_guid,
                                 ),
                             )
-                            for (
-                                callset_path,
-                                project_guid,
-                                _,
-                                _,
-                                _,
-                            ) in callset_project_pairs(
-                                self.callset_paths,
-                                self.project_guids,
-                                self.project_remap_paths,
-                                self.project_pedigree_paths,
-                                self.imputed_sex_paths,
-                            )
+                            for project_guid in self.project_guids
                         ],
                     ),
                     hl.read_table(self.output().path).updates,
@@ -73,31 +48,21 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            WriteRemappedAndSubsettedCallsetTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                callset_path,
-                project_guid,
-                project_remap_path,
-                project_pedigree_path,
-                imputed_sex_path,
-                self.ignore_missing_samples_when_remapping,
-                self.validate,
-                False,
+            self.clone(
+                WriteRemappedAndSubsettedCallsetTask,
+                project_guid=project_guid,
+                project_remap_path=project_remap_path,
+                project_pedigree_path=project_pedigree_path,
             )
             for (
-                callset_path,
                 project_guid,
                 project_remap_path,
                 project_pedigree_path,
-                imputed_sex_path,
-            ) in callset_project_pairs(
-                self.callset_paths,
+            ) in zip(
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
-                self.imputed_sex_paths,
+                strict=False,
             )
         ]
 
