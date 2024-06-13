@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
@@ -14,8 +15,10 @@ from v03_pipeline.lib.tasks.base.base_update_project_table import (
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateProjectTableTask(BaseUpdateProjectTableTask):
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()

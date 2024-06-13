@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
