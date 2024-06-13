@@ -128,7 +128,7 @@ def remove_project(
     existing_project_guids = hl.eval(ht.globals.project_guids)
     if project_guid not in existing_project_guids:
         return ht
-    project_indexes_to_keep = (
+    project_indexes_to_keep = hl.eval(
         hl.enumerate(existing_project_guids)
         .filter(lambda item: item[1] != project_guid)
         .map(lambda item: item[0])
