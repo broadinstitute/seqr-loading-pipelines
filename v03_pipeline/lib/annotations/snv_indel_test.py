@@ -3,12 +3,7 @@ from unittest.mock import Mock, patch
 
 import hail as hl
 
-from v03_pipeline.lib.annotations.snv_indel import (
-    gt_stats,
-    sorted_motif_feature_consequences,
-    sorted_regulatory_feature_consequences,
-    sorted_transcript_consequences,
-)
+from v03_pipeline.lib.annotations import shared, snv_indel
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
@@ -76,7 +71,7 @@ class SNVTest(unittest.TestCase):
             ),
             key='id',
         )
-        ht = ht.select(gt_stats=gt_stats(ht, lookup_ht))
+        ht = ht.select(gt_stats=snv_indel.gt_stats(ht, lookup_ht))
         self.assertCountEqual(
             ht.collect(),
             [
@@ -120,9 +115,8 @@ class SNVTest(unittest.TestCase):
             ReferenceGenome.GRCh37,
         )
         ht = ht.select(
-            sorted_transcript_consequences=sorted_transcript_consequences(
+            sorted_transcript_consequences=shared.sorted_transcript_consequences(
                 ht,
-                ReferenceGenome.GRCh37,
             ),
         )
         self.assertCountEqual(
@@ -204,9 +198,11 @@ class SNVTest(unittest.TestCase):
             ReferenceGenome.GRCh38,
         )
         ht = ht.select(
-            sorted_transcript_consequences=sorted_transcript_consequences(
+            sorted_transcript_consequences=snv_indel.sorted_transcript_consequences(
                 ht,
-                ReferenceGenome.GRCh38,
+                hl.dict(
+                    {'ENST00000327044': 'NM_015658.4', 'ENST00000477976': 'refseq1'},
+                ),
             ),
         )
         self.assertCountEqual(
@@ -220,6 +216,7 @@ class SNVTest(unittest.TestCase):
                     hgvsc='ENST00000327044.6:c.1667C>T',
                     hgvsp='ENSP00000317992.6:p.Ser556Leu',
                     transcript_id='ENST00000327044',
+                    refseq_transcript_id='NM_015658.4',
                     mane_select='NM_015658.4',
                     mane_plus_clinical=None,
                     biotype_id=39,
@@ -250,6 +247,7 @@ class SNVTest(unittest.TestCase):
                     hgvsc='ENST00000477976.1:n.3114C>T',
                     hgvsp=None,
                     transcript_id='ENST00000477976',
+                    refseq_transcript_id='refseq1',
                     mane_select=None,
                     mane_plus_clinical=None,
                     biotype_id=38,
@@ -280,6 +278,7 @@ class SNVTest(unittest.TestCase):
                     hgvsc='ENST00000483767.1:n.523C>T',
                     hgvsp=None,
                     transcript_id='ENST00000483767',
+                    refseq_transcript_id=None,
                     mane_select=None,
                     mane_plus_clinical=None,
                     biotype_id=38,
@@ -355,8 +354,10 @@ class SNVTest(unittest.TestCase):
             ReferenceGenome.GRCh38,
         )
         ht = ht.select(
-            sorted_motif_feature_consequences=sorted_motif_feature_consequences(ht),
-            sorted_regulatory_feature_consequences=sorted_regulatory_feature_consequences(
+            sorted_motif_feature_consequences=snv_indel.sorted_motif_feature_consequences(
+                ht,
+            ),
+            sorted_regulatory_feature_consequences=snv_indel.sorted_regulatory_feature_consequences(
                 ht,
             ),
         )

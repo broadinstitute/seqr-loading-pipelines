@@ -15,7 +15,10 @@ from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
+    load_gencode_ensembl_to_refseq_id,
+    load_gencode_gene_symbol_to_gene_id,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -63,9 +66,15 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
-        if self.dataset_type.has_gencode_mapping:
-            deps['gencode_mapping'] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ''),
+        if self.dataset_type.has_gencode_ensembl_to_refseq_id_mapping(
+            self.reference_genome,
+        ):
+            deps['gencode_ensembl_to_refseq_id_mapping'] = hl.literal(
+                load_gencode_ensembl_to_refseq_id(GENCODE_RELEASE),
+            )
+        if self.dataset_type.has_gencode_gene_symbol_to_gene_id_mapping:
+            deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
+                load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE, ''),
             )
         return deps
 

@@ -147,8 +147,16 @@ class DatasetType(Enum):
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
+    def has_gencode_ensembl_to_refseq_id_mapping(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> bool:
+        return (
+            self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
+        )
+
     @property
-    def has_gencode_mapping(self) -> dict[str, str]:
+    def has_gencode_gene_symbol_to_gene_id_mapping(self) -> bool:
         return self == DatasetType.SV
 
     @property
@@ -201,7 +209,7 @@ class DatasetType(Enum):
                 shared.rsid,
                 shared.variant_id,
                 shared.xpos,
-                snv_indel.sorted_transcript_consequences,
+                shared.sorted_transcript_consequences,
             ],
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
@@ -211,7 +219,7 @@ class DatasetType(Enum):
                 mito.rsid,
                 shared.variant_id,
                 shared.xpos,
-                mito.sorted_transcript_consequences,
+                shared.sorted_transcript_consequences,
             ],
             DatasetType.SV: [
                 sv.algorithms,
@@ -242,11 +250,16 @@ class DatasetType(Enum):
             return GRCh37_fns[self]
         return {
             DatasetType.SNV_INDEL: [
-                *GRCh37_fns[DatasetType.SNV_INDEL],
+                *[
+                    x
+                    for x in GRCh37_fns[DatasetType.SNV_INDEL]
+                    if x != shared.sorted_transcript_consequences
+                ],
                 snv_indel.gnomad_non_coding_constraint,
                 snv_indel.screen,
                 shared.rg37_locus,
                 snv_indel.check_ref,
+                snv_indel.sorted_transcript_consequences,
                 snv_indel.sorted_regulatory_feature_consequences,
                 snv_indel.sorted_motif_feature_consequences,
             ],
