@@ -74,7 +74,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                 ht = ht.annotate_globals(
                     updates=ht.updates.add(
                         hl.Struct(
-                            callset=callset_path,
+                            callset=self.callset_path,
                             project_guid=project_guid,
                         ),
                     ),
@@ -100,7 +100,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(
-                        callset=callset_path,
+                        callset=self.callset_path,
                         project_guid=project_guid,
                     ),
                 ),
