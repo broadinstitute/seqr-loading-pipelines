@@ -37,6 +37,7 @@ from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
 GENCODE_RELEASE = 42
+GENCODE_FOR_VEP_RELEASE = 44
 
 
 class WriteNewVariantsTableTask(BaseWriteTask):
@@ -70,7 +71,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.reference_genome,
         ):
             deps['gencode_ensembl_to_refseq_id_mapping'] = hl.literal(
-                load_gencode_ensembl_to_refseq_id(GENCODE_RELEASE),
+                load_gencode_ensembl_to_refseq_id(GENCODE_FOR_VEP_RELEASE),
             )
         if self.dataset_type.has_gencode_gene_symbol_to_gene_id_mapping:
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
