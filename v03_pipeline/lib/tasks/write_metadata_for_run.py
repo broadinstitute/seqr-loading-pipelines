@@ -50,7 +50,7 @@ class WriteMetadataForRunTask(BaseHailTableTask):
 
     def run(self) -> None:
         metadata_json = {
-            'callsets': [self.callset],
+            'callsets': [self.callset_path],
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
             'family_samples': {},
