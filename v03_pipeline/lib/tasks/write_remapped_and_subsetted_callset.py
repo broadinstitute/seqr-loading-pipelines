@@ -59,7 +59,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             requirements = [
                 *requirements,
                 self.clone(WriteRelatednessCheckTableTask),
-                self.close(WriteSexCheckTableTask),
+                self.clone(WriteSexCheckTableTask),
             ]
         return requirements
 
