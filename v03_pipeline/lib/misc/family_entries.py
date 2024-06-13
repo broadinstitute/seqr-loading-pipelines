@@ -98,13 +98,17 @@ def remove_family_guids(
     family_guids: hl.SetExpression,
 ) -> hl.Table:
     # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
-    family_indexes_to_keep = hl.array(
+    family_indexes_to_keep = hl.set(
         hl.enumerate(ht.globals.family_guids)
         .filter(lambda item: ~family_guids.contains(item[1]))
         .map(lambda item: item[0]),
     )
     ht = ht.annotate(
-        family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
+        family_entries=(
+            hl.enumerate(ht.family_entries)
+            .filter(lambda item: family_indexes_to_keep.contains(item[0]))
+            .map(lambda item: item[1])
+        ),
     )
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
