@@ -103,7 +103,7 @@ def remove_family_guids(
             hl.enumerate(ht.globals.family_guids)
             .filter(lambda item: ~family_guids.contains(item[1]))
             .map(lambda item: item[0]),
-        )
+        ),
     )
     ht = ht.annotate(
         # NB: this "should" work without the extra if statement (and does in the tests)
