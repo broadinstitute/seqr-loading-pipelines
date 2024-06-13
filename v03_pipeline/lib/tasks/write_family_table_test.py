@@ -5,6 +5,7 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
+TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -26,6 +27,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_3,
             family_guid='abc_1',
             validate=False,
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(wft_task)
         worker.run()
@@ -163,6 +165,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
             validate=False,
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(write_family_table_task)
         worker.run()
@@ -415,6 +418,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
             validate=False,
+            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(write_family_table_task)
         worker.run()
