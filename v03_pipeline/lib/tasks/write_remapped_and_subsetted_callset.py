@@ -7,7 +7,11 @@ from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_relatedness_check,
     get_families_failed_sex_check,
 )
-from v03_pipeline.lib.misc.io import does_file_exist, import_pedigree, import_remap
+from v03_pipeline.lib.misc.io import (
+    does_file_exist,
+    import_pedigree,
+    import_remap,
+)
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
@@ -28,10 +32,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
     imputed_sex_path = luigi.Parameter(default=None)
-    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -174,8 +174,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 hl.tstruct(s=hl.dtype('str')),
                 key='s',
             ),
-            self.ignore_missing_samples_when_subsetting,
         )
+        # Drop additional fields imported onto the intermediate callsets but
+        # not used when creating the downstream optimized tables.
+        for field in mt.row_value:
+            if field not in self.dataset_type.row_fields:
+                mt = mt.drop(field)
         return mt.select_globals(
             family_samples=(
                 {

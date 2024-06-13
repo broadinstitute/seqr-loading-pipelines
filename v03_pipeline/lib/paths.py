@@ -41,6 +41,22 @@ def _v03_reference_data_prefix(
     )
 
 
+def cached_reference_dataset_query_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    cached_reference_dataset_query: CachedReferenceDatasetQuery,
+) -> str:
+    return os.path.join(
+        _v03_reference_data_prefix(
+            AccessControl.PUBLIC,
+            reference_genome,
+        ),
+        dataset_type.value,
+        'cached_reference_dataset_queries',
+        f'{cached_reference_dataset_query.value}.ht',
+    )
+
+
 def family_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -179,27 +195,6 @@ def sex_check_table_path(
         ),
         'sex_check',
         f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
-    )
-
-
-def valid_cached_reference_dataset_query_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    cached_reference_dataset_query: CachedReferenceDatasetQuery,
-) -> str | None:
-    if (
-        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
-        and cached_reference_dataset_query.access_control == AccessControl.PRIVATE
-    ):
-        return None
-    return os.path.join(
-        _v03_reference_data_prefix(
-            cached_reference_dataset_query.access_control,
-            reference_genome,
-        ),
-        dataset_type.value,
-        'cached_reference_dataset_queries',
-        f'{cached_reference_dataset_query.value}.ht',
     )
 
 

@@ -28,7 +28,7 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -347,7 +347,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         coding_and_noncoding_variants_ht.write(
-            valid_cached_reference_dataset_query_path(
+            cached_reference_dataset_query_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,

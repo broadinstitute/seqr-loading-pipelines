@@ -42,10 +42,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
     imputed_sex_paths = luigi.ListParameter(default=None)
-    ignore_missing_samples_when_subsetting = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
@@ -112,7 +108,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         self.project_remap_paths,
                         self.project_pedigree_paths,
                         self.imputed_sex_paths,
-                        self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
                         self.force,
@@ -131,7 +126,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                         project_remap_path,
                         project_pedigree_path,
                         imputed_sex_path,
-                        self.ignore_missing_samples_when_subsetting,
                         self.ignore_missing_samples_when_remapping,
                         self.validate,
                         False,
@@ -265,7 +259,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 ar_ht = ar_ht.union(ar_ht_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
 
-        return new_variants_ht.annotate_globals(
+        return new_variants_ht.select_globals(
             updates={
                 hl.Struct(callset=callset_path, project_guid=project_guid)
                 for (

@@ -4,8 +4,8 @@ import luigi
 from v03_pipeline.lib.methods.relatedness import call_relatedness
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     relatedness_check_table_path,
-    valid_cached_reference_dataset_query_path,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
@@ -48,7 +48,7 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
                     )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
                     else HailTableTask(
-                        valid_cached_reference_dataset_query_path(
+                        cached_reference_dataset_query_path(
                             self.reference_genome,
                             self.dataset_type,
                             CachedReferenceDatasetQuery.GNOMAD_QC,

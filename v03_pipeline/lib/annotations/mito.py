@@ -60,7 +60,7 @@ def high_constraint_region_mito(
 
 
 def mito_cn(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
-    return hl.int(mt.mito_cn)
+    return hl.int32(mt.mito_cn)
 
 
 def mitotip(ht: hl.Table, **_: Any) -> hl.Expression:
