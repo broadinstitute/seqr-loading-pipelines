@@ -135,9 +135,10 @@ def remove_project(
     )
     ht = ht.annotate(
         project_stats=(
-            project_indexes_to_keep.map(
-                lambda i: ht.project_stats[i],
-            )
+            # See "remove_family_guids" func for why this was necessary
+            project_stats=project_indexes_to_keep.map(lambda i: ht.project_stats[i])
+            if len(project_indexes_to_keep) > 0
+            else hl.empty_array(ht.project_stats.dtype.element_type)
         ),
     )
     ht = ht.filter(hl.any(ht.project_stats.map(hl.is_defined)))
