@@ -7,9 +7,13 @@ import luigi.worker
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CLINVAR_PATHOGENICITIES,
-    CONSEQUENCE_TERMS,
+    FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    MOTIF_CONSEQUENCE_TERMS,
+    REGULATORY_BIOTYPES,
+    REGULATORY_CONSEQUENCE_TERMS,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -878,10 +882,22 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         hgmd=hl.Struct(
                             **{'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
                         ),
+                        sorted_motif_feature_consequences=hl.Struct(
+                            consequence_term=MOTIF_CONSEQUENCE_TERMS,
+                        ),
+                        sorted_regulatory_feature_consequences=hl.Struct(
+                            biotype=REGULATORY_BIOTYPES,
+                            consequence_term=REGULATORY_CONSEQUENCE_TERMS,
+                        ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+                            loftee=hl.Struct(
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            utrannotator=hl.Struct(
+                                fiveutr_consequence=FIVEUTR_CONSEQUENCES,
+                            ),
                         ),
                     ),
                     updates=set(),
@@ -974,7 +990,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         high_constraint_region_mito=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                         mitotip=hl.Struct(
@@ -1139,7 +1155,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                     ),

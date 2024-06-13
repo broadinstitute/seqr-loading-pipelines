@@ -12,7 +12,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
-from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
@@ -34,23 +34,20 @@ class FieldsTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock, mock_validate: Mock) -> None:
-        ht = hl.read_table(TEST_COMBINED_1)
-        mock_vep.return_value = ht.annotate(vep=MOCK_VEP_DATA)
         mock_validate.return_value = None
-        ht = run_vep(
-            ht,
-            DatasetType.SNV_INDEL,
-            ReferenceGenome.GRCh38,
-        )
+        ht = hl.read_table(TEST_COMBINED_1)
         ht = ht.annotate(rsid='abcd')
         for reference_genome, expected_fields in [
             (
                 ReferenceGenome.GRCh38,
                 [
+                    'check_ref',
                     'screen',
                     'gnomad_non_coding_constraint',
                     'rg37_locus',
                     'rsid',
+                    'sorted_motif_feature_consequences',
+                    'sorted_regulatory_feature_consequences',
                     'sorted_transcript_consequences',
                     'variant_id',
                     'xpos',
@@ -66,6 +63,16 @@ class FieldsTest(MockedDatarootTestCase):
                 ],
             ),
         ]:
+            mock_vep.return_value = ht.annotate(
+                vep=MOCK_37_VEP_DATA
+                if reference_genome == ReferenceGenome.GRCh37
+                else MOCK_38_VEP_DATA,
+            )
+            ht = run_vep(
+                ht,
+                DatasetType.SNV_INDEL,
+                reference_genome,
+            )
             self.assertCountEqual(
                 list(
                     get_fields(
@@ -87,6 +94,15 @@ class FieldsTest(MockedDatarootTestCase):
                             )
                             if rdc.requires_annotation
                         },
+                        **(
+                            {
+                                'gencode_ensembl_to_refseq_id_mapping': hl.dict(
+                                    {'a': 'b'},
+                                ),
+                            }
+                            if reference_genome == ReferenceGenome.GRCh38
+                            else {}
+                        ),
                         dataset_type=DatasetType.SNV_INDEL,
                         reference_genome=reference_genome,
                         liftover_ref_path=LIFTOVER,

@@ -1,11 +1,4 @@
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 import hail as hl
-
-if TYPE_CHECKING:
-    from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 BIOTYPES = [
     'IG_C_gene',
@@ -77,25 +70,38 @@ BIOTYPES = [
     'disrupted_domain',
     'vaultRNA/vault_RNA',
     'vaultRNA',
+    'vault_RNA',
     'bidirectional_promoter_lncRNA',
     '3prime_overlapping_ncrna',
 ]
 
-CONSEQUENCE_TERMS = [
+REGULATORY_BIOTYPES = [
+    'enhancer',
+    'promoter',
+    'CTCF_binding_site',
+    'TF_binding_site',
+    'open_chromatin_region',
+]
+
+TRANSCRIPT_CONSEQUENCE_TERMS = [
     'transcript_ablation',
     'splice_acceptor_variant',
     'splice_donor_variant',
     'stop_gained',
     'frameshift_variant',
     'stop_lost',
-    'start_lost',  # new in v81
-    'initiator_codon_variant',  # deprecated
+    'start_lost',
     'transcript_amplification',
+    'feature_elongation',
+    'feature_truncation',
     'inframe_insertion',
     'inframe_deletion',
     'missense_variant',
-    'protein_altering_variant',  # new in v79
+    'protein_altering_variant',
+    'splice_donor_5th_base_variant',
     'splice_region_variant',
+    'splice_donor_region_variant',
+    'splice_polypyrimidine_tract_variant',
     'incomplete_terminal_codon_variant',
     'start_retained_variant',
     'stop_retained_variant',
@@ -105,22 +111,37 @@ CONSEQUENCE_TERMS = [
     '5_prime_UTR_variant',
     '3_prime_UTR_variant',
     'non_coding_transcript_exon_variant',
-    'non_coding_exon_variant',  # deprecated
     'intron_variant',
     'NMD_transcript_variant',
     'non_coding_transcript_variant',
-    'nc_transcript_variant',  # deprecated
+    'coding_transcript_variant',
     'upstream_gene_variant',
     'downstream_gene_variant',
+    'intergenic_variant',
+    'sequence_variant',
+]
+
+MOTIF_CONSEQUENCE_TERMS = [
     'TFBS_ablation',
     'TFBS_amplification',
     'TF_binding_site_variant',
+    'TFBS_fusion',
+    'TFBS_translocation',
+]
+
+REGULATORY_CONSEQUENCE_TERMS = [
     'regulatory_region_ablation',
     'regulatory_region_amplification',
-    'feature_elongation',
     'regulatory_region_variant',
-    'feature_truncation',
-    'intergenic_variant',
+    'regulatory_region_fusion',
+]
+
+FIVEUTR_CONSEQUENCES = [
+    '5_prime_UTR_premature_start_codon_gain_variant',  # uAUG_gained
+    '5_prime_UTR_premature_start_codon_loss_variant',  # uAUG_lost
+    '5_prime_UTR_stop_codon_gain_variant',  # uSTOP_gained
+    '5_prime_UTR_stop_codon_loss_variant',  # uSTOP_lost
+    '5_prime_UTR_uORF_frameshift_variant',  # uFrameshift
 ]
 
 LOF_FILTERS = [
@@ -219,50 +240,3 @@ CLINVAR_PATHOGENICITIES = [
 CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
-
-
-def annotate_enums(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> hl.Table:
-    formatting_annotation_names = {
-        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
-    }
-    if 'sorted_transcript_consequences' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(
-                sorted_transcript_consequences=hl.Struct(
-                    biotype=BIOTYPES,
-                    consequence_term=CONSEQUENCE_TERMS,
-                    lof_filter=LOF_FILTERS,
-                ),
-            ),
-        )
-    if 'mitotip' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(
-                mitotip=hl.Struct(
-                    trna_prediction=MITOTIP_PATHOGENICITIES,
-                ),
-            ),
-        )
-    if 'sv_type_id' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(
-                sv_type=SV_TYPES,
-            ),
-        )
-    if 'sv_type_detail_id' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(sv_type_detail=SV_TYPE_DETAILS),
-        )
-    if 'sorted_gene_consequences' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(
-                sorted_gene_consequences=hl.Struct(
-                    major_consequence=SV_CONSEQUENCE_RANKS,
-                ),
-            ),
-        )
-    return ht
