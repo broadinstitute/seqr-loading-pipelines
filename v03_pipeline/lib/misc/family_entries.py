@@ -108,7 +108,7 @@ def remove_family_guids(
     ht = ht.annotate(
         # NB: this "should" work without the extra if statement (and does in the tests)
         # however, experiments on dataproc showed this statement hanging with an empty
-        # indexes array.
+        # unevaluated indexes array.
         family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i])
         if len(family_indexes_to_keep) > 0
         else hl.empty_array(ht.family_entries.dtype.element_type),
