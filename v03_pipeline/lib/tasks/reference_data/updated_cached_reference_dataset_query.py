@@ -8,7 +8,7 @@ from v03_pipeline.lib.model import (
     ReferenceDatasetCollection,
 )
 from v03_pipeline.lib.paths import (
-    valid_cached_reference_dataset_query_path,
+    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
 from v03_pipeline.lib.reference_data.compare_globals import (
@@ -56,7 +56,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            valid_cached_reference_dataset_query_path(
+            cached_reference_dataset_query_path(
                 self.reference_genome,
                 self.dataset_type,
                 self.crdq,
