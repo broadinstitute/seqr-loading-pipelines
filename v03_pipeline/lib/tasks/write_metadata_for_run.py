@@ -4,7 +4,6 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.callsets import callset_project_pairs
 from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
@@ -35,32 +34,17 @@ class WriteMetadataForRunTask(BaseHailTableTask):
 
     def requires(self) -> list[luigi.Task]:
         return [
-            self.clone(WriteRemappedAndSubsettedCallsetTask,
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                callset_path,
-                project_guid,
-                project_remap_path,
-                project_pedigree_path,
-                imputed_sex_path,
-                self.ignore_missing_samples_when_remapping,
-                self.validate,
-                self.force,
-                self.check_sex_and_relatedness,
+            self.clone(
+                WriteRemappedAndSubsettedCallsetTask,
+                project_guid=project_guid,
+                project_remap_path=project_remap_path,
+                project_pedigree_path=project_pedigree_path,
             )
-            for (
-                callset_path,
-                project_guid,
-                project_remap_path,
-                project_pedigree_path,
-                imputed_sex_path,
-            ) in callset_project_pairs(
-                self.callset_paths,
+            for (project_guid, project_remap_path, project_pedigree_path) in zip(
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
-                self.imputed_sex_paths,
+                strict=False,
             )
         ]
 
