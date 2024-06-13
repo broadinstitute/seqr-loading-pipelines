@@ -131,12 +131,12 @@ def remove_project(
     project_indexes_to_keep = hl.eval(
         hl.enumerate(existing_project_guids)
         .filter(lambda item: item[1] != project_guid)
-        .map(lambda item: item[0])
+        .map(lambda item: item[0]),
     )
     ht = ht.annotate(
         project_stats=(
             # See "remove_family_guids" func for why this was necessary
-            project_stats=project_indexes_to_keep.map(lambda i: ht.project_stats[i])
+            project_indexes_to_keep.map(lambda i: ht.project_stats[i])
             if len(project_indexes_to_keep) > 0
             else hl.empty_array(ht.project_stats.dtype.element_type)
         ),
