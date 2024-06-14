@@ -273,13 +273,6 @@ class FamilyEntriesTest(unittest.TestCase):
                         ],
                     ],
                 ),
-                hl.Struct(
-                    id=1,
-                    filters={'HIGH_SR_BACKGROUND'},
-                    family_entries=[
-                        None,
-                    ],
-                ),
             ],
         )
 

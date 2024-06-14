@@ -115,6 +115,7 @@ def remove_family_guids(
         if len(family_indexes_to_keep) > 0
         else hl.empty_array(ht.family_entries.dtype.element_type),
     )
+    ht = ht.filter(hl.any(ht.family_entries.map(hl.is_defined)))
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
             lambda f: ~family_guids.contains(f),
