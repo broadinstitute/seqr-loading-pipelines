@@ -143,7 +143,7 @@ def remove_project(
     )
     ht = ht.filter(hl.any(ht.project_stats.map(hl.is_defined)))
     return ht.annotate_globals(
-        project_guids = ht.project_guids.filter(
+        project_guids=ht.project_guids.filter(
             lambda p: p != project_guid,
         ),
         project_families=hl.dict(
