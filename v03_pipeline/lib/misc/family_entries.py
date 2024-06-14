@@ -109,7 +109,9 @@ def remove_family_guids(
         # NB: this "should" work without the extra if statement (and does in the tests)
         # however, experiments on dataproc showed this statement hanging with an empty
         # unevaluated indexes array.
-        family_entries=hl.array(family_indexes_to_keep).map(lambda i: ht.family_entries[i])
+        family_entries=hl.array(family_indexes_to_keep).map(
+            lambda i: ht.family_entries[i]
+        )
         if len(family_indexes_to_keep) > 0
         else hl.empty_array(ht.family_entries.dtype.element_type),
     )
