@@ -183,7 +183,7 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             os.path.basename(tmp_file.name),
         )
         safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
-        return hl.import_table(
+        ht = hl.import_table(
             gcs_tmp_file_name,
             force=True,
             filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
@@ -193,5 +193,6 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
                 'ReportedPhenotypeInfo': hl.tstr,
             },
             missing='-',
-            min_partitions=MIN_HT_PARTITIONS,
         )
+        # NB: min_partitions fails with force=True but appears overrideable
+        return ht.reparition(MIN_HT_PARTITIONS)
