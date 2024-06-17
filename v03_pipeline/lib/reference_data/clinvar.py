@@ -194,5 +194,6 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             },
             missing='-',
         )
-        # NB: min_partitions fails with force=True but appears overrideable
-        return ht.reparition(MIN_HT_PARTITIONS)
+        # NB: min_partitions fails with force=True during `import_table`, but
+        # an immediate repartition here works.
+        return ht.repartition(MIN_HT_PARTITIONS)
