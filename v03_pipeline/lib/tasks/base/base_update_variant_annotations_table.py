@@ -39,7 +39,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 UpdatedReferenceDatasetCollectionTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                     rdc,
                 )
                 if Env.REFERENCE_DATA_AUTO_UPDATE

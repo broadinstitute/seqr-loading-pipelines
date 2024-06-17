@@ -14,6 +14,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
@@ -27,6 +28,7 @@ logger = get_logger(__name__)
 
 
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -95,7 +97,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 WriteSexCheckTableTask(
                     self.reference_genome,
                     self.dataset_type,
-                    self.sample_type,
                     self.callset_path,
                     self.imputed_sex_path,
                 ),

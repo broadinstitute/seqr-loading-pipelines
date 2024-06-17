@@ -4,7 +4,6 @@ from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
@@ -14,7 +13,6 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 class UpdateCachedReferenceDatasetQueries(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
-    sample_type = luigi.EnumParameter(enum=SampleType)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

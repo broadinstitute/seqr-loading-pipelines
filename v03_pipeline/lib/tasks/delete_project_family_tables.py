@@ -35,7 +35,6 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
                 DeleteFamilyTableTask(
                     reference_genome=self.reference_genome,
                     dataset_type=self.dataset_type,
-                    sample_type=self.sample_type,
                     family_guid=family_guid,
                 ),
             )

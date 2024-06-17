@@ -8,7 +8,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
@@ -59,7 +58,6 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
         vat_task = BaseUpdateVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
         )
         self.assertTrue('annotations.ht' in vat_task.output().path)
         self.assertTrue(DatasetType.SNV_INDEL.value in vat_task.output().path)

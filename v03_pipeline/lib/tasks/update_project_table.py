@@ -7,6 +7,7 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_update_project_table import (
     BaseUpdateProjectTableTask,
 )
@@ -16,6 +17,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class UpdateProjectTableTask(BaseUpdateProjectTableTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()

@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -10,6 +11,7 @@ from v03_pipeline.lib.tasks.update_project_table import (
 
 
 class WriteFamilyTableTask(BaseWriteTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
@@ -52,8 +54,8 @@ class WriteFamilyTableTask(BaseWriteTask):
         return UpdateProjectTableTask(
             self.reference_genome,
             self.dataset_type,
-            self.sample_type,
             self.project_guid,
+            self.sample_type,
             self.callset_path,
             self.project_remap_path,
             self.project_pedigree_path,

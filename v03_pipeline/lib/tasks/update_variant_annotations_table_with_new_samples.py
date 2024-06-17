@@ -3,6 +3,7 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
@@ -16,6 +17,7 @@ from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTabl
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
     BaseUpdateVariantAnnotationsTableTask,
 ):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()

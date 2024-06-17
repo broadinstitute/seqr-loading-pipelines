@@ -7,7 +7,6 @@ from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
     UpdateCachedReferenceDatasetQueries,
@@ -25,7 +24,6 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -35,25 +33,21 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh37,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh37,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh37,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh37,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
                 ),
             ],
@@ -65,7 +59,6 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -75,25 +68,21 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh38,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh38,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh38,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
                 ),
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh38,
                     dataset_type=DatasetType.SNV_INDEL,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.HIGH_AF_VARIANTS,
                 ),
             ],
@@ -105,7 +94,6 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
-            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
@@ -115,7 +103,6 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
                 mock.call(
                     reference_genome=ReferenceGenome.GRCh38,
                     dataset_type=DatasetType.MITO,
-                    sample_type=SampleType.WGS,
                     crdq=CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
                 ),
             ],
@@ -127,7 +114,6 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
-            sample_type=SampleType.WGS,
         )
         worker.add(task)
         worker.run()
