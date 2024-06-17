@@ -16,7 +16,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, SampleType
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,

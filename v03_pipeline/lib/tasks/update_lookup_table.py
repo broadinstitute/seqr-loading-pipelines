@@ -7,6 +7,7 @@ from v03_pipeline.lib.misc.lookup import (
     join_lookup_hts,
     remove_family_guids,
 )
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (

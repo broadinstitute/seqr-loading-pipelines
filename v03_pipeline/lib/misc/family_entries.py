@@ -106,6 +106,7 @@ def remove_family_guids(
     ht = ht.annotate(
         family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
     )
+    ht = ht.filter(hl.any(ht.family_entries.map(hl.is_defined)))
     return ht.annotate_globals(
         family_guids=ht.family_guids.filter(
             lambda f: ~family_guids.contains(f),

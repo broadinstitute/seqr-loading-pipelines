@@ -4,7 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES_LOOKUP,
-    CONSEQUENCE_TERMS,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.annotations.expression_helpers import (
     get_expr_for_vep_sorted_transcript_consequences_array,
@@ -15,8 +15,8 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CLINVAR_PATH_RANGE = ('Pathogenic', 'Pathogenic/Likely_risk_allele')
 CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele')
-CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
-    hl.enumerate(CONSEQUENCE_TERMS, index_first=False),
+TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
+    hl.enumerate(TRANSCRIPT_CONSEQUENCE_TERMS, index_first=False),
 )
 GNOMAD_CODING_NONCODING_HIGH_AF_THRESHOLD = 0.90
 ONE_PERCENT = 0.01
@@ -91,11 +91,11 @@ def gnomad_coding_and_noncoding_variants(
     ht = ht.select(
         coding=(
             ht.main_transcript.major_consequence_rank
-            <= CONSEQUENCE_TERM_RANK_LOOKUP['synonymous_variant']
+            <= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP['synonymous_variant']
         ),
         noncoding=(
             ht.main_transcript.major_consequence_rank
-            >= CONSEQUENCE_TERM_RANK_LOOKUP['downstream_gene_variant']
+            >= TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP['downstream_gene_variant']
         ),
     )
     return ht.filter(ht.coding | ht.noncoding)

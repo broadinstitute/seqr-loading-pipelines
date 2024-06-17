@@ -11,13 +11,15 @@ from v03_pipeline.lib.annotations.rdc_dependencies import (
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection, SampleType
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import load_gencode
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
+    load_gencode_ensembl_to_refseq_id,
+    load_gencode_gene_symbol_to_gene_id,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -36,6 +38,7 @@ from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
 GENCODE_RELEASE = 42
+GENCODE_FOR_VEP_RELEASE = 44
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -48,9 +51,15 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
-        if self.dataset_type.has_gencode_mapping:
-            deps['gencode_mapping'] = hl.literal(
-                load_gencode(GENCODE_RELEASE, ''),
+        if self.dataset_type.has_gencode_ensembl_to_refseq_id_mapping(
+            self.reference_genome,
+        ):
+            deps['gencode_ensembl_to_refseq_id_mapping'] = hl.literal(
+                load_gencode_ensembl_to_refseq_id(GENCODE_FOR_VEP_RELEASE),
+            )
+        if self.dataset_type.has_gencode_gene_symbol_to_gene_id_mapping:
+            deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
+                load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE, ''),
             )
         return deps
 

@@ -8,12 +8,16 @@ import luigi.worker
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     CLINVAR_PATHOGENICITIES,
-    CONSEQUENCE_TERMS,
+    FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
+    MOTIF_CONSEQUENCE_TERMS,
+    REGULATORY_BIOTYPES,
+    REGULATORY_CONSEQUENCE_TERMS,
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
     SV_TYPES,
+    TRANSCRIPT_CONSEQUENCE_TERMS,
 )
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
@@ -37,7 +41,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
-from v03_pipeline.var.test.vep.mock_vep_data import MOCK_VEP_DATA
+from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
 TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -217,8 +221,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
+    )
     def test_multiple_update_vat(
         self,
+        mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
@@ -236,8 +244,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 dataset_type=DatasetType.SNV_INDEL,
             )
         )
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_vep_validate.return_value = None
+        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
+            {'ENST00000327044': 'NM_015658.4'},
+        )
         # make register_alleles return CAIDs for 4 of 30 variants
         mock_env.SHOULD_REGISTER_ALLELES = True
         mock_register_alleles.side_effect = [
@@ -529,11 +540,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ht.locus.position <= 878809,  # noqa: PLR2004
             ).sorted_transcript_consequences.consequence_term_ids.collect(),
             [
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
-                [[11], [22, 26], [22, 26]],
+                [[12], [26, 29], [26, 16, 29]],
+                [[12], [26, 29], [26, 16, 29]],
+                [[12], [26, 29], [26, 16, 29]],
+                [[12], [26, 29], [26, 16, 29]],
+                [[12], [26, 29], [26, 16, 29]],
             ],
         )
         self.assertCountEqual(
@@ -623,10 +634,22 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 'low-DNase',
                             ],
                         ),
+                        sorted_motif_feature_consequences=hl.Struct(
+                            consequence_term=MOTIF_CONSEQUENCE_TERMS,
+                        ),
+                        sorted_regulatory_feature_consequences=hl.Struct(
+                            biotype=REGULATORY_BIOTYPES,
+                            consequence_term=REGULATORY_CONSEQUENCE_TERMS,
+                        ),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+                            loftee=hl.Struct(
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            utrannotator=hl.Struct(
+                                fiveutr_consequence=FIVEUTR_CONSEQUENCES,
+                            ),
                         ),
                     ),
                 ),
@@ -654,7 +677,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 dataset_type=DatasetType.SNV_INDEL,
             )
         )
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_vep_validate.return_value = None
         mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
@@ -703,8 +726,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
+    )
     def test_update_vat_without_accessing_private_datasets(
         self,
+        mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
@@ -712,6 +739,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_register_alleles: Mock,
         mock_update_rdc_task: Mock,
     ) -> None:
+        mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
+            {'ENST00000327044': 'NM_015658.4'},
+        )
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
@@ -727,7 +757,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
-        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_VEP_DATA)
+        mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_vep_validate.return_value = None
         mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
@@ -847,7 +877,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         mitimpact=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
-                            consequence_term=CONSEQUENCE_TERMS,
+                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
                             lof_filter=LOF_FILTERS,
                         ),
                         mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
@@ -1043,7 +1073,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
 
     @patch(
-        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode',
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
     def test_sv_update_vat(
         self,
