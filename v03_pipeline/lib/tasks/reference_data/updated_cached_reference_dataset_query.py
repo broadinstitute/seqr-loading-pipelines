@@ -68,7 +68,6 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             return UpdatedReferenceDatasetCollectionTask(
                 self.reference_genome,
                 self.dataset_type,
-                self.sample_type,
                 ReferenceDatasetCollection.COMBINED,
             )
         if self.crdq.query_raw_dataset:

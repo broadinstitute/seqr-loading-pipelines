@@ -4,6 +4,7 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.callsets import callset_project_pairs
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import metadata_for_run_path
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -13,6 +14,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 
 class WriteMetadataForRunTask(BaseHailTableTask):
+    sample_type = luigi.EnumParameter(enum=SampleType)
     callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()

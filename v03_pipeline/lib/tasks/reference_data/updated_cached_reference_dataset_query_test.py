@@ -11,7 +11,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
@@ -109,7 +108,6 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         task = UpdatedCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
         )
         worker.add(task)
@@ -199,7 +197,6 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         task = UpdatedCachedReferenceDatasetQuery(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             crdq=CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
         )
         worker.add(task)

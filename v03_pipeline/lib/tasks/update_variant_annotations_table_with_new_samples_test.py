@@ -242,7 +242,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
             )
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
@@ -676,7 +675,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh37,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
             )
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
@@ -749,7 +747,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
             )
         )
         shutil.rmtree(
@@ -817,7 +814,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
-                sample_type=SampleType.WGS,
             )
         )
         mock_register_alleles.side_effect = None

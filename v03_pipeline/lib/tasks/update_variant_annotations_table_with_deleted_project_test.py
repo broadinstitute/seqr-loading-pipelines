@@ -1,7 +1,7 @@
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     variant_annotations_table_path,
@@ -147,7 +147,6 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
         worker = luigi.worker.Worker()
         task = UpdateVariantAnnotationsTableWithDeletedProjectTask(
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             reference_genome=ReferenceGenome.GRCh38,
             project_guid='project_b',
         )
