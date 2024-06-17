@@ -17,7 +17,9 @@ from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
     UpdateLookupTableWithDeletedProjectTask,
 )
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
-from v03_pipeline.lib.tasks.update_project_table_with_deleted_families import UpdateProjectTableWithDeletedFamiliesTask
+from v03_pipeline.lib.tasks.update_project_table_with_deleted_families import (
+    UpdateProjectTableWithDeletedFamiliesTask,
+)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
     UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
 )
