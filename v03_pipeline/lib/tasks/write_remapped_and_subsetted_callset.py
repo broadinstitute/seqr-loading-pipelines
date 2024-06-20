@@ -53,7 +53,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             RawFileTask(self.project_pedigree_path),
         ]
         if (
-            self.check_sex_and_relatedness
+            not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
@@ -88,7 +88,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
         if (
-            self.check_sex_and_relatedness
+            not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)

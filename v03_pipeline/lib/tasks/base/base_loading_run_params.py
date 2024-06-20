@@ -14,16 +14,20 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     force = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    check_sex_and_relatedness = luigi.BoolParameter(
-        default=False,
+    skip_check_sex_and_relatedness = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    skip_expect_filters = luigi.BoolParameter(
+        default=True,
+        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
+    )
+    skip_validation = luigi.BoolParameter(
+        default=True,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
     is_new_gcnv_joint_call = luigi.BoolParameter(

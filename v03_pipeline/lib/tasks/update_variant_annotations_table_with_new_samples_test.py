@@ -163,7 +163,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
-            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -197,7 +196,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -366,7 +364,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=True,
+            skip_validation=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -418,7 +416,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=True,
+            skip_validation=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -689,7 +687,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -769,7 +766,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
             liftover_ref_path=TEST_LIFTOVER,
             run_id=TEST_RUN_ID,
         )
@@ -827,7 +823,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
                 run_id=TEST_RUN_ID,
             )
@@ -1092,7 +1087,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
                 run_id=TEST_RUN_ID,
             )
@@ -1654,7 +1648,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
                 liftover_ref_path=TEST_LIFTOVER,
                 run_id=TEST_RUN_ID,
             )

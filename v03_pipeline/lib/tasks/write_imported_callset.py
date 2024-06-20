@@ -54,7 +54,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if Env.EXPECT_WES_FILTERS and self.dataset_type.expect_filters(
+        if not self.skip_expect_filters and self.dataset_type.expect_filters(
             self.sample_type,
         ):
             requirements = [
@@ -67,7 +67,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     ),
                 ),
             ]
-        if self.validate and self.dataset_type.can_run_validation:
+        if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
                 *requirements,
                 (
@@ -86,7 +86,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             ]
         if (
-            self.check_sex_and_relatedness
+            not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
@@ -102,7 +102,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         return {
             **(
                 {'info.AF': hl.tarray(hl.tfloat64)}
-                if self.check_sex_and_relatedness
+                if not self.skip_check_sex_and_relatedness
                 and self.dataset_type.check_sex_and_relatedness
                 else {}
             ),
@@ -154,7 +154,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
-        if self.validate and self.dataset_type.can_run_validation:
+        if not self.skip_validation and self.dataset_type.can_run_validation:
             validate_allele_type(mt)
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
@@ -172,7 +172,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.sample_type,
             )
         if (
-            self.check_sex_and_relatedness
+            not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             sex_check_ht = hl.read_table(
