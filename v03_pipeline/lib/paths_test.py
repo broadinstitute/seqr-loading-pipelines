@@ -60,6 +60,7 @@ class TestPaths(unittest.TestCase):
     def test_valid_filters_path(self) -> None:
         self.assertEqual(
             valid_filters_path(
+                DatasetType.SNV_INDEL,
                 SampleType.WES,
                 'gs://bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
             ),
@@ -69,6 +70,7 @@ class TestPaths(unittest.TestCase):
             mock_env.EXPECT_WES_FILTERS = True
             self.assertEqual(
                 valid_filters_path(
+                    DatasetType.SNV_INDEL,
                     SampleType.WES,
                     'gs://bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
                 ),
