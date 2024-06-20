@@ -5,7 +5,8 @@ from dataclasses import dataclass
 HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/hail-search-data')
 LIFTOVER_REF_PATH = os.environ.get(
-    'LIFTOVER_REF_PATH', 'gs://hail-common/references/grch38_to_grch37.over.chain.gz'
+    'LIFTOVER_REF_PATH',
+    'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
 )
 LOADING_DATASETS = os.environ.get('LOADING_DATASETS', '/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS = os.environ.get(
