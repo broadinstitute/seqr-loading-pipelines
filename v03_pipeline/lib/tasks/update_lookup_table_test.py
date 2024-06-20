@@ -27,6 +27,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
+            skip_check_sex_and_relatedness=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uslt_task)
@@ -59,6 +60,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
+            skip_check_sex_and_relatedness=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uslt_task)
