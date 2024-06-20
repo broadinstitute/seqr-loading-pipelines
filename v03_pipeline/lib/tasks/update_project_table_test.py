@@ -5,7 +5,6 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
@@ -24,7 +23,6 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_3,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
-            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(upt_task)
         worker.run()

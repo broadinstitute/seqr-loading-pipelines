@@ -4,6 +4,9 @@ from dataclasses import dataclass
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
 HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/hail-search-data')
+LIFTOVER_REF_PATH = os.environ.get(
+    'LIFTOVER_REF_PATH', 'gs://hail-common/references/grch38_to_grch37.over.chain.gz'
+)
 LOADING_DATASETS = os.environ.get('LOADING_DATASETS', '/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS = os.environ.get(
     'PRIVATE_REFERENCE_DATASETS',
@@ -34,6 +37,7 @@ class Env:
     ALLELE_REGISTRY_SECRET_NAME: str | None = ALLELE_REGISTRY_SECRET_NAME
     HAIL_TMPDIR: str = HAIL_TMPDIR
     HAIL_SEARCH_DATA: str = HAIL_SEARCH_DATA
+    LIFTOVER_REF_PATH: str = LIFTOVER_REF_PATH
     LOADING_DATASETS: str = LOADING_DATASETS
     PRIVATE_REFERENCE_DATASETS: str = PRIVATE_REFERENCE_DATASETS
     PROJECT_ID: str | None = PROJECT_ID

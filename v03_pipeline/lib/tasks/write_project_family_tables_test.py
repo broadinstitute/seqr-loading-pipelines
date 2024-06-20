@@ -7,7 +7,6 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
@@ -26,7 +25,6 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_4,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
-            liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(write_project_family_tables)
         worker.run()

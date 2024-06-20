@@ -43,7 +43,6 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -163,7 +162,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -198,7 +196,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -368,7 +365,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=False,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -421,7 +417,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=False,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -693,7 +688,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -774,7 +768,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            liftover_ref_path=TEST_LIFTOVER,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
@@ -833,7 +826,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                liftover_ref_path=TEST_LIFTOVER,
                 skip_validation=True,
                 skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,
@@ -1099,7 +1091,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                liftover_ref_path=TEST_LIFTOVER,
                 skip_validation=True,
                 skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,
@@ -1662,7 +1653,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                liftover_ref_path=TEST_LIFTOVER,
                 skip_validation=True,
                 skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,

@@ -34,7 +34,3 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         description='Is this a fully joint-called callset.',
     )
-    liftover_ref_path = luigi.OptionalParameter(
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-        description='Path to GRCh38 to GRCh37 coordinates file',
-    )
