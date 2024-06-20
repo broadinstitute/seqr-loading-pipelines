@@ -63,7 +63,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 *requirements,
                 CallsetTask(
                     valid_filters_path(
-                        self.dataset_type, self.sample_type, self.callset_path,
+                        self.dataset_type,
+                        self.sample_type,
+                        self.callset_path,
                     ),
                 ),
             ]
@@ -118,7 +120,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def create_table(self) -> hl.MatrixTable:
         filters_path = valid_filters_path(
-            self.dataset_type, self.sample_type, self.callset_path,
+            self.dataset_type,
+            self.sample_type,
+            self.callset_path,
         )
         mt = import_callset(
             self.callset_path,
