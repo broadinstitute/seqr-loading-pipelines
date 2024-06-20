@@ -54,9 +54,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if (
-            Env.EXPECT_WES_FILTERS
-            and self.dataset_type.expect_filters(self.sample_type)
+        if Env.EXPECT_WES_FILTERS and self.dataset_type.expect_filters(
+            self.sample_type
         ):
             requirements = [
                 *requirements,
