@@ -3,7 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env, SampleType
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     relatedness_check_table_path,
