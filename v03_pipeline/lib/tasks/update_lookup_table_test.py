@@ -26,6 +26,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             ],  # a project excluded from the lookup table
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            skip_validation=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uslt_task)
@@ -57,6 +58,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
+            skip_validation=True,
             liftover_ref_path=TEST_LIFTOVER,
         )
         worker.add(uslt_task)

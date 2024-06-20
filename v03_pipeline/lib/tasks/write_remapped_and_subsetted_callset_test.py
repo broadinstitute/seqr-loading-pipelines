@@ -82,6 +82,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
+            skip_validation=True,
             skip_check_sex_and_relatedness=False,
         )
         worker.add(wrsc_task)
@@ -115,6 +116,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_guid='R0114_project4',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_4,
+            skip_validation=True,
             skip_check_sex_and_relatedness=False,
         )
         worker.add(wrsc_task)
