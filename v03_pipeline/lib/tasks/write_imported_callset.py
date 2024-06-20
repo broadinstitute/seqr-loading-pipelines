@@ -4,6 +4,7 @@ import luigi.util
 
 from v03_pipeline.lib.misc.io import (
     import_callset,
+    import_vcf,
     select_relevant_fields,
     split_multi_hts,
 )
@@ -117,17 +118,22 @@ class WriteImportedCallsetTask(BaseWriteTask):
         }
 
     def create_table(self) -> hl.MatrixTable:
-        filters_path = valid_filters_path(
-            self.dataset_type,
-            self.sample_type,
-            self.callset_path,
-        )
         mt = import_callset(
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
-            filters_path,
         )
+        filters_path = None
+        if not self.skip_expect_filters and self.dataset_type.expect_filters(
+            self.sample_type,
+        ):
+            filters_path = valid_filters_path(
+                self.dataset_type,
+                self.sample_type,
+                self.callset_path,
+            )
+            filters_ht = import_vcf(filters_path, self.reference_genome).rows()
+            mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
         mt = select_relevant_fields(
             mt,
             self.dataset_type,
