@@ -223,8 +223,7 @@ def valid_filters_path(
 ) -> str | None:
     if (
         not Env.EXPECT_WES_FILTERS
-        or dataset_type != DatasetType.SNV_INDEL
-        or sample_type != SampleType.WES
+        or not dataset_type.expect_filters(sample_type)
         or 'part_one_outputs' not in callset_path
     ):
         return None

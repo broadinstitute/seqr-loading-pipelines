@@ -16,7 +16,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, DatasetType, SampleType
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
@@ -56,8 +56,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         requirements = []
         if (
             Env.EXPECT_WES_FILTERS
-            and self.dataset_type == DatasetType.SNV_INDEL
-            and self.sample_type == SampleType.WES
+            and self.dataset_type.expect_filters(self.sample_type)
         ):
             requirements = [
                 *requirements,
