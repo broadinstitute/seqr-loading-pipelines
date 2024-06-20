@@ -16,12 +16,13 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery, DatasetType, SampleType
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     imported_callset_path,
     sex_check_table_path,
+    valid_filters_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
@@ -53,10 +54,18 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if self.filters_path:
+        if (
+            Env.EXPECT_WES_FILTERS
+            and self.dataset_type == DatasetType.SNV_INDEL
+            and self.sample_type == SampleType.WES
+        ):
             requirements = [
                 *requirements,
-                CallsetTask(self.filters_path),
+                CallsetTask(
+                    valid_filters_path(
+                        self.dataset_type, self.sample_type, self.callset_path,
+                    ),
+                ),
             ]
         if self.validate and self.dataset_type.can_run_validation:
             requirements = [
@@ -108,11 +117,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
         }
 
     def create_table(self) -> hl.MatrixTable:
+        filters_path = valid_filters_path(
+            self.dataset_type, self.sample_type, self.callset_path,
+        )
         mt = import_callset(
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
-            self.filters_path,
+            filters_path,
         )
         mt = select_relevant_fields(
             mt,
@@ -174,6 +186,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
         return mt.annotate_globals(
             callset_path=self.callset_path,
-            filters_path=self.filters_path or hl.missing(hl.tstr),
+            filters_path=filters_path or hl.missing(hl.tstr),
             sample_type=self.sample_type.value,
         )
