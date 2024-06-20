@@ -1,3 +1,9 @@
+from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
+from v03_pipeline.lib.tasks.delete_family_tables import DeleteFamilyTablesTask
+from v03_pipeline.lib.tasks.delete_project_family_tables import (
+    DeleteProjectFamilyTablesTask,
+)
+from v03_pipeline.lib.tasks.delete_project_table import DeleteProjectTableTask
 from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
     UpdateCachedReferenceDatasetQueries,
 )
@@ -11,6 +17,9 @@ from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
     UpdateLookupTableWithDeletedProjectTask,
 )
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
+from v03_pipeline.lib.tasks.update_project_table_with_deleted_families import (
+    UpdateProjectTableWithDeletedFamiliesTask,
+)
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
     UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
 )
@@ -26,7 +35,12 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 )
 
 __all__ = [
+    'DeleteFamilyTableTask',
+    'DeleteFamilyTablesTask',
+    'DeleteProjectFamilyTablesTask',
+    'DeleteProjectTableTask',
     'UpdateProjectTableTask',
+    'UpdateProjectTableWithDeletedFamiliesTask',
     'UpdateLookupTableTask',
     'UpdateLookupTableWithDeletedProjectTask',
     'UpdateLookupTableWithDeletedFamiliesTask',
