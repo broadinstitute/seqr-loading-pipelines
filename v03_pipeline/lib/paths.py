@@ -241,7 +241,7 @@ def valid_reference_dataset_collection_path(
 ) -> str | None:
     if (
         not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
-        or reference_dataset_collection.access_control == AccessControl.PUBLIC
+        and reference_dataset_collection.access_control == AccessControl.PRIVATE
     ):
         return None
     return os.path.join(
