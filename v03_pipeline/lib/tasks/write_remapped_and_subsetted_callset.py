@@ -54,6 +54,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             RawFileTask(self.project_pedigree_path),
         ]
         if (
+            Env.CHECK_SEX_AND_RELATEDNESS and
             not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
