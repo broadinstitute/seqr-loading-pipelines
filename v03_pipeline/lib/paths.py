@@ -222,6 +222,7 @@ def valid_filters_path(
     callset_path: str,
 ) -> str | None:
     if (
+        not Env.EXPECT_WES_FILTERS or
         not dataset_type.expect_filters(sample_type)
         or 'part_one_outputs' not in callset_path
     ):
@@ -240,7 +241,7 @@ def valid_reference_dataset_collection_path(
 ) -> str | None:
     if (
         not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
-        and reference_dataset_collection.access_control == AccessControl.PRIVATE
+        or reference_dataset_collection.access_control == AccessControl.PUBLIC
     ):
         return None
     return os.path.join(

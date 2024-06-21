@@ -55,8 +55,12 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if not self.skip_expect_filters and self.dataset_type.expect_filters(
-            self.sample_type,
+        if (
+            Env.EXPECT_WES_FILTERS
+            and not self.skip_expect_filters
+            and self.dataset_type.expect_filters(
+                self.sample_type,
+            )
         ):
             requirements = [
                 *requirements,
@@ -87,7 +91,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             ]
         if (
-            not self.skip_check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
@@ -124,8 +129,12 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
         )
         filters_path = None
-        if not self.skip_expect_filters and self.dataset_type.expect_filters(
-            self.sample_type,
+        if (
+            Env.EXPECT_WES_FILTERS
+            and not self.skip_expect_filters
+            and self.dataset_type.expect_filters(
+                self.sample_type,
+            )
         ):
             filters_path = valid_filters_path(
                 self.dataset_type,
@@ -178,7 +187,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.sample_type,
             )
         if (
-            not self.skip_check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             sex_check_ht = hl.read_table(

@@ -23,7 +23,6 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             project_guids=['R0113_test_project', 'R0114_project4'],
             project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
             project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
-            skip_check_sex_and_relatedness=True,
             skip_validation=True,
             run_id='run_123456',
         )

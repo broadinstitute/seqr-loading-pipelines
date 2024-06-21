@@ -22,7 +22,6 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
         )
         worker.add(upt_task)
         worker.run()

@@ -26,7 +26,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_3,
             family_guid='abc_1',
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
         )
         worker.add(wft_task)
         worker.run()
@@ -164,7 +163,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
         )
         worker.add(write_family_table_task)
         worker.run()
@@ -417,7 +415,6 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
         )
         worker.add(write_family_table_task)
         worker.run()

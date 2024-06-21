@@ -163,7 +163,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -197,7 +196,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -366,7 +364,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=False,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
@@ -418,7 +415,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
             skip_validation=False,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_4)
@@ -689,7 +685,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -769,7 +764,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
-            skip_check_sex_and_relatedness=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -827,7 +821,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1092,7 +1085,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1654,7 +1646,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                skip_check_sex_and_relatedness=True,
                 run_id=TEST_RUN_ID,
             )
         )
