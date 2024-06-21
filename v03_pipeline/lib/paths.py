@@ -222,8 +222,8 @@ def valid_filters_path(
     callset_path: str,
 ) -> str | None:
     if (
-        not Env.EXPECT_WES_FILTERS or
-        not dataset_type.expect_filters(sample_type)
+        not Env.EXPECT_WES_FILTERS
+        or not dataset_type.expect_filters(sample_type)
         or 'part_one_outputs' not in callset_path
     ):
         return None
