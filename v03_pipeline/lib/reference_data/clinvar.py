@@ -1,5 +1,6 @@
 import gzip
 import os
+import shutil
 import subprocess
 import tempfile
 import urllib
@@ -175,13 +176,23 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.txt.gz',
         delete=False,
-    ) as tmp_file:
+    ) as tmp_file, tempfile.NamedTemporaryFile(
+        suffix='.txt',
+        delete=False,
+    ) as unzipped_tmp_file:
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
+        # Unzip the gzipped file first to fix gzip files being read by hail with single partition
+        with gzip.open(tmp_file.name, 'rb') as f_in, open(
+            unzipped_tmp_file.name,
+            'wb',
+        ) as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
         gcs_tmp_file_name = os.path.join(
             Env.HAIL_TMPDIR,
-            os.path.basename(tmp_file.name),
+            os.path.basename(unzipped_tmp_file.name),
         )
-        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
+        safely_move_to_gcs(unzipped_tmp_file.name, gcs_tmp_file_name)
         return hl.import_table(
             gcs_tmp_file_name,
             force=True,
