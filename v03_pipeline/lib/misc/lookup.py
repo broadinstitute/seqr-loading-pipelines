@@ -128,22 +128,23 @@ def remove_project(
     existing_project_guids = hl.eval(ht.globals.project_guids)
     if project_guid not in existing_project_guids:
         return ht
-    project_indexes_to_keep = (
+    project_indexes_to_keep = hl.eval(
         hl.enumerate(existing_project_guids)
         .filter(lambda item: item[1] != project_guid)
-        .map(lambda item: item[0])
+        .map(lambda item: item[0]),
     )
     ht = ht.annotate(
         project_stats=(
-            project_indexes_to_keep.map(
-                lambda i: ht.project_stats[i],
-            )
+            # See "remove_family_guids" func for why this was necessary
+            hl.array(project_indexes_to_keep).map(lambda i: ht.project_stats[i])
+            if len(project_indexes_to_keep) > 0
+            else hl.empty_array(ht.project_stats.dtype.element_type)
         ),
     )
     ht = ht.filter(hl.any(ht.project_stats.map(hl.is_defined)))
     return ht.annotate_globals(
-        project_guids=project_indexes_to_keep.map(
-            lambda i: ht.project_guids[i],
+        project_guids=ht.project_guids.filter(
+            lambda p: p != project_guid,
         ),
         project_families=hl.dict(
             ht.project_families.items().filter(lambda item: item[0] != project_guid),
