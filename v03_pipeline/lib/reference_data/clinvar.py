@@ -1,6 +1,5 @@
 import gzip
 import os
-import shutil
 import subprocess
 import tempfile
 import urllib
