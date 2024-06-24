@@ -36,8 +36,10 @@ def update_or_create_joined_ht(
             continue
 
         # Join the new one!
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         dataset_ht = get_dataset_ht(dataset, reference_genome)
         dataset_ht, _ = checkpoint(dataset_ht)
+        hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
 
@@ -214,8 +216,10 @@ def join_hts(
         ),
     )
     for dataset in reference_dataset_collection.datasets(dataset_type):
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         dataset_ht = get_dataset_ht(dataset, reference_genome)
         dataset_ht, _ = checkpoint(dataset_ht)
+        hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
         joined_ht = joined_ht.join(dataset_ht, 'outer')
         joined_ht = annotate_dataset_globals(joined_ht, dataset, dataset_ht)
     return joined_ht
