@@ -160,20 +160,16 @@ def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
     logger.info('Getting clinvar submission summary')
     ht = download_and_import_clinvar_submission_summary()
-    # Set 'use_new_shuffle' to None here maintain expected partitions
-    hl._set_flags(use_new_shuffle=None)
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect(ht.Submitter),
         Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
     )
-    ht = vcf_ht.annotate(
+    return vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
         conditions=ht[vcf_ht.rsid].Conditions,
     )
-    hl._set_flags(use_new_shuffle='1')
-    return ht
 
 
 def download_and_import_clinvar_submission_summary() -> hl.Table:
