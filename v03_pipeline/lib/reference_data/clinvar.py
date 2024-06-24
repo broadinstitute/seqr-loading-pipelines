@@ -160,37 +160,33 @@ def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
     logger.info('Getting clinvar submission summary')
     ht = download_and_import_clinvar_submission_summary()
+    # Set 'use_new_shuffle' to None here maintain expected partitions
+    hl._set_flags(use_new_shuffle=None)
     ht = ht.rename({'#VariationID': 'VariationID'})
     ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
     ht = ht.group_by('VariationID').aggregate(
         Submitters=hl.agg.collect(ht.Submitter),
         Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
     )
-    ht = ht.key_by('VariationID')
-    return vcf_ht.annotate(
+    ht = vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
         conditions=ht[vcf_ht.rsid].Conditions,
     )
+    hl._set_flags(use_new_shuffle='1')
+    return ht
 
 
 def download_and_import_clinvar_submission_summary() -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.txt.gz',
         delete=False,
-    ) as tmp_file, tempfile.NamedTemporaryFile(
-        suffix='.txt',
-        delete=False,
-    ) as unzipped_tmp_file:
+    ) as tmp_file:
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
-        # Unzip the gzipped file first to fix gzip files being read by hail with single partition
-        with gzip.open(tmp_file.name, 'rb') as f_in, open(unzipped_tmp_file.name, 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
-
         gcs_tmp_file_name = os.path.join(
             Env.HAIL_TMPDIR,
-            os.path.basename(unzipped_tmp_file.name),
+            os.path.basename(tmp_file.name),
         )
-        safely_move_to_gcs(unzipped_tmp_file.name, gcs_tmp_file_name)
+        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
         return hl.import_table(
             gcs_tmp_file_name,
             force=True,
