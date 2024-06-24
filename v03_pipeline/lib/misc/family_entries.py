@@ -98,13 +98,22 @@ def remove_family_guids(
     family_guids: hl.SetExpression,
 ) -> hl.Table:
     # Remove families from the existing project table structure (both the entries arrays and the globals are mutated)
-    family_indexes_to_keep = hl.array(
-        hl.enumerate(ht.globals.family_guids)
-        .filter(lambda item: ~family_guids.contains(item[1]))
-        .map(lambda item: item[0]),
+    family_indexes_to_keep = hl.eval(
+        hl.array(
+            hl.enumerate(ht.globals.family_guids)
+            .filter(lambda item: ~family_guids.contains(item[1]))
+            .map(lambda item: item[0]),
+        ),
     )
     ht = ht.annotate(
-        family_entries=family_indexes_to_keep.map(lambda i: ht.family_entries[i]),
+        # NB: this "should" work without the extra if statement (and does in the tests)
+        # however, experiments on dataproc showed this statement hanging with an empty
+        # unevaluated indexes array.
+        family_entries=hl.array(family_indexes_to_keep).map(
+            lambda i: ht.family_entries[i],
+        )
+        if len(family_indexes_to_keep) > 0
+        else hl.empty_array(ht.family_entries.dtype.element_type),
     )
     ht = ht.filter(hl.any(ht.family_entries.map(hl.is_defined)))
     return ht.annotate_globals(
