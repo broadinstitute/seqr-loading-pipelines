@@ -183,7 +183,9 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
     ) as unzipped_tmp_file:
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
         # Unzip the gzipped file first to fix gzip files being read by hail with single partition
-        with gzip.open(tmp_file.name, 'rb') as f_in, open(unzipped_tmp_file.name, 'wb') as f_out:
+        with gzip.open(tmp_file.name, 'rb') as f_in, open(
+            unzipped_tmp_file.name, 'wb',
+        ) as f_out:
             shutil.copyfileobj(f_in, f_out)
 
         gcs_tmp_file_name = os.path.join(
