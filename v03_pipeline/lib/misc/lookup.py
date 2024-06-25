@@ -97,7 +97,7 @@ def remove_family_guids(
                                 lambda j: ht.project_stats[i][j],
                             )
                             if len(family_indexes_to_keep) > 0
-                            else hl.empty_array(ht.project_stats[i].dtype.element_type),
+                            else hl.empty_array(ht.project_stats[i].dtype.element_type)
                         ),
                     )
                 ),
