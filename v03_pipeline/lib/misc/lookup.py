@@ -78,10 +78,12 @@ def remove_family_guids(
     if project_guid not in hl.eval(ht.globals.project_families):
         return ht
     project_i = ht.project_guids.index(project_guid)
-    family_indexes_to_keep = hl.array(
-        hl.enumerate(ht.globals.project_families[project_guid])
-        .filter(lambda item: ~family_guids.contains(item[1]))
-        .map(lambda item: item[0]),
+    family_indexes_to_keep = hl.eval(
+        hl.array(
+            hl.enumerate(ht.globals.project_families[project_guid])
+            .filter(lambda item: ~family_guids.contains(item[1]))
+            .map(lambda item: item[0]),
+        ),
     )
     ht = ht.annotate(
         project_stats=(
@@ -90,8 +92,12 @@ def remove_family_guids(
                     hl.if_else(
                         i != project_i,
                         fs,
-                        family_indexes_to_keep.map(
-                            lambda j: ht.project_stats[i][j],
+                        (
+                            hl.array(family_indexes_to_keep).map(
+                                lambda j: ht.project_stats[i][j],
+                            )
+                            if len(family_indexes_to_keep) > 0
+                            else hl.empty_array(ht.project_stats[i].dtype.element_type),
                         ),
                     )
                 ),
