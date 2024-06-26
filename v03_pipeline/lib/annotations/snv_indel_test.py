@@ -119,7 +119,6 @@ class SNVTest(unittest.TestCase):
                 ht,
             ),
         )
-        print(ht.sorted_transcript_consequences.collect())
         self.assertCountEqual(
             ht.sorted_transcript_consequences.collect(),
             [
