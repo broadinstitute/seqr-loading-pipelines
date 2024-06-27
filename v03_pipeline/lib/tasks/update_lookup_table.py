@@ -62,7 +62,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                 self.project_guids,
                 self.project_remap_paths,
                 self.project_pedigree_paths,
-                strict=False,
+                strict=True,
             )
         ]
 
