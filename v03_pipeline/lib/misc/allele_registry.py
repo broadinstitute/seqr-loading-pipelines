@@ -181,9 +181,15 @@ def handle_api_response(
                 unmappable_variants.append(allele_response)
                 continue
 
+        formatted_chromosome = chrom
+        if reference_genome == ReferenceGenome.GRCh38:
+            formatted_chromosome = f'chr{chrom}'
+            if chrom == 'MT':
+                formatted_chromosome = 'chrM'
+
         struct = hl.Struct(
             locus=hl.Locus(
-                f'chr{chrom}' if reference_genome == ReferenceGenome.GRCh38 else chrom,
+                formatted_chromosome,
                 int(pos),
                 reference_genome=reference_genome.value,
             ),
