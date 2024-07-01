@@ -25,7 +25,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
             family_guid='abc_1',
-            validate=False,
+            skip_validation=True,
         )
         worker.add(wft_task)
         worker.run()
@@ -162,7 +162,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_remap_path='not_a_real_file',
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
-            validate=False,
+            skip_validation=True,
         )
         worker.add(write_family_table_task)
         worker.run()
@@ -414,7 +414,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             project_remap_path='not_a_real_file',
             project_pedigree_path=TEST_PEDIGREE_5,
             family_guid='family_2_1',
-            validate=False,
+            skip_validation=True,
         )
         worker.add(write_family_table_task)
         worker.run()

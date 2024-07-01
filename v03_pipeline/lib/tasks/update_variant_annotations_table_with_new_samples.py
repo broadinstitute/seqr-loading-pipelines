@@ -1,64 +1,33 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
     BaseUpdateVariantAnnotationsTableTask,
 ):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    imputed_sex_paths = luigi.ListParameter(default=None)
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    liftover_ref_path = luigi.OptionalParameter(
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-        description='Path to GRCh38 to GRCh37 coordinates file',
-    )
     run_id = luigi.Parameter()
 
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
-            WriteNewVariantsTableTask(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.callset_paths,
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                self.imputed_sex_paths,
-                self.ignore_missing_samples_when_remapping,
-                self.validate,
-                self.force,
-                self.liftover_ref_path,
-                self.run_id,
-            ),
+            self.clone(WriteNewVariantsTableTask),
         ]
 
     def complete(self) -> bool:
@@ -71,23 +40,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                         [
                             updates.contains(
                                 hl.Struct(
-                                    callset=callset_path,
+                                    callset=self.callset_path,
                                     project_guid=project_guid,
                                 ),
                             )
-                            for (
-                                callset_path,
-                                project_guid,
-                                _,
-                                _,
-                                _,
-                            ) in callset_project_pairs(
-                                self.callset_paths,
-                                self.project_guids,
-                                self.project_remap_paths,
-                                self.project_pedigree_paths,
-                                self.imputed_sex_paths,
-                            )
+                            for project_guid in self.project_guids
                         ],
                     ),
                     hl.read_table(self.output().path).updates,
@@ -110,11 +67,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             callset_ht = get_callset_ht(
                 self.reference_genome,
                 self.dataset_type,
-                self.callset_paths,
+                self.callset_path,
                 self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                self.imputed_sex_paths,
             )
             # new_variants_ht consists of variants present in the new callset, fully annotated,
             # but NOT present in the existing annotations table.
@@ -142,20 +96,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {
-                    hl.Struct(callset=callset_path, project_guid=project_guid)
-                    for (
-                        callset_path,
-                        project_guid,
-                        _,
-                        _,
-                        _,
-                    ) in callset_project_pairs(
-                        self.callset_paths,
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                        self.imputed_sex_paths,
-                    )
+                    hl.Struct(callset=self.callset_path, project_guid=project_guid)
+                    for project_guid in self.project_guids
                 },
             ),
         )

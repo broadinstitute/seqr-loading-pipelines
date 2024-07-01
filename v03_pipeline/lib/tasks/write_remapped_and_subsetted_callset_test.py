@@ -1,4 +1,5 @@
 import shutil
+from unittest.mock import Mock, patch
 
 import hail as hl
 import luigi.worker
@@ -82,8 +83,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_3,
-            validate=False,
-            check_sex_and_relatedness=True,
+            skip_validation=True,
         )
         worker.add(wrsc_task)
         worker.run()
@@ -104,9 +104,12 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             ],
         )
 
+    @patch('v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset.Env')
     def test_write_remapped_and_subsetted_callset_task_failed_sex_check_family(
         self,
+        mock_env: Mock,
     ) -> None:
+        mock_env.CHECK_SEX_AND_RELATEDNESS = True
         worker = luigi.worker.Worker()
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -116,8 +119,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_guid='R0114_project4',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_4,
-            validate=False,
-            check_sex_and_relatedness=True,
+            skip_validation=True,
         )
         worker.add(wrsc_task)
         worker.run()

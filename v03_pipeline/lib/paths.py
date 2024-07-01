@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 
 from v03_pipeline.lib.model import (
     AccessControl,
@@ -9,6 +10,7 @@ from v03_pipeline.lib.model import (
     PipelineVersion,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleType,
 )
 
 
@@ -70,6 +72,22 @@ def family_table_path(
         ),
         'families',
         f'{family_guid}.ht',
+    )
+
+
+def imputed_sex_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.LOADING_DATASETS,
+            reference_genome,
+            dataset_type,
+        ),
+        'imputed_sex',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
     )
 
 
@@ -195,6 +213,24 @@ def sex_check_table_path(
         ),
         'sex_check',
         f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
+    )
+
+
+def valid_filters_path(
+    dataset_type: DatasetType,
+    sample_type: SampleType,
+    callset_path: str,
+) -> str | None:
+    if (
+        not Env.EXPECT_WES_FILTERS
+        or not dataset_type.expect_filters(sample_type)
+        or 'part_one_outputs' not in callset_path
+    ):
+        return None
+    return re.sub(
+        'part_one_outputs/.*$',
+        'part_two_outputs/*.filtered.*.vcf.gz',
+        callset_path,
     )
 
 

@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
@@ -7,7 +8,7 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_project_table import (
     BaseUpdateProjectTableTask,
 )
@@ -16,28 +17,10 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateProjectTableTask(BaseUpdateProjectTableTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_path = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    imputed_sex_path = luigi.Parameter(default=None)
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    is_new_gcnv_joint_call = luigi.BoolParameter(
-        default=False,
-        description='Is this a fully joint-called callset.',
-    )
 
     def complete(self) -> bool:
         return (
@@ -51,19 +34,7 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
         )
 
     def requires(self) -> luigi.Task:
-        return WriteRemappedAndSubsettedCallsetTask(
-            self.reference_genome,
-            self.dataset_type,
-            self.sample_type,
-            self.callset_path,
-            self.project_guid,
-            self.project_remap_path,
-            self.project_pedigree_path,
-            self.imputed_sex_path,
-            self.ignore_missing_samples_when_remapping,
-            self.validate,
-            False,
-        )
+        return self.clone(WriteRemappedAndSubsettedCallsetTask, force=False)
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
