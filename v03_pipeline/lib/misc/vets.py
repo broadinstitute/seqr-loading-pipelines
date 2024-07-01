@@ -7,7 +7,7 @@ VETS_INDEL_FILTER = 'high_CALIBRATION_SENSITIVITY_INDEL'
 
 
 def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
-    if not hasattr(mt, 'info') or not hasattr(mt.info, 'CALIBRATION_SENSITIVITY'):
+    if not hasattr(mt, 'info.CALIBRATION_SENSITIVITY'):
         return mt
     return mt.annotate_rows(
         filters=hl.bind(
