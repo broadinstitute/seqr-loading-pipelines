@@ -34,6 +34,6 @@ def annotate_vets(mt: hl.MatrixTable) -> hl.MatrixTable:
                 )
             ),
             hl.is_snp(mt.alleles[0], mt.alleles[1]),
-            hl.parse_float(mt.info.CALIBRATION_SENSITIVITY[mt.a_index - 1]),
+            hl.parse_float(mt['info.CALIBRATION_SENSITIVITY'][mt.a_index - 1]),
         ),
     )
