@@ -540,11 +540,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ht.locus.position <= 878809,  # noqa: PLR2004
             ).sorted_transcript_consequences.consequence_term_ids.collect(),
             [
-                [[12], [26, 29], [26, 16, 29]],
-                [[12], [26, 29], [26, 16, 29]],
-                [[12], [26, 29], [26, 16, 29]],
-                [[12], [26, 29], [26, 16, 29]],
-                [[12], [26, 29], [26, 16, 29]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
+                [[9], [23, 26], [23, 13, 26]],
             ],
         )
         self.assertCountEqual(
