@@ -2,15 +2,16 @@ import math
 
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
-from v03_pipeline.lib.misc.callsets import callset_project_pairs, get_callset_ht
+from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection, SampleType
+from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
@@ -19,6 +20,7 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -40,29 +42,11 @@ GENCODE_RELEASE = 42
 GENCODE_FOR_VEP_RELEASE = 44
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteNewVariantsTableTask(BaseWriteTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_paths = luigi.ListParameter()
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    imputed_sex_paths = luigi.ListParameter(default=None)
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    liftover_ref_path = luigi.OptionalParameter(
-        default='gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-        description='Path to GRCh38 to GRCh37 coordinates file',
-    )
     run_id = luigi.Parameter()
 
     @property
@@ -78,6 +62,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
                 load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE, ''),
             )
+        deps['liftover_ref_path'] = Env.LIFTOVER_REF_PATH
         return deps
 
     def output(self) -> luigi.Target:
@@ -91,14 +76,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         if Env.REFERENCE_DATA_AUTO_UPDATE:
-            upstream_table_tasks = [
+            requirements = [
                 UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     self.reference_genome,
                     self.dataset_type,
                 ),
             ]
         else:
-            upstream_table_tasks = [
+            requirements = [
                 BaseUpdateVariantAnnotationsTableTask(
                     self.reference_genome,
                     self.dataset_type,
@@ -106,55 +91,33 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
-            upstream_table_tasks.extend(
-                [
-                    UpdateLookupTableTask(
-                        self.reference_genome,
-                        self.dataset_type,
-                        self.sample_type,
-                        self.callset_paths,
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                        self.imputed_sex_paths,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                        self.force,
-                    ),
-                ],
-            )
+            # Also note that force is passed here,
+            requirements = [
+                *requirements,
+                self.clone(UpdateLookupTableTask),
+            ]
         else:
-            upstream_table_tasks.extend(
+            requirements.extend(
                 [
-                    WriteRemappedAndSubsettedCallsetTask(
-                        self.reference_genome,
-                        self.dataset_type,
-                        self.sample_type,
-                        callset_path,
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                        imputed_sex_path,
-                        self.ignore_missing_samples_when_remapping,
-                        self.validate,
-                        False,
+                    self.clone(
+                        WriteRemappedAndSubsettedCallsetTask,
+                        project_guid=project_guid,
+                        project_remap_path=project_remap_path,
+                        project_pedigree_path=project_pedigree_path,
                     )
                     for (
-                        callset_path,
                         project_guid,
                         project_remap_path,
                         project_pedigree_path,
-                        imputed_sex_path,
-                    ) in callset_project_pairs(
-                        self.callset_paths,
+                    ) in zip(
                         self.project_guids,
                         self.project_remap_paths,
                         self.project_pedigree_paths,
-                        self.imputed_sex_paths,
+                        strict=True,
                     )
                 ],
             )
-        return upstream_table_tasks
+        return requirements
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
@@ -163,23 +126,11 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     [
                         updates.contains(
                             hl.Struct(
-                                callset=callset_path,
+                                callset=self.callset_path,
                                 project_guid=project_guid,
                             ),
                         )
-                        for (
-                            callset_path,
-                            project_guid,
-                            _,
-                            _,
-                            _,
-                        ) in callset_project_pairs(
-                            self.callset_paths,
-                            self.project_guids,
-                            self.project_remap_paths,
-                            self.project_pedigree_paths,
-                            self.imputed_sex_paths,
-                        )
+                        for project_guid in self.project_guids
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -190,11 +141,8 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         callset_ht = get_callset_ht(
             self.reference_genome,
             self.dataset_type,
-            self.callset_paths,
+            self.callset_path,
             self.project_guids,
-            self.project_remap_paths,
-            self.project_pedigree_paths,
-            self.imputed_sex_paths,
         )
 
         # 1) Identify new variants.
@@ -270,19 +218,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         return new_variants_ht.select_globals(
             updates={
-                hl.Struct(callset=callset_path, project_guid=project_guid)
-                for (
-                    callset_path,
-                    project_guid,
-                    _,
-                    _,
-                    _,
-                ) in callset_project_pairs(
-                    self.callset_paths,
-                    self.project_guids,
-                    self.project_remap_paths,
-                    self.project_pedigree_paths,
-                    self.imputed_sex_paths,
-                )
+                hl.Struct(callset=self.callset_path, project_guid=project_guid)
+                for project_guid in self.project_guids
             },
         )

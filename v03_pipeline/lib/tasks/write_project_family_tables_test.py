@@ -23,7 +23,8 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             project_guid='R0113_test_project',
             project_remap_path=TEST_REMAP,
             project_pedigree_path=TEST_PEDIGREE_4,
-            validate=False,
+            skip_validation=True,
+            skip_check_sex_and_relatedness=True,
         )
         worker.add(write_project_family_tables)
         worker.run()

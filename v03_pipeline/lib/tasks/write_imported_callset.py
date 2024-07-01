@@ -1,8 +1,10 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.misc.io import (
     import_callset,
+    import_vcf,
     select_relevant_fields,
     split_multi_hts,
 )
@@ -15,13 +17,15 @@ from v03_pipeline.lib.misc.validation import (
     validate_sample_type,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, SampleType
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     imported_callset_path,
     sex_check_table_path,
+    valid_filters_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
@@ -30,27 +34,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteImportedCallsetTask(BaseWriteTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_path = luigi.Parameter()
-    imputed_sex_path = luigi.Parameter(default=None)
-    filters_path = luigi.OptionalParameter(
-        default=None,
-        description='Optional path to part two outputs from callset (VCF shards containing filter information)',
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    check_sex_and_relatedness = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-
     def complete(self) -> luigi.Target:
         if not self.force and super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -70,18 +55,29 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if self.filters_path:
+        if (
+            Env.EXPECT_WES_FILTERS
+            and not self.skip_expect_filters
+            and self.dataset_type.expect_filters(
+                self.sample_type,
+            )
+        ):
             requirements = [
                 *requirements,
-                CallsetTask(self.filters_path),
+                CallsetTask(
+                    valid_filters_path(
+                        self.dataset_type,
+                        self.sample_type,
+                        self.callset_path,
+                    ),
+                ),
             ]
-        if self.validate and self.dataset_type.can_run_validation:
+        if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
                 *requirements,
                 (
-                    UpdatedCachedReferenceDatasetQuery(
-                        reference_genome=self.reference_genome,
-                        dataset_type=self.dataset_type,
+                    self.clone(
+                        UpdatedCachedReferenceDatasetQuery,
                         crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     )
                     if Env.REFERENCE_DATA_AUTO_UPDATE
@@ -95,17 +91,13 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             ]
         if (
-            self.check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
                 *requirements,
-                WriteSexCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                    self.imputed_sex_path,
-                ),
+                self.clone(WriteSexCheckTableTask),
             ]
         return [
             *requirements,
@@ -116,7 +108,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         return {
             **(
                 {'info.AF': hl.tarray(hl.tfloat64)}
-                if self.check_sex_and_relatedness
+                if not self.skip_check_sex_and_relatedness
                 and self.dataset_type.check_sex_and_relatedness
                 else {}
             ),
@@ -135,8 +127,22 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.callset_path,
             self.reference_genome,
             self.dataset_type,
-            self.filters_path,
         )
+        filters_path = None
+        if (
+            Env.EXPECT_WES_FILTERS
+            and not self.skip_expect_filters
+            and self.dataset_type.expect_filters(
+                self.sample_type,
+            )
+        ):
+            filters_path = valid_filters_path(
+                self.dataset_type,
+                self.sample_type,
+                self.callset_path,
+            )
+            filters_ht = import_vcf(filters_path, self.reference_genome).rows()
+            mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
         mt = select_relevant_fields(
             mt,
             self.dataset_type,
@@ -163,7 +169,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     mt.locus.contig,
                 ),
             )
-        if self.validate and self.dataset_type.can_run_validation:
+        if not self.skip_validation and self.dataset_type.can_run_validation:
             validate_allele_type(mt)
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
@@ -181,7 +187,8 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.sample_type,
             )
         if (
-            self.check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             sex_check_ht = hl.read_table(
@@ -197,6 +204,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
         return mt.annotate_globals(
             callset_path=self.callset_path,
-            filters_path=self.filters_path or hl.missing(hl.tstr),
+            filters_path=filters_path or hl.missing(hl.tstr),
             sample_type=self.sample_type.value,
         )
