@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.misc.callsets import additional_row_fields
 from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_expected_contig_frequency,
@@ -82,24 +83,6 @@ class ValidateCallsetTask(BaseUpdateTask):
             CallsetTask(self.callset_path),
         ]
 
-    def additional_row_fields(self, mt):
-        return {
-            **(
-                {'info.AF': hl.tarray(hl.tfloat64)}
-                if not self.skip_check_sex_and_relatedness
-                and self.dataset_type.check_sex_and_relatedness
-                else {}
-            ),
-            # this field is never required, the pipeline
-            # will run smoothly even in its absence, but
-            # will trigger special handling if it is present.
-            **(
-                {'info.CALIBRATION_SENSITIVITY': hl.tarray(hl.tstr)}
-                if hasattr(mt, 'info') and hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
-                else {}
-            ),
-        }
-
     def create_table(self) -> hl.MatrixTable:
         mt = hl.read_matrix_table(
             imported_callset_path(
@@ -113,7 +96,9 @@ class ValidateCallsetTask(BaseUpdateTask):
         validate_imported_field_types(
             mt,
             self.dataset_type,
-            self.additional_row_fields(mt),
+            additional_row_fields(
+                mt, self.dataset_type, self.skip_check_sex_and_relatedness,
+            ),
         )
         if self.dataset_type.can_run_validation:
             # Rather than throwing an error, we silently remove invalid contigs.

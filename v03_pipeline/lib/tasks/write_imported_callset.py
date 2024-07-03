@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.misc.callsets import additional_row_fields
 from v03_pipeline.lib.misc.io import (
     import_callset,
     import_vcf,
@@ -99,7 +100,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = select_relevant_fields(
             mt,
             self.dataset_type,
-            self.additional_row_fields(mt),
+            additional_row_fields(
+                mt, self.dataset_type, self.skip_check_sex_and_relatedness,
+            ),
         )
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
