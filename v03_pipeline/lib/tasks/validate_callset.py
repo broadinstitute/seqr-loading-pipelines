@@ -83,7 +83,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             CallsetTask(self.callset_path),
         ]
 
-    def create_table(self) -> hl.MatrixTable:
+    def update_table(self) -> hl.MatrixTable:
         mt = hl.read_matrix_table(
             imported_callset_path(
                 self.reference_genome,
