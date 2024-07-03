@@ -31,7 +31,9 @@ def get_callset_ht(
 
 
 def additional_row_fields(
-    mt: hl.MatrixTable, dataset_type: DatasetType, skip_check_sex_and_relatedness: bool,
+    mt: hl.MatrixTable,
+    dataset_type: DatasetType,
+    skip_check_sex_and_relatedness: bool,
 ):
     return {
         **(

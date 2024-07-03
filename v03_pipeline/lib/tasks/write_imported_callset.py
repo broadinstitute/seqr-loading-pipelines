@@ -101,7 +101,9 @@ class WriteImportedCallsetTask(BaseWriteTask):
             mt,
             self.dataset_type,
             additional_row_fields(
-                mt, self.dataset_type, self.skip_check_sex_and_relatedness,
+                mt,
+                self.dataset_type,
+                self.skip_check_sex_and_relatedness,
             ),
         )
         if self.dataset_type.has_multi_allelic_variants:
