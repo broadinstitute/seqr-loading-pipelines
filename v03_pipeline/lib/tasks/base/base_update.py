@@ -10,7 +10,11 @@ class BaseUpdateTask(BaseHailTableTask):
         if not self.output().exists():
             ht = self.initialize_table()
         else:
-            read_fn = hl.read_matrix_table if self.output().path.endswith('mt') else hl.read_table
+            read_fn = (
+                hl.read_matrix_table
+                if self.output().path.endswith('mt')
+                else hl.read_table
+            )
             ht = read_fn(self.output().path)
         ht = self.update_table(ht)
         write(ht, self.output().path)
