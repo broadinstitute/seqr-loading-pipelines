@@ -57,7 +57,7 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
 
         # Force imported callset to be complete
         ht = import_vcf(TEST_VCF, ReferenceGenome.GRCh38)
-        ht = ht.annotate_globals(sample_type=SampleType.WGS.value)
+        ht = ht.annotate_globals(validated_sample_type=SampleType.WGS.value)
         ht = ht.annotate_rows(**{'info.AF': ht.info.AF})
         ht.write(
             imported_callset_path(
