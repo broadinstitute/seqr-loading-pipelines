@@ -159,22 +159,20 @@ def handle_api_response(  # noqa: C901
             continue
 
         # Extract CAID and allele info
-        caid = allele_response['@id'].split('/')[-1]
-        allele_info = next(
-            (
+        try:
+            caid = allele_response['@id'].split('/')[-1]
+            allele_info = next(
                 record
                 for record in allele_response['genomicAlleles']
                 if record['referenceGenome'] == reference_genome.value
-            ),
-            None,
-        )
-        if not allele_info:
+            )
+            chrom = allele_info['chromosome']
+            pos = allele_info['coordinates'][0]['end']
+            ref = allele_info['coordinates'][0]['referenceAllele']
+            alt = allele_info['coordinates'][0]['allele']
+        except (KeyError, StopIteration):
             unmappable_variants.append(allele_response)
             continue
-        chrom = allele_info['chromosome']
-        pos = allele_info['coordinates'][0]['end']
-        ref = allele_info['coordinates'][0]['referenceAllele']
-        alt = allele_info['coordinates'][0]['allele']
 
         if ref == '' or alt == '':
             # AR will turn alleles like ["A","ATT"] to ["", "TT"] so try using gnomad IDs instead
