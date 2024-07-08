@@ -137,7 +137,7 @@ def get_ar_credentials_from_secret_manager() -> tuple[str, str]:
     return payload_dict['login'], payload_dict['password']
 
 
-def handle_api_response(
+def handle_api_response(  # noqa: C901
     res: requests.Response,
     base_url: str,
     reference_genome: ReferenceGenome,
@@ -159,16 +159,20 @@ def handle_api_response(
             continue
 
         # Extract CAID and allele info
-        caid = allele_response['@id'].split('/')[-1]
-        allele_info = next(
-            record
-            for record in allele_response['genomicAlleles']
-            if record['referenceGenome'] == reference_genome.value
-        )
-        chrom = allele_info['chromosome']
-        pos = allele_info['coordinates'][0]['end']
-        ref = allele_info['coordinates'][0]['referenceAllele']
-        alt = allele_info['coordinates'][0]['allele']
+        try:
+            caid = allele_response['@id'].split('/')[-1]
+            allele_info = next(
+                record
+                for record in allele_response['genomicAlleles']
+                if record['referenceGenome'] == reference_genome.value
+            )
+            chrom = allele_info['chromosome']
+            pos = allele_info['coordinates'][0]['end']
+            ref = allele_info['coordinates'][0]['referenceAllele']
+            alt = allele_info['coordinates'][0]['allele']
+        except (KeyError, StopIteration):
+            unmappable_variants.append(allele_response)
+            continue
 
         if ref == '' or alt == '':
             # AR will turn alleles like ["A","ATT"] to ["", "TT"] so try using gnomad IDs instead
