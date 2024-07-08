@@ -67,6 +67,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_list(hl.tstr),
             ),
         )
 
