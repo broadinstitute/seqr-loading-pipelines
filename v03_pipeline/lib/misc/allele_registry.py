@@ -137,7 +137,7 @@ def get_ar_credentials_from_secret_manager() -> tuple[str, str]:
     return payload_dict['login'], payload_dict['password']
 
 
-def handle_api_response(
+def handle_api_response(  # noqa: C901
     res: requests.Response,
     base_url: str,
     reference_genome: ReferenceGenome,
@@ -161,10 +161,16 @@ def handle_api_response(
         # Extract CAID and allele info
         caid = allele_response['@id'].split('/')[-1]
         allele_info = next(
-            record
-            for record in allele_response['genomicAlleles']
-            if record['referenceGenome'] == reference_genome.value
+            (
+                record
+                for record in allele_response['genomicAlleles']
+                if record['referenceGenome'] == reference_genome.value
+            ),
+            None,
         )
+        if not allele_info:
+            unmappable_variants.append(allele_response)
+            continue
         chrom = allele_info['chromosome']
         pos = allele_info['coordinates'][0]['end']
         ref = allele_info['coordinates'][0]['referenceAllele']
