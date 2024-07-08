@@ -10,6 +10,8 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
+    migration = luigi.Parameter()
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
@@ -21,9 +23,7 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
-            return hasattr(mt, 'migrations') and hl.eval(
-                list_migrations() == mt.migrations,
-            )
+            return hl.eval(mt.globals.migrations[-1] == self.migration)
         return False
 
     def initialize_table(self) -> hl.Table:
@@ -42,10 +42,6 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        completed_migrations = set(hl.eval(ht.globals.migrations))
-        for migration in list_migrations():
-            if migration in completed_migrations:
-                continue
-            ht = 
-            ht = ht.annotate(migrations=ht.migrations.append(migration))
-        return ht
+        name, migration = dict(list_migrations())[self.migration]
+        ht = migration.migrate(ht)
+        return ht.annotate(migrations=ht.migrations.append(name))
