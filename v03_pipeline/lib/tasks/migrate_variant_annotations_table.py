@@ -9,7 +9,7 @@ from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class BaseMigrateVariantAnnotationsTableTask(BaseUpdateTask):
+class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
@@ -40,3 +40,10 @@ class BaseMigrateVariantAnnotationsTableTask(BaseUpdateTask):
                 migrations=hl.empty_list(hl.tstr),
             ),
         )
+
+    def update_table(self, ht: hl.Table) -> hl.Table:
+        completed_migrations = set(hl.eval(ht.globals.migrations))
+        for migration in list_migrations():
+            if migration in completed_migrations:
+                continue
+            ht = ht.annotate(migrations=ht.migrations.append(migration))
