@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
+MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
 MALE = 'Male'
 FEMALE = 'Female'
@@ -54,7 +55,9 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = bi.filter_rows(~bi.alleles.contains('*'))
     bi = bi.annotate_rows(a_index=1, was_split=False)
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
-    split = hl.split_multi_hts(multi)
+    split = hl.split_multi_hts(
+        multi, permit_shuffle=mt.count()[1] < MAX_SAMPLES_SPLIT_MULTI_SHUFFLE
+    )
     mt = split.union_rows(bi)
     return mt.distinct_by_row()
 
