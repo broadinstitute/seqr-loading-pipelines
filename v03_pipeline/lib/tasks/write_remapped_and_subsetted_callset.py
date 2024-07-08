@@ -1,5 +1,6 @@
 import hail as hl
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.family_loading_failures import (
@@ -14,8 +15,9 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
@@ -27,29 +29,11 @@ from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
-    callset_path = luigi.Parameter()
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()
-    imputed_sex_path = luigi.Parameter(default=None)
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    validate = luigi.BoolParameter(
-        default=True,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    check_sex_and_relatedness = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
 
     def complete(self) -> luigi.Target:
         return not self.force and super().complete()
@@ -66,40 +50,18 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            WriteImportedCallsetTask(
-                reference_genome=self.reference_genome,
-                dataset_type=self.dataset_type,
-                sample_type=self.sample_type,
-                callset_path=self.callset_path,
-                imputed_sex_path=self.imputed_sex_path,
-                # NB: filters_path is explicitly passed as None here
-                # to avoid carrying it throughout the rest of the pipeline.
-                # Only the primary import task itself should be aware of it.
-                filters_path=None,
-                validate=self.validate,
-                force=False,
-                check_sex_and_relatedness=self.check_sex_and_relatedness,
-            ),
+            self.clone(WriteImportedCallsetTask, force=False),
             RawFileTask(self.project_pedigree_path),
         ]
         if (
-            self.check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             requirements = [
                 *requirements,
-                WriteRelatednessCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.sample_type,
-                    self.callset_path,
-                ),
-                WriteSexCheckTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                    self.imputed_sex_path,
-                ),
+                self.clone(WriteRelatednessCheckTableTask),
+                self.clone(WriteSexCheckTableTask),
             ]
         return requirements
 
@@ -128,7 +90,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
         if (
-            self.check_sex_and_relatedness
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
         ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)

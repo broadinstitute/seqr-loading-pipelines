@@ -4,7 +4,7 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleType
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -154,6 +154,12 @@ class DatasetType(Enum):
         return (
             self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
         )
+
+    def expect_filters(
+        self,
+        sample_type: SampleType,
+    ) -> bool:
+        return self == DatasetType.SNV_INDEL and sample_type == SampleType.WES
 
     @property
     def has_gencode_gene_symbol_to_gene_id_mapping(self) -> bool:

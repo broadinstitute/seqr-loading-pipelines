@@ -43,7 +43,6 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-TEST_LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -159,12 +158,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=['bad_pedigree'],
-            validate=False,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=True,
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -193,12 +191,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=True,
             run_id=TEST_RUN_ID,
         )
         worker = luigi.worker.Worker()
@@ -362,12 +359,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=True,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=False,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_3)
@@ -414,12 +410,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0114_project4'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
-            validate=True,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=False,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task_4)
@@ -685,12 +680,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -765,12 +759,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
-            callset_paths=[TEST_SNV_INDEL_VCF],
+            callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
-            validate=False,
-            liftover_ref_path=TEST_LIFTOVER,
+            skip_validation=True,
             run_id=TEST_RUN_ID,
         )
         worker.add(uvatwns_task)
@@ -823,12 +816,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
                 sample_type=SampleType.WGS,
-                callset_paths=[TEST_MITO_MT],
+                callset_path=TEST_MITO_MT,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
-                liftover_ref_path=TEST_LIFTOVER,
+                skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1088,12 +1080,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
                 sample_type=SampleType.WGS,
-                callset_paths=[TEST_SV_VCF],
+                callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
-                liftover_ref_path=TEST_LIFTOVER,
+                skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
         )
@@ -1650,12 +1641,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.GCNV,
                 sample_type=SampleType.WES,
-                callset_paths=[TEST_GCNV_BED_FILE],
+                callset_path=TEST_GCNV_BED_FILE,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
-                validate=False,
-                liftover_ref_path=TEST_LIFTOVER,
+                skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
         )

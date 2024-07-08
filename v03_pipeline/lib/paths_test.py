@@ -6,11 +6,13 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleType,
 )
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     family_table_path,
     imported_callset_path,
+    imputed_sex_path,
     lookup_table_path,
     metadata_for_run_path,
     new_variants_table_path,
@@ -18,6 +20,7 @@ from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
+    valid_filters_path,
     valid_reference_dataset_collection_path,
     variant_annotations_table_path,
 )
@@ -52,6 +55,26 @@ class TestPaths(unittest.TestCase):
                     'franklin',
                 ),
                 'gs://seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht',
+            )
+
+    def test_valid_filters_path(self) -> None:
+        self.assertEqual(
+            valid_filters_path(
+                DatasetType.MITO,
+                SampleType.WES,
+                'gs://bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
+            ),
+            None,
+        )
+        with patch('v03_pipeline.lib.paths.Env') as mock_env:
+            mock_env.EXPECT_WES_FILTERS = True
+            self.assertEqual(
+                valid_filters_path(
+                    DatasetType.SNV_INDEL,
+                    SampleType.WES,
+                    'gs://bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
+                ),
+                'gs://bucket/RDG_Broad_WES_Internal_Oct2023/part_two_outputs/*.filtered.*.vcf.gz',
             )
 
     def test_project_table_path(self) -> None:
@@ -160,6 +183,16 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
             ),
             '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+        )
+
+    def test_imputed_sex_path(self) -> None:
+        self.assertEqual(
+            imputed_sex_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                'gs://abc.efg/callset.vcf.gz',
+            ),
+            '/seqr-loading-temp/v03/GRCh38/SNV_INDEL/imputed_sex/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.tsv',
         )
 
     def test_new_variants_table_path(self) -> None:

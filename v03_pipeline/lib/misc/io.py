@@ -125,7 +125,6 @@ def import_callset(
     callset_path: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    filters_path: str | None = None,
 ) -> hl.MatrixTable:
     if dataset_type == DatasetType.GCNV:
         mt = import_gcnv_bed_file(callset_path)
@@ -135,9 +134,6 @@ def import_callset(
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(variant_id=mt.rsid)
-    if filters_path:
-        filters_ht = import_vcf(filters_path, reference_genome).rows()
-        mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
