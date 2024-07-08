@@ -14,4 +14,4 @@ def list_migrations(
         match = re.search(name_pattern, migration)
         if match:
             migrations.append(match.group(1))
-    return migrations
+    return sorted(migrations)
