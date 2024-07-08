@@ -46,4 +46,6 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
         for migration in list_migrations():
             if migration in completed_migrations:
                 continue
+            ht = 
             ht = ht.annotate(migrations=ht.migrations.append(migration))
+        return ht

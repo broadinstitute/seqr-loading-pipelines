@@ -17,8 +17,15 @@ class TestListMigrations(unittest.TestCase):
             'abcd_test.py',
             '0000_migration.txt',
         ]:
-            with open(os.path.join(self.tmpdir.name, migration), 'w'):
-                os.utime(os.path.join(self.tmpdir.name, migration), None)
+            with open(os.path.join(self.tmpdir.name, migration), 'w') as f:
+                f.write(
+                    '''
+from v03_pipeline.lib.misc.migration import Migration
+class ImplementedMigration(Migration):
+    pass
+                    '''
+                )
+                
 
     def tearDown(self):
         if os.path.isdir(self.tmpdir.name):
@@ -27,7 +34,7 @@ class TestListMigrations(unittest.TestCase):
     def test_list_migrations(self):
         self.assertEqual(
             list_migrations(
-                path=os.path.join(self.tmpdir.name, '*.py'),
+                self.tmpdir.name,
             ),
             [
                 '0000_migration',
