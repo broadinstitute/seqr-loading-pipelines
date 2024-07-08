@@ -56,7 +56,8 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = bi.annotate_rows(a_index=1, was_split=False)
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(
-        multi, permit_shuffle=mt.count()[1] < MAX_SAMPLES_SPLIT_MULTI_SHUFFLE
+        multi,
+        permit_shuffle=mt.count()[1] < MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
     )
     mt = split.union_rows(bi)
     return mt.distinct_by_row()
