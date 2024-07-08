@@ -282,3 +282,10 @@ def new_variants_table_path(
         run_id,
         'new_variants.ht',
     )
+
+
+def clinvar_submission_summary_path(etag: str) -> str:
+    return os.path.join(
+        Env.HAIL_TMPDIR,
+        f'clinvar-{etag}.ht',
+    )
