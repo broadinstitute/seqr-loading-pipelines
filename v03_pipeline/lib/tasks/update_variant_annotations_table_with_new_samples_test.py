@@ -206,13 +206,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
-        'v03_pipeline.lib.tasks.write_imported_callset.UpdatedCachedReferenceDatasetQuery',
+        'v03_pipeline.lib.tasks.validate_callset.UpdatedCachedReferenceDatasetQuery',
     )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
-        'v03_pipeline.lib.tasks.write_imported_callset.validate_expected_contig_frequency',
+        'v03_pipeline.lib.tasks.validate_callset.validate_expected_contig_frequency',
         partial(validate_expected_contig_frequency, min_rows_per_contig=25),
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)

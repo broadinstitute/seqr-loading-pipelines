@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
 )
-from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
+from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -30,7 +30,7 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
 
     def requires(self) -> luigi.Task:
         requirements = [
-            self.clone(WriteImportedCallsetTask),
+            self.clone(ValidateCallsetTask),
         ]
         if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             requirements = [
