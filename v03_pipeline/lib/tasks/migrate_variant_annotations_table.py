@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc import list_migrations
+from v03_pipeline.lib.misc.migration import list_migrations
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
@@ -10,7 +10,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
-    migration = luigi.Parameter()
+    migration_name = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -22,8 +22,8 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
 
     def complete(self) -> luigi.Target:
         if super().complete():
-            mt = hl.read_matrix_table(self.output().path)
-            return hl.eval(mt.globals.migrations[-1] == self.migration)
+            mt = hl.read_table(self.output().path)
+            return hl.eval(mt.globals.migrations[-1] == self.migration_name)
         return False
 
     def initialize_table(self) -> hl.Table:
@@ -37,11 +37,13 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
-                migrations=hl.empty_list(hl.tstr),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        name, migration = dict(list_migrations())[self.migration]
+        migration = dict(list_migrations())[self.migration_name]
         ht = migration.migrate(ht)
-        return ht.annotate(migrations=ht.migrations.append(name))
+        return ht.annotate_globals(
+            migrations=ht.globals.migrations.append(self.migration_name)
+        )

@@ -6,13 +6,16 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 
 class BaseMigration(ABC):
-    @property
+    @staticmethod
     @abstractmethod
-    def reference_genome_dataset_types(
-        self,
-    ) -> set[tuple[ReferenceGenome, DatasetType]]:
+    def reference_genome_dataset_types() -> set[tuple[ReferenceGenome, DatasetType]]:
+        #
+        # The migration pertains to this set of
+        # ReferenceGenome, DatasetType pairs.
+        #
         pass
 
+    @staticmethod
     @abstractmethod
-    def migrate(self, ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table) -> hl.Table:
         pass

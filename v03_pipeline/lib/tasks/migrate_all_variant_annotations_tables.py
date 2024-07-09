@@ -1,14 +1,7 @@
 import luigi
 
-from v03_pipeline.lib.model import (
-    DatasetType,
-    ReferenceGenome,
-)
-from v03_pipeline.lib.tasks.migrate_variant_annotations_table import MigrateVariantAnnotationsTableTask
-
 
 class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
-    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_migrate_tasks = list()

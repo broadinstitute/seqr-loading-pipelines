@@ -8,6 +8,9 @@ from v03_pipeline.migrations.base_migration import BaseMigration
 MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
 
 
+# NB: there's a strong case for this method to just be included
+# in the migrations package... but it was easier to
+# unit test by mocking the entire package itself.
 def list_migrations(
     path: str = v03_pipeline.migrations.__path__,
 ) -> list[tuple[str, BaseMigration]]:

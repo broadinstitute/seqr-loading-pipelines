@@ -33,9 +33,7 @@ class ImplementedMigration(BaseMigration):
 
     def test_list_migrations(self):
         self.assertEqual(
-            list_migrations(
-                self.tmpdir.name,
-            ),
+            list_migrations(self.tmpdir.name),
             [
                 ('0000_migration', ANY),
                 ('1111_a_migration', ANY),
