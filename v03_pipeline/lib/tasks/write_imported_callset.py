@@ -58,24 +58,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             CallsetTask(self.callset_path),
         ]
 
-    def additional_row_fields(self, mt):
-        return {
-            **(
-                {'info.AF': hl.tarray(hl.tfloat64)}
-                if not self.skip_check_sex_and_relatedness
-                and self.dataset_type.check_sex_and_relatedness
-                else {}
-            ),
-            # this field is never required, the pipeline
-            # will run smoothly even in its absence, but
-            # will trigger special handling if it is present.
-            **(
-                {'info.CALIBRATION_SENSITIVITY': hl.tarray(hl.tstr)}
-                if hasattr(mt, 'info') and hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
-                else {}
-            ),
-        }
-
     def create_table(self) -> hl.MatrixTable:
         mt = import_callset(
             self.callset_path,
