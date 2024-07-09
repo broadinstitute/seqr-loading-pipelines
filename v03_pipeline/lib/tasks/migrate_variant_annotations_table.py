@@ -45,5 +45,5 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
         migration = dict(list_migrations())[self.migration_name]
         ht = migration.migrate(ht)
         return ht.annotate_globals(
-            migrations=ht.globals.migrations.append(self.migration_name)
+            migrations=ht.globals.migrations.append(self.migration_name),
         )
