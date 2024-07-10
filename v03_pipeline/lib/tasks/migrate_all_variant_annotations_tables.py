@@ -1,5 +1,6 @@
 import luigi
 
+import v03_pipeline.migrations.annotations
 from v03_pipeline.lib.migration.misc import list_migrations
 from v03_pipeline.lib.tasks.migrate_variant_annotations_table import (
     MigrateVariantAnnotationsTableTask,
@@ -17,7 +18,7 @@ class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
         )
 
     def run(self):
-        for migration in list_migrations():
+        for migration in list_migrations(v03_pipeline.migrations.annotations.__path__):
             for (
                 reference_genome,
                 dataset_type,

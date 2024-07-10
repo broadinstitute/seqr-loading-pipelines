@@ -16,7 +16,7 @@ class AddMigrationsGlobals(BaseMigration):
                 (ReferenceGenome.GRCh38, DatasetType.MITO),
                 (ReferenceGenome.GRCh38, DatasetType.GCNV),
                 (ReferenceGenome.GRCh38, DatasetType.SV),
-            )
+            ),
         )
 
     @staticmethod

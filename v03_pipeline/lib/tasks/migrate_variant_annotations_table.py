@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+import v03_pipeline.migrations.annotations
 from v03_pipeline.lib.migration.misc import list_migrations
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
@@ -22,7 +23,9 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
 
     def complete(self) -> luigi.Target:
         if super().complete():
-            migration = dict(list_migrations())[self.migration_name]
+            migration = dict(
+                list_migrations(v03_pipeline.migrations.annotations.__path__),
+            )[self.migration_name]
             if (
                 self.reference_genome,
                 self.dataset_type,
@@ -48,7 +51,9 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        migration = dict(list_migrations())[self.migration_name]
+        migration = dict(list_migrations(v03_pipeline.migrations.annotations.__path__))[
+            self.migration_name
+        ]
         if (
             (self.reference_genome, self.dataset_type)
         ) in migration.reference_genome_dataset_types:

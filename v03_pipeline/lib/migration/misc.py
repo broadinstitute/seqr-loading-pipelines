@@ -2,7 +2,6 @@ import inspect
 import pkgutil
 import re
 
-import v03_pipeline.migrations
 from v03_pipeline.lib.migration.base_migration import BaseMigration
 
 MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
@@ -12,7 +11,7 @@ MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
 # in the migrations package... but it was easier to
 # unit test by mocking the entire package itself.
 def list_migrations(
-    path: str = v03_pipeline.migrations.__path__,
+    path: str,
 ) -> list[tuple[str, BaseMigration]]:
     migrations = []
     for loader, name, _ in pkgutil.iter_modules([path]):
