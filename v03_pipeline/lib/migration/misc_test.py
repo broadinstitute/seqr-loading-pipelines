@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import ANY
 
-from v03_pipeline.lib.misc.migration import list_migrations
+from v03_pipeline.lib.migration.misc import list_migrations
 
 
 class TestListMigrations(unittest.TestCase):
