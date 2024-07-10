@@ -7,9 +7,6 @@ from v03_pipeline.lib.migration.base_migration import BaseMigration
 MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
 
 
-# NB: there's a strong case for this method to just be included
-# in the migrations package... but it was easier to
-# unit test by mocking the entire package itself.
 def list_migrations(
     path: str,
 ) -> list[tuple[str, BaseMigration]]:
@@ -20,14 +17,14 @@ def list_migrations(
             module = loader.find_module(name).load_module(name)
             implemented_migration = next(
                 (
-                    x
-                    for x in module.__dict__.values()
+                    m
+                    for m in module.__dict__.values()
                     # Return objects that are
                     # classes, subclasses of the BaseMigration
                     # and also NOT the BaseMigration class.
-                    if inspect.isclass(x)
-                    and issubclass(x, BaseMigration)
-                    and x != BaseMigration
+                    if inspect.isclass(m)
+                    and issubclass(m, BaseMigration)
+                    and m != BaseMigration
                 ),
                 None,
             )
