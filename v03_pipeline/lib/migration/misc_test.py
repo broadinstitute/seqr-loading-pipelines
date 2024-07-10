@@ -21,7 +21,7 @@ class TestListMigrations(unittest.TestCase):
             with open(os.path.join(self.tmpdir.name, migration), 'w') as f:
                 f.write(
                     """
-from v03_pipeline.migrations.base_migration import BaseMigration
+from v03_pipeline.lib.migration.base_migration import BaseMigration
 class ImplementedMigration(BaseMigration):
     pass
                     """,
