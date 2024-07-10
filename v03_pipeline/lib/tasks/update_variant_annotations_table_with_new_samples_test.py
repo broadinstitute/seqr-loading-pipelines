@@ -588,6 +588,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         screen=None,
                         hgmd='HGMD_Pro_2023',
                     ),
+                    mutations=[],
                     enums=hl.Struct(
                         cadd=hl.Struct(),
                         clinvar=hl.Struct(
