@@ -221,7 +221,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                     paths=hl.Struct(
                         primate_ai='gs://seqr-reference-data/GRCh38/primate_ai/PrimateAI_scores_v0.2.liftover_grch38.ht',
                         cadd='gs://seqr-reference-data/GRCh38/CADD/CADD_snvs_and_indels.v1.6.ht',
-                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+                        clinvar='{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                     ),
                     versions=hl.Struct(
                         primate_ai='v0.3',
