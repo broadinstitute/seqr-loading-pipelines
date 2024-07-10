@@ -284,8 +284,8 @@ def new_variants_table_path(
     )
 
 
-def clinvar_submission_summary_path(etag: str) -> str:
+def clinvar_dataset_path(etag: str) -> str:
     return os.path.join(
         Env.HAIL_TMPDIR,
-        f'clinvar-submissions-{etag}.ht',
+        f'clinvar-{etag}.ht',
     )

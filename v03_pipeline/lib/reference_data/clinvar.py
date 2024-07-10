@@ -12,7 +12,7 @@ from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.paths import clinvar_submission_summary_path
+from v03_pipeline.lib.paths import clinvar_dataset_path
 
 CLINVAR_ASSERTIONS = [
     'Affects',
@@ -41,7 +41,9 @@ CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
         'practice_guideline': 4,
     },
 )
-CLINVAR_SUBMISSION_URL_TEMPLATE = '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
+CLINVAR_SUBMISSION_SUMMARY_URL = (
+    'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
+)
 MIN_HT_PARTITIONS = 2000
 logger = get_logger(__name__)
 
@@ -110,14 +112,33 @@ def parsed_and_mapped_clnsigconf(ht: hl.Table):
     )
 
 
+def get_clinvar_ht(
+    clinvar_url: str,
+    reference_genome: ReferenceGenome,
+):
+    etag = (
+        requests.head(
+            clinvar_url.format(protocol='https'),
+            timeout=10,
+        )
+        .headers.get('ETag')
+        .strip('"')
+    )
+    try:
+        logger.info(f'Try using cached clinvar ht with etag {etag}')
+        ht = hl.read_table(clinvar_dataset_path(etag))
+    except hl.utils.FatalError:
+        ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
+        ht.write(clinvar_dataset_path(etag), overwrite=True)
+    return ht
+
+
 def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
-
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
-        urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
+        urllib.request.urlretrieve(clinvar_url.format(protocol='ftp'), tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = os.path.join(
             Env.HAIL_TMPDIR,
             os.path.basename(tmp_file.name),
@@ -157,27 +178,15 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
 
 
 def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
-    etag = (
-        requests.head(
-            CLINVAR_SUBMISSION_URL_TEMPLATE.format(protocol='https'),
-            timeout=10,
-        )
-        .headers.get('ETag')
-        .strip('"')
-    )
-    try:
-        logger.info(f'Try using cached clinvar submission summary with etag {etag}')
-        ht = hl.read_table(clinvar_submission_summary_path(etag))
-    except hl.utils.FatalError:
-        ht = download_import_write_submission_summary(etag)
-
+    # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
+    ht = download_and_import_clinvar_submission_summary()
     return vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
         conditions=ht[vcf_ht.rsid].Conditions,
     )
 
 
-def download_import_write_submission_summary(etag: str) -> hl.Table:
+def download_and_import_clinvar_submission_summary() -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.txt.gz',
         delete=False,
@@ -186,11 +195,7 @@ def download_import_write_submission_summary(etag: str) -> hl.Table:
         delete=False,
     ) as unzipped_tmp_file:
         logger.info('Getting clinvar submission summary from NCBI FTP server')
-        # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
-        urllib.request.urlretrieve(  # noqa: S310
-            CLINVAR_SUBMISSION_URL_TEMPLATE.format(protocol='ftp'),
-            tmp_file.name,
-        )
+        urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
         # Unzip the gzipped file first to fix gzip files being read by hail with single partition
         with gzip.open(tmp_file.name, 'rb') as f_in, open(
             unzipped_tmp_file.name,
@@ -203,9 +208,7 @@ def download_import_write_submission_summary(etag: str) -> hl.Table:
             os.path.basename(unzipped_tmp_file.name),
         )
         safely_move_to_gcs(unzipped_tmp_file.name, gcs_tmp_file_name)
-        ht = import_submission_table(gcs_tmp_file_name)
-        ht.write(clinvar_submission_summary_path(etag), overwrite=True)
-        return ht
+        return import_submission_table(gcs_tmp_file_name)
 
 
 def import_submission_table(file_name: str) -> hl.Table:

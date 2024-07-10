@@ -191,7 +191,7 @@ CONFIG = {
     'clinvar': {
         '37': {
             'custom_import': download_and_import_latest_clinvar_vcf,
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {
@@ -202,7 +202,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': download_and_import_latest_clinvar_vcf,
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {

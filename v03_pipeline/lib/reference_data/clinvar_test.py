@@ -148,15 +148,11 @@ class ClinvarTest(unittest.TestCase):
         )
 
     @mock.patch(
-        'v03_pipeline.lib.reference_data.clinvar.hl.read_table',
-    )
-    @mock.patch(
-        'v03_pipeline.lib.reference_data.clinvar.download_import_write_submission_summary',
+        'v03_pipeline.lib.reference_data.clinvar.download_and_import_clinvar_submission_summary',
     )
     def test_join_to_submission_summary_ht(
         self,
         mock_download,
-        mock_read_existing_table,
     ):
         vcf_ht = hl.Table.parallelize(
             [
@@ -251,17 +247,6 @@ class ClinvarTest(unittest.TestCase):
             ),
         ]
 
-        # Tests reading cached submission summary table
-        mock_read_existing_table.return_value = submitters_ht
-        ht = join_to_submission_summary_ht(vcf_ht)
-        self.assertEqual(
-            ht.collect(),
-            expected_clinvar_ht_rows,
-        )
-        mock_download.assert_not_called()
-
-        # Tests downloading new submission summary table
-        mock_read_existing_table.side_effect = hl.utils.FatalError('Table not found')
         mock_download.return_value = submitters_ht
         ht = join_to_submission_summary_ht(vcf_ht)
         self.assertEqual(
