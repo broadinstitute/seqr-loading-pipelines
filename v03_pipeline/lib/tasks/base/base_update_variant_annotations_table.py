@@ -103,6 +103,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                     **rdc_globals.enums,
                 ),
                 updates=ht.globals.updates,
-                migrations=ht.migrations,
+                migrations=ht.globals.migrations,
             )
         return annotate_enums(ht, self.reference_genome, self.dataset_type)
