@@ -116,14 +116,7 @@ def get_clinvar_ht(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ):
-    etag = (
-        requests.head(
-            clinvar_url.format(protocol='https'),
-            timeout=10,
-        )
-        .headers.get('ETag')
-        .strip('"')
-    )
+    etag = requests.head(clinvar_url, timeout=10).headers.get('ETag').strip('"')
     try:
         logger.info(f'Try using cached clinvar ht with etag {etag}')
         ht = hl.read_table(clinvar_dataset_path(reference_genome, etag))
@@ -139,7 +132,7 @@ def download_and_import_latest_clinvar_vcf(
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
-        urllib.request.urlretrieve(clinvar_url.format(protocol='ftp'), tmp_file.name)  # noqa: S310
+        urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = os.path.join(
             Env.HAIL_TMPDIR,
             os.path.basename(tmp_file.name),

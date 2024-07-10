@@ -191,7 +191,7 @@ CONFIG = {
     'clinvar': {
         '37': {
             'custom_import': get_clinvar_ht,
-            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {
@@ -202,7 +202,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': get_clinvar_ht,
-            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {
@@ -443,7 +443,7 @@ CONFIG = {
     'clinvar_mito': {
         '37': {
             'custom_import': get_clinvar_ht,
-            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {
@@ -454,7 +454,7 @@ CONFIG = {
         },
         '38': {
             'custom_import': get_clinvar_ht,
-            'source_path': '{protocol}://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'select': {'alleleId': 'info.ALLELEID'},
             'custom_select': clinvar_custom_select,
             'enum_select': {
