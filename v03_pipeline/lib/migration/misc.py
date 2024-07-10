@@ -3,7 +3,7 @@ import pkgutil
 import re
 
 import v03_pipeline.migrations
-from v03_pipeline.migrations.base_migration import BaseMigration
+from v03_pipeline.lib.migration.base_migration import BaseMigration
 
 MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
 

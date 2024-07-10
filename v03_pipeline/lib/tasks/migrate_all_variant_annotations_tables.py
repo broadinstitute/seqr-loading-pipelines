@@ -1,24 +1,31 @@
 import luigi
 
+from v03_pipeline.lib.migration.misc import list_migrations
+from v03_pipeline.lib.tasks.migrate_variant_annotations_table import (
+    MigrateVariantAnnotationsTableTask,
+)
+
 
 class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dynamic_migrate_tasks = list()
+        self.dynamic_migration_tasks = []
 
     def complete(self) -> bool:
-        return self.checked_for_tasks
+        return len(self.dynamic_migration_tasks) >= 1 and all(
+            migration_task.complete() for migration_task in self.migration_task
+        )
 
     def run(self):
-        self.checked_for_tasks = True
-        for crdq in CachedReferenceDatasetQuery.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        ):
-            self.dynamic_crdq_tasks.add(
-                UpdatedCachedReferenceDatasetQuery(
-                    **self.param_kwargs,
-                    crdq=crdq,
-                ),
-            )
-        yield self.dynamic_crdq_tasks
+        for migration in list_migrations():
+            for (
+                reference_genome,
+                dataset_type,
+            ) in migration.reference_genome_dataset_types:
+                self.dynamic_migration_tasks.append(
+                    MigrateVariantAnnotationsTableTask(
+                        reference_genome,
+                        dataset_type,
+                    ),
+                )
+        yield self.dynamic_migration_tasks
