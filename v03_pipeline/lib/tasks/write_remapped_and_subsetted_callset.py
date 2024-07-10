@@ -20,7 +20,7 @@ from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
-from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
+from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 from v03_pipeline.lib.tasks.write_relatedness_check_table import (
     WriteRelatednessCheckTableTask,
 )
@@ -50,7 +50,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(WriteImportedCallsetTask, force=False),
+            self.clone(ValidateCallsetTask, force=False),
             RawFileTask(self.project_pedigree_path),
         ]
         if (
