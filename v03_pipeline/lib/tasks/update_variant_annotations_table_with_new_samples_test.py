@@ -342,7 +342,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 versions=hl.Struct(
                     gnomad_genomes='4.1',
                 ),
-                migrations=[],
                 enums=hl.Struct(
                     gnomad_genomes=hl.Struct(),
                 ),
