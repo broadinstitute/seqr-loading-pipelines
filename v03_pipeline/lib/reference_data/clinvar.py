@@ -126,10 +126,11 @@ def get_clinvar_ht(
     )
     try:
         logger.info(f'Try using cached clinvar ht with etag {etag}')
-        ht = hl.read_table(clinvar_dataset_path(etag))
+        ht = hl.read_table(clinvar_dataset_path(reference_genome, etag))
     except hl.utils.FatalError:
+        logger.info('Cached clinvar ht not found, downloading latest clinvar vcf')
         ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
-        ht.write(clinvar_dataset_path(etag), overwrite=True)
+        ht.write(clinvar_dataset_path(reference_genome, etag), overwrite=True)
     return ht
 
 
@@ -179,6 +180,7 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
 
 def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
+    logger.info('Getting clinvar submission summary from NCBI FTP server')
     ht = download_and_import_clinvar_submission_summary()
     return vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
@@ -194,7 +196,6 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
         suffix='.txt',
         delete=False,
     ) as unzipped_tmp_file:
-        logger.info('Getting clinvar submission summary from NCBI FTP server')
         urllib.request.urlretrieve(CLINVAR_SUBMISSION_SUMMARY_URL, tmp_file.name)  # noqa: S310
         # Unzip the gzipped file first to fix gzip files being read by hail with single partition
         with gzip.open(tmp_file.name, 'rb') as f_in, open(

@@ -284,8 +284,8 @@ def new_variants_table_path(
     )
 
 
-def clinvar_dataset_path(etag: str) -> str:
+def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
     return os.path.join(
         Env.HAIL_TMPDIR,
-        f'clinvar-{etag}.ht',
+        f'clinvar-{reference_genome.value}-{etag}.ht',
     )
