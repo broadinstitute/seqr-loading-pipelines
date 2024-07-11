@@ -6,10 +6,12 @@ import tempfile
 import urllib
 
 import hail as hl
+import hailtop.fs as hfs
 import requests
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.paths import clinvar_dataset_path
@@ -117,13 +119,14 @@ def get_clinvar_ht(
     reference_genome: ReferenceGenome,
 ):
     etag = requests.head(clinvar_url, timeout=10).headers.get('ETag').strip('"')
-    try:
+    clinvar_ht_path = clinvar_dataset_path(reference_genome, etag)
+    if hfs.exists(clinvar_ht_path):
         logger.info(f'Try using cached clinvar ht with etag {etag}')
-        ht = hl.read_table(clinvar_dataset_path(reference_genome, etag))
-    except hl.utils.FatalError:
+        ht = hl.read_table(clinvar_ht_path)
+    else:
         logger.info('Cached clinvar ht not found, downloading latest clinvar vcf')
         ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
-        ht.write(clinvar_dataset_path(reference_genome, etag), overwrite=True)
+        write(ht, clinvar_ht_path)
     return ht
 
 
