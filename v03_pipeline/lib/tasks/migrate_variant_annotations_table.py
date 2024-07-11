@@ -2,16 +2,17 @@ import hail as hl
 import luigi
 
 import v03_pipeline.migrations.annotations
-from v03_pipeline.lib.migration.misc import list_migrations
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
+from v03_pipeline.lib.tasks.base.base_migrate import BaseMigrateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
-    migration_name = luigi.Parameter()
+class MigrateVariantAnnotationsTableTask(BaseMigrateTask):
+    @property
+    def migrations_path(self):
+        return v03_pipeline.migrations.annotations.__path__
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -20,20 +21,6 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
                 self.dataset_type,
             ),
         )
-
-    def complete(self) -> luigi.Target:
-        if super().complete():
-            migration = dict(
-                list_migrations(v03_pipeline.migrations.annotations.__path__),
-            )[self.migration_name]
-            if (
-                self.reference_genome,
-                self.dataset_type,
-            ) not in migration.reference_genome_dataset_types:
-                return True
-            mt = hl.read_table(self.output().path)
-            return hl.eval(mt.globals.migrations.index(self.migration_name) >= 0)
-        return False
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
@@ -49,16 +36,3 @@ class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
                 migrations=hl.empty_array(hl.tstr),
             ),
         )
-
-    def update_table(self, ht: hl.Table) -> hl.Table:
-        migration = dict(list_migrations(v03_pipeline.migrations.annotations.__path__))[
-            self.migration_name
-        ]
-        if (
-            (self.reference_genome, self.dataset_type)
-        ) in migration.reference_genome_dataset_types:
-            ht = migration.migrate(ht)
-            return ht.annotate_globals(
-                migrations=ht.globals.migrations.append(self.migration_name),
-            )
-        return ht
