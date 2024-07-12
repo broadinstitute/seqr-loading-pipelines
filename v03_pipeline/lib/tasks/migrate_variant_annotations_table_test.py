@@ -28,7 +28,7 @@ class MockMigration(BaseMigration):
 
 class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
     @mock.patch(
-        'v03_pipeline.lib.tasks.migrate_variant_annotations_table.list_migrations',
+        'v03_pipeline.lib.tasks.base.base_migrate.list_migrations',
     )
     def test_mock_migration(
         self,
@@ -67,7 +67,7 @@ class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
         )
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.migrate_variant_annotations_table.list_migrations',
+        'v03_pipeline.lib.tasks.base.base_migrate.list_migrations',
     )
     def test_migration_is_noop_for_other_dataset_types(
         self,

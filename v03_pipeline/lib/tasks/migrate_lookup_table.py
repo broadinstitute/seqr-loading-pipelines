@@ -5,14 +5,14 @@ import v03_pipeline.migrations.lookup
 from v03_pipeline.lib.paths import (
     lookup_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
+from v03_pipeline.lib.tasks.base.base_migrate import BaseMigrateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class MigrateVariantAnnotationsTableTask(BaseUpdateTask):
+class MigrateLookupTableTask(BaseMigrateTask):
     @property
     def migrations_path(self):
-        return v03_pipeline.migrations.annotations.__path__
+        return v03_pipeline.migrations.lookup.__path__
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
