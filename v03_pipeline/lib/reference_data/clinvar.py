@@ -126,7 +126,7 @@ def get_clinvar_ht(
     else:
         logger.info('Cached clinvar ht not found, downloading latest clinvar vcf')
         ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
-        write(ht, clinvar_ht_path)
+        write(ht, clinvar_ht_path, repartition=False)
     return ht
 
 
