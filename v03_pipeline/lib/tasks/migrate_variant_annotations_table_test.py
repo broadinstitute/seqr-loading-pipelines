@@ -25,6 +25,16 @@ class MockMigration(BaseMigration):
         )
         return ht.annotate_globals(mock_migration='a mock migration')
 
+class MockMigration2(BaseMigration):
+    reference_genome_dataset_types: frozenset[
+        tuple[ReferenceGenome, DatasetType]
+    ] = frozenset(
+        ((ReferenceGenome.GRCh38, DatasetType.GCNV),),
+    )
+
+    @staticmethod
+    def migrate(ht: hl.Table) -> hl.Table:
+        return ht.annotate_globals(mock_migration2='a second mock migration')
 
 class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
     @mock.patch(
@@ -98,4 +108,45 @@ class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
                     migrations=[],
                 ),
             ],
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.base.base_migrate.list_migrations',
+    )
+    def test_migration_dependency(
+        self,
+        mock_list_migrations: mock.Mock,
+    ) -> None:
+        mock_list_migrations.return_value = [
+            ('0012_mock_migration', MockMigration),
+            ('0013_mock_migration2', MockMigration2),
+        ]
+        worker = luigi.worker.Worker()
+        task = MigrateVariantAnnotationsTableTask(
+            dataset_type=DatasetType.GCNV,
+            reference_genome=ReferenceGenome.GRCh38,
+            migration_name='0013_mock_migration2',
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        ht = hl.read_table(task.output().path)
+        self.assertEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    paths=hl.Struct(),
+                    versions=hl.Struct(),
+                    enums=hl.Struct(),
+                    updates=set(),
+                    migrations=['0012_mock_migration', '0013_mock_migration2'],
+                    mock_migration='a mock migration',
+                    mock_migration2='a second mock migration',
+                ),
+            ],
+        )
+        self.assertEqual(
+            ht.collect(),
+            [],
         )
