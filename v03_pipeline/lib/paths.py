@@ -282,3 +282,10 @@ def new_variants_table_path(
         run_id,
         'new_variants.ht',
     )
+
+
+def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
+    return os.path.join(
+        Env.HAIL_TMPDIR,
+        f'clinvar-{reference_genome.value}-{etag}.ht',
+    )
