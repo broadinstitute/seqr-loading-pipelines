@@ -25,6 +25,7 @@ class MockMigration(BaseMigration):
         )
         return ht.annotate_globals(mock_migration='a mock migration')
 
+
 class MockMigration2(BaseMigration):
     reference_genome_dataset_types: frozenset[
         tuple[ReferenceGenome, DatasetType]
@@ -35,6 +36,7 @@ class MockMigration2(BaseMigration):
     @staticmethod
     def migrate(ht: hl.Table) -> hl.Table:
         return ht.annotate_globals(mock_migration2='a second mock migration')
+
 
 class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
     @mock.patch(
