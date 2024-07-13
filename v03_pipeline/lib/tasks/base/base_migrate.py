@@ -17,7 +17,9 @@ class BaseMigrateTask(BaseUpdateTask):
         defined_migrations = [x[0] for x in list_migrations(self.migrations_path)]
         for i, migration in enumerate(defined_migrations):
             if i > 0 and migration == self.migration_name:
-                return self.clone(self.__class__, defined_migrations[i - 1])
+                return self.clone(
+                    self.__class__, migration_name=defined_migrations[i - 1]
+                )
         return None
 
     def complete(self) -> luigi.Target:
