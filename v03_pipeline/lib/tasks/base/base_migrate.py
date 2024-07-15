@@ -18,7 +18,8 @@ class BaseMigrateTask(BaseUpdateTask):
         for i, migration in enumerate(defined_migrations):
             if i > 0 and migration == self.migration_name:
                 return self.clone(
-                    self.__class__, migration_name=defined_migrations[i - 1]
+                    self.__class__,
+                    migration_name=defined_migrations[i - 1],
                 )
         return None
 
