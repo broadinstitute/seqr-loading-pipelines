@@ -206,6 +206,25 @@ class DatasetType(Enum):
             },
         }[self]
 
+    @property
+    def lookup_table_pack(self) -> hl.Struct:
+        return {
+            DatasetType.SNV_INDEL: lambda s: s.annotate(
+                buffer=(
+                    hl.bit_lshift(s.ref_samples, 16) +
+                    hl.bit_lshift(s.het_samples, 8) +
+                    s.hom_samples
+                ),
+            ).drop('ref_samples', 'het_samples', 'hom_samples'),
+            DatasetType.MITO: lambda s: s.annotate(
+                buffer=(
+                    hl.bit_lshift(s.ref_samples, 16) +
+                    hl.bit_lshift(s.heteroplasmic_samples, 8) +
+                    s.homoplasmic_samples
+                ),
+            ).drop('ref_samples', 'heteroplasmic_samples', 'homoplasmic_samples'),
+        }[self]
+
     def formatting_annotation_fns(
         self,
         reference_genome: ReferenceGenome,

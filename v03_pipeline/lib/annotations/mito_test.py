@@ -28,11 +28,11 @@ class MITOTest(unittest.TestCase):
                     'id': 0,
                     'project_stats': [
                         [
-                            hl.Struct(
+                            DatasetType.MITO.lookup_table_pack(hl.Struct(
                                 ref_samples=2,
                                 heteroplasmic_samples=2,
                                 homoplasmic_samples=2,
-                            ),
+                            )),
                         ],
                         [],
                     ],
@@ -41,11 +41,11 @@ class MITOTest(unittest.TestCase):
                     'id': 1,
                     'project_stats': [
                         [
-                            hl.Struct(
+                            DatasetType.MITO.lookup_table_pack(hl.Struct(
                                 ref_samples=6,
                                 heteroplasmic_samples=0,
                                 homoplasmic_samples=0,
-                            ),
+                            )),
                         ],
                         [],
                     ],
@@ -56,10 +56,7 @@ class MITOTest(unittest.TestCase):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in DatasetType.MITO.lookup_table_fields_and_genotype_filter_fns
-                            },
+                            buffer=hl.tint32,
                         ),
                     ),
                 ),

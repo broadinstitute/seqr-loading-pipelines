@@ -28,6 +28,14 @@ N_ALT_HET = 1
 N_ALT_HOM = 2
 
 
+def lookup_table_unpack(s: hl.StructExpression) -> hl.StructExpression:
+    return s.annotate(
+        ref_samples=hl.bit_rshift(s.buffer, 16),
+        het_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF00), 8),
+        hom_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF), 0),
+    ).drop('buffer')
+
+
 def AB(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
     is_called = hl.is_defined(mt.GT)
     return hl.bind(
@@ -55,9 +63,10 @@ def gt_stats(
     **_: Any,
 ) -> hl.Expression:
     row = lookup_ht[ht.key]
-    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
-    het_samples = hl.sum(hl.flatten(row.project_stats.het_samples))
-    hom_samples = hl.sum(hl.flatten(row.project_stats.hom_samples))
+    unpacked_project_stats = hl.flatten(row.project_stats).map(lookup_table_unpack)
+    ref_samples = hl.sum(unpacked_project_stats.ref_samples)
+    het_samples = hl.sum(unpacked_project_stats.het_samples)
+    hom_samples = hl.sum(unpacked_project_stats.hom_samples)
     AC = ref_samples * N_ALT_REF + het_samples * N_ALT_HET + hom_samples * N_ALT_HOM
     AN = 2 * (ref_samples + het_samples + hom_samples)
     hom = hom_samples

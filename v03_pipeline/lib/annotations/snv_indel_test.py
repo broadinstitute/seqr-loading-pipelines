@@ -31,10 +31,12 @@ class SNVTest(unittest.TestCase):
                     'id': 0,
                     'project_stats': [
                         [
-                            hl.Struct(
-                                ref_samples=2,
-                                het_samples=2,
-                                hom_samples=2,
+                            DatasetType.SNV_INDEL.lookup_table_pack(
+                                hl.Struct(
+                                    ref_samples=2,
+                                    het_samples=2,
+                                    hom_samples=2,
+                                ),
                             ),
                             None,
                         ],
@@ -45,10 +47,12 @@ class SNVTest(unittest.TestCase):
                     'id': 1,
                     'project_stats': [
                         [
-                            hl.Struct(
-                                ref_samples=6,
-                                het_samples=0,
-                                hom_samples=0,
+                            DatasetType.SNV_INDEL.lookup_table_pack(
+                                hl.Struct(
+                                    ref_samples=6,
+                                    het_samples=0,
+                                    hom_samples=0,
+                                ),
                             ),
                             None,
                         ],
@@ -61,10 +65,7 @@ class SNVTest(unittest.TestCase):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns
-                            },
+                            buffer=hl.tint32,
                         ),
                     ),
                 ),

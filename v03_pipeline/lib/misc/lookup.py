@@ -34,6 +34,9 @@ def compute_callset_lookup_ht(
                             for field_name, filter_fn in dataset_type.lookup_table_fields_and_genotype_filter_fns.items()
                         },
                     ),
+                )
+                .map(
+                    dataset_type.lookup_table_pack,
                 ),
             ],
         ),

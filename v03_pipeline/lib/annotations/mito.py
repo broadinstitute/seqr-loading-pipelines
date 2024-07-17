@@ -13,6 +13,12 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
     ),
 )
 
+def lookup_table_unpack(s: hl.StructExpression) -> hl.StructExpression:
+    return s.annotate(
+        ref_samples=hl.bit_rshift(s.buffer, 16),
+        heteroplasmic_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF00), 8),
+        homoplasmic_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF), 0),
+    ).drop('buffer')
 
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.bool(ht.common_low_heteroplasmy)
@@ -75,9 +81,10 @@ def gt_stats(
     **_: Any,
 ) -> hl.Expression:
     row = lookup_ht[ht.key]
-    ref_samples = hl.sum(hl.flatten(row.project_stats.ref_samples))
-    heteroplasmic_samples = hl.sum(hl.flatten(row.project_stats.heteroplasmic_samples))
-    homoplasmic_samples = hl.sum(hl.flatten(row.project_stats.homoplasmic_samples))
+    unpacked_project_stats = hl.flatten(row.project_stats).map(lookup_table_unpack)
+    ref_samples = hl.sum(unpacked_project_stats.ref_samples)
+    heteroplasmic_samples = hl.sum(unpacked_project_stats.heteroplasmic_samples)
+    homoplasmic_samples = hl.sum(unpacked_project_stats.homoplasmic_samples)
     AC_het = heteroplasmic_samples  # noqa: N806
     AC_hom = homoplasmic_samples  # noqa: N806
     AN = (  # noqa: N806

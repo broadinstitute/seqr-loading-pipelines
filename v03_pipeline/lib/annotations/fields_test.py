@@ -122,9 +122,7 @@ class FieldsTest(MockedDatarootTestCase):
                     'project_stats': [
                         [
                             hl.Struct(
-                                ref_samples=2,
-                                het_samples=2,
-                                hom_samples=2,
+                                buffer=536870912,
                             ),
                         ],
                     ],
@@ -136,10 +134,7 @@ class FieldsTest(MockedDatarootTestCase):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns
-                            },
+                            buffer=hl.tint32,
                         ),
                     ),
                 ),
