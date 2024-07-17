@@ -30,7 +30,7 @@ N_ALT_HOM = 2
 
 def lookup_table_unpack(s: hl.StructExpression) -> hl.StructExpression:
     return s.annotate(
-        ref_samples=hl.bit_rshift(s.buffer, 16),
+        ref_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF0000), 16),
         het_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF00), 8),
         hom_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF), 0),
     ).drop('buffer')
