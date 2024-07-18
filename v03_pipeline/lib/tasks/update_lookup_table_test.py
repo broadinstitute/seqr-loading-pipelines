@@ -14,6 +14,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
     maxDiff = None
+
     def test_skip_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateLookupTableTask(

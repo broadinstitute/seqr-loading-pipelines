@@ -28,11 +28,13 @@ class MITOTest(unittest.TestCase):
                     'id': 0,
                     'project_stats': [
                         [
-                            DatasetType.MITO.lookup_table_pack(hl.Struct(
-                                ref_samples=2,
-                                heteroplasmic_samples=2,
-                                homoplasmic_samples=2,
-                            )),
+                            DatasetType.MITO.lookup_table_pack(
+                                hl.Struct(
+                                    ref_samples=2,
+                                    heteroplasmic_samples=2,
+                                    homoplasmic_samples=2,
+                                )
+                            ),
                         ],
                         [],
                     ],
@@ -41,11 +43,13 @@ class MITOTest(unittest.TestCase):
                     'id': 1,
                     'project_stats': [
                         [
-                            DatasetType.MITO.lookup_table_pack(hl.Struct(
-                                ref_samples=6,
-                                heteroplasmic_samples=0,
-                                homoplasmic_samples=0,
-                            )),
+                            DatasetType.MITO.lookup_table_pack(
+                                hl.Struct(
+                                    ref_samples=6,
+                                    heteroplasmic_samples=0,
+                                    homoplasmic_samples=0,
+                                )
+                            ),
                         ],
                         [],
                     ],

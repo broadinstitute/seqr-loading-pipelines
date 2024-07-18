@@ -13,12 +13,14 @@ MITOTIP_PATHOGENICITIES_LOOKUP = hl.dict(
     ),
 )
 
+
 def lookup_table_unpack(s: hl.StructExpression) -> hl.StructExpression:
     return s.annotate(
         ref_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF0000), 16),
         heteroplasmic_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF00), 8),
         homoplasmic_samples=hl.bit_rshift(hl.bit_and(s.buffer, 0xFF), 0),
     ).drop('buffer')
+
 
 def common_low_heteroplasmy(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.bool(ht.common_low_heteroplasmy)
