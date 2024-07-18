@@ -103,6 +103,6 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
                     'cde_1',
                     'def_1',
                     'efg_1',
-                ]
+                ],
             ],
         )
