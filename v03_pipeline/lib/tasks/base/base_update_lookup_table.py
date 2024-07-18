@@ -24,10 +24,7 @@ class BaseUpdateLookupTableTask(BaseUpdateTask):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in self.dataset_type.lookup_table_fields_and_genotype_filter_fns
-                            },
+                            buffer=hl.tint32,
                         ),
                     ),
                 ),

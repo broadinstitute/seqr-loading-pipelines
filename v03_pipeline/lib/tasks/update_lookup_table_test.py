@@ -13,6 +13,7 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
+    maxDiff = None
     def test_skip_update_lookup_table_task(self) -> None:
         worker = luigi.worker.Worker()
         uslt_task = UpdateLookupTableTask(
@@ -86,7 +87,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'C'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -97,7 +98,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['C', 'T'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -108,7 +109,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'G'],
                     project_stats=[
-                        [hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)],
+                        [hl.Struct(buffer=3)],
                     ],
                 ),
                 hl.Struct(
@@ -119,7 +120,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['G', 'C'],
                     project_stats=[
-                        [hl.Struct(ref_samples=1, het_samples=2, hom_samples=0)],
+                        [hl.Struct(buffer=66048)],
                     ],
                 ),
                 hl.Struct(
@@ -130,7 +131,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['C', 'T'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -141,7 +142,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['C', 'T'],
                     project_stats=[
-                        [hl.Struct(ref_samples=2, het_samples=1, hom_samples=0)],
+                        [hl.Struct(buffer=131328)],
                     ],
                 ),
                 hl.Struct(
@@ -152,7 +153,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['G', 'A'],
                     project_stats=[
-                        [hl.Struct(ref_samples=1, het_samples=1, hom_samples=1)],
+                        [hl.Struct(buffer=65793)],
                     ],
                 ),
                 hl.Struct(
@@ -163,7 +164,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['G', 'A'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -174,7 +175,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['G', 'A'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -185,7 +186,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['C', 'T'],
                     project_stats=[
-                        [hl.Struct(ref_samples=3, het_samples=0, hom_samples=0)],
+                        [hl.Struct(buffer=196608)],
                     ],
                 ),
                 hl.Struct(
@@ -196,7 +197,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     ),
                     alleles=['A', 'G'],
                     project_stats=[
-                        [hl.Struct(ref_samples=0, het_samples=0, hom_samples=3)],
+                        [hl.Struct(buffer=3)],
                     ],
                 ),
             ],
