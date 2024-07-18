@@ -6,11 +6,15 @@ import tempfile
 import urllib
 
 import hail as hl
+import hailtop.fs as hfs
+import requests
 
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES_LOOKUP
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.paths import clinvar_dataset_path
 
 CLINVAR_ASSERTIONS = [
     'Affects',
@@ -110,12 +114,26 @@ def parsed_and_mapped_clnsigconf(ht: hl.Table):
     )
 
 
+def get_clinvar_ht(
+    clinvar_url: str,
+    reference_genome: ReferenceGenome,
+):
+    etag = requests.head(clinvar_url, timeout=10).headers.get('ETag').strip('"')
+    clinvar_ht_path = clinvar_dataset_path(reference_genome, etag)
+    if hfs.exists(clinvar_ht_path):
+        logger.info(f'Try using cached clinvar ht with etag {etag}')
+        ht = hl.read_table(clinvar_ht_path)
+    else:
+        logger.info('Cached clinvar ht not found, downloading latest clinvar vcf')
+        ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
+        write(ht, clinvar_ht_path, repartition=False)
+    return ht
+
+
 def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    """Downloads the latest clinvar VCF from the NCBI FTP server, imports it to a MT and returns that."""
-
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         gcs_tmp_file_name = os.path.join(
@@ -158,14 +176,8 @@ def _parse_clinvar_release_date(local_vcf_path: str) -> str:
 
 def join_to_submission_summary_ht(vcf_ht: hl.Table) -> hl.Table:
     # https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/README - submission_summary.txt
-    logger.info('Getting clinvar submission summary')
+    logger.info('Getting clinvar submission summary from NCBI FTP server')
     ht = download_and_import_clinvar_submission_summary()
-    ht = ht.rename({'#VariationID': 'VariationID'})
-    ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
-    ht = ht.group_by('VariationID').aggregate(
-        Submitters=hl.agg.collect(ht.Submitter),
-        Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
-    )
     return vcf_ht.annotate(
         submitters=ht[vcf_ht.rsid].Submitters,
         conditions=ht[vcf_ht.rsid].Conditions,
@@ -193,15 +205,25 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             os.path.basename(unzipped_tmp_file.name),
         )
         safely_move_to_gcs(unzipped_tmp_file.name, gcs_tmp_file_name)
-        return hl.import_table(
-            gcs_tmp_file_name,
-            force=True,
-            filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
-            types={
-                '#VariationID': hl.tstr,
-                'Submitter': hl.tstr,
-                'ReportedPhenotypeInfo': hl.tstr,
-            },
-            missing='-',
-            min_partitions=MIN_HT_PARTITIONS,
-        )
+        return import_submission_table(gcs_tmp_file_name)
+
+
+def import_submission_table(file_name: str) -> hl.Table:
+    ht = hl.import_table(
+        file_name,
+        force=True,
+        filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
+        types={
+            '#VariationID': hl.tstr,
+            'Submitter': hl.tstr,
+            'ReportedPhenotypeInfo': hl.tstr,
+        },
+        missing='-',
+        min_partitions=MIN_HT_PARTITIONS,
+    )
+    ht = ht.rename({'#VariationID': 'VariationID'})
+    ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
+    return ht.group_by('VariationID').aggregate(
+        Submitters=hl.agg.collect(ht.Submitter),
+        Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
+    )
