@@ -92,8 +92,8 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
         )
         ht = ht.annotate(
             ht.project_stats.map(
-                lambda p: p.map(DatasetType.SNV_INDEL.lookup_table_pack)
-            )
+                lambda p: p.map(DatasetType.SNV_INDEL.lookup_table_pack),
+            ),
         )
         ht.write(
             lookup_table_path(
