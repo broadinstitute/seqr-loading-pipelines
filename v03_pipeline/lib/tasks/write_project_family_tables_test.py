@@ -83,22 +83,26 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         self.assertCountEqual(
             hl.read_table(
                 project_table_path(
-                    ReferenceGenome.GRCh38, DatasetType.SNV_INDEL, 'R0113_test_project'
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    'R0113_test_project',
                 ),
             ).family_guids.collect(),
-            [[
-                '123_1',
-                '234_1',
-                '345_1',
-                '456_1',
-                '567_1',
-                '678_1',
-                '789_1',
-                '890_1',
-                '901_1',
-                'bcd_1',
-                'cde_1',
-                'def_1',
-                'efg_1',
-            ]],
+            [
+                [
+                    '123_1',
+                    '234_1',
+                    '345_1',
+                    '456_1',
+                    '567_1',
+                    '678_1',
+                    '789_1',
+                    '890_1',
+                    '901_1',
+                    'bcd_1',
+                    'cde_1',
+                    'def_1',
+                    'efg_1',
+                ]
+            ],
         )
