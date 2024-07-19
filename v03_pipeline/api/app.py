@@ -12,6 +12,6 @@ async def init_web_app():
     app.add_routes(
         [
             web.get('/status', status),
-        ]
+        ],
     )
     return app

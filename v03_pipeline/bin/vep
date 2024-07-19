@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# NB: the vep_data volume reference isn't absolute... couldn't get it to work.
+docker run --platform linux/amd64 -i -v vep_data:/opt/vep/.vep/:ro ${VEP_DOCKER_IMAGE} \
+  /opt/vep/src/ensembl-vep/vep $@
