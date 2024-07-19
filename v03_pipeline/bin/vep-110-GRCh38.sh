@@ -10,7 +10,6 @@ set -x
 
 export PROJECT="$(gcloud config get-value project)"
 export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CONFIG_PATH)"
-export VEP_REPLICATE="$(/usr/share/google/get_metadata_value attributes/VEP_REPLICATE)"
 export ASSEMBLY=GRCh38
 export VEP_DOCKER_IMAGE=gcr.io/seqr-project/vep-docker-image:110
 
