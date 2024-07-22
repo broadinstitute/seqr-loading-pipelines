@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -e
+
+BUILD_VERSION=$1
+
+VEP_DATA=vep_data/
+SEQR_REFERENCE_DATA=seqr_reference_data/
+
+case ${BUILD_VERSION} in
+  GRCh38)
+    VEP_REFERENCE_DATA_FILES=(
+        'gs://seqr-reference-data/vep/110/uORF_5UTR_GRCh38_PUBLIC.txt'
+        'gs://seqr-reference-data/vep/110/AlphaMissense_hg38.tsv.*'
+        'gs://seqr-reference-data/vep_data/loftee-beta/GRCh38.tar.gz'
+        'gs://seqr-reference-data/vep/110/homo_sapiens_vep_110_GRCh38.tar.gz'
+        'gs://seqr-reference-data/vep/110/Homo_sapiens.GRCh38.dna.primary_assembly.fa.*'
+    )
+    ;;
+  GRCh37)
+    VEP_REFERENCE_DATA_FILES=(
+        'gs://seqr-reference-data/vep_data/loftee-beta/GRCh37.tar.gz'
+        'gs://seqr-reference-data/vep/99/homo_sapiens_vep_99_GRCh37.tar.gz'
+        'gs://seqr-reference-data/vep/99/Homo_sapiens.GRCh37.dna.primary_assembly.fa.*'
+    )
+    ;;
+  *)
+    echo "Invalid build '${BUILD_VERSION}', should be GRCh37 or GRCh38"
+    exit 1
+esac
+
+
+mkdir -p $VEP_DATA
+for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
+    if  [[ $vep_reference_data_file == *.tar.gz ]]; then
+        echo "Downloading and extracting" $vep_reference_data_file;
+        gcloud storage cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/
+    else 
+        echo "Downloading" $vep_reference_data_file;
+        gcloud storage cp $vep_reference_data_file $VEP_DATA
+    fi
+done;
+
+mkdir -p $SEQR_REFERENCE_DATA
+gcloud storage cp -r "gs://seqr-reference-data/v03/$BUILD_VERSION/*" $SEQR_REFERENCE_DATA
