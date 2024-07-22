@@ -13,9 +13,10 @@ RUN python3 -m pip install --no-cache-dir -r ./requirements.txt
 # Application Code
 COPY v03_pipeline/api/ ./api
 COPY v03_pipeline/bin/vep /vep
-COPY v03_pipeline/deploy/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
 COPY v03_pipeline/lib/ ./lib
 COPY v03_pipeline/var/ ./var
+
+RUN cp ./var/spark_config/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
 
 WORKDIR /
 EXPOSE 5000
