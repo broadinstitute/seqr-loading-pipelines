@@ -9,7 +9,7 @@ def run():
     logger = get_logger(__name__)
     web.run_app(
         app,
-        host='0.0.0.0', # noqa: S104
+        host='0.0.0.0',  # noqa: S104
         port=5000,
         access_log=logger,
     )
