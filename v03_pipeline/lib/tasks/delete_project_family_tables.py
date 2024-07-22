@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
@@ -31,11 +32,13 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
         project_ht = hl.read_table(project_table_task.path)
         family_guids = hl.eval(project_ht.globals.family_guids)
         for family_guid in family_guids:
-            self.dynamic_delete_family_table_tasks.add(
-                DeleteFamilyTableTask(
-                    reference_genome=self.reference_genome,
-                    dataset_type=self.dataset_type,
-                    family_guid=family_guid,
-                ),
-            )
+            for sample_type in SampleType:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks

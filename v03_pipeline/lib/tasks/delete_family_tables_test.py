@@ -3,7 +3,7 @@ import pathlib
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import family_table_path
 from v03_pipeline.lib.tasks.delete_family_tables import (
     DeleteFamilyTablesTask,
@@ -20,6 +20,7 @@ class DeleteFamilyTablesTaskTest(MockedDatarootTestCase):
                 family_table_path(
                     ReferenceGenome.GRCh38,
                     DatasetType.SNV_INDEL,
+                    SampleType.WGS,
                     family_guid,
                 ),
             )
@@ -30,6 +31,7 @@ class DeleteFamilyTablesTaskTest(MockedDatarootTestCase):
                 family_table_path(
                     ReferenceGenome.GRCh38,
                     DatasetType.SNV_INDEL,
+                    SampleType.WGS,
                     'family_a',
                 ),
             ).exists(),
@@ -38,6 +40,7 @@ class DeleteFamilyTablesTaskTest(MockedDatarootTestCase):
         task = DeleteFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             family_guids=['family_a', 'family_b'],
         )
         worker.add(task)
@@ -49,6 +52,7 @@ class DeleteFamilyTablesTaskTest(MockedDatarootTestCase):
                     family_table_path(
                         ReferenceGenome.GRCh38,
                         DatasetType.SNV_INDEL,
+                        SampleType.WGS,
                         family_guid,
                     ),
                 ).exists(),

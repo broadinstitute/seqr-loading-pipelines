@@ -62,6 +62,7 @@ def cached_reference_dataset_query_path(
 def family_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    sample_type: SampleType,
     family_guid: str,
 ) -> str:
     return os.path.join(
@@ -71,6 +72,7 @@ def family_table_path(
             dataset_type,
         ),
         'families',
+        sample_type.value,
         f'{family_guid}.ht',
     )
 

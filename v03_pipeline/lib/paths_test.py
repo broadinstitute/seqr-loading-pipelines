@@ -42,9 +42,10 @@ class TestPaths(unittest.TestCase):
             family_table_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
+                SampleType.WES,
                 'franklin',
             ),
-            '/hail-search-data/v03/GRCh37/SNV_INDEL/families/franklin.ht',
+            '/hail-search-data/v03/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
             mock_env.HAIL_SEARCH_DATA = 'gs://seqr-datasets/'
@@ -52,9 +53,10 @@ class TestPaths(unittest.TestCase):
                 family_table_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
+                    SampleType.WES,
                     'franklin',
                 ),
-                'gs://seqr-datasets/v03/GRCh37/SNV_INDEL/families/franklin.ht',
+                'gs://seqr-datasets/v03/GRCh37/SNV_INDEL/families/WES/franklin.ht',
             )
 
     def test_valid_filters_path(self) -> None:
