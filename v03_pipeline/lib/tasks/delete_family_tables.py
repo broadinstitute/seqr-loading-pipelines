@@ -7,7 +7,6 @@ from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
 class DeleteFamilyTablesTask(BaseHailTableTask):
     family_guids = luigi.ListParameter()
-    sample_type = luigi.EnumParameter(enum=SampleType)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,12 +20,13 @@ class DeleteFamilyTablesTask(BaseHailTableTask):
 
     def run(self):
         for family_guid in self.family_guids:
-            self.dynamic_delete_family_table_tasks.add(
-                DeleteFamilyTableTask(
-                    reference_genome=self.reference_genome,
-                    dataset_type=self.dataset_type,
-                    sample_type=self.sample_type,
-                    family_guid=family_guid,
-                ),
-            )
+            for sample_type in SampleType:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks

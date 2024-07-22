@@ -36,11 +36,20 @@ class DeleteFamilyTablesTaskTest(MockedDatarootTestCase):
                 ),
             ).exists(),
         )
+        self.assertFalse(
+            pathlib.Path(
+                family_table_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    SampleType.WES,
+                    'family_a',
+                ),
+            ).exists(),
+        )
         worker = luigi.worker.Worker()
         task = DeleteFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
             family_guids=['family_a', 'family_b'],
         )
         worker.add(task)
