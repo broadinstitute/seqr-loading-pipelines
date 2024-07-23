@@ -214,10 +214,12 @@ def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable,
 def write(
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
+    repartition: bool = True,
 ) -> hl.Table | hl.MatrixTable:
     t, path = checkpoint(t)
-    t = t.repartition(
-        compute_hail_n_partitions(file_size_bytes(path)),
-        shuffle=False,
-    )
+    if repartition:
+        t = t.repartition(
+            compute_hail_n_partitions(file_size_bytes(path)),
+            shuffle=False,
+        )
     return t.write(destination_path, overwrite=True)
