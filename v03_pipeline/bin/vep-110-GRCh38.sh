@@ -44,7 +44,7 @@ gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/110/uO
 # tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
 gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/110/AlphaMissense_hg38.tsv.*' /vep_data/ &
 
-gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar | tar -xf - -C /vep_data/ &
+gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
 
 # Copied from ftp://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz
 gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
@@ -54,6 +54,7 @@ gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/110/h
 # gzip -d Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
 # bgzip Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa
 # samtools faidx Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
+# (The 37 version is hosted at /pub/grch37/release-99)
 gcloud storage cp --billing-project $PROJECT "gs://seqr-reference-data/vep/110/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*" /vep_data/ &
 docker pull ${VEP_DOCKER_IMAGE} &
 wait
