@@ -543,7 +543,7 @@ CONFIG = {
             # Supplementary Table 7.
             'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
             'custom_import': download_and_import_local_constraint_tsv,
-            'select': ['MLC_score'],
+            'select': {'score': 'MLC_score'},
         },
     },
 }

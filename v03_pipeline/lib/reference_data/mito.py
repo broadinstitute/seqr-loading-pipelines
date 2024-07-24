@@ -11,6 +11,6 @@ def download_and_import_local_constraint_tsv(
     ht = ht.select(
         locus=hl.locus('chrM', ht.Position, reference_genome.value),
         alleles=[ht.Reference, ht.Alternate],
-        MLC_Score=ht.MLC_score,
+        MLC_score=ht.MLC_score,
     )
     return ht.key_by('locus', 'alleles')
