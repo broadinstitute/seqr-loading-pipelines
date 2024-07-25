@@ -67,6 +67,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
 
@@ -102,5 +103,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                     **rdc_globals.enums,
                 ),
                 updates=ht.globals.updates,
+                migrations=ht.globals.migrations,
             )
         return annotate_enums(ht, self.reference_genome, self.dataset_type)

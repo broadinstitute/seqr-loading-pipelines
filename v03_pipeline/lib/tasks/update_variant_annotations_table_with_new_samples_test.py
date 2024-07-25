@@ -588,6 +588,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         screen=None,
                         hgmd='HGMD_Pro_2023',
                     ),
+                    migrations=[],
                     enums=hl.Struct(
                         cadd=hl.Struct(),
                         clinvar=hl.Struct(
@@ -877,6 +878,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         ),
                         mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/mito_1.mt',
@@ -1119,6 +1121,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             major_consequence=SV_CONSEQUENCE_RANKS,
                         ),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset=TEST_SV_VCF,
@@ -1679,6 +1682,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             major_consequence=SV_CONSEQUENCE_RANKS,
                         ),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset=TEST_GCNV_BED_FILE,

@@ -743,6 +743,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -913,6 +914,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ),
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
@@ -949,6 +951,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -1012,6 +1015,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             trna_prediction=MITOTIP_PATHOGENICITIES,
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
@@ -1095,6 +1099,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -1174,6 +1179,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             lof_filter=LOF_FILTERS,
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
