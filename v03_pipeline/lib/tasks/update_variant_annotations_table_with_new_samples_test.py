@@ -843,6 +843,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+                        local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
                     ),
                     versions=hl.Struct(
                         high_constraint_region_mito='Feb-15-2022',
@@ -853,9 +854,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hmtvar='Jan. 10 2022',
                         mitomap='Feb. 04 2022',
                         mitimpact='3.0.7',
+                        local_constraint_mito='2024-07-24',
                     ),
                     enums=hl.Struct(
                         high_constraint_region_mito=hl.Struct(),
+                        local_constraint_mito=hl.Struct(),
                         clinvar_mito=hl.Struct(
                             assertion=CLINVAR_ASSERTIONS,
                             pathogenicity=CLINVAR_PATHOGENICITIES,
@@ -922,6 +925,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -957,6 +961,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -992,6 +997,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -1027,6 +1033,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -1062,6 +1069,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
             ],
         )

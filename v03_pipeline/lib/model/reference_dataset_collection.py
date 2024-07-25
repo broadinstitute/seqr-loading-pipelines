@@ -45,6 +45,7 @@ class ReferenceDatasetCollection(Enum):
                 'hmtvar',
                 'mitomap',
                 'mitimpact',
+                'local_constraint_mito',
             ],
             (ReferenceDatasetCollection.HGMD, DatasetType.SNV_INDEL): ['hgmd'],
             (ReferenceDatasetCollection.INTERVAL, DatasetType.SNV_INDEL): [
