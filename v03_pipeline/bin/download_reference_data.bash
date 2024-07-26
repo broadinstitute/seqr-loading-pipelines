@@ -15,5 +15,5 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-mkdir -p $SEQR_REFERENCE_DATA/$reference_genome;
-gcloud storage cp -r "gs://seqr-reference-data/v03/$reference_genome/*" $SEQR_REFERENCE_DATA/$reference_genome/
+mkdir -p $SEQR_REFERENCE_DATA/$REFERENCE_GENOME;
+gcloud storage cp -r "gs://seqr-reference-data/v03/$REFERENCE_GENOME/*" $SEQR_REFERENCE_DATA/$REFERENCE_GENOME/
