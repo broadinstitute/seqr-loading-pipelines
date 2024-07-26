@@ -13,7 +13,7 @@ export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CO
 export ASSEMBLY=GRCh38
 export VEP_DOCKER_IMAGE=gcr.io/seqr-project/vep-docker-image:GRCh38
 
-mkdir -p /vep_data
+mkdir -p /vep_data/$ASSEMBLY
 
 # Install docker
 apt-get update
@@ -38,23 +38,23 @@ sudo service docker restart
 gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/vep-${ASSEMBLY}.json $VEP_CONFIG_PATH
 
 # Copied from the UTRAnnotator repo (https://github.com/ImperialCardioGenetics/UTRannotator/tree/master)
-gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/uORF_5UTR_${ASSEMBLY}_PUBLIC.txt /vep_data/ &
+gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/uORF_5UTR_${ASSEMBLY}_PUBLIC.txt /vep_data/$ASSEMBLY/ &
 
 # Raw data files copied from the bucket (https://console.cloud.google.com/storage/browser/dm_alphamissense;tab=objects?prefix=&forceOnObjectsSortingFiltering=false)
 # tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
-gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/GRCh38/AlphaMissense_hg38.tsv.*' /vep_data/ &
+gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/GRCh38/AlphaMissense_hg38.tsv.*' /vep_data/$ASSEMBLY/ &
 
-gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
+gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep_data/loftee-beta/${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/$ASSEMBLY/ &
 
 # Copied from ftp://ftp.ensembl.org/pub/release-110/variation/indexed_vep_cache/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz
-gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/ &
+gcloud storage cat --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/homo_sapiens_vep_110_${ASSEMBLY}.tar.gz | tar -xzf - -C /vep_data/$ASSEMBLY/ &
 
 # Generated with:
 # curl -O ftp://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/dna/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz > Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
 # gzip -d Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
 # bgzip Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa
 # samtools faidx Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.gz
-gcloud storage cp --billing-project $PROJECT "gs://seqr-reference-data/vep/GRCh38/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*" /vep_data/ &
+gcloud storage cp --billing-project $PROJECT "gs://seqr-reference-data/vep/GRCh38/Homo_sapiens.${ASSEMBLY}.dna.primary_assembly.fa.*" /vep_data/$ASSEMBLY/ &
 docker pull ${VEP_DOCKER_IMAGE} &
 wait
 
@@ -77,7 +77,10 @@ chmod u+s /vep
 cat >/vep.sh <<EOF
 #!/bin/bash
 
-docker run -i -v /vep_data/:/opt/vep/.vep/:ro ${VEP_DOCKER_IMAGE} \
+ASSEMBLY="\$1"
+shift
+
+docker run -i -v /vep_data/"\$ASSEMBLY"/:/opt/vep/.vep/:ro ${VEP_DOCKER_IMAGE} \
   /opt/vep/src/ensembl-vep/vep "\$@"
 EOF
 chmod +x /vep.sh

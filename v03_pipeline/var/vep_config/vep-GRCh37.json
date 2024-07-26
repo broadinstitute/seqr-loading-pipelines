@@ -1,5 +1,6 @@
 {"command": [
     "/vep",
+    "GRCh37",
     "--format", "vcf",
     "__OUTPUT_FORMAT_FLAG__",
     "--everything",

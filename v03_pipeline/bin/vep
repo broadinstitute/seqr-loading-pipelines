@@ -1,5 +1,9 @@
 #!/bin/bash
 
+
+ASSEMBLY="\$1"
+shift
+
 # NB: the vep_data volume reference isn't absolute... couldn't get it to work.
-docker run --platform ${PLATFORM} -i -v vep_data:/opt/vep/.vep/:ro ${VEP_DOCKER_IMAGE} \
+docker run --platform ${PLATFORM} -i -v vep_data/$ASSEMBLY:/opt/vep/.vep/:ro gcr.io/seqr-project/vep-docker-image:${ASSEMBLY} \
   /opt/vep/src/ensembl-vep/vep $@
