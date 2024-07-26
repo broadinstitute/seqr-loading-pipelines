@@ -15,6 +15,5 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-# NB: the vep_data volume reference isn't absolute... couldn't get it to work.
-docker run --platform linux/amd64 -i -v ~/vep_data/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
+docker run --platform linux/amd64 -i -v /vep_data/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
   /opt/vep/src/ensembl-vep/vep $@
