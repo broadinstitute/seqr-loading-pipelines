@@ -9,11 +9,8 @@
 set -x
 
 export PROJECT="$(gcloud config get-value project)"
+export ENVIRONMENT="$(/usr/share/google/get_metadata_value attributes/ENVIRONMENT)"
 export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CONFIG_PATH)"
-export REFERENCE_GENOME=GRCh38
-export VEP_DOCKER_IMAGE=gcr.io/seqr-project/vep-docker-image:GRCh38
-
-mkdir -p /vep_data/$REFERENCE_GENOME
 
 # Install docker
 apt-get update
@@ -34,9 +31,7 @@ apt-get install -y --allow-unauthenticated docker-ce
 sleep 60
 sudo service docker restart
 
-# Copied from the repo at v03_pipeline/var/vep_config
-gcloud storage cp --billing-project $PROJECT gs://seqr-reference-data/vep/GRCh38/vep-${REFERENCE_GENOME}.json $VEP_CONFIG_PATH
-docker pull ${VEP_DOCKER_IMAGE}
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/var/vep_config/vep-GRCh38.json $VEP_CONFIG_PATH
 
 cat >/vep.c <<EOF
 #include <unistd.h>
@@ -47,14 +42,17 @@ main(int argc, char *const argv[]) {
   if (setuid(geteuid()))
     perror( "setuid" );
 
-  execv("/vep.sh", argv);
+  execv("/vep.bash", argv);
   return 0;
 }
 EOF
 gcc -Wall -Werror -O2 /vep.c -o /vep
 chmod u+s /vep
 
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_data.bash /download_vep_data.bash
+chmod +x /download_vep_data.bash
+./download_vep_data.bash GRCh38 /vep_data
 
-gcloud storage cp --billing-project $PROJECT 'gs://seqr-reference-data/vep/GRCh38/AlphaMissense_hg38.tsv.*' /vep_data/$REFERENCE_GENOME/ &
-chmod +x /vep.sh
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.sh
+chmod +x /vep.bash
 
