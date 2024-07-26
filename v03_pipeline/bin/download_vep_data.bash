@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=${1:-GRCh38}
-VEP_DATA=${1:~/vep_data}
+VEP_DATA=${1:/vep_data}
 
 case $REFERENCE_GENOME in
   GRCh38)
