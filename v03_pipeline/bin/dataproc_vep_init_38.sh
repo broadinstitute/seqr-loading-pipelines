@@ -54,5 +54,5 @@ chmod +x /download_vep_data.bash
 ./download_vep_data.bash GRCh38 /vep_data
 
 gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.sh
-chmod +x /vep.bash
+chmod +x /vep.sh
 
