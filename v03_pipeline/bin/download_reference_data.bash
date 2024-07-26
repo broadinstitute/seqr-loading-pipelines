@@ -2,8 +2,8 @@
 
 set -eux
 
-VEP_DATA=${1:-vep_data/}
-SEQR_REFERENCE_DATA=${2:-seqr-reference-data/}
+VEP_DATA=${1:~/vep_data}
+SEQR_REFERENCE_DATA=${2:~/seqr-reference-data}
 
 for reference_genome in GRCh37 GRCh38; do
     mkdir -p $VEP_DATA/$reference_genome
