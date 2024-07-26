@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-ASSEMBLY="\$1"
+REFERENCE_GENOME="\$1"
 shift
 
 # NB: the vep_data volume reference isn't absolute... couldn't get it to work.
-docker run --platform ${PLATFORM} -i -v vep_data/$ASSEMBLY:/opt/vep/.vep/:ro gcr.io/seqr-project/vep-docker-image:${ASSEMBLY} \
+docker run --platform ${PLATFORM} -i -v vep_data/$REFERENCE_GENOME:/opt/vep/.vep/:ro gcr.io/seqr-project/vep-docker-image:${REFERENCE_GENOME} \
   /opt/vep/src/ensembl-vep/vep $@
