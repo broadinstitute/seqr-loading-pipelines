@@ -1,10 +1,10 @@
 import luigi
 
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.base.task import BaseTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
 
-class DeleteFamilyTablesTask(BaseHailTableTask):
+class DeleteFamilyTablesTask(BaseTask):
     family_guids = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):

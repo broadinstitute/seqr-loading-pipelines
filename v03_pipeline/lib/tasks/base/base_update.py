@@ -1,10 +1,10 @@
 import hail as hl
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.base.task import BaseTask
 
 
-class BaseUpdateTask(BaseHailTableTask):
+class BaseUpdateTask(BaseTask):
     def run(self) -> None:
         self.init_hail()
         if not self.output().exists():

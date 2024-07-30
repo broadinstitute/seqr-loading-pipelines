@@ -4,15 +4,15 @@ import luigi.util
 
 from v03_pipeline.lib.misc.io import import_pedigree
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.task import BaseTask
 from v03_pipeline.lib.tasks.files import RawFileTask
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_family_table import WriteFamilyTableTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class WriteProjectFamilyTablesTask(BaseHailTableTask):
+class WriteProjectFamilyTablesTask(BaseTask):
     project_guid = luigi.Parameter()
     project_remap_path = luigi.Parameter()
     project_pedigree_path = luigi.Parameter()

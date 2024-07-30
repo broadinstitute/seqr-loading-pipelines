@@ -8,7 +8,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 logger = get_logger(__name__)
 
 
-class BaseHailTableTask(luigi.Task):
+class BaseTask(luigi.Task):
     reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
     dataset_type = luigi.EnumParameter(enum=DatasetType)
 
@@ -16,7 +16,7 @@ class BaseHailTableTask(luigi.Task):
         raise NotImplementedError
 
     def complete(self) -> bool:
-        logger.info(f'BaseHailTableTask: checking if {self.output().path} exists')
+        logger.info(f'BaseTask: checking if {self.output().path} exists')
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def init_hail(self):
@@ -27,7 +27,7 @@ class BaseHailTableTask(luigi.Task):
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
 
 
-# NB: these are defined over luigi.Task instead of the BaseHailTableTask so that
+# NB: these are defined over luigi.Task instead of the BaseTask so that
 # they work on file dependencies.
 
 

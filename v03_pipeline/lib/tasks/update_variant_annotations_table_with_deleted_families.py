@@ -34,7 +34,8 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTask(
         if not self.dataset_type.has_lookup_table:
             return True
         # We don't have the concept of families being present or not present
-        #  in annotations table a done flag to prevent the task from looping over itself.
+        # in the annotations table, so we use a done flag to prevent the task
+        # from looping over itself.
         return super().complete() and self.done
 
     def update_table(self, ht: hl.Table) -> hl.Table:

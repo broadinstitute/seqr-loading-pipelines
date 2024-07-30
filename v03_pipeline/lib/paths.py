@@ -284,6 +284,20 @@ def new_variants_table_path(
     )
 
 
+def variant_annotations_vcf_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    return os.path.join(
+        _v03_pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'annotations.vcf',
+    )
+
+
 def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
     return os.path.join(
         Env.HAIL_TMPDIR,

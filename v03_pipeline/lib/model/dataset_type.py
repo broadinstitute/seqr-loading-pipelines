@@ -333,5 +333,18 @@ class DatasetType(Enum):
         }[self]
 
     @property
+    def export_vcf_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+        return {
+            DatasetType.SV: [
+                sv.locus,
+                sv.alleles,
+            ],
+        }[self]
+
+    @property
     def should_send_to_allele_registry(self):
         return self == DatasetType.SNV_INDEL
+
+    @property
+    def should_export_to_vcf(self):
+        return self == DatasetType.SV

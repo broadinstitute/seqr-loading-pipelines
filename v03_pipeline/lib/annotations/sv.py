@@ -81,6 +81,23 @@ def _sv_types(ht: hl.Table) -> hl.ArrayExpression:
     return ht.alleles[1].replace('[<>]', '').split(':', 2)
 
 
+def alleles(ht: hl.Table, **_: Any) -> hl.ArrayExpression:
+    return hl.array(
+        [
+            'N',
+            hl.if_else(
+                hl.is_defined(ht.sv_type_detail_id),
+                hl.format('<%s:%s>', SV_TYPES[ht.sv_type_id], SV_TYPE_DETAILS),
+                hl.format('<%s>', SV_TYPES[ht.sv_type_id], SV_TYPE_DETAILS),
+            ),
+        ],
+    )
+
+
+def locus(ht: hl.Table, **_: Any) -> hl.LocusExpression:
+    return ht.start_locus
+
+
 def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.str(',').join(ht['info.ALGORITHMS'])
 

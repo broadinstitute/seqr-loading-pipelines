@@ -1,10 +1,10 @@
 import hail as hl
 
 from v03_pipeline.lib.misc.io import write
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.base.task import BaseTask
 
 
-class BaseWriteTask(BaseHailTableTask):
+class BaseWriteTask(BaseTask):
     def run(self) -> None:
         self.init_hail()
         ht = self.create_table()
