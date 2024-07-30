@@ -18,6 +18,7 @@ TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
+
 class IOTest(unittest.TestCase):
     def test_file_size_mb(self) -> None:
         # find v03_pipeline/var/test/callsets/mito_1.mt -type f | grep -v 'crc' | xargs ls -alt {} | awk '{sum += $5; print sum}'
