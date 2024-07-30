@@ -32,6 +32,8 @@ class BaseUpdateProjectTableTask(BaseUpdateTask):
             globals=hl.Struct(
                 family_guids=hl.empty_array(hl.tstr),
                 family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(hl.tstr),
+                updates=hl.empty_set(
+                    hl.tstruct(callset=hl.tstr, remap_pedigree_hash=hl.tstr),
+                ),
             ),
         )

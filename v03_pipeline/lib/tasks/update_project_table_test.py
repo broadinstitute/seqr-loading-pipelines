@@ -36,7 +36,14 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                         'abc_1': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
                     },
                     sample_type=SampleType.WGS.value,
-                    updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
+                    updates={
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                            remap_pedigree_hash=remap_pedigree_hash(
+                                TEST_REMAP, TEST_PEDIGREE_3
+                            ),
+                        ),
+                    },
                 ),
             ],
         )

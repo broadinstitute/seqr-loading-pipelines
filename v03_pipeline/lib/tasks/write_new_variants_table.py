@@ -128,9 +128,13 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                             hl.Struct(
                                 callset=self.callset_path,
                                 project_guid=project_guid,
+                                remap_pedigree_hash=remap_pedigree_hash(
+                                    self.project_remap_paths[i],
+                                    self.project_pedigree_paths[i],
+                                ),
                             ),
                         )
-                        for project_guid in self.project_guids
+                        for i, project_guid in enumerate(self.project_guids)
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -218,7 +222,13 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         return new_variants_ht.select_globals(
             updates={
-                hl.Struct(callset=self.callset_path, project_guid=project_guid)
-                for project_guid in self.project_guids
+                hl.Struct(
+                    callset=self.callset_path,
+                    project_guid=project_guid,
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        self.project_remap_paths[i], self.project_pedigree_paths[i]
+                    ),
+                )
+                for i, project_guid in enumerate(self.project_guids)
             },
         )

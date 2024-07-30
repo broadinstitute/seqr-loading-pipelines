@@ -32,7 +32,13 @@ class MigrateVariantAnnotationsTableTask(BaseMigrateTask):
                 paths=hl.Struct(),
                 versions=hl.Struct(),
                 enums=hl.Struct(),
-                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                updates=hl.empty_set(
+                    hl.tstruct(
+                        callset=hl.tstr,
+                        project_guid=hl.tstr,
+                        remap_pedigree_hash=hl.tstr,
+                    ),
+                ),
                 migrations=hl.empty_array(hl.tstr),
             ),
         )

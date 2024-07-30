@@ -28,7 +28,13 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
             and super().complete()
             and hl.eval(
                 hl.read_table(self.output().path).updates.contains(
-                    self.callset_path,
+                    hl.Struct(
+                        callset=self.callset_path,
+                        remap_pedigree_hash=remap_pedigree_hash(
+                            self.project_remap_path,
+                            self.project_pedigree_path,
+                        ),
+                    ),
                 ),
             )
         )
@@ -62,5 +68,13 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
             family_guids=ht.family_guids,
             family_samples=ht.family_samples,
             sample_type=self.sample_type.value,
-            updates=ht.updates.add(self.callset_path),
+            updates=ht.updates.add(
+                hl.Struct(
+                    callset=self.callset_path,
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        self.project_remap_path,
+                        self.project_pedigree_path,
+                    ),
+                ),
+            ),
         )

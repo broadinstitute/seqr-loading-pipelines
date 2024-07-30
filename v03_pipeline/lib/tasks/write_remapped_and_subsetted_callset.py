@@ -36,7 +36,16 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_pedigree_path = luigi.Parameter()
 
     def complete(self) -> luigi.Target:
-        return not self.force and super().complete()
+        return (
+            not self.force
+            and super().complete()
+            and hl.eval(
+                hl.read_table(self.output().path).globals.remap_pedigree_hash
+                == remap_pedigree_hash(
+                    self.project_remap_path, self.project_pedigree_path
+                ),
+            )
+        )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -145,6 +154,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
         return mt.select_globals(
+            remap_pedigree_hash=remap_pedigree_hash(
+                self.project_remap_path,
+                self.project_pedigree_path,
+            ),
             family_samples=(
                 {
                     f.family_guid: sorted(f.samples.keys())

@@ -43,6 +43,12 @@ class MigrateLookupTableTask(BaseMigrateTask):
             globals=hl.Struct(
                 project_guids=hl.empty_array(hl.tstr),
                 project_families=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                updates=hl.empty_set(
+                    hl.tstruct(
+                        callset=hl.tstr,
+                        project_guid=hl.tstr,
+                        remap_pedigree_hash=hl.tstr,
+                    ),
+                ),
             ),
         )
