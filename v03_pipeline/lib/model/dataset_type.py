@@ -116,6 +116,7 @@ class DatasetType(Enum):
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
                 'info.StrVCTVRE': hl.tstr,
+                'info.SVLEN': hl.tint32,
                 **sv.CONSEQ_PREDICTED_GENE_COLS,
             },
             DatasetType.GCNV: {
@@ -239,6 +240,7 @@ class DatasetType(Enum):
                 sv.strvctvre,
                 sv.sv_type_id,
                 sv.sv_type_detail_id,
+                sv.sv_len,
                 shared.xpos,
             ],
             DatasetType.GCNV: [

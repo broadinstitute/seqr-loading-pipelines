@@ -81,6 +81,38 @@ def _sv_types(ht: hl.Table) -> hl.ArrayExpression:
     return ht.alleles[1].replace('[<>]', '').split(':', 2)
 
 
+def alleles(ht: hl.Table, **_: Any) -> hl.ArrayExpression:
+    return hl.array(
+        [
+            'N',
+            hl.if_else(
+                hl.is_defined(ht.sv_type_detail_id),
+                hl.format(
+                    '<%s:%s>',
+                    hl.array(SV_TYPES)[ht.sv_type_id],
+                    hl.array(SV_TYPE_DETAILS)[ht.sv_type_detail_id],
+                ),
+                hl.format('<%s>', hl.array(SV_TYPES)[ht.sv_type_id]),
+            ),
+        ],
+    )
+
+
+def info(ht: hl.Table, **_: Any) -> hl.StructExpression:
+    return hl.Struct(
+        ALGORITHMS=ht.algorithms,
+        END=ht.locus.position,
+        CHR2=ht.end_locus.contig,
+        END2=ht.end_locus.position,
+        SVTYPE=hl.array(SV_TYPES)[ht.sv_type_id],
+        SVLEN=ht.sv_len,
+    )
+
+
+def locus(ht: hl.Table, **_: Any) -> hl.LocusExpression:
+    return ht.start_locus
+
+
 def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.str(',').join(ht['info.ALGORITHMS'])
 
@@ -203,6 +235,10 @@ def sorted_gene_consequences(
 
 def strvctvre(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(score=hl.parse_float32(ht['info.StrVCTVRE']))
+
+
+def sv_len(ht: hl.Table, **_: Any) -> hl.Expression:
+    return ht['info.SVLEN']
 
 
 def sv_type_id(ht: hl.Table, **_: Any) -> hl.Expression:
