@@ -294,7 +294,7 @@ def variant_annotations_vcf_path(
             reference_genome,
             dataset_type,
         ),
-        'annotations.vcf',
+        'annotations.vcf.bgz',
     )
 
 

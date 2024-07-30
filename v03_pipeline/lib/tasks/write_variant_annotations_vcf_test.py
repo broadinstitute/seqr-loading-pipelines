@@ -6,6 +6,9 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
+from v03_pipeline.lib.tasks.write_variant_annotations_vcf import (
+    WriteVariantAnnotationsVCF,
+)
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -35,7 +38,7 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
-    def test_sv_update_vat(
+    def test_sv_export_vcf(
         self,
         mock_load_gencode: Mock,
     ) -> None:
@@ -57,3 +60,13 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
         worker.add(update_variant_annotations_task)
         worker.run()
         self.assertTrue(update_variant_annotations_task.complete())
+
+        write_variant_annotations_vcf_task = WriteVariantAnnotationsVCF(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SV,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SV_VCF,
+        )
+        worker.add(write_variant_annotations_vcf_task)
+        worker.run()
+        self.assertTrue(write_variant_annotations_vcf_task.complete())

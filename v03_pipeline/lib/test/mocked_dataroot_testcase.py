@@ -1,5 +1,3 @@
-import os
-import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -16,7 +14,7 @@ class MockedDatarootTestCase(unittest.TestCase):
             if 'DATA' in field_name or 'DIR' in field_name:
                 setattr(self.mock_env, field_name, tempfile.TemporaryDirectory().name)
 
-    def tearDown(self) -> None:
-        for field_name in Env.__dataclass_fields__:
-            if os.path.isdir(getattr(self.mock_env, field_name)):
-                shutil.rmtree(getattr(self.mock_env, field_name))
+    # def tearDown(self) -> None:
+    #    for field_name in Env.__dataclass_fields__:
+    #        if os.path.isdir(getattr(self.mock_env, field_name)):
+    #            shutil.rmtree(getattr(self.mock_env, field_name))

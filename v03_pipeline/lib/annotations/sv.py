@@ -87,8 +87,12 @@ def alleles(ht: hl.Table, **_: Any) -> hl.ArrayExpression:
             'N',
             hl.if_else(
                 hl.is_defined(ht.sv_type_detail_id),
-                hl.format('<%s:%s>', SV_TYPES[ht.sv_type_id], SV_TYPE_DETAILS),
-                hl.format('<%s>', SV_TYPES[ht.sv_type_id], SV_TYPE_DETAILS),
+                hl.format(
+                    '<%s:%s>',
+                    hl.array(SV_TYPES)[ht.sv_type_id],
+                    hl.array(SV_TYPE_DETAILS)[ht.sv_type_detail_id],
+                ),
+                hl.format('<%s>', hl.array(SV_TYPES)[ht.sv_type_id]),
             ),
         ],
     )

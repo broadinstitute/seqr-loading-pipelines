@@ -30,7 +30,7 @@ class WriteMetadataForRunTask(BaseTask):
         )
 
     def complete(self) -> bool:
-        return GCSorLocalTarget(self.output().path).exists()
+        return self.output().exists()
 
     def requires(self) -> list[luigi.Task]:
         return [
