@@ -41,7 +41,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             not self.force
             and super().complete()
             and hl.eval(
-                hl.read_table(self.output().path).globals.remap_pedigree_hash
+                hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
                 == remap_pedigree_hash(
                     self.project_remap_path,
                     self.project_pedigree_path,
