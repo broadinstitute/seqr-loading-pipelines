@@ -6,15 +6,17 @@ from v03_pipeline.lib.misc.io import (
     compute_hail_n_partitions,
     file_size_bytes,
     import_imputed_sex,
+    remap_pedigree_hash,
 )
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
     'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
 )
+TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
+TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
-
 
 class IOTest(unittest.TestCase):
     def test_file_size_mb(self) -> None:
@@ -45,4 +47,13 @@ class IOTest(unittest.TestCase):
             hl.utils.java.HailUserError,
             'Found unexpected value Unknown in imputed sex file',
             ht.collect,
+        )
+
+    def test_remap_pedigree_hash(self) -> None:
+        self.assertEqual(
+            remap_pedigree_hash(
+                TEST_REMAP,
+                TEST_PEDIGREE_3,
+            ),
+            'de9871e6a817e2652adc0497d26e13cb',
         )

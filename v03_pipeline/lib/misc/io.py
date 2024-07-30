@@ -1,8 +1,10 @@
+import hashlib
 import math
 import os
 import uuid
 
 import hail as hl
+import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
@@ -199,6 +201,13 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
         paternal_s=ht.Paternal_ID,
     )
 
+def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> str:
+    sha256 = hashlib.sha256()
+    with hfs.open(remap_path) as f1:
+        sha256.update(f1.read().encode('utf8'))
+    with hfs.open(pedigree_path) as f2:
+        sha256.update(f2.read().encode('utf8'))
+    return sha256.hexdigest()[:32]
 
 def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable, str]:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'

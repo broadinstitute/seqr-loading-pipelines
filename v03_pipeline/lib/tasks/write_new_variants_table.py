@@ -226,7 +226,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     callset=self.callset_path,
                     project_guid=project_guid,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[i], self.project_pedigree_paths[i]
+                        self.project_remap_paths[i], self.project_pedigree_paths[i],
                     ),
                 )
                 for i, project_guid in enumerate(self.project_guids)

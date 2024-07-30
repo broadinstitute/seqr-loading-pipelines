@@ -178,8 +178,8 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
                             callset='abc',
                             project_guid='project_a',
                             remap_pedigree_hash='abcd',
-                        )
-                    }
+                        ),
+                    },
                 ),
             ],
         )
