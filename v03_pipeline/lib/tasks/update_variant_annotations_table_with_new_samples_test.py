@@ -86,6 +86,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 )
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     maxDiff = None
+
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
