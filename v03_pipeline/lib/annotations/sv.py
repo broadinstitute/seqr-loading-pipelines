@@ -86,7 +86,10 @@ def alleles(ht: hl.Table, **_: Any) -> hl.ArrayExpression:
         [
             'N',
             hl.if_else(
-                hl.is_defined(ht.sv_type_detail_id),
+                (
+                    hl.is_defined(ht.sv_type_detail_id)
+                    & (hl.array(SV_TYPES)[ht.sv_type_id] != 'CPX')
+                ),
                 hl.format(
                     '<%s:%s>',
                     hl.array(SV_TYPES)[ht.sv_type_id],
@@ -101,7 +104,7 @@ def alleles(ht: hl.Table, **_: Any) -> hl.ArrayExpression:
 def info(ht: hl.Table, **_: Any) -> hl.StructExpression:
     return hl.Struct(
         ALGORITHMS=ht.algorithms,
-        END=ht.locus.position,
+        END=ht.start_locus.position,
         CHR2=ht.end_locus.contig,
         END2=ht.end_locus.position,
         SVTYPE=hl.array(SV_TYPES)[ht.sv_type_id],
