@@ -1,6 +1,7 @@
 import hail as hl
 import luigi.worker
 
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase

@@ -4,6 +4,7 @@ import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.callsets import get_callset_ht
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,

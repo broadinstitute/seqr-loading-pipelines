@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_project_table import (
     BaseUpdateProjectTableTask,

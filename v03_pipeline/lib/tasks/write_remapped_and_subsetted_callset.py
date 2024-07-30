@@ -12,6 +12,7 @@ from v03_pipeline.lib.misc.io import (
     does_file_exist,
     import_pedigree,
     import_remap,
+    remap_pedigree_hash,
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
