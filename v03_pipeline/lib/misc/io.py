@@ -210,7 +210,7 @@ def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> hl.Int32Expressi
     with hfs.open(pedigree_path) as f2:
         sha256.update(f2.read().encode('utf8'))
     # maximum 4 byte int
-    return hl.int32(sha256.hexdigest()[:8], 16)
+    return hl.int32(int(sha256.hexdigest()[:8], 16))
 
 
 def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable, str]:
