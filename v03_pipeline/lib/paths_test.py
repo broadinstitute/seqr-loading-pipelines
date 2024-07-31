@@ -84,9 +84,10 @@ class TestPaths(unittest.TestCase):
             project_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
+                SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/hail-search-data/v03/GRCh38/MITO/projects/R0652_pipeline_test.ht',
+            '/hail-search-data/v03/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:

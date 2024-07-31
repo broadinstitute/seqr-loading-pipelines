@@ -7,6 +7,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class BaseUpdateProjectTableTask(BaseUpdateTask):
+    sample_type = luigi.Parameter()
     project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
@@ -14,6 +15,7 @@ class BaseUpdateProjectTableTask(BaseUpdateTask):
             project_table_path(
                 self.reference_genome,
                 self.dataset_type,
+                self.sample_type,
                 self.project_guid,
             ),
         )

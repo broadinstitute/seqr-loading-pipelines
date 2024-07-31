@@ -127,6 +127,7 @@ def metadata_for_run_path(
 def project_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    sample_type: SampleType,
     project_guid: str,
 ) -> str:
     return os.path.join(
@@ -136,6 +137,7 @@ def project_table_path(
             dataset_type,
         ),
         'projects',
+        sample_type.value,
         f'{project_guid}.ht',
     )
 
