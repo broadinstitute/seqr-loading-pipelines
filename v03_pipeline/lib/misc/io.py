@@ -202,7 +202,7 @@ def import_pedigree(pedigree_path: str) -> hl.Table:
     )
 
 
-def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> int:
+def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> hl.Int32Expression:
     sha256 = hashlib.sha256()
     if hfs.exists(remap_path):
         with hfs.open(remap_path) as f1:
@@ -210,7 +210,7 @@ def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> int:
     with hfs.open(pedigree_path) as f2:
         sha256.update(f2.read().encode('utf8'))
     # maximum 4 byte int
-    return int(sha256.hexdigest()[:8], 16)
+    return hl.int32(sha256.hexdigest()[:8], 16)
 
 
 def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable, str]:

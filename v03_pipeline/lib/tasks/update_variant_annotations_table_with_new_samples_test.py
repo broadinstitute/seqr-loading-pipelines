@@ -551,17 +551,21 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0113_test_project',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                TEST_REMAP,
-                                TEST_PEDIGREE_4,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_4,
+                                )
                             ),
                         ),
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0114_project4',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                TEST_REMAP,
-                                TEST_PEDIGREE_4,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_4,
+                                )
                             ),
                         ),
                     },
@@ -892,9 +896,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/mito_1.mt',
                             project_guid='R0115_test_project2',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                'not_a_real_file',
-                                TEST_PEDIGREE_5,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                )
                             ),
                         ),
                     },
@@ -1139,9 +1145,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hl.Struct(
                             callset=TEST_SV_VCF,
                             project_guid='R0115_test_project2',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                'not_a_real_file',
-                                TEST_PEDIGREE_5,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                )
                             ),
                         ),
                     },
@@ -1715,9 +1723,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hl.Struct(
                             callset=TEST_GCNV_BED_FILE,
                             project_guid='R0115_test_project2',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                'not_a_real_file',
-                                TEST_PEDIGREE_5,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                )
                             ),
                         ),
                     },

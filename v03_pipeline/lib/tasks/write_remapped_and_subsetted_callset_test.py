@@ -95,9 +95,11 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             mt.globals.collect(),
             [
                 hl.Struct(
-                    remap_pedigree_hash=remap_pedigree_hash(
-                        TEST_REMAP,
-                        TEST_PEDIGREE_3,
+                    remap_pedigree_hash=hl.eval(
+                        remap_pedigree_hash(
+                            TEST_REMAP,
+                            TEST_PEDIGREE_3,
+                        )
                     ),
                     failed_family_samples=hl.Struct(
                         missing_samples={},
@@ -136,9 +138,11 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             mt.globals.collect(),
             [
                 hl.Struct(
-                    remap_pedigree_hash=remap_pedigree_hash(
-                        TEST_REMAP,
-                        TEST_PEDIGREE_4,
+                    remap_pedigree_hash=hl.eval(
+                        remap_pedigree_hash(
+                            TEST_REMAP,
+                            TEST_PEDIGREE_4,
+                        )
                     ),
                     family_samples={
                         '123_1': ['NA19675_1'],

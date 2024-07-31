@@ -40,9 +40,11 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                     updates={
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                            remap_pedigree_hash=remap_pedigree_hash(
-                                TEST_REMAP,
-                                TEST_PEDIGREE_3,
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_3,
+                                )
                             ),
                         ),
                     },
