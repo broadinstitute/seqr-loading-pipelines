@@ -118,7 +118,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
                 updates={
                     hl.Struct(
                         callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
-                        remap_pedigree_hash='abc',
+                        remap_pedigree_hash=123,
                     ),
                 },
             ),

@@ -36,7 +36,7 @@ class MigrateVariantAnnotationsTableTask(BaseMigrateTask):
                     hl.tstruct(
                         callset=hl.tstr,
                         project_guid=hl.tstr,
-                        remap_pedigree_hash=hl.tstr,
+                        remap_pedigree_hash=hl.tint32,
                     ),
                 ),
                 migrations=hl.empty_array(hl.tstr),

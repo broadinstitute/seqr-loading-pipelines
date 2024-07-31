@@ -81,7 +81,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                         hl.Struct(
                             callset=self.callset_path,
                             project_guid=project_guid,
-                            remap_pedigree_hash=hl.missing(hl.tstr),
+                            remap_pedigree_hash=hl.missing(hl.tint32),
                         ),
                     ),
                 )

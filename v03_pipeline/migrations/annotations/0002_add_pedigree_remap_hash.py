@@ -23,6 +23,6 @@ class AddMigrationsGlobals(BaseMigration):
     def migrate(ht: hl.Table) -> hl.Table:
         return ht.annotate_globals(
             updates=ht.globals.updates.map(
-                lambda u: u.annotate(remap_pedigree_hash=hl.missing(hl.tstr)),
+                lambda u: u.annotate(remap_pedigree_hash=hl.missing(hl.tint32)),
             ),
         )

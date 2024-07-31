@@ -40,7 +40,7 @@ class BaseUpdateLookupTableTask(BaseUpdateTask):
                     hl.tstruct(
                         callset=hl.tstr,
                         project_guid=hl.tstr,
-                        remap_pedigree_hash=hl.tstr,
+                        remap_pedigree_hash=hl.tint32,
                     ),
                 ),
             ),

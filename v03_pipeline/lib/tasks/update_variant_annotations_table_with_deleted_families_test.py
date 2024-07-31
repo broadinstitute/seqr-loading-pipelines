@@ -88,12 +88,12 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
                     hl.Struct(
                         callset='abc',
                         project_guid='project_a',
-                        remap_pedigree_hash='abc',
+                        remap_pedigree_hash=123,
                     ),
                     hl.Struct(
                         callset='123',
                         project_guid='project_b',
-                        remap_pedigree_hash='abc',
+                        remap_pedigree_hash=123,
                     ),
                 },
             ),
@@ -134,12 +134,12 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
                     hl.Struct(
                         callset='abc',
                         project_guid='project_a',
-                        remap_pedigree_hash='abcd',
+                        remap_pedigree_hash=123,
                     ),
                     hl.Struct(
                         callset='123',
                         project_guid='project_b',
-                        remap_pedigree_hash='abcd',
+                        remap_pedigree_hash=123,
                     ),
                 },
             ),
@@ -170,12 +170,12 @@ class UpdateVariantAnnotationsTableWithDeletedFamiliesTaskTest(MockedDatarootTes
                         hl.Struct(
                             callset='abc',
                             project_guid='project_a',
-                            remap_pedigree_hash='abcd',
+                            remap_pedigree_hash=123,
                         ),
                         hl.Struct(
                             callset='123',
                             project_guid='project_b',
-                            remap_pedigree_hash='abcd',
+                            remap_pedigree_hash=123,
                         ),
                     },
                 ),

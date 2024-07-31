@@ -126,12 +126,12 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                     hl.Struct(
                         project_guid='project_a',
                         callset='abc',
-                        remap_pedigree_hash='abcd',
+                        remap_pedigree_hash=123,
                     ),
                     hl.Struct(
                         project_guid='project_b',
                         callset='abc',
-                        remap_pedigree_hash='abcd',
+                        remap_pedigree_hash=123,
                     ),
                 },
             ),
@@ -158,12 +158,12 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                         hl.Struct(
                             project_guid='project_a',
                             callset='abc',
-                            remap_pedigree_hash='abcd',
+                            remap_pedigree_hash=123,
                         ),
                         hl.Struct(
                             project_guid='project_b',
                             callset='abc',
-                            remap_pedigree_hash='abcd',
+                            remap_pedigree_hash=123,
                         ),
                     },
                 ),

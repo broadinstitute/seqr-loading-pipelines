@@ -56,5 +56,5 @@ class IOTest(unittest.TestCase):
                 TEST_REMAP,
                 TEST_PEDIGREE_3,
             ),
-            'de9871e6a817e2652adc0497d26e13cb',
+            3734532582,
         )
