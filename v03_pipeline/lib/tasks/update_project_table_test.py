@@ -44,7 +44,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                                 remap_pedigree_hash(
                                     TEST_REMAP,
                                     TEST_PEDIGREE_3,
-                                )
+                                ),
                             ),
                         ),
                     },

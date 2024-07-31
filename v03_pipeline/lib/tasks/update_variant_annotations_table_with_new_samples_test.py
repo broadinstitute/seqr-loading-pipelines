@@ -555,7 +555,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 remap_pedigree_hash(
                                     TEST_REMAP,
                                     TEST_PEDIGREE_4,
-                                )
+                                ),
                             ),
                         ),
                         hl.Struct(
@@ -565,7 +565,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 remap_pedigree_hash(
                                     TEST_REMAP,
                                     TEST_PEDIGREE_4,
-                                )
+                                ),
                             ),
                         ),
                     },
@@ -900,7 +900,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 remap_pedigree_hash(
                                     'not_a_real_file',
                                     TEST_PEDIGREE_5,
-                                )
+                                ),
                             ),
                         ),
                     },
@@ -1149,7 +1149,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 remap_pedigree_hash(
                                     'not_a_real_file',
                                     TEST_PEDIGREE_5,
-                                )
+                                ),
                             ),
                         ),
                     },
@@ -1727,7 +1727,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                                 remap_pedigree_hash(
                                     'not_a_real_file',
                                     TEST_PEDIGREE_5,
-                                )
+                                ),
                             ),
                         ),
                     },

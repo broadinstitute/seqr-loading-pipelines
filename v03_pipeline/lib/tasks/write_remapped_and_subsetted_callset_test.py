@@ -99,7 +99,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                         remap_pedigree_hash(
                             TEST_REMAP,
                             TEST_PEDIGREE_3,
-                        )
+                        ),
                     ),
                     failed_family_samples=hl.Struct(
                         missing_samples={},
@@ -142,7 +142,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                         remap_pedigree_hash(
                             TEST_REMAP,
                             TEST_PEDIGREE_4,
-                        )
+                        ),
                     ),
                     family_samples={
                         '123_1': ['NA19675_1'],
