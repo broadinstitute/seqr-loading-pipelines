@@ -4,7 +4,7 @@ from v03_pipeline.lib.migration.base_migration import BaseMigration
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 
-class RemoveNullFamilies(BaseMigration):
+class AddRemapPedigreeHash(BaseMigration):
     @property
     def reference_genome_dataset_types() -> (
         frozenset[tuple[ReferenceGenome, DatasetType]]
@@ -14,6 +14,8 @@ class RemoveNullFamilies(BaseMigration):
                 (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
                 (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL),
                 (ReferenceGenome.GRCh38, DatasetType.MITO),
+                (ReferenceGenome.GRCh38, DatasetType.GCNV),
+                (ReferenceGenome.GRCh38, DatasetType.SV),
             ),
         )
 
