@@ -1,6 +1,7 @@
 import hail as hl
 import luigi.worker
 
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
@@ -39,7 +40,13 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     project_guids=[],
                     project_families={},
                     updates={
-                        hl.Struct(callset=TEST_VCF, project_guid='R0555_seqr_demo'),
+                        hl.Struct(
+                            callset=TEST_VCF,
+                            project_guid='R0555_seqr_demo',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3)
+                            ),
+                        ),
                     },
                 ),
             ],
@@ -70,7 +77,13 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                     project_guids=['R0113_test_project'],
                     project_families={'R0113_test_project': ['abc_1']},
                     updates={
-                        hl.Struct(callset=TEST_VCF, project_guid='R0113_test_project'),
+                        hl.Struct(
+                            callset=TEST_VCF,
+                            project_guid='R0113_test_project',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3)
+                            ),
+                        ),
                     },
                 ),
             ],
