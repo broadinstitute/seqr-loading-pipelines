@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 import hail as hl
 import luigi.worker
 
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import relatedness_check_table_path, sex_check_table_path
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
@@ -94,6 +95,9 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             mt.globals.collect(),
             [
                 hl.Struct(
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        TEST_REMAP, TEST_PEDIGREE_3,
+                    ),
                     failed_family_samples=hl.Struct(
                         missing_samples={},
                         relatedness_check={},
@@ -131,6 +135,9 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             mt.globals.collect(),
             [
                 hl.Struct(
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        TEST_REMAP, TEST_PEDIGREE_4,
+                    ),
                     family_samples={
                         '123_1': ['NA19675_1'],
                         '234_1': ['NA19678_1'],
