@@ -1,13 +1,14 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class BaseUpdateProjectTableTask(BaseUpdateTask):
-    sample_type = luigi.Parameter()
+    sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:

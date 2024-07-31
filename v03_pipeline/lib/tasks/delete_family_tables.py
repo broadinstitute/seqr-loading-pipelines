@@ -1,11 +1,12 @@
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
 
 class DeleteFamilyTablesTask(BaseHailTableTask):
-    sample_type = luigi.Parameter()
+    sample_type = luigi.EnumParameter(enum=SampleType)
     family_guids = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):

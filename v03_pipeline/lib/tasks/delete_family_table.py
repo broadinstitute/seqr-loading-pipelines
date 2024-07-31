@@ -7,8 +7,8 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class DeleteFamilyTableTask(BaseDeleteTableTask):
-    family_guid = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
+    family_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

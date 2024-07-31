@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
@@ -8,7 +9,7 @@ from v03_pipeline.lib.tasks.files import HailTableTask
 
 
 class DeleteProjectFamilyTablesTask(BaseHailTableTask):
-    sample_type = luigi.Parameter()
+    sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
