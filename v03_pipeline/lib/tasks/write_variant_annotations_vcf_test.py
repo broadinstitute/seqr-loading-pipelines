@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import luigi.worker
+import hailtop.fs as hfs
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
@@ -68,4 +69,8 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
         )
         worker.add(write_variant_annotations_vcf_task)
         worker.run()
-        self.assertTrue(write_variant_annotations_vcf_task.complete())
+        self.assertTrue(
+            hfs.exists(
+                write_variant_annotations_vcf_task.output().path
+            )
+        )
