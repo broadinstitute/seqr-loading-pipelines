@@ -44,7 +44,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             callset=TEST_VCF,
                             project_guid='R0555_seqr_demo',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3)
+                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
                             ),
                         ),
                     },
@@ -81,7 +81,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             callset=TEST_VCF,
                             project_guid='R0113_test_project',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3)
+                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
                             ),
                         ),
                     },

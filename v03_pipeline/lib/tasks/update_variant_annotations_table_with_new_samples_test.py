@@ -401,7 +401,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     hl.Struct(
                         callset=TEST_SNV_INDEL_VCF,
                         project_guid='R0113_test_project',
-                        remap_pedigree_hash=hl.eval(remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3))
+                        remap_pedigree_hash=hl.eval(
+                            remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3)
+                        ),
                     ),
                 },
             ],
