@@ -188,31 +188,29 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
 
         self.assertCountEqual(
             ht.collect()[0],
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chr1',
-                        position=876499,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'G'],
-                    filters=set(),
-                    family_entries=[
-                        [
-                            hl.Struct(
-                                GQ=21,
-                                AB=1.0,
-                                DP=7,
-                                GT=hl.Call(alleles=[1, 1], phased=False),
-                            ),
-                            hl.Struct(
-                                GQ=12,
-                                AB=1.0,
-                                DP=4,
-                                GT=hl.Call(alleles=[1, 1], phased=False),
-                            ),
-                        ],
-                    ],
+            hl.Struct(
+                locus=hl.Locus(
+                    contig='chr1',
+                    position=876499,
+                    reference_genome='GRCh38',
                 ),
-            ],
+                alleles=['A', 'G'],
+                filters=set(),
+                family_entries=[
+                    [
+                        hl.Struct(
+                            GQ=21,
+                            AB=1.0,
+                            DP=7,
+                            GT=hl.Call(alleles=[1, 1], phased=False),
+                        ),
+                        hl.Struct(
+                            GQ=12,
+                            AB=1.0,
+                            DP=4,
+                            GT=hl.Call(alleles=[1, 1], phased=False),
+                        ),
+                    ],
+                ],
+            ),
         )
