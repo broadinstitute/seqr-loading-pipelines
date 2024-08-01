@@ -9,6 +9,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3_DIFFERENT_FAMILIES = (
+    'v03_pipeline/var/test/pedigrees/test_pedigree_3_different_families.tsv'
+)
 
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
@@ -113,6 +116,100 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
                                 AB=hl.eval(hl.float32(0.6)),
                                 DP=5,
                                 GT=hl.Call(alleles=[0, 1], phased=False),
+                            ),
+                        ],
+                    ],
+                ),
+            ],
+        )
+
+    def test_update_project_table_task_different_pedigree(self) -> None:
+        worker = luigi.worker.Worker()
+        upt_task = UpdateProjectTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guid='R0113_test_project',
+            project_remap_path=TEST_REMAP,
+            project_pedigree_path=TEST_PEDIGREE_3,
+            skip_validation=True,
+        )
+        worker.add(upt_task)
+        worker.run()
+        upt_task = UpdateProjectTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_VCF,
+            project_guid='R0113_test_project',
+            project_remap_path=TEST_REMAP,
+            project_pedigree_path=TEST_PEDIGREE_3_DIFFERENT_FAMILIES,
+            skip_validation=True,
+        )
+        worker.add(upt_task)
+        worker.run()
+        self.assertTrue(upt_task.complete())
+        worker.add(upt_task)
+        worker.run()
+        ht = hl.read_table(upt_task.output().path)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    family_guids=['abc_1'],
+                    family_samples={
+                        'abc_1': ['HG00731_1', 'HG00733_1'],
+                    },
+                    sample_type=SampleType.WGS.value,
+                    updates={
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_3,
+                                ),
+                            ),
+                        ),
+                        hl.Struct(
+                            callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_3_DIFFERENT_FAMILIES,
+                                ),
+                            ),
+                        ),
+                    },
+                ),
+            ],
+        )
+
+        self.assertCountEqual(
+            ht.collect()[0],
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=876499,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'G'],
+                    filters=set(),
+                    family_entries=[
+                        [
+                            hl.Struct(
+                                GQ=21,
+                                AB=1.0,
+                                DP=7,
+                                GT=hl.Call(alleles=[1, 1], phased=False),
+                            ),
+                            hl.Struct(
+                                GQ=12,
+                                AB=1.0,
+                                DP=4,
+                                GT=hl.Call(alleles=[1, 1], phased=False),
                             ),
                         ],
                     ],
