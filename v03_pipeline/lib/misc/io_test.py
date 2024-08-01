@@ -52,9 +52,11 @@ class IOTest(unittest.TestCase):
 
     def test_remap_pedigree_hash(self) -> None:
         self.assertEqual(
-            remap_pedigree_hash(
-                TEST_REMAP,
-                TEST_PEDIGREE_3,
+            hl.eval(
+                remap_pedigree_hash(
+                    TEST_REMAP,
+                    TEST_PEDIGREE_3,
+                ),
             ),
-            3734532582,
+            -560434714,
         )
