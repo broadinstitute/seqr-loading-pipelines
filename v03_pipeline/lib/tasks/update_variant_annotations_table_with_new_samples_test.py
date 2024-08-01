@@ -1,4 +1,4 @@
-import shutil
+:import shutil
 from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -557,7 +557,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             remap_pedigree_hash=hl.eval(
                                 remap_pedigree_hash(
                                     TEST_REMAP,
-                                    TEST_PEDIGREE_4,
+                                    TEST_PEDIGREE_3,
                                 ),
                             ),
                         ),
