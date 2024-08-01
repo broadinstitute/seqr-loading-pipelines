@@ -339,6 +339,10 @@ class DatasetType(Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def should_export_to_vcf(self):
+        return self == DatasetType.SV
+
+    @property
     def export_vcf_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SV: [
