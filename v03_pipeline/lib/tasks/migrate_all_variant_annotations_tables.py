@@ -23,7 +23,7 @@ class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
 
     def run(self):
         for _, migration in list_migrations(
-            v03_pipeline.migrations.annotations.__path__
+            v03_pipeline.migrations.annotations.__path__,
         ):
             if (
                 self.reference_genome,
