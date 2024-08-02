@@ -22,7 +22,7 @@ class MigrateAllLookupTablesTask(luigi.Task):
         )
 
     def run(self):
-        for migration in list_migrations(v03_pipeline.migrations.lookup.__path__):
+        for _, migration in list_migrations(v03_pipeline.migrations.lookup.__path__):
             if (
                 (self.reference_genome, self.dataset_type)
                 in migration.reference_genome_dataset_types
