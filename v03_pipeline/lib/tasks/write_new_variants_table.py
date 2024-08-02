@@ -10,6 +10,7 @@ from v03_pipeline.lib.annotations.rdc_dependencies import (
 )
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
 from v03_pipeline.lib.paths import (
@@ -128,9 +129,13 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                             hl.Struct(
                                 callset=self.callset_path,
                                 project_guid=project_guid,
+                                remap_pedigree_hash=remap_pedigree_hash(
+                                    self.project_remap_paths[i],
+                                    self.project_pedigree_paths[i],
+                                ),
                             ),
                         )
-                        for project_guid in self.project_guids
+                        for i, project_guid in enumerate(self.project_guids)
                     ],
                 ),
                 hl.read_table(self.output().path).updates,
@@ -218,7 +223,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
         return new_variants_ht.select_globals(
             updates={
-                hl.Struct(callset=self.callset_path, project_guid=project_guid)
-                for project_guid in self.project_guids
+                hl.Struct(
+                    callset=self.callset_path,
+                    project_guid=project_guid,
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        self.project_remap_paths[i],
+                        self.project_pedigree_paths[i],
+                    ),
+                )
+                for i, project_guid in enumerate(self.project_guids)
             },
         )
