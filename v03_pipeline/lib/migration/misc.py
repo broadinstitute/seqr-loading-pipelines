@@ -8,10 +8,10 @@ MIGRATION_NAME_PATTERN = r'(\d\d\d\d_.*)'
 
 
 def list_migrations(
-    path: str,
+    paths: list[str],
 ) -> list[tuple[str, BaseMigration]]:
     migrations = []
-    for loader, name, _ in pkgutil.iter_modules([path]):
+    for loader, name, _ in pkgutil.iter_modules(paths):
         match = re.search(MIGRATION_NAME_PATTERN, name)
         if match:
             module = loader.find_module(name).load_module(name)
