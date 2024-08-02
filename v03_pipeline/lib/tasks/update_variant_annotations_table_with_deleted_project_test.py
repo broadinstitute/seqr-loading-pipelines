@@ -93,8 +93,16 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
                 project_guids=['project_a', 'project_b'],
                 project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
                 updates={
-                    hl.Struct(callset='abc', project_guid='project_a'),
-                    hl.Struct(callset='123', project_guid='project_b'),
+                    hl.Struct(
+                        callset='abc',
+                        project_guid='project_a',
+                        remap_pedigree_hash=123,
+                    ),
+                    hl.Struct(
+                        callset='123',
+                        project_guid='project_b',
+                        remap_pedigree_hash=123,
+                    ),
                 },
             ),
         )
@@ -131,8 +139,16 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
             key='id',
             globals=hl.Struct(
                 updates={
-                    hl.Struct(callset='abc', project_guid='project_a'),
-                    hl.Struct(callset='123', project_guid='project_b'),
+                    hl.Struct(
+                        callset='abc',
+                        project_guid='project_a',
+                        remap_pedigree_hash=123,
+                    ),
+                    hl.Struct(
+                        callset='123',
+                        project_guid='project_b',
+                        remap_pedigree_hash=123,
+                    ),
                 },
             ),
         )
@@ -156,7 +172,15 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
         self.assertEqual(
             ht.globals.collect(),
             [
-                hl.Struct(updates={hl.Struct(callset='abc', project_guid='project_a')}),
+                hl.Struct(
+                    updates={
+                        hl.Struct(
+                            callset='abc',
+                            project_guid='project_a',
+                            remap_pedigree_hash=123,
+                        ),
+                    },
+                ),
             ],
         )
         self.assertEqual(

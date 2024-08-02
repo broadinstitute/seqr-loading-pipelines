@@ -64,6 +64,9 @@ inline-quotes = "single"
     'SLF001', # allow private access
     'PLR0913', # allow high arity functions
 ]
+'*migration*' = [
+    'N999', # allow invalid module names
+]
 
 [tool.ruff.pylint]
 max-args = 6

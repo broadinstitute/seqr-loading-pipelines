@@ -8,6 +8,7 @@ from v03_pipeline.lib.misc.family_entries import (
     join_family_entries_hts,
     remove_family_guids,
 )
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_project_table import (
     BaseUpdateProjectTableTask,
@@ -28,7 +29,13 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
             and super().complete()
             and hl.eval(
                 hl.read_table(self.output().path).updates.contains(
-                    self.callset_path,
+                    hl.Struct(
+                        callset=self.callset_path,
+                        remap_pedigree_hash=remap_pedigree_hash(
+                            self.project_remap_path,
+                            self.project_pedigree_path,
+                        ),
+                    ),
                 ),
             )
         )
@@ -62,5 +69,13 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
             family_guids=ht.family_guids,
             family_samples=ht.family_samples,
             sample_type=self.sample_type.value,
-            updates=ht.updates.add(self.callset_path),
+            updates=ht.updates.add(
+                hl.Struct(
+                    callset=self.callset_path,
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        self.project_remap_path,
+                        self.project_pedigree_path,
+                    ),
+                ),
+            ),
         )

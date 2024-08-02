@@ -1,12 +1,19 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.paths import lookup_table_path
-from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
+import v03_pipeline.migrations.lookup
+from v03_pipeline.lib.paths import (
+    lookup_table_path,
+)
+from v03_pipeline.lib.tasks.base.base_migrate import BaseMigrateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
-class BaseUpdateLookupTableTask(BaseUpdateTask):
+class MigrateLookupTableTask(BaseMigrateTask):
+    @property
+    def migrations_path(self):
+        return v03_pipeline.migrations.lookup.__path__[0]
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             lookup_table_path(
