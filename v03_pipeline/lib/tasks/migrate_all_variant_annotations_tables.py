@@ -22,7 +22,7 @@ class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
         )
 
     def run(self):
-        for _, migration in list_migrations(
+        for migration_name, migration in list_migrations(
             v03_pipeline.migrations.annotations.__path__,
         ):
             if (
@@ -33,6 +33,7 @@ class MigrateAllVariantAnnotationsTablesTask(luigi.Task):
                     MigrateVariantAnnotationsTableTask(
                         self.reference_genome,
                         self.dataset_type,
+                        migration_name=migration_name,
                     ),
                 )
         yield self.dynamic_migration_tasks
