@@ -35,7 +35,7 @@ class ImplementedMigration(BaseMigration):
         self.assertEqual(
             [
                 (x, issubclass(y, BaseMigration))
-                for (x, y) in list_migrations([self.tmpdir.name])
+                for (x, y) in list_migrations(self.tmpdir.name)
             ],
             [
                 ('0000_migration', True),
@@ -43,5 +43,5 @@ class ImplementedMigration(BaseMigration):
             ],
         )
         self.assertTrue(
-            all(hasattr(x[1], 'migrate') for x in list_migrations([self.tmpdir.name])),
+            all(hasattr(x[1], 'migrate') for x in list_migrations(self.tmpdir.name)),
         )
