@@ -11,7 +11,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 class MigrateVariantAnnotationsTableTask(BaseMigrateTask):
     @property
-    def migrations_paths(self):
+    def migrations_path(self):
         return v03_pipeline.migrations.annotations.__path__[0]
 
     def output(self) -> luigi.Target:

@@ -9,12 +9,12 @@ class BaseMigrateTask(BaseUpdateTask):
     migration_name = luigi.Parameter()
 
     @property
-    def migrations_paths(self) -> list[str]:
+    def migrations_path(self) -> str:
         raise NotImplementedError
 
     def requires(self) -> luigi.Task | None:
         # Require the previous migration
-        defined_migrations = [x[0] for x in list_migrations(self.migrations_paths)]
+        defined_migrations = [x[0] for x in list_migrations(self.migrations_path)]
         for i, migration in enumerate(defined_migrations):
             if i > 0 and migration == self.migration_name:
                 return self.clone(
@@ -26,7 +26,7 @@ class BaseMigrateTask(BaseUpdateTask):
     def complete(self) -> luigi.Target:
         if super().complete():
             migration = dict(
-                list_migrations(self.migrations_paths),
+                list_migrations(self.migrations_path),
             )[self.migration_name]
             if (
                 self.reference_genome,
@@ -38,7 +38,7 @@ class BaseMigrateTask(BaseUpdateTask):
         return False
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        migration = dict(list_migrations(self.migrations_paths))[self.migration_name]
+        migration = dict(list_migrations(self.migrations_path))[self.migration_name]
         if (
             (self.reference_genome, self.dataset_type)
         ) in migration.reference_genome_dataset_types:
