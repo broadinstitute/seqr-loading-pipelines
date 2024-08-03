@@ -22,4 +22,4 @@ class RemoveNullFamilies(BaseMigration):
                 lambda ps: hl.or_missing(hl.all(ps.map(hl.is_defined)), ps),
             ),
         )
-        return ht.annotate_globals(migrations=hl.empty_list(hl.str))
+        return ht.annotate_globals(migrations=hl.empty_array(hl.tstr))

@@ -34,6 +34,8 @@ class BaseMigrateTask(BaseUpdateTask):
             ) not in migration.reference_genome_dataset_types:
                 return True
             mt = hl.read_table(self.output().path)
+            if not hasattr(mt, 'migrations'):
+                return False
             return hl.eval(mt.globals.migrations.index(self.migration_name) >= 0)
         return False
 

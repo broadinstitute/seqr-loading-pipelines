@@ -19,4 +19,4 @@ class AddMigrationsGlobals(BaseMigration):
 
     @staticmethod
     def migrate(ht: hl.Table) -> hl.Table:
-        return ht.annotate_globals(migrations=hl.empty_list(hl.str))
+        return ht.annotate_globals(migrations=hl.empty_array(hl.tstr))
