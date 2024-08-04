@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.misc.luigi import OptionalEnumListParameter
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
@@ -9,7 +10,7 @@ from v03_pipeline.lib.tasks.files import HailTableTask
 
 
 class DeleteProjectFamilyTablesTask(BaseHailTableTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
+    sample_types = OptionalEnumListParameter(enum=SampleType, default=list(SampleType))
     project_guid = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
@@ -23,23 +24,24 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
         )
 
     def run(self):
-        project_table_task: luigi.Target = yield HailTableTask(
-            project_table_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.project_guid,
-            ),
-        )
-        project_ht = hl.read_table(project_table_task.path)
-        family_guids = hl.eval(project_ht.globals.family_guids)
-        for family_guid in family_guids:
-            self.dynamic_delete_family_table_tasks.add(
-                DeleteFamilyTableTask(
-                    reference_genome=self.reference_genome,
-                    dataset_type=self.dataset_type,
-                    sample_type=self.sample_type,
-                    family_guid=family_guid,
+        for sample_type in self.sample_types:
+            project_table_task: luigi.Target = yield HailTableTask(
+                project_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    sample_type,
+                    self.project_guid,
                 ),
             )
+            project_ht = hl.read_table(project_table_task.path)
+            family_guids = hl.eval(project_ht.globals.family_guids)
+            for family_guid in family_guids:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks

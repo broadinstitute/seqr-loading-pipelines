@@ -1,12 +1,13 @@
 import luigi
 
+from v03_pipeline.lib.misc.luigi import OptionalEnumListParameter
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
 
 class DeleteFamilyTablesTask(BaseHailTableTask):
-    sample_type = luigi.EnumParameter(enum=SampleType)
+    sample_types = OptionalEnumListParameter(enum=SampleType, default=list(SampleType))
     family_guids = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):
@@ -20,13 +21,14 @@ class DeleteFamilyTablesTask(BaseHailTableTask):
         )
 
     def run(self):
-        for family_guid in self.family_guids:
-            self.dynamic_delete_family_table_tasks.add(
-                DeleteFamilyTableTask(
-                    reference_genome=self.reference_genome,
-                    dataset_type=self.dataset_type,
-                    sample_type=self.sample_type,
-                    family_guid=family_guid,
-                ),
-            )
+        for sample_type in self.sample_types:
+            for family_guid in self.family_guids:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks
