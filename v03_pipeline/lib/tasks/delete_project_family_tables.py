@@ -24,21 +24,14 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
 
     def run(self):
         for sample_type in SampleType:
-            path = project_table_path(
+            project_ht_path = project_table_path(
                 self.reference_genome,
                 self.dataset_type,
                 sample_type,
                 self.project_guid,
             )
-            if hfs.exists(path):
-                project_table_task: luigi.Target = yield HailTableTask(
-                    project_table_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                        sample_type,
-                        self.project_guid,
-                    ),
-                )
+            if hfs.exists(project_ht_path):
+                project_table_task: luigi.Target = yield HailTableTask(project_ht_path)
                 project_ht = hl.read_table(project_table_task.path)
                 family_guids = hl.eval(project_ht.globals.family_guids)
                 for family_guid in family_guids:
