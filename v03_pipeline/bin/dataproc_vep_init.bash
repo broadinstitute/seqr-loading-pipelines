@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #
 # VEP init action for dataproc
 #
@@ -14,6 +16,7 @@ set -x
 export PROJECT="$(gcloud config get-value project)"
 export ENVIRONMENT="$(/usr/share/google/get_metadata_value attributes/ENVIRONMENT)"
 export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CONFIG_PATH)"
+export REFERENCE_GENOME="$(/usr/share/google/get_metadata_value attributes/REFERENCE_GENOME)"
 
 # Install docker
 apt-get update
@@ -34,7 +37,7 @@ apt-get install -y --allow-unauthenticated docker-ce
 sleep 60
 sudo service docker restart
 
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/var/vep_config/vep-GRCh38.json $VEP_CONFIG_PATH
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/var/vep_config/vep-$REFERENCE_GENOME.json $VEP_CONFIG_PATH
 
 cat >/vep.c <<EOF
 #include <unistd.h>
@@ -54,7 +57,7 @@ chmod u+s /vep
 
 gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_data.bash /download_vep_data.bash
 chmod +x /download_vep_data.bash
-./download_vep_data.bash GRCh38
+./download_vep_data.bash $REFERENCE_GENOME
 
 gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.sh
 chmod +x /vep.sh
