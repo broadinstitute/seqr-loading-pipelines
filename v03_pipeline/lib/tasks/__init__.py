@@ -4,6 +4,10 @@ from v03_pipeline.lib.tasks.delete_project_family_tables import (
     DeleteProjectFamilyTablesTask,
 )
 from v03_pipeline.lib.tasks.delete_project_table import DeleteProjectTableTask
+from v03_pipeline.lib.tasks.migrate_all_lookup_tables import MigrateAllLookupTablesTask
+from v03_pipeline.lib.tasks.migrate_all_variant_annotations_tables import (
+    MigrateAllVariantAnnotationsTablesTask,
+)
 from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
     UpdateCachedReferenceDatasetQueries,
 )
@@ -39,6 +43,8 @@ __all__ = [
     'DeleteFamilyTablesTask',
     'DeleteProjectFamilyTablesTask',
     'DeleteProjectTableTask',
+    'MigrateAllLookupTablesTask',
+    'MigrateAllVariantAnnotationsTablesTask',
     'UpdateProjectTableTask',
     'UpdateProjectTableWithDeletedFamiliesTask',
     'UpdateLookupTableTask',

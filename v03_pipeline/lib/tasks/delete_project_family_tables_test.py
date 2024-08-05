@@ -115,7 +115,12 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
                 family_guids=['family_a', 'family_b'],
                 family_samples={'family_a': ['1', '2', '3'], 'family_b': ['4']},
                 sample_type='WGS',
-                updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
+                updates={
+                    hl.Struct(
+                        callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                        remap_pedigree_hash=123,
+                    ),
+                },
             ),
         )
         ht.write(
