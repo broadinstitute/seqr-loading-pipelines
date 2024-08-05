@@ -4,6 +4,9 @@
 # adapted/copied from
 # https://github.com/broadinstitute/gnomad_methods/blob/main/init_scripts/vep105-init.sh
 # and gs://hail-common/hailctl/dataproc/0.2.128/vep-GRCh38.sh
+# 
+# NB: This is code used for initializing a dataproc cluster and runs as an intialization
+# action when the rest of our code is unavailable. 
 #
 
 set -x
