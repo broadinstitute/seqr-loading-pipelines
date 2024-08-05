@@ -104,8 +104,8 @@ def validate_imputed_sex_ploidy(
     mt = mt.select_cols(
         discrepant=(
             (
-                # All calls are diploid but the sex is Male
-                hl.agg.all(mt.GT.is_diploid())
+                # All calls are diploid or missing but the sex is Male
+                hl.agg.all(mt.GT.is_diploid() | hl.is_missing(mt.GT))
                 & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
             )
             | (

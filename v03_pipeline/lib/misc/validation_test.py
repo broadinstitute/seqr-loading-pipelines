@@ -106,19 +106,21 @@ class ValidationTest(unittest.TestCase):
                     ),
                 ],
             },
-            cols={'s': ['HG00731_1', 'HG00732_1']},
+            # Male, Female, Male
+            cols={'s': ['HG00731_1', 'HG00732_1', 'NA19678_1']},
             entries={
                 'GT': [
                     [
                         hl.Call(alleles=[0], phased=False),
                         hl.Call(alleles=[0], phased=False),
+                        hl.missing(hl.tcall),
                     ],
                 ],
             },
         ).key_rows_by('locus')
         self.assertRaisesRegex(
             SeqrValidationError,
-            '50.00% of samples have misaligned ploidy',
+            '66.67% of samples have misaligned ploidy',
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,
