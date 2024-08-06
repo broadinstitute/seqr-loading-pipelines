@@ -8,7 +8,6 @@ from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 class BaseMigrateTask(BaseUpdateTask):
     migration_name = luigi.Parameter()
 
-    @property
     def migrations_path(self) -> str:
         raise NotImplementedError
 
