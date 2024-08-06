@@ -125,8 +125,10 @@ def get_clinvar_ht(
         ht = hl.read_table(clinvar_ht_path)
     else:
         logger.info('Cached clinvar ht not found, downloading latest clinvar vcf')
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         ht = download_and_import_latest_clinvar_vcf(clinvar_url, reference_genome)
         write(ht, clinvar_ht_path, repartition=False)
+        hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
     return ht
 
 
