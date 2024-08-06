@@ -105,7 +105,7 @@ class FieldsTest(MockedDatarootTestCase):
                         ),
                         dataset_type=DatasetType.SNV_INDEL,
                         reference_genome=reference_genome,
-                        liftover_ref_path=LIFTOVER,
+                        grch38_to_grch37_liftover_ref_path=LIFTOVER,
                     ).keys(),
                 ),
                 expected_fields,

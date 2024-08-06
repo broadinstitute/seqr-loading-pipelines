@@ -63,7 +63,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
                 load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE, ''),
             )
-        deps['liftover_ref_path'] = Env.LIFTOVER_REF_PATH
+        deps[
+            'grch37_to_grch38_liftover_ref_path'
+        ] = Env.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH
+        deps[
+            'grch38_to_grch37_liftover_ref_path'
+        ] = Env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
         return deps
 
     def output(self) -> luigi.Target:
