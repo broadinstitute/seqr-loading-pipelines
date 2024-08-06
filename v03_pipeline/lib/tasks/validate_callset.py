@@ -128,22 +128,22 @@ class ValidateCallsetTask(BaseUpdateTask):
                 self.reference_genome,
                 self.sample_type,
             )
-        if (
-            Env.CHECK_SEX_AND_RELATEDNESS
-            and not self.skip_check_sex_and_relatedness
-            and self.dataset_type.check_sex_and_relatedness
-        ):
-            sex_check_ht = hl.read_table(
-                sex_check_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                ),
-            )
-            validate_imputed_sex_ploidy(
-                mt,
-                sex_check_ht,
-            )
+            if (
+                Env.CHECK_SEX_AND_RELATEDNESS
+                and not self.skip_check_sex_and_relatedness
+                and self.dataset_type.check_sex_and_relatedness
+            ):
+                sex_check_ht = hl.read_table(
+                    sex_check_table_path(
+                        self.reference_genome,
+                        self.dataset_type,
+                        self.callset_path,
+                    ),
+                )
+                validate_imputed_sex_ploidy(
+                    mt,
+                    sex_check_ht,
+                )
         return mt.select_globals(
             callset_path=self.callset_path,
             validated_sample_type=self.sample_type.value,
