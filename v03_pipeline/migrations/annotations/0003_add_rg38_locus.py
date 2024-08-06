@@ -9,9 +9,7 @@ class AddRG38Locus(BaseMigration):
     reference_genome_dataset_types: frozenset[
         tuple[ReferenceGenome, DatasetType]
     ] = frozenset(
-        (
-            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
-        ),
+        ((ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),),
     )
 
     @staticmethod
