@@ -110,6 +110,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                     mt.locus.contig,
                 ),
             )
+
         if not self.skip_validation and self.dataset_type.can_run_validation:
             validate_allele_type(mt)
             validate_no_duplicate_variants(mt)

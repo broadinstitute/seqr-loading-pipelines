@@ -2,9 +2,8 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import expression_helpers
+from v03_pipeline.lib.annotations import expression_helpers, liftover
 from v03_pipeline.lib.annotations.enums import SV_CONSEQUENCE_RANKS, SV_TYPES
-from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
@@ -86,10 +85,10 @@ def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def rg37_locus(
     ht: hl.Table,
-    liftover_ref_path: str,
+    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    add_rg38_liftover(liftover_ref_path)
+    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
     return hl.liftover(
         start_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,
@@ -98,10 +97,10 @@ def rg37_locus(
 
 def rg37_locus_end(
     ht: hl.Table,
-    liftover_ref_path: str,
+    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    add_rg38_liftover(liftover_ref_path)
+    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
     return hl.liftover(
         end_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,

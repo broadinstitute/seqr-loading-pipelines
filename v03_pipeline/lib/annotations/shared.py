@@ -2,19 +2,12 @@ from typing import Any
 
 import hail as hl
 
-from v03_pipeline.lib.annotations import expression_helpers
+from v03_pipeline.lib.annotations import expression_helpers, liftover
 from v03_pipeline.lib.annotations.vep import (
     transcript_consequences_sort,
     vep_85_transcript_consequences_select,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-
-
-def add_rg38_liftover(liftover_ref_path: str) -> None:
-    rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
-    rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if not rg38.has_liftover(rg37):
-        rg38.add_liftover(liftover_ref_path, rg37)
 
 
 def GT(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
@@ -32,10 +25,10 @@ def rsid(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
 
 def rg37_locus(
     ht: hl.Table,
-    liftover_ref_path: str,
+    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    add_rg38_liftover(liftover_ref_path)
+    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
     return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
 

@@ -3,6 +3,7 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import liftover
 from v03_pipeline.lib.annotations.enums import (
     MOTIF_CONSEQUENCE_TERMS,
     REGULATORY_BIOTYPES,
@@ -12,6 +13,7 @@ from v03_pipeline.lib.annotations.vep import (
     transcript_consequences_sort,
     vep_110_transcript_consequences_select,
 )
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MOTIF_CONSEQUENCE_TERMS_LOOKUP = hl.dict(
     hl.enumerate(MOTIF_CONSEQUENCE_TERMS, index_first=False),
@@ -83,6 +85,15 @@ def gnomad_non_coding_constraint(
             .gnomad_non_coding_constraint.z_score.first()
         ),
     )
+
+
+def rg38_locus(
+    ht: hl.Table,
+    grch37_to_grch38_liftover_ref_path: str,
+    **_: Any,
+) -> hl.Expression | None:
+    liftover.add_rg37_liftover(grch37_to_grch38_liftover_ref_path)
+    return hl.liftover(ht.locus, ReferenceGenome.GRCh38.value)
 
 
 def screen(

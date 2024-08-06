@@ -217,6 +217,7 @@ class DatasetType(Enum):
                 shared.variant_id,
                 shared.xpos,
                 shared.sorted_transcript_consequences,
+                snv_indel.rg38_locus,
             ],
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
@@ -258,11 +259,9 @@ class DatasetType(Enum):
             return GRCh37_fns[self]
         return {
             DatasetType.SNV_INDEL: [
-                *[
-                    x
-                    for x in GRCh37_fns[DatasetType.SNV_INDEL]
-                    if x != shared.sorted_transcript_consequences
-                ],
+                shared.rsid,
+                shared.variant_id,
+                shared.xpos,
                 snv_indel.gnomad_non_coding_constraint,
                 snv_indel.screen,
                 shared.rg37_locus,
