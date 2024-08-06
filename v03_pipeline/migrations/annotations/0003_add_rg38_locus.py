@@ -6,13 +6,13 @@ from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
 
 class AddRG38Locus(BaseMigration):
-    @property
-    def reference_genome_dataset_types() -> (
-        frozenset[tuple[ReferenceGenome, DatasetType]]
-    ):
-        return frozenset(
-            ((ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),),
-        )
+    reference_genome_dataset_types: frozenset[
+        tuple[ReferenceGenome, DatasetType]
+    ] = frozenset(
+        (
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
+        ),
+    )
 
     @staticmethod
     def migrate(ht: hl.Table) -> hl.Table:
