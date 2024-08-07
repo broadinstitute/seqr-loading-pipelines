@@ -23,6 +23,7 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
         )
 
     def run(self):
+        project_tables = set()
         for sample_type in SampleType:
             project_ht_path = project_table_path(
                 self.reference_genome,
@@ -33,14 +34,21 @@ class DeleteProjectFamilyTablesTask(BaseHailTableTask):
             if hfs.exists(project_ht_path):
                 project_table_task: luigi.Target = yield HailTableTask(project_ht_path)
                 project_ht = hl.read_table(project_table_task.path)
-                family_guids = hl.eval(project_ht.globals.family_guids)
-                for family_guid in family_guids:
-                    self.dynamic_delete_family_table_tasks.add(
-                        DeleteFamilyTableTask(
-                            reference_genome=self.reference_genome,
-                            dataset_type=self.dataset_type,
-                            sample_type=sample_type,
-                            family_guid=family_guid,
-                        ),
-                    )
+                project_tables.add((project_ht, sample_type))
+
+        if len(project_tables) == 0:
+            msg = f'No project tables found for {self.project_guid}'
+            raise RuntimeError(msg)
+
+        for project_ht, sample_type in project_tables:
+            family_guids = hl.eval(project_ht.globals.family_guids)
+            for family_guid in family_guids:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks

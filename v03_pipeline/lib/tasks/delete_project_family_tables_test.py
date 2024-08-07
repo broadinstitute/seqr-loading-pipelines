@@ -14,7 +14,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 class DeleteTableTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        ht = hl.Table.parallelize(
+        project_ht = hl.Table.parallelize(
             [
                 {
                     'locus': hl.Locus(
@@ -118,7 +118,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
                 updates={'v03_pipeline/var/test/callsets/1kg_30variants.vcf'},
             ),
         )
-        ht.write(
+        project_ht.write(
             project_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
@@ -126,7 +126,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
                 'project_a',
             ),
         )
-        for family_guid in hl.eval(ht.globals.family_guids):
+        for family_guid in hl.eval(project_ht.globals.family_guids):
             family_ht = hl.utils.range_table(100)
             family_ht.write(
                 family_table_path(
@@ -136,6 +136,17 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
                     family_guid,
                 ),
             )
+
+    def test_no_project_tables_for_project(self) -> None:
+        worker = luigi.worker.Worker()
+        task = DeleteProjectFamilyTablesTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            project_guid='project_b',
+        )
+        worker.add(task)
+        worker.run()
+        self.assertFalse(task.complete())
 
     def test_delete_project_family_tables_task(self) -> None:
         self.assertTrue(
