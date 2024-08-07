@@ -16,6 +16,9 @@ from v03_pipeline.lib.reference_data.clinvar import (
     parsed_clnsig,
 )
 from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
+from v03_pipeline.lib.reference_data.mito import (
+    download_and_import_local_constraint_tsv,
+)
 
 
 def import_locus_intervals(
@@ -531,6 +534,16 @@ CONFIG = {
             'version': 'Feb-15-2022',
             'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
             'custom_import': import_locus_intervals,
+        },
+    },
+    'local_constraint_mito': {
+        '38': {
+            'version': '2024-07-24',
+            # Originally sourced from https://www.biorxiv.org/content/10.1101/2022.12.16.520778v2.supplementary-material
+            # Supplementary Table 7.
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
+            'custom_import': download_and_import_local_constraint_tsv,
+            'select': {'score': 'MLC_score'},
         },
     },
 }

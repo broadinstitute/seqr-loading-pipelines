@@ -19,6 +19,7 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
@@ -400,6 +401,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     hl.Struct(
                         callset=TEST_SNV_INDEL_VCF,
                         project_guid='R0113_test_project',
+                        remap_pedigree_hash=hl.eval(
+                            remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
+                        ),
                     ),
                 },
             ],
@@ -550,10 +554,22 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0113_test_project',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_3,
+                                ),
+                            ),
                         ),
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                             project_guid='R0114_project4',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    TEST_REMAP,
+                                    TEST_PEDIGREE_4,
+                                ),
+                            ),
                         ),
                     },
                     paths=hl.Struct(
@@ -588,6 +604,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         screen=None,
                         hgmd='HGMD_Pro_2023',
                     ),
+                    migrations=[],
                     enums=hl.Struct(
                         cadd=hl.Struct(),
                         clinvar=hl.Struct(
@@ -842,6 +859,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+                        local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
                     ),
                     versions=hl.Struct(
                         high_constraint_region_mito='Feb-15-2022',
@@ -852,9 +870,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         hmtvar='Jan. 10 2022',
                         mitomap='Feb. 04 2022',
                         mitimpact='3.0.7',
+                        local_constraint_mito='2024-07-24',
                     ),
                     enums=hl.Struct(
                         high_constraint_region_mito=hl.Struct(),
+                        local_constraint_mito=hl.Struct(),
                         clinvar_mito=hl.Struct(
                             assertion=CLINVAR_ASSERTIONS,
                             pathogenicity=CLINVAR_PATHOGENICITIES,
@@ -874,10 +894,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         ),
                         mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset='v03_pipeline/var/test/callsets/mito_1.mt',
                             project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
                         ),
                     },
                 ),
@@ -920,6 +947,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -955,6 +983,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -990,6 +1019,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -1025,6 +1055,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -1060,6 +1091,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         AF_hom=0.0,
                         AN=4,
                     ),
+                    local_constraint_mito=None,
                 ),
             ],
         )
@@ -1111,10 +1143,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             major_consequence=SV_CONSEQUENCE_RANKS,
                         ),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset=TEST_SV_VCF,
                             project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
                         ),
                     },
                 ),
@@ -1161,6 +1200,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=-1,
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000180928,
@@ -1203,6 +1243,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=223225007,
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000789481,
@@ -1255,6 +1296,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=821,
                     sv_type_id=3,
                     sv_type_detail_id=2,
                     xpos=1006558902,
@@ -1310,6 +1352,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=534718,
                     sv_type_id=3,
                     sv_type_detail_id=9,
                     xpos=1180540234,
@@ -1362,6 +1405,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=841,
                     sv_type_id=3,
                     sv_type_detail_id=12,
                     xpos=1016088760,
@@ -1419,6 +1463,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=52921,
                     sv_type_id=3,
                     sv_type_detail_id=13,
                     xpos=1021427498,
@@ -1460,6 +1505,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=14532,
                     sv_type_id=5,
                     sv_type_detail_id=None,
                     xpos=1000413968,
@@ -1497,6 +1543,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=6000,
                     sv_type_id=6,
                     sv_type_detail_id=None,
                     xpos=1000257666,
@@ -1538,6 +1585,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=955,
                     sv_type_id=7,
                     sv_type_detail_id=6,
                     xpos=1017465707,
@@ -1582,6 +1630,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=hl.eval(hl.float32(0.1255))),
+                    sv_len=298,
                     sv_type_id=7,
                     sv_type_detail_id=4,
                     xpos=1004228405,
@@ -1623,6 +1672,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
+                    sv_len=5520,
                     sv_type_id=7,
                     sv_type_detail_id=5,
                     xpos=1048963084,
@@ -1671,10 +1721,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                             major_consequence=SV_CONSEQUENCE_RANKS,
                         ),
                     ),
+                    migrations=[],
                     updates={
                         hl.Struct(
                             callset=TEST_GCNV_BED_FILE,
                             project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
                         ),
                     },
                 ),

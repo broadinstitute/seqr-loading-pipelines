@@ -628,6 +628,21 @@ MOCK_CONFIG_MITO = {
             ),
         },
     },
+    'local_constraint_mito': {
+        '38': {
+            **CONFIG['local_constraint_mito']['38'],
+            'custom_import': lambda *_: hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    locus=hl.tlocus('GRCh38'),
+                    alleles=hl.tarray(hl.tstr),
+                    MLC_score=hl.tfloat32,
+                ),
+                key=['locus', 'alleles'],
+                globals=hl.Struct(),
+            ),
+        },
+    },
 }
 
 
@@ -728,6 +743,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -898,6 +914,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             ),
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
@@ -934,6 +951,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -960,6 +978,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                         dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
+                        local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
                     ),
                     versions=hl.Struct(
                         gnomad_mito='v3.1',
@@ -970,6 +989,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         clinvar_mito='2023-07-22',
                         dbnsfp_mito='4.2',
                         high_constraint_region_mito='Feb-15-2022',
+                        local_constraint_mito='2024-07-24',
                     ),
                     enums=hl.Struct(
                         gnomad_mito=hl.Struct(),
@@ -985,6 +1005,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             MutationTaster_pred=['D', 'A', 'N', 'P'],
                         ),
                         high_constraint_region_mito=hl.Struct(),
+                        local_constraint_mito=hl.Struct(),
                         sorted_transcript_consequences=hl.Struct(
                             biotype=BIOTYPES,
                             consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
@@ -994,6 +1015,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             trna_prediction=MITOTIP_PATHOGENICITIES,
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
@@ -1041,6 +1063,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     mitomap=None,
                     mitimpact=hl.Struct(score=0.5199999809265137),
                     high_constraint_region_mito=True,
+                    local_constraint_mito=hl.Struct(score=0.5),
                 ),
             ],
         )
@@ -1076,6 +1099,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -1155,6 +1179,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             lof_filter=LOF_FILTERS,
                         ),
                     ),
+                    migrations=[],
                     updates=set(),
                 ),
             ],
