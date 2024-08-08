@@ -85,6 +85,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
                 project_table_path(
                     ReferenceGenome.GRCh38,
                     DatasetType.SNV_INDEL,
+                    SampleType.WGS,
                     'R0113_test_project',
                 ),
             ).family_guids.collect()[0],

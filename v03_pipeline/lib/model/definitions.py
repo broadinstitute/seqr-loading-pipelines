@@ -17,6 +17,7 @@ class Sex(Enum):
 class PipelineVersion(Enum):
     V02 = 'v02'
     V03 = 'v03'
+    V3_1 = 'v3.1'
 
 
 class ReferenceGenome(Enum):

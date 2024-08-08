@@ -14,14 +14,14 @@ from v03_pipeline.lib.model import (
 )
 
 
-def _v03_pipeline_prefix(
+def _pipeline_prefix(
     root: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
         root,
-        PipelineVersion.V03.value,
+        PipelineVersion.V3_1.value,
         reference_genome.value,
         dataset_type.value,
     )
@@ -62,15 +62,17 @@ def cached_reference_dataset_query_path(
 def family_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    sample_type: SampleType,
     family_guid: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
         'families',
+        sample_type.value,
         f'{family_guid}.ht',
     )
 
@@ -81,7 +83,7 @@ def imputed_sex_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
@@ -97,7 +99,7 @@ def imported_callset_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
@@ -125,15 +127,17 @@ def metadata_for_run_path(
 def project_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
+    sample_type: SampleType,
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
         ),
         'projects',
+        sample_type.value,
         f'{project_guid}.ht',
     )
 
@@ -144,7 +148,7 @@ def relatedness_check_table_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
@@ -161,7 +165,7 @@ def remapped_and_subsetted_callset_path(
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
@@ -177,7 +181,7 @@ def lookup_table_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
@@ -191,7 +195,7 @@ def runs_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
@@ -206,7 +210,7 @@ def sex_check_table_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
@@ -260,7 +264,7 @@ def variant_annotations_table_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,
@@ -274,7 +278,7 @@ def variant_annotations_vcf_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _v03_pipeline_prefix(
+        _pipeline_prefix(
             Env.HAIL_SEARCH_DATA,
             reference_genome,
             dataset_type,

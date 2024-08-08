@@ -1,5 +1,6 @@
 import luigi
 
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
@@ -18,12 +19,14 @@ class DeleteFamilyTablesTask(BaseHailTableTask):
         )
 
     def run(self):
-        for family_guid in self.family_guids:
-            self.dynamic_delete_family_table_tasks.add(
-                DeleteFamilyTableTask(
-                    reference_genome=self.reference_genome,
-                    dataset_type=self.dataset_type,
-                    family_guid=family_guid,
-                ),
-            )
+        for sample_type in SampleType:
+            for family_guid in self.family_guids:
+                self.dynamic_delete_family_table_tasks.add(
+                    DeleteFamilyTableTask(
+                        reference_genome=self.reference_genome,
+                        dataset_type=self.dataset_type,
+                        sample_type=sample_type,
+                        family_guid=family_guid,
+                    ),
+                )
         yield self.dynamic_delete_family_table_tasks
