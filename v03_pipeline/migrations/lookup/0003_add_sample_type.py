@@ -30,7 +30,7 @@ class AddLookupSampleType(BaseMigration):
         Adds sample_type to lookup ht global fields project_guids, project_families, and updates.
         Assumes that only one project_ht exists for each project across both sample types.
 
-        ld Global fields:
+        Old Global fields:
             'project_guids': array<str>
             'project_families': dict<str, array<str>>
             'updates': set<struct {
@@ -54,7 +54,6 @@ class AddLookupSampleType(BaseMigration):
                 sample_type: str
             }>
         """
-
         collected_globals = ht.globals.collect()[0]
         project_guids = collected_globals['project_guids']
         project_families = collected_globals['project_families']
