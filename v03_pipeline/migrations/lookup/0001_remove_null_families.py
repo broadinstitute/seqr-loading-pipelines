@@ -5,23 +5,22 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 
 class RemoveNullFamilies(BaseMigration):
-    @property
-    def reference_genome_dataset_types() -> (
-        frozenset[tuple[ReferenceGenome, DatasetType]]
-    ):
-        return frozenset(
-            (
-                (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
-                (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL),
-                (ReferenceGenome.GRCh38, DatasetType.MITO),
-            ),
-        )
+    reference_genome_dataset_types: frozenset[
+        tuple[ReferenceGenome, DatasetType]
+    ] = frozenset(
+        (
+            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
+            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL),
+            (ReferenceGenome.GRCh38, DatasetType.MITO),
+        ),
+    )
 
     @staticmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, *_) -> hl.Table:
         ht = ht.annotate(
             project_stats=ht.project_stats.map(
                 lambda ps: hl.or_missing(hl.all(ps.map(hl.is_defined)), ps),
             ),
         )
-        return ht.annotate_globals(migrations=hl.empty_list(hl.str))
+        return ht.annotate_globals(migrations=hl.empty_array(hl.tstr))
+

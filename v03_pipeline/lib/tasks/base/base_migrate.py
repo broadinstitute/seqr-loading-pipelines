@@ -42,7 +42,7 @@ class BaseMigrateTask(BaseUpdateTask):
         if (
             (self.reference_genome, self.dataset_type)
         ) in migration.reference_genome_dataset_types:
-            ht = migration.migrate(ht)
+            ht = migration.migrate(ht, self.reference_genome, self.dataset_type)
             return ht.annotate_globals(
                 migrations=ht.globals.migrations.append(self.migration_name),
             )
