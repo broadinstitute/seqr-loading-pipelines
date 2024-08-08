@@ -100,7 +100,7 @@ class AddLookupSampleType(BaseMigration):
             logger.info(f'Projects without hts: {projects_without_hts}')
 
         return ht.annotate_globals(
-            project_guids=hl.array(project_guids),
+            project_guids=project_guids,
             project_families=project_families,
             updates=updates,
         )
