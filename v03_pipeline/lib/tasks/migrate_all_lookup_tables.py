@@ -22,7 +22,9 @@ class MigrateAllLookupTablesTask(luigi.Task):
         )
 
     def run(self):
-        for migration in list_migrations(v03_pipeline.migrations.lookup.__path__):
+        for migration_name, migration in list_migrations(
+            v03_pipeline.migrations.lookup.__path__[0],
+        ):
             if (
                 (self.reference_genome, self.dataset_type)
                 in migration.reference_genome_dataset_types
@@ -32,6 +34,7 @@ class MigrateAllLookupTablesTask(luigi.Task):
                     MigrateLookupTableTask(
                         self.reference_genome,
                         self.dataset_type,
+                        migration_name=migration_name,
                     ),
                 )
         yield self.dynamic_migration_tasks
