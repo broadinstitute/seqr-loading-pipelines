@@ -12,5 +12,9 @@ class BaseMigration(ABC):
 
     @staticmethod
     @abstractmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(
+        ht: hl.Table,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> hl.Table:
         pass
