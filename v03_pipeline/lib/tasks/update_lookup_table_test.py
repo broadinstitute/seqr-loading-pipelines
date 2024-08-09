@@ -74,8 +74,8 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['R0113_test_project'],
-                    project_families={'R0113_test_project': ['abc_1']},
+                    project_guids=[('R0113_test_project', 'WGS')],
+                    project_families={('R0113_test_project', 'WGS'): ['abc_1']},
                     updates={
                         hl.Struct(
                             callset=TEST_VCF,
