@@ -19,7 +19,7 @@ class MockMigration(BaseMigration):
     )
 
     @staticmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, *_) -> hl.Table:
         ht = ht.annotate(
             variant_id_id=hl.format('%s_id', ht.variant_id),
         )
@@ -34,7 +34,7 @@ class MockMigration2(BaseMigration):
     )
 
     @staticmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, *_) -> hl.Table:
         return ht.annotate_globals(mock_migration2='a second mock migration')
 
 

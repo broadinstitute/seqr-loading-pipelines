@@ -27,7 +27,7 @@ class AddLookupSampleType(BaseMigration):
         dataset_type: DatasetType,
     ) -> hl.Table:
         """
-        Adds sample_type to lookup ht global fields project_guids, project_families, and updates.
+        Adds sample_type to lookup ht global fields project_guids and project_families.
         Assumes that only one project_ht exists for each project across both sample types.
 
         Old Global fields:
@@ -50,14 +50,12 @@ class AddLookupSampleType(BaseMigration):
             'updates': set<struct {
                 callset: str,
                 project_guid: str,
-                remap_pedigree_hash: int32,
-                sample_type: str
+                remap_pedigree_hash: int32
             }>
         """
         collected_globals = ht.globals.collect()[0]
         project_guids = collected_globals['project_guids']
         project_families = collected_globals['project_families']
-        updates = collected_globals['updates']
         projects_without_hts = set()
 
         for i, project_guid in enumerate(project_guids):
@@ -76,11 +74,6 @@ class AddLookupSampleType(BaseMigration):
                 key = (project_guid, sample_type.value)
                 project_guids[i] = key
                 project_families[key] = project_families.pop(project_guid)
-                for update in updates:
-                    if update['project_guid'] == project_guid:
-                        new_update = update.annotate(sample_type=sample_type.value)
-                        updates.remove(update)
-                        updates.add(new_update)
                 break
 
             # It is possible that there are projects in the lookup globals with no corresponding project ht.
@@ -90,11 +83,6 @@ class AddLookupSampleType(BaseMigration):
                 key = (project_guid, hl.missing(hl.tstr))
                 project_guids[i] = key
                 project_families[key] = project_families.pop(project_guid)
-                for update in updates:
-                    if update['project_guid'] == project_guid:
-                        new_update = update.annotate(sample_type=hl.missing(hl.tstr))
-                        updates.remove(update)
-                        updates.add(new_update)
 
         if projects_without_hts:
             logger.info(f'Projects without hts: {projects_without_hts}')
@@ -102,5 +90,4 @@ class AddLookupSampleType(BaseMigration):
         return ht.annotate_globals(
             project_guids=project_guids,
             project_families=project_families,
-            updates=updates,
         )
