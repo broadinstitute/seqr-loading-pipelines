@@ -90,8 +90,11 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a', 'project_b'],
-                project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+                project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_families={
+                    ('project_a', 'WES'): ['1', '2', '3'],
+                    ('project_b', 'WGS'): ['4'],
+                },
                 updates={
                     hl.Struct(
                         callset='abc',
