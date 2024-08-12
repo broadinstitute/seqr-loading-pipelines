@@ -826,6 +826,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                     Polyphen2_HVAR_score=None,
                     MutationTaster_pred_id=0,
                 ),
+                hgmd=None,
                 gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
             ),
         )
