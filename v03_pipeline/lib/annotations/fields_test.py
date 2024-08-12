@@ -15,8 +15,12 @@ from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
-GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = 'v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz'
-GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz'
+)
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+)
 
 
 class FieldsTest(MockedDatarootTestCase):
@@ -105,7 +109,7 @@ class FieldsTest(MockedDatarootTestCase):
                 if reference_genome == ReferenceGenome.GRCh37
                 else MOCK_38_VEP_DATA,
             )
-            ht = run_vep(
+            ht = run_vep(  # noqa: PLW2901
                 ht,
                 DatasetType.SNV_INDEL,
                 reference_genome,
