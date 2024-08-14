@@ -16,5 +16,7 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
+shift # Remove the REFERENCE_GENOME arg.
+
 docker run --platform linux/amd64 -i -v $VEP_DATA/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
   /opt/vep/src/ensembl-vep/vep $@
