@@ -10,6 +10,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class MigrateLookupTableTask(BaseMigrateTask):
+    @property
     def migrations_path(self) -> str:
         return v03_pipeline.migrations.lookup.__path__[0]
 
