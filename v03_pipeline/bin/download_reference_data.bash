@@ -2,8 +2,8 @@
 
 set -eux
 
-REFERENCE_GENOME=${1:-GRCh38}
-SEQR_REFERENCE_DATA=${2:-/seqr-reference-data}
+REFERENCE_GENOME=$1
+SEQR_REFERENCE_DATA=/seqr-reference-data
 
 case $REFERENCE_GENOME in
   GRCh38)
