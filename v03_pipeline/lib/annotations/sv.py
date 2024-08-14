@@ -2,12 +2,12 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import liftover
 from v03_pipeline.lib.annotations.enums import (
     SV_CONSEQUENCE_RANKS,
     SV_TYPE_DETAILS,
     SV_TYPES,
 )
-from v03_pipeline.lib.annotations.shared import add_rg38_liftover
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 CONSEQ_PREDICTED_PREFIX = 'info.PREDICTED_'
@@ -194,10 +194,10 @@ def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def rg37_locus_end(
     ht: hl.Table,
-    liftover_ref_path: str,
+    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    add_rg38_liftover(liftover_ref_path)
+    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
     end = end_locus(ht)
     return hl.or_missing(
         hl.is_defined(end),
