@@ -23,6 +23,7 @@ class WriteFamilyTableTask(BaseWriteTask):
             family_table_path(
                 self.reference_genome,
                 self.dataset_type,
+                self.sample_type,
                 self.family_guid,
             ),
         )
