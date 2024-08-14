@@ -9,7 +9,7 @@
     "--cache", "--offline",
     "--minimal",
     "--assembly", "GRCh37",
-    "--fasta", "/opt/vep/.vep/homo_sapiens/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz",
+    "--fasta", "/opt/vep/.vep/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz",
     "--plugin", "LoF,human_ancestor_fa:/opt/vep/.vep/loftee_data/GRCh37/human_ancestor.fa.gz,filter_position:0.05,min_intron_size:15,conservation_file:/opt/vep/.vep/loftee_data/GRCh37/phylocsf_gerp.sql,gerp_file:/opt/vep/.vep/loftee_data/GRCh37/GERP_scores.final.sorted.txt.gz",
     "-o", "STDOUT"
 ],
