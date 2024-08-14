@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 set -eux
 
 REFERENCE_GENOME=${1:-GRCh38}
-VEP_DATA=${2:/vep_data}
+VEP_DATA=${2:-/vep_data}
 VEP_DOCKER_IMAGE="gcr.io/seqr-project/vep-docker-image"
 
 case $REFERENCE_GENOME in

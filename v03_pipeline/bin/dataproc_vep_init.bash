@@ -59,6 +59,6 @@ gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_
 chmod +x /download_vep_data.bash
 ./download_vep_data.bash $REFERENCE_GENOME
 
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.sh
-chmod +x /vep.sh
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.bash
+chmod +x /vep.bash
 
