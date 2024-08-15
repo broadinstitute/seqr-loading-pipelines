@@ -33,10 +33,10 @@ class BaseMigrateTask(BaseUpdateTask):
                 self.dataset_type,
             ) not in migration.reference_genome_dataset_types:
                 return True
-            mt = hl.read_table(self.output().path)
-            if not hasattr(mt, 'migrations'):
+            ht = hl.read_table(self.output().path)
+            if not hasattr(ht, 'migrations'):
                 return False
-            return hl.eval(mt.globals.migrations.index(self.migration_name) >= 0)
+            return hl.eval(ht.globals.migrations.index(self.migration_name) >= 0)
         return False
 
     def update_table(self, ht: hl.Table) -> hl.Table:
@@ -44,7 +44,7 @@ class BaseMigrateTask(BaseUpdateTask):
         if (
             (self.reference_genome, self.dataset_type)
         ) in migration.reference_genome_dataset_types:
-            ht = migration.migrate(ht)
+            ht = migration.migrate(ht, self.reference_genome, self.dataset_type)
             return ht.annotate_globals(
                 migrations=ht.globals.migrations.append(self.migration_name),
             )
