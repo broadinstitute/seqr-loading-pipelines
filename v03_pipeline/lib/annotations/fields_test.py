@@ -14,9 +14,13 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
-LIFTOVER = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz'
+)
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+)
 
 
 class FieldsTest(MockedDatarootTestCase):
@@ -35,11 +39,28 @@ class FieldsTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_get_formatting_fields(self, mock_vep: Mock, mock_validate: Mock) -> None:
         mock_validate.return_value = None
-        ht = hl.read_table(TEST_COMBINED_1)
-        ht = ht.annotate(rsid='abcd')
-        for reference_genome, expected_fields in [
+        for reference_genome, ht, expected_fields in [
             (
                 ReferenceGenome.GRCh38,
+                hl.Table.parallelize(
+                    [
+                        {
+                            'locus': hl.Locus(
+                                contig='chr1',
+                                position=1,
+                                reference_genome='GRCh38',
+                            ),
+                            'alleles': ['A', 'C'],
+                            'rsid': 'abcd',
+                        },
+                    ],
+                    hl.tstruct(
+                        locus=hl.tlocus('GRCh38'),
+                        alleles=hl.tarray(hl.tstr),
+                        rsid=hl.tstr,
+                    ),
+                    key=['locus', 'alleles'],
+                ),
                 [
                     'check_ref',
                     'screen',
@@ -55,7 +76,27 @@ class FieldsTest(MockedDatarootTestCase):
             ),
             (
                 ReferenceGenome.GRCh37,
+                hl.Table.parallelize(
+                    [
+                        {
+                            'locus': hl.Locus(
+                                contig='1',
+                                position=1,
+                                reference_genome='GRCh37',
+                            ),
+                            'alleles': ['A', 'C'],
+                            'rsid': 'abcd',
+                        },
+                    ],
+                    hl.tstruct(
+                        locus=hl.tlocus('GRCh37'),
+                        alleles=hl.tarray(hl.tstr),
+                        rsid=hl.tstr,
+                    ),
+                    key=['locus', 'alleles'],
+                ),
                 [
+                    'rg38_locus',
                     'rsid',
                     'sorted_transcript_consequences',
                     'variant_id',
@@ -68,7 +109,7 @@ class FieldsTest(MockedDatarootTestCase):
                 if reference_genome == ReferenceGenome.GRCh37
                 else MOCK_38_VEP_DATA,
             )
-            ht = run_vep(
+            ht = run_vep(  # noqa: PLW2901
                 ht,
                 DatasetType.SNV_INDEL,
                 reference_genome,
@@ -99,13 +140,15 @@ class FieldsTest(MockedDatarootTestCase):
                                 'gencode_ensembl_to_refseq_id_mapping': hl.dict(
                                     {'a': 'b'},
                                 ),
+                                'grch38_to_grch37_liftover_ref_path': GRCH38_TO_GRCH37_LIFTOVER_REF_PATH,
                             }
                             if reference_genome == ReferenceGenome.GRCh38
-                            else {}
+                            else {
+                                'grch37_to_grch38_liftover_ref_path': GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
+                            }
                         ),
                         dataset_type=DatasetType.SNV_INDEL,
                         reference_genome=reference_genome,
-                        liftover_ref_path=LIFTOVER,
                     ).keys(),
                 ),
                 expected_fields,
