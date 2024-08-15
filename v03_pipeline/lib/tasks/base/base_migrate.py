@@ -36,7 +36,7 @@ class BaseMigrateTask(BaseUpdateTask):
             ht = hl.read_table(self.output().path)
             if not hasattr(ht, 'migrations'):
                 return False
-            return hl.eval(ht.globals.migrations.index(self.migration_name) >= 0)
+            return hl.eval(ht.globals.migrations.contains(self.migration_name))
         return False
 
     def update_table(self, ht: hl.Table) -> hl.Table:
