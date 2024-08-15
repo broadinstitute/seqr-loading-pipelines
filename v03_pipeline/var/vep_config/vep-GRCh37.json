@@ -1,6 +1,7 @@
 {"command": [
     "/vep",
     "GRCh37",
+    "--warning_file", "STDERR",
     "--format", "vcf",
     "__OUTPUT_FORMAT_FLAG__",
     "--everything",
