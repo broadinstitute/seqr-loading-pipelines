@@ -27,7 +27,8 @@ class AddLookupSampleType(BaseMigration):
         dataset_type: DatasetType,
     ) -> hl.Table:
         """
-        Adds sample_type to lookup ht global fields project_guids and project_families.
+        Renames project_guids to project_sample_types.
+        Adds sample_type to global fields project_sample_types and project_families.
         Assumes that only one project_ht exists for each project across both sample types.
 
         Old Global fields:
@@ -39,7 +40,7 @@ class AddLookupSampleType(BaseMigration):
                 remap_pedigree_hash: int32
             }>
         New Global fields:
-            'project_guids': array<tuple (
+            'project_sample_types': array<tuple (
                 str,
                 str
             )>
@@ -53,13 +54,14 @@ class AddLookupSampleType(BaseMigration):
                 remap_pedigree_hash: int32
             }>
         """
+        ht = ht.transmute_globals(
+            project_sample_types=ht.globals.project_guids,
+        )
         collected_globals = ht.globals.collect()[0]
-        project_guids = collected_globals['project_guids']
+        project_sample_types = collected_globals['project_sample_types']
         project_families = collected_globals['project_families']
-        projects_without_hts = set()
 
-        for i, project_guid in enumerate(project_guids):
-            project_has_ht = False
+        for i, project_guid in enumerate(project_sample_types):
             for sample_type in SampleType:
                 project_ht_path = project_table_path(
                     reference_genome,
@@ -70,24 +72,12 @@ class AddLookupSampleType(BaseMigration):
                 if not hfs.exists(project_ht_path):
                     continue
 
-                project_has_ht = True
                 key = (project_guid, sample_type.value)
-                project_guids[i] = key
+                project_sample_types[i] = key
                 project_families[key] = project_families.pop(project_guid)
                 break
 
-            # It is possible that there are projects in the lookup globals with no corresponding project ht.
-            # For those projects, set sample_type to missing and log project_guid, so we can delete them later.
-            if not project_has_ht:
-                projects_without_hts.add(project_guid)
-                key = (project_guid, hl.missing(hl.tstr))
-                project_guids[i] = key
-                project_families[key] = project_families.pop(project_guid)
-
-        if projects_without_hts:
-            logger.info(f'Projects without hts: {projects_without_hts}')
-
         return ht.annotate_globals(
-            project_guids=project_guids,
+            project_sample_types=project_sample_types,
             project_families=project_families,
         )
