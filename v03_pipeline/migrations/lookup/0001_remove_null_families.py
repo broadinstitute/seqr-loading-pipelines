@@ -16,7 +16,7 @@ class RemoveNullFamilies(BaseMigration):
     )
 
     @staticmethod
-    def migrate(ht: hl.Table, *_) -> hl.Table:
+    def migrate(ht: hl.Table, **_) -> hl.Table:
         ht = ht.annotate(
             project_stats=ht.project_stats.map(
                 lambda ps: hl.or_missing(hl.any(ps.map(hl.is_defined)), ps),

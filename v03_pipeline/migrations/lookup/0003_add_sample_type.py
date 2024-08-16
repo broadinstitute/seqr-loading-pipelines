@@ -25,6 +25,7 @@ class AddLookupSampleType(BaseMigration):
         ht: hl.Table,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
+        **_,
     ) -> hl.Table:
         """
         Renames project_guids to project_sample_types.

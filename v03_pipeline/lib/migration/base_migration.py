@@ -16,5 +16,6 @@ class BaseMigration(ABC):
         ht: hl.Table,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
+        **kwargs,
     ) -> hl.Table:
         pass
