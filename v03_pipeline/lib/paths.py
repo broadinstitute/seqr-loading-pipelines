@@ -307,3 +307,39 @@ def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
         Env.HAIL_TMPDIR,
         f'clinvar-{reference_genome.value}-{etag}.ht',
     )
+
+
+def project_remap_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    sample_type: SampleType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'remaps',
+        sample_type.value,
+        f'{project_guid}.ht',
+    )
+
+
+def project_pedigree_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    sample_type: SampleType,
+    project_guid: str,
+) -> str:
+    return os.path.join(
+        _pipeline_prefix(
+            Env.HAIL_SEARCH_DATA,
+            reference_genome,
+            dataset_type,
+        ),
+        'pedigrees',
+        sample_type.value,
+        f'{project_guid}.ht',
+    )
