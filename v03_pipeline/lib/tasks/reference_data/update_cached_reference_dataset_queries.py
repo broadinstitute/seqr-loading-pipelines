@@ -2,18 +2,17 @@ import luigi
 
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
-    DatasetType,
-    ReferenceGenome,
+)
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
 )
 
 
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdateCachedReferenceDatasetQueries(luigi.Task):
-    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
-    dataset_type = luigi.EnumParameter(enum=DatasetType)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.checked_for_tasks = False

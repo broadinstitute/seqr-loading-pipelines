@@ -2,16 +2,17 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class BaseHailTableTask(luigi.Task):
-    reference_genome = luigi.EnumParameter(enum=ReferenceGenome)
-    dataset_type = luigi.EnumParameter(enum=DatasetType)
-
     def output(self) -> luigi.Target:
         raise NotImplementedError
 
