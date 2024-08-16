@@ -1,4 +1,5 @@
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,

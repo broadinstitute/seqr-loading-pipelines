@@ -1,5 +1,6 @@
 import hailtop.fs as hfs
 import luigi
+import luigi.util
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import SampleType
