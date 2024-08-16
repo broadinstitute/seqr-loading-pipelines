@@ -4,7 +4,6 @@ import luigi
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
-    Env,
     ReferenceDatasetCollection,
 )
 from v03_pipeline.lib.paths import (
@@ -72,18 +71,10 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                     ],
                 ),
             )
-        else:
-            return UpdatedReferenceDatasetCollectionTask(
-                self.reference_genome,
-                self.dataset_type,
-                ReferenceDatasetCollection.COMBINED,
-            )
-        return HailTableTask(
-            valid_reference_dataset_collection_path(
-                self.reference_genome,
-                self.dataset_type,
-                ReferenceDatasetCollection.COMBINED,
-            ),
+        return UpdatedReferenceDatasetCollectionTask(
+            self.reference_genome,
+            self.dataset_type,
+            ReferenceDatasetCollection.COMBINED,
         )
 
     def create_table(self) -> hl.Table:
