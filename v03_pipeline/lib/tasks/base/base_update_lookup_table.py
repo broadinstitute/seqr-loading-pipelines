@@ -34,7 +34,7 @@ class BaseUpdateLookupTableTask(BaseUpdateTask):
             ),
             key=key_type.fields,
             globals=hl.Struct(
-                project_guids=hl.empty_array(hl.ttuple(hl.tstr, hl.tstr)),
+                project_sample_types=hl.empty_array(hl.ttuple(hl.tstr, hl.tstr)),
                 project_families=hl.empty_dict(
                     hl.ttuple(hl.tstr, hl.tstr),
                     hl.tarray(hl.tstr),

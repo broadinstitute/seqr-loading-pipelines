@@ -37,7 +37,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[],
+                    project_sample_types=[],
                     project_families={},
                     updates={
                         hl.Struct(
@@ -74,7 +74,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[('R0113_test_project', 'WGS')],
+                    project_sample_types=[('R0113_test_project', 'WGS')],
                     project_families={('R0113_test_project', 'WGS'): ['abc_1']},
                     updates={
                         hl.Struct(

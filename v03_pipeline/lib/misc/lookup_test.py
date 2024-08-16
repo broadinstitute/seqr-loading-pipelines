@@ -35,7 +35,7 @@ class LookupTest(unittest.TestCase):
             [
                 hl.Struct(
                     family_samples={'1': ['b', 'c', 'd'], '2': ['a'], '3': ['e']},
-                    project_guids=[('project_a', 'WES')],
+                    project_sample_types=[('project_a', 'WES')],
                     project_families={('project_a', 'WES'): ['1', '2', '3']},
                 ),
             ],
@@ -154,7 +154,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                 project_families={
                     ('project_a', 'WES'): ['1', '2', '3'],
                     ('project_b', 'WGS'): ['4'],
@@ -189,7 +189,7 @@ class LookupTest(unittest.TestCase):
             lookup_ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                    project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                     project_families={
                         ('project_a', 'WES'): ['2'],
                         ('project_b', 'WGS'): [],
@@ -286,7 +286,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                 project_families={
                     ('project_a', 'WES'): ['1', '2', '3'],
                     ('project_b', 'WGS'): ['4'],
@@ -307,7 +307,7 @@ class LookupTest(unittest.TestCase):
             lookup_ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[('project_b', 'WGS')],
+                    project_sample_types=[('project_b', 'WGS')],
                     project_families={('project_b', 'WGS'): ['4']},
                 ),
             ],
@@ -347,7 +347,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=hl.empty_array(hl.ttuple(hl.tstr, hl.tstr)),
+                project_sample_types=hl.empty_array(hl.ttuple(hl.tstr, hl.tstr)),
                 project_families=hl.empty_dict(
                     hl.ttuple(hl.tstr, hl.tstr),
                     hl.tarray(hl.tstr),
@@ -415,7 +415,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_a', 'WES')],
+                project_sample_types=[('project_a', 'WES')],
                 project_families={('project_a', 'WES'): ['1', '2', '3']},
             ),
         )
@@ -427,7 +427,7 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[('project_a', 'WES')],
+                    project_sample_types=[('project_a', 'WES')],
                     project_families={('project_a', 'WES'): ['1', '2', '3']},
                 ),
             ],
@@ -548,7 +548,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                 project_families={
                     ('project_a', 'WES'): ['1', '2'],
                     ('project_b', 'WGS'): ['3'],
@@ -606,7 +606,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_c', 'WES')],
+                project_sample_types=[('project_c', 'WES')],
                 project_families={('project_c', 'WES'): ['1', '2']},
             ),
         )
@@ -618,7 +618,7 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[
+                    project_sample_types=[
                         ('project_a', 'WES'),
                         ('project_b', 'WGS'),
                         ('project_c', 'WES'),
@@ -783,7 +783,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                 project_families={
                     ('project_a', 'WES'): ['1', '2'],
                     ('project_b', 'WGS'): ['3'],
@@ -841,7 +841,7 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=[('project_b', 'WGS')],
+                project_sample_types=[('project_b', 'WGS')],
                 project_families={('project_b', 'WGS'): ['1', '2']},
             ),
         )
@@ -853,7 +853,7 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=[('project_a', 'WES'), ('project_b', 'WGS')],
+                    project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                     project_families={
                         ('project_a', 'WES'): ['1', '2'],
                         ('project_b', 'WGS'): ['3', '1', '2'],

@@ -107,7 +107,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                 callset_ht,
             )
             ht = ht.select_globals(
-                project_guids=ht.project_guids,
+                project_sample_types=ht.project_sample_types,
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(
