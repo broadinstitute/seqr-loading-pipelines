@@ -3,7 +3,6 @@ import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.paths import variant_annotations_vcf_path
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
@@ -12,7 +11,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class WriteVariantAnnotationsVCF(BaseHailTableTask):
+class WriteVariantAnnotationsVCF(luigi.Task):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_vcf_path(
