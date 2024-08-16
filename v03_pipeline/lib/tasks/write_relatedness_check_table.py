@@ -40,14 +40,6 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
                         UpdatedCachedReferenceDatasetQuery,
                         crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
                     )
-                    if Env.REFERENCE_DATA_AUTO_UPDATE
-                    else HailTableTask(
-                        cached_reference_dataset_query_path(
-                            self.reference_genome,
-                            self.dataset_type,
-                            CachedReferenceDatasetQuery.GNOMAD_QC,
-                        ),
-                    )
                 ),
             ]
         return requirements

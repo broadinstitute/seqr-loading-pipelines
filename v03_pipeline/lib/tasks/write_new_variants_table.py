@@ -22,9 +22,6 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
     load_gencode_gene_symbol_to_gene_id,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
-)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
@@ -81,20 +78,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        if Env.REFERENCE_DATA_AUTO_UPDATE:
-            requirements = [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            ]
-        else:
-            requirements = [
-                BaseUpdateVariantAnnotationsTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            ]
+        requirements = [
+            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             # Also note that force is passed here,

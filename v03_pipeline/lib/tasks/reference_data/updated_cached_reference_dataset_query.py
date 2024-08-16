@@ -64,12 +64,6 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         )
 
     def requires(self) -> luigi.Task:
-        if Env.REFERENCE_DATA_AUTO_UPDATE and not self.crdq.query_raw_dataset:
-            return UpdatedReferenceDatasetCollectionTask(
-                self.reference_genome,
-                self.dataset_type,
-                ReferenceDatasetCollection.COMBINED,
-            )
         if self.crdq.query_raw_dataset:
             return HailTableTask(
                 get_ht_path(
@@ -77,6 +71,12 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                         self.reference_genome.v02_value
                     ],
                 ),
+            )
+        else:
+            return UpdatedReferenceDatasetCollectionTask(
+                self.reference_genome,
+                self.dataset_type,
+                ReferenceDatasetCollection.COMBINED,
             )
         return HailTableTask(
             valid_reference_dataset_collection_path(
