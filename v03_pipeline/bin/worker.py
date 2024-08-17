@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import json
+import os
 import time
 
 import luigi
@@ -27,7 +29,6 @@ def main():
                 luigi.build(
                     [
                         WriteProjectFamilyTablesTask(
-                            callset_path=lpr.callset_path,
                             project_guid=project_guid,
                             project_remap_path=project_remap_path(
                                 lpr.reference_genome,
@@ -41,21 +42,20 @@ def main():
                                 lpr.sample_type,
                                 lpr.project_guid,
                             ),
-                            reference_genome=lpr.reference_genome,
-                            dataset_type=lpr.dataset_type,
-                            sample_type=lpr.sample_type,
-                            force=lpr.force,
-                            ignore_missing_samples_when_remapping=lpr.ignore_missing_samples_when_remapping,
-                            skip_validation=lpr.skip_validation,
+                            **{
+                                k: v
+                                for k, v in lpr.moßdel_dump().items()
+                                if k != 'projects_to_run'
+                            },
                         )
-                        for project_guid in lpt.projects_to_run
+                        for project_guid in lpr.projects_to_run
                     ],
                 )
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
             logger.info('Waiting for work')
-            time.sleep(3)
+            time.sleep(1)
 
 
 if __name__ == '__main__':
