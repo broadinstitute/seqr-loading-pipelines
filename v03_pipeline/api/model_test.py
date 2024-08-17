@@ -7,8 +7,6 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 
 class ModelTest(unittest.TestCase):
-    maxDiff = None
-
     def test_valid_loading_pipeline_requests(self) -> None:
         raw_request = {
             'callset_path': TEST_VCF,
@@ -32,6 +30,6 @@ class ModelTest(unittest.TestCase):
             LoadingPipelineRequest.model_validate(raw_request)
         self.assertTrue(
             str(cm.exception).startswith(
-                '3 validation errors for LoadingPipelineRequest'
-            )
+                '3 validation errors for LoadingPipelineRequest',
+            ),
         )
