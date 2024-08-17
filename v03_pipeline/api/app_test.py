@@ -23,7 +23,7 @@ class AppTest(AioHTTPTestCase):
                     aiohttp.web_exceptions.HTTPMethodNotAllowed.status_code,
                 )
                 self.assertTrue(
-                    'HTTPMethodNotAllowed' in log.output[0]
+                    'HTTPMethodNotAllowed' in log.output[0],
                 )
 
         with self.assertLogs(level='ERROR') as log:
@@ -33,7 +33,7 @@ class AppTest(AioHTTPTestCase):
                     aiohttp.web_exceptions.HTTPUnprocessableEntity.status_code,
                 )
                 self.assertTrue(
-                    'HTTPUnprocessableEntity' in log.output[0]
+                    'HTTPUnprocessableEntity' in log.output[0],
                 )
 
         body = {
