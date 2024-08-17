@@ -98,3 +98,15 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                 },
             },
         )
+
+        # Second request
+        body['projects_to_run'] = ['project_b', 'project_c']
+        async with self.client.request(
+            'POST',
+            '/loading_pipeline_enqueue',
+            json=body,
+        ) as resp:
+            self.assertEqual(
+                resp.status,
+                web_exceptions.HTTPConflict.status_code,
+            )
