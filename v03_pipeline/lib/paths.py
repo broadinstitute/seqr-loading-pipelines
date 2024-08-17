@@ -343,3 +343,10 @@ def project_pedigree_path(
         sample_type.value,
         f'{project_guid}.ht',
     )
+
+
+def loading_pipeline_queue_path() -> str:
+    return os.path.join(
+        Env.LOADING_DATASETS,
+        'loading_pipeline_queue',
+    )

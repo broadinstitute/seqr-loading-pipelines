@@ -1,4 +1,4 @@
-import aiohttp
+from aiohttp import web_exceptions
 from aiohttp.test_utils import AioHTTPTestCase
 
 from v03_pipeline.api.app import init_web_app
@@ -20,7 +20,7 @@ class AppTest(AioHTTPTestCase):
             async with self.client.request('GET', '/loading_pipeline') as resp:
                 self.assertEqual(
                     resp.status,
-                    aiohttp.web_exceptions.HTTPMethodNotAllowed.status_code,
+                    web_exceptions.HTTPMethodNotAllowed.status_code,
                 )
                 self.assertTrue(
                     'HTTPMethodNotAllowed' in log.output[0],
@@ -30,7 +30,7 @@ class AppTest(AioHTTPTestCase):
             async with self.client.request('POST', '/loading_pipeline') as resp:
                 self.assertEqual(
                     resp.status,
-                    aiohttp.web_exceptions.HTTPUnprocessableEntity.status_code,
+                    web_exceptions.HTTPUnprocessableEntity.status_code,
                 )
                 self.assertTrue(
                     'HTTPUnprocessableEntity' in log.output[0],
@@ -51,7 +51,7 @@ class AppTest(AioHTTPTestCase):
             ) as resp:
                 self.assertEqual(
                     resp.status,
-                    aiohttp.web_exceptions.HTTPBadRequest.status_code,
+                    web_exceptions.HTTPBadRequest.status_code,
                 )
                 self.assertTrue(
                     'callset_path must point to a file that exists' in log.output[0],
