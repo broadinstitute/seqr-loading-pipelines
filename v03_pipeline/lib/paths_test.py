@@ -215,10 +215,10 @@ class TestPaths(unittest.TestCase):
             project_remap_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                SampleType.WES,
+                SampleType.WGS,
                 'R0652_pipeline_test',
             ),
-            '123',
+            '/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test.ht',
         )
 
     def test_project_pedigree_path(self) -> None:
@@ -229,5 +229,5 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '123',
+            '/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test.ht',
         )

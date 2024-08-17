@@ -317,7 +317,7 @@ def project_remap_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
@@ -335,7 +335,7 @@ def project_pedigree_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.LOADING_DATASETS,
             reference_genome,
             dataset_type,
         ),
