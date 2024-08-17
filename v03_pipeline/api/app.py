@@ -1,7 +1,9 @@
 import json
+import os
 import traceback
 
 import aiofiles
+import aiofiles.os
 from aiohttp import web, web_exceptions
 
 from v03_pipeline.api.model import LoadingPipelineRequest
@@ -33,13 +35,16 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
     except ValueError as e:
         raise web.HTTPBadRequest from e
 
-    if await aiofiles.exists(loading_pipeline_queue_path()):
+    try:
         async with aiofiles.open(loading_pipeline_queue_path(), 'r') as f:
             return web.json_response({'In process request': json.loads(await f.read())})
+    except FileNotFoundError:
+        pass
+
     async with aiofiles.open(loading_pipeline_queue_path(), 'w') as f:
         await f.write(lpr.model_dump_json())
     return web.json_response(
-        {'Successfully queued': lpr.model_dump_json()},
+        {'Successfully queued': lpr.model_dump()},
         status=web_exceptions.HTTPAccepted.status_code,
     )
 
@@ -49,6 +54,10 @@ async def status(_: web.Request) -> web.Response:
 
 
 async def init_web_app():
+    await aiofiles.os.makedirs(
+        os.path.dirname(loading_pipeline_queue_path()),
+        exist_ok=True,
+    )
     app = web.Application(middlewares=[error_middleware])
     app.add_routes(
         [

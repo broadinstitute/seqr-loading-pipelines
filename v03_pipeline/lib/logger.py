@@ -28,6 +28,9 @@ LOG_CONFIG = {
         'urllib3': {
             'level': 'CRITICAL',
         },
+        'asyncio': {
+            'level': 'CRITICAL',
+        },
     },
 }
 

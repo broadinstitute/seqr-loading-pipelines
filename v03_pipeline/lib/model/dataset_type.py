@@ -10,7 +10,7 @@ MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
 
 
-class DatasetType(Enum):
+class DatasetType(str, Enum):
     GCNV = 'GCNV'
     MITO = 'MITO'
     SNV_INDEL = 'SNV_INDEL'

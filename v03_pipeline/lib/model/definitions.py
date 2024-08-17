@@ -3,24 +3,24 @@ from enum import Enum
 import hail as hl
 
 
-class AccessControl(Enum):
+class AccessControl(str, Enum):
     PUBLIC = 'public'
     PRIVATE = 'private'
 
 
-class Sex(Enum):
+class Sex(str, Enum):
     FEMALE = 'F'
     MALE = 'M'
     UNKNOWN = 'U'
 
 
-class PipelineVersion(Enum):
+class PipelineVersion(str, Enum):
     V02 = 'v02'
     V03 = 'v03'
     V3_1 = 'v3.1'
 
 
-class ReferenceGenome(Enum):
+class ReferenceGenome(str, Enum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
 
@@ -139,6 +139,6 @@ class ReferenceGenome(Enum):
         }[self]
 
 
-class SampleType(Enum):
+class SampleType(str, Enum):
     WES = 'WES'
     WGS = 'WGS'

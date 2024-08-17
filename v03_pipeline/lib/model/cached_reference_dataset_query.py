@@ -13,7 +13,7 @@ from v03_pipeline.lib.reference_data.queries import (
 )
 
 
-class CachedReferenceDatasetQuery(Enum):
+class CachedReferenceDatasetQuery(str, Enum):
     CLINVAR_PATH_VARIANTS = 'clinvar_path_variants'
     GNOMAD_CODING_AND_NONCODING_VARIANTS = 'gnomad_coding_and_noncoding_variants'
     GNOMAD_QC = 'gnomad_qc'
