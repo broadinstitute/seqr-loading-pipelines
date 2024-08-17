@@ -39,12 +39,14 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
         async with aiofiles.open(loading_pipeline_queue_path(), 'r') as f:
             return web.json_response(
                 {
-                    'Failed to queue due to in process request': json.loads(await f.read())
+                    'Failed to queue due to in process request': json.loads(
+                        await f.read(),
+                    ),
                 },
                 #
-                # The 409 (Conflict) status code indicates that the request 
-                # could not be completed due to a conflict with the current 
-                # state of the target resource. 
+                # The 409 (Conflict) status code indicates that the request
+                # could not be completed due to a conflict with the current
+                # state of the target resource.
                 #
                 status=web_exceptions.HTTPConflict.status_code,
             )
