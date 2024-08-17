@@ -4,6 +4,8 @@ from aiohttp.test_utils import AioHTTPTestCase
 from v03_pipeline.api.app import init_web_app
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 
+CALLSET_PATH = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+
 
 class AppTest(AioHTTPTestCase):
     async def get_application(self):
@@ -15,9 +17,14 @@ class AppTest(AioHTTPTestCase):
             resp_json = await resp.json()
         self.assertDictEqual(resp_json, {'success': True})
 
+    async def test_missing_route(self):
+        with self.assertLogs(level='ERROR') as log:
+            async with self.client.request('GET', '/loading_pip') as resp:
+                self.assertEqual(resp.status, web_exceptions.HTTPNotFound.status_code)
+
     async def test_loading_pipeline_invalid_requests(self):
         with self.assertLogs(level='ERROR') as log:
-            async with self.client.request('GET', '/loading_pipeline') as resp:
+            async with self.client.request('GET', '/loading_pipeline_enqueue') as resp:
                 self.assertEqual(
                     resp.status,
                     web_exceptions.HTTPMethodNotAllowed.status_code,
@@ -27,7 +34,7 @@ class AppTest(AioHTTPTestCase):
                 )
 
         with self.assertLogs(level='ERROR') as log:
-            async with self.client.request('POST', '/loading_pipeline') as resp:
+            async with self.client.request('POST', '/loading_pipeline_enqueue') as resp:
                 self.assertEqual(
                     resp.status,
                     web_exceptions.HTTPUnprocessableEntity.status_code,
@@ -46,7 +53,7 @@ class AppTest(AioHTTPTestCase):
         with self.assertLogs(level='ERROR') as log:
             async with self.client.request(
                 'POST',
-                '/loading_pipeline',
+                '/loading_pipeline_enqueue',
                 json=body,
             ) as resp:
                 self.assertEqual(
@@ -56,3 +63,21 @@ class AppTest(AioHTTPTestCase):
                 self.assertTrue(
                     'callset_path must point to a file that exists' in log.output[0],
                 )
+
+    async def test_loading_pipeline_enqueue(self):
+        body = {
+            'callset_path': CALLSET_PATH,
+            'projects_to_run': ['project_a'],
+            'sample_type': SampleType.WGS.value,
+            'reference_genome': ReferenceGenome.GRCh38.value,
+            'dataset_type': DatasetType.SNV_INDEL.value,
+        }
+        async with self.client.request(
+            'POST',
+            '/loading_pipeline_enqueue',
+            json=body,
+        ) as resp:
+            self.assertEqual(
+                resp.status,
+                web_exceptions.HTTPAccepted.status_code,
+            )
