@@ -50,6 +50,7 @@ def main():
                         project_guid=lpr.projects_to_run[i],
                         project_remap_path=project_remap_paths[i],
                         project_pedigree_path=project_pedigree_paths[i],
+                        force=False,
                         **{
                             k: v
                             for k, v in lpr.model_dump().items()
@@ -62,6 +63,7 @@ def main():
                     project_guids=lpr.projects_to_run,
                     project_remap_paths=project_remap_paths,
                     project_pedigree_paths=project_pedigree_paths,
+                    force=False,
                     **{
                         k: v
                         for k, v in lpr.model_dump().items()

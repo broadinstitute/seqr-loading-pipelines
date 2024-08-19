@@ -30,7 +30,7 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRun
+from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
@@ -92,7 +92,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         else:
             requirements = [
                 *requirements,
-                self.clone(WriteMetadataForRun, force=False),
+                self.clone(WriteMetadataForRunTask, force=False),
             ]
         return requirements
 
