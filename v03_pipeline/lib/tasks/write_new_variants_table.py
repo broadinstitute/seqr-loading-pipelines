@@ -30,9 +30,7 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
+from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRun
 from v03_pipeline.lib.vep import run_vep
 
 VARIANTS_PER_VEP_PARTITION = 1e3
@@ -89,29 +87,13 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             # Also note that force is passed here,
             requirements = [
                 *requirements,
-                self.clone(UpdateLookupTableTask),
+                self.clone(UpdateLookupTableTask, force=False),
             ]
         else:
-            requirements.extend(
-                [
-                    self.clone(
-                        WriteRemappedAndSubsettedCallsetTask,
-                        project_guid=project_guid,
-                        project_remap_path=project_remap_path,
-                        project_pedigree_path=project_pedigree_path,
-                    )
-                    for (
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                    ) in zip(
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                        strict=True,
-                    )
-                ],
-            )
+            requirements = [
+                *requirements,
+                self.clone(WriteMetadataForRun, force=False),
+            ]
         return requirements
 
     def complete(self) -> bool:

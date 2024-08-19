@@ -12,7 +12,6 @@ class LoadingPipelineRequest(BaseModel):
     sample_type: SampleType
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
-    force: bool = False
     ignore_missing_samples_when_remapping: bool = False
     skip_validation: bool = False
 

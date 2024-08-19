@@ -23,6 +23,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
+    run_id = luigi.Parameter()
 
     def complete(self) -> bool:
         return (
@@ -53,21 +54,8 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     def requires(self) -> list[luigi.Task]:
         return [
             self.clone(
-                WriteRemappedAndSubsettedCallsetTask,
-                project_guid=project_guid,
-                project_remap_path=project_remap_path,
-                project_pedigree_path=project_pedigree_path,
+                WriteMetadataForRun,
                 force=False,
-            )
-            for (
-                project_guid,
-                project_remap_path,
-                project_pedigree_path,
-            ) in zip(
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                strict=True,
             )
         ]
 

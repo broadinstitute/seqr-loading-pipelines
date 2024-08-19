@@ -56,7 +56,7 @@ def main():
                             if k != 'projects_to_run'
                         },
                     )
-                    for i in range(lpr.projects_to_run)
+                    for i in range(len(lpr.projects_to_run))
                 ],
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
                     project_guids=lpr.projects_to_run,

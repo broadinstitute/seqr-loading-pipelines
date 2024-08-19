@@ -89,7 +89,6 @@ class AppTest(AioHTTPTestCase, MockedDatarootTestCase):
                 'Successfully queued': {
                     'callset_path': 'v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                     'dataset_type': 'SNV_INDEL',
-                    'force': False,
                     'ignore_missing_samples_when_remapping': False,
                     'projects_to_run': ['project_a'],
                     'reference_genome': 'GRCh38',
