@@ -44,7 +44,7 @@ def main():
                             ),
                             **{
                                 k: v
-                                for k, v in lpr.moßdel_dump().items()
+                                for k, v in lpr.model_dump().items()
                                 if k != 'projects_to_run'
                             },
                         )
