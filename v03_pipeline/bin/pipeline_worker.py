@@ -51,7 +51,7 @@ def main():
                     project_remap_paths=project_remap_paths,
                     project_pedigree_paths=project_pedigree_paths,
                     run_id=datetime.datetime.now(datetime.timezone.utc).strftime(
-                        '%Y%m%d-%H%M%S'
+                        '%Y%m%d-%H%M%S',
                     ),
                     force=False,
                     **{
