@@ -13,9 +13,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunPa
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
+from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRun
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -56,7 +54,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
             self.clone(
                 WriteMetadataForRun,
                 force=False,
-            )
+            ),
         ]
 
     def update_table(self, ht: hl.Table) -> hl.Table:
