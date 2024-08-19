@@ -50,7 +50,9 @@ def main():
                     project_guids=lpr.projects_to_run,
                     project_remap_paths=project_remap_paths,
                     project_pedigree_paths=project_pedigree_paths,
-                    run_id=datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
+                    run_id=datetime.datetime.now(datetime.timezone.utc).strftime(
+                        '%Y%m%d-%H%M%S'
+                    ),
                     force=False,
                     **{
                         k: v
@@ -71,7 +73,7 @@ def main():
                         },
                     )
                     for i in range(len(lpr.projects_to_run))
-                ]
+                ],
             ]
             luigi.build(tasks)
         except Exception:
