@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import datetime
 import os
 import time
 
@@ -44,8 +45,20 @@ def main():
                 )
                 for project_guid in lpr.projects_to_run
             ]
-            luigi.build(
-                [
+            tasks = [
+                UpdateVariantAnnotationsTableWithNewSamplesTask(
+                    project_guids=lpr.projects_to_run,
+                    project_remap_paths=project_remap_paths,
+                    project_pedigree_paths=project_pedigree_paths,
+                    run_id=datetime.datetime.now().strftime('%Y%m%d-%H%M%S'),
+                    force=False,
+                    **{
+                        k: v
+                        for k, v in lpr.model_dump().items()
+                        if k != 'projects_to_run'
+                    },
+                ),
+                *[
                     WriteProjectFamilyTablesTask(
                         project_guid=lpr.projects_to_run[i],
                         project_remap_path=project_remap_paths[i],
@@ -58,19 +71,9 @@ def main():
                         },
                     )
                     for i in range(len(lpr.projects_to_run))
-                ],
-                UpdateVariantAnnotationsTableWithNewSamplesTask(
-                    project_guids=lpr.projects_to_run,
-                    project_remap_paths=project_remap_paths,
-                    project_pedigree_paths=project_pedigree_paths,
-                    force=False,
-                    **{
-                        k: v
-                        for k, v in lpr.model_dump().items()
-                        if k != 'projects_to_run'
-                    },
-                ),
-            )
+                ]
+            ]
+            luigi.build(tasks)
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
