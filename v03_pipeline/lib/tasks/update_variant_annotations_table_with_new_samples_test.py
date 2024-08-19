@@ -419,7 +419,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
             skip_validation=False,
-            run_id=TEST_RUN_ID,
+            run_id=TEST_RUN_ID + '-another-run',
         )
         worker.add(uvatwns_task_4)
         worker.run()
