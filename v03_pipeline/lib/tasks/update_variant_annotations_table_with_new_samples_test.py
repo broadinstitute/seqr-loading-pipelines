@@ -44,7 +44,9 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = 'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
