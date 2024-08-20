@@ -1,7 +1,6 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.liftover import remove_liftover
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
@@ -27,9 +26,6 @@ class BaseHailTableTask(luigi.Task):
 
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
-
-        # Ensure any cached liftover files within Hail are cleared
-        remove_liftover()
 
 
 # NB: these are defined over luigi.Task instead of the BaseHailTableTask so that
