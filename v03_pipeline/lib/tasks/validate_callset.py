@@ -49,7 +49,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(WriteImportedCallsetTask),
+            self.clone(WriteImportedCallsetTask, force=False),
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
