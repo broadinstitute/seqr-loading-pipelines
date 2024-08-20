@@ -45,6 +45,11 @@ def main():
                 )
                 for project_guid in lpr.projects_to_run
             ]
+            task_kwargs = {
+                k: v
+                for k, v in lpr.model_dump().items()
+                if k != 'projects_to_run'
+            }
             tasks = [
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
                     project_guids=lpr.projects_to_run,
@@ -54,11 +59,7 @@ def main():
                         '%Y%m%d-%H%M%S',
                     ),
                     force=False,
-                    **{
-                        k: v
-                        for k, v in lpr.model_dump().items()
-                        if k != 'projects_to_run'
-                    },
+                    **task_kwargs,
                 ),
                 *[
                     WriteProjectFamilyTablesTask(
@@ -66,11 +67,7 @@ def main():
                         project_remap_path=project_remap_paths[i],
                         project_pedigree_path=project_pedigree_paths[i],
                         force=False,
-                        **{
-                            k: v
-                            for k, v in lpr.model_dump().items()
-                            if k != 'projects_to_run'
-                        },
+                        **task_kwargs,
                     )
                     for i in range(len(lpr.projects_to_run))
                 ],
@@ -79,9 +76,10 @@ def main():
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
+            if os.path.exists(loading_pipeline_queue_path()):
+                os.remove(loading_pipeline_queue_path())
             logger.info('Waiting for work')
             time.sleep(1)
-
 
 if __name__ == '__main__':
     main()
