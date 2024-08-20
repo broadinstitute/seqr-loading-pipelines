@@ -12,7 +12,10 @@ from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model import (
+    Env,
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
@@ -198,7 +201,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ):
                 ar_ht = ar_ht.union(ar_ht_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
-
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(
