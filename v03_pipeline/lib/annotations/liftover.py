@@ -20,7 +20,7 @@ def add_rg37_liftover(grch37_to_grch38_liftover_ref_path: str) -> None:
 def remove_liftover():
     rg37 = hl.get_reference(ReferenceGenome.GRCh37.value)
     rg38 = hl.get_reference(ReferenceGenome.GRCh38.value)
-    if rg37.has_liftover():
-        rg37.remove_lifover()
-    if rg38.has_liftover():
-        rg38.remove_lifover()
+    if rg37.has_liftover(rg38):
+        rg37.remove_lifover(rg38)
+    if rg38.has_liftover(rg37):
+        rg38.remove_lifover(rg37)
