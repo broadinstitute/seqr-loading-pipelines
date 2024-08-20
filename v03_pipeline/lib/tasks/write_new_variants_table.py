@@ -5,7 +5,6 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.annotations.liftover import remove_liftover
 from v03_pipeline.lib.annotations.rdc_dependencies import (
     get_rdc_annotation_dependencies,
 )
@@ -218,8 +217,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ):
                 ar_ht = ar_ht.union(ar_ht_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
-
-        remove_liftover()
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(
