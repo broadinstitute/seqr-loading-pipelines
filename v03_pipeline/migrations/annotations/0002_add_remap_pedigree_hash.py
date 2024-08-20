@@ -18,7 +18,7 @@ class AddRemapPedigreeHash(BaseMigration):
     )
 
     @staticmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, **_) -> hl.Table:
         return ht.annotate_globals(
             updates=ht.globals.updates.map(
                 lambda u: u.annotate(remap_pedigree_hash=hl.missing(hl.tint32)),

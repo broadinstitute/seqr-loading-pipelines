@@ -29,9 +29,10 @@ class BaseHailTableTask(luigi.Task):
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001
 
         # Ensure any cached liftover files within Hail are cleared
-        # This runs "before" as task to account for situations where
+        # to provide a clean context free of hidden state.
+        # This runs "before" a task to account for situations where
         # the Hail write fails and we do not have the chance to
-        # run this method.
+        # run this method in the "after".
         remove_liftover()
 
 
