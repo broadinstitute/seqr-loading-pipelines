@@ -32,7 +32,7 @@ class BaseHailTableTask(luigi.Task):
         # to provide a clean context free of hidden state.
         # This runs "before" a task to account for situations where
         # the Hail write fails and we do not have the chance to
-        # run this method in the "after". 
+        # run this method in the "after".
         remove_liftover()
 
 
