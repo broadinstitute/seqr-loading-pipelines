@@ -12,5 +12,5 @@ class BaseMigration(ABC):
 
     @staticmethod
     @abstractmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, **kwargs) -> hl.Table:
         pass

@@ -9,11 +9,14 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
+from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
+from v03_pipeline.lib.tasks.write_metadata_for_run import (
+    WriteMetadataForRunTask,
+)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -75,7 +78,14 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                     ),
                 )
                 continue
-            callset_mt = hl.read_matrix_table(self.input()[i].path)
+            callset_mt = hl.read_matrix_table(
+                remapped_and_subsetted_callset_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                    project_guid,
+                ),
+            )
             ht = remove_family_guids(
                 ht,
                 project_guid,
