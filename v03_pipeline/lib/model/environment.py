@@ -4,8 +4,12 @@ from dataclasses import dataclass
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
 HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/hail-search-data')
-LIFTOVER_REF_PATH = os.environ.get(
-    'LIFTOVER_REF_PATH',
+GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = os.environ.get(
+    'GRCH37_TO_GRCH38_LIFTOVER_REF_PATH',
+    'gs://hail-common/references/grch37_to_grch38.over.chain.gz',
+)
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
+    'GRCH38_TO_GRCH37_LIFTOVER_REF_PATH',
     'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
 )
 LOADING_DATASETS = os.environ.get('LOADING_DATASETS', '/seqr-loading-temp')
@@ -30,7 +34,6 @@ ACCESS_PRIVATE_REFERENCE_DATASETS = (
 )
 CHECK_SEX_AND_RELATEDNESS = os.environ.get('CHECK_SEX_AND_RELATEDNESS') == '1'
 EXPECT_WES_FILTERS = os.environ.get('EXPECT_WES_FILTERS') == '1'
-REFERENCE_DATA_AUTO_UPDATE = os.environ.get('REFERENCE_DATA_AUTO_UPDATE') == '1'
 SHOULD_REGISTER_ALLELES = os.environ.get('SHOULD_REGISTER_ALLELES') == '1'
 
 
@@ -42,11 +45,11 @@ class Env:
     EXPECT_WES_FILTERS: bool = EXPECT_WES_FILTERS
     HAIL_TMPDIR: str = HAIL_TMPDIR
     HAIL_SEARCH_DATA: str = HAIL_SEARCH_DATA
-    LIFTOVER_REF_PATH: str = LIFTOVER_REF_PATH
+    GRCH37_TO_GRCH38_LIFTOVER_REF_PATH: str = GRCH37_TO_GRCH38_LIFTOVER_REF_PATH
+    GRCH38_TO_GRCH37_LIFTOVER_REF_PATH: str = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
     LOADING_DATASETS: str = LOADING_DATASETS
     PRIVATE_REFERENCE_DATASETS: str = PRIVATE_REFERENCE_DATASETS
     PROJECT_ID: str | None = PROJECT_ID
-    REFERENCE_DATA_AUTO_UPDATE: bool = REFERENCE_DATA_AUTO_UPDATE
     REFERENCE_DATASETS: str = REFERENCE_DATASETS
     SHOULD_REGISTER_ALLELES: bool = SHOULD_REGISTER_ALLELES
     VEP_CONFIG_PATH: str | None = VEP_CONFIG_PATH

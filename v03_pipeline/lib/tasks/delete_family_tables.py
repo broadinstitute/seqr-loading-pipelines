@@ -1,11 +1,14 @@
 import luigi
 
 from v03_pipeline.lib.model import SampleType
-from v03_pipeline.lib.tasks.base.base_hail_table import BaseHailTableTask
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
+)
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 
 
-class DeleteFamilyTablesTask(BaseHailTableTask):
+@luigi.util.inherits(BaseLoadingPipelineParams)
+class DeleteFamilyTablesTask(luigi.Task):
     family_guids = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):

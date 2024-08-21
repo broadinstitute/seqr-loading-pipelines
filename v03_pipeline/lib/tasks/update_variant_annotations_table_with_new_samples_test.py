@@ -44,6 +44,9 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -248,6 +251,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             {'ENST00000327044': 'NM_015658.4'},
         )
         # make register_alleles return CAIDs for 4 of 30 variants
+        mock_env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
         mock_env.SHOULD_REGISTER_ALLELES = True
         mock_register_alleles.side_effect = [
             iter(
@@ -419,7 +423,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
             skip_validation=False,
-            run_id=TEST_RUN_ID,
+            run_id=TEST_RUN_ID + '-another-run',
         )
         worker.add(uvatwns_task_4)
         worker.run()
@@ -729,6 +733,107 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ],
         )
         self.assertFalse(hasattr(ht, 'rg37_locus'))
+        self.assertEqual(
+            ht.collect()[0],
+            hl.Struct(
+                locus=hl.Locus(contig=1, position=871269, reference_genome='GRCh37'),
+                alleles=['A', 'C'],
+                rsid=None,
+                variant_id='1-871269-A-C',
+                xpos=1000871269,
+                sorted_transcript_consequences=[
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=1,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000327044.6:c.1667C>T',
+                        hgvsp='ENSP00000317992.6:p.Ser556Leu',
+                        transcript_id='ENST00000327044',
+                        biotype_id=39,
+                        consequence_term_ids=[9],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=[0, 1],
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000477976.1:n.3114C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000477976',
+                        biotype_id=38,
+                        consequence_term_ids=[23, 26],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                    ),
+                    hl.Struct(
+                        amino_acids=None,
+                        canonical=None,
+                        codons=None,
+                        gene_id='ENSG00000188976',
+                        hgvsc='ENST00000483767.1:n.523C>T',
+                        hgvsp=None,
+                        transcript_id='ENST00000483767',
+                        biotype_id=38,
+                        consequence_term_ids=[23, 26],
+                        is_lof_nagnag=None,
+                        lof_filter_ids=None,
+                    ),
+                ],
+                rg38_locus=hl.Locus(
+                    contig='chr1',
+                    position=935889,
+                    reference_genome='GRCh38',
+                ),
+                cadd=hl.Struct(PHRED=9.699999809265137),
+                clinvar=hl.Struct(
+                    alleleId=None,
+                    conflictingPathogenicities=None,
+                    goldStars=None,
+                    pathogenicity_id=None,
+                    assertion_ids=None,
+                    submitters=None,
+                    conditions=None,
+                ),
+                eigen=hl.Struct(Eigen_phred=1.5880000591278076),
+                exac=hl.Struct(
+                    AF_POPMAX=0.0004100881633348763,
+                    AF=0.0004633000062312931,
+                    AC_Adj=51,
+                    AC_Het=51,
+                    AC_Hom=0,
+                    AC_Hemi=None,
+                    AN_Adj=108288,
+                ),
+                gnomad_exomes=hl.Struct(
+                    AF=0.00012876000255346298,
+                    AN=240758,
+                    AC=31,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0001119549197028391,
+                    FAF_AF=9.315000352216884e-05,
+                    Hemi=0,
+                ),
+                gnomad_genomes=None,
+                mpc=None,
+                primate_ai=None,
+                splice_ai=hl.Struct(
+                    delta_score=0.029999999329447746,
+                    splice_consequence_id=3,
+                ),
+                topmed=None,
+                dbnsfp=hl.Struct(
+                    REVEL_score=0.0430000014603138,
+                    SIFT_score=None,
+                    Polyphen2_HVAR_score=None,
+                    MutationTaster_pred_id=0,
+                ),
+                hgmd=None,
+                gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
+            ),
+        )
 
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(

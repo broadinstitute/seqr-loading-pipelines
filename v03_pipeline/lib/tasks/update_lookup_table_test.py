@@ -12,6 +12,8 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 
 class UpdateLookupTableTest(MockedDatarootTestCase):
     def test_skip_update_lookup_table_task(self) -> None:
@@ -27,6 +29,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uslt_task)
         worker.run()
@@ -64,6 +67,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_3],
             skip_validation=True,
+            run_id=TEST_RUN_ID,
         )
         worker.add(uslt_task)
         worker.run()

@@ -1,13 +1,21 @@
 import luigi
 
 from v03_pipeline.lib.model import SampleType
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
+)
 
 
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class BaseLoadingRunParams(luigi.Task):
-    # NB:
-    # These params are "inherited" with the special
-    # luigi.util.inherits function, copying params
-    # but nothing else.
+    # The difference between the "Loading Run" params
+    # and the "Loading Pipeline" params:
+    # - These params are used during standard "runs"
+    # of the pipeline that add a callset to the backend
+    # data store.
+    # - The "Loading Pipeline" params are shared with
+    # tasks that may remove data from or change the
+    # structure of the persisted Hail Tables.
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
