@@ -36,7 +36,8 @@ jobs:
         run: ruff . --output-format github
       - name: Unit Tests
         run: |
-          export REFERENCE_DATA_AUTO_UPDATE=1
+          export GRCH37_TO_GRCH38_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz
+          export GRCH38_TO_GRCH37_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib

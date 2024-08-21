@@ -20,7 +20,7 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
 )
@@ -49,7 +49,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(WriteImportedCallsetTask),
+            self.clone(WriteImportedCallsetTask, force=False),
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
@@ -59,14 +59,6 @@ class ValidateCallsetTask(BaseUpdateTask):
                         UpdatedCachedReferenceDatasetQuery,
                         crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
                     )
-                    if Env.REFERENCE_DATA_AUTO_UPDATE
-                    else HailTableTask(
-                        cached_reference_dataset_query_path(
-                            self.reference_genome,
-                            self.dataset_type,
-                            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                        ),
-                    ),
                 ),
             ]
         if (

@@ -12,7 +12,10 @@ from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import Env, ReferenceDatasetCollection
+from v03_pipeline.lib.model import (
+    Env,
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     variant_annotations_table_path,
@@ -22,9 +25,6 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
     load_gencode_gene_symbol_to_gene_id,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
-from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
-    BaseUpdateVariantAnnotationsTableTask,
-)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
@@ -33,8 +33,8 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
+from v03_pipeline.lib.tasks.write_metadata_for_run import (
+    WriteMetadataForRunTask,
 )
 from v03_pipeline.lib.vep import run_vep
 
@@ -81,20 +81,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        if Env.REFERENCE_DATA_AUTO_UPDATE:
-            requirements = [
-                UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            ]
-        else:
-            requirements = [
-                BaseUpdateVariantAnnotationsTableTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            ]
+        requirements = [
+            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             # Also note that force is passed here,
@@ -103,26 +95,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 self.clone(UpdateLookupTableTask),
             ]
         else:
-            requirements.extend(
-                [
-                    self.clone(
-                        WriteRemappedAndSubsettedCallsetTask,
-                        project_guid=project_guid,
-                        project_remap_path=project_remap_path,
-                        project_pedigree_path=project_pedigree_path,
-                    )
-                    for (
-                        project_guid,
-                        project_remap_path,
-                        project_pedigree_path,
-                    ) in zip(
-                        self.project_guids,
-                        self.project_remap_paths,
-                        self.project_pedigree_paths,
-                        strict=True,
-                    )
-                ],
-            )
+            requirements = [
+                *requirements,
+                self.clone(WriteMetadataForRunTask, force=False),
+            ]
         return requirements
 
     def complete(self) -> bool:
@@ -225,7 +201,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ):
                 ar_ht = ar_ht.union(ar_ht_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
-
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(

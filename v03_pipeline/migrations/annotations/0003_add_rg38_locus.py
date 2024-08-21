@@ -13,7 +13,7 @@ class AddRG38Locus(BaseMigration):
     )
 
     @staticmethod
-    def migrate(ht: hl.Table) -> hl.Table:
+    def migrate(ht: hl.Table, **_) -> hl.Table:
         return ht.annotate(
             rg38_locus=snv_indel.rg38_locus(ht, Env.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH),
         )

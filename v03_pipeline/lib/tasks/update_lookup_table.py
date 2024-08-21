@@ -9,12 +9,13 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
+from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
+from v03_pipeline.lib.tasks.write_metadata_for_run import (
+    WriteMetadataForRunTask,
 )
 
 
@@ -23,6 +24,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
+    run_id = luigi.Parameter()
 
     def complete(self) -> bool:
         return (
@@ -53,22 +55,9 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     def requires(self) -> list[luigi.Task]:
         return [
             self.clone(
-                WriteRemappedAndSubsettedCallsetTask,
-                project_guid=project_guid,
-                project_remap_path=project_remap_path,
-                project_pedigree_path=project_pedigree_path,
+                WriteMetadataForRunTask,
                 force=False,
-            )
-            for (
-                project_guid,
-                project_remap_path,
-                project_pedigree_path,
-            ) in zip(
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                strict=True,
-            )
+            ),
         ]
 
     def update_table(self, ht: hl.Table) -> hl.Table:
@@ -89,23 +78,32 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                     ),
                 )
                 continue
-            callset_mt = hl.read_matrix_table(self.input()[i].path)
+            callset_mt = hl.read_matrix_table(
+                remapped_and_subsetted_callset_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                    project_guid,
+                ),
+            )
             ht = remove_family_guids(
                 ht,
                 project_guid,
+                self.sample_type,
                 callset_mt.index_globals().family_samples.key_set(),
             )
             callset_ht = compute_callset_lookup_ht(
                 self.dataset_type,
                 callset_mt,
                 project_guid,
+                self.sample_type,
             )
             ht = join_lookup_hts(
                 ht,
                 callset_ht,
             )
             ht = ht.select_globals(
-                project_guids=ht.project_guids,
+                project_sample_types=ht.project_sample_types,
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(

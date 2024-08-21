@@ -44,6 +44,9 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
+)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -248,6 +251,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             {'ENST00000327044': 'NM_015658.4'},
         )
         # make register_alleles return CAIDs for 4 of 30 variants
+        mock_env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
         mock_env.SHOULD_REGISTER_ALLELES = True
         mock_register_alleles.side_effect = [
             iter(
@@ -419,7 +423,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4],
             skip_validation=False,
-            run_id=TEST_RUN_ID,
+            run_id=TEST_RUN_ID + '-another-run',
         )
         worker.add(uvatwns_task_4)
         worker.run()
