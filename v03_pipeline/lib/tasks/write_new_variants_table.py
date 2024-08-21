@@ -92,7 +92,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             # Also note that force is passed here,
             requirements = [
                 *requirements,
-                self.clone(UpdateLookupTableTask, force=False),
+                self.clone(UpdateLookupTableTask),
             ]
         else:
             requirements = [
