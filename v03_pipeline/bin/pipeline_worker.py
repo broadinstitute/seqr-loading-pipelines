@@ -46,9 +46,7 @@ def main():
                 for project_guid in lpr.projects_to_run
             ]
             task_kwargs = {
-                k: v
-                for k, v in lpr.model_dump().items()
-                if k != 'projects_to_run'
+                k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'
             }
             tasks = [
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -80,6 +78,7 @@ def main():
                 os.remove(loading_pipeline_queue_path())
             logger.info('Waiting for work')
             time.sleep(1)
+
 
 if __name__ == '__main__':
     main()
