@@ -66,7 +66,7 @@ class MITOTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_1', 'project_2'],
+                project_sample_types=[('project_1', 'WES'), ('project_2', 'WES')],
                 project_families={'project_1': ['a'], 'project_2': []},
             ),
         )
