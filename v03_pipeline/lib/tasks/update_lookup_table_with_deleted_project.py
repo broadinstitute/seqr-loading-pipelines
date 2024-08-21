@@ -4,6 +4,7 @@ import luigi
 from v03_pipeline.lib.misc.lookup import (
     remove_project,
 )
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
@@ -20,7 +21,9 @@ class UpdateLookupTableWithDeletedProjectTask(BaseUpdateLookupTableTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        ht = remove_project(ht, self.project_guid)
+        for sample_type in SampleType:
+            ht = remove_project(ht, self.project_guid, sample_type)
+
         return ht.annotate_globals(
             updates=ht.updates.filter(lambda u: u.project_guid != self.project_guid),
         )
