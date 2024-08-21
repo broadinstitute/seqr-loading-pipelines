@@ -13,6 +13,7 @@ from v03_pipeline.lib.paths import (
     project_remap_path,
 )
 from v03_pipeline.lib.tasks import (
+    UpdateCachedReferenceDatasetQueries,
     UpdateVariantAnnotationsTableWithNewSamplesTask,
     WriteProjectFamilyTablesTask,
 )
@@ -49,6 +50,10 @@ def main():
                 k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'
             }
             tasks = [
+                UpdateCachedReferenceDatasetQueries(
+                    reference_genome=lpr.reference_genome,
+                    dataset_type=lpr.dataset_type,
+                ),
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
                     project_guids=lpr.projects_to_run,
                     project_remap_paths=project_remap_paths,
