@@ -8,7 +8,7 @@ from v03_pipeline.lib.misc.lookup import (
     remove_family_guids,
     remove_project,
 )
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.model import DatasetType, SampleType
 
 
 class LookupTest(unittest.TestCase):
@@ -28,14 +28,15 @@ class LookupTest(unittest.TestCase):
             DatasetType.MITO,
             mt,
             'project_a',
+            SampleType.WES,
         )
         self.assertCountEqual(
             lookup_ht.globals.collect(),
             [
                 hl.Struct(
                     family_samples={'1': ['b', 'c', 'd'], '2': ['a'], '3': ['e']},
-                    project_guids=['project_a'],
-                    project_families={'project_a': ['1', '2', '3']},
+                    project_sample_types=[('project_a', 'WES')],
+                    project_families={('project_a', 'WES'): ['1', '2', '3']},
                 ),
             ],
         )
@@ -153,36 +154,46 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a', 'project_b'],
-                project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_families={
+                    ('project_a', 'WES'): ['1', '2', '3'],
+                    ('project_b', 'WGS'): ['4'],
+                },
             ),
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
             'project_c',
+            SampleType.WES,
             hl.set(['2']),
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
             'project_a',
+            SampleType.WES,
             hl.set(['3', '1']),
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
             'project_a',
+            SampleType.WES,
             hl.set(['1']),
         )
         lookup_ht = remove_family_guids(
             lookup_ht,
             'project_b',
+            SampleType.WGS,
             hl.set(['4']),
         )
         self.assertCountEqual(
             lookup_ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_a', 'project_b'],
-                    project_families={'project_a': ['2'], 'project_b': []},
+                    project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
+                    project_families={
+                        ('project_a', 'WES'): ['2'],
+                        ('project_b', 'WGS'): [],
+                    },
                 ),
             ],
         )
@@ -275,24 +286,29 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a', 'project_b'],
-                project_families={'project_a': ['1', '2', '3'], 'project_b': ['4']},
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_families={
+                    ('project_a', 'WES'): ['1', '2', '3'],
+                    ('project_b', 'WGS'): ['4'],
+                },
             ),
         )
         lookup_ht = remove_project(
             lookup_ht,
             'project_c',
+            SampleType.WES,
         )
         lookup_ht = remove_project(
             lookup_ht,
             'project_a',
+            SampleType.WES,
         )
         self.assertCountEqual(
             lookup_ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_b'],
-                    project_families={'project_b': ['4']},
+                    project_sample_types=[('project_b', 'WGS')],
+                    project_families={('project_b', 'WGS'): ['4']},
                 ),
             ],
         )
@@ -331,8 +347,11 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=hl.empty_array(hl.tstr),
-                project_families=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
+                project_sample_types=hl.empty_array(hl.ttuple(hl.tstr, hl.tstr)),
+                project_families=hl.empty_dict(
+                    hl.ttuple(hl.tstr, hl.tstr),
+                    hl.tarray(hl.tstr),
+                ),
             ),
         )
         callset_ht = hl.Table.parallelize(
@@ -396,8 +415,8 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a'],
-                project_families={'project_a': ['1', '2', '3']},
+                project_sample_types=[('project_a', 'WES')],
+                project_families={('project_a', 'WES'): ['1', '2', '3']},
             ),
         )
         ht = join_lookup_hts(
@@ -408,8 +427,8 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_a'],
-                    project_families={'project_a': ['1', '2', '3']},
+                    project_sample_types=[('project_a', 'WES')],
+                    project_families={('project_a', 'WES'): ['1', '2', '3']},
                 ),
             ],
         )
@@ -529,8 +548,11 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a', 'project_b'],
-                project_families={'project_a': ['1', '2'], 'project_b': ['3']},
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_families={
+                    ('project_a', 'WES'): ['1', '2'],
+                    ('project_b', 'WGS'): ['3'],
+                },
             ),
         )
         callset_ht = hl.Table.parallelize(
@@ -584,8 +606,8 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_c'],
-                project_families={'project_c': ['1', '2']},
+                project_sample_types=[('project_c', 'WES')],
+                project_families={('project_c', 'WES'): ['1', '2']},
             ),
         )
         ht = join_lookup_hts(
@@ -596,11 +618,15 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_a', 'project_b', 'project_c'],
+                    project_sample_types=[
+                        ('project_a', 'WES'),
+                        ('project_b', 'WGS'),
+                        ('project_c', 'WES'),
+                    ],
                     project_families={
-                        'project_a': ['1', '2'],
-                        'project_b': ['3'],
-                        'project_c': ['1', '2'],
+                        ('project_a', 'WES'): ['1', '2'],
+                        ('project_b', 'WGS'): ['3'],
+                        ('project_c', 'WES'): ['1', '2'],
                     },
                 ),
             ],
@@ -757,8 +783,11 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_a', 'project_b'],
-                project_families={'project_a': ['1', '2'], 'project_b': ['3']},
+                project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
+                project_families={
+                    ('project_a', 'WES'): ['1', '2'],
+                    ('project_b', 'WGS'): ['3'],
+                },
             ),
         )
         callset_ht = hl.Table.parallelize(
@@ -812,8 +841,8 @@ class LookupTest(unittest.TestCase):
             ),
             key='id',
             globals=hl.Struct(
-                project_guids=['project_b'],
-                project_families={'project_b': ['1', '2']},
+                project_sample_types=[('project_b', 'WGS')],
+                project_families={('project_b', 'WGS'): ['1', '2']},
             ),
         )
         ht = join_lookup_hts(
@@ -824,10 +853,10 @@ class LookupTest(unittest.TestCase):
             ht.globals.collect(),
             [
                 hl.Struct(
-                    project_guids=['project_a', 'project_b'],
+                    project_sample_types=[('project_a', 'WES'), ('project_b', 'WGS')],
                     project_families={
-                        'project_a': ['1', '2'],
-                        'project_b': ['3', '1', '2'],
+                        ('project_a', 'WES'): ['1', '2'],
+                        ('project_b', 'WGS'): ['3', '1', '2'],
                     },
                 ),
             ],

@@ -89,19 +89,21 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
             ht = remove_family_guids(
                 ht,
                 project_guid,
+                self.sample_type,
                 callset_mt.index_globals().family_samples.key_set(),
             )
             callset_ht = compute_callset_lookup_ht(
                 self.dataset_type,
                 callset_mt,
                 project_guid,
+                self.sample_type,
             )
             ht = join_lookup_hts(
                 ht,
                 callset_ht,
             )
             ht = ht.select_globals(
-                project_guids=ht.project_guids,
+                project_sample_types=ht.project_sample_types,
                 project_families=ht.project_families,
                 updates=ht.updates.add(
                     hl.Struct(

@@ -1,12 +1,13 @@
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.model import DatasetType, SampleType
 
 
 def compute_callset_lookup_ht(
     dataset_type: DatasetType,
     mt: hl.MatrixTable,
     project_guid: str,
+    sample_type: SampleType,
 ) -> hl.Table:
     sample_id_to_family_guid = hl.dict(
         {
@@ -38,7 +39,7 @@ def compute_callset_lookup_ht(
             ],
         ),
     ).rows()
-    ht = globalize_ids(ht, project_guid)
+    ht = globalize_ids(ht, project_guid, sample_type)
     return ht.annotate(
         project_stats=[
             # Set a family to missing if all values are 0
@@ -52,13 +53,14 @@ def compute_callset_lookup_ht(
     )
 
 
-def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
+def globalize_ids(ht: hl.Table, project_guid: str, sample_type: SampleType) -> hl.Table:
     row = ht.take(1)[0] if ht.count() > 0 else None
     has_project_stats = row and len(row.project_stats) > 0
+    project_key = (project_guid, sample_type.value)
     ht = ht.annotate_globals(
-        project_guids=[project_guid],
+        project_sample_types=[project_key],
         project_families=(
-            {project_guid: [fs.family_guid for fs in ps] for ps in row.project_stats}
+            {project_key: [fs.family_guid for fs in ps] for ps in row.project_stats}
             if has_project_stats
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),
@@ -73,14 +75,16 @@ def globalize_ids(ht: hl.Table, project_guid: str) -> hl.Table:
 def remove_family_guids(
     ht: hl.Table,
     project_guid: str,
+    sample_type: SampleType,
     family_guids: hl.SetExpression,
 ) -> hl.Table:
-    if project_guid not in hl.eval(ht.globals.project_families):
+    project_key = (project_guid, sample_type.value)
+    if project_key not in hl.eval(ht.globals.project_families):
         return ht
-    project_i = ht.project_guids.index(project_guid)
+    project_i = ht.project_sample_types.index(project_key)
     family_indexes_to_keep = hl.eval(
         hl.array(
-            hl.enumerate(ht.globals.project_families[project_guid])
+            hl.enumerate(ht.globals.project_families[project_key])
             .filter(lambda item: ~family_guids.contains(item[1]))
             .map(lambda item: item[0]),
         ),
@@ -112,11 +116,11 @@ def remove_family_guids(
             ht.project_families.items().map(
                 lambda item: (
                     hl.if_else(
-                        item[0] != project_guid,
+                        item[0] != project_key,
                         item,
                         (
                             item[0],
-                            ht.project_families[project_guid].filter(
+                            ht.project_families[project_key].filter(
                                 lambda family_guid: ~family_guids.contains(family_guid),
                             ),
                         ),
@@ -130,13 +134,15 @@ def remove_family_guids(
 def remove_project(
     ht: hl.Table,
     project_guid: str,
+    sample_type: SampleType,
 ) -> hl.Table:
-    existing_project_guids = hl.eval(ht.globals.project_guids)
-    if project_guid not in existing_project_guids:
+    existing_projects = hl.eval(ht.globals.project_sample_types)
+    project_key = (project_guid, sample_type.value)
+    if project_key not in existing_projects:
         return ht
     project_indexes_to_keep = hl.eval(
-        hl.enumerate(existing_project_guids)
-        .filter(lambda item: item[1] != project_guid)
+        hl.enumerate(existing_projects)
+        .filter(lambda item: item[1] != project_key)
         .map(lambda item: item[0]),
     )
     ht = ht.annotate(
@@ -149,11 +155,11 @@ def remove_project(
     )
     ht = ht.filter(hl.any(ht.project_stats.map(hl.is_defined)))
     return ht.annotate_globals(
-        project_guids=ht.project_guids.filter(
-            lambda p: p != project_guid,
+        project_sample_types=ht.project_sample_types.filter(
+            lambda p: p != project_key,
         ),
         project_families=hl.dict(
-            ht.project_families.items().filter(lambda item: item[0] != project_guid),
+            ht.project_families.items().filter(lambda item: item[0] != project_key),
         ),
     )
 
@@ -163,8 +169,8 @@ def join_lookup_hts(
     callset_ht: hl.Table,
 ) -> hl.Table:
     ht = ht.join(callset_ht, 'outer')
-    project_guid = ht.project_guids_1[0]
-    ht_project_i = ht.project_guids.index(project_guid)
+    project_key = ht.project_sample_types_1[0]
+    ht_project_i = ht.project_sample_types.index(project_key)
     ht = ht.select(
         # We have 6 unique cases here.
         # 1) The project has not been loaded before, the row is missing
@@ -183,14 +189,14 @@ def join_lookup_hts(
             hl.case()
             .when(
                 (hl.is_missing(ht_project_i) & hl.is_missing(ht.project_stats)),
-                ht.project_guids.map(
+                ht.project_sample_types.map(
                     lambda _: hl.missing(ht.project_stats.dtype.element_type),
                 ).extend(ht.project_stats_1),
             )
             .when(
                 (hl.is_missing(ht_project_i) & hl.is_missing(ht.project_stats_1)),
                 ht.project_stats.extend(
-                    ht.project_guids_1.map(
+                    ht.project_sample_types_1.map(
                         lambda _: hl.missing(ht.project_stats_1.dtype.element_type),
                     ),
                 ),
@@ -201,7 +207,7 @@ def join_lookup_hts(
             )
             .when(
                 hl.is_missing(ht.project_stats),
-                hl.enumerate(ht.project_guids).starmap(
+                hl.enumerate(ht.project_sample_types).starmap(
                     # Add a missing project_stats value for every loaded project,
                     # then add a missing value for every family for "this project"
                     # and extend the new families on the right.
@@ -230,7 +236,7 @@ def join_lookup_hts(
                             i != ht_project_i,
                             ps,
                             ps.extend(
-                                ht.project_families_1[project_guid].map(
+                                ht.project_families_1[project_key].map(
                                     lambda _: hl.missing(
                                         ht.project_stats.dtype.element_type.element_type,
                                     ),
@@ -256,13 +262,13 @@ def join_lookup_hts(
         ),
     )
     # NB: double reference these because the source ht has changed :/
-    project_guid = ht.project_guids_1[0]
-    ht_project_i = ht.project_guids.index(project_guid)
+    project_key = ht.project_sample_types_1[0]
+    ht_project_i = ht.project_sample_types.index(project_key)
     return ht.transmute_globals(
-        project_guids=hl.if_else(
+        project_sample_types=hl.if_else(
             hl.is_missing(ht_project_i),
-            ht.project_guids.extend(ht.project_guids_1),
-            ht.project_guids,
+            ht.project_sample_types.extend(ht.project_sample_types_1),
+            ht.project_sample_types,
         ),
         project_families=hl.if_else(
             hl.is_missing(ht_project_i),
@@ -270,12 +276,12 @@ def join_lookup_hts(
             hl.dict(
                 ht.project_families.items().map(
                     lambda item: hl.if_else(
-                        item[0] != project_guid,
+                        item[0] != project_key,
                         item,
                         (
                             item[0],
-                            ht.project_families[project_guid].extend(
-                                ht.project_families_1[project_guid],
+                            ht.project_families[project_key].extend(
+                                ht.project_families_1[project_key],
                             ),
                         ),
                     ),
