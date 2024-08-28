@@ -16,6 +16,8 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
     metadata_for_run_path,
     new_variants_table_path,
+    project_pedigree_path,
+    project_remap_path,
     project_table_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
@@ -206,4 +208,26 @@ class TestPaths(unittest.TestCase):
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
             '/hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
+        )
+
+    def test_project_remap_path(self) -> None:
+        self.assertEqual(
+            project_remap_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                SampleType.WGS,
+                'R0652_pipeline_test',
+            ),
+            '/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test.ht',
+        )
+
+    def test_project_pedigree_path(self) -> None:
+        self.assertEqual(
+            project_pedigree_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                SampleType.WES,
+                'R0652_pipeline_test',
+            ),
+            '/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test.ht',
         )

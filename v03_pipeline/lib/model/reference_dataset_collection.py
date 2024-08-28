@@ -7,7 +7,7 @@ from v03_pipeline.lib.model.definitions import AccessControl, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 
 
-class ReferenceDatasetCollection(Enum):
+class ReferenceDatasetCollection(str, Enum):
     COMBINED = 'combined'
     HGMD = 'hgmd'
     INTERVAL = 'interval'
