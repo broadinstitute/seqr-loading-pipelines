@@ -6,8 +6,11 @@ from v03_pipeline.lib.misc.io import (
     compute_hail_n_partitions,
     file_size_bytes,
     import_imputed_sex,
+    import_vcf,
     remap_pedigree_hash,
 )
+from v03_pipeline.lib.misc.validation import SeqrValidationError
+from v03_pipeline.lib.model import ReferenceGenome
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
@@ -59,4 +62,13 @@ class IOTest(unittest.TestCase):
                 ),
             ),
             -560434714,
+        )
+
+    def test_import_bad_callset(self) -> None:
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            '.*failed initial file format(?s).*We never saw the required CHROM header line.*',
+            import_vcf,
+            TEST_PEDIGREE_3,
+            ReferenceGenome.GRCh38,
         )

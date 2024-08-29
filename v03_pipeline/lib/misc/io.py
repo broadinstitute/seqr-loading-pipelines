@@ -1,14 +1,16 @@
 import hashlib
 import math
 import os
+import re
 import uuid
+from collections.abc import Callable
 
 import hail as hl
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
-from v03_pipeline.lib.misc.validation import validated_hl_function
+from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -18,6 +20,28 @@ MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
 MALE = 'Male'
 FEMALE = 'Female'
+
+
+def validated_hl_function(msg: str) -> Callable[[Callable], Callable]:
+    def decorator(fn: Callable) -> Callable:
+        def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
+            try:
+                t, _ = checkpoint(fn(*args, **kwargs))
+            except (hl.utils.java.FatalError, hl.utils.java.HailUserError) as e:
+                hail_error = re.search('Error summary: (.*)$', str(e))
+                if hail_error:
+                    nonlocal msg
+                    msg = (
+                        msg
+                        + f'The error summary provided by HAIL: {hail_error.group(1)}'
+                    )
+                raise SeqrValidationError(msg) from e
+            else:
+                return t
+
+        return wrapper
+
+    return decorator
 
 
 def does_file_exist(path: str) -> bool:
