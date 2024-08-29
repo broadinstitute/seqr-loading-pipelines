@@ -18,7 +18,7 @@ def validate_allele_type(
     ht = mt.rows()
     ht = ht.filter(
         dataset_type.invalid_allele_types.contains(
-            hl.numeric_allele_type(ht.alleles[0], ht.alleles[1])
+            hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
         ),
     )
     if ht.count() > 0:

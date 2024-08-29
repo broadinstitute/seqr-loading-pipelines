@@ -154,7 +154,7 @@ class DatasetType(str, Enum):
                 [
                     hl.genetics.allele_type.AlleleType.UNKNOWN,
                     hl.genetics.allele_type.AlleleType.SYMBOLIC,
-                ]
+                ],
             ),
         )
 
