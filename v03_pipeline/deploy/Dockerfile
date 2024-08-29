@@ -10,13 +10,15 @@ WORKDIR /v03_pipeline
 COPY requirements.txt .
 RUN python3 -m pip install --no-cache-dir -r ./requirements.txt
 
-# VEP
-COPY v03_pipeline/bin/vep /vep
-
 # Application Code
-COPY v03_pipeline/ .
+COPY v03_pipeline/api api
+COPY v03_pipeline/bin bin
+COPY v03_pipeline/lib lib
+COPY v03_pipeline/migrations migrations
 
-RUN cp ./var/spark_config/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
+# Special paths
+COPY v03_pipeline/var/spark_config/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
+COPY v03_pipeline/bin/vep /vep
 
 WORKDIR /
 EXPOSE 5000

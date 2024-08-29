@@ -35,10 +35,8 @@ class FieldsTest(MockedDatarootTestCase):
             ),
         )
 
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
-    def test_get_formatting_fields(self, mock_vep: Mock, mock_validate: Mock) -> None:
-        mock_validate.return_value = None
+    def test_get_formatting_fields(self, mock_vep: Mock) -> None:
         for reference_genome, ht, expected_fields in [
             (
                 ReferenceGenome.GRCh38,
