@@ -145,6 +145,20 @@ class DatasetType(str, Enum):
         }[self]
 
     @property
+    def invalid_allele_types(self) -> hl.SetExpression:
+        return {
+            DatasetType.SV: hl.set([hl.genetics.allele_type.AlleleType.UNKNOWN]),
+        }.get(
+            self,
+            hl.set(
+                [
+                    hl.genetics.allele_type.AlleleType.UNKNOWN,
+                    hl.genetics.allele_type.AlleleType.SYMBOLIC,
+                ]
+            ),
+        )
+
+    @property
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 

@@ -13,14 +13,16 @@ class SeqrValidationError(Exception):
 
 def validate_allele_type(
     mt: hl.MatrixTable,
+    dataset_type: DatasetType,
 ) -> None:
     ht = mt.rows()
     ht = ht.filter(
-        hl.numeric_allele_type(ht.alleles[0], ht.alleles[1])
-        == hl.genetics.allele_type.AlleleType.UNKNOWN,
+        dataset_type.invalid_allele_types.contains(
+            hl.numeric_allele_type(ht.alleles[0], ht.alleles[1])
+        ),
     )
     if ht.count() > 0:
-        msg = f'Alleles with Unknown AlleleType are present in the callset: {ht.alleles.collect()}'
+        msg = f'Alleles with invalid AlleleType are present in the callset: {ht.alleles.take(10)}'
         raise SeqrValidationError(msg)
 
 

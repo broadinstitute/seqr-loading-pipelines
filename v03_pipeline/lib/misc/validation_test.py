@@ -54,6 +54,11 @@ class ValidationTest(unittest.TestCase):
                         position=3,
                         reference_genome='GRCh38',
                     ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=4,
+                        reference_genome='GRCh38',
+                    ),
                 ],
                 'alleles': [
                     ['A', 'T'],
@@ -61,16 +66,18 @@ class ValidationTest(unittest.TestCase):
                     # but are eventually filtered out upstream.
                     ['A', '*'],
                     ['A', '-'],
+                    ['A', '<NON_REF>'],
                 ],
             },
             cols={'s': ['sample_1']},
-            entries={'HL': [[0.0], [0.0], [0.0]]},
+            entries={'HL': [[0.0], [0.0], [0.0], [0.0]]},
         ).key_rows_by('locus', 'alleles')
         self.assertRaisesRegex(
             SeqrValidationError,
-            "Alleles with Unknown AlleleType are present in the callset: \\[\\['A', '-'\\]\\]",
+            "Alleles with invalid AlleleType are present in the callset: \\[\\['A', '-'\\], \\['A', '<NON_REF>'\\]\\]",
             validate_allele_type,
             mt,
+            DatasetType.SNV_INDEL,
         )
 
     def test_validate_imputed_sex_ploidy(self) -> None:
