@@ -16,4 +16,4 @@ case $REFERENCE_GENOME in
 esac
 
 mkdir -p $SEQR_REFERENCE_DATA/$REFERENCE_GENOME;
-gcloud storage cp -r "gs://seqr-reference-data/v03/$REFERENCE_GENOME/*" $SEQR_REFERENCE_DATA/$REFERENCE_GENOME/
+gcloud storage rsync -r "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $SEQR_REFERENCE_DATA/$REFERENCE_GENOME
