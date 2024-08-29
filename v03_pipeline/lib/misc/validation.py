@@ -1,5 +1,9 @@
+import re
+from collections.abc import Callable
+
 import hail as hl
 
+from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType, Sex
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
@@ -9,6 +13,25 @@ SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
 class SeqrValidationError(Exception):
     pass
+
+
+def validated_hl_function(msg: str) -> Callable[[Callable], Callable]:
+    def decorator(fn: Callable[[]]) -> Callable:
+        def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
+            try:
+                t, _ = checkpoint(fn(*args, **kwargs))
+            except hl.utils.java.FatalError as e:
+                hail_error = re.search('Error summary: (.*)$', str(e))
+                if hail_error:
+                    nonlocal msg
+                    msg = msg + f'The error summary provided by HAIL: {hail_error}'
+                raise SeqrValidationError(msg) from e
+            else:
+                return t
+
+        return wrapper
+
+    return decorator
 
 
 def validate_allele_type(

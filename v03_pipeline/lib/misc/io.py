@@ -8,6 +8,7 @@ import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
+from v03_pipeline.lib.misc.validation import validated_hl_function
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -49,6 +50,12 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
     return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
 
+@validated_hl_function(
+    """
+Your callset failed while attempting to split multiallelic sites
+into distinct biallelic variants.
+""",
+)
 def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
     # split_multi_hts filters star alleles by default, but we
@@ -103,6 +110,13 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     return mt.unfilter_entries()
 
 
+@validated_hl_function(
+    """
+Your callset failed initial file format validation.
+Please check the seqr VCF requirements document to
+ensure your callset is satisfactory.
+""",
+)
 def import_vcf(
     callset_path: str,
     reference_genome: ReferenceGenome,
@@ -139,6 +153,13 @@ def import_callset(
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
+@validated_hl_function(
+    """
+Your callset failed appears to be missing a required field.
+Please check the seqr VCF requirements document to
+ensure your callset contains all expected fields.
+""",
+)
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
