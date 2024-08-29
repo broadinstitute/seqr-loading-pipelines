@@ -23,7 +23,9 @@ FEMALE = 'Female'
 
 
 def validated_hl_function(
-    msg: str, exceptions: tuple[Exception]
+    msg: str,
+    exceptions: tuple[Exception],
+    exception_message_regex: str | None = None,
 ) -> Callable[[Callable], Callable]:
     def decorator(fn: Callable) -> Callable:
         def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
@@ -31,15 +33,10 @@ def validated_hl_function(
                 t, _ = checkpoint(fn(*args, **kwargs))
             except exceptions as e:
                 nonlocal msg
-                hail_java_error = re.search('Error summary: (.*)$', str(e))
-                missing_field = re.search('instance has no field (.*)\n', str(e))
-                if hail_java_error:
-                    msg = msg + f'Additional Information: {hail_java_error.group(1)}'
-                elif missing_field:
-                    msg = (
-                        msg
-                        + f'The suspected missing field is: {missing_field.group(1)}'
-                    )
+                if exception_message_regex:
+                    parsed_message = re.search(exception_message_regex, str(e))
+                    if parsed_message:
+                        msg = msg + f'Additional Information: {parsed_message.group(1)}'
                 raise SeqrValidationError(msg) from e
             else:
                 return t
@@ -80,13 +77,13 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 
 
 @validated_hl_function(
-    """
-Your callset failed while attempting to split multiallelic sites
-into distinct biallelic variants.
-""",
-    (),
+    'Your callset failed while attempting to split multiallelic sites into distinct biallelic variants.  Please ensure that all variants are only present once in the VCF.',
+    (hl.utils.java.FatalError),
 )
-def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
+def split_multi_hts(
+    mt: hl.MatrixTable,
+    max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
+) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
     # split_multi_hts filters star alleles by default, but we
     # need that behavior for bi-allelic variants in addition to
@@ -96,7 +93,7 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(
         multi,
-        permit_shuffle=mt.count()[1] < MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
+        permit_shuffle=mt.count()[1] < max_samples_split_multi_shuffle,
     )
     mt = split.union_rows(bi)
     return mt.distinct_by_row()
@@ -141,12 +138,9 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
 
 
 @validated_hl_function(
-    """
-Your callset failed initial file format validation.
-Please check the seqr VCF requirements document to
-ensure your callset is satisfactory.
-""",
+    'Your callset failed initial file format validation.  Please check the seqr VCF requirements document to ensure your callset is satisfactory.',
     (hl.utils.java.FatalError, hl.utils.java.HailUserError),
+    'Error summary: (.*)$',
 )
 def import_vcf(
     callset_path: str,
@@ -185,12 +179,9 @@ def import_callset(
 
 
 @validated_hl_function(
-    """
-Your callset is missing a required field.
-Please check the seqr VCF requirements document to
-ensure your callset contains all expected fields.
-""",
+    'Your callset is missing a required field.  Please check the seqr VCF requirements document to ensure your callset contains all expected fields.',
     (LookupError,),
+    'instance (has no field .*)\n',
 )
 def select_relevant_fields(
     mt: hl.MatrixTable,

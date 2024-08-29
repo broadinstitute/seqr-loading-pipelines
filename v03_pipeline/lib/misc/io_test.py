@@ -9,6 +9,7 @@ from v03_pipeline.lib.misc.io import (
     import_vcf,
     remap_pedigree_hash,
     select_relevant_fields,
+    split_multi_hts,
 )
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
@@ -24,6 +25,9 @@ TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
 
 class IOTest(unittest.TestCase):
+    def tearDown(self) -> None:
+        hl._set_flags(use_new_shuffle=None)
+
     def test_file_size_mb(self) -> None:
         # find v03_pipeline/var/test/callsets/mito_1.mt -type f | grep -v 'crc' | xargs ls -alt {} | awk '{sum += $5; print sum}'
         # 191310
@@ -77,7 +81,7 @@ class IOTest(unittest.TestCase):
     def test_select_missing_field(self) -> None:
         self.assertRaisesRegex(
             SeqrValidationError,
-            "The suspected missing field is: 'a magic field'",
+            "Additional Information: has no field 'a magic field'",
             select_relevant_fields,
             hl.MatrixTable.from_parts(
                 rows={
@@ -103,4 +107,45 @@ class IOTest(unittest.TestCase):
             ).key_rows_by('locus', 'alleles'),
             DatasetType.SNV_INDEL,
             {'a magic field': hl.tint32},
+        )
+
+    def test_bad_split_multi(self) -> None:
+        hl._set_flags(use_new_shuffle='1')
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'Your callset failed while attempting to split multiallelic sites(?s).*',
+            split_multi_hts,
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['A', 'G', 'AC'],
+                        ['A', 'AT', 'C'],
+                        ['A', 'AT'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={
+                    'GQ': [[99], [98], [97]],
+                },
+            )
+            .key_rows_by('locus', 'alleles')
+            .repartition(3),
+            0,
         )
