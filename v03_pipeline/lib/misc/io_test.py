@@ -8,9 +8,10 @@ from v03_pipeline.lib.misc.io import (
     import_imputed_sex,
     import_vcf,
     remap_pedigree_hash,
+    select_relevant_fields,
 )
 from v03_pipeline.lib.misc.validation import SeqrValidationError
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
@@ -71,4 +72,35 @@ class IOTest(unittest.TestCase):
             import_vcf,
             TEST_PEDIGREE_3,
             ReferenceGenome.GRCh38,
+        )
+
+    def test_select_missing_field(self) -> None:
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "The suspected missing field is: 'a magic field'",
+            select_relevant_fields,
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['A', 'C'],
+                    ],
+                    'rsid': ['rs1233'],
+                    'filters': [{'PASS'}],
+                },
+                cols={'s': ['sample_1']},
+                entries={
+                    'GT': [[hl.Call([0, 0])]],
+                    'AD': [[[0, 20]]],
+                    'GQ': [[99]],
+                },
+            ).key_rows_by('locus', 'alleles'),
+            DatasetType.SNV_INDEL,
+            {'a magic field': hl.tint32},
         )

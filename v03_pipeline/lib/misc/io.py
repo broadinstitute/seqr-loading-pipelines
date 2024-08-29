@@ -22,18 +22,23 @@ MALE = 'Male'
 FEMALE = 'Female'
 
 
-def validated_hl_function(msg: str) -> Callable[[Callable], Callable]:
+def validated_hl_function(
+    msg: str, exceptions: tuple[Exception]
+) -> Callable[[Callable], Callable]:
     def decorator(fn: Callable) -> Callable:
         def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
             try:
                 t, _ = checkpoint(fn(*args, **kwargs))
-            except (hl.utils.java.FatalError, hl.utils.java.HailUserError) as e:
-                hail_error = re.search('Error summary: (.*)$', str(e))
-                if hail_error:
-                    nonlocal msg
+            except exceptions as e:
+                nonlocal msg
+                hail_java_error = re.search('Error summary: (.*)$', str(e))
+                missing_field = re.search('instance has no field (.*)\n', str(e))
+                if hail_java_error:
+                    msg = msg + f'Additional Information: {hail_java_error.group(1)}'
+                elif missing_field:
                     msg = (
                         msg
-                        + f'The error summary provided by HAIL: {hail_error.group(1)}'
+                        + f'The suspected missing field is: {missing_field.group(1)}'
                     )
                 raise SeqrValidationError(msg) from e
             else:
@@ -79,6 +84,7 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 Your callset failed while attempting to split multiallelic sites
 into distinct biallelic variants.
 """,
+    (),
 )
 def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
@@ -140,6 +146,7 @@ Your callset failed initial file format validation.
 Please check the seqr VCF requirements document to
 ensure your callset is satisfactory.
 """,
+    (hl.utils.java.FatalError, hl.utils.java.HailUserError),
 )
 def import_vcf(
     callset_path: str,
@@ -179,10 +186,11 @@ def import_callset(
 
 @validated_hl_function(
     """
-Your callset failed appears to be missing a required field.
+Your callset is missing a required field.
 Please check the seqr VCF requirements document to
 ensure your callset contains all expected fields.
 """,
+    (LookupError,),
 )
 def select_relevant_fields(
     mt: hl.MatrixTable,
