@@ -103,7 +103,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
 
-            # Rather than throwin an error, we silently remove NON_REF symbolic
+            # Rather than throwing an error, we silently remove NON_REF symbolic
             # alleles.  gVCFs may contain GQ or AD at sites without actual variant
             # calls.
             mt = mt.filter_rows(
