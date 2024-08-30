@@ -107,7 +107,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             # alleles.  gVCFs may contain GQ or AD at sites without actual variant
             # calls.
             mt = mt.filter_rows(
-                mt.alleles[1] == '<NON_REF>',
+                mt.alleles[1] != '<NON_REF>',
             )
 
         if not self.skip_validation and self.dataset_type.can_run_validation:
