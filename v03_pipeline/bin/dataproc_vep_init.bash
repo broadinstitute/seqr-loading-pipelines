@@ -15,7 +15,6 @@ set -x
 
 export PROJECT="$(gcloud config get-value project)"
 export ENVIRONMENT="$(/usr/share/google/get_metadata_value attributes/ENVIRONMENT)"
-export VEP_CONFIG_PATH="$(/usr/share/google/get_metadata_value attributes/VEP_CONFIG_PATH)"
 export REFERENCE_GENOME="$(/usr/share/google/get_metadata_value attributes/REFERENCE_GENOME)"
 
 # Install docker
@@ -36,8 +35,6 @@ apt-get install -y --allow-unauthenticated docker-ce
 # https://github.com/hail-is/hail/issues/12936
 sleep 60
 sudo service docker restart
-
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/var/vep_config/vep-$REFERENCE_GENOME.json $VEP_CONFIG_PATH
 
 cat >/vep.c <<EOF
 #include <unistd.h>

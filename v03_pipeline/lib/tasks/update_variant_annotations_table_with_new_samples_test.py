@@ -221,14 +221,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch.object(ReferenceGenome, 'standard_contigs', new_callable=PropertyMock)
     @patch('v03_pipeline.lib.vep.hl.vep')
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
     )
     def test_multiple_update_vat(
         self,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
-        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
@@ -246,7 +244,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             )
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_vep_validate.return_value = None
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
@@ -677,10 +674,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch('v03_pipeline.lib.vep.hl.vep')
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     def test_update_vat_grch37(
         self,
-        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_update_vat_with_rdc_task: Mock,
         mock_register_alleles: Mock,
@@ -694,7 +689,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             )
         )
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
-        mock_vep_validate.return_value = None
         mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -841,14 +835,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     )
     @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
     )
     def test_update_vat_without_accessing_private_datasets(
         self,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
-        mock_vep_validate: Mock,
         mock_vep: Mock,
         mock_rdc_env: Mock,
         mock_update_vat_with_rdc_task: Mock,
@@ -874,7 +866,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_vep_validate.return_value = None
         mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
