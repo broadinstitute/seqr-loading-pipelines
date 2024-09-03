@@ -74,7 +74,7 @@ class ValidationTest(unittest.TestCase):
         ).key_rows_by('locus', 'alleles')
         self.assertRaisesRegex(
             SeqrValidationError,
-            "Alleles with invalid AlleleType are present in the callset: \\[\\['A', '-'\\], \\['A', '<NON_REF>'\\]\\]",
+            "Alleles with invalid AlleleType are present in the callset: \\{\\('A', '-'\\), \\('A', '<NON_REF>'\\)\\}",
             validate_allele_type,
             mt,
             DatasetType.SNV_INDEL,
