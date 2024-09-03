@@ -103,13 +103,6 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
 
-            # Rather than throwing an error, we silently remove NON_REF symbolic
-            # alleles.  gVCFs may contain GQ or AD at sites without actual variant
-            # calls.
-            mt = mt.filter_rows(
-                mt.alleles[1] != '<NON_REF>',
-            )
-
         if not self.skip_validation and self.dataset_type.can_run_validation:
             validate_allele_type(mt, self.dataset_type)
             validate_no_duplicate_variants(mt)
