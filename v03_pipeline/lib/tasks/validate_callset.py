@@ -104,7 +104,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             )
 
         if not self.skip_validation and self.dataset_type.can_run_validation:
-            validate_allele_type(mt)
+            validate_allele_type(mt, self.dataset_type)
             validate_no_duplicate_variants(mt)
             validate_expected_contig_frequency(mt, self.reference_genome)
             coding_and_noncoding_ht = hl.read_table(
