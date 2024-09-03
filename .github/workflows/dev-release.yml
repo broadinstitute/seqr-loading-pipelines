@@ -45,5 +45,4 @@ jobs:
         run: |-
           gcloud storage rm -r gs://seqr-luigi/releases/dev/latest/ || echo 'No latest release'
           gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/dev/latest/bin/
-          gcloud storage cp v03_pipeline/var/vep_config/* gs://seqr-luigi/releases/dev/latest/var/vep_config
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/dev/latest/pyscripts.zip

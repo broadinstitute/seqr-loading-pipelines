@@ -15,8 +15,6 @@ TEST_PEDIGREE_4_SUBSET = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_subset
 
 
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
-    maxDiff = None
-
     def test_snv_write_project_family_tables_task(self) -> None:
         worker = luigi.worker.Worker()
         write_project_family_tables = WriteProjectFamilyTablesTask(

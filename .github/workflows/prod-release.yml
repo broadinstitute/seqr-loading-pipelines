@@ -53,11 +53,10 @@ jobs:
         run: |-
           gcloud storage rm -r gs://seqr-luigi/releases/prod/latest/ || echo 'No latest release'
           gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/latest/bin/
-          gcloud storage cp v03_pipeline/var/vep_config/* gs://seqr-luigi/releases/prod/latest/var/vep_config
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/latest/pyscripts.zip
           gcloud storage cp v03_pipeline/bin/* gs://seqr-luigi/releases/prod/$TAG_NAME/bin/
-          gcloud storage cp v03_pipeline/var/vep_config/* gs://seqr-luigi/releases/prod/$TAG_NAME/var/vep_config
           gcloud storage cp dist/*.whl gs://seqr-luigi/releases/prod/$TAG_NAME/pyscripts.zip
+          gcloud storage cp v03_pipeline/var/vep/* gs://seqr-reference-data/vep/
 
       - name: Create tag
         uses: actions/github-script@v7
