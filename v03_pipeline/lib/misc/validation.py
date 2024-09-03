@@ -22,9 +22,9 @@ def validate_allele_type(
         ),
     )
     if ht.count() > 0:
-        collected_alleles = sorted([
-            tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))
-        ])
+        collected_alleles = sorted(
+            [tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))]
+        )
         msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles}'
         raise SeqrValidationError(msg)
 
