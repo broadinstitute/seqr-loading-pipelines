@@ -1,4 +1,4 @@
- steps:
+steps:
 - name: 'gcr.io/kaniko-project/executor:v1.3.0'
   args:
   - --destination=gcr.io/seqr-project/seqr-pipeline-runner:${COMMIT_SHA}
