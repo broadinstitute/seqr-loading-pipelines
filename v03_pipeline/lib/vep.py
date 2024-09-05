@@ -5,7 +5,7 @@ import hail as hl
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 VEP_CONFIG_URI = Template(
-    'file:///vep_data/$reference_genome/vep-$reference_genome.json'
+    'file:///vep_data/$reference_genome/vep-$reference_genome.json',
 )
 
 
