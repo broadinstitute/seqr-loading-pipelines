@@ -55,10 +55,9 @@ class AddLookupSampleType(BaseMigration):
                 remap_pedigree_hash: int32
             }>
         """
-        if 'project_sample_types' not in list(ht.globals.keys()):
-            ht = ht.transmute_globals(
-                project_sample_types=ht.globals.project_guids,
-            )
+        ht = ht.transmute_globals(
+            project_sample_types=ht.globals.project_guids,
+        )
         collected_globals = ht.globals.collect()[0]
         project_sample_types = collected_globals['project_sample_types']
         project_families = collected_globals['project_families']
