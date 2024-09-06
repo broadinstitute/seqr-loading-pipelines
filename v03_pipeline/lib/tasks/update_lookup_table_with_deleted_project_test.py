@@ -137,7 +137,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                         remap_pedigree_hash=123,
                     ),
                 },
-                migrations=[],
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         worker = luigi.worker.Worker()
