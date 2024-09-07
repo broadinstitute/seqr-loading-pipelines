@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=$1
-VEP_DATA=/vep_data
+VEP_DATA=/seqr/vep_data
 
 case $REFERENCE_GENOME in
   GRCh38)
