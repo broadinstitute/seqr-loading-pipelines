@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
 HAIL_TMPDIR = os.environ.get('HAIL_TMPDIR', '/tmp')  # noqa: S108
-HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/hail-search-data')
+HAIL_SEARCH_DATA = os.environ.get('HAIL_SEARCH_DATA', '/seqr/hail-search-data')
 GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = os.environ.get(
     'GRCH37_TO_GRCH38_LIFTOVER_REF_PATH',
     'gs://hail-common/references/grch37_to_grch38.over.chain.gz',
@@ -12,14 +12,14 @@ GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
     'GRCH38_TO_GRCH37_LIFTOVER_REF_PATH',
     'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
 )
-LOADING_DATASETS = os.environ.get('LOADING_DATASETS', '/seqr-loading-temp')
+LOADING_DATASETS = os.environ.get('LOADING_DATASETS', '/seqr/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS = os.environ.get(
     'PRIVATE_REFERENCE_DATASETS',
-    '/seqr-reference-data-private',
+    '/seqr/seqr-reference-data-private',
 )
 REFERENCE_DATASETS = os.environ.get(
     'REFERENCE_DATASETS',
-    '/seqr-reference-data',
+    '/seqr/seqr-reference-data',
 )
 # Allele registry secrets :/
 ALLELE_REGISTRY_SECRET_NAME = os.environ.get('ALLELE_REGISTRY_SECRET_NAME', None)
