@@ -3,7 +3,8 @@
 set -eux
 
 REFERENCE_GENOME=$1
-SEQR_REFERENCE_DATA=/seqr-reference-data
+SEQR_REFERENCE_DATA=${SEQR_REFERENCE_DATA:-/seqr/seqr-reference-data}
+
 
 case $REFERENCE_GENOME in
   GRCh38)
