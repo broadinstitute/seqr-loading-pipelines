@@ -20,7 +20,9 @@ COPY v03_pipeline/migrations migrations
 
 # Special paths
 COPY v03_pipeline/var/spark_config/spark-defaults.conf /usr/local/lib/python3.10/dist-packages/pyspark/conf/spark-defaults.conf
+COPY v03_pipeline/var/luigi_config/luigi-defaults.conf /etc/luigi/luigi.cfg
 COPY v03_pipeline/bin/vep /vep
+
 
 WORKDIR /
 EXPOSE 5000
