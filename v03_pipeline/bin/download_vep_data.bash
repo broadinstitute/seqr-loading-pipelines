@@ -52,10 +52,10 @@ mkdir -p $VEP_DATA/$REFERENCE_GENOME;
 for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
         echo "Downloading and extracting" $vep_reference_data_file;
-        gcloud storage cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/$REFERENCE_GENOME/ &
     else 
         echo "Downloading" $vep_reference_data_file;
-        gcloud storage cp $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cat $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
     fi
 done;
 wait
