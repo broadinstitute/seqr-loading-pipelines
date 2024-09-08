@@ -1,8 +1,10 @@
 FROM docker:dind as BUILD
 FROM hailgenetics/hail:0.2.132-py3.10
 COPY --from=BUILD /usr/local/bin/docker /usr/local/bin/docker
-
 LABEL maintainer="Broad TGG"
+
+RUN curl -sSL https://sdk.cloud.google.com | bash
+ENV PATH $PATH:/root/google-cloud-sdk/bin
 
 WORKDIR /v03_pipeline
 
