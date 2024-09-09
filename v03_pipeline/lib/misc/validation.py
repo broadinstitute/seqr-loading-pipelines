@@ -155,7 +155,7 @@ def validate_sample_type(
         msg = f'Sample type validation error: dataset contains noncoding variants but is missing common coding variants for {reference_genome.value}. Please verify that the dataset contains coding variants.'
         raise SeqrValidationError(msg)
     if has_coding and not has_noncoding and sample_type != SampleType.WES:
-        msg = 'Sample type validation error: dataset sample-type is specified as WGS but appears to be WES because it contains many common coding variants'
+        msg = 'Sample type validation error: dataset sample-type is specified as WGS but appears to be WES because it contains many common coding variants but is missing common non-coding variants'
         raise SeqrValidationError(msg)
     if has_noncoding and has_coding and sample_type != SampleType.WGS:
         msg = 'Sample type validation error: dataset sample-type is specified as WES but appears to be WGS because it contains many common non-coding variants'
