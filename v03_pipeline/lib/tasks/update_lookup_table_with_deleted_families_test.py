@@ -33,6 +33,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                     project_sample_types=[],
                     project_families={},
                     updates=set(),
+                    migrations=[],
                 ),
             ],
         )
@@ -137,6 +138,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                         remap_pedigree_hash=123,
                     ),
                 },
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         worker = luigi.worker.Worker()
@@ -172,6 +174,7 @@ class UpdateLookupTableWithDeletedProjectTaskTest(MockedDatarootTestCase):
                             remap_pedigree_hash=123,
                         ),
                     },
+                    migrations=[],
                 ),
             ],
         )

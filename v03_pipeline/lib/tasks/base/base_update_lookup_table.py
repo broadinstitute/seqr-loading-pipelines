@@ -46,5 +46,6 @@ class BaseUpdateLookupTableTask(BaseUpdateTask):
                         remap_pedigree_hash=hl.tint32,
                     ),
                 ),
+                migrations=hl.empty_array(hl.tstr),
             ),
         )

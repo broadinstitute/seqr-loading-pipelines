@@ -115,5 +115,6 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                         ),
                     ),
                 ),
+                migrations=ht.migrations,
             )
         return ht
