@@ -107,6 +107,7 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTaskTest(MockedDatarootTest
                         remap_pedigree_hash=123,
                     ),
                 },
+                migrations=hl.empty_array(hl.tstr),
             ),
         )
         ht.write(
