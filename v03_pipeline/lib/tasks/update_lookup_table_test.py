@@ -51,6 +51,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             ),
                         ),
                     },
+                    migrations=[],
                 ),
             ],
         )
@@ -89,6 +90,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             ),
                         ),
                     },
+                    migrations=[],
                 ),
             ],
         )
