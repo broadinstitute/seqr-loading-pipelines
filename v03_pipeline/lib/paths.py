@@ -244,7 +244,7 @@ def valid_reference_dataset_collection_path(
     reference_dataset_collection: ReferenceDatasetCollection,
 ) -> str | None:
     if (
-        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS_DIR
+        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
         and reference_dataset_collection.access_control == AccessControl.PRIVATE
     ):
         return None
