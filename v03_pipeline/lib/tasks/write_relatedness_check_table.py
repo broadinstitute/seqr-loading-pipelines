@@ -31,7 +31,7 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
         requirements = [
             self.clone(ValidateCallsetTask),
         ]
-        if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+        if Env.ACCESS_PRIVATE_REFERENCE_DATASETS_DIR_DIR:
             requirements = [
                 *requirements,
                 (

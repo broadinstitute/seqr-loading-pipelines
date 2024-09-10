@@ -50,7 +50,7 @@ class TestPaths(unittest.TestCase):
             '/seqr/hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.HAIL_SEARCH_DATA = 'gs://seqr-datasets/'
+            mock_env.HAIL_SEARCH_DATA_DIR = 'gs://seqr-datasets/'
             self.assertEqual(
                 family_table_path(
                     ReferenceGenome.GRCh37,
@@ -94,7 +94,7 @@ class TestPaths(unittest.TestCase):
 
     def test_valid_reference_dataset_collection_path(self) -> None:
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+            mock_env.ACCESS_PRIVATE_REFERENCE_DATASETS_DIR_DIR = False
             self.assertEqual(
                 valid_reference_dataset_collection_path(
                     ReferenceGenome.GRCh37,

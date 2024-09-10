@@ -864,7 +864,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ReferenceDatasetCollection.HGMD,
             ),
         )
-        mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS_DIR_DIR = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_register_alleles.side_effect = None
         worker = luigi.worker.Worker()
@@ -1221,7 +1221,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertTrue(update_variant_annotations_task.complete())
         self.assertFalse(
             GCSorLocalFolderTarget(
-                f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/SV/lookup.ht',
+                f'{self.mock_env.REFERENCE_DATASETS_DIR}/v03/GRCh38/SV/lookup.ht',
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
@@ -1800,7 +1800,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self.assertTrue(update_variant_annotations_task.complete())
         self.assertFalse(
             GCSorLocalFolderTarget(
-                f'{self.mock_env.REFERENCE_DATASETS}/v03/GRCh38/GCNV/lookup.ht',
+                f'{self.mock_env.REFERENCE_DATASETS_DIR}/v03/GRCh38/GCNV/lookup.ht',
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)

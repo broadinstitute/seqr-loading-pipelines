@@ -92,7 +92,7 @@ class ReferenceDatasetCollection(str, Enum):
                 ReferenceDatasetCollection.HGMD,
             ],
         }.get((reference_genome, dataset_type), [])
-        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS_DIR_DIR:
             return [rdc for rdc in rdcs if rdc.access_control == AccessControl.PUBLIC]
         return rdcs
 
