@@ -38,8 +38,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def complete(self) -> luigi.Target:
         return (
-            not self.force
-            and super().complete()
+            super().complete()
             and hl.eval(
                 hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
                 == remap_pedigree_hash(
@@ -61,7 +60,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(ValidateCallsetTask, force=False),
+            self.clone(ValidateCallsetTask),
             RawFileTask(self.project_pedigree_path),
         ]
         if (

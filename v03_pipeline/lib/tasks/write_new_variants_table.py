@@ -89,7 +89,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
-            # Also note that force is passed here,
             requirements = [
                 *requirements,
                 self.clone(UpdateLookupTableTask),
@@ -97,7 +96,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         else:
             requirements = [
                 *requirements,
-                self.clone(WriteMetadataForRunTask, force=False),
+                self.clone(WriteMetadataForRunTask),
             ]
         return requirements
 
