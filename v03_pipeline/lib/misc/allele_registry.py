@@ -77,8 +77,8 @@ def register_alleles(
     base_url: str,
 ) -> hl.Table:
     uuid4 = uuid.uuid4()
-    raw_vcf_file_name = f'{Env.HAIL_TMPDIR}/r_{uuid4}.vcf'
-    formatted_vcf_file_name = f'{Env.HAIL_TMPDIR}/f_{uuid4}.vcf'
+    raw_vcf_file_name = f'{Env.HAIL_TMP_DIR}/r_{uuid4}.vcf'
+    formatted_vcf_file_name = f'{Env.HAIL_TMP_DIR}/f_{uuid4}.vcf'
 
     # Export the variants to a VCF
     hl.export_vcf(ht, raw_vcf_file_name)
