@@ -39,7 +39,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         mock_put_request: Mock,
     ):
         mock_get_credentials.return_value = ('', '')
-        mock_env.HAIL_TMPDIR = self.temp_dir.name
+        mock_env.HAIL_TMP_DIR = self.temp_dir.name
 
         new_variants_ht = hl.Table.parallelize(
             [
