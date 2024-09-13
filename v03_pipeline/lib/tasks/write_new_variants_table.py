@@ -195,12 +195,30 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 ),
                 key=('locus', 'alleles'),
             )
-            for ar_ht_chunk in register_alleles_in_chunks(
+            clinvar_allele_ht = hl.Table.parallelize(
+                [],
+                hl.tstruct(
+                    clinvar_allele_id=hl.tint32,
+                    CAID=hl.tstr,
+                ),
+                key='clinvar_allele_id',
+            )
+            for ar_ht_chunk, clinvar_allele_id_chunk in register_alleles_in_chunks(
                 new_variants_ht,
                 self.reference_genome,
             ):
                 ar_ht = ar_ht.union(ar_ht_chunk)
+                clinvar_allele_ht = clinvar_allele_ht.union(clinvar_allele_id_chunk)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
+            new_variants_ht = new_variants_ht.key_by(new_variants_ht.clinvar.alleleId)
+            new_variants_ht = new_variants_ht.join(clinvar_allele_ht, 'left')
+            new_variants_ht = new_variants_ht.key_by('locus', 'alleles')
+            new_variants_ht = new_variants_ht.transmute(
+                CAID=hl.coalesce(
+                    new_variants_ht.CAID,
+                    new_variants_ht.CAID_1,
+                ),
+            )
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(

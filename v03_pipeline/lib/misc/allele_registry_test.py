@@ -51,6 +51,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                     ),
                     'alleles': ['TA', 'T'],
                     'rsid': 'rs370233999',
+                    'clinvar': hl.missing(hl.tstruct(alleleId=hl.tint32)),
                 },
                 {
                     'locus': hl.Locus(
@@ -60,6 +61,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                     ),
                     'alleles': ['T', 'TC'],
                     'rsid': 'rs370233997',
+                    'clinvar': hl.missing(hl.tstruct(alleleId=hl.tint32)),
                 },
                 {
                     'locus': hl.Locus(
@@ -69,6 +71,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                     ),
                     'alleles': ['A', 'G'],
                     'rsid': 'rs370234000',
+                    'clinvar': hl.Struct(alleleId=3228069),
                 },
                 {
                     'locus': hl.Locus(
@@ -78,12 +81,14 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                     ),
                     'alleles': ['C', 'G'],
                     'rsid': 'rs370233998',
+                    'clinvar': hl.missing(hl.tstruct(alleleId=hl.tint32)),
                 },
             ],
             hl.tstruct(
                 locus=hl.tlocus(ReferenceGenome.GRCh38.value),
                 alleles=hl.tarray(hl.tstr),
                 rsid=hl.tstr,
+                clinvar=hl.tstruct(alleleId=hl.tint32),
             ),
             key=('locus', 'alleles'),
         )
@@ -128,6 +133,9 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                         'referenceGenome': 'GRCh38',
                     },
                 ],
+                'externalRecords': {
+                    'ClinVarAlleles': [{'alleleId': 3228069}],
+                },  # has clinvar allele ID
             },
             {
                 '@id': 'http://reg.genome.network/allele/CA997563845',
@@ -155,7 +163,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
             },
         ]
 
-        ar_ht = register_alleles(
+        ar_ht, clinvar_allele_ht = register_alleles(
             new_variants_ht,
             ReferenceGenome.GRCh38,
             TEST_SERVER_URL,
@@ -173,6 +181,12 @@ class AlleleRegistryTest(MockedDatarootTestCase):
                     alleles=['A', 'G'],
                     CAID='CA997563845',
                 ),
+            ],
+        )
+        self.assertEqual(
+            clinvar_allele_ht.collect(),
+            [
+                hl.Struct(clinvar_allele_id=3228069, CAID='CA16716503'),
             ],
         )
         mock_put_request.assert_called_once_with(

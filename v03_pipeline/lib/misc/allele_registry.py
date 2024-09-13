@@ -75,7 +75,7 @@ def register_alleles(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     base_url: str,
-) -> hl.Table:
+) -> tuple[hl.Table, hl.Table]:
     uuid4 = uuid.uuid4()
     raw_vcf_file_name = f'{Env.HAIL_TMP_DIR}/r_{uuid4}.vcf'
     formatted_vcf_file_name = f'{Env.HAIL_TMP_DIR}/f_{uuid4}.vcf'
@@ -137,11 +137,11 @@ def get_ar_credentials_from_secret_manager() -> tuple[str, str]:
     return payload_dict['login'], payload_dict['password']
 
 
-def handle_api_response(  # noqa: C901
+def handle_api_response(  # noqa: C901, PLR0915, PLR0912
     res: requests.Response,
     base_url: str,
     reference_genome: ReferenceGenome,
-) -> hl.Table:
+) -> tuple[hl.Table, hl.Table]:
     response = res.json()
     if not res.ok or 'errorType' in response:
         error = AlleleRegistryError.from_api_response(response, base_url)
@@ -149,6 +149,7 @@ def handle_api_response(  # noqa: C901
         raise HTTPError(error.message)
 
     parsed_structs = []
+    clinvar_structs = []
     errors = []
     unmappable_variants = []
     for allele_response in response:
@@ -176,11 +177,25 @@ def handle_api_response(  # noqa: C901
 
         if ref == '' or alt == '':
             # AR will turn alleles like ["A","ATT"] to ["", "TT"] so try using gnomad IDs instead
-            if 'externalRecords' in allele_response:
-                gnomad_id = allele_response['externalRecords'][
+            external_records = allele_response.get('externalRecords')
+            if not external_records:
+                unmappable_variants.append(allele_response)
+                continue
+
+            if reference_genome.allele_registry_gnomad_id in external_records:
+                gnomad_id = external_records[
                     reference_genome.allele_registry_gnomad_id
                 ][0]['id']
                 chrom, pos, ref, alt = gnomad_id.split('-')
+            elif 'ClinVarAlleles' in external_records:
+                clinvar_allele_id = external_records['ClinVarAlleles'][0]['alleleId']
+                clinvar_structs.append(
+                    hl.Struct(
+                        clinvar_allele_id=clinvar_allele_id,
+                        CAID=caid,
+                    ),
+                )
+                continue
             else:
                 unmappable_variants.append(allele_response)
                 continue
@@ -214,7 +229,7 @@ def handle_api_response(  # noqa: C901
         logger.warning(
             f'{len(errors)} failed. First error: {errors[0]}',
         )
-    return hl.Table.parallelize(
+    ht = hl.Table.parallelize(
         parsed_structs,
         hl.tstruct(
             locus=hl.tlocus(reference_genome.value),
@@ -223,3 +238,12 @@ def handle_api_response(  # noqa: C901
         ),
         key=('locus', 'alleles'),
     )
+    clinvar_allele_id_ht = hl.Table.parallelize(
+        clinvar_structs,
+        hl.tstruct(
+            clinvar_allele_id=hl.tint32,
+            CAID=hl.tstr,
+        ),
+        key='clinvar_allele_id',
+    )
+    return ht, clinvar_allele_id_ht
