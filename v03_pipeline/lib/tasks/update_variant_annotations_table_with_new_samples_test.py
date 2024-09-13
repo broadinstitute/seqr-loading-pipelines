@@ -253,51 +253,61 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_register_alleles.side_effect = [
             iter(
                 [
-                    hl.Table.parallelize(
-                        [
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=871269,
-                                    reference_genome='GRCh38',
+                    (
+                        hl.Table.parallelize(
+                            [
+                                hl.Struct(
+                                    locus=hl.Locus(
+                                        contig='chr1',
+                                        position=871269,
+                                        reference_genome='GRCh38',
+                                    ),
+                                    alleles=['A', 'C'],
+                                    CAID='CA1',
                                 ),
-                                alleles=['A', 'C'],
-                                CAID='CA1',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=874734,
-                                    reference_genome='GRCh38',
+                                hl.Struct(
+                                    locus=hl.Locus(
+                                        contig='chr1',
+                                        position=874734,
+                                        reference_genome='GRCh38',
+                                    ),
+                                    alleles=['C', 'T'],
+                                    CAID='CA2',
                                 ),
-                                alleles=['C', 'T'],
-                                CAID='CA2',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=876499,
-                                    reference_genome='GRCh38',
+                                hl.Struct(
+                                    locus=hl.Locus(
+                                        contig='chr1',
+                                        position=876499,
+                                        reference_genome='GRCh38',
+                                    ),
+                                    alleles=['A', 'G'],
+                                    CAID='CA3',
                                 ),
-                                alleles=['A', 'G'],
-                                CAID='CA3',
-                            ),
-                            hl.Struct(
-                                locus=hl.Locus(
-                                    contig='chr1',
-                                    position=878314,
-                                    reference_genome='GRCh38',
+                                hl.Struct(
+                                    locus=hl.Locus(
+                                        contig='chr1',
+                                        position=878314,
+                                        reference_genome='GRCh38',
+                                    ),
+                                    alleles=['G', 'C'],
+                                    CAID='CA4',
                                 ),
-                                alleles=['G', 'C'],
-                                CAID='CA4',
+                            ],
+                            hl.tstruct(
+                                locus=hl.tlocus('GRCh38'),
+                                alleles=hl.tarray(hl.tstr),
+                                CAID=hl.tstr,
                             ),
-                        ],
-                        hl.tstruct(
-                            locus=hl.tlocus('GRCh38'),
-                            alleles=hl.tarray(hl.tstr),
-                            CAID=hl.tstr,
+                            key=('locus', 'alleles'),
                         ),
-                        key=('locus', 'alleles'),
+                        hl.Table.parallelize(
+                            [],
+                            hl.tstruct(
+                                clinvar_allele_id=hl.tint32,
+                                CAID=hl.tstr,
+                            ),
+                            key='clinvar_allele_id',
+                        ),
                     ),
                 ],
             ),
