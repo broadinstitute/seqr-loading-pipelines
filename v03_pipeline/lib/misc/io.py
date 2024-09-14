@@ -261,7 +261,7 @@ def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable,
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     read_fn = hl.read_matrix_table if isinstance(t, hl.MatrixTable) else hl.read_table
     checkpoint_path = os.path.join(
-        Env.HAIL_TMPDIR,
+        Env.HAIL_TMP_DIR,
         f'{uuid.uuid4()}.{suffix}',
     )
     t.write(checkpoint_path)

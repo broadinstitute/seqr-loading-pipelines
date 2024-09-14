@@ -32,9 +32,9 @@ def _v03_reference_data_prefix(
     reference_genome: ReferenceGenome,
 ) -> str:
     root = (
-        Env.PRIVATE_REFERENCE_DATASETS
+        Env.PRIVATE_REFERENCE_DATASETS_DIR_DIR
         if access_control == AccessControl.PRIVATE
-        else Env.REFERENCE_DATASETS
+        else Env.REFERENCE_DATASETS_DIR
     )
     return os.path.join(
         root,
@@ -67,7 +67,7 @@ def family_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -84,7 +84,7 @@ def imputed_sex_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -100,7 +100,7 @@ def imported_callset_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -132,7 +132,7 @@ def project_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -149,7 +149,7 @@ def relatedness_check_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -166,7 +166,7 @@ def remapped_and_subsetted_callset_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -182,7 +182,7 @@ def lookup_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -196,7 +196,7 @@ def runs_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -211,7 +211,7 @@ def sex_check_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -265,7 +265,7 @@ def variant_annotations_table_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -279,7 +279,7 @@ def variant_annotations_vcf_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.HAIL_SEARCH_DATA,
+            Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -304,7 +304,7 @@ def new_variants_table_path(
 
 def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
     return os.path.join(
-        Env.HAIL_TMPDIR,
+        Env.HAIL_TMP_DIR,
         f'clinvar-{reference_genome.value}-{etag}.ht',
     )
 
@@ -317,7 +317,7 @@ def project_remap_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -335,7 +335,7 @@ def project_pedigree_path(
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
-            Env.LOADING_DATASETS,
+            Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
         ),
@@ -347,7 +347,7 @@ def project_pedigree_path(
 
 def loading_pipeline_queue_path() -> str:
     return os.path.join(
-        Env.LOADING_DATASETS,
+        Env.LOADING_DATASETS_DIR,
         'loading_pipeline_queue',
         'request.json',
     )

@@ -83,12 +83,10 @@ class SNVTest(unittest.TestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_sorted_transcript_consequences_37(
         self,
         mock_vep: Mock,
-        mock_validate: Mock,
     ) -> None:
         ht = hl.Table.parallelize(
             [
@@ -108,7 +106,6 @@ class SNVTest(unittest.TestCase):
             key=['locus', 'alleles'],
         )
         mock_vep.return_value = ht.annotate(vep=MOCK_37_VEP_DATA)
-        mock_validate.return_value = None
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
@@ -166,12 +163,10 @@ class SNVTest(unittest.TestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_sorted_transcript_consequences_38(
         self,
         mock_vep: Mock,
-        mock_validate: Mock,
     ) -> None:
         ht = hl.Table.parallelize(
             [
@@ -191,7 +186,6 @@ class SNVTest(unittest.TestCase):
             key=['locus', 'alleles'],
         )
         mock_vep.return_value = ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_validate.return_value = None
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,
@@ -322,12 +316,10 @@ class SNVTest(unittest.TestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.vep.validate_vep_config_reference_genome')
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_sorted_other_feature_consequences(
         self,
         mock_vep: Mock,
-        mock_validate: Mock,
     ) -> None:
         ht = hl.Table.parallelize(
             [
@@ -347,7 +339,6 @@ class SNVTest(unittest.TestCase):
             key=['locus', 'alleles'],
         )
         mock_vep.return_value = ht.annotate(vep=MOCK_38_VEP_DATA)
-        mock_validate.return_value = None
         ht = run_vep(
             ht,
             DatasetType.SNV_INDEL,

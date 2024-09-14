@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=$1
-VEP_DATA=/vep_data
+VEP_DATA=/seqr/vep_data
 
 case $REFERENCE_GENOME in
   GRCh38)
@@ -26,6 +26,8 @@ case $REFERENCE_GENOME in
 
         # Copied from the UTRAnnotator repo (https://github.com/ImperialCardioGenetics/UTRannotator/tree/master)
         'gs://seqr-reference-data/vep/GRCh38/uORF_5UTR_GRCh38_PUBLIC.txt'
+
+        'gs://seqr-reference-data/vep/GRCh38/vep-GRCh38.json'
     )
     ;;
   GRCh37)
@@ -33,6 +35,7 @@ case $REFERENCE_GENOME in
         'gs://seqr-reference-data/vep_data/loftee-beta/GRCh37.tar.gz'
         'gs://seqr-reference-data/vep/GRCh37/homo_sapiens_vep_110_GRCh37.tar.gz'
         'gs://seqr-reference-data/vep/GRCh37/Homo_sapiens.GRCh37.dna.primary_assembly.fa.*'
+        'gs://seqr-reference-data/vep/GRCh37/vep-GRCh37.json'
     )
     ;;
    *)
@@ -49,10 +52,10 @@ mkdir -p $VEP_DATA/$REFERENCE_GENOME;
 for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
         echo "Downloading and extracting" $vep_reference_data_file;
-        gcloud storage cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/$REFERENCE_GENOME/ &
     else 
         echo "Downloading" $vep_reference_data_file;
-        gcloud storage cp $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cat $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
     fi
 done;
 wait
