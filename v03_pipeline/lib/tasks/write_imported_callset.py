@@ -23,7 +23,7 @@ from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteImportedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
-        return not self.force and super().complete()
+        return super().complete()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

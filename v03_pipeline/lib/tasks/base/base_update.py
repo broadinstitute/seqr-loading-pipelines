@@ -18,9 +18,6 @@ class BaseUpdateTask(BaseHailTableTask):
             ht = read_fn(self.output().path)
         ht = self.update_table(ht)
         write(ht, self.output().path)
-        # Set force to false after run, allowing "complete()" to succeeded
-        # when dependencies are re-evaluated.
-        self.force = False
 
     def initialize_table(self) -> hl.Table:
         raise NotImplementedError

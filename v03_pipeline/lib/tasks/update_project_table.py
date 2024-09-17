@@ -24,24 +24,20 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
     project_pedigree_path = luigi.Parameter()
 
     def complete(self) -> bool:
-        return (
-            not self.force
-            and super().complete()
-            and hl.eval(
-                hl.read_table(self.output().path).updates.contains(
-                    hl.Struct(
-                        callset=self.callset_path,
-                        remap_pedigree_hash=remap_pedigree_hash(
-                            self.project_remap_path,
-                            self.project_pedigree_path,
-                        ),
+        return super().complete() and hl.eval(
+            hl.read_table(self.output().path).updates.contains(
+                hl.Struct(
+                    callset=self.callset_path,
+                    remap_pedigree_hash=remap_pedigree_hash(
+                        self.project_remap_path,
+                        self.project_pedigree_path,
                     ),
                 ),
-            )
+            ),
         )
 
     def requires(self) -> luigi.Task:
-        return self.clone(WriteRemappedAndSubsettedCallsetTask, force=False)
+        return self.clone(WriteRemappedAndSubsettedCallsetTask)
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
