@@ -4,6 +4,7 @@ import os
 import re
 import uuid
 from collections.abc import Callable
+from string import Template
 
 import hail as hl
 import hailtop.fs as hfs
@@ -23,23 +24,20 @@ FEMALE = 'Female'
 
 
 def validated_hl_function(
-    msg: str,
-    exceptions: tuple[Exception],
-    exception_message_regex: str | None = None,
+    regex_to_msg: dict[str, str | Template],
 ) -> Callable[[Callable], Callable]:
     def decorator(fn: Callable) -> Callable:
         def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
             try:
                 t, _ = checkpoint(fn(*args, **kwargs))
-            except exceptions as e:
-                nonlocal msg
-                if exception_message_regex:
-                    parsed_message = re.search(exception_message_regex, str(e))
-                    if parsed_message:
-                        msg = msg + f'Additional Information: {parsed_message.group(1)}'
-                raise SeqrValidationError(msg) from e
-            else:
-                return t
+            except Exception as e:
+                for regex, msg in regex_to_msg.items():
+                    match = re.search(regex, str(e))
+                    if match and isinstance(msg, Template):
+                        msg = msg.substitute(match=match.group(1))  # noqa: PLW2901
+                    if match:
+                        raise SeqrValidationError(msg) from e
+                raise
 
         return wrapper
 
@@ -76,10 +74,6 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
     return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
 
-@validated_hl_function(
-    'Your callset failed while attempting to split multiallelic sites into distinct biallelic variants.  Please ensure that all variants are only present once in the VCF.',
-    (hl.utils.java.FatalError),
-)
 def split_multi_hts(
     mt: hl.MatrixTable,
     max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
@@ -138,9 +132,13 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
 
 
 @validated_hl_function(
-    'Your callset failed initial file format validation.  Please check the seqr VCF requirements document to ensure your callset is satisfactory.',
-    (hl.utils.java.FatalError, hl.utils.java.HailUserError),
-    'Error summary: (.*)$',
+    {
+        '.*FileNotFoundException|GoogleJsonResponseException: 403 Forbidden|arguments refer to no files.*': 'Unable to access the VCF in cloud storage.',
+        '.*InvalidHeader: (Your input file has a malformed header: .*)$': Template(
+            'VCF failed file format validation: $match',
+        ),
+        '.*(VCFParseError: .*)$': Template('VCF failed file format validation: $match'),
+    },
 )
 def import_vcf(
     callset_path: str,
@@ -178,11 +176,6 @@ def import_callset(
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
-@validated_hl_function(
-    'Your callset is missing a required field.  Please check the seqr VCF requirements document to ensure your callset contains all expected fields.',
-    (LookupError,),
-    'instance (has no field .*)\n',
-)
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,

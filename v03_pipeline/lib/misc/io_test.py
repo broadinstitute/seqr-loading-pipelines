@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 import hail as hl
 
@@ -69,10 +70,41 @@ class IOTest(unittest.TestCase):
             -560434714,
         )
 
-    def test_import_bad_callset(self) -> None:
+    def test_import_vcf(self) -> None:
+        self.assertRaisesRegex(
+            TypeError,
+            'missing 1 required positional argument',
+            import_vcf,
+            'abc',
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
-            '.*failed initial file format(?s).*We never saw the required CHROM header line.*',
+            'Unable to access the VCF in cloud storage',
+            import_vcf,
+            'bad.vcf',
+            ReferenceGenome.GRCh38,
+        )
+        with mock.patch('v03_pipeline.lib.misc.io.hl.read_table') as mock_read_table:
+            mock_read_table.side_effect = hl.utils.java.FatalError(
+                'GoogleJsonResponseException: 403 Forbidden',
+            )
+            self.assertRaisesRegex(
+                SeqrValidationError,
+                'Unable to access the VCF in cloud storage',
+                import_vcf,
+                'gs://abc123/bad.vcf',
+                ReferenceGenome.GRCh38,
+            )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'VCF failed file format validation: Your input file has a malformed header: We never saw the required CHROM header line \\(starting with one #\\) for the input VCF file',
+            import_vcf,
+            TEST_PEDIGREE_3,
+            ReferenceGenome.GRCh38,
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'VCF failed file format validation: Your input file has a malformed header: We never saw the required CHROM header line \\(starting with one #\\) for the input VCF file',
             import_vcf,
             TEST_PEDIGREE_3,
             ReferenceGenome.GRCh38,
