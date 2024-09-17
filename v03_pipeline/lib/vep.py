@@ -4,7 +4,6 @@ import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome
 
-
 VEP_CONFIG_URI = Template(
     'file://$vep_reference_datasets_dir/$reference_genome/vep-$reference_genome.json',
 )
@@ -21,7 +20,7 @@ def run_vep(
         ht,
         config=VEP_CONFIG_URI.substitute(
             vep_reference_datasets_dir=Env.VEP_REFERENCE_DATASETS_DIR,
-            reference_genome=reference_genome.value
+            reference_genome=reference_genome.value,
         ),
         name='vep',
         block_size=1000,
