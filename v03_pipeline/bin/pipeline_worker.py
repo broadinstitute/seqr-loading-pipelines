@@ -61,7 +61,6 @@ def main():
                     run_id=datetime.datetime.now(datetime.timezone.utc).strftime(
                         '%Y%m%d-%H%M%S',
                     ),
-                    force=False,
                     **task_kwargs,
                 ),
                 *[
@@ -69,7 +68,6 @@ def main():
                         project_guid=lpr.projects_to_run[i],
                         project_remap_path=project_remap_paths[i],
                         project_pedigree_path=project_pedigree_paths[i],
-                        force=False,
                         **task_kwargs,
                     )
                     for i in range(len(lpr.projects_to_run))

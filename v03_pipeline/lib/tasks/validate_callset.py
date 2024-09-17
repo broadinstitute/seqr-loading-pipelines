@@ -31,7 +31,7 @@ from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
     def complete(self) -> luigi.Target:
-        if not self.force and super().complete():
+        if super().complete():
             mt = hl.read_matrix_table(self.output().path)
             return hasattr(mt, 'validated_sample_type') and hl.eval(
                 self.sample_type.value == mt.validated_sample_type,
@@ -49,7 +49,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(WriteImportedCallsetTask, force=False),
+            self.clone(WriteImportedCallsetTask),
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [

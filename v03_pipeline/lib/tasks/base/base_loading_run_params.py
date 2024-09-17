@@ -22,10 +22,6 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    force = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     skip_check_sex_and_relatedness = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
