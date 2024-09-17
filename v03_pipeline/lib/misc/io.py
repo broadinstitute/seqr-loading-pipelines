@@ -134,10 +134,10 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
 @validated_hl_function(
     {
         '.*FileNotFoundException|GoogleJsonResponseException: 403 Forbidden|arguments refer to no files.*': 'Unable to access the VCF in cloud storage.',
-        '.*InvalidHeader: (Your input file has a malformed header: .*)$': Template(
+        # NB: ?: is non-capturing group.
+        '.*(?:InvalidHeader|VCFParseError): (.*)$': Template(
             'VCF failed file format validation: $match',
         ),
-        '.*(VCFParseError: .*)$': Template('VCF failed file format validation: $match'),
     },
 )
 def import_vcf(
@@ -176,6 +176,11 @@ def import_callset(
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
+@validated_hl_function(
+    {
+        'instance has no field (.*)': Template('Your callset is missing a required field: $match')
+    }
+)
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,

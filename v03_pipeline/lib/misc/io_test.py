@@ -19,6 +19,7 @@ TEST_IMPUTED_SEX = 'v03_pipeline/var/test/sex_check/test_imputed_sex.tsv'
 TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
     'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
 )
+TEST_INVALID_VCF = 'v03_pipeline/var/test/callsets/improperly_formatted.vcf'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -104,16 +105,16 @@ class IOTest(unittest.TestCase):
         )
         self.assertRaisesRegex(
             SeqrValidationError,
-            'VCF failed file format validation: Your input file has a malformed header: We never saw the required CHROM header line \\(starting with one #\\) for the input VCF file',
+            "VCF failed file format validation: invalid character 'N' in integer literal",
             import_vcf,
-            TEST_PEDIGREE_3,
+            TEST_INVALID_VCF,
             ReferenceGenome.GRCh38,
         )
 
     def test_select_missing_field(self) -> None:
         self.assertRaisesRegex(
             SeqrValidationError,
-            "Additional Information: has no field 'a magic field'",
+            "Your callset is missing a required field: 'a magic field'",
             select_relevant_fields,
             hl.MatrixTable.from_parts(
                 rows={
