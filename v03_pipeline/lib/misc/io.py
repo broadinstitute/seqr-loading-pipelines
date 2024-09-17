@@ -38,6 +38,8 @@ def validated_hl_function(
                     if match:
                         raise SeqrValidationError(msg) from e
                 raise
+            else:
+                return t
 
         return wrapper
 
@@ -74,6 +76,11 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
     return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
 
+@validated_hl_function(
+    {
+        'RVD error! Keys found out of order': 'Your callset failed while attempting to split multiallelic sites.  This error can occur after a split_multi if the dataset contains both multiallelic variants and duplicated loci.',
+    },
+)
 def split_multi_hts(
     mt: hl.MatrixTable,
     max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
@@ -178,8 +185,10 @@ def import_callset(
 
 @validated_hl_function(
     {
-        'instance has no field (.*)': Template('Your callset is missing a required field: $match')
-    }
+        'instance has no field (.*)': Template(
+            'Your callset is missing a required field: $match',
+        ),
+    },
 )
 def select_relevant_fields(
     mt: hl.MatrixTable,
