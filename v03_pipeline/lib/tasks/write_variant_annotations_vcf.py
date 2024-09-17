@@ -24,7 +24,7 @@ class WriteVariantAnnotationsVCF(luigi.Task):
         return not self.dataset_type.should_export_to_vcf
 
     def requires(self) -> luigi.Task:
-        return self.clone(BaseUpdateVariantAnnotationsTableTask, force=False)
+        return self.clone(BaseUpdateVariantAnnotationsTableTask)
 
     def run(self) -> None:
         ht = hl.read_table(self.input().path)

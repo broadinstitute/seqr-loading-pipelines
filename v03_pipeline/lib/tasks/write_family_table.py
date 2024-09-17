@@ -29,16 +29,12 @@ class WriteFamilyTableTask(BaseWriteTask):
         )
 
     def complete(self) -> bool:
-        return (
-            not self.force
-            and super().complete()
-            and hl.eval(
-                hl.read_table(self.output().path).updates.contains(self.callset_path),
-            )
+        return super().complete() and hl.eval(
+            hl.read_table(self.output().path).updates.contains(self.callset_path),
         )
 
     def requires(self) -> luigi.Task:
-        return self.clone(UpdateProjectTableTask, force=False)
+        return self.clone(UpdateProjectTableTask)
 
     def create_table(self) -> hl.Table:
         project_ht = hl.read_table(self.input().path)
