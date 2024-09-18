@@ -2,8 +2,9 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.callsets import additional_row_fields
-from v03_pipeline.lib.misc.validation import (
+from v03_pipeline.lib.misc import (
+    SeqrValidationError,
+    get_validation_dependencies,
     validate_allele_type,
     validate_expected_contig_frequency,
     validate_imported_field_types,
@@ -11,12 +12,11 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
+from v03_pipeline.lib.misc.callsets import additional_row_fields
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
     imported_callset_path,
-    sex_check_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
@@ -30,6 +30,12 @@ from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
+    @property
+    def validation_dependencies(self) -> dict[str, hl.Table]:
+        return get_validation_dependencies(
+            **self.param_kwargs,
+        )
+
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -102,40 +108,25 @@ class ValidateCallsetTask(BaseUpdateTask):
                     mt.locus.contig,
                 ),
             )
-
+        validation_exceptions = []
         if not self.skip_validation and self.dataset_type.can_run_validation:
-            validate_allele_type(mt, self.dataset_type)
-            validate_no_duplicate_variants(mt)
-            validate_expected_contig_frequency(mt, self.reference_genome)
-            coding_and_noncoding_ht = hl.read_table(
-                cached_reference_dataset_query_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                ),
-            )
-            validate_sample_type(
-                mt,
-                coding_and_noncoding_ht,
-                self.reference_genome,
-                self.sample_type,
-            )
-            if (
-                Env.CHECK_SEX_AND_RELATEDNESS
-                and not self.skip_check_sex_and_relatedness
-                and self.dataset_type.check_sex_and_relatedness
-            ):
-                sex_check_ht = hl.read_table(
-                    sex_check_table_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                        self.callset_path,
-                    ),
-                )
-                validate_imputed_sex_ploidy(
-                    mt,
-                    sex_check_ht,
-                )
+            for validation_f in [
+                validate_allele_type,
+                validate_imputed_sex_ploidy,
+                validate_no_duplicate_variants,
+                validate_expected_contig_frequency,
+                validate_sample_type,
+            ]:
+                try:
+                    validation_f(
+                        mt,
+                        **self.param_kwargs,
+                        **self.validation_dependencies,
+                    )
+                except SeqrValidationError as e:  # noqa: PERF203
+                    validation_exceptions.append(e)
+        if validation_exceptions:
+            raise validation_exceptions[0]
         return mt.select_globals(
             callset_path=self.callset_path,
             validated_sample_type=self.sample_type.value,
