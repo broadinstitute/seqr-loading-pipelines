@@ -90,7 +90,7 @@ class IOTest(unittest.TestCase):
                 SeqrValidationError,
                 'Unable to access the VCF in cloud storage',
                 import_vcf,
-                'gs://abc123/bad.vcf',
+                'abc123/bad.vcf',
                 ReferenceGenome.GRCh38,
             )
         self.assertRaisesRegex(
