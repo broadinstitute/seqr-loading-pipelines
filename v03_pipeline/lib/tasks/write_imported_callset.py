@@ -68,7 +68,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def create_table(self) -> hl.MatrixTable:
         if self.clone(WriteValidationErrorsForRunTask).complete():
             raise SeqrValidationError(
-                self.clone(WriteValidationErrorsForRunTask).to_error_message(),
+                self.clone(WriteValidationErrorsForRunTask).to_single_error_message(),
             )
         try:
             mt = import_callset(

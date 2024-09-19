@@ -85,7 +85,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def update_table(self, mt: hl.MatrixTable) -> hl.MatrixTable:
         if self.clone(WriteValidationErrorsForRunTask).complete():
             raise SeqrValidationError(
-                self.clone(WriteValidationErrorsForRunTask).to_error_message(),
+                self.clone(WriteValidationErrorsForRunTask).to_single_error_message(),
             )
         mt = hl.read_matrix_table(
             imported_callset_path(
@@ -129,7 +129,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 errors=validation_exceptions,
             )
             raise SeqrValidationError(
-                write_validation_errors_for_run_task.to_error_message(),
+                write_validation_errors_for_run_task.to_single_error_message(),
             )
         return mt.select_globals(
             callset_path=self.callset_path,
