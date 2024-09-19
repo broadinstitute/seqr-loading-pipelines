@@ -1,13 +1,17 @@
 import hashlib
 import math
 import os
+import re
 import uuid
+from collections.abc import Callable
+from string import Template
 
 import hail as hl
 import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
+from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
 
 BIALLELIC = 2
@@ -15,8 +19,28 @@ B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
 MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
-MALE = 'Male'
-FEMALE = 'Female'
+
+def validated_hl_function(
+    regex_to_msg: dict[str, str | Template],
+) -> Callable[[Callable], Callable]:
+    def decorator(fn: Callable) -> Callable:
+        def wrapper(*args, **kwargs) -> hl.Table | hl.MatrixTable:
+            try:
+                t, _ = checkpoint(fn(*args, **kwargs))
+            except Exception as e:
+                for regex, msg in regex_to_msg.items():
+                    match = re.search(regex, str(e))
+                    if match and isinstance(msg, Template):
+                        msg = msg.substitute(match=match.group(1))  # noqa: PLW2901
+                    if match:
+                        raise SeqrValidationError(msg) from e
+                raise
+            else:
+                return t
+
+        return wrapper
+
+    return decorator
 
 
 def does_file_exist(path: str) -> bool:
@@ -49,7 +73,15 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
     return math.ceil(file_size_b / B_PER_MB / MB_PER_PARTITION)
 
 
-def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
+@validated_hl_function(
+    {
+        'RVD error! Keys found out of order': 'Your callset failed while attempting to split multiallelic sites.  This error can occur if the dataset contains both multiallelic variants and duplicated loci.',
+    },
+)
+def split_multi_hts(
+    mt: hl.MatrixTable,
+    max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
+) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
     # split_multi_hts filters star alleles by default, but we
     # need that behavior for bi-allelic variants in addition to
@@ -59,7 +91,7 @@ def split_multi_hts(mt: hl.MatrixTable) -> hl.MatrixTable:
     multi = mt.filter_rows(hl.len(mt.alleles) > BIALLELIC)
     split = hl.split_multi_hts(
         multi,
-        permit_shuffle=mt.count()[1] < MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
+        permit_shuffle=mt.count()[1] < max_samples_split_multi_shuffle,
     )
     mt = split.union_rows(bi)
     return mt.distinct_by_row()
@@ -103,6 +135,15 @@ def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:
     return mt.unfilter_entries()
 
 
+@validated_hl_function(
+    {
+        '.*FileNotFoundException|GoogleJsonResponseException: 403 Forbidden|arguments refer to no files.*': 'Unable to access the VCF in cloud storage.',
+        # NB: ?: is non-capturing group.
+        '.*(?:InvalidHeader|VCFParseError): (.*)$': Template(
+            'VCF failed file format validation: $match',
+        ),
+    },
+)
 def import_vcf(
     callset_path: str,
     reference_genome: ReferenceGenome,
@@ -139,6 +180,13 @@ def import_callset(
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
+@validated_hl_function(
+    {
+        'instance has no field (.*)': Template(
+            'Your callset is missing a required field: $match',
+        ),
+    },
+)
 def select_relevant_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
@@ -165,12 +213,17 @@ def select_relevant_fields(
 
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
     ht = hl.import_table(imputed_sex_path)
+    imputed_sex_lookup = hl.dict(
+        {s.imputed_sex_value: s.value for s in Sex},
+    )
     ht = ht.select(
         s=ht.collaborator_sample_id,
         predicted_sex=(
             hl.case()
-            .when(ht.predicted_sex == FEMALE, Sex.FEMALE.value)
-            .when(ht.predicted_sex == MALE, Sex.MALE.value)
+            .when(
+                imputed_sex_lookup.contains(ht.predicted_sex),
+                imputed_sex_lookup[ht.predicted_sex],
+            )
             .or_error(
                 hl.format(
                     'Found unexpected value %s in imputed sex file',

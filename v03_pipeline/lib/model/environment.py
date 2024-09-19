@@ -10,7 +10,7 @@ GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
     'GRCH38_TO_GRCH37_LIFTOVER_REF_PATH',
     'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
 )
-HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/seqr/tmp')
+HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA_DIR = os.environ.get('HAIL_SEARCH_DATA_DIR', '/seqr/hail-search-data')
 LOADING_DATASETS_DIR = os.environ.get('LOADING_DATASETS_DIR', '/seqr/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS_DIR_DIR = os.environ.get(
@@ -20,6 +20,10 @@ PRIVATE_REFERENCE_DATASETS_DIR_DIR = os.environ.get(
 REFERENCE_DATASETS_DIR = os.environ.get(
     'REFERENCE_DATASETS_DIR',
     '/seqr/seqr-reference-data',
+)
+VEP_REFERENCE_DATASETS_DIR = os.environ.get(
+    'VEP_REFERENCE_DATASETS_DIR',
+    '/seqr/vep-reference-data',
 )
 
 # Allele registry secrets :/
@@ -50,3 +54,4 @@ class Env:
     PROJECT_ID: str | None = PROJECT_ID
     REFERENCE_DATASETS_DIR: str = REFERENCE_DATASETS_DIR
     SHOULD_REGISTER_ALLELES: bool = SHOULD_REGISTER_ALLELES
+    VEP_REFERENCE_DATASETS_DIR: str = VEP_REFERENCE_DATASETS_DIR
