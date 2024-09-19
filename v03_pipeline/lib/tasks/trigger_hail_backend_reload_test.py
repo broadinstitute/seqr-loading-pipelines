@@ -1,15 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import luigi.worker
 import requests
 
-from v03_pipeline.lib.model import ReferenceGenome, DatasetType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
 class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
-
     @patch.object(requests, 'post')
     def test_success(self, mock_post: Mock):
         mock_response = Mock()
