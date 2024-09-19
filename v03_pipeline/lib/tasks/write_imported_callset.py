@@ -120,6 +120,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
         except SeqrValidationError as e:
             yield self.clone(
-                WriteValidationErrorsForRunTask, error_messages=[str(e) for e in e],
+                WriteValidationErrorsForRunTask,
+                error_messages=[str(e) for e in e],
             )
             raise
