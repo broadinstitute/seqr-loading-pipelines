@@ -51,8 +51,8 @@ def main():
             task_kwargs = {
                 k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'
             }
-            run_id = (
-                datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S'),
+            run_id = datetime.datetime.now(datetime.timezone.utc).strftime(
+                '%Y%m%d-%H%M%S',
             )
             tasks = [
                 UpdateCachedReferenceDatasetQueries(
