@@ -30,11 +30,7 @@ class TriggerHailBackendReload(luigi.Task):
 
     def run(self):
         url = f'{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
-        try:
-            res = requests.post(url, headers={'From': 'loading-pipelines'}, timeout=300)
-            res.raise_for_status()
-        except requests.exceptions.HTTPError as err:
-            raise SystemExit from err
-
+        res = requests.post(url, headers={'From': 'loading-pipelines'}, timeout=300)
+        res.raise_for_status()
         with self.output().open('w') as f:
             f.write('success!')

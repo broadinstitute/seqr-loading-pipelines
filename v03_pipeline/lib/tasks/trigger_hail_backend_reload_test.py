@@ -11,9 +11,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
     @patch.object(requests, 'post')
     def test_success(self, mock_post: Mock):
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_post.return_value = mock_response
+        mock_resp = requests.models.Response()
+        mock_resp.status_code = 200
+        mock_post.return_value = mock_resp
 
         worker = luigi.worker.Worker()
         task = TriggerHailBackendReload(
@@ -28,9 +28,9 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
 
     @patch.object(requests, 'post')
     def test_failure(self, mock_post: Mock):
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_post.return_value = mock_response
+        mock_resp = requests.models.Response()
+        mock_resp.status_code = 500
+        mock_post.return_value = mock_resp
 
         worker = luigi.worker.Worker()
         task = TriggerHailBackendReload(
@@ -39,7 +39,5 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
             run_id='manual__2024-09-19',
         )
         worker.add(task)
-        with self.assertRaises(SystemExit):
-            worker.run()
         self.assertFalse(task.output().exists())
         self.assertFalse(task.complete())
