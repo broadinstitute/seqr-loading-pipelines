@@ -186,7 +186,7 @@ def get_families_failed_sex_check(
                 or family.samples[sample_id].sex == Sex.UNKNOWN
             ):
                 logger.info(
-                    f'Encountered sample with Unknown sex excluded from sex check: {sample_id}'
+                    f'Encountered sample with Unknown sex excluded from sex check: {sample_id}',
                 )
 
             if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
