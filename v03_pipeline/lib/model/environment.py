@@ -21,6 +21,10 @@ REFERENCE_DATASETS_DIR = os.environ.get(
     'REFERENCE_DATASETS_DIR',
     '/seqr/seqr-reference-data',
 )
+VEP_REFERENCE_DATASETS_DIR = os.environ.get(
+    'VEP_REFERENCE_DATASETS_DIR',
+    '/seqr/vep-reference-data',
+)
 
 # Allele registry secrets :/
 ALLELE_REGISTRY_SECRET_NAME = os.environ.get('ALLELE_REGISTRY_SECRET_NAME', None)
@@ -50,3 +54,4 @@ class Env:
     PROJECT_ID: str | None = PROJECT_ID
     REFERENCE_DATASETS_DIR: str = REFERENCE_DATASETS_DIR
     SHOULD_REGISTER_ALLELES: bool = SHOULD_REGISTER_ALLELES
+    VEP_REFERENCE_DATASETS_DIR: str = VEP_REFERENCE_DATASETS_DIR
