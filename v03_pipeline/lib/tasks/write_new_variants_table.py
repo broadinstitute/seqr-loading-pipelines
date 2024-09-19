@@ -48,7 +48,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    run_id = luigi.Parameter()
 
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
