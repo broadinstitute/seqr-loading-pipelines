@@ -12,6 +12,8 @@ TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 
 class WriteFamilyTableTaskTest(MockedDatarootTestCase):
     def test_snv_write_family_table_task(self) -> None:
@@ -19,6 +21,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         wft_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guid='R0113_test_project',
@@ -156,6 +159,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF,
             project_guid='R0115_test_project2',
@@ -408,6 +412,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         write_family_table_task = WriteFamilyTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.GCNV,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WES,
             callset_path=TEST_GCNV_BED_FILE,
             project_guid='R0115_test_project2',
