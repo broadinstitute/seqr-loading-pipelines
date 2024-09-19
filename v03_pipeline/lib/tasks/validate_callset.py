@@ -103,22 +103,26 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
         validation_exceptions = []
-        if not self.skip_validation and self.dataset_type.can_run_validation:
-            for validation_f in [
-                validate_allele_type,
-                validate_imputed_sex_ploidy,
-                validate_no_duplicate_variants,
-                validate_expected_contig_frequency,
-                validate_sample_type,
-            ]:
-                try:
-                    validation_f(
-                        mt,
-                        **self.param_kwargs,
-                        **self.validation_dependencies,
-                    )
-                except SeqrValidationError as e:  # noqa: PERF203
-                    validation_exceptions.append(e)
+        if self.skip_validation or not self.dataset_type.can_run_validation:
+            return mt.select_globals(
+                callset_path=self.callset_path,
+                validated_sample_type=self.sample_type.value,
+            )
+        for validation_f in [
+            validate_allele_type,
+            validate_imputed_sex_ploidy,
+            validate_no_duplicate_variants,
+            validate_expected_contig_frequency,
+            validate_sample_type,
+        ]:
+            try:
+                validation_f(
+                    mt,
+                    **self.param_kwargs,
+                    **self.validation_dependencies,
+                )
+            except SeqrValidationError as e:  # noqa: PERF203
+                validation_exceptions.append(e)
         if validation_exceptions:
             write_validation_errors_for_run_task = yield self.clone(
                 WriteValidationErrorsForRunTask,
@@ -131,3 +135,4 @@ class ValidateCallsetTask(BaseUpdateTask):
             callset_path=self.callset_path,
             validated_sample_type=self.sample_type.value,
         )
+
