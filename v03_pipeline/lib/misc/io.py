@@ -214,13 +214,16 @@ def select_relevant_fields(
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
     ht = hl.import_table(imputed_sex_path)
     imputed_sex_lookup = hl.dict(
-        {s.imputed_sex_value: s.value for s in Sex}
+        {s.imputed_sex_value: s.value for s in Sex},
     )
     ht = ht.select(
         s=ht.collaborator_sample_id,
         predicted_sex=(
             hl.case()
-            .when(imputed_sex_lookup.contains(ht.predicted_sex), imputed_sex_lookup[ht.predicted_sex])
+            .when(
+                imputed_sex_lookup.contains(ht.predicted_sex),
+                imputed_sex_lookup[ht.predicted_sex],
+            )
             .or_error(
                 hl.format(
                     'Found unexpected value %s in imputed sex file',

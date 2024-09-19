@@ -56,12 +56,12 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
     def test_build_sex_check_lookup(self):
         ht = hl.Table.parallelize(
             [
-                {'s': 'remapped_id', 'predicted_sex': 'M'},
-                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'M'},
-                {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'M'},
-                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'M'},
-                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'F'},
-                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},
             ],
             hl.tstruct(
                 s=hl.tstr,
@@ -72,12 +72,12 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertEqual(
             build_sex_check_lookup(ht, hl.dict({'ROS_006_18Y03226_D1': 'remapped_id'})),
             {
-                'remapped_id': Sex.MALE,
-                'ROS_006_18Y03227_D1': Sex.MALE,
-                'ROS_006_18Y03228_D1': Sex.MALE,
-                'ROS_007_19Y05919_D1': Sex.MALE,
-                'ROS_007_19Y05939_D1': Sex.FEMALE,
-                'ROS_007_19Y05987_D1': Sex.MALE,
+                'remapped_id': Sex.FEMALE,
+                'ROS_006_18Y03227_D1': Sex.FEMALE,
+                'ROS_006_18Y03228_D1': Sex.FEMALE,
+                'ROS_007_19Y05919_D1': Sex.FEMALE,
+                'ROS_007_19Y05939_D1': Sex.MALE,
+                'ROS_007_19Y05987_D1': Sex.UNKNOWN,
             },
         )
 
@@ -178,12 +178,12 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
     def test_get_families_failed_sex_check(self):
         sex_check_ht = hl.Table.parallelize(
             [
-                {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'M'},
-                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_006_18Y03226_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_006_18Y03227_D1', 'predicted_sex': 'F'},  # Pedigree Sex U
                 {'s': 'ROS_006_18Y03228_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
-                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'F'},
-                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'F'},
+                {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
+                {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},  # Pedigree Sex F
             ],
             hl.tstruct(
                 s=hl.tstr,
@@ -201,7 +201,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             failed_families.values(),
             [
                 [
-                    'Sample ROS_006_18Y03226_D1 has pedigree sex F but imputed sex M',
+                    'Sample ROS_007_19Y05939_D1 has pedigree sex F but imputed sex M',
                 ],
             ],
         )
