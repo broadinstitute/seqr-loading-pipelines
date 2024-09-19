@@ -84,7 +84,7 @@ class ValidateCallsetTask(BaseUpdateTask):
 
     def update_table(self, mt: hl.MatrixTable) -> hl.MatrixTable:
         if self.clone(WriteValidationErrorsForRunTask).complete():
-            raise SeqrValidationError
+            raise SeqrValidationError(self.clone(WriteValidationErrorsForRunTask).to_error_message())
         mt = hl.read_matrix_table(
             imported_callset_path(
                 self.reference_genome,
@@ -118,10 +118,10 @@ class ValidateCallsetTask(BaseUpdateTask):
                 except SeqrValidationError as e:  # noqa: PERF203
                     validation_exceptions.append(e)
         if validation_exceptions:
-            yield self.clone(
+            write_validation_errors_for_run_task = yield self.clone(
                 WriteValidationErrorsForRunTask, errors=validation_exceptions
             )
-            raise validation_exceptions[0]
+            raise SeqrValidationError(write_validation_errors_for_run_task.to_error_message())
         return mt.select_globals(
             callset_path=self.callset_path,
             validated_sample_type=self.sample_type.value,

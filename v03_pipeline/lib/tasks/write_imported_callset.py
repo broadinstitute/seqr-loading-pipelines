@@ -67,7 +67,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def create_table(self) -> hl.MatrixTable:
         if self.clone(WriteValidationErrorsForRunTask).complete():
-            raise SeqrValidationError
+            raise SeqrValidationError(self.clone(WriteValidationErrorsForRunTask).to_error_message())
         try:
             mt = import_callset(
                 self.callset_path,
@@ -117,5 +117,5 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 filters_path=filters_path or hl.missing(hl.tstr),
             )
         except SeqrValidationError as e:
-            yield self.clone(WriteValidationErrorsForRunTask, errors=[e])
+            yield self.clone(WriteValidationErrorsForRunTask, error_messages=[str(e) for e in e])
             raise
