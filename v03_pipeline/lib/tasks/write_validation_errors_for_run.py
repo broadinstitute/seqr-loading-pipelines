@@ -26,7 +26,7 @@ class WriteValidationErrorsForRunTask(luigi.Task):
 
     def run(self) -> None:
         validation_errors_json = {
-            'error_messages': [error_message for e in error_messages],
+            'error_messages': self.error_messages,
         }
         with self.output().open('w') as f:
             json.dump(validation_errors_json, f)
