@@ -1,0 +1,46 @@
+from unittest.mock import patch, Mock
+
+import luigi.worker
+import requests
+
+from v03_pipeline.lib.model import ReferenceGenome, DatasetType
+from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+
+
+class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
+
+    @patch.object(requests, 'post')
+    def test_success(self, mock_post: Mock):
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        worker = luigi.worker.Worker()
+        task = TriggerHailBackendReload(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            run_id='manual__2024-09-19',
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+
+    @patch.object(requests, 'post')
+    def test_failure(self, mock_post: Mock):
+        mock_response = Mock()
+        mock_response.status_code = 500
+        mock_post.return_value = mock_response
+
+        worker = luigi.worker.Worker()
+        task = TriggerHailBackendReload(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            run_id='manual__2024-09-19',
+        )
+        worker.add(task)
+        with self.assertRaises(SystemExit):
+            worker.run()
+        self.assertFalse(task.output().exists())
+        self.assertFalse(task.complete())

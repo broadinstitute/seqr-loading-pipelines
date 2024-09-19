@@ -351,3 +351,18 @@ def loading_pipeline_queue_path() -> str:
         'loading_pipeline_queue',
         'request.json',
     )
+
+
+def hail_backend_reload_success_for_run_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'hail_backend_reload_success.txt',
+    )

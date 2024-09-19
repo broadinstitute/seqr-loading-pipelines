@@ -7,6 +7,7 @@ import luigi
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.paths import (
     loading_pipeline_queue_path,
     project_pedigree_path,
@@ -17,6 +18,7 @@ from v03_pipeline.lib.tasks import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
     WriteProjectFamilyTablesTask,
 )
+from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 
 logger = get_logger(__name__)
 
@@ -49,6 +51,9 @@ def main():
             task_kwargs = {
                 k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'
             }
+            run_id = (
+                datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S'),
+            )
             tasks = [
                 UpdateCachedReferenceDatasetQueries(
                     reference_genome=lpr.reference_genome,
@@ -58,9 +63,7 @@ def main():
                     project_guids=lpr.projects_to_run,
                     project_remap_paths=project_remap_paths,
                     project_pedigree_paths=project_pedigree_paths,
-                    run_id=datetime.datetime.now(datetime.timezone.utc).strftime(
-                        '%Y%m%d-%H%M%S',
-                    ),
+                    run_id=run_id,
                     **task_kwargs,
                 ),
                 *[
@@ -73,6 +76,14 @@ def main():
                     for i in range(len(lpr.projects_to_run))
                 ],
             ]
+            if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
+                tasks.append(
+                    TriggerHailBackendReload(
+                        reference_genome=lpr.reference_genome,
+                        dataset_type=lpr.dataset_type,
+                        run_id=run_id,
+                    ),
+                )
             luigi.build(tasks)
         except Exception:
             logger.exception('Unhandled Exception')
