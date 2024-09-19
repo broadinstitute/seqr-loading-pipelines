@@ -142,7 +142,7 @@ class IOTest(unittest.TestCase):
     def test_split_multi_failure(self) -> None:
         self.assertRaisesRegex(
             SeqrValidationError,
-            'Your callset failed while attempting to split multiallelic sites.  This error can occur after a split_multi if the dataset contains both multiallelic variants and duplicated loci.',
+            'Your callset failed while attempting to split multiallelic sites.  This error can occur if the dataset contains both multiallelic variants and duplicated loci.',
             split_multi_hts,
             hl.MatrixTable.from_parts(
                 rows={
