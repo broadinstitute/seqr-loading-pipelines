@@ -2,17 +2,15 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc import (
+from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     get_validation_dependencies,
     validate_allele_type,
     validate_expected_contig_frequency,
-    validate_imported_field_types,
     validate_imputed_sex_ploidy,
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.misc.callsets import additional_row_fields
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
@@ -26,6 +24,9 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
+    WriteValidationErrorsForRunTask,
+)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -82,22 +83,13 @@ class ValidateCallsetTask(BaseUpdateTask):
         ]
 
     def update_table(self, mt: hl.MatrixTable) -> hl.MatrixTable:
+        if self.clone(WriteValidationErrorsForRunTask).complete():
+            raise SeqrValidationError
         mt = hl.read_matrix_table(
             imported_callset_path(
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
-            ),
-        )
-        # This validation isn't override-able.  If a field is the wrong
-        # type, the pipeline will likely hard-fail downstream.
-        validate_imported_field_types(
-            mt,
-            self.dataset_type,
-            additional_row_fields(
-                mt,
-                self.dataset_type,
-                self.skip_check_sex_and_relatedness,
             ),
         )
         if self.dataset_type.can_run_validation:
@@ -126,6 +118,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 except SeqrValidationError as e:  # noqa: PERF203
                     validation_exceptions.append(e)
         if validation_exceptions:
+            yield self.clone(WriteValidationErrorsForRunTask, errors=validation_exceptions)
             raise validation_exceptions[0]
         return mt.select_globals(
             callset_path=self.callset_path,

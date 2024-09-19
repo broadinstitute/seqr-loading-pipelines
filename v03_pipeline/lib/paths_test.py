@@ -10,7 +10,6 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
-    errors_for_run_path,
     family_table_path,
     imported_callset_path,
     imputed_sex_path,
@@ -25,6 +24,7 @@ from v03_pipeline.lib.paths import (
     sex_check_table_path,
     valid_filters_path,
     valid_reference_dataset_collection_path,
+    validation_errors_for_run_path,
     variant_annotations_table_path,
 )
 
@@ -142,14 +142,14 @@ class TestPaths(unittest.TestCase):
             '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/relatedness_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
         )
 
-    def test_errors_for_run_path(self) -> None:
+    def test_validation_errors_for_run_path(self) -> None:
         self.assertEqual(
-            errors_for_run_path(
+            validation_errors_for_run_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/errors.json',
+            '/seqr/hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:
