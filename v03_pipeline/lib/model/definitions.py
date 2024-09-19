@@ -13,6 +13,14 @@ class Sex(str, Enum):
     MALE = 'M'
     UNKNOWN = 'U'
 
+    @property
+    def imputed_sex_value(self):
+        return {
+            Sex.MALE: 'Male',
+            Sex.FEMALE: 'Female',
+            Sex.UNKNOWN: 'Unknown',
+        }[self]
+
 
 class PipelineVersion(str, Enum):
     V02 = 'v02'
