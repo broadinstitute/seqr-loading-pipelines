@@ -3,10 +3,13 @@ from collections import defaultdict
 import hail as hl
 import numpy as np
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
 from v03_pipeline.lib.model import Sex
 
 RELATEDNESS_TOLERANCE = 0.2
+
+logger = get_logger(__name__)
 
 
 def passes_relatedness_check(
@@ -182,7 +185,7 @@ def get_families_failed_sex_check(
                 sex_check_lookup[sample_id] == Sex.UNKNOWN  # noqa: PLR1714
                 or family.samples[sample_id].sex == Sex.UNKNOWN
             ):
-                continue
+                logger.info(f'Encountered sample with Unknown sex excluded from sex check: {sample_id}')
 
             if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
                 failed_families[family].append(
