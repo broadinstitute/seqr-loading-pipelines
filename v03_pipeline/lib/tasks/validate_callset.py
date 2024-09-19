@@ -135,4 +135,3 @@ class ValidateCallsetTask(BaseUpdateTask):
             callset_path=self.callset_path,
             validated_sample_type=self.sample_type.value,
         )
-
