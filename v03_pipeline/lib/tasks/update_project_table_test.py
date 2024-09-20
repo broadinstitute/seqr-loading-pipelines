@@ -13,6 +13,8 @@ TEST_PEDIGREE_3_DIFFERENT_FAMILIES = (
     'v03_pipeline/var/test/pedigrees/test_pedigree_3_different_families.tsv'
 )
 
+v
+
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
     def test_update_project_table_task(self) -> None:
@@ -20,6 +22,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
         upt_task = UpdateProjectTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
@@ -128,6 +131,7 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
         upt_task = UpdateProjectTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
