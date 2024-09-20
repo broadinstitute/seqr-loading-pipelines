@@ -60,6 +60,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         write_project_family_tables_subset = WriteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guid='R0113_test_project',
