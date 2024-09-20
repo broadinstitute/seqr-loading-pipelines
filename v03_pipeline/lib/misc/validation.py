@@ -35,7 +35,7 @@ def get_validation_dependencies(
     deps = {}
     if skip_validation or not dataset_type.can_run_validation:
         return {}
-    deps['coding_and_noncoding_ht'] = hl.read_table(
+    deps['coding_and_noncoding_variants_ht'] = hl.read_table(
         cached_reference_dataset_query_path(
             reference_genome,
             dataset_type,
