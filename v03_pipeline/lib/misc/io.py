@@ -19,9 +19,6 @@ B_PER_MB = 1 << 20  # 1024 * 1024
 MB_PER_PARTITION = 128
 MAX_SAMPLES_SPLIT_MULTI_SHUFFLE = 100
 
-MALE = 'Male'
-FEMALE = 'Female'
-
 
 def validated_hl_function(
     regex_to_msg: dict[str, str | Template],
@@ -216,12 +213,17 @@ def select_relevant_fields(
 
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
     ht = hl.import_table(imputed_sex_path)
+    imputed_sex_lookup = hl.dict(
+        {s.imputed_sex_value: s.value for s in Sex},
+    )
     ht = ht.select(
         s=ht.collaborator_sample_id,
         predicted_sex=(
             hl.case()
-            .when(ht.predicted_sex == FEMALE, Sex.FEMALE.value)
-            .when(ht.predicted_sex == MALE, Sex.MALE.value)
+            .when(
+                imputed_sex_lookup.contains(ht.predicted_sex),
+                imputed_sex_lookup[ht.predicted_sex],
+            )
             .or_error(
                 hl.format(
                     'Found unexpected value %s in imputed sex file',

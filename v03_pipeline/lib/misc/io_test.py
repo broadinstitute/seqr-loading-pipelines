@@ -45,7 +45,7 @@ class IOTest(unittest.TestCase):
             [
                 hl.Struct(s='abc_1', predicted_sex='M'),
                 hl.Struct(s='abc_2', predicted_sex='F'),
-                hl.Struct(s='abc_3', predicted_sex='M'),
+                hl.Struct(s='abc_3', predicted_sex='U'),
             ],
         )
 
@@ -53,7 +53,7 @@ class IOTest(unittest.TestCase):
         ht = import_imputed_sex(TEST_IMPUTED_SEX_UNEXPECTED_VALUE)
         self.assertRaisesRegex(
             hl.utils.java.HailUserError,
-            'Found unexpected value Unknown in imputed sex file',
+            'Found unexpected value UNKNOWN in imputed sex file',
             ht.collect,
         )
 
