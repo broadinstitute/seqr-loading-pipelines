@@ -87,14 +87,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.dataset_type,
             self.skip_check_sex_and_relatedness,
         )
-        # This validation isn't override-able by the skip option.
-        # If a field is the wrong type, the pipeline will likely hard-fail downstream.
-        validate_imported_field_types(
+        mt = select_relevant_fields(
             mt,
             self.dataset_type,
             additional_row_fields,
         )
-        mt = select_relevant_fields(
+        # This validation isn't override-able by the skip option.
+        # If a field is the wrong type, the pipeline will likely hard-fail downstream.
+        validate_imported_field_types(
             mt,
             self.dataset_type,
             additional_row_fields,
