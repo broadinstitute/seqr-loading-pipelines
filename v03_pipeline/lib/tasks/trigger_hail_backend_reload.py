@@ -5,14 +5,14 @@ import requests
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
 from v03_pipeline.lib.tasks import UpdateVariantAnnotationsTableWithNewSamplesTask
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
-from v03_pipeline.lib.tasks.base.base_project_info_params import BaseProjectInfoParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import (
+    BaseLoadingRunWithProjectInfoParams,
+)
 
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
-@luigi.util.inherits(BaseProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
 class TriggerHailBackendReload(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

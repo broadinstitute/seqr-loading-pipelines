@@ -24,7 +24,9 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import (
+    BaseLoadingRunWithProjectInfoParams,
+)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
@@ -43,12 +45,8 @@ GENCODE_RELEASE = 42
 GENCODE_FOR_VEP_RELEASE = 44
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
 class WriteNewVariantsTableTask(BaseWriteTask):
-    project_guids = luigi.ListParameter()
-    project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.ListParameter()
-
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
         deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)

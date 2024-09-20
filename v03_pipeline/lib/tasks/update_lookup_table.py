@@ -10,7 +10,9 @@ from v03_pipeline.lib.misc.lookup import (
 )
 from v03_pipeline.lib.model.constants import PROJECTS_EXCLUDED_FROM_LOOKUP
 from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import (
+    BaseLoadingRunWithProjectInfoParams,
+)
 from v03_pipeline.lib.tasks.base.base_update_lookup_table import (
     BaseUpdateLookupTableTask,
 )
@@ -19,12 +21,8 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import (
 )
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
 class UpdateLookupTableTask(BaseUpdateLookupTableTask):
-    project_guids = luigi.ListParameter()
-    project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.ListParameter()
-
     def complete(self) -> bool:
         return super().complete() and hl.eval(
             hl.bind(

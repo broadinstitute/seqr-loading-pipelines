@@ -5,19 +5,17 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.paths import metadata_for_run_path
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import (
+    BaseLoadingRunWithProjectInfoParams,
+)
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
 class WriteMetadataForRunTask(luigi.Task):
-    project_guids = luigi.ListParameter()
-    project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.ListParameter()
-
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             metadata_for_run_path(
