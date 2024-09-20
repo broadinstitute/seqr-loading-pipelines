@@ -44,8 +44,8 @@ def get_validation_dependencies(
     )
     if (
         Env.CHECK_SEX_AND_RELATEDNESS
-        and not skip_check_sex_and_relatedness
         and dataset_type.check_sex_and_relatedness
+        and not skip_check_sex_and_relatedness
     ):
         deps['sex_check_ht'] = hl.read_table(
             sex_check_table_path(
@@ -156,13 +156,13 @@ def validate_imputed_sex_ploidy(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
     skip_check_sex_and_relatedness: bool,
-    sex_check_ht: hl.Table,
+    sex_check_ht: hl.Table | None = None,  # nb: sex_check_ht will be undefined if
     **_: Any,
 ) -> None:
-    if (
-        not Env.CHECK_SEX_AND_RELATEDNESS
-        or skip_check_sex_and_relatedness
-        or not dataset_type.check_sex_and_relatedness
+    if not (
+        Env.CHECK_SEX_AND_RELATEDNESS
+        and dataset_type.check_sex_and_relatedness
+        and not skip_check_sex_and_relatedness
     ):
         return
     mt = mt.select_cols(
