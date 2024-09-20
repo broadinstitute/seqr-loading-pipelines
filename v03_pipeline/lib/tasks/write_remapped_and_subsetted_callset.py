@@ -62,8 +62,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         ]
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
-            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
+            and not self.skip_check_sex_and_relatedness
         ):
             requirements = [
                 *requirements,
@@ -98,8 +98,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_sex_check = {}
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
-            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
+            and not self.skip_check_sex_and_relatedness
         ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)
             sex_check_ht = hl.read_table(self.input()[3].path)
