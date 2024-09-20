@@ -99,7 +99,8 @@ class ValidateCallsetTask(BaseUpdateTask):
                 **validation_dependencies,
             )
             validate_no_duplicate_variants(
-                mt**self.param_kwargs,
+                mt,
+                **self.param_kwargs,
                 **validation_dependencies,
             )
             validate_expected_contig_frequency(
