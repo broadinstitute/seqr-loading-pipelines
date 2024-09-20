@@ -36,7 +36,6 @@ jobs:
         run: ruff . --output-format github
       - name: Unit Tests
         run: |
-          export HAIL_TMP_DIR=/tmp
           export GRCH37_TO_GRCH38_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz
           export GRCH38_TO_GRCH37_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
