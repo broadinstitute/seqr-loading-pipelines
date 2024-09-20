@@ -15,6 +15,7 @@ TEST_PEDIGREE_4_SUBSET = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_subset
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
+
 class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
     def test_snv_write_project_family_tables_task(self) -> None:
         worker = luigi.worker.Worker()
