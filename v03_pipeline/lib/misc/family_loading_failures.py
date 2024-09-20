@@ -3,10 +3,13 @@ from collections import defaultdict
 import hail as hl
 import numpy as np
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
 from v03_pipeline.lib.model import Sex
 
 RELATEDNESS_TOLERANCE = 0.2
+
+logger = get_logger(__name__)
 
 
 def passes_relatedness_check(
@@ -175,10 +178,19 @@ def get_families_failed_sex_check(
     failed_families = defaultdict(list)
     for family in families:
         for sample_id in family.samples:
-            if family.samples[sample_id].sex not in {
-                sex_check_lookup[sample_id],
-                Sex.UNKNOWN,
-            }:  # NB: Unknown samples in pedigree are excluded from sex check.
+            # NB: Both Unknown samples in pedigree and Unknown
+            # samples in the predicted_sex are precluded from
+            # failing the sex check.
+            if (
+                sex_check_lookup[sample_id] == Sex.UNKNOWN  # noqa: PLR1714
+                or family.samples[sample_id].sex == Sex.UNKNOWN
+            ):
+                logger.info(
+                    f'Encountered sample with Unknown sex excluded from sex check: {sample_id}',
+                )
+                continue
+
+            if family.samples[sample_id].sex != sex_check_lookup[sample_id]:
                 failed_families[family].append(
                     f'Sample {sample_id} has pedigree sex {family.samples[sample_id].sex.value} but imputed sex {sex_check_lookup[sample_id].value}',
                 )

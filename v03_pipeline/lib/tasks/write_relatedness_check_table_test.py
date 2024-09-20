@@ -24,6 +24,8 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_GNOMAD_QC_HT = 'v03_pipeline/var/test/reference_data/gnomad_qc_crdq.ht'
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 MOCK_CONFIG = {
     'gnomad_qc': {
         '38': {
@@ -89,6 +91,7 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
         task = WriteRelatednessCheckTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
         )

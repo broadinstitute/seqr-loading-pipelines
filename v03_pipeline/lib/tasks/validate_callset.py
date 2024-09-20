@@ -31,12 +31,6 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
-    @property
-    def validation_dependencies(self) -> dict[str, hl.Table]:
-        return get_validation_dependencies(
-            **self.param_kwargs,
-        )
-
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -108,6 +102,9 @@ class ValidateCallsetTask(BaseUpdateTask):
                 callset_path=self.callset_path,
                 validated_sample_type=self.sample_type.value,
             )
+        validation_dependencies = get_validation_dependencies(
+            **self.param_kwargs,
+        )
         for validation_f in [
             validate_allele_type,
             validate_imputed_sex_ploidy,
@@ -119,7 +116,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 validation_f(
                     mt,
                     **self.param_kwargs,
-                    **self.validation_dependencies,
+                    **validation_dependencies,
                 )
             except SeqrValidationError as e:  # noqa: PERF203
                 validation_exceptions.append(e)
