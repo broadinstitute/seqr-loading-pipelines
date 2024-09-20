@@ -15,6 +15,8 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
     'PLEKHG4B': 'ENSG00000153404',
@@ -49,6 +51,7 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
+                run_id=TEST_RUN_ID,
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
