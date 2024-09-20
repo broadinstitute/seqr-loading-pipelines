@@ -1,6 +1,19 @@
+from typing import Any
+
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType, Sex
+from v03_pipeline.lib.model import (
+    CachedReferenceDatasetQuery,
+    DatasetType,
+    Env,
+    ReferenceGenome,
+    SampleType,
+    Sex,
+)
+from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
+    sex_check_table_path,
+)
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
 MIN_ROWS_PER_CONTIG = 100
@@ -11,9 +24,40 @@ class SeqrValidationError(Exception):
     pass
 
 
+def get_validation_dependencies(
+    dataset_type: DatasetType,
+    reference_genome: ReferenceGenome,
+    callset_path: str,
+    skip_check_sex_and_relatedness: bool,
+    **_: Any,
+) -> dict[str, hl.Table]:
+    deps = {}
+    deps['coding_and_noncoding_ht'] = hl.read_table(
+        cached_reference_dataset_query_path(
+            reference_genome,
+            dataset_type,
+            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+        ),
+    )
+    if (
+        Env.CHECK_SEX_AND_RELATEDNESS
+        and not skip_check_sex_and_relatedness
+        and dataset_type.check_sex_and_relatedness
+    ):
+        deps['sex_check_ht'] = hl.read_table(
+            sex_check_table_path(
+                reference_genome,
+                dataset_type,
+                callset_path,
+            ),
+        )
+    return deps
+
+
 def validate_allele_type(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
+    **_: Any,
 ) -> None:
     ht = mt.rows()
     ht = ht.filter(
@@ -31,6 +75,7 @@ def validate_allele_type(
 
 def validate_no_duplicate_variants(
     mt: hl.MatrixTable,
+    **_: Any,
 ) -> None:
     ht = mt.rows()
     ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
@@ -44,6 +89,7 @@ def validate_expected_contig_frequency(
     mt: hl.MatrixTable,
     reference_genome: ReferenceGenome,
     min_rows_per_contig: int = MIN_ROWS_PER_CONTIG,
+    **_: Any,
 ) -> None:
     rows_per_contig = mt.aggregate_rows(hl.agg.counter(mt.locus.contig))
     missing_contigs = (
@@ -69,6 +115,7 @@ def validate_imported_field_types(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
     additional_row_fields: dict[str, hl.expr.types.HailType | set],
+    **_: Any,
 ) -> None:
     def _validate_field(
         mt_schema: hl.StructExpression,
@@ -104,8 +151,17 @@ def validate_imported_field_types(
 
 def validate_imputed_sex_ploidy(
     mt: hl.MatrixTable,
+    dataset_type: DatasetType,
+    skip_check_sex_and_relatedness: bool,
     sex_check_ht: hl.Table,
+    **_: Any,
 ) -> None:
+    if (
+        not Env.CHECK_SEX_AND_RELATEDNESS
+        or skip_check_sex_and_relatedness
+        or not dataset_type.check_sex_and_relatedness
+    ):
+        return
     mt = mt.select_cols(
         discrepant=(
             (
@@ -132,6 +188,7 @@ def validate_sample_type(
     reference_genome: ReferenceGenome,
     sample_type: SampleType,
     sample_type_match_threshold: float = SAMPLE_TYPE_MATCH_THRESHOLD,
+    **_: Any,
 ) -> None:
     coding_variants_ht = coding_and_noncoding_variants_ht.filter(
         coding_and_noncoding_variants_ht.coding,

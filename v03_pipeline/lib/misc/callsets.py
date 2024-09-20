@@ -30,7 +30,7 @@ def get_callset_ht(
     return callset_ht.distinct()
 
 
-def additional_row_fields(
+def get_additional_row_fields(
     mt: hl.MatrixTable,
     dataset_type: DatasetType,
     skip_check_sex_and_relatedness: bool,
