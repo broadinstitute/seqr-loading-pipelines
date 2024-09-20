@@ -34,8 +34,6 @@ GENE_ID_MAPPING = {
     'XPR1': 'ENSG00000143324',
 }
 
-TEST_RUN_ID = 'manual__2024-04-03'
-
 
 class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
     @patch(
@@ -51,7 +49,6 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
-                run_id=TEST_RUN_ID,
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
