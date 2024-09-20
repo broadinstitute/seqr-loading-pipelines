@@ -89,10 +89,10 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             )
 
-        validation_dependencies = get_validation_dependencies(
-            **self.param_kwargs,
-        )
         if not self.skip_validation and self.dataset_type.can_run_validation:
+            validation_dependencies = get_validation_dependencies(
+                **self.param_kwargs,
+            )
             validate_allele_type(
                 mt,
                 **self.param_kwargs,
