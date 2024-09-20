@@ -13,7 +13,7 @@ TEST_PEDIGREE_3_DIFFERENT_FAMILIES = (
     'v03_pipeline/var/test/pedigrees/test_pedigree_3_different_families.tsv'
 )
 
-v
+TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class UpdateProjectTableTaskTest(MockedDatarootTestCase):
