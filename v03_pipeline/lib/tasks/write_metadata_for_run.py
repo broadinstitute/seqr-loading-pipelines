@@ -17,7 +17,6 @@ class WriteMetadataForRunTask(luigi.Task):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    run_id = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
