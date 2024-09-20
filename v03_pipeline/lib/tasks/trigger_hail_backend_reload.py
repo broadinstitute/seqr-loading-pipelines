@@ -1,36 +1,31 @@
 import luigi
+import luigi.util
 import requests
 
-from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
-from v03_pipeline.lib.paths import hail_backend_reload_success_for_run_path
-from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
-    BaseLoadingPipelineParams,
-)
+from v03_pipeline.lib.tasks import UpdateVariantAnnotationsTableWithNewSamplesTask
+from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import BaseProjectInfoParams
 
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingPipelineParams)
+@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseProjectInfoParams)
 class TriggerHailBackendReload(luigi.Task):
-    run_id = luigi.Parameter()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.done = False
 
-    def output(self):
-        return GCSorLocalTarget(
-            hail_backend_reload_success_for_run_path(
-                reference_genome=self.reference_genome,
-                dataset_type=self.dataset_type,
-                run_id=self.run_id,
-            ),
-        )
-
-    def complete(self):
-        return GCSorLocalTarget(self.output().path).exists()
+    def requires(self):
+        return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
 
     def run(self):
         url = f'{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
         res = requests.post(url, headers={'From': 'loading-pipelines'}, timeout=300)
         res.raise_for_status()
-        with self.output().open('w') as f:
-            f.write('success!')
+        self.done = True
+
+    def complete(self):
+        return self.done

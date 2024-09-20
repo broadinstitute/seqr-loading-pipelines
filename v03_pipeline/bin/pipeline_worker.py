@@ -79,9 +79,11 @@ def main():
             if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
                 tasks.append(
                     TriggerHailBackendReload(
-                        reference_genome=lpr.reference_genome,
-                        dataset_type=lpr.dataset_type,
+                        project_guids=lpr.projects_to_run,
+                        project_remap_paths=project_remap_paths,
+                        project_pedigree_paths=project_pedigree_paths,
                         run_id=run_id,
+                        **task_kwargs,
                     ),
                 )
             luigi.build(tasks)
