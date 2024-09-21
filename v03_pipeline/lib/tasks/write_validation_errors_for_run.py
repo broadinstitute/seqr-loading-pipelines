@@ -10,7 +10,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteValidationErrorsForRunTask(luigi.Task):
-    error_messages = luigi.ListParameter()
+    error_messages = luigi.ListParameter(default=[])
 
     def to_single_error_message(self) -> str:
         with self.output().open('r') as f:
@@ -27,9 +27,6 @@ class WriteValidationErrorsForRunTask(luigi.Task):
                 self.run_id,
             ),
         )
-
-    def complete(self) -> bool:
-        return GCSorLocalTarget(self.output().path).exists()
 
     def run(self) -> None:
         validation_errors_json = {
