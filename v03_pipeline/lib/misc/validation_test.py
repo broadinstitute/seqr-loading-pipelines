@@ -105,7 +105,7 @@ class ValidationTest(unittest.TestCase):
                 ],
             },
         ).key_rows_by('locus')
-        validate_imputed_sex_ploidy(mt, DatasetType.SNV_INDEL, False, sex_check_ht)
+        validate_imputed_sex_ploidy(mt, sex_check_ht)
         mt = hl.MatrixTable.from_parts(
             rows={
                 'locus': [
@@ -133,8 +133,6 @@ class ValidationTest(unittest.TestCase):
             '66.67% of samples have misaligned ploidy',
             validate_imputed_sex_ploidy,
             mt,
-            DatasetType.SNV_INDEL,
-            False,
             sex_check_ht,
         )
 
