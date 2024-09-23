@@ -77,10 +77,6 @@ class ValidateCallsetTask(BaseUpdateTask):
         ]
 
     def update_table(self, mt: hl.MatrixTable) -> hl.MatrixTable:
-        if self.clone(WriteValidationErrorsForRunTask).complete():
-            raise SeqrValidationError(
-                self.clone(WriteValidationErrorsForRunTask).to_single_error_message(),
-            )
         mt = hl.read_matrix_table(
             imported_callset_path(
                 self.reference_genome,
