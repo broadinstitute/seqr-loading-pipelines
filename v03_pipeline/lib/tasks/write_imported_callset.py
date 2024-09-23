@@ -2,12 +2,15 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.callsets import additional_row_fields
+from v03_pipeline.lib.misc.callsets import get_additional_row_fields
 from v03_pipeline.lib.misc.io import (
     import_callset,
     import_vcf,
     select_relevant_fields,
     split_multi_hts,
+)
+from v03_pipeline.lib.misc.validation import (
+    validate_imported_field_types,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
 from v03_pipeline.lib.model.environment import Env
@@ -79,14 +82,22 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
             filters_ht = import_vcf(filters_path, self.reference_genome).rows()
             mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
+        additional_row_fields = get_additional_row_fields(
+            mt,
+            self.dataset_type,
+            self.skip_check_sex_and_relatedness,
+        )
         mt = select_relevant_fields(
             mt,
             self.dataset_type,
-            additional_row_fields(
-                mt,
-                self.dataset_type,
-                self.skip_check_sex_and_relatedness,
-            ),
+            additional_row_fields,
+        )
+        # This validation isn't override-able by the skip option.
+        # If a field is the wrong type, the pipeline will likely hard-fail downstream.
+        validate_imported_field_types(
+            mt,
+            self.dataset_type,
+            additional_row_fields,
         )
         if self.dataset_type.has_multi_allelic_variants:
             mt = split_multi_hts(mt)
