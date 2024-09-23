@@ -109,7 +109,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 additional_row_fields,
             )
             if self.dataset_type.has_multi_allelic_variants:
-                mt = split_multi_hts(mt)
+                mt = split_multi_hts(mt, self.skip_validation)
             # Special handling of variant-level filter annotation for VETs filters.
             # The annotations are present on the sample-level FT field but are
             # expected upstream on "filters".

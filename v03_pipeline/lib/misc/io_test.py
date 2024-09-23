@@ -170,5 +170,6 @@ class IOTest(unittest.TestCase):
             )
             .key_rows_by('locus', 'alleles')
             .repartition(1),
+            False,
             1,
         )

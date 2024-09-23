@@ -173,15 +173,22 @@ class ValidationTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                 ],
+                'alleles': [
+                    ['A', 'C'],
+                    ['A', 'C'],
+                    ['A', 'C'],
+                ],
             },
             cols={'s': ['sample_1']},
             entries={'HL': [[0.0], [0.0], [0.0]]},
-        ).key_rows_by('locus')
+        ).key_rows_by('locus', 'alleles')
         self.assertRaisesRegex(
             SeqrValidationError,
-            'Variants are present multiple times in the callset',
+            "Variants are present multiple times in the callset: \\['1-2-A-C'\\]",
             validate_no_duplicate_variants,
             mt,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
         )
 
     def test_validate_expected_contig_frequency(self) -> None:

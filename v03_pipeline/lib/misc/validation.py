@@ -78,13 +78,17 @@ def validate_allele_type(
 
 def validate_no_duplicate_variants(
     mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     **_: Any,
 ) -> None:
     ht = mt.rows()
     ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
     ht = ht.filter(ht.n > 1)
+    ht = ht.select()
     if ht.count() > 0:
-        msg = f'Variants are present multiple times in the callset: {ht.collect()}'
+        variant_format = dataset_type.table_key_format_fn(reference_genome)
+        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.collect()]}'
         raise SeqrValidationError(msg)
 
 
@@ -102,7 +106,7 @@ def validate_expected_contig_frequency(
     )
     if missing_contigs:
         msg = 'Missing the following expected contigs:{}'.format(
-            ', '.join(missing_contigs),
+            ', '.join(sorted(missing_contigs)),
         )
         raise SeqrValidationError(msg)
 

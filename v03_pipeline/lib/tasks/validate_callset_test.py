@@ -21,7 +21,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_CODING_NONCODING_CRDQ_1 = (
     'v03_pipeline/var/test/reference_data/test_gnomad_coding_noncoding_crdq_1.ht'
 )
-TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+MULTIPLE_VALIDATION_EXCEPTIONS_VCF = (
+    'v03_pipeline/var/test/callsets/multiple_validation_exceptions.vcf'
+)
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -50,10 +52,15 @@ class ValidateCallsetTest(MockedDatarootTestCase):
         validate_callset_task = ValidateCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_VCF,
+            sample_type=SampleType.WES,
+            # NB:
+            # This callset contains duplicate rows for chr1:902088,
+            # a NON_REF allele type at position chr1: 902024, missing
+            # all contigs but chr1, and contains non-coding variants.
+            callset_path=MULTIPLE_VALIDATION_EXCEPTIONS_VCF,
             skip_validation=False,
             run_id=TEST_RUN_ID,
         )
         worker.add(validate_callset_task)
         worker.run()
+        self.assertTrue(False)
