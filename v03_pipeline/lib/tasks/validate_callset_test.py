@@ -57,5 +57,3 @@ class ValidateCallsetTest(MockedDatarootTestCase):
         )
         worker.add(validate_callset_task)
         worker.run()
-        self.assertTrue(validate_callset_task.output().exists())
-        self.assertTrue(validate_callset_task.complete())

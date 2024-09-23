@@ -121,7 +121,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         except SeqrValidationError as e:
             write_validation_errors_for_run_task = self.clone(
                 WriteValidationErrorsForRunTask,
-                error_messages=[e],
+                error_messages=[str(e)],
             )
             write_validation_errors_for_run_task.run()
             raise SeqrValidationError(

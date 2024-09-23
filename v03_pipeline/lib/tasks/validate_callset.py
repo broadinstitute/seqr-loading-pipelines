@@ -123,7 +123,7 @@ class ValidateCallsetTask(BaseUpdateTask):
         if validation_exceptions:
             write_validation_errors_for_run_task = self.clone(
                 WriteValidationErrorsForRunTask,
-                error_messages=validation_exceptions,
+                error_messages=[str(e) for e in validation_exceptions],
             )
             write_validation_errors_for_run_task.run()
             raise SeqrValidationError(
