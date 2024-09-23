@@ -1,3 +1,4 @@
+import json
 import shutil
 from unittest.mock import Mock, patch
 
@@ -14,6 +15,9 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks.validate_callset import (
     ValidateCallsetTask,
+)
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
+    WriteValidationErrorsForRunTask,
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
@@ -63,4 +67,26 @@ class ValidateCallsetTest(MockedDatarootTestCase):
         )
         worker.add(validate_callset_task)
         worker.run()
-        self.assertTrue(False)
+        self.assertFalse(validate_callset_task.complete())
+
+        write_validation_errors_task = WriteValidationErrorsForRunTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WES,
+            callset_path=MULTIPLE_VALIDATION_EXCEPTIONS_VCF,
+            skip_validation=False,
+            run_id=TEST_RUN_ID,
+        )
+        self.assertTrue(write_validation_errors_task.complete())
+        with write_validation_errors_task.output().open('r') as f:
+            self.assertDictEqual(
+                json.load(f),
+                {
+                    'error_messages': [
+                        "Alleles with invalid AlleleType are present in the callset: [('G', '<NON_REF>')]",
+                        "Variants are present multiple times in the callset: ['1-902088-G-A']",
+                        'Missing the following expected contigs:chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr2, chr20, chr21, chr22, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chrX',
+                        'Sample type validation error: dataset sample-type is specified as WES but appears to be WGS because it contains many common non-coding variants',
+                    ],
+                },
+            )
