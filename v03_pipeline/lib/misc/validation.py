@@ -28,13 +28,10 @@ def get_validation_dependencies(
     dataset_type: DatasetType,
     reference_genome: ReferenceGenome,
     callset_path: str,
-    skip_validation: bool,
     skip_check_sex_and_relatedness: bool,
     **_: Any,
 ) -> dict[str, hl.Table]:
     deps = {}
-    if skip_validation or not dataset_type.can_run_validation:
-        return {}
     deps['coding_and_noncoding_variants_ht'] = hl.read_table(
         cached_reference_dataset_query_path(
             reference_genome,
@@ -158,16 +155,11 @@ def validate_imported_field_types(
 
 def validate_imputed_sex_ploidy(
     mt: hl.MatrixTable,
-    dataset_type: DatasetType,
-    skip_check_sex_and_relatedness: bool,
-    sex_check_ht: hl.Table | None = None,  # nb: sex_check_ht will be undefined if
+    # NB: sex_check_ht will be undefined if sex checking is disabled for the run
+    sex_check_ht: hl.Table | None = None,
     **_: Any,
 ) -> None:
-    if not (
-        Env.CHECK_SEX_AND_RELATEDNESS
-        and dataset_type.check_sex_and_relatedness
-        and not skip_check_sex_and_relatedness
-    ):
+    if not sex_check_ht:
         return
     mt = mt.select_cols(
         discrepant=(
