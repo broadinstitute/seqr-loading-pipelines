@@ -49,6 +49,8 @@ if [ -f $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS ]; then
 fi
 
 mkdir -p $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+rm -rf $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/*;
+
 for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
         echo "Downloading and extracting" $vep_reference_data_file;
