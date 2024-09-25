@@ -3,7 +3,7 @@ from v03_pipeline.lib.tasks.delete_family_tables import DeleteFamilyTablesTask
 from v03_pipeline.lib.tasks.delete_project_family_tables import (
     DeleteProjectFamilyTablesTask,
 )
-from v03_pipeline.lib.tasks.delete_project_table import DeleteProjectTableTask
+from v03_pipeline.lib.tasks.delete_project_tables import DeleteProjectTablesTask
 from v03_pipeline.lib.tasks.migrate_all_lookup_tables import MigrateAllLookupTablesTask
 from v03_pipeline.lib.tasks.migrate_all_variant_annotations_tables import (
     MigrateAllVariantAnnotationsTablesTask,
@@ -21,8 +21,8 @@ from v03_pipeline.lib.tasks.update_lookup_table_with_deleted_project import (
     UpdateLookupTableWithDeletedProjectTask,
 )
 from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
-from v03_pipeline.lib.tasks.update_project_table_with_deleted_families import (
-    UpdateProjectTableWithDeletedFamiliesTask,
+from v03_pipeline.lib.tasks.update_project_tables_with_deleted_families import (
+    UpdateProjectTablesWithDeletedFamiliesTask,
 )
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_deleted_families import (
     UpdateVariantAnnotationsTableWithDeletedFamiliesTask,
@@ -42,11 +42,11 @@ __all__ = [
     'DeleteFamilyTableTask',
     'DeleteFamilyTablesTask',
     'DeleteProjectFamilyTablesTask',
-    'DeleteProjectTableTask',
+    'DeleteProjectTablesTask',
     'MigrateAllLookupTablesTask',
     'MigrateAllVariantAnnotationsTablesTask',
     'UpdateProjectTableTask',
-    'UpdateProjectTableWithDeletedFamiliesTask',
+    'UpdateProjectTablesWithDeletedFamiliesTask',
     'UpdateLookupTableTask',
     'UpdateLookupTableWithDeletedProjectTask',
     'UpdateLookupTableWithDeletedFamiliesTask',
