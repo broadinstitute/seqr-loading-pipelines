@@ -11,7 +11,7 @@ def get_valid_project_tables(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     project_guid: str,
-) -> set[tuple[hl.HailTable, SampleType]]:
+) -> set[tuple[hl.Table, SampleType]]:
     project_tables = set()
     for sample_type in SampleType:
         project_ht_path = project_table_path(
