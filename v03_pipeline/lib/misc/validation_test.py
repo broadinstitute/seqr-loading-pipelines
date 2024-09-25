@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -80,7 +81,9 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-    def test_validate_imputed_sex_ploidy(self) -> None:
+    @patch('v03_pipeline.lib.misc.validation.Env')
+    def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
+        mock_env.CHECK_SEX_AND_RELATEDNESS = True
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
         mt = hl.MatrixTable.from_parts(
             rows={
