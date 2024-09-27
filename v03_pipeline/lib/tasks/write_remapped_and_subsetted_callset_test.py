@@ -21,6 +21,8 @@ TEST_RELATEDNESS_CHECK_1 = (
     'v03_pipeline/var/test/relatedness_check/test_relatedness_check_1.ht'
 )
 
+TEST_RUN_ID = 'manual__2024-04-03'
+
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
@@ -79,6 +81,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guid='R0113_test_project',
@@ -121,6 +124,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guid='R0114_project4',

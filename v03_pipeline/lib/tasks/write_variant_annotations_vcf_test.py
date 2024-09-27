@@ -49,13 +49,13 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
+                run_id='run_id1',
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                run_id='run_id1',
             )
         )
         worker.add(update_variant_annotations_task)
@@ -64,6 +64,7 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
         write_variant_annotations_vcf_task = WriteVariantAnnotationsVCF(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
+            run_id='run_id1',
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF,
         )
