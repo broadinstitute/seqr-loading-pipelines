@@ -49,13 +49,15 @@ if [ -f $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS ]; then
 fi
 
 mkdir -p $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+rm -rf $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/*;
+
 for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
         echo "Downloading and extracting" $vep_reference_data_file;
         gsutil cat $vep_reference_data_file | tar -xzf - -C $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
     else 
         echo "Downloading" $vep_reference_data_file;
-        gsutil cp $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cp $vep_reference_data_file $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
     fi
 done;
 wait

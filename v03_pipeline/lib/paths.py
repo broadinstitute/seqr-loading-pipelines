@@ -32,7 +32,7 @@ def _v03_reference_data_prefix(
     reference_genome: ReferenceGenome,
 ) -> str:
     root = (
-        Env.PRIVATE_REFERENCE_DATASETS_DIR_DIR
+        Env.PRIVATE_REFERENCE_DATASETS_DIR
         if access_control == AccessControl.PRIVATE
         else Env.REFERENCE_DATASETS_DIR
     )

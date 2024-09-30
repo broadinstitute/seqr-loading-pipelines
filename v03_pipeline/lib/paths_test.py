@@ -48,7 +48,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'franklin',
             ),
-            '/seqr/hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
             mock_env.HAIL_SEARCH_DATA_DIR = 'gs://seqr-datasets/'
@@ -90,7 +90,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/seqr/hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -119,7 +119,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            '/seqr/hail-search-data/v3.1/GRCh37/SV/lookup.ht',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh37/SV/lookup.ht',
         )
 
     def test_sex_check_table_path(self) -> None:
@@ -159,7 +159,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -168,7 +168,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            '/seqr/hail-search-data/v3.1/GRCh38/GCNV/annotations.ht',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
@@ -218,7 +218,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
+            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )
 
     def test_project_remap_path(self) -> None:
