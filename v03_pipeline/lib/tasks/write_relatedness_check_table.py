@@ -3,7 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery, Env
+from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
 )
@@ -27,21 +27,14 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
             ),
         )
 
-    def requires(self) -> luigi.Task:
-        requirements = [
+    def requires(self):
+        return [
             self.clone(ValidateCallsetTask),
+            self.clone(
+                UpdatedCachedReferenceDatasetQuery,
+                crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
+            ),
         ]
-        if Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
-            requirements = [
-                *requirements,
-                (
-                    self.clone(
-                        UpdatedCachedReferenceDatasetQuery,
-                        crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
-                    )
-                ),
-            ]
-        return requirements
 
     def create_table(self) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
