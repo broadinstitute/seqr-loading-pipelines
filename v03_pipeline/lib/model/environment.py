@@ -11,7 +11,9 @@ GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
     'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
 )
 HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
-HAIL_SEARCH_DATA_DIR = os.environ.get('HAIL_SEARCH_DATA_DIR', '/seqr/seqr-hail-search-data')
+HAIL_SEARCH_DATA_DIR = os.environ.get(
+    'HAIL_SEARCH_DATA_DIR', '/seqr/seqr-hail-search-data'
+)
 LOADING_DATASETS_DIR = os.environ.get('LOADING_DATASETS_DIR', '/seqr/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS_DIR = os.environ.get(
     'PRIVATE_REFERENCE_DATASETS_DIR',
