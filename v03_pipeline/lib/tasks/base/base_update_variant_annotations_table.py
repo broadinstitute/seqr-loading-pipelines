@@ -11,9 +11,11 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks import UpdateCachedReferenceDatasetQueries
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
+    UpdateCachedReferenceDatasetQueries,
+)
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
