@@ -88,6 +88,9 @@ TEST_RUN_ID = 'manual__2024-04-03'
 @patch(
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
+@patch(
+    'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
+)
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
@@ -154,9 +157,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_missing_pedigree(
         self,
         mock_update_vat_with_rdc_task,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -180,9 +185,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_missing_interval_reference(
         self,
         mock_update_vat_with_rdc_task,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
         shutil.rmtree(
             valid_reference_dataset_collection_path(
@@ -233,10 +240,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_updated_cached_reference_dataset_query,
         mock_env: Mock,
         mock_register_alleles: Mock,
+        mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -679,9 +688,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_update_vat_with_rdc_task: Mock,
         mock_register_alleles: Mock,
+        mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh37,
@@ -845,12 +856,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_rdc_env: Mock,
         mock_update_vat_with_rdc_task: Mock,
         mock_register_alleles: Mock,
+        mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -913,9 +926,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         self,
         mock_update_vat_with_rdc_task: Mock,
         mock_register_alleles: Mock,
+        mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
@@ -1198,9 +1213,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     def test_sv_update_vat(
         self,
         mock_load_gencode: Mock,
+        mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_load_gencode.return_value = GENE_ID_MAPPING
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -1778,9 +1795,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
 
     def test_gcnv_update_vat(
         self,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(

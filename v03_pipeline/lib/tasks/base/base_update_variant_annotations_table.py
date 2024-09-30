@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
+from v03_pipeline.lib.tasks import UpdateCachedReferenceDatasetQueries
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
@@ -32,19 +33,24 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        return [
-            (
-                UpdatedReferenceDatasetCollectionTask(
-                    self.reference_genome,
-                    self.dataset_type,
-                    rdc,
-                )
+        requirements = [
+            UpdateCachedReferenceDatasetQueries(
+                reference_genome=self.reference_genome,
+                dataset_type=self.dataset_type,
+            ),
+        ]
+        requirements.extend(
+            UpdatedReferenceDatasetCollectionTask(
+                self.reference_genome,
+                self.dataset_type,
+                rdc,
             )
             for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,
                 self.dataset_type,
             )
-        ]
+        )
+        return requirements
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
