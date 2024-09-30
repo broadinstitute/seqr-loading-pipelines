@@ -67,6 +67,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
 
     def create_table(self) -> hl.MatrixTable:
         try:
+            # NB: throws SeqrValidationError
             mt = import_callset(
                 self.callset_path,
                 self.reference_genome,
@@ -92,6 +93,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 self.dataset_type,
                 self.skip_check_sex_and_relatedness,
             )
+            # NB: throws SeqrValidationError
             mt = select_relevant_fields(
                 mt,
                 self.dataset_type,
@@ -99,12 +101,14 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
             # This validation isn't override-able by the skip option.
             # If a field is the wrong type, the pipeline will likely hard-fail downstream.
+            # NB: throws SeqrValidationError
             validate_imported_field_types(
                 mt,
                 self.dataset_type,
                 additional_row_fields,
             )
             if self.dataset_type.has_multi_allelic_variants:
+                # NB: throws SeqrValidationError
                 mt = split_multi_hts(mt, self.skip_validation)
             # Special handling of variant-level filter annotation for VETs filters.
             # The annotations are present on the sample-level FT field but are
