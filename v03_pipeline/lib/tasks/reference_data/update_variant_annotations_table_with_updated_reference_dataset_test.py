@@ -650,6 +650,9 @@ MOCK_CONFIG_MITO = {
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )
 @mock.patch(
+    'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
+)
+@mock.patch(
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
 )
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
@@ -719,9 +722,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
         mock_initialize_table,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -927,9 +932,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def test_update_vat_with_updated_rdc_mito_38(
         self,
         mock_initialize_table,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -1075,9 +1082,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
         mock_initialize_table,
+        mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
             [
                 hl.Struct(

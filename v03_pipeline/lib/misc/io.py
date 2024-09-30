@@ -80,6 +80,7 @@ def compute_hail_n_partitions(file_size_b: int) -> int:
 )
 def split_multi_hts(
     mt: hl.MatrixTable,
+    skip_validation: bool,
     max_samples_split_multi_shuffle=MAX_SAMPLES_SPLIT_MULTI_SHUFFLE,
 ) -> hl.MatrixTable:
     bi = mt.filter_rows(hl.len(mt.alleles) == BIALLELIC)
@@ -94,7 +95,11 @@ def split_multi_hts(
         permit_shuffle=mt.count()[1] < max_samples_split_multi_shuffle,
     )
     mt = split.union_rows(bi)
-    return mt.distinct_by_row()
+    # If we've disabled validation (which is expected to throw an exception
+    # for duplicate variants, we would like to distinc )
+    if skip_validation:
+        return mt.distinct_by_row()
+    return mt
 
 
 def import_gcnv_bed_file(callset_path: str) -> hl.MatrixTable:

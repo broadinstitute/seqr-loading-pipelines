@@ -53,8 +53,16 @@ class BaseVariantAnnotationsTableTest(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
     )
-    def test_should_create_initialized_table(self, mock_update_rdc_task) -> None:
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
+    )
+    def test_should_create_initialized_table(
+        self,
+        mock_update_crdqs_task,
+        mock_update_rdc_task,
+    ) -> None:
         mock_update_rdc_task.return_value = MockCompleteTask()
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         vat_task = BaseUpdateVariantAnnotationsTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,

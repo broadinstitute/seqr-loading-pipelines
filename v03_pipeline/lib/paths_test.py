@@ -24,6 +24,7 @@ from v03_pipeline.lib.paths import (
     sex_check_table_path,
     valid_filters_path,
     valid_reference_dataset_collection_path,
+    validation_errors_for_run_path,
     variant_annotations_table_path,
 )
 
@@ -139,6 +140,16 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
             ),
             '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/relatedness_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
+        )
+
+    def test_validation_errors_for_run_path(self) -> None:
+        self.assertEqual(
+            validation_errors_for_run_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                'manual__2023-06-26T18:30:09.349671+00:00',
+            ),
+            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:
