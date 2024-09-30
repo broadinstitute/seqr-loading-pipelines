@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
+    SeqrValidationError,
     get_validation_dependencies,
     validate_allele_type,
     validate_expected_contig_frequency,
@@ -23,6 +24,9 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
+    WriteValidationErrorsForRunTask,
+)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -88,35 +92,38 @@ class ValidateCallsetTask(BaseUpdateTask):
                     mt.locus.contig,
                 ),
             )
-
-        if not self.skip_validation and self.dataset_type.can_run_validation:
-            validation_dependencies = get_validation_dependencies(
-                **self.param_kwargs,
+        validation_exceptions = []
+        if self.skip_validation or not self.dataset_type.can_run_validation:
+            return mt.select_globals(
+                callset_path=self.callset_path,
+                validated_sample_type=self.sample_type.value,
             )
-            validate_allele_type(
-                mt,
-                **self.param_kwargs,
-                **validation_dependencies,
+        validation_dependencies = get_validation_dependencies(
+            **self.param_kwargs,
+        )
+        for validation_f in [
+            validate_allele_type,
+            validate_imputed_sex_ploidy,
+            validate_no_duplicate_variants,
+            validate_expected_contig_frequency,
+            validate_sample_type,
+        ]:
+            try:
+                validation_f(
+                    mt,
+                    **self.param_kwargs,
+                    **validation_dependencies,
+                )
+            except SeqrValidationError as e:  # noqa: PERF203
+                validation_exceptions.append(e)
+        if validation_exceptions:
+            write_validation_errors_for_run_task = self.clone(
+                WriteValidationErrorsForRunTask,
+                error_messages=[str(e) for e in validation_exceptions],
             )
-            validate_no_duplicate_variants(
-                mt,
-                **self.param_kwargs,
-                **validation_dependencies,
-            )
-            validate_expected_contig_frequency(
-                mt,
-                **self.param_kwargs,
-                **validation_dependencies,
-            )
-            validate_sample_type(
-                mt,
-                **self.param_kwargs,
-                **validation_dependencies,
-            )
-            validate_imputed_sex_ploidy(
-                mt,
-                **self.param_kwargs,
-                **validation_dependencies,
+            write_validation_errors_for_run_task.run()
+            raise SeqrValidationError(
+                write_validation_errors_for_run_task.to_single_error_message(),
             )
         return mt.select_globals(
             callset_path=self.callset_path,

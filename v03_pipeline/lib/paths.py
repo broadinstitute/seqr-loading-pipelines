@@ -109,6 +109,21 @@ def imported_callset_path(
     )
 
 
+def validation_errors_for_run_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'validation_errors.json',
+    )
+
+
 def metadata_for_run_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

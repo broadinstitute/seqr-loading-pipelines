@@ -89,7 +89,7 @@ class VetsTest(unittest.TestCase):
             cols={'s': ['sample_1']},
             entries={'HL': [[0.0], [0.0], [0.0], [0.0], [0.0], [0.0]]},
         ).key_rows_by('locus', 'alleles')
-        dragen_mt = split_multi_hts(dragen_mt)
+        dragen_mt = split_multi_hts(dragen_mt, False)
         dragen_mt = annotate_vets(dragen_mt)
         self.assertListEqual(
             dragen_mt.filters.collect(),

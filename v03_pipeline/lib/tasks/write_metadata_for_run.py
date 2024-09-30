@@ -27,9 +27,6 @@ class WriteMetadataForRunTask(luigi.Task):
             ),
         )
 
-    def complete(self) -> bool:
-        return GCSorLocalTarget(self.output().path).exists()
-
     def requires(self) -> list[luigi.Task]:
         return [
             self.clone(
