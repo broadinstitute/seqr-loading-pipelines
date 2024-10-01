@@ -28,7 +28,7 @@ VEP_REFERENCE_DATASETS_DIR = os.environ.get(
     'VEP_REFERENCE_DATASETS_DIR',
     '/seqr/vep-reference-data',
 )
-HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get('HAIL_BACKEND_SERVICE_HOSTNAME')
+HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get('HAIL_BACKEND_SERVICE_HOSTNAME', 'hail-search')
 HAIL_BACKEND_SERVICE_PORT = int(os.environ.get('HAIL_BACKEND_SERVICE_PORT', '6000'))
 
 # Allele registry secrets :/

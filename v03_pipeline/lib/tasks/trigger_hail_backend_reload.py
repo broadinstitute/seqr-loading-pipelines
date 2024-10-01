@@ -22,7 +22,7 @@ class TriggerHailBackendReload(luigi.Task):
         return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
 
     def run(self):
-        url = f'{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
+        url = f'http://{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
         res = requests.post(url, headers={'From': 'pipeline-runner'}, timeout=300)
         res.raise_for_status()
         self.done = True
