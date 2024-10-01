@@ -10,7 +10,7 @@ def run():
     web.run_app(
         app,
         host='0.0.0.0',  # noqa: S104
-        port=5000,
+        port=6000,
         access_log=logger,
     )
 
