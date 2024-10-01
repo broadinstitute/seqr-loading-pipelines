@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.io import remap_pedigree_hash
+from v03_pipeline.lib.misc.io import checkpoint, remap_pedigree_hash
 from v03_pipeline.lib.misc.lookup import (
     compute_callset_lookup_ht,
     join_lookup_hts,
@@ -24,39 +24,33 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    run_id = luigi.Parameter()
 
     def complete(self) -> bool:
-        return (
-            not self.force
-            and super().complete()
-            and hl.eval(
-                hl.bind(
-                    lambda updates: hl.all(
-                        [
-                            updates.contains(
-                                hl.Struct(
-                                    callset=self.callset_path,
-                                    project_guid=project_guid,
-                                    remap_pedigree_hash=remap_pedigree_hash(
-                                        self.project_remap_paths[i],
-                                        self.project_pedigree_paths[i],
-                                    ),
+        return super().complete() and hl.eval(
+            hl.bind(
+                lambda updates: hl.all(
+                    [
+                        updates.contains(
+                            hl.Struct(
+                                callset=self.callset_path,
+                                project_guid=project_guid,
+                                remap_pedigree_hash=remap_pedigree_hash(
+                                    self.project_remap_paths[i],
+                                    self.project_pedigree_paths[i],
                                 ),
-                            )
-                            for i, project_guid in enumerate(self.project_guids)
-                        ],
-                    ),
-                    hl.read_table(self.output().path).updates,
+                            ),
+                        )
+                        for i, project_guid in enumerate(self.project_guids)
+                    ],
                 ),
-            )
+                hl.read_table(self.output().path).updates,
+            ),
         )
 
     def requires(self) -> list[luigi.Task]:
         return [
             self.clone(
                 WriteMetadataForRunTask,
-                force=False,
             ),
         ]
 
@@ -115,5 +109,7 @@ class UpdateLookupTableTask(BaseUpdateLookupTableTask):
                         ),
                     ),
                 ),
+                migrations=ht.migrations,
             )
+            ht, _ = checkpoint(ht)
         return ht

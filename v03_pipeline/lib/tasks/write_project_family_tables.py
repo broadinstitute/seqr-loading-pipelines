@@ -21,13 +21,9 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         self.dynamic_write_family_table_tasks = set()
 
     def complete(self) -> bool:
-        return (
-            not self.force
-            and len(self.dynamic_write_family_table_tasks) >= 1
-            and all(
-                write_family_table_task.complete()
-                for write_family_table_task in self.dynamic_write_family_table_tasks
-            )
+        return len(self.dynamic_write_family_table_tasks) >= 1 and all(
+            write_family_table_task.complete()
+            for write_family_table_task in self.dynamic_write_family_table_tasks
         )
 
     def run(self):
@@ -35,7 +31,6 @@ class WriteProjectFamilyTablesTask(luigi.Task):
         # Fetch family guids from project table
         update_project_table_task: luigi.Target = yield self.clone(
             UpdateProjectTableTask,
-            force=False,
         )
         project_ht = hl.read_table(update_project_table_task.path)
         family_guids_in_project_table = set(hl.eval(project_ht.globals.family_guids))

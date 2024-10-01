@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=$1
-VEP_DATA=/vep_data
+VEP_REFERENCE_DATASETS_DIR=${VEP_REFERENCE_DATASETS_DIR:-/seqr/vep-reference-data}
 
 case $REFERENCE_GENOME in
   GRCh38)
@@ -43,20 +43,22 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-if [ -f $VEP_DATA/$REFERENCE_GENOME/_SUCCESS ]; then
+if [ -f $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS ]; then
    echo "Skipping download because already successful"
    exit 0;
 fi
 
-mkdir -p $VEP_DATA/$REFERENCE_GENOME;
+mkdir -p $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+rm -rf $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/*;
+
 for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
         echo "Downloading and extracting" $vep_reference_data_file;
-        gcloud storage cat $vep_reference_data_file | tar -xzf - -C $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cat $vep_reference_data_file | tar -xzf - -C $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
     else 
         echo "Downloading" $vep_reference_data_file;
-        gcloud storage cp $vep_reference_data_file $VEP_DATA/$REFERENCE_GENOME/ &
+        gsutil cp $vep_reference_data_file $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
     fi
 done;
 wait
-touch $VEP_DATA/$REFERENCE_GENOME/_SUCCESS
+touch $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS

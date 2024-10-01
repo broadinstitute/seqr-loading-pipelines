@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -80,7 +81,9 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-    def test_validate_imputed_sex_ploidy(self) -> None:
+    @patch('v03_pipeline.lib.misc.validation.Env')
+    def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
+        mock_env.CHECK_SEX_AND_RELATEDNESS = True
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
         mt = hl.MatrixTable.from_parts(
             rows={
@@ -168,15 +171,22 @@ class ValidationTest(unittest.TestCase):
                         reference_genome='GRCh38',
                     ),
                 ],
+                'alleles': [
+                    ['A', 'C'],
+                    ['A', 'C'],
+                    ['A', 'C'],
+                ],
             },
             cols={'s': ['sample_1']},
             entries={'HL': [[0.0], [0.0], [0.0]]},
-        ).key_rows_by('locus')
+        ).key_rows_by('locus', 'alleles')
         self.assertRaisesRegex(
             SeqrValidationError,
-            'Variants are present multiple times in the callset',
+            "Variants are present multiple times in the callset: \\['1-2-A-C'\\]",
             validate_no_duplicate_variants,
             mt,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
         )
 
     def test_validate_expected_contig_frequency(self) -> None:

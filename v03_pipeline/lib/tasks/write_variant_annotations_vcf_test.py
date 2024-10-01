@@ -10,6 +10,7 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 from v03_pipeline.lib.tasks.write_variant_annotations_vcf import (
     WriteVariantAnnotationsVCF,
 )
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -39,23 +40,28 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
+    )
     def test_sv_export_vcf(
         self,
+        mock_update_crdqs_task: Mock,
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
+        mock_update_crdqs_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
+                run_id='run_id1',
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                run_id='run_id1',
             )
         )
         worker.add(update_variant_annotations_task)
@@ -64,6 +70,7 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
         write_variant_annotations_vcf_task = WriteVariantAnnotationsVCF(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SV,
+            run_id='run_id1',
             sample_type=SampleType.WGS,
             callset_path=TEST_SV_VCF,
         )

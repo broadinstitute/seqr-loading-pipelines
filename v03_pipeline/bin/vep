@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=$1
-VEP_DATA=/vep_data
+VEP_REFERENCE_DATASETS_DIR=${VEP_REFERENCE_DATASETS_DIR:-/seqr/vep-reference-data}
 VEP_DOCKER_IMAGE="gcr.io/seqr-project/vep-docker-image"
 
 case $REFERENCE_GENOME in
@@ -17,5 +17,5 @@ case $REFERENCE_GENOME in
 esac
 
 shift # Remove the REFERENCE_GENOME arg.
-docker run --platform linux/amd64 -i -v $VEP_DATA/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
+docker run --platform linux/amd64 -i -v $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
   /opt/vep/src/ensembl-vep/vep $@

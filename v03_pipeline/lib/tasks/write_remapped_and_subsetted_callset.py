@@ -37,16 +37,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     project_pedigree_path = luigi.Parameter()
 
     def complete(self) -> luigi.Target:
-        return (
-            not self.force
-            and super().complete()
-            and hl.eval(
-                hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
-                == remap_pedigree_hash(
-                    self.project_remap_path,
-                    self.project_pedigree_path,
-                ),
-            )
+        return super().complete() and hl.eval(
+            hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
+            == remap_pedigree_hash(
+                self.project_remap_path,
+                self.project_pedigree_path,
+            ),
         )
 
     def output(self) -> luigi.Target:
@@ -61,13 +57,13 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            self.clone(ValidateCallsetTask, force=False),
+            self.clone(ValidateCallsetTask),
             RawFileTask(self.project_pedigree_path),
         ]
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
-            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
+            and not self.skip_check_sex_and_relatedness
         ):
             requirements = [
                 *requirements,
@@ -102,8 +98,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_sex_check = {}
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
-            and not self.skip_check_sex_and_relatedness
             and self.dataset_type.check_sex_and_relatedness
+            and not self.skip_check_sex_and_relatedness
         ):
             relatedness_check_ht = hl.read_table(self.input()[2].path)
             sex_check_ht = hl.read_table(self.input()[3].path)

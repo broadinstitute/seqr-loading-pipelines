@@ -48,7 +48,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     project_guids = luigi.ListParameter()
     project_remap_paths = luigi.ListParameter()
     project_pedigree_paths = luigi.ListParameter()
-    run_id = luigi.Parameter()
 
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
@@ -89,7 +88,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
-            # Also note that force is passed here,
             requirements = [
                 *requirements,
                 self.clone(UpdateLookupTableTask),
@@ -97,7 +95,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         else:
             requirements = [
                 *requirements,
-                self.clone(WriteMetadataForRunTask, force=False),
+                self.clone(WriteMetadataForRunTask),
             ]
         return requirements
 

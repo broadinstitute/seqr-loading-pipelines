@@ -16,13 +16,10 @@ class BaseLoadingRunParams(luigi.Task):
     # - The "Loading Pipeline" params are shared with
     # tasks that may remove data from or change the
     # structure of the persisted Hail Tables.
+    run_id = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
-    force = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )

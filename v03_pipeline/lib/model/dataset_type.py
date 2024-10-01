@@ -29,6 +29,16 @@ class DatasetType(str, Enum):
             DatasetType.SV: hl.tstruct(variant_id=hl.tstr),
         }.get(self, default_key)
 
+    def table_key_format_fn(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> Callable[[hl.StructExpression], str]:
+        if self in {DatasetType.GCNV, DatasetType.SV}:
+            return lambda s: s.variant_id
+        return (
+            lambda s: f'{s.locus.contig if reference_genome == ReferenceGenome.GRCh37 else s.locus.contig.replace("chr", "")}-{s.locus.position}-{s.alleles[0]}-{s.alleles[1]}'
+        )
+
     @property
     def col_fields(
         self,

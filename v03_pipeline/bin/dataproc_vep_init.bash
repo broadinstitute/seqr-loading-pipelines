@@ -52,9 +52,9 @@ EOF
 gcc -Wall -Werror -O2 /vep.c -o /vep
 chmod u+s /vep
 
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_data.bash /download_vep_data.bash
-chmod +x /download_vep_data.bash
-./download_vep_data.bash $REFERENCE_GENOME
+gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_reference_data.bash /download_vep_reference_data.bash
+chmod +x /download_vep_reference_data.bash
+./download_vep_reference_data.bash $REFERENCE_GENOME
 
 gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.bash
 chmod +x /vep.bash
