@@ -9,21 +9,19 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_project_info_params import (
+    BaseLoadingRunWithProjectInfoParams,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
     BaseUpdateVariantAnnotationsTableTask,
 ):
-    project_guids = luigi.ListParameter()
-    project_remap_paths = luigi.ListParameter()
-    project_pedigree_paths = luigi.ListParameter()
-
     def requires(self) -> list[luigi.Task]:
         return [
             *super().requires(),
