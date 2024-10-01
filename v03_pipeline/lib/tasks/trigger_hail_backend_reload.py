@@ -23,7 +23,7 @@ class TriggerHailBackendReload(luigi.Task):
 
     def run(self):
         url = f'{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
-        res = requests.post(url, headers={'From': 'loading-pipelines'}, timeout=300)
+        res = requests.post(url, headers={'From': 'pipeline-runner'}, timeout=300)
         res.raise_for_status()
         self.done = True
 
