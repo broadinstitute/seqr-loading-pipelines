@@ -26,5 +26,5 @@ COPY v03_pipeline/bin/vep /vep
 
 
 WORKDIR /
-EXPOSE 6000
+EXPOSE 6000 8082
 CMD ["python3", "-m", "v03_pipeline.api"]

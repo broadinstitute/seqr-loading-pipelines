@@ -1,2 +1,2 @@
 -c requirements.txt
-sqlalchemy
+sqlalchemy<2.0.0
