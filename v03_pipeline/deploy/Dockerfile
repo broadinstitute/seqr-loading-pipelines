@@ -10,7 +10,8 @@ WORKDIR /v03_pipeline
 
 ## Copy & Install Application Deps 
 COPY requirements.txt .
-RUN python3 -m pip install --no-cache-dir -r ./requirements.txt
+COPY requirements-prod.txt .
+RUN python3 -m pip install --no-cache-dir -r ./requirements.txt -r requirements-prod.txt
 
 # Application Code
 COPY v03_pipeline/api api
