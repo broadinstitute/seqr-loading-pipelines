@@ -36,6 +36,7 @@ def _pipeline_prefix(
 def _v03_reference_data_prefix(
     access_control: AccessControl,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ) -> str:
     root = (
         Env.PRIVATE_REFERENCE_DATASETS_DIR
