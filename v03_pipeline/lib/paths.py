@@ -19,9 +19,15 @@ def _pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
+    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:   
+        return os.path.join(
+            root,
+            PipelineVersion.V3_1.value,
+            reference_genome.value,
+            dataset_type.value,
+        )
     return os.path.join(
         root,
-        PipelineVersion.V3_1.value,
         reference_genome.value,
         dataset_type.value,
     )
@@ -36,9 +42,14 @@ def _v03_reference_data_prefix(
         if access_control == AccessControl.PRIVATE
         else Env.REFERENCE_DATASETS_DIR
     )
+    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+        return os.path.join(
+            root,
+            PipelineVersion.V03.value,
+            reference_genome.value,
+        ) 
     return os.path.join(
         root,
-        PipelineVersion.V03.value,
         reference_genome.value,
     )
 
@@ -52,8 +63,8 @@ def cached_reference_dataset_query_path(
         _v03_reference_data_prefix(
             AccessControl.PUBLIC,
             reference_genome,
+            dataset_type.value,
         ),
-        dataset_type.value,
         'cached_reference_dataset_queries',
         f'{cached_reference_dataset_query.value}.ht',
     )
@@ -267,8 +278,8 @@ def valid_reference_dataset_collection_path(
         _v03_reference_data_prefix(
             reference_dataset_collection.access_control,
             reference_genome,
+            dataset_type.value,
         ),
-        dataset_type.value,
         'reference_datasets',
         f'{reference_dataset_collection.value}.ht',
     )
