@@ -19,7 +19,7 @@ def _pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:   
+    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
             root,
             PipelineVersion.V3_1.value,
@@ -47,7 +47,7 @@ def _v03_reference_data_prefix(
             root,
             PipelineVersion.V03.value,
             reference_genome.value,
-        ) 
+        )
     return os.path.join(
         root,
         reference_genome.value,
