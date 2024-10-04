@@ -66,7 +66,7 @@ def cached_reference_dataset_query_path(
         _v03_reference_data_prefix(
             AccessControl.PUBLIC,
             reference_genome,
-            dataset_type.value,
+            dataset_type,
         ),
         'cached_reference_dataset_queries',
         f'{cached_reference_dataset_query.value}.ht',
@@ -281,7 +281,7 @@ def valid_reference_dataset_collection_path(
         _v03_reference_data_prefix(
             reference_dataset_collection.access_control,
             reference_genome,
-            dataset_type.value,
+            dataset_type,
         ),
         'reference_datasets',
         f'{reference_dataset_collection.value}.ht',
