@@ -1,21 +1,18 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-added-large-files
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.6.9
-  hooks:
-    # Run the linter.
-    - id: ruff
-      args: [ --fix ]
-    # Run the formatter.
-    - id: ruff-format
--   repo: https://github.com/koalaman/shellcheck-precommit
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.10
+    hooks:
+      - id: ruff
+        args: [ --fix, --config=pyproject.toml ]
+      - id: ruff-format
+  - repo: https://github.com/koalaman/shellcheck-precommit
     rev: v0.10.0
     hooks:
-    -   id: shellcheck
+      - id: shellcheck
+        args: ["--severity=error"]

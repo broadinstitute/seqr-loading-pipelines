@@ -34,6 +34,10 @@ jobs:
         run: ruff format --check v03_pipeline --diff
       - name: Check Ruff
         run: ruff . --output-format github
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: error
       - name: Unit Tests
         run: |
           export GRCH37_TO_GRCH38_LIFTOVER_REF_PATH=v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz
