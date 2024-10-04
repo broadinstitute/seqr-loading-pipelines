@@ -48,10 +48,12 @@ def _v03_reference_data_prefix(
             root,
             PipelineVersion.V03.value,
             reference_genome.value,
+            dataset_type.value,
         )
     return os.path.join(
         root,
         reference_genome.value,
+        dataset_type.value,
     )
 
 
