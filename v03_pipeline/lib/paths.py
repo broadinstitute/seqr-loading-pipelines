@@ -366,3 +366,18 @@ def loading_pipeline_queue_path() -> str:
         'loading_pipeline_queue',
         'request.json',
     )
+
+
+def pipeline_run_success_file_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        '_SUCCESS',
+    )
