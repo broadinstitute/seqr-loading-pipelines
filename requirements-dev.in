@@ -6,4 +6,3 @@ pip-tools>=6.12.3
 responses>=0.23.1
 ruff>=0.1.8
 shellcheck-py>=0.10.0
-pre-commit>=3.8.0
