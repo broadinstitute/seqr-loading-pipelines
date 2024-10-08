@@ -1,4 +1,3 @@
-import hailtop.fs as hfs
 import luigi
 import luigi.util
 
@@ -33,5 +32,5 @@ class WriteSuccessFileTask(luigi.Task):
         ]
 
     def run(self):
-        with hfs.open(self.output().path, mode='w') as f:
+        with self.output().open('w') as f:
             f.write('')
