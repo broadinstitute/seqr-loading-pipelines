@@ -15,7 +15,6 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
-    WriteProjectFamilyTablesTask,
 )
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
@@ -48,9 +47,6 @@ def main():
                 )
                 for project_guid in lpr.projects_to_run
             ]
-            task_kwargs = {
-                k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'
-            }
             run_id = datetime.datetime.now(datetime.timezone.utc).strftime(
                 '%Y%m%d-%H%M%S',
             )
@@ -59,21 +55,12 @@ def main():
                 'project_remap_paths': project_remap_paths,
                 'project_pedigree_paths': project_pedigree_paths,
                 'run_id': run_id,
-                **task_kwargs,
+                **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
             }
             tasks = [
                 UpdateVariantAnnotationsTableWithNewSamplesTask(
                     **loading_run_task_params,
                 ),
-                *[
-                    WriteProjectFamilyTablesTask(
-                        project_guid=lpr.projects_to_run[i],
-                        project_remap_path=project_remap_paths[i],
-                        project_pedigree_path=project_pedigree_paths[i],
-                        **task_kwargs,
-                    )
-                    for i in range(len(lpr.projects_to_run))
-                ],
                 WriteSuccessFileTask(**loading_run_task_params),
             ]
             if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
