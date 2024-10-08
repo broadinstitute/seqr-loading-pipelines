@@ -34,6 +34,7 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTas
 from v03_pipeline.lib.tasks.write_project_family_tables import (
     WriteProjectFamilyTablesTask,
 )
+from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 __all__ = [
     'DeleteFamilyTableTask',
@@ -52,4 +53,5 @@ __all__ = [
     'UpdateVariantAnnotationsTableWithDeletedFamiliesTask',
     'WriteMetadataForRunTask',
     'WriteProjectFamilyTablesTask',
+    'WriteSuccessFileTask',
 ]
