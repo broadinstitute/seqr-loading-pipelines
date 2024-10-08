@@ -484,8 +484,8 @@ class PedigreesTest(unittest.TestCase):
         )
         self.assertEqual(
             family.samples['BBL_BC1-000345_01_D1'].father,
-            'BBL_BC1-000345_02_D1'
-        ),
+            'BBL_BC1-000345_02_D1',
+        )
         self.assertEqual(
             family.samples['BBL_BC1-000345_01_D1'].mother,
             'BBL_BC1-000345_03_D1',
