@@ -3,7 +3,7 @@
 set -eux
 
 REFERENCE_GENOME=$1
-SEQR_REFERENCE_DATA=${SEQR_REFERENCE_DATA:-/seqr/seqr-reference-data}
+REFERENCE_DATASETS_DIR=${REFERENCE_DATASETS_DIR:-/var/seqr/seqr-reference-data}
 
 
 case $REFERENCE_GENOME in
@@ -16,5 +16,5 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-mkdir -p $SEQR_REFERENCE_DATA/$REFERENCE_GENOME;
-gsutil -m rsync -rd "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $SEQR_REFERENCE_DATA/$REFERENCE_GENOME
+mkdir -p $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+gsutil -m rsync -rd "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
