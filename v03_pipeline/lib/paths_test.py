@@ -37,7 +37,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
             ),
-            '/seqr/seqr-reference-data/v03/GRCh38/SNV_INDEL/cached_reference_dataset_queries/clinvar_path_variants.ht',
+            '/var/seqr/seqr-reference-data/v03/GRCh38/SNV_INDEL/cached_reference_dataset_queries/clinvar_path_variants.ht',
         )
 
     def test_family_table_path(self) -> None:
@@ -48,7 +48,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'franklin',
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
         with patch('v03_pipeline.lib.paths.Env') as mock_env:
             mock_env.HAIL_SEARCH_DATA_DIR = 'gs://seqr-datasets/'
@@ -90,7 +90,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
         )
 
     def test_valid_reference_dataset_collection_path(self) -> None:
@@ -110,7 +110,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 ReferenceDatasetCollection.HGMD,
             ),
-            '/seqr/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
+            '/var/seqr/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
         )
 
     def test_lookup_table_path(self) -> None:
@@ -119,7 +119,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh37,
                 DatasetType.SV,
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh37/SV/lookup.ht',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SV/lookup.ht',
         )
 
     def test_sex_check_table_path(self) -> None:
@@ -129,7 +129,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/sex_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/sex_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
         )
 
     def test_relatedness_check_table_path(self) -> None:
@@ -139,7 +139,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/relatedness_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/relatedness_check/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.ht',
         )
 
     def test_validation_errors_for_run_path(self) -> None:
@@ -149,7 +149,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/validation_errors.json',
         )
 
     def test_metadata_for_run_path(self) -> None:
@@ -159,7 +159,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/metadata.json',
         )
 
     def test_variant_annotations_table_path(self) -> None:
@@ -168,7 +168,7 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh38/GCNV/annotations.ht',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/GCNV/annotations.ht',
         )
 
     def test_remapped_and_subsetted_callset_path(self) -> None:
@@ -179,7 +179,7 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
         )
         self.assertEqual(
             remapped_and_subsetted_callset_path(
@@ -188,7 +188,7 @@ class TestPaths(unittest.TestCase):
                 'gs://abc.efg/callset/*.vcf.gz',
                 'R0111_tgg_bblanken_wes',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/bce53ccdb49a5ed2513044e1d0c6224e3ffcc323f770dc807d9175fd3c70a050.mt',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/remapped_and_subsetted_callsets/R0111_tgg_bblanken_wes/bce53ccdb49a5ed2513044e1d0c6224e3ffcc323f770dc807d9175fd3c70a050.mt',
         )
 
     def test_imported_callset_path(self) -> None:
@@ -198,7 +198,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
         )
 
     def test_imputed_sex_path(self) -> None:
@@ -208,7 +208,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'gs://abc.efg/callset.vcf.gz',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imputed_sex/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.tsv',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imputed_sex/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.tsv',
         )
 
     def test_new_variants_table_path(self) -> None:
@@ -218,7 +218,7 @@ class TestPaths(unittest.TestCase):
                 DatasetType.SNV_INDEL,
                 'manual__2023-06-26T18:30:09.349671+00:00',
             ),
-            '/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
+            '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )
 
     def test_project_remap_path(self) -> None:
@@ -229,7 +229,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WGS,
                 'R0652_pipeline_test',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test.ht',
         )
 
     def test_project_pedigree_path(self) -> None:
@@ -240,5 +240,5 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test.ht',
         )

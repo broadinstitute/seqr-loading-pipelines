@@ -13,20 +13,20 @@ GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
 HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA_DIR = os.environ.get(
     'HAIL_SEARCH_DATA_DIR',
-    '/seqr/seqr-hail-search-data',
+    '/var/seqr/seqr-hail-search-data',
 )
-LOADING_DATASETS_DIR = os.environ.get('LOADING_DATASETS_DIR', '/seqr/seqr-loading-temp')
+LOADING_DATASETS_DIR = os.environ.get('LOADING_DATASETS_DIR', '/var/seqr/seqr-loading-temp')
 PRIVATE_REFERENCE_DATASETS_DIR = os.environ.get(
     'PRIVATE_REFERENCE_DATASETS_DIR',
-    '/seqr/seqr-reference-data-private',
+    '/var/seqr/seqr-reference-data-private',
 )
 REFERENCE_DATASETS_DIR = os.environ.get(
     'REFERENCE_DATASETS_DIR',
-    '/seqr/seqr-reference-data',
+    '/var/seqr/seqr-reference-data',
 )
 VEP_REFERENCE_DATASETS_DIR = os.environ.get(
     'VEP_REFERENCE_DATASETS_DIR',
-    '/seqr/vep-reference-data',
+    '/var/seqr/vep-reference-data',
 )
 HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get(
     'HAIL_BACKEND_SERVICE_HOSTNAME',
