@@ -16,7 +16,8 @@ HAIL_SEARCH_DATA_DIR = os.environ.get(
     '/var/seqr/seqr-hail-search-data',
 )
 LOADING_DATASETS_DIR = os.environ.get(
-    'LOADING_DATASETS_DIR', '/var/seqr/seqr-loading-temp'
+    'LOADING_DATASETS_DIR',
+    '/var/seqr/seqr-loading-temp',
 )
 PRIVATE_REFERENCE_DATASETS_DIR = os.environ.get(
     'PRIVATE_REFERENCE_DATASETS_DIR',
