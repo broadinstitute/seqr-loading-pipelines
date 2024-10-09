@@ -13,7 +13,7 @@ case $REFERENCE_GENOME in
         # Raw data files copied from the bucket (https://console.cloud.google.com/storage/browser/dm_alphamissense;tab=objects?prefix=&forceOnObjectsSortingFiltering=false)
         # tabix -s 1 -b 2 -e 2 -f -S 1 AlphaMissense_hg38.tsv.gz
         'gs://seqr-reference-data/vep/GRCh38/AlphaMissense_hg38.tsv.*'
-        
+
         # Generated with:
         # curl -O ftp://ftp.ensembl.org/pub/release-110/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz > Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
         # gzip -d Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz
@@ -43,22 +43,22 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-if [ -f $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS ]; then
+if [ -f "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS ]; then
    echo "Skipping download because already successful"
    exit 0;
 fi
 
-mkdir -p $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
-rm -rf $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/*;
+mkdir -p "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME";
+rm -rf "${VEP_REFERENCE_DATASETS_DIR:?}"/"${REFERENCE_GENOME:?}"/*;
 
-for vep_reference_data_file in ${VEP_REFERENCE_DATA_FILES[@]}; do
+for vep_reference_data_file in "${VEP_REFERENCE_DATA_FILES[@]}"; do
     if  [[ $vep_reference_data_file == *.tar.gz ]]; then
-        echo "Downloading and extracting" $vep_reference_data_file;
-        gsutil cat $vep_reference_data_file | tar -xzf - -C $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
-    else 
-        echo "Downloading" $vep_reference_data_file;
-        gsutil cp $vep_reference_data_file $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/ &
+        echo "Downloading and extracting" "$vep_reference_data_file";
+        gsutil cat "$vep_reference_data_file" | tar -xzf - -C "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/ &
+    else
+        echo "Downloading" "$vep_reference_data_file";
+        gsutil cp "$vep_reference_data_file" "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/ &
     fi
 done;
 wait
-touch $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME/_SUCCESS
+touch "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS

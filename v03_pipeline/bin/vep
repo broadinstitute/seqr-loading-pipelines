@@ -17,5 +17,5 @@ case $REFERENCE_GENOME in
 esac
 
 shift # Remove the REFERENCE_GENOME arg.
-docker run --platform linux/amd64 -i -v $VEP_REFERENCE_DATASETS_DIR/$REFERENCE_GENOME:/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:$REFERENCE_GENOME \
-  /opt/vep/src/ensembl-vep/vep $@
+docker run --platform linux/amd64 -i -v "$VEP_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME":/opt/vep/.vep/:ro $VEP_DOCKER_IMAGE:"$REFERENCE_GENOME" \
+  /opt/vep/src/ensembl-vep/vep "$@"
