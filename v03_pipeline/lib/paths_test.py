@@ -61,6 +61,16 @@ class TestPaths(unittest.TestCase):
                 ),
                 'gs://seqr-datasets/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
             )
+            mock_env.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
+            self.assertEqual(
+                family_table_path(
+                    ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
+                    SampleType.WES,
+                    'franklin',
+                ),
+                'gs://seqr-datasets/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+            )
 
     def test_valid_filters_path(self) -> None:
         self.assertEqual(
