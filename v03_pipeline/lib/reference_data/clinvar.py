@@ -1,7 +1,6 @@
 import gzip
 import os
 import shutil
-import subprocess
 import tempfile
 import urllib
 
@@ -129,7 +128,7 @@ def download_and_import_latest_clinvar_vcf(
         )
         hfs.copy(tmp_file.name, cached_tmp_file_name)
         mt = hl.import_vcf(
-            gcs_tmp_file_name,
+            cached_tmp_file_name,
             reference_genome=reference_genome.value,
             drop_samples=True,
             skip_invalid_loci=True,
@@ -191,7 +190,7 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             os.path.basename(unzipped_tmp_file.name),
         )
         hfs.copy(unzipped_tmp_file.name, cached_tmp_file_name)
-        return import_submission_table(gcs_tmp_file_name)
+        return import_submission_table(cached_tmp_file_name)
 
 
 def import_submission_table(file_name: str) -> hl.Table:
