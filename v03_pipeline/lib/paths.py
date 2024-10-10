@@ -352,7 +352,7 @@ def project_remap_path(
         ),
         'remaps',
         sample_type.value,
-        f'{project_guid}.ht',
+        f'{project_guid}_remap.tsv',
     )
 
 
@@ -370,7 +370,7 @@ def project_pedigree_path(
         ),
         'pedigrees',
         sample_type.value,
-        f'{project_guid}.ht',
+        f'{project_guid}_pedigree.tsv',
     )
 
 

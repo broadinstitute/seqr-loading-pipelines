@@ -239,7 +239,7 @@ class TestPaths(unittest.TestCase):
                 SampleType.WGS,
                 'R0652_pipeline_test',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_remap.tsv',
         )
 
     def test_project_pedigree_path(self) -> None:
@@ -250,5 +250,5 @@ class TestPaths(unittest.TestCase):
                 SampleType.WES,
                 'R0652_pipeline_test',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_test.ht',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/GCNV/pedigrees/WES/R0652_pipeline_pedigree.tsv',
         )
