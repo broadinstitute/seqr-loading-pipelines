@@ -50,21 +50,6 @@ MIN_HT_PARTITIONS = 2000
 logger = get_logger(__name__)
 
 
-def safely_move_to_gcs(tmp_file_name, gcs_tmp_file_name):
-    try:
-        subprocess.run(
-            [  # noqa: S603, S607
-                'gsutil',
-                'cp',
-                tmp_file_name,
-                gcs_tmp_file_name,
-            ],
-            check=True,
-        )
-    except subprocess.CalledProcessError:
-        logger.exception(f'Failed to move local tmp file {tmp_file_name} to gcs')
-
-
 def parsed_clnsig(ht: hl.Table):
     return (
         hl.delimit(ht.info.CLNSIG)
@@ -138,11 +123,11 @@ def download_and_import_latest_clinvar_vcf(
 ) -> hl.Table:
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        gcs_tmp_file_name = os.path.join(
+        cached_tmp_file_name = os.path.join(
             Env.HAIL_TMP_DIR,
             os.path.basename(tmp_file.name),
         )
-        safely_move_to_gcs(tmp_file.name, gcs_tmp_file_name)
+        hfs.copy(tmp_file.name, cached_tmp_file_name)
         mt = hl.import_vcf(
             gcs_tmp_file_name,
             reference_genome=reference_genome.value,
@@ -201,12 +186,11 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             'wb',
         ) as f_out:
             shutil.copyfileobj(f_in, f_out)
-
-        gcs_tmp_file_name = os.path.join(
+        cached_tmp_file_name = os.path.join(
             Env.HAIL_TMP_DIR,
             os.path.basename(unzipped_tmp_file.name),
         )
-        safely_move_to_gcs(unzipped_tmp_file.name, gcs_tmp_file_name)
+        hfs.copy(unzipped_tmp_file.name, cached_tmp_file_name)
         return import_submission_table(gcs_tmp_file_name)
 
 
