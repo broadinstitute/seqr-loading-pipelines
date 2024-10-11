@@ -105,7 +105,7 @@ class ValidationTest(unittest.TestCase):
         ).key_rows_by('locus', 'alleles')
         self.assertRaisesRegex(
             SeqrValidationError,
-            'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants, which we cannot accept.',
+            'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.',
             validate_allele_type,
             mt,
             DatasetType.SNV_INDEL,
