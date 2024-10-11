@@ -83,7 +83,9 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.trigger_hail_backend_reload.WriteSuccessFileTask',
     )
     def test_failure(
-        self, mock_write_success_file_task: mock.Mock, mock_post: mock.Mock
+        self,
+        mock_write_success_file_task: mock.Mock,
+        mock_post: mock.Mock,
     ):
         mock_write_success_file_task.return_value = MockCompleteTask()
         mock_resp = requests.models.Response()
