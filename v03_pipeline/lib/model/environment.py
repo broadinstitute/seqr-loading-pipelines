@@ -35,7 +35,7 @@ HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get(
     'HAIL_BACKEND_SERVICE_HOSTNAME',
     'hail-search',
 )
-HAIL_BACKEND_SERVICE_PORT = int(os.environ.get('HAIL_BACKEND_SERVICE_PORT', '6000'))
+HAIL_BACKEND_SERVICE_PORT = int(os.environ.get('HAIL_BACKEND_SERVICE_PORT', '5000'))
 
 # Allele registry secrets :/
 ALLELE_REGISTRY_SECRET_NAME = os.environ.get('ALLELE_REGISTRY_SECRET_NAME', None)
