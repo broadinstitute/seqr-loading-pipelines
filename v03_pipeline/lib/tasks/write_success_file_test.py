@@ -12,7 +12,15 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
     @mock.patch(
         'v03_pipeline.lib.tasks.write_success_file.WriteProjectFamilyTablesTask',
     )
-    def test_write_success_file_task(self, mock_write_project_fam_tables) -> None:
+    @mock.patch(
+        'v03_pipeline.lib.tasks.write_success_file.UpdateVariantAnnotationsTableWithNewSamplesTask',
+    )
+    def test_write_success_file_task(
+        self,
+        mock_update_variant_annotations_task,
+        mock_write_project_fam_tables,
+    ) -> None:
+        mock_update_variant_annotations_task.return_value = MockCompleteTask()
         mock_write_project_fam_tables.return_value = MockCompleteTask()
 
         worker = luigi.worker.Worker()

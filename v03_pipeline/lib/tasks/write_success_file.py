@@ -21,14 +21,20 @@ class WriteSuccessFileTask(luigi.Task):
         )
 
     def requires(self):
+        requirements = [
+            self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask),
+        ]
         return [
-            self.clone(
-                WriteProjectFamilyTablesTask,
-                project_guid=self.project_guids[i],
-                project_remap_path=self.project_remap_paths[i],
-                project_pedigree_path=self.project_pedigree_paths[i],
-            )
-            for i in range(len(self.project_guids))
+            *requirements,
+            *[
+                self.clone(
+                    WriteProjectFamilyTablesTask,
+                    project_guid=self.project_guids[i],
+                    project_remap_path=self.project_remap_paths[i],
+                    project_pedigree_path=self.project_pedigree_paths[i],
+                )
+                for i in range(len(self.project_guids))
+            ],
         ]
 
     def run(self):
