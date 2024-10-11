@@ -4,10 +4,10 @@ import requests
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
-from v03_pipeline.lib.tasks import UpdateVariantAnnotationsTableWithNewSamplesTask
 from v03_pipeline.lib.tasks.base.base_project_info_params import (
     BaseLoadingRunWithProjectInfoParams,
 )
+from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
 
@@ -19,7 +19,7 @@ class TriggerHailBackendReload(luigi.Task):
         self.done = False
 
     def requires(self):
-        return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
+        return self.clone(WriteSuccessFileTask)
 
     def run(self):
         url = f'http://{Env.HAIL_BACKEND_SERVICE_HOSTNAME}:{Env.HAIL_BACKEND_SERVICE_PORT}/reload_globals'
