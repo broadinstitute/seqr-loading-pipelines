@@ -126,7 +126,10 @@ def download_and_import_latest_clinvar_vcf(
             Env.HAIL_TMP_DIR,
             os.path.basename(tmp_file.name),
         )
-        hfs.copy(tmp_file.name, cached_tmp_file_name)
+        # In cases where HAIL_TMP_DIR is a remote path, copy the
+        # file there.  If it's local, do nothing.
+        if tmp_file.name != cached_tmp_file_name:
+            hfs.copy(tmp_file.name, cached_tmp_file_name)
         mt = hl.import_vcf(
             cached_tmp_file_name,
             reference_genome=reference_genome.value,
@@ -189,7 +192,10 @@ def download_and_import_clinvar_submission_summary() -> hl.Table:
             Env.HAIL_TMP_DIR,
             os.path.basename(unzipped_tmp_file.name),
         )
-        hfs.copy(unzipped_tmp_file.name, cached_tmp_file_name)
+        # In cases where HAIL_TMP_DIR is a remote path, copy the
+        # file there.  If it's local, do nothing.
+        if unzipped_tmp_file.name != cached_tmp_file_name:
+            hfs.copy(unzipped_tmp_file.name, cached_tmp_file_name)
         return import_submission_table(cached_tmp_file_name)
 
 
