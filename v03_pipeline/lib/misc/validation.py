@@ -70,9 +70,7 @@ def validate_allele_type(
             [tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))],
         )
         # Handle case where all invalid alleles are NON_REF, indicating a gvcf:
-        if all(
-            '<NON_REF>' in alleles for alleles in collected_alleles
-        ):
+        if all('<NON_REF>' in alleles for alleles in collected_alleles):
             msg = 'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants, which we cannot accept.'
             raise SeqrValidationError(msg)
         msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles[:10]}'

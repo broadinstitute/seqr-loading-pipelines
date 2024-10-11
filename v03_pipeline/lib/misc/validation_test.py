@@ -111,7 +111,6 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-
     @patch('v03_pipeline.lib.misc.validation.Env')
     def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
         mock_env.CHECK_SEX_AND_RELATEDNESS = True
