@@ -13,12 +13,6 @@ from v03_pipeline.lib.paths import (
     project_pedigree_path,
     project_remap_path,
 )
-<<<<<<< HEAD
-from v03_pipeline.lib.tasks import (
-    UpdateVariantAnnotationsTableWithNewSamplesTask,
-)
-=======
->>>>>>> 92f827224f608388fc4e20be60a08b1f675c7408
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
@@ -60,18 +54,6 @@ def main():
                 'run_id': run_id,
                 **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
             }
-<<<<<<< HEAD
-            tasks = [
-                UpdateVariantAnnotationsTableWithNewSamplesTask(
-                    **loading_run_task_params,
-                ),
-                WriteSuccessFileTask(**loading_run_task_params),
-            ]
-            if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
-                tasks.append(
-                    TriggerHailBackendReload(**loading_run_task_params),
-                )
-=======
             if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
                 tasks = [
                     TriggerHailBackendReload(**loading_run_task_params),
@@ -80,7 +62,6 @@ def main():
                 tasks = [
                     WriteSuccessFileTask(**loading_run_task_params),
                 ]
->>>>>>> 92f827224f608388fc4e20be60a08b1f675c7408
             luigi.build(tasks)
         except Exception:
             logger.exception('Unhandled Exception')

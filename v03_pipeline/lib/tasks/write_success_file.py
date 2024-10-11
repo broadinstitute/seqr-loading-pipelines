@@ -7,6 +7,9 @@ from v03_pipeline.lib.tasks.base.base_project_info_params import (
     BaseLoadingRunWithProjectInfoParams,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+    UpdateVariantAnnotationsTableWithNewSamplesTask,
+)
 
 
 @luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
