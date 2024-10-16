@@ -82,6 +82,8 @@ responses==0.24.1
     # via -r requirements-dev.in
 ruff==0.1.10
     # via -r requirements-dev.in
+shellcheck-py==0.10.0.1
+    # via -r requirements-dev.in
 six==1.16.0
     # via
     #   -c requirements.txt
