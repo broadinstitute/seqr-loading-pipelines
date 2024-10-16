@@ -17,4 +17,11 @@ case $REFERENCE_GENOME in
 esac
 
 mkdir -p $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+
+if [ -f "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS ]; then
+   echo "Skipping rsync because already successful"
+   exit 0;
+fi
+
 gsutil -m rsync -rd "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
+touch "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
