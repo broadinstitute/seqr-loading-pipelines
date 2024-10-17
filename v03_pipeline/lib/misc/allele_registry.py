@@ -105,7 +105,7 @@ def register_alleles(
 
 def build_url(base_url: str, reference_genome: ReferenceGenome) -> str:
     login, password = (
-        Env.CLINGEN_ALLELE_REGISTRY_USERNAME,
+        Env.CLINGEN_ALLELE_REGISTRY_LOGIN,
         Env.CLINGEN_ALLELE_REGISTRY_PASSWORD,
     )
 
