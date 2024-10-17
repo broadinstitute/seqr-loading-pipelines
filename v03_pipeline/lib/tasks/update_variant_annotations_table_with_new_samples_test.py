@@ -258,7 +258,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         )
         # make register_alleles return CAIDs for 4 of 30 variants
         mock_env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
-        mock_env.SHOULD_REGISTER_ALLELES = True
+        mock_env.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
+        mock_env.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
         mock_register_alleles.side_effect = [
             iter(
                 [
@@ -837,6 +838,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                 ),
                 hgmd=None,
                 gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
+                CAID=None,
             ),
         )
 
