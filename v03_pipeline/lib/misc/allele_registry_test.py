@@ -35,6 +35,8 @@ class AlleleRegistryTest(MockedDatarootTestCase):
         mock_put_request: Mock,
     ):
         mock_env.HAIL_TMP_DIR = self.temp_dir.name
+        mock_env.CLINGEN_ALLELE_REGISTRY_LOGIN = ''
+        mock_env.CLINGEN_ALLELE_REGISTRY_PASSWORD = ''
 
         new_variants_ht = hl.Table.parallelize(
             [
