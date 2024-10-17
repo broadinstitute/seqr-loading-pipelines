@@ -81,6 +81,36 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
+        mt = hl.MatrixTable.from_parts(
+            rows={
+                'locus': [
+                    hl.Locus(
+                        contig='chr1',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    hl.Locus(
+                        contig='chr1',
+                        position=2,
+                        reference_genome='GRCh38',
+                    ),
+                ],
+                'alleles': [
+                    ['C', '<NON_REF>'],
+                    ['A', '<NON_REF>'],
+                ],
+            },
+            cols={'s': ['sample_1']},
+            entries={'HL': [[0.0], [0.0]]},
+        ).key_rows_by('locus', 'alleles')
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.',
+            validate_allele_type,
+            mt,
+            DatasetType.SNV_INDEL,
+        )
+
     @patch('v03_pipeline.lib.misc.validation.Env')
     def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
         mock_env.CHECK_SEX_AND_RELATEDNESS = True
