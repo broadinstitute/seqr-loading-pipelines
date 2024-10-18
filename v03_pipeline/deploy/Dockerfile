@@ -3,6 +3,9 @@ FROM hailgenetics/hail:0.2.132-py3.10
 COPY --from=BUILD /usr/local/bin/docker /usr/local/bin/docker
 LABEL maintainer="Broad TGG"
 
+ARG PIPELINE_RUNNER_APP_VERSION
+ENV PIPELINE_RUNNER_APP_VERSION=${PIPELINE_RUNNER_APP_VERSION}
+
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 

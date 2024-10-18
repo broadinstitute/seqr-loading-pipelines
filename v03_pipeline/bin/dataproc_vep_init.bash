@@ -16,6 +16,7 @@ set -x
 export PROJECT="$(gcloud config get-value project)"
 export ENVIRONMENT="$(/usr/share/google/get_metadata_value attributes/ENVIRONMENT)"
 export REFERENCE_GENOME="$(/usr/share/google/get_metadata_value attributes/REFERENCE_GENOME)"
+export PIPELINE_RUNNER_APP_VERSION="$(/usr/share/google/get_metadata_value attributes/PIPELINE_RUNNER_APP_VERSION)"
 
 # Install docker
 apt-get update
@@ -52,10 +53,10 @@ EOF
 gcc -Wall -Werror -O2 /vep.c -o /vep
 chmod u+s /vep
 
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/download_vep_reference_data.bash /download_vep_reference_data.bash
+gcloud storage cp gs://seqr-pipeline-runner-builds/releases/$ENVIRONMENT/$PIPELINE_RUNNER_APP_VERSION/bin/download_vep_reference_data.bash /download_vep_reference_data.bash
 chmod +x /download_vep_reference_data.bash
 ./download_vep_reference_data.bash $REFERENCE_GENOME
 
-gcloud storage cp gs://seqr-luigi/releases/$ENVIRONMENT/latest/bin/vep /vep.bash
+gcloud storage cp gs://seqr-pipeline-runner-builds/releases/$ENVIRONMENT/$PIPELINE_RUNNER_APP_VERSION/bin/vep /vep.bash
 chmod +x /vep.bash
 
