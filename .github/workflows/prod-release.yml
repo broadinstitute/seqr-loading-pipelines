@@ -45,11 +45,11 @@ jobs:
       - name: Copy files to release directory
         shell: bash
         run: |-
-          gcloud storage rm -r gs://seqr-pipeline-runner-builds/releases/latest/ || echo 'No latest release'
-          gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/releases/latest/bin/
-          gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/releases/latest/pyscripts.zip
-          gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/releases/${{ github.event.workflow_run.head_sha }}/bin/
-          gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/releases/${{ github.event.workflow_run.head_sha }}/pyscripts.zip
+          gcloud storage rm -r gs://seqr-pipeline-runner-builds/prod/latest/ || echo 'No latest release'
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/prod/latest/bin/
+          gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/prod/latest/pyscripts.zip
+          gcloud storage cp v03_pipeline/bin/* gs://seqr-pipeline-runner-builds/prod/${{ github.event.workflow_run.head_sha }}/bin/
+          gcloud storage cp dist/*.whl gs://seqr-pipeline-runner-builds/prod/${{ github.event.workflow_run.head_sha }}/pyscripts.zip
           gcloud storage cp -r v03_pipeline/var/vep/* gs://seqr-reference-data/vep/
 
   docker:
