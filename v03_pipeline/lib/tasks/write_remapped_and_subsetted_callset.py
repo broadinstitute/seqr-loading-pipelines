@@ -22,9 +22,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunPa
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
-from v03_pipeline.lib.tasks.write_relatedness_check_table import (
-    WriteRelatednessCheckTableTask,
-)
 from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
     WriteRelatednessCheckTsvTask,
 )
@@ -70,9 +67,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         ):
             requirements = [
                 *requirements,
-                self.clone(WriteRelatednessCheckTableTask),
-                self.clone(WriteSexCheckTableTask),
                 self.clone(WriteRelatednessCheckTsvTask),
+                self.clone(WriteSexCheckTableTask),
             ]
         return requirements
 
