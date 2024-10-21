@@ -25,6 +25,9 @@ from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 from v03_pipeline.lib.tasks.write_relatedness_check_table import (
     WriteRelatednessCheckTableTask,
 )
+from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
+    WriteRelatednessCheckTsvTask,
+)
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
 logger = get_logger(__name__)
@@ -69,6 +72,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 *requirements,
                 self.clone(WriteRelatednessCheckTableTask),
                 self.clone(WriteSexCheckTableTask),
+                self.clone(WriteRelatednessCheckTsvTask),
             ]
         return requirements
 
