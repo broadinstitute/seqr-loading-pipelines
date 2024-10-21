@@ -69,7 +69,11 @@ def validate_allele_type(
         collected_alleles = sorted(
             [tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))],
         )
-        msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles}'
+        # Handle case where all invalid alleles are NON_REF, indicating a gvcf:
+        if all('<NON_REF>' in alleles for alleles in collected_alleles):
+            msg = 'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.'
+            raise SeqrValidationError(msg)
+        msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles[:10]}'
         raise SeqrValidationError(msg)
 
 
@@ -85,7 +89,7 @@ def validate_no_duplicate_variants(
     ht = ht.select()
     if ht.count() > 0:
         variant_format = dataset_type.table_key_format_fn(reference_genome)
-        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.collect()]}'
+        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.collect()][:10]}'
         raise SeqrValidationError(msg)
 
 
