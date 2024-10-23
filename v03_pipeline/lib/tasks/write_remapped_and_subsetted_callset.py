@@ -17,13 +17,16 @@ from v03_pipeline.lib.misc.io import (
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.model.environment import Env
-from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
+from v03_pipeline.lib.paths import (
+    relatedness_check_table_path,
+    remapped_and_subsetted_callset_path,
+)
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
-from v03_pipeline.lib.tasks.write_relatedness_check_table import (
-    WriteRelatednessCheckTableTask,
+from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
+    WriteRelatednessCheckTsvTask,
 )
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 
@@ -67,7 +70,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         ):
             requirements = [
                 *requirements,
-                self.clone(WriteRelatednessCheckTableTask),
+                self.clone(WriteRelatednessCheckTsvTask),
                 self.clone(WriteSexCheckTableTask),
             ]
         return requirements
@@ -101,7 +104,13 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             and self.dataset_type.check_sex_and_relatedness
             and not self.skip_check_sex_and_relatedness
         ):
-            relatedness_check_ht = hl.read_table(self.input()[2].path)
+            relatedness_check_ht = hl.read_table(
+                relatedness_check_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                ),
+            )
             sex_check_ht = hl.read_table(self.input()[3].path)
             families_failed_relatedness_check = get_families_failed_relatedness_check(
                 families - families_failed_missing_samples.keys(),
