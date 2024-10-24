@@ -16,12 +16,34 @@ case $REFERENCE_GENOME in
     exit 1
 esac
 
-mkdir -p $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+case $REFERENCE_DATASETS_DIR in
+  "gs://seqr-reference-data")
+    echo "Cannot rsync to the authoritative source"
+    exit 1
+    ;;
+    *)
+    ;;
+esac
 
-if [ -f "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS ]; then
-   echo "Skipping rsync because already successful"
-   exit 0;
+if ! [[ "$REFERENCE_DATASETS_DIR" =~ gs://* ]]; then
+  mkdir -p $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME;
+  if [ -f "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS ]; then
+     echo "Skipping rsync because already successful"
+     exit 0;
+  fi
+else
+  result=$(gsutil -q stat "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS || echo 1)
+  if [[ $result != 1 ]]; then
+    echo "Skipping rsync because already successful"
+    exit 0;
+  fi
 fi
 
 gsutil -m rsync -rd "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
-touch "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
+if ! [[ $REFERENCE_DATASETS_DIR =~ gs://* ]]; then
+  touch "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
+else 
+  touch _SUCCESS
+  gsutil cp _SUCCESS "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
+  rm -rf _SUCCESS
+fi
