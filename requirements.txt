@@ -98,31 +98,16 @@ frozenlist==1.5.0
     #   hail
 gnomad==0.6.4
     # via -r requirements.in
-google-api-core==2.21.0
-    # via google-api-python-client
-google-api-python-client==2.108.0
-    # via -r requirements.in
 google-auth==2.35.0
     # via
-    #   google-api-core
-    #   google-api-python-client
-    #   google-auth-httplib2
     #   google-auth-oauthlib
     #   hail
-google-auth-httplib2==0.2.0
-    # via google-api-python-client
 google-auth-oauthlib==0.8.0
     # via hail
-googleapis-common-protos==1.65.0
-    # via google-api-core
 hail==0.2.132
     # via -r requirements.in
 hdbscan==0.8.39
     # via gnomad
-httplib2==0.22.0
-    # via
-    #   google-api-python-client
-    #   google-auth-httplib2
 humanize==1.1.0
     # via hail
 idna==3.10
@@ -214,14 +199,8 @@ prompt-toolkit==3.0.48
     # via ipython
 propcache==0.2.0
     # via yarl
-proto-plus==1.25.0
-    # via google-api-core
 protobuf==3.20.2
-    # via
-    #   google-api-core
-    #   googleapis-common-protos
-    #   hail
-    #   proto-plus
+    # via hail
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
@@ -248,8 +227,6 @@ pygments==2.18.0
     #   rich
 pyjwt[crypto]==2.9.0
     # via msal
-pyparsing==3.2.0
-    # via httplib2
 pyspark==3.5.3
     # via hail
 python-daemon==3.0.1
@@ -272,7 +249,6 @@ regex==2024.9.11
 requests==2.32.3
     # via
     #   azure-core
-    #   google-api-core
     #   hail
     #   msal
     #   msrest
@@ -345,8 +321,6 @@ typing-extensions==4.12.2
     #   typer
 tzdata==2024.2
     # via pandas
-uritemplate==4.1.1
-    # via google-api-python-client
 urllib3==2.2.3
     # via
     #   botocore

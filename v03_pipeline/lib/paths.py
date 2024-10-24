@@ -187,6 +187,22 @@ def relatedness_check_table_path(
     )
 
 
+def relatedness_check_tsv_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        _pipeline_prefix(
+            Env.LOADING_DATASETS_DIR,
+            reference_genome,
+            dataset_type,
+        ),
+        'relatedness_check',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+    )
+
+
 def remapped_and_subsetted_callset_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
