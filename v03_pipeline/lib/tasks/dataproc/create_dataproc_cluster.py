@@ -145,7 +145,7 @@ class CreateDataprocClusterTask(luigi.Task):
                     'cluster_name': f'{CLUSTER_NAME_PREFIX}-{self.reference_genome.value.lower()}',
                 },
             )
-        except Exception: # noqa: BLE001
+        except Exception:  # noqa: BLE001
             return False
         else:
             return client.status.state == SUCCESS_STATE

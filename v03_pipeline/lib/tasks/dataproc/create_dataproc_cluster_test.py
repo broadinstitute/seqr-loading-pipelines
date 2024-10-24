@@ -27,7 +27,8 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self.assertTrue(task.complete())
 
     def test_spinup_cluster_already_exists_failed(
-        self, mock_cluster_controller: Mock,
+        self,
+        mock_cluster_controller: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -47,7 +48,8 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self.assertFalse(task.complete())
 
     def test_spinup_cluster_already_exists_success(
-        self, mock_cluster_controller: Mock,
+        self,
+        mock_cluster_controller: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -93,7 +95,9 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
 
     @patch('v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.logger')
     def test_spinup_cluster_doesnt_exist_success(
-        self, mock_logger: Mock, mock_cluster_controller: Mock,
+        self,
+        mock_logger: Mock,
+        mock_cluster_controller: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -102,7 +106,8 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         operation = mock_client.create_cluster.return_value
         operation.done.side_effect = [False, True]
         operation.result.return_value = SimpleNamespace(
-            cluster_name='dataproc-cluster-1', cluster_uuid='12345',
+            cluster_name='dataproc-cluster-1',
+            cluster_uuid='12345',
         )
         worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
