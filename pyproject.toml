@@ -29,7 +29,6 @@ extend-exclude = [
     'luigi_pipeline/lib/*',
     'luigi_pipeline/seqr*.py',
     'luigi_pipeline/tests/data/*',
-    'v03_pipeline/lib/reference_data/gencode/*',
 ]
 ignore = [
     # Individual Rules
