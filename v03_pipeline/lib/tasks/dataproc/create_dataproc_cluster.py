@@ -1,6 +1,5 @@
 import time
 
-import google.api_core.exceptions
 import hail as hl
 import luigi
 from google.cloud import dataproc_v1 as dataproc
@@ -123,6 +122,7 @@ class CreateDataprocClusterTask(luigi.Task):
     # NB: The luigi.dataproc.contrib module was old and bad
     # so we built our own shim.
     run_id = luigi.Parameter()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # https://cloud.google.com/dataproc/docs/tutorials/python-library-example
@@ -145,7 +145,7 @@ class CreateDataprocClusterTask(luigi.Task):
                     'cluster_name': f'{CLUSTER_NAME_PREFIX}-{self.reference_genome.value.lower()}',
                 },
             )
-        except Exception:
+        except Exception: # noqa: BLE001
             return False
         else:
             return client.status.state == SUCCESS_STATE
