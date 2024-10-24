@@ -58,7 +58,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             )
         if self.dataset_type.has_gencode_gene_symbol_to_gene_id_mapping:
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
-                load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE, ''),
+                load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE),
             )
         deps[
             'grch37_to_grch38_liftover_ref_path'
