@@ -131,7 +131,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
                     '234_1': {
                         'reasons': ["Missing samples: {'NA19678_999'}"],
                         'samples': ['NA19678_1', 'NA19678_999'],
-                    }
+                    },
                 },
                 relatedness_check={},
                 sex_check={},
