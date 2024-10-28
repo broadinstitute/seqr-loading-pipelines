@@ -2,7 +2,10 @@ import hail as hl
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import project_table_path
+from v03_pipeline.lib.paths import (
+    project_table_path,
+    remapped_and_subsetted_callset_path,
+)
 from v03_pipeline.lib.tasks.write_project_family_tables import (
     WriteProjectFamilyTablesTask,
 )
@@ -38,6 +41,33 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             hl.read_table(write_family_table_task.output().path)
             for write_family_table_task in write_project_family_tables.dynamic_write_family_table_tasks
         ]
+        # Validate remapped and subsetted callset families
+        remapped_and_subsetted_callset = hl.read_matrix_table(
+            remapped_and_subsetted_callset_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_SNV_INDEL_VCF,
+                'R0113_test_project',
+            ),
+        )
+        self.assertCountEqual(
+            hl.eval(remapped_and_subsetted_callset.globals.family_samples.keys()),
+            {
+                '123_1',
+                '234_1',
+                '345_1',
+                '456_1',
+                '567_1',
+                '678_1',
+                '789_1',
+                '890_1',
+                '901_1',
+                'bcd_1',
+                'cde_1',
+                'def_1',
+                'efg_1',
+            },
+        )
         self.assertCountEqual(
             [ht.globals.sample_ids.collect() for ht in hts],
             [
@@ -73,13 +103,39 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
         worker.run()
         self.assertTrue(write_project_family_tables_subset.complete())
         hts = [
-            hl.read_table(write_family_table_task.output().path)
+            write_family_table_task.output().path
             for write_family_table_task in write_project_family_tables_subset.dynamic_write_family_table_tasks
         ]
-        # Only one family table written
-        self.assertEqual(
-            len(hts),
-            1,
+        self.assertTrue(len(hts))
+        self.assertTrue(
+            '123_1' in hts[0],
+        )
+        # Validate remapped and subsetted callset families
+        # (and that it was re-written)
+        remapped_and_subsetted_callset = hl.read_matrix_table(
+            remapped_and_subsetted_callset_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_SNV_INDEL_VCF,
+                'R0113_test_project',
+            ),
+        )
+        self.assertCountEqual(
+            hl.eval(remapped_and_subsetted_callset.globals.family_samples.keys()),
+            {'123_1'},
+        )
+        self.assertCountEqual(
+            hl.eval(remapped_and_subsetted_callset.globals.failed_family_samples),
+            hl.Struct(
+                missing_samples={
+                    '234_1': {
+                        'reasons': ["Missing samples: {'NA19678_999'}"],
+                        'samples': ['NA19678_1', 'NA19678_999'],
+                    }
+                },
+                relatedness_check={},
+                sex_check={},
+            ),
         )
         # Project table still contains all family guids
         self.assertCountEqual(
