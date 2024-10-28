@@ -4,7 +4,10 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.paths import metadata_for_run_path
+from v03_pipeline.lib.paths import (
+    metadata_for_run_path,
+    relatedness_check_tsv_path,
+)
 from v03_pipeline.lib.tasks.base.base_project_info_params import (
     BaseLoadingRunWithProjectInfoParams,
 )
@@ -52,6 +55,11 @@ class WriteMetadataForRunTask(luigi.Task):
                 'relatedness_check': {},
                 'sex_check': {},
             },
+            'relatedness_check_file_path': relatedness_check_tsv_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_path,
+            ),
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
