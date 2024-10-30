@@ -32,16 +32,9 @@ class WriteMetadataForRunTask(luigi.Task):
         return [
             self.clone(
                 WriteRemappedAndSubsettedCallsetTask,
-                project_guid=project_guid,
-                project_remap_path=project_remap_path,
-                project_pedigree_path=project_pedigree_path,
+                project_i=i
             )
-            for (project_guid, project_remap_path, project_pedigree_path) in zip(
-                self.project_guids,
-                self.project_remap_paths,
-                self.project_pedigree_paths,
-                strict=True,
-            )
+            for i in range(len(self.project_guids))
         ]
 
     def run(self) -> None:
