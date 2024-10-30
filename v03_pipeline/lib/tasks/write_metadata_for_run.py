@@ -32,7 +32,7 @@ class WriteMetadataForRunTask(luigi.Task):
         return [
             self.clone(
                 WriteRemappedAndSubsettedCallsetTask,
-                project_i=i
+                project_i=i,
             )
             for i in range(len(self.project_guids))
         ]
