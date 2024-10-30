@@ -9,7 +9,6 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 class BaseUpdateProjectTableTask(BaseUpdateTask):
     sample_type = luigi.EnumParameter(enum=SampleType)
-    project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -17,7 +16,11 @@ class BaseUpdateProjectTableTask(BaseUpdateTask):
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
-                self.project_guid,
+                (
+                    self.project_guids[self.project_i]
+                    if hasattr(self, 'project_guids')
+                    else self.project_guid
+                ),
             ),
         )
 

@@ -8,6 +8,7 @@ from v03_pipeline.lib.tasks.base.base_update_project_table import (
 
 
 class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateProjectTableTask):
+    project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
 
     def complete(self) -> bool:

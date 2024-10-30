@@ -20,8 +20,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class UpdateProjectTableTask(BaseUpdateProjectTableTask):
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_i = luigi.Parameter()
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
@@ -29,8 +28,8 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_path,
-                        self.project_pedigree_path,
+                        self.project_remap_paths[self.project_i],
+                        self.project_pedigree_paths[self.project_i],
                     ),
                 ),
             ),
@@ -69,8 +68,8 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_path,
-                        self.project_pedigree_path,
+                        self.project_remap_paths[self.project_i],
+                        self.project_pedigree_paths[self.project_i],
                     ),
                 ),
             ),

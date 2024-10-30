@@ -8,8 +8,8 @@ from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     relatedness_check_tsv_path,
 )
-from v03_pipeline.lib.tasks.base.base_project_info_params import (
-    BaseLoadingRunWithProjectInfoParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 )
 
 
-@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteMetadataForRunTask(luigi.Task):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -49,6 +49,7 @@ class WriteMetadataForRunTask(luigi.Task):
             'callsets': [self.callset_path],
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
+            'project_guids': self.project_guids,
             'family_samples': {},
             'failed_family_samples': {
                 'missing_samples': {},
