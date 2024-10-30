@@ -13,9 +13,7 @@ from v03_pipeline.lib.tasks.update_project_table import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteFamilyTableTask(BaseWriteTask):
-    project_guid = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_i = luigi.Parameter()
     family_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
