@@ -62,6 +62,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
                 {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},
+                {'s': 'ROS_007_19Y05989_D1', 'predicted_sex': 'X0'},
             ],
             hl.tstruct(
                 s=hl.tstr,
@@ -78,6 +79,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 'ROS_007_19Y05919_D1': Sex.FEMALE,
                 'ROS_007_19Y05939_D1': Sex.MALE,
                 'ROS_007_19Y05987_D1': Sex.UNKNOWN,
+                'ROS_007_19Y05989_D1': Sex.X0,
             },
         )
 
@@ -184,6 +186,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
                 {'s': 'ROS_007_19Y05919_D1', 'predicted_sex': 'F'},
                 {'s': 'ROS_007_19Y05939_D1', 'predicted_sex': 'M'},
                 {'s': 'ROS_007_19Y05987_D1', 'predicted_sex': 'U'},  # Pedigree Sex F
+                {'s': 'ROS_007_19Y05989_D1', 'predicted_sex': 'XXX'},
             ],
             hl.tstruct(
                 s=hl.tstr,
