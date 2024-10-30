@@ -41,7 +41,7 @@ class WriteProjectFamilyTablesTask(luigi.Task):
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
-                self.project_guid,
+                self.project_guids[self.project_i],
             ),
         )
         for family_guid in set(hl.eval(ht.globals.family_samples).keys()):
