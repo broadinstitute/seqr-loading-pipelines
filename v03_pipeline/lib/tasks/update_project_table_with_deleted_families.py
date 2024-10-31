@@ -3,9 +3,6 @@ import luigi
 
 from v03_pipeline.lib.misc.family_entries import remove_family_guids
 from v03_pipeline.lib.paths import project_table_path
-from v03_pipeline.lib.tasks.base.base_update_project_table import (
-    BaseUpdateProjectTableTask,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
