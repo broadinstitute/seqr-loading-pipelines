@@ -14,6 +14,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 
 
 class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
+
     def test_write_metadata_for_run_task(self) -> None:
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
@@ -38,6 +39,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                 json.load(f),
                 {
                     'callsets': [TEST_VCF],
+                    'project_guids': ['R0113_test_project', 'R0114_project4'],
                     'failed_family_samples': {
                         'missing_samples': {
                             'efg_1': {
