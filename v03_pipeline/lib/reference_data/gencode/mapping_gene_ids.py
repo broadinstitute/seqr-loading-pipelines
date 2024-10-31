@@ -57,8 +57,6 @@ def load_gencode_ensembl_to_refseq_id(gencode_release: int):
         fields = line.decode('ascii').strip().split('\t')
         if len(fields) > EXPECTED_ENSEMBLE_TO_REFSEQ_FIELDS:
             msg = 'Unexpected number of fields on line in ensemble_to_refseq mapping'
-            raise ValueError(
-                msg,
-            )
+            raise ValueError(msg)
         ensembl_to_refseq_ids[fields[0].split('.')[0]] = fields[1]
     return ensembl_to_refseq_ids
