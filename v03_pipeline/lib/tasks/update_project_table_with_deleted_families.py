@@ -9,7 +9,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateTask):
-    sample_type = luigi.EnumParameter(SampleType)
+    sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
 
