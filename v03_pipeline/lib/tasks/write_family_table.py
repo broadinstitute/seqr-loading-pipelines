@@ -13,7 +13,7 @@ from v03_pipeline.lib.tasks.update_project_table import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteFamilyTableTask(BaseWriteTask):
-    project_i = luigi.Parameter()
+    project_i = luigi.IntParameter()
     family_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:

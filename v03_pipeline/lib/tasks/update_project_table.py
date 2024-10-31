@@ -22,7 +22,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class UpdateProjectTableTask(BaseUpdateTask):
-    project_i = luigi.Parameter()
+    project_i = luigi.IntParameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

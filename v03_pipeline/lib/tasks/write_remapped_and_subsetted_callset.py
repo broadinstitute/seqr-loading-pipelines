@@ -35,7 +35,7 @@ logger = get_logger(__name__)
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
-    project_i = luigi.Parameter()
+    project_i = luigi.IntParameter()
 
     def complete(self) -> luigi.Target:
         return super().complete() and hl.eval(

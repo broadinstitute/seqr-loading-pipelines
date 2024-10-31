@@ -13,7 +13,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteProjectFamilyTablesTask(luigi.Task):
-    project_i = luigi.Parameter()
+    project_i = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
