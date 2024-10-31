@@ -28,7 +28,7 @@ avro==1.11.3
     # via hail
 azure-common==1.1.28
     # via azure-mgmt-storage
-azure-core==1.31.0
+azure-core==1.32.0
     # via
     #   azure-identity
     #   azure-mgmt-core
@@ -36,7 +36,7 @@ azure-core==1.31.0
     #   msrest
 azure-identity==1.19.0
     # via hail
-azure-mgmt-core==1.4.0
+azure-mgmt-core==1.5.0
     # via azure-mgmt-storage
 azure-mgmt-storage==20.1.0
     # via hail
@@ -44,9 +44,9 @@ azure-storage-blob==12.23.1
     # via hail
 bokeh==3.3.4
     # via hail
-boto3==1.35.48
+boto3==1.35.53
     # via hail
-botocore==1.35.48
+botocore==1.35.53
     # via
     #   boto3
     #   hail
@@ -85,8 +85,6 @@ deprecated==1.2.14
     # via hail
 dill==0.3.9
     # via hail
-docutils==0.21.2
-    # via python-daemon
 exceptiongroup==1.2.2
     # via ipython
 executing==2.1.0
@@ -98,7 +96,7 @@ frozenlist==1.5.0
     #   hail
 gnomad==0.6.4
     # via -r requirements.in
-google-api-core[grpc]==2.21.0
+google-api-core[grpc]==2.22.0
     # via google-cloud-dataproc
 google-auth==2.35.0
     # via
@@ -117,7 +115,7 @@ googleapis-common-protos[grpc]==1.65.0
     #   grpcio-status
 grpc-google-iam-v1==0.13.1
     # via google-cloud-dataproc
-grpcio==1.67.0
+grpcio==1.67.1
     # via
     #   google-api-core
     #   googleapis-common-protos
@@ -135,7 +133,7 @@ idna==3.10
     # via
     #   requests
     #   yarl
-ipython==8.28.0
+ipython==8.29.0
     # via ipywidgets
 ipywidgets==8.1.5
     # via gnomad
@@ -261,7 +259,7 @@ pyjwt[crypto]==2.9.0
     # via msal
 pyspark==3.5.3
     # via hail
-python-daemon==3.0.1
+python-daemon==3.1.0
     # via luigi
 python-dateutil==2.9.0.post0
     # via
@@ -368,7 +366,7 @@ wrapt==1.16.0
     # via deprecated
 xyzservices==2024.9.0
     # via bokeh
-yarl==1.16.0
+yarl==1.17.1
     # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
