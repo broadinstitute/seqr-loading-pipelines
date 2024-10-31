@@ -2,12 +2,14 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.misc.family_entries import remove_family_guids
+from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 
 class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateTask):
+    sample_type = luigi.EnumParameter(SampleType)
     project_guid = luigi.Parameter()
     family_guids = luigi.ListParameter()
 
