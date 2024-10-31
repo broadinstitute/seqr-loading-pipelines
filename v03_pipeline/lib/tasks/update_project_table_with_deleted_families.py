@@ -17,7 +17,7 @@ class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateTask):
                 self.reference_genome,
                 self.dataset_type,
                 self.sample_type,
-                self.project_guids[self.project_i],
+                self.project_guid,
             ),
         )
 
