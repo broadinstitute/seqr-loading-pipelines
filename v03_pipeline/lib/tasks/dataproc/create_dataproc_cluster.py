@@ -10,8 +10,8 @@ from v03_pipeline.lib.model import Env, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
+from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
-CLUSTER_NAME_PREFIX = 'pipeline-runner'
 DEBIAN_IMAGE = '2.1.33-debian11'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
     return {
         'project_id': Env.GCLOUD_PROJECT,
-        'cluster_name': f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}',
+        'cluster_name': get_cluster_name(reference_genome, run_id),
         'config': {
             'gce_cluster_config': {
                 'zone_uri': Env.GCLOUD_ZONE,
@@ -136,19 +136,23 @@ class CreateDataprocClusterTask(luigi.Task):
 
     def complete(self) -> bool:
         if not self.dataset_type.requires_dataproc:
-            return True
+            msg = f'{self.dataset_type} should not require a dataproc cluster'
+            raise RuntimeError(msg)
         try:
-            client = self.client.get_cluster(
+            cluster = self.client.get_cluster(
                 request={
                     'project_id': Env.GCLOUD_PROJECT,
                     'region': Env.GCLOUD_REGION,
-                    'cluster_name': f'{CLUSTER_NAME_PREFIX}-{self.reference_genome.value.lower()}',
+                    'cluster_name': get_cluster_name(
+                        self.reference_genome,
+                        self.run_id,
+                    ),
                 },
             )
         except Exception:  # noqa: BLE001
             return False
         else:
-            return client.status.state == SUCCESS_STATE
+            return cluster.status.state == SUCCESS_STATE
 
     def run(self):
         operation = self.client.create_cluster(

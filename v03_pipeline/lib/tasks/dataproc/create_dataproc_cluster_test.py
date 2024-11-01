@@ -23,8 +23,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
             run_id='1',
         )
         worker.add(task)
-        worker.run()
-        self.assertTrue(task.complete())
+        self.assertRaises(RuntimeError, worker.run)
 
     def test_spinup_cluster_already_exists_failed(
         self,
@@ -106,7 +105,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         operation = mock_client.create_cluster.return_value
         operation.done.side_effect = [False, True]
         operation.result.return_value = SimpleNamespace(
-            cluster_name='dataproc-cluster-1',
+            cluster_name='dataproc-cluster-5',
             cluster_uuid='12345',
         )
         worker = luigi.worker.Worker()
@@ -120,6 +119,6 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call('Waiting for cluster spinup'),
-                call('Created cluster dataproc-cluster-1 with cluster uuid: 12345'),
+                call('Created cluster dataproc-cluster-5 with cluster uuid: 12345'),
             ],
         )
