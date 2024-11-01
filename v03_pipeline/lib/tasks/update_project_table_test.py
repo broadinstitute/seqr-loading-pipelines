@@ -25,9 +25,10 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
-            project_guid='R0113_test_project',
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_3,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_i=0,
             skip_validation=True,
         )
         worker.add(upt_task)
@@ -134,9 +135,10 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
-            project_guid='R0113_test_project',
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_3,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_i=0,
             skip_validation=True,
         )
         worker.add(upt_task)
@@ -147,9 +149,10 @@ class UpdateProjectTableTaskTest(MockedDatarootTestCase):
             run_id=TEST_RUN_ID,
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
-            project_guid='R0113_test_project',
-            project_remap_path=TEST_REMAP,
-            project_pedigree_path=TEST_PEDIGREE_3_DIFFERENT_FAMILIES,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=[TEST_REMAP],
+            project_pedigree_paths=[TEST_PEDIGREE_3_DIFFERENT_FAMILIES],
+            project_i=0,
             skip_validation=True,
         )
         worker.add(upt_task)

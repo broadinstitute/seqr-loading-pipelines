@@ -35,16 +35,14 @@ logger = get_logger(__name__)
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
-    project_guid = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_i = luigi.IntParameter()
 
     def complete(self) -> luigi.Target:
         return super().complete() and hl.eval(
             hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
             == remap_pedigree_hash(
-                self.project_remap_path,
-                self.project_pedigree_path,
+                self.project_remap_paths[self.project_i],
+                self.project_pedigree_paths[self.project_i],
             ),
         )
 
@@ -54,14 +52,14 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
-                self.project_guid,
+                self.project_guids[self.project_i],
             ),
         )
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
             self.clone(ValidateCallsetTask),
-            RawFileTask(self.project_pedigree_path),
+            RawFileTask(self.project_pedigree_paths[self.project_i]),
         ]
         if (
             Env.CHECK_SEX_AND_RELATEDNESS
@@ -81,8 +79,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
         # Remap, but only if the remap file is present!
         remap_lookup = hl.empty_dict(hl.tstr, hl.tstr)
-        if does_file_exist(self.project_remap_path):
-            project_remap_ht = import_remap(self.project_remap_path)
+        if does_file_exist(self.project_remap_paths[self.project_i]):
+            project_remap_ht = import_remap(self.project_remap_paths[self.project_i])
             callset_mt = remap_sample_ids(
                 callset_mt,
                 project_remap_ht,
@@ -162,8 +160,8 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 mt = mt.drop(field)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
-                self.project_remap_path,
-                self.project_pedigree_path,
+                self.project_remap_paths[self.project_i],
+                self.project_pedigree_paths[self.project_i],
             ),
             family_samples=(
                 {

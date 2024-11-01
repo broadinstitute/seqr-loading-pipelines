@@ -9,19 +9,30 @@ from v03_pipeline.lib.misc.family_entries import (
     remove_family_guids,
 )
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
+from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
-from v03_pipeline.lib.tasks.base.base_update_project_table import (
-    BaseUpdateProjectTableTask,
+from v03_pipeline.lib.tasks.base.base_update import (
+    BaseUpdateTask,
 )
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class UpdateProjectTableTask(BaseUpdateProjectTableTask):
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+class UpdateProjectTableTask(BaseUpdateTask):
+    project_i = luigi.IntParameter()
+
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(
+            project_table_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                self.project_guids[self.project_i],
+            ),
+        )
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
@@ -29,8 +40,8 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_path,
-                        self.project_pedigree_path,
+                        self.project_remap_paths[self.project_i],
+                        self.project_pedigree_paths[self.project_i],
                     ),
                 ),
             ),
@@ -38,6 +49,26 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
 
     def requires(self) -> luigi.Task:
         return self.clone(WriteRemappedAndSubsettedCallsetTask)
+
+    def initialize_table(self) -> hl.Table:
+        key_type = self.dataset_type.table_key_type(self.reference_genome)
+        return hl.Table.parallelize(
+            [],
+            hl.tstruct(
+                **key_type,
+                filters=hl.tset(hl.tstr),
+                # NB: entries is missing here because it is untyped
+                # until we read the type off of the first callset aggregation.
+            ),
+            key=key_type.fields,
+            globals=hl.Struct(
+                family_guids=hl.empty_array(hl.tstr),
+                family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
+                updates=hl.empty_set(
+                    hl.tstruct(callset=hl.tstr, remap_pedigree_hash=hl.tint32),
+                ),
+            ),
+        )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
         callset_mt = hl.read_matrix_table(self.input().path)
@@ -69,8 +100,8 @@ class UpdateProjectTableTask(BaseUpdateProjectTableTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_path,
-                        self.project_pedigree_path,
+                        self.project_remap_paths[self.project_i],
+                        self.project_pedigree_paths[self.project_i],
                     ),
                 ),
             ),
