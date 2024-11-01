@@ -13,10 +13,12 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.1.33-debian11'
+ERROR_STATE = 'ERROR'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(pip_freeze.freeze())
 SUCCESS_STATE = 'RUNNING'
+TIMEOUT_S = 900
 
 logger = get_logger(__name__)
 
@@ -128,9 +130,7 @@ class CreateDataprocClusterTask(luigi.Task):
         # https://cloud.google.com/dataproc/docs/tutorials/python-library-example
         self.client = dataproc.ClusterControllerClient(
             client_options={
-                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443'.format(
-                    Env.GCLOUD_REGION,
-                ),
+                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443',
             },
         )
 
@@ -152,6 +152,9 @@ class CreateDataprocClusterTask(luigi.Task):
         except Exception:  # noqa: BLE001
             return False
         else:
+            if cluster.status.state == ERROR_STATE:
+                msg = f'Cluster {cluster.cluster_name} entered ERROR state'
+                logger.error(msg)
             return cluster.status.state == SUCCESS_STATE
 
     def run(self):
@@ -162,7 +165,8 @@ class CreateDataprocClusterTask(luigi.Task):
                 'cluster': get_cluster_config(self.reference_genome, self.run_id),
             },
         )
-        while True:
+        wait_s = 0
+        while wait_s < TIMEOUT_S:
             if operation.done():
                 result = operation.result()  # Will throw on failure!
                 msg = f'Created cluster {result.cluster_name} with cluster uuid: {result.cluster_uuid}'
@@ -170,3 +174,4 @@ class CreateDataprocClusterTask(luigi.Task):
                 break
             logger.info('Waiting for cluster spinup')
             time.sleep(3)
+            wait_s += 3

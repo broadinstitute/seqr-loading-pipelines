@@ -25,13 +25,13 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         worker.add(task)
         self.assertRaises(RuntimeError, worker.run)
 
-    def test_spinup_cluster_already_exists_failed(
+    def test_spinup_cluster_already_exists_error(
         self,
         mock_cluster_controller: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='FAILED'),
+            status=SimpleNamespace(state='ERROR'),
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')

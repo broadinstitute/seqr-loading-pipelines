@@ -23,14 +23,13 @@ logger = get_logger(__name__)
 class RunDataprocJobTask(luigi.Task):
     run_id = luigi.Parameter()
     job_id = luigi.Parameter()
+    additional_args = luigi.ListParameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.client = dataproc.JobControllerClient(
             client_options={
-                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443'.format(
-                    Env.GCLOUD_REGION,
-                ),
+                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443',
             },
         )
 
@@ -77,6 +76,7 @@ class RunDataprocJobTask(luigi.Task):
                             self.reference_genome.value,
                             '--dataset-type',
                             self.dataset_type.value,
+                            *self.additional_args,
                         ],
                         'python_file_uris': f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
                     },
@@ -89,5 +89,5 @@ class RunDataprocJobTask(luigi.Task):
                 msg = f'Finished job {self.job_id}-{self.run_id}'
                 logger.info(msg)
                 break
-            logger.info(f'Waiting for job spinup {self.job_id}-{self.run_id}')
+            logger.info(f'Waiting for job completion {self.job_id}-{self.run_id}')
             time.sleep(3)
