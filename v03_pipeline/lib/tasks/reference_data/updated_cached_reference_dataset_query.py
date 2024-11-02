@@ -43,6 +43,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         if 'clinvar' in dataset and not clinvar_versions_equal(
             hl.read_table(self.output().path),
             self.reference_genome,
+            self.dataset_type,
         ):
             return False
 

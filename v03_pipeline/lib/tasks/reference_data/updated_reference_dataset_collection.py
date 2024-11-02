@@ -41,6 +41,7 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
         if any('clinvar' in d for d in datasets) and not clinvar_versions_equal(
             hl.read_table(self.output().path),
             self.reference_genome,
+            self.dataset_type,
         ):
             datasets.remove('clinvar')
             self._datasets_to_update.add('clinvar')
