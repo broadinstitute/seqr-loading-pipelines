@@ -57,7 +57,7 @@ MOCK_CONFIG = {
     'clinvar': {
         '38': {
             **CONFIG['clinvar']['38'],
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(

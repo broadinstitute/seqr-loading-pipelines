@@ -1,3 +1,3 @@
 This folder comprises a Hail (www.hail.is) native Table or MatrixTable.
-  Written with version 0.2.130-bea04d9c79b5
-  Created at 2024/05/20 15:38:26
+  Written with version 0.2.133-4c60fddb171a
+  Created at 2024/11/02 13:18:45
