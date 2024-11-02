@@ -92,6 +92,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
 )
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase):
+    maxDiff = None
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
