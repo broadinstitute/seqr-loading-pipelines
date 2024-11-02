@@ -12,6 +12,7 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
+    clinvar_versions_equal,
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
@@ -38,14 +39,20 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             )
             return False
 
-        datasets_to_check = [self.crdq.dataset(self.dataset_type)]
+        dataset = self.crdq.dataset(self.dataset_type)
+        if 'clinvar' in dataset and not clinvar_versions_equal(
+            hl.read_table(self.output().path),
+            self.reference_genome,
+        ):
+            return False
+
         crdq_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            datasets_to_check,
+            [dataset],
         )
         dataset_config_globals = Globals.from_dataset_configs(
             self.reference_genome,
-            datasets_to_check,
+            [dataset],
         )
         return not get_datasets_to_update(
             crdq_globals,
