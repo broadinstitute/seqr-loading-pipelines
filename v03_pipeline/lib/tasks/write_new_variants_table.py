@@ -79,10 +79,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                self.reference_genome,
-                self.dataset_type,
-            ),
+            self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset)
         ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
