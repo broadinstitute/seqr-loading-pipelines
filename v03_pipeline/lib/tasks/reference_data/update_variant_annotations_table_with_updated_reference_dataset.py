@@ -1,4 +1,5 @@
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.logger import get_logger
@@ -8,6 +9,9 @@ from v03_pipeline.lib.reference_data.compare_globals import (
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -15,6 +19,7 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseUpdateVariantAnnotationsTableTask,
 ):

@@ -19,6 +19,9 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_ht_path,
     import_ht_from_config_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
+)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
@@ -28,6 +31,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
     crdq = luigi.EnumParameter(enum=CachedReferenceDatasetQuery)
 

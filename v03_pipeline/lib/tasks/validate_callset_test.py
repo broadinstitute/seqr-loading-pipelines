@@ -1,6 +1,5 @@
 import json
 import shutil
-from unittest.mock import Mock, patch
 
 import luigi.worker
 
@@ -19,7 +18,6 @@ from v03_pipeline.lib.tasks.validate_callset import (
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_CODING_NONCODING_CRDQ_1 = (
@@ -44,14 +42,9 @@ class ValidateCallsetTest(MockedDatarootTestCase):
             ),
         )
 
-    @patch(
-        'v03_pipeline.lib.tasks.validate_callset.UpdatedCachedReferenceDatasetQuery',
-    )
     def test_validate_callset_multiple_exceptions(
         self,
-        mock_updated_cached_reference_dataset_query: Mock,
     ) -> None:
-        mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         validate_callset_task = ValidateCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,

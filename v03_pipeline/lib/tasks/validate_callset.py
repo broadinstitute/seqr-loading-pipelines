@@ -14,14 +14,12 @@ from v03_pipeline.lib.misc.validation import (
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
+    cached_reference_dataset_query_path,
     imported_callset_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
-    UpdatedCachedReferenceDatasetQuery,
-)
+from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, HailTableTask
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
@@ -54,12 +52,13 @@ class ValidateCallsetTask(BaseUpdateTask):
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
-                *requirements,
-                (
-                    self.clone(
-                        UpdatedCachedReferenceDatasetQuery,
-                        crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-                    )
+                *requirements, 
+                HailTableTask(
+                    cached_reference_dataset_query_path(
+                        self.reference_genome,
+                        self.dataset_type,
+                        CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                    ),
                 ),
             ]
         if (

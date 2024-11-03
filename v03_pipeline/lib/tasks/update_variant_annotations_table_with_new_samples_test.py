@@ -217,9 +217,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
-        'v03_pipeline.lib.tasks.validate_callset.UpdatedCachedReferenceDatasetQuery',
-    )
-    @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     @patch(
@@ -237,13 +234,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
-        mock_updated_cached_reference_dataset_query,
         mock_env: Mock,
         mock_register_alleles: Mock,
         mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
-        mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
