@@ -52,7 +52,7 @@ class ValidateCallsetTask(BaseUpdateTask):
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
-                *requirements, 
+                *requirements,
                 HailTableTask(
                     cached_reference_dataset_query_path(
                         self.reference_genome,
