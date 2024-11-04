@@ -10,7 +10,10 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
+    UpdatedCachedReferenceDatasetQuery,
+)
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 
 
@@ -28,12 +31,9 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
     def requires(self):
         return [
             self.clone(ValidateCallsetTask),
-            HailTableTask(
-                cached_reference_dataset_query_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    CachedReferenceDatasetQuery.GNOMAD_QC,
-                ),
+            self.clone(
+                UpdatedCachedReferenceDatasetQuery,
+                crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
             ),
         ]
 
