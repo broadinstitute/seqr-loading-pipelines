@@ -160,8 +160,12 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
     @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CachedReferenceDatasetQuery.query',
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.clinvar_versions_equal'
+    )
     def test_clinvar(
         self,
+        mock_clinvar_versions_equal,
         mock_crdq_query,
         mock_updated_rdc_task,
     ) -> None:
@@ -169,6 +173,8 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         Given a crdq task where there exists a clinvar crdq table and a clinvar rdc table,
         expect task to replace the clinvar crdq table with new version.
         """
+        mock_clinvar_versions_equal.return_value = True
+
         # rdc dependency exists
         mock_updated_rdc_task.return_value = MockCompleteTask()
 
