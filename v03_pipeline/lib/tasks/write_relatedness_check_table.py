@@ -5,7 +5,6 @@ import luigi.util
 from v03_pipeline.lib.methods.relatedness import call_relatedness
 from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
     relatedness_check_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
