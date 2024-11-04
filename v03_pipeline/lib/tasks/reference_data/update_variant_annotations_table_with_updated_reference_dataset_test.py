@@ -722,12 +722,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+    )
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = True
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
@@ -939,12 +944,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG_MITO,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+    )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = True,
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
@@ -1096,12 +1106,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+    )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = True
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
