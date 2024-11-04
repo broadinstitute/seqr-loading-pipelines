@@ -24,6 +24,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+import v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection
 
 COMBINED_1_PATH = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 CLINVAR_CRDQ_PATH = (
@@ -152,8 +153,9 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
-    @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.UpdatedReferenceDatasetCollectionTask',
+    @mock.patch.object(
+        v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection,
+        'UpdatedReferenceDatasetCollectionTask',
     )
     @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CachedReferenceDatasetQuery.query',
