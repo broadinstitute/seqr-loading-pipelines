@@ -1,17 +1,43 @@
+import gzip
 import unittest
 from unittest import mock
 
 import hail as hl
+import responses
 
 from v03_pipeline.lib.reference_data.clinvar import (
     import_submission_table,
     join_to_submission_summary_ht,
+    parse_clinvar_release_date,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
 )
 
+CLINVAR_VCF_DATA = b"""
+##fileformat=VCFv4.1
+##fileDate=2024-10-27
+##source=ClinVar
+##reference=GRCh37
+##ID=<Description="ClinVar Variation ID">
+##INFO=<ID=AF_ESP,Number=1,Type=Float,Description="allele frequencies from GO-ESP">
+"""
+
 
 class ClinvarTest(unittest.TestCase):
+    @responses.activate
+    def test_parse_clinvar_release_date(self):
+        clinvar_url = (
+            'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz'
+        )
+        responses.get(
+            clinvar_url,
+            body=gzip.compress(CLINVAR_VCF_DATA),
+        )
+        self.assertEqual(
+            parse_clinvar_release_date(clinvar_url),
+            '2024-10-27',
+        )
+
     def test_parsed_clnsig(self):
         ht = hl.Table.parallelize(
             [

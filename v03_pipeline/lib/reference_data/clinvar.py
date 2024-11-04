@@ -120,6 +120,7 @@ def download_and_import_latest_clinvar_vcf(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
+    version = parse_clinvar_release_date(clinvar_url)
     with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
         cached_tmp_file_name = os.path.join(
@@ -139,27 +140,20 @@ def download_and_import_latest_clinvar_vcf(
             min_partitions=MIN_HT_PARTITIONS,
             force_bgz=True,
         )
-        mt = mt.annotate_globals(version=_parse_clinvar_release_date(tmp_file.name))
+        mt = mt.annotate_globals(version=version)
         return join_to_submission_summary_ht(mt.rows())
 
 
-def _parse_clinvar_release_date(local_vcf_path: str) -> str:
-    """Parse clinvar release date from the VCF header.
-
-    Args:
-        local_vcf_path (str): clinvar vcf path on the local file system.
-
-    Returns:
-        str: return VCF release date as string, or None if release date not found in header.
-    """
-    with gzip.open(local_vcf_path, 'rt') as f:
-        for line in f:
-            if line.startswith('##fileDate='):
-                return line.split('=')[-1].strip()
-
-            if not line.startswith('#'):
-                return None
-
+def parse_clinvar_release_date(clinvar_url: str) -> str:
+    response = requests.get(clinvar_url, stream=True, timeout=10)
+    for byte_line in gzip.GzipFile(fileobj=response.raw):
+        line = byte_line.decode('ascii').strip()
+        if not line:
+            continue
+        if line.startswith('##fileDate='):
+            return line.split('=')[-1].strip()
+        if not line.startswith('#'):
+            return None
     return None
 
 
