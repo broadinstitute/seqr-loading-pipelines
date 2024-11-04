@@ -24,9 +24,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
-    UpdatedReferenceDatasetCollectionTask,
-)
 
 logger = get_logger(__name__)
 
@@ -75,6 +72,14 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                     ],
                 ),
             )
+        # Special nested import to avoid a circular dependency issue
+        # (ValidateCallset -> this file -> UpdatedReferenceDatasetCollection -> ValidateCallset)
+        # The specific CRDQ referenced in ValidateCallset will never reach
+        # this line due to it being a "query_raw_dataset"
+        from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
+            UpdatedReferenceDatasetCollectionTask,
+        )
+
         return UpdatedReferenceDatasetCollectionTask(
             self.reference_genome,
             self.dataset_type,
