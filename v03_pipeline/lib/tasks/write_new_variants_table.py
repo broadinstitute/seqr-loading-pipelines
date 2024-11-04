@@ -24,8 +24,8 @@ from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
-from v03_pipeline.lib.tasks.base.base_project_info_params import (
-    BaseLoadingRunWithProjectInfoParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
@@ -45,7 +45,7 @@ GENCODE_RELEASE = 42
 GENCODE_FOR_VEP_RELEASE = 44
 
 
-@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
@@ -79,10 +79,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
-                self.reference_genome,
-                self.dataset_type,
-            ),
+            self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
         ]
         if self.dataset_type.has_lookup_table:
             # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.

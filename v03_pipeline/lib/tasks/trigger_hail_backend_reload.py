@@ -4,15 +4,15 @@ import requests
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
-from v03_pipeline.lib.tasks.base.base_project_info_params import (
-    BaseLoadingRunWithProjectInfoParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
 
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class TriggerHailBackendReload(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
