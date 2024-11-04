@@ -159,7 +159,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.clinvar_versions_equal'
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.clinvar_versions_equal',
     )
     def test_update_task_with_empty_reference_data_table(
         self,

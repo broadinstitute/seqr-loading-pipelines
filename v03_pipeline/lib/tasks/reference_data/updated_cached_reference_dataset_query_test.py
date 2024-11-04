@@ -161,7 +161,7 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CachedReferenceDatasetQuery.query',
     )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.clinvar_versions_equal'
+        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.clinvar_versions_equal',
     )
     def test_clinvar(
         self,

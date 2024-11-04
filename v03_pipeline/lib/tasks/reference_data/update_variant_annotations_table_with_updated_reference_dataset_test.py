@@ -723,7 +723,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         MOCK_CONFIG,
     )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
     )
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
@@ -945,7 +945,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         MOCK_CONFIG_MITO,
     )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
     )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
@@ -1107,7 +1107,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         MOCK_CONFIG,
     )
     @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal'
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
     )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
