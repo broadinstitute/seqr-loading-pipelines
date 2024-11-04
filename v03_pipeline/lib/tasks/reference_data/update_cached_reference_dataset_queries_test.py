@@ -4,7 +4,6 @@ from unittest import mock
 import luigi
 
 from v03_pipeline.lib.model import (
-    CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceGenome,
     SampleType,
@@ -29,7 +28,7 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
             'project_remap_paths': [],
             'project_pedigree_paths': [],
             'skip_validation': True,
-            'run_id':'1',
+            'run_id': '1',
         }
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh37,
@@ -51,7 +50,7 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
             'project_remap_paths': [],
             'project_pedigree_paths': [],
             'skip_validation': True,
-            'run_id':'2',
+            'run_id': '2',
         }
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
@@ -73,7 +72,7 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
             'project_remap_paths': [],
             'project_pedigree_paths': [],
             'skip_validation': True,
-            'run_id':'3',
+            'run_id': '3',
         }
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
@@ -95,7 +94,7 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
             'project_remap_paths': [],
             'project_pedigree_paths': [],
             'skip_validation': True,
-            'run_id':'4',
+            'run_id': '4',
         }
         task = UpdateCachedReferenceDatasetQueries(
             reference_genome=ReferenceGenome.GRCh38,
