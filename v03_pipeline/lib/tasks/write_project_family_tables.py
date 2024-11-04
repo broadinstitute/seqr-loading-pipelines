@@ -13,9 +13,7 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteProjectFamilyTablesTask(luigi.Task):
-    project_guid = luigi.Parameter()
-    project_remap_path = luigi.Parameter()
-    project_pedigree_path = luigi.Parameter()
+    project_i = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,7 +41,7 @@ class WriteProjectFamilyTablesTask(luigi.Task):
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
-                self.project_guid,
+                self.project_guids[self.project_i],
             ),
         )
         for family_guid in set(hl.eval(ht.globals.family_samples).keys()):
