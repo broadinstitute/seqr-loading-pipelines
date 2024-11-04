@@ -5,6 +5,7 @@ from unittest import mock
 import hail as hl
 import luigi
 
+import v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
@@ -24,7 +25,6 @@ from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_quer
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
-import v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection
 
 COMBINED_1_PATH = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 CLINVAR_CRDQ_PATH = (
