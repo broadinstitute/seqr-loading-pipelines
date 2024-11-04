@@ -954,7 +954,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
-        mock_clinvar_versions_equal.return_value = True,
+        mock_clinvar_versions_equal.return_value = (True,)
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
