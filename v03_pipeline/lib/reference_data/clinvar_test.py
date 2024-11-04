@@ -24,6 +24,7 @@ CLINVAR_VCF_DATA = """
 
 
 class ClinvarTest(unittest.TestCase):
+    @responses.activate
     def test_parse_clinvar_release_date(self):
         clinvar_url = (
             'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz'
