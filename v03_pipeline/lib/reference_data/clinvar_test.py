@@ -13,7 +13,7 @@ from v03_pipeline.lib.reference_data.clinvar import (
     parsed_clnsig,
 )
 
-CLINVAR_VCF_DATA = """
+CLINVAR_VCF_DATA = b"""
 ##fileformat=VCFv4.1
 ##fileDate=2024-10-27
 ##source=ClinVar
@@ -29,10 +29,9 @@ class ClinvarTest(unittest.TestCase):
         clinvar_url = (
             'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz'
         )
-        responses.add(
-            responses.GET,
+        responses.get(
             clinvar_url,
-            body=gzip.compress(('\n'.join(CLINVAR_VCF_DATA)).encode()),
+            body=gzip.compress(CLINVAR_VCF_DATA),
         )
         self.assertEqual(
             parse_clinvar_release_date(clinvar_url),

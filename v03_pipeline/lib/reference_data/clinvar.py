@@ -147,7 +147,9 @@ def download_and_import_latest_clinvar_vcf(
 def parse_clinvar_release_date(clinvar_url: str) -> str:
     response = requests.get(clinvar_url, stream=True, timeout=10)
     for byte_line in gzip.GzipFile(fileobj=response.raw):
-        line = byte_line.decode('ascii')
+        line = byte_line.decode('ascii').strip()
+        if not line:
+            continue
         if line.startswith('##fileDate='):
             return line.split('=')[-1].strip()
         if not line.startswith('#'):
