@@ -10,6 +10,7 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -20,6 +21,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection 
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 COMBINED_2_PATH = 'v03_pipeline/var/test/reference_data/test_combined_2.ht'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 MOCK_PRIMATE_AI_DATASET_HT = hl.Table.parallelize(
     [
@@ -170,6 +172,13 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='2',
         )
         worker.add(task)
         worker.run()
@@ -279,6 +288,13 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='2',
         )
         worker.add(task)
         worker.run()

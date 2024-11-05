@@ -4,15 +4,15 @@ import luigi.util
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
 )
-from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
-    BaseLoadingPipelineParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
 )
 
 
-@luigi.util.inherits(BaseLoadingPipelineParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateCachedReferenceDatasetQueries(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

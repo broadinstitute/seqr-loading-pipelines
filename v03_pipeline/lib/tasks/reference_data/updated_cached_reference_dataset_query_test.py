@@ -5,12 +5,14 @@ from unittest import mock
 import hail as hl
 import luigi
 
+import v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection
 from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleType,
 )
 from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
@@ -28,6 +30,7 @@ COMBINED_1_PATH = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 CLINVAR_CRDQ_PATH = (
     'v03_pipeline/var/test/reference_data/test_clinvar_path_variants_crdq.ht'
 )
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 MOCK_CONFIG = {
     'gnomad_qc': {
@@ -109,6 +112,13 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='1',
         )
         worker.add(task)
         worker.run()
@@ -143,8 +153,9 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
-    @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.UpdatedReferenceDatasetCollectionTask',
+    @mock.patch.object(
+        v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection,
+        'UpdatedReferenceDatasetCollectionTask',
     )
     @mock.patch(
         'v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query.CachedReferenceDatasetQuery.query',
@@ -198,6 +209,13 @@ class UpdatedCachedReferenceDatasetQueryTest(MockedDatarootTestCase):
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             crdq=CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='2',
         )
         worker.add(task)
         worker.run()

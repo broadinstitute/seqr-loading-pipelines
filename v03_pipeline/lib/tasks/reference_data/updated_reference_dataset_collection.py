@@ -11,18 +11,34 @@ from v03_pipeline.lib.reference_data.compare_globals import (
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     update_or_create_joined_ht,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
+)
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
     reference_dataset_collection = luigi.EnumParameter(enum=ReferenceDatasetCollection)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._datasets_to_update = []
+
+    def requires(self) -> luigi.Task:
+        # Though there is no explicit functional dependency between
+        # validing the callset and updating the reference data, it's
+        # a more user-friendly experience for the callset validation
+        # to fail/succeed prior to attempting any
+        # compute intensive work.
+        #
+        # Note that, if validation is disabled or skipped the task
+        # still runs but is a no-op.
+        return self.clone(ValidateCallsetTask)
 
     def complete(self) -> bool:
         self._datasets_to_update = []
