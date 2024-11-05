@@ -1,13 +1,18 @@
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
+    clinvar_versions_equal,
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -15,6 +20,7 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseUpdateVariantAnnotationsTableTask,
 ):
@@ -49,6 +55,17 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             for rdc in self.reference_dataset_collections
             for dataset in rdc.datasets(self.dataset_type)
         ]
+
+        if any(
+            'clinvar' in d for d in datasets_to_check
+        ) and not clinvar_versions_equal(
+            hl.read_table(self.output().path),
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            datasets_to_check.remove('clinvar')
+            self._datasets_to_update.add('clinvar')
+
         annotations_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
             datasets_to_check,

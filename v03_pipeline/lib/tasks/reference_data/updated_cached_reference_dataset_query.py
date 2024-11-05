@@ -12,6 +12,7 @@ from v03_pipeline.lib.paths import (
 )
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
+    clinvar_versions_equal,
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.config import CONFIG
@@ -19,15 +20,16 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_ht_path,
     import_ht_from_config_path,
 )
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
+)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
-    UpdatedReferenceDatasetCollectionTask,
-)
 
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
     crdq = luigi.EnumParameter(enum=CachedReferenceDatasetQuery)
 
@@ -38,14 +40,21 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             )
             return False
 
-        datasets_to_check = [self.crdq.dataset(self.dataset_type)]
+        dataset = self.crdq.dataset(self.dataset_type)
+        if 'clinvar' in dataset and not clinvar_versions_equal(
+            hl.read_table(self.output().path),
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            return False
+
         crdq_globals = Globals.from_ht(
             hl.read_table(self.output().path),
-            datasets_to_check,
+            [dataset],
         )
         dataset_config_globals = Globals.from_dataset_configs(
             self.reference_genome,
-            datasets_to_check,
+            [dataset],
         )
         return not get_datasets_to_update(
             crdq_globals,
@@ -71,6 +80,16 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
                     ],
                 ),
             )
+        # Special nested import to avoid a circular dependency issue
+        # (ValidateCallset -> this file -> UpdatedReferenceDatasetCollection -> ValidateCallset)
+        # The specific CRDQ referenced in ValidateCallset will never reach
+        # this line due to it being a "query_raw_dataset".  In theory this
+        # would be fixed by splitting the CRDQ into raw_dataset and non-raw_dataset
+        # queries.
+        from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
+            UpdatedReferenceDatasetCollectionTask,
+        )
+
         return UpdatedReferenceDatasetCollectionTask(
             self.reference_genome,
             self.dataset_type,

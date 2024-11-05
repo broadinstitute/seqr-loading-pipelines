@@ -19,6 +19,7 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
+    SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
@@ -37,6 +38,8 @@ TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
+TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 
 
 MOCK_CADD_CONFIG = {
@@ -58,7 +61,7 @@ MOCK_CADD_CONFIG = {
 }
 MOCK_CLINVAR_CONFIG = {
     **CONFIG['clinvar']['38'],
-    'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+    'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
     'custom_import': lambda *_: hl.Table.parallelize(
         [],
         hl.tstruct(
@@ -483,7 +486,7 @@ MOCK_CONFIG_MITO = {
     'clinvar_mito': {
         '38': {
             **CONFIG['clinvar_mito']['38'],
-            'source_path': 'ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            'source_path': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
@@ -719,12 +722,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
+    )
     def test_update_vat_with_updated_rdc_snv_indel_38(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = True
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
@@ -754,6 +762,13 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='3',
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -830,7 +845,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 hl.Struct(
                     paths=hl.Struct(
                         cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
-                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                        clinvar='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
                         dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
                         eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
                         exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',
@@ -929,12 +944,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG_MITO,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
+    )
     def test_update_vat_with_updated_rdc_mito_38(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = (True,)
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
@@ -964,6 +984,13 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_MITO_MT,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='1',
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -982,7 +1009,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
                         mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
-                        clinvar_mito='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+                        clinvar_mito='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                         dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
                         local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
@@ -1079,12 +1106,17 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
         MOCK_CONFIG,
     )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset.clinvar_versions_equal',
+    )
     def test_update_vat_with_updated_rdc_snv_indel_37(
         self,
+        mock_clinvar_versions_equal,
         mock_initialize_table,
         mock_update_crdqs_task,
         mock_update_rdc_task,
     ):
+        mock_clinvar_versions_equal.return_value = True
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_initialize_table.return_value = hl.Table.parallelize(
@@ -1114,6 +1146,13 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SNV_INDEL_VCF,
+            project_guids=[],
+            project_remap_paths=[],
+            project_pedigree_paths=[],
+            skip_validation=True,
+            run_id='2',
         )
         worker = luigi.worker.Worker()
         worker.add(task)
@@ -1128,7 +1167,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 hl.Struct(
                     paths=hl.Struct(
                         cadd='gs://seqr-reference-data/GRCh37/CADD/CADD_snvs_and_indels.v1.6.ht',
-                        clinvar='ftp://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+                        clinvar='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
                         dbnsfp='gs://seqr-reference-data/GRCh37/dbNSFP/v2.9.3/dbNSFP2.9.3_variant.ht',
                         eigen='gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
                         exac='gs://seqr-reference-data/GRCh37/gnomad/ExAC.r1.sites.vep.ht',

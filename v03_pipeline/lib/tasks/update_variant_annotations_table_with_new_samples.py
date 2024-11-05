@@ -9,8 +9,8 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
 )
-from v03_pipeline.lib.tasks.base.base_project_info_params import (
-    BaseLoadingRunWithProjectInfoParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
@@ -18,7 +18,7 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
-@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class UpdateVariantAnnotationsTableWithNewSamplesTask(
     BaseUpdateVariantAnnotationsTableTask,
 ):
@@ -74,6 +74,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             # and either present or not present in the existing annotations table.
             callset_variants_ht = ht.semi_join(callset_ht)
             ht = ht.anti_join(callset_ht)
+            lookup_ht = hl.read_table(
+                lookup_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
+            )
             callset_variants_ht = callset_variants_ht.annotate(
                 **get_fields(
                     callset_variants_ht,
@@ -88,6 +94,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 ),
             )
             ht = ht.union(callset_variants_ht, unify=True)
+
+            # Variants may have fallen out of the callset and
+            # have been removed from the lookup table during modification.
+            # Ensure we don't proceed with those variants.
+            ht = ht.semi_join(lookup_ht)
 
         # Fix up the globals and mark the table as updated with these callset/project pairs.
         ht = self.annotate_globals(ht)

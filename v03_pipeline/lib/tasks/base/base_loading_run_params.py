@@ -19,6 +19,9 @@ class BaseLoadingRunParams(luigi.Task):
     run_id = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
     callset_path = luigi.Parameter()
+    project_guids = luigi.ListParameter(default=[])
+    project_remap_paths = luigi.ListParameter(default=[])
+    project_pedigree_paths = luigi.ListParameter(default=[])
     ignore_missing_samples_when_remapping = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,

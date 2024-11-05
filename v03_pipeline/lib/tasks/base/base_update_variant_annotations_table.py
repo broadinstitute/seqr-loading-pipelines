@@ -36,16 +36,12 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = [
-            UpdateCachedReferenceDatasetQueries(
-                reference_genome=self.reference_genome,
-                dataset_type=self.dataset_type,
-            ),
+            self.clone(UpdateCachedReferenceDatasetQueries),
         ]
         requirements.extend(
-            UpdatedReferenceDatasetCollectionTask(
-                self.reference_genome,
-                self.dataset_type,
-                rdc,
+            self.clone(
+                UpdatedReferenceDatasetCollectionTask,
+                reference_dataset_collection=rdc,
             )
             for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
                 self.reference_genome,

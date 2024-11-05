@@ -3,6 +3,7 @@ import json
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.paths import relatedness_check_tsv_path
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
@@ -37,6 +38,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                 json.load(f),
                 {
                     'callsets': [TEST_VCF],
+                    'project_guids': ['R0113_test_project', 'R0114_project4'],
                     'failed_family_samples': {
                         'missing_samples': {
                             'efg_1': {
@@ -70,5 +72,10 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                     },
                     'run_id': 'run_123456',
                     'sample_type': SampleType.WGS.value,
+                    'relatedness_check_file_path': relatedness_check_tsv_path(
+                        ReferenceGenome.GRCh38,
+                        DatasetType.SNV_INDEL,
+                        TEST_VCF,
+                    ),
                 },
             )
