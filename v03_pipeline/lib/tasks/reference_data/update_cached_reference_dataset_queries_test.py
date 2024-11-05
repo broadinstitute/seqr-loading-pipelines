@@ -38,7 +38,12 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         worker.add(task)
         worker.run()
         self.assertTrue(task.complete())
-        self.assertEqual(mock_crdq_task.call_count, 4)
+        call_args_list = mock_crdq_task.call_args_list
+        self.assertEqual(len(call_args_list), 4)
+        self.assertEqual(
+            [x.kwargs['crdq'] for x in call_args_list],
+            list(CachedReferenceDatasetQuery),
+        )
 
     def test_38_snv_indel(self, mock_crdq_task):
         mock_crdq_task.return_value = MockCompleteTask()
@@ -60,7 +65,12 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         worker.add(task)
         worker.run()
         self.assertTrue(task.complete())
-        self.assertEqual(mock_crdq_task.call_count, 4)
+        call_args_list = mock_crdq_task.call_args_list
+        self.assertEqual(len(call_args_list), 4)
+        self.assertEqual(
+            [x.kwargs['crdq'] for x in call_args_list],
+            list(CachedReferenceDatasetQuery),
+        )
 
     def test_38_mito(self, mock_crdq_task):
         mock_crdq_task.return_value = MockCompleteTask()
@@ -82,7 +92,12 @@ class UpdateCachedReferenceDatasetQueriesTest(unittest.TestCase):
         worker.add(task)
         worker.run()
         self.assertTrue(task.complete())
-        self.assertEqual(mock_crdq_task.call_count, 1)
+        call_args_list = mock_crdq_task.call_args_list
+        self.assertEqual(len(call_args_list), 1)
+        self.assertEqual(
+            next(x.kwargs['crdq'] for x in call_args_list),
+            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
+        )
 
     def test_38_sv(self, mock_crdq_task):
         mock_crdq_task.return_value = MockCompleteTask()
