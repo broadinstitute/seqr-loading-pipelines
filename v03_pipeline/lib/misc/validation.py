@@ -173,9 +173,17 @@ def validate_imputed_sex_ploidy(
                 & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
             )
             | (
-                # At least one call is haploid but the sex is Female
+                # At least one call is haploid but the sex is Female, X0, XXY, XYY, or XXX
                 hl.agg.any(~mt.GT.is_diploid())
-                & (sex_check_ht[mt.s].predicted_sex == Sex.FEMALE.value)
+                & hl.literal(
+                    {
+                        Sex.FEMALE.value,
+                        Sex.X0.value,
+                        Sex.XYY.value,
+                        Sex.XXY.value,
+                        Sex.XXX.value,
+                    },
+                ).contains(sex_check_ht[mt.s].predicted_sex)
             )
         ),
     )

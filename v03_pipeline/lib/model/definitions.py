@@ -12,6 +12,10 @@ class Sex(str, Enum):
     FEMALE = 'F'
     MALE = 'M'
     UNKNOWN = 'U'
+    XXX = 'XXX'
+    X0 = 'X0'
+    XXY = 'XXY'
+    XYY = 'XYY'
 
     @property
     def imputed_sex_value(self):
@@ -19,7 +23,7 @@ class Sex(str, Enum):
             Sex.MALE: 'Male',
             Sex.FEMALE: 'Female',
             Sex.UNKNOWN: 'Unknown',
-        }[self]
+        }.get(self, self.name)
 
 
 class PipelineVersion(str, Enum):
