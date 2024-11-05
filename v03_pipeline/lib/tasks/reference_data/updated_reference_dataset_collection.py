@@ -6,6 +6,7 @@ from v03_pipeline.lib.model import ReferenceDatasetCollection
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
 from v03_pipeline.lib.reference_data.compare_globals import (
     Globals,
+    clinvar_versions_equal,
     get_datasets_to_update,
 )
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
@@ -52,6 +53,14 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
                 ),
             )
             return False
+
+        if any('clinvar' in d for d in datasets) and not clinvar_versions_equal(
+            hl.read_table(self.output().path),
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            datasets.remove('clinvar')
+            self._datasets_to_update.add('clinvar')
 
         joined_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),

@@ -4,8 +4,10 @@ import hail as hl
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import (
+    DatasetType,
     ReferenceGenome,
 )
+from v03_pipeline.lib.reference_data.clinvar import parse_clinvar_release_date
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.reference_data.dataset_table_operations import (
     get_all_select_fields,
@@ -14,6 +16,17 @@ from v03_pipeline.lib.reference_data.dataset_table_operations import (
 )
 
 logger = get_logger(__name__)
+
+
+def clinvar_versions_equal(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> bool:
+    dataset = 'clinvar_mito' if dataset_type == DatasetType.MITO else 'clinvar'
+    return hl.eval(ht.globals.versions[dataset]) == parse_clinvar_release_date(
+        CONFIG[dataset][reference_genome.v02_value],
+    )
 
 
 @dataclasses.dataclass

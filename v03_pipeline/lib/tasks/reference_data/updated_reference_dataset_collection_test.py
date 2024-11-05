@@ -158,14 +158,19 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         MOCK_CONFIG,
     )
     @mock.patch.object(ReferenceDatasetCollection, 'datasets')
+    @mock.patch(
+        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.clinvar_versions_equal',
+    )
     def test_update_task_with_empty_reference_data_table(
         self,
+        mock_clinvar_versions_equal,
         mock_rdc_datasets,
     ) -> None:
         """
         Given a new task with no existing reference dataset collection table,
         expect the task to create a new reference dataset collection table for all datasets in the collection.
         """
+        mock_clinvar_versions_equal.return_value = True
         mock_rdc_datasets.return_value = ['cadd', 'primate_ai', 'clinvar']
         worker = luigi.worker.Worker()
         task = UpdatedReferenceDatasetCollectionTask(
