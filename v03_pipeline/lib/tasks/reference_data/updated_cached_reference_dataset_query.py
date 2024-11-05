@@ -75,7 +75,9 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         # Special nested import to avoid a circular dependency issue
         # (ValidateCallset -> this file -> UpdatedReferenceDatasetCollection -> ValidateCallset)
         # The specific CRDQ referenced in ValidateCallset will never reach
-        # this line due to it being a "query_raw_dataset"
+        # this line due to it being a "query_raw_dataset".  In theory this
+        # would be fixed by splitting the CRDQ into raw_dataset and non-raw_dataset
+        # queries.
         from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
             UpdatedReferenceDatasetCollectionTask,
         )
