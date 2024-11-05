@@ -4,6 +4,7 @@ from unittest import mock
 import luigi
 
 from v03_pipeline.lib.model import (
+    CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceGenome,
     SampleType,
