@@ -22,7 +22,7 @@ def clinvar_versions_equal(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-):
+) -> bool:
     dataset = 'clinvar_mito' if dataset_type == DatasetType.MITO else 'clinvar'
     return hl.eval(ht.globals.versions[dataset]) == parse_clinvar_release_date(
         CONFIG[dataset][reference_genome.v02_value],
