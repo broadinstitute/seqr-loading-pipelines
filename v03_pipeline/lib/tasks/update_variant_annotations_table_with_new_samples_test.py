@@ -57,7 +57,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
-TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
+TEST_COMBINED_MITO = 'v03_pipeline/var/test/reference_data/test_combined_mito_2.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
@@ -135,7 +135,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         shutil.copytree(
-            TEST_COMBINED_MITO_1,
+            TEST_COMBINED_MITO,
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
@@ -971,7 +971,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         helix_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
-                        mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+                        mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
                         local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
                     ),
                     versions=hl.Struct(
@@ -982,7 +982,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
                         helix_mito='20200327',
                         hmtvar='Jan. 10 2022',
                         mitomap='Feb. 04 2022',
-                        mitimpact='3.0.7',
+                        mitimpact='3.1.3',
                         local_constraint_mito='2024-07-24',
                     ),
                     enums=hl.Struct(
