@@ -34,7 +34,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
-TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
+TEST_COMBINED_MITO = 'v03_pipeline/var/test/reference_data/test_combined_mito_2.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
@@ -604,13 +604,14 @@ MOCK_CONFIG_MITO = {
     'mitimpact': {
         '38': {
             **CONFIG['mitimpact']['38'],
-            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
             'custom_import': lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
-                    APOGEE_score=hl.tfloat64,
+                    APOGEE1_score=hl.tfloat64,
+                    APOGEE2_score=hl.tfloat64,
                 ),
                 key=['locus', 'alleles'],
                 globals=hl.Struct(),
@@ -686,7 +687,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
         shutil.copytree(
-            TEST_COMBINED_MITO_1,
+            TEST_COMBINED_MITO,
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
@@ -1008,7 +1009,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         helix_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
                         hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
                         mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
-                        mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.0.7.ht',
+                        mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
                         clinvar_mito='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
                         dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
                         high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
@@ -1019,7 +1020,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         helix_mito='20200327',
                         hmtvar='Jan. 10 2022',
                         mitomap='Feb. 04 2022',
-                        mitimpact='3.0.7',
+                        mitimpact='3.1.3',
                         clinvar_mito='2023-07-22',
                         dbnsfp_mito='4.2',
                         high_constraint_region_mito='Feb-15-2022',
@@ -1095,7 +1096,10 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     hmtvar=hl.Struct(score=0.6700000166893005),
                     mitomap=None,
-                    mitimpact=hl.Struct(score=0.5199999809265137),
+                    mitimpact=hl.Struct(
+                        score=0.5199999809265137,
+                        apogee2_score=0.42500001192092896,
+                    ),
                     high_constraint_region_mito=True,
                     local_constraint_mito=hl.Struct(score=0.5),
                 ),
