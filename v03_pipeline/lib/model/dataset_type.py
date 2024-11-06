@@ -362,6 +362,10 @@ class DatasetType(str, Enum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def requires_dataproc(self):
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def should_export_to_vcf(self):
         return self == DatasetType.SV
 
