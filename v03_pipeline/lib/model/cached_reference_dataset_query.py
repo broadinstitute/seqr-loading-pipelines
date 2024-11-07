@@ -5,6 +5,9 @@ import hail as hl
 
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.reference_dataset_collection import (
+    ReferenceDatasetCollection,
+)
 from v03_pipeline.lib.reference_data.queries import (
     clinvar_path_variants,
     gnomad_coding_and_noncoding_variants,
@@ -30,11 +33,13 @@ class CachedReferenceDatasetQuery(str, Enum):
         }.get(self)
 
     @property
-    def query_raw_dataset(self) -> bool:
+    def reference_dataset_collection(self) -> ReferenceDatasetCollection:
         return {
-            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: True,
-            CachedReferenceDatasetQuery.GNOMAD_QC: True,
-        }.get(self, False)
+            CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS: ReferenceDatasetCollection.COMBINED,
+            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS: None,
+            CachedReferenceDatasetQuery.GNOMAD_QC: None,
+            CachedReferenceDatasetQuery.HIGH_AF_VARIANTS: ReferenceDatasetCollection.COMBINED,
+        }[self]
 
     @property
     def query(self) -> Callable[[hl.Table, ReferenceGenome], hl.Table]:
