@@ -9,7 +9,6 @@ CONFIG = {
     'annotate': {
         'locus': lambda ht: hl.locus('chrM', hl.parse_int32(ht.Start)),
         'alleles': lambda ht: [ht.Ref, ht.Alt],
-        'APOGEE1_score': lambda ht: hl.parse_float(ht.APOGEE1_score),
         'APOGEE2_score': lambda ht: hl.parse_float(ht.APOGEE2_score),
     },
 }

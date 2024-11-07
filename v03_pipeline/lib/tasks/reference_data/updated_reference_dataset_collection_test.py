@@ -18,12 +18,10 @@ from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
 )
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 COMBINED_2_PATH = 'v03_pipeline/var/test/reference_data/test_combined_2.ht'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
 
 MOCK_PRIMATE_AI_DATASET_HT = hl.Table.parallelize(
     [
@@ -70,34 +68,6 @@ MOCK_CADD_DATASET_HT = hl.Table.parallelize(
     ),
 )
 MOCK_CONFIG = {
-    'mitimpact': {
-        '38': {
-            **CONFIG['mitimpact']['38'],
-            'source_path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
-            'custom_import': lambda *_: hl.Table.parallelize(
-                [
-                    {
-                        'locus': hl.Locus(
-                            contig='chrM',
-                            position=1,
-                            reference_genome='GRCh38',
-                        ),
-                        'alleles': ['A', 'C'],
-                        'APOGEE1_score': 0.55,
-                        'APOGEE2_score': 0.66,
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
-                    APOGEE1_score=hl.tfloat64,
-                    APOGEE2_score=hl.tfloat64,
-                ),
-                key=['locus', 'alleles'],
-                globals=hl.Struct(),
-            ),
-        },
-    },
     'primate_ai': {
         '38': {
             'version': 'v0.3',
@@ -370,73 +340,6 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
                         primate_ai=hl.Struct(),
                     ),
                     date=ANY,
-                ),
-            ],
-        )
-
-    @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.compare_globals.CONFIG',
-        MOCK_CONFIG,
-    )
-    @mock.patch.dict(
-        'v03_pipeline.lib.reference_data.dataset_table_operations.CONFIG',
-        MOCK_CONFIG,
-    )
-    @mock.patch(
-        'v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection.ValidateCallsetTask',
-    )
-    @mock.patch.object(ReferenceDatasetCollection, 'datasets')
-    def test_update_mito_rdc_additional_field(
-        self,
-        mock_rdc_datasets,
-        mock_validate_callset_task,
-    ) -> None:
-        mock_validate_callset_task.return_value = MockCompleteTask()
-        mock_rdc_datasets.return_value = ['mitimpact']
-
-        # Reference dataset collection has older mitimpact version, path, selects
-        shutil.copytree(
-            TEST_COMBINED_MITO_1,
-            valid_reference_dataset_collection_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.MITO,
-                ReferenceDatasetCollection.COMBINED,
-            ),
-        )
-
-        worker = luigi.worker.Worker()
-        task = UpdatedReferenceDatasetCollectionTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.MITO,
-            reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=[],
-            project_remap_paths=[],
-            project_pedigree_paths=[],
-            skip_validation=True,
-            run_id='2',
-        )
-        worker.add(task)
-        worker.run()
-        self.assertTrue(task.complete())
-
-        # Expect additional mitimpact select field to be present in rdc
-        ht = hl.read_table(task.output().path)
-        self.assertCountEqual(
-            ht.collect(),
-            [
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'C'],
-                    mitimpact=hl.Struct(
-                        score=0.550000011920929,
-                        apogee2_score=0.6600000262260437,
-                    ),
                 ),
             ],
         )

@@ -34,7 +34,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
-TEST_COMBINED_MITO = 'v03_pipeline/var/test/reference_data/test_combined_mito_2.ht'
+TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
 TEST_INTERVAL_MITO_1 = 'v03_pipeline/var/test/reference_data/test_interval_mito_1.ht'
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
@@ -610,7 +610,6 @@ MOCK_CONFIG_MITO = {
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
                     alleles=hl.tarray(hl.tstr),
-                    APOGEE1_score=hl.tfloat64,
                     APOGEE2_score=hl.tfloat64,
                 ),
                 key=['locus', 'alleles'],
@@ -687,7 +686,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
         shutil.copytree(
-            TEST_COMBINED_MITO,
+            TEST_COMBINED_MITO_1,
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
@@ -1096,10 +1095,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                     hmtvar=hl.Struct(score=0.6700000166893005),
                     mitomap=None,
-                    mitimpact=hl.Struct(
-                        score=0.5199999809265137,
-                        apogee2_score=0.42500001192092896,
-                    ),
+                    mitimpact=hl.Struct(score=0.42500001192092896),
                     high_constraint_region_mito=True,
                     local_constraint_mito=hl.Struct(score=0.5),
                 ),

@@ -57,7 +57,7 @@ TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_COMBINED_1 = 'v03_pipeline/var/test/reference_data/test_combined_1.ht'
 TEST_COMBINED_37 = 'v03_pipeline/var/test/reference_data/test_combined_37.ht'
-TEST_COMBINED_MITO = 'v03_pipeline/var/test/reference_data/test_combined_mito_2.ht'
+TEST_COMBINED_MITO_1 = 'v03_pipeline/var/test/reference_data/test_combined_mito_1.ht'
 TEST_HGMD_1 = 'v03_pipeline/var/test/reference_data/test_hgmd_1.ht'
 TEST_HGMD_37 = 'v03_pipeline/var/test/reference_data/test_hgmd_37.ht'
 TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
@@ -135,7 +135,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         shutil.copytree(
-            TEST_COMBINED_MITO,
+            TEST_COMBINED_MITO_1,
             valid_reference_dataset_collection_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,

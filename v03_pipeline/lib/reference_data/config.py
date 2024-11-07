@@ -505,7 +505,7 @@ CONFIG = {
         '38': {
             'version': '3.1.3',
             'path': 'gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
-            'select': {'score': 'APOGEE1_score', 'apogee2_score': 'APOGEE2_score'},
+            'select': {'score': 'APOGEE2_score'},
         },
     },
     'hmtvar': {
