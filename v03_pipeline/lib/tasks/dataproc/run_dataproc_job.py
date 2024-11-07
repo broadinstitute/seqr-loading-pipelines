@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 class RunDataprocJobTask(luigi.Task):
     run_id = luigi.Parameter()
     job_id = luigi.Parameter()
-    additional_args = luigi.ListParameter()
+    additional_args = luigi.ListParameter(default=[])
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,7 +45,7 @@ class RunDataprocJobTask(luigi.Task):
                 request={
                     'project_id': Env.GCLOUD_PROJECT,
                     'region': Env.GCLOUD_REGION,
-                    'job_id': f'{self.job_id}_{self.run_id}',
+                    'job_id': f'{self.job_id}-{self.run_id}',
                 },
             )
         except Exception:  # noqa: BLE001
@@ -71,6 +71,7 @@ class RunDataprocJobTask(luigi.Task):
                     'pyspark_job': {
                         'main_python_file_uri': f'{SEQR_PIPELINE_RUNNER_BUILD}/bin/run_task.py',
                         'args': [
+                            self.job_id,
                             '--local-scheduler',
                             '--reference-genome',
                             self.reference_genome.value,

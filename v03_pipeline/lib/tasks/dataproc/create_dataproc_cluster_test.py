@@ -16,14 +16,12 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 )
 class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_dataset_type_unsupported(self, mock_cluster_controller: Mock) -> None:
-        worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
             run_id='1',
         )
-        worker.add(task)
-        self.assertRaises(RuntimeError, worker.run)
+        self.assertRaises(RuntimeError, task.complete)
 
     def test_spinup_cluster_already_exists_error(
         self,
@@ -32,6 +30,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
             status=SimpleNamespace(state='ERROR'),
+            cluster_name='abc',
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')

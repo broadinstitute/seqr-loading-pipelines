@@ -17,7 +17,7 @@ ERROR_STATE = 'ERROR'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(pip_freeze.freeze())
-SUCCESS_STATE = 'RUNNING'
+RUNNING_STATE = 'RUNNING'
 TIMEOUT_S = 900
 
 logger = get_logger(__name__)
@@ -155,7 +155,7 @@ class CreateDataprocClusterTask(luigi.Task):
             if cluster.status.state == ERROR_STATE:
                 msg = f'Cluster {cluster.cluster_name} entered ERROR state'
                 logger.error(msg)
-            return cluster.status.state == SUCCESS_STATE
+            return cluster.status.state == RUNNING_STATE
 
     def run(self):
         operation = self.client.create_cluster(
