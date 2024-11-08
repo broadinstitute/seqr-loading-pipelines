@@ -42,6 +42,8 @@ class UpdatedReferenceDataset(BaseUpdateTask):
                 self.reference_dataset.raw_dataset_path,
                 self.reference_genome,
             )
+            # selects logic goes here
+            # enum logic goes here
             ht = ht.annotate_globals(
                 version=self.reference_dataset.version,
                 enums=hl.Struct(),  # expect more complex enum logic
