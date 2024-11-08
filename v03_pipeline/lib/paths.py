@@ -12,6 +12,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.reference_data.reference_dataset import ReferenceDataset
 
 
 def _pipeline_prefix(
@@ -54,6 +55,27 @@ def _v03_reference_data_prefix(
         root,
         reference_genome.value,
         dataset_type.value,
+    )
+
+
+def _v03_reference_dataset_prefix(
+    access_control: AccessControl,
+    reference_genome: ReferenceGenome,
+) -> str:
+    root = (
+        Env.PRIVATE_REFERENCE_DATASETS_DIR
+        if access_control == AccessControl.PRIVATE
+        else Env.REFERENCE_DATASETS_DIR
+    )
+    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+        return os.path.join(
+            root,
+            PipelineVersion.V03.value,
+            reference_genome.value,
+        )
+    return os.path.join(
+        root,
+        reference_genome.value,
     )
 
 
@@ -301,6 +323,20 @@ def valid_reference_dataset_collection_path(
         ),
         'reference_datasets',
         f'{reference_dataset_collection.value}.ht',
+    )
+
+
+def valid_reference_dataset_path(
+    reference_genome: ReferenceGenome,
+    reference_dataset: ReferenceDataset,
+) -> str | None:
+    return os.path.join(
+        _v03_reference_dataset_prefix(
+            reference_dataset.access_control,
+            reference_genome,
+        ),
+        'reference_datasets',
+        f'{reference_dataset.name}_{reference_dataset.version}.ht',
     )
 
 
