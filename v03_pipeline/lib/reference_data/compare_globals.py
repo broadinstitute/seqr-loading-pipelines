@@ -25,7 +25,7 @@ def clinvar_versions_equal(
 ) -> bool:
     dataset = 'clinvar_mito' if dataset_type == DatasetType.MITO else 'clinvar'
     return hl.eval(ht.globals.versions[dataset]) == parse_clinvar_release_date(
-        CONFIG[dataset][reference_genome.v02_value]['path'],
+        CONFIG[dataset][reference_genome.v02_value]['source_path'],
     )
 
 
