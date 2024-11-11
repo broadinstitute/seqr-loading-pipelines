@@ -25,7 +25,7 @@ class AlleleRegistryTest(MockedDatarootTestCase):
     def tearDown(self):
         shutil.rmtree(self.temp_dir.name)
 
-    @patch.object(requests, 'put')
+    @patch.object(requests.Session, 'put')
     @patch('v03_pipeline.lib.misc.allele_registry.Env')
     @patch('v03_pipeline.lib.misc.allele_registry.logger')
     def test_register_alleles_38(
