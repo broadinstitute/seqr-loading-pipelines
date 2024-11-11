@@ -97,7 +97,9 @@ def register_alleles(
     with hfs.open(formatted_vcf_file_name, 'r') as vcf_in:
         data = vcf_in.read()
         s = requests.Session()
-        retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
+        retries = Retry(
+            total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504]
+        )
         s.mount('https://', HTTPAdapter(max_retries=retries))
         res = s.put(
             url=build_url(base_url, reference_genome),
