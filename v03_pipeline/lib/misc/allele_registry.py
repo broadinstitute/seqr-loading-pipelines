@@ -8,6 +8,7 @@ import hail as hl
 import hailtop.fs as hfs
 import requests
 from requests import HTTPError
+from requests.adapters import HTTPAdapter, Retry
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env, ReferenceGenome
@@ -95,7 +96,10 @@ def register_alleles(
     logger.info('Calling the ClinGen Allele Registry')
     with hfs.open(formatted_vcf_file_name, 'r') as vcf_in:
         data = vcf_in.read()
-        res = requests.put(
+        s = requests.Session()
+        retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 500, 502, 503, 504 ])
+        s.mount('https://', HTTPAdapter(max_retries=retries))
+        res = s.put(
             url=build_url(base_url, reference_genome),
             data=data,
             timeout=HTTP_REQUEST_TIMEOUT_S,
