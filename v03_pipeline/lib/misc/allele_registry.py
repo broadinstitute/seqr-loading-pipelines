@@ -98,7 +98,9 @@ def register_alleles(
         data = vcf_in.read()
         s = requests.Session()
         retries = Retry(
-            total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504]
+            total=5,
+            backoff_factor=1,
+            status_forcelist=[500, 502, 503, 504],
         )
         s.mount('https://', HTTPAdapter(max_retries=retries))
         res = s.put(
