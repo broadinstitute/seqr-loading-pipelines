@@ -1,6 +1,8 @@
 import importlib
 from enum import Enum
 
+import hail as hl
+
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 
 DATASET_TYPES = 'dataset_types'
@@ -43,7 +45,7 @@ class ReferenceDataset(str, Enum):
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(self, *args) -> callable:
+    def get_ht(self, *args) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
