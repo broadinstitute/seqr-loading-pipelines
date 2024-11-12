@@ -2,6 +2,17 @@ import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
 
+HGMD_ENUM_SELECT = {
+    'class': [
+        'DM',
+        'DM?',
+        'DP',
+        'DFP',
+        'FP',
+        'R',
+    ],
+}
+
 
 def download_and_import_hgmd_vcf(
     hgmd_url: str,
