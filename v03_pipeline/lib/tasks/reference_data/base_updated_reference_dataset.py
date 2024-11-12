@@ -23,18 +23,12 @@ class UpdatedReferenceDataset(BaseWriteTask):
 
     def create_table(self):
         if does_file_exist(self.output().path):
-            ht = hl.read_table(self.output().path)
-            # todo fix version check
-            ht_version = hl.eval(ht.globals).version
-
-            if ht_version == self.reference_dataset.version:
-                return ht
+            return hl.read_table(self.output().path)
 
         ht = self.reference_dataset.load_parsed_dataset_func(
             self.reference_dataset.raw_dataset_path,
             self.reference_genome,
         )
-        # selects logic goes here
         # enum logic goes here
         return ht.annotate_globals(
             version=self.reference_dataset.version,
