@@ -46,15 +46,11 @@ class ReferenceDataset(str, Enum):
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(
-        self,
-        raw_dataset_path: str | list[str],
-        reference_genome: ReferenceGenome,
-    ) -> hl.Table:
+    def get_ht(self, reference_genome: ReferenceGenome) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
-        return module.get_ht(raw_dataset_path, reference_genome)
+        return module.get_ht(self.raw_dataset_path, reference_genome)
 
 
 CONFIG = {
@@ -64,14 +60,14 @@ CONFIG = {
             VERSION: '1.0',
             RAW_DATASET_PATH: [
                 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
             ],
         },
         ReferenceGenome.GRCh38: {
             VERSION: '1.0',
             RAW_DATASET_PATH: [
                 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
             ],
         },
     },
