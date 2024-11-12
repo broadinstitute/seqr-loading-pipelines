@@ -90,10 +90,9 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             UpdatedReferenceDatasetCollectionTask,
         )
 
-        return UpdatedReferenceDatasetCollectionTask(
-            self.reference_genome,
-            self.dataset_type,
-            ReferenceDatasetCollection.COMBINED,
+        return self.clone(
+            UpdatedReferenceDatasetCollectionTask,
+            reference_dataset_collection=ReferenceDatasetCollection.COMBINED,
         )
 
     def create_table(self) -> hl.Table:

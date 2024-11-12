@@ -60,7 +60,7 @@ class UpdatedReferenceDatasetCollectionTask(BaseUpdateTask):
             self.dataset_type,
         ):
             datasets.remove('clinvar')
-            self._datasets_to_update.add('clinvar')
+            self._datasets_to_update.append('clinvar')
 
         joined_ht_globals = Globals.from_ht(
             hl.read_table(self.output().path),
