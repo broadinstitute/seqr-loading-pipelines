@@ -70,7 +70,7 @@ def _v03_reference_dataset_prefix(
     if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
             root,
-            PipelineVersion.V03.value,
+            PipelineVersion.V3_1.value,
             reference_genome.value,
         )
     return os.path.join(
