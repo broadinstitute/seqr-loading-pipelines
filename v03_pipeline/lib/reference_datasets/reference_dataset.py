@@ -64,14 +64,6 @@ CONFIG = {
                 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
             ],
         },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            RAW_DATASET_PATH: [
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
-            ],
-        },
     },
     ReferenceDataset.dbnsfp: {
         ReferenceGenome.GRCh38: {

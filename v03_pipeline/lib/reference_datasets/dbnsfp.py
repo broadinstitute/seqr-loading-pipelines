@@ -16,6 +16,7 @@ TYPES_38 = {
     **TYPES,
     'fathmm-MKL_coding_score': hl.tfloat32,
     'MutPred_score': hl.tfloat32,
+    'CADD_phred': hl.tfloat32,
 }
 
 RENAME = {
