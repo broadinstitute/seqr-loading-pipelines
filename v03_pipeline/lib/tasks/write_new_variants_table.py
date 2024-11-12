@@ -10,7 +10,7 @@ from v03_pipeline.lib.annotations.rdc_dependencies import (
 )
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
-from v03_pipeline.lib.misc.io import remap_pedigree_hash
+from v03_pipeline.lib.misc.io import checkpoint, remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import (
     Env,
@@ -194,6 +194,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 self.reference_genome,
             ):
                 ar_ht = ar_ht.union(ar_ht_chunk)
+                ar_ht, _ = checkpoint(ar_ht)
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
         elif self.dataset_type.should_send_to_allele_registry:
             new_variants_ht = new_variants_ht.annotate(CAID=hl.missing(hl.tstr))
