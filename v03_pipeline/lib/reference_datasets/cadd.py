@@ -45,24 +45,21 @@ def import_cadd_table(
         alleles = hl.array([cadd_ht.ref, cadd_ht.alt])
         cadd_ht = cadd_ht.transmute(locus=locus, alleles=alleles)
 
-        cadd_union_ht = cadd_ht.head(0)
         contigs = reference_genome.standard_contigs.union(
             reference_genome.optional_contigs,
         )
-        for contig_subset in (contigs[:9], contigs[9:]):
-            cadd_ht_subset = cadd_ht.filter(
-                hl.array(list(map(str, contig_subset))).contains(cadd_ht.locus.contig),
-            )
-            cadd_union_ht = cadd_union_ht.union(cadd_ht_subset)
-
-        return cadd_union_ht.key_by('locus', 'alleles')
+        cadd_ht = cadd_ht.filter(
+            hl.array(list(map(str, contigs))).contains(cadd_ht.locus.contig),
+        )
+        return cadd_ht.key_by('locus', 'alleles')
 
 
 def load_cadd_ht_from_raw_dataset(
     raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
-):
+) -> hl.Table:
     snv_path, indel_path = raw_dataset_paths
     snvs_ht = import_cadd_table(snv_path, reference_genome)
     indel_ht = import_cadd_table(indel_path, reference_genome)
-    return snvs_ht.union(indel_ht)
+    ht = snvs_ht.union(indel_ht)
+    return ht.select('PHRED')
