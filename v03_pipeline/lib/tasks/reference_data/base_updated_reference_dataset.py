@@ -24,6 +24,7 @@ class UpdatedReferenceDataset(BaseWriteTask):
     def create_table(self):
         if does_file_exist(self.output().path):
             ht = hl.read_table(self.output().path)
+            # todo fix version check
             ht_version = hl.eval(ht.globals).version
 
             if ht_version == self.reference_dataset.version:

@@ -41,22 +41,22 @@ class ReferenceDataset(str, Enum):
 
     def version(self, reference_genome: ReferenceGenome):
         return {
-            (ReferenceDataset.cadd, ReferenceGenome.GRCh37): 'v1.7',
-            (ReferenceDataset.cadd, ReferenceGenome.GRCh38): 'v1.7',
-            (ReferenceDataset.hgmd, ReferenceGenome.GRCh37): 'HGMD_Pro_2023',
-            (ReferenceDataset.hgmd, ReferenceGenome.GRCh38): 'HGMD_Pro_2023',
+            (ReferenceDataset.cadd, ReferenceGenome.GRCh37): '0.0',
+            (ReferenceDataset.cadd, ReferenceGenome.GRCh38): '0.0',
+            (ReferenceDataset.hgmd, ReferenceGenome.GRCh37): '0.0',
+            (ReferenceDataset.hgmd, ReferenceGenome.GRCh38): '0.0',
         }[self, reference_genome]
 
-    def raw_dataset_path(self, reference_genome: ReferenceGenome):
+    def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return {
-            (ReferenceDataset.cadd, ReferenceGenome.GRCh37): {
-                'snv': 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
-                'indel': 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
-            },
-            (ReferenceDataset.cadd, ReferenceGenome.GRCh38): {
-                'snv': 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
-                'indel': 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
-            },
+            (ReferenceDataset.cadd, ReferenceGenome.GRCh37): [
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
+            ],
+            (ReferenceDataset.cadd, ReferenceGenome.GRCh38): [
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
+                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
+            ],
             (
                 ReferenceDataset.hgmd,
                 ReferenceGenome.GRCh37,

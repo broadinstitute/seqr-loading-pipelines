@@ -59,10 +59,10 @@ def import_cadd_table(
 
 
 def load_cadd_ht_from_raw_dataset(
-    raw_dataset_paths: dict[str, str],
+    raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
 ):
-    snvs_ht = import_cadd_table(raw_dataset_paths['snv'], reference_genome)
-    indel_ht = import_cadd_table(raw_dataset_paths['indel'], reference_genome)
-    ht = snvs_ht.union(indel_ht)
-    return ht.naive_coalesce(10000)
+    snv_path, indel_path = raw_dataset_paths
+    snvs_ht = import_cadd_table(snv_path, reference_genome)
+    indel_ht = import_cadd_table(indel_path, reference_genome)
+    return snvs_ht.union(indel_ht)
