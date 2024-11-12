@@ -21,7 +21,7 @@ class UpdatedReferenceDataset(BaseWriteTask):
         )
 
     def create_table(self):
-        ht = self.reference_dataset.load_parsed_dataset_func(
+        ht = self.reference_dataset.get_ht(
             self.reference_dataset.raw_dataset_path,
             self.reference_genome,
         )

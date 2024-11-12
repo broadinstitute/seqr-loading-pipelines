@@ -54,7 +54,7 @@ def import_cadd_table(
         return cadd_ht.key_by('locus', 'alleles')
 
 
-def load_cadd_ht_from_raw_dataset(
+def get_ht(
     raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
