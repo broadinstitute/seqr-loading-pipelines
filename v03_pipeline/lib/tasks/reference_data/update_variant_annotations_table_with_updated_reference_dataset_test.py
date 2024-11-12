@@ -6,6 +6,7 @@ import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    CLINVAR_ASSERTIONS,
     CLINVAR_PATHOGENICITIES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
@@ -22,7 +23,6 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (

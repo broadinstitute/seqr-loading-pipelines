@@ -3,13 +3,13 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_ASSERTIONS,
     CLINVAR_DEFAULT_PATHOGENICITY,
     CLINVAR_PATHOGENICITIES,
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_data.clinvar import (
-    CLINVAR_ASSERTIONS,
     CLINVAR_GOLD_STARS_LOOKUP,
     get_clinvar_ht,
     parsed_and_mapped_clnsigconf,

@@ -6,7 +6,10 @@ import hail as hl
 import luigi
 
 import v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection
-from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
+)
 from v03_pipeline.lib.model import (
     CachedReferenceDatasetQuery,
     DatasetType,
@@ -18,7 +21,6 @@ from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
     UpdatedCachedReferenceDatasetQuery,
