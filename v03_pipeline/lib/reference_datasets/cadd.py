@@ -44,13 +44,6 @@ def import_cadd_table(
         )
         alleles = hl.array([cadd_ht.ref, cadd_ht.alt])
         cadd_ht = cadd_ht.transmute(locus=locus, alleles=alleles)
-
-        contigs = reference_genome.standard_contigs.union(
-            reference_genome.optional_contigs,
-        )
-        cadd_ht = cadd_ht.filter(
-            hl.array(list(map(str, contigs))).contains(cadd_ht.locus.contig),
-        )
         return cadd_ht.key_by('locus', 'alleles')
 
 

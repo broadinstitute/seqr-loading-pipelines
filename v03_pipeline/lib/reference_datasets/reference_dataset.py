@@ -24,8 +24,7 @@ class ReferenceDataset(str, Enum):
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
-            if dataset_type
-            in config.get(reference_genome, {}).get(DATASET_TYPES, set())
+            if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES)
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [
