@@ -1,6 +1,6 @@
 import gzip
+import shutil
 import tempfile
-import urllib
 
 import hail as hl
 import requests
@@ -99,24 +99,29 @@ def get_submission_summary_ht() -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.txt.gz',
         delete=False,
-    ) as tmp_file:
-        ht = hl.import_table(
-            tmp_file.name,
-            force=True,
-            filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
-            types={
-                '#VariationID': hl.tstr,
-                'Submitter': hl.tstr,
-                'ReportedPhenotypeInfo': hl.tstr,
-            },
-            missing='-',
-        )
-        ht = ht.rename({'#VariationID': 'VariationID'})
-        ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
-        return ht.group_by('VariationID').aggregate(
-            Submitters=hl.agg.collect(ht.Submitter),
-            Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
-        )
+    ) as tmp_file, requests.get(
+        CLINVAR_SUBMISSION_SUMMARY_URL,
+        stream=True,
+        timeout=10,
+    ) as r:
+        shutil.copyfileobj(r.raw, tmp_file)
+    ht = hl.import_table(
+        tmp_file.name,
+        force=True,
+        filter='^(#[^:]*:|^##).*$',  # removes all comments except for the header line
+        types={
+            '#VariationID': hl.tstr,
+            'Submitter': hl.tstr,
+            'ReportedPhenotypeInfo': hl.tstr,
+        },
+        missing='-',
+    )
+    ht = ht.rename({'#VariationID': 'VariationID'})
+    ht = ht.select('VariationID', 'Submitter', 'ReportedPhenotypeInfo')
+    return ht.group_by('VariationID').aggregate(
+        Submitters=hl.agg.collect(ht.Submitter),
+        Conditions=hl.agg.collect(ht.ReportedPhenotypeInfo),
+    )
 
 
 def select_fields(ht):
@@ -156,27 +161,30 @@ def get_ht(
     dataset_type: DatasetType,
 ) -> hl.Table:
     version = parse_clinvar_release_date(clinvar_url)
-    with tempfile.NamedTemporaryFile(suffix='.vcf.gz', delete=False) as tmp_file:
-        urllib.request.urlretrieve(clinvar_url, tmp_file.name)  # noqa: S310
-        ht = hl.import_vcf(
-            tmp_file.name,
-            reference_genome=reference_genome.value,
-            drop_samples=True,
-            skip_invalid_loci=True,
-            contig_recoding=reference_genome.contig_recoding(include_mt=True),
-            force_bgz=True,
-        ).rows()
-        ht = filter_contigs(ht, reference_genome, dataset_type)
-        submitters_ht = get_submission_summary_ht()
-        ht = ht.annotate(
-            submitters=submitters_ht[ht.rsid].Submitters,
-            conditions=submitters_ht[ht.rsid].Conditions,
-        )
-        ht = select_fields(ht)
-        return ht.annotate_globals(
-            version=version,
-            enums=hl.Struct(
-                pathogenicity=CLINVAR_PATHOGENICITIES,
-                assertion=CLINVAR_ASSERTIONS,
-            ),
-        )
+    with tempfile.NamedTemporaryFile(
+        suffix='.vcf.gz',
+        delete=False,
+    ) as tmp_file, requests.get(clinvar_url, stream=True, timeout=10) as r:
+        shutil.copyfileobj(r.raw, tmp_file)
+    ht = hl.import_vcf(
+        tmp_file.name,
+        reference_genome=reference_genome.value,
+        drop_samples=True,
+        skip_invalid_loci=True,
+        contig_recoding=reference_genome.contig_recoding(include_mt=True),
+        force_bgz=True,
+    ).rows()
+    ht = filter_contigs(ht, reference_genome, dataset_type)
+    submitters_ht = get_submission_summary_ht()
+    ht = ht.annotate(
+        submitters=submitters_ht[ht.rsid].Submitters,
+        conditions=submitters_ht[ht.rsid].Conditions,
+    )
+    ht = select_fields(ht)
+    return ht.annotate_globals(
+        version=version,
+        enums=hl.Struct(
+            pathogenicity=CLINVAR_PATHOGENICITIES,
+            assertion=CLINVAR_ASSERTIONS,
+        ),
+    )

@@ -1,4 +1,3 @@
-import gzip
 import unittest
 
 import hail as hl
@@ -14,9 +13,9 @@ from v03_pipeline.lib.reference_datasets.clinvar import (
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf'
+CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf.gz'
 CLINVAR_SUBMISSION_SUMMARY = (
-    'v03_pipeline/var/test/reference_data/submission_summary.txt'
+    'v03_pipeline/var/test/reference_data/submission_summary.txt.gz'
 )
 
 
@@ -26,7 +25,7 @@ class ClinvarTest(unittest.TestCase):
         with open(CLINVAR_VCF, 'rb') as f:
             responses.get(
                 ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh37),
-                body=gzip.compress(f.read()),
+                body=f.read(),
             )
             self.assertEqual(
                 ReferenceDataset.clinvar.version(ReferenceGenome.GRCh37),
@@ -111,21 +110,70 @@ class ClinvarTest(unittest.TestCase):
     @responses.activate
     def test_get_ht(self):
         with open(CLINVAR_VCF, 'rb') as f1, open(
-            CLINVAR_SUBMISSION_SUMMARY, 'rb'
+            CLINVAR_SUBMISSION_SUMMARY,
+            'rb',
         ) as f2:
             responses.get(
                 ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
-                body=gzip.compress(f1.read()),
+                body=f1.read(),
             )
             responses.get(
                 CLINVAR_SUBMISSION_SUMMARY_URL,
-                body=gzip.compress(f2.read()),
+                body=f2.read(),
             )
+            responses.add_passthru('http://localhost')
             clinvar_url = ReferenceDataset.clinvar.raw_dataset_path(
-                ReferenceGenome.GRCh38
+                ReferenceGenome.GRCh38,
             )
             ht = get_ht(
                 clinvar_url,
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
+            )
+            self.assertEqual(
+                ht.collect()[:3],
+                [
+                    hl.Struct(
+                        locus=hl.Locus(
+                            contig='chr1', position=69134, reference_genome='GRCh38'
+                        ),
+                        alleles=['A', 'G'],
+                        alleleId=2193183,
+                        conflictingPathogenicities=None,
+                        goldStars=1,
+                        submitters=None,
+                        conditions=None,
+                        pathogenicity_id=14,
+                        assertion_id=[],
+                    ),
+                    hl.Struct(
+                        locus=hl.Locus(
+                            contig='chr1', position=69314, reference_genome='GRCh38'
+                        ),
+                        alleles=['T', 'G'],
+                        alleleId=3374047,
+                        conflictingPathogenicities=None,
+                        goldStars=1,
+                        submitters=['Paris Brain Institute, Inserm - ICM', 'OMIM'],
+                        conditions=[
+                            'Hereditary spastic paraplegia 48',
+                            'Hereditary spastic paraplegia 48',
+                        ],
+                        pathogenicity_id=12,
+                        assertion_id=[],
+                    ),
+                    hl.Struct(
+                        locus=hl.Locus(
+                            contig='chr1', position=69423, reference_genome='GRCh38'
+                        ),
+                        alleles=['G', 'A'],
+                        alleleId=3374048,
+                        conflictingPathogenicities=None,
+                        goldStars=1,
+                        submitters=['OMIM'],
+                        conditions=['Hereditary spastic paraplegia 48'],
+                        pathogenicity_id=12,
+                        assertion_id=[],
+                    ),
+                ],
             )
