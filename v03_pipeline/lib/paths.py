@@ -12,7 +12,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.reference_data.reference_dataset import ReferenceDataset
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 
 def _pipeline_prefix(

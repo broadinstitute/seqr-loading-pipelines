@@ -2,9 +2,8 @@ import hail as hl
 import luigi
 
 from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
-from v03_pipeline.lib.misc.io import does_file_exist
 from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_data.reference_dataset import ReferenceDataset
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 
@@ -22,9 +21,6 @@ class UpdatedReferenceDataset(BaseWriteTask):
         )
 
     def create_table(self):
-        if does_file_exist(self.output().path):
-            return hl.read_table(self.output().path)
-
         ht = self.reference_dataset.load_parsed_dataset_func(
             self.reference_dataset.raw_dataset_path,
             self.reference_genome,
