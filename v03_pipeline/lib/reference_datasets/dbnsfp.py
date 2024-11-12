@@ -17,6 +17,7 @@ TYPES_38 = {
     'fathmm-MKL_coding_score': hl.tfloat32,
     'MutPred_score': hl.tfloat32,
     'CADD_phred': hl.tfloat32,
+    'PrimateAI_score': hl.tfloat32,
 }
 
 RENAME = {
@@ -26,7 +27,7 @@ RENAME = {
 }
 
 PREDICTOR_SCORES = {'REVEL_score', 'SIFT_score', 'Polyphen2_HVAR_score'}
-PREDICTOR_SCORES_38 = {*PREDICTOR_SCORES, 'VEST4_score'}
+PREDICTOR_SCORES_38 = {*PREDICTOR_SCORES, 'VEST4_score', 'MPC_score'}
 PREDICTOR_FIELDS = ['MutationTaster_pred']
 
 
