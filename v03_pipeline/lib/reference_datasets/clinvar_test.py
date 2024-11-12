@@ -135,7 +135,9 @@ class ClinvarTest(unittest.TestCase):
                 [
                     hl.Struct(
                         locus=hl.Locus(
-                            contig='chr1', position=69134, reference_genome='GRCh38'
+                            contig='chr1',
+                            position=69134,
+                            reference_genome='GRCh38',
                         ),
                         alleles=['A', 'G'],
                         alleleId=2193183,
@@ -148,7 +150,9 @@ class ClinvarTest(unittest.TestCase):
                     ),
                     hl.Struct(
                         locus=hl.Locus(
-                            contig='chr1', position=69314, reference_genome='GRCh38'
+                            contig='chr1',
+                            position=69314,
+                            reference_genome='GRCh38',
                         ),
                         alleles=['T', 'G'],
                         alleleId=3374047,
@@ -164,7 +168,9 @@ class ClinvarTest(unittest.TestCase):
                     ),
                     hl.Struct(
                         locus=hl.Locus(
-                            contig='chr1', position=69423, reference_genome='GRCh38'
+                            contig='chr1',
+                            position=69423,
+                            reference_genome='GRCh38',
                         ),
                         alleles=['G', 'A'],
                         alleleId=3374048,
