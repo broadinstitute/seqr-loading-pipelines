@@ -1,6 +1,6 @@
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
 from v03_pipeline.lib.reference_datasets.cadd import load_cadd_ht_from_raw_dataset
+from v03_pipeline.lib.reference_datasets.hgmd import download_and_import_hgmd_vcf
 
 CONFIG = {
     'cadd': {
