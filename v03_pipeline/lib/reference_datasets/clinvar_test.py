@@ -110,7 +110,9 @@ class ClinvarTest(unittest.TestCase):
 
     @responses.activate
     def test_get_ht(self):
-        with open(CLINVAR_VCF, 'rb') as f1, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
+        with open(CLINVAR_VCF, 'rb') as f1, open(
+            CLINVAR_SUBMISSION_SUMMARY, 'rb'
+        ) as f2:
             responses.get(
                 ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
                 body=gzip.compress(f1.read()),
