@@ -13,6 +13,7 @@ ENUM_SELECT = 'enum_select'
 
 class ReferenceDataset(str, Enum):
     cadd = 'cadd'
+    hgmd = 'hgmd'
 
     @classmethod
     def for_reference_genome_dataset_type(
@@ -45,11 +46,15 @@ class ReferenceDataset(str, Enum):
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(self, *args) -> hl.Table:
+    def get_ht(
+        self,
+        raw_dataset_path: str | list[str],
+        reference_genome: ReferenceGenome,
+    ) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
-        return module.get_ht(*args)
+        return module.get_ht(raw_dataset_path, reference_genome)
 
 
 CONFIG = {
