@@ -1,7 +1,5 @@
 from enum import Enum
 
-import hail as hl
-
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_data.cadd import load_cadd_ht_from_raw_dataset
 from v03_pipeline.lib.reference_data.hgmd import download_and_import_hgmd_vcf
@@ -74,13 +72,6 @@ class ReferenceDataset(str, Enum):
             ReferenceDataset.cadd: load_cadd_ht_from_raw_dataset,
             ReferenceDataset.hgmd: download_and_import_hgmd_vcf,
         }[self]
-
-    @staticmethod
-    def table_key_type(reference_genome: ReferenceGenome):
-        return hl.tstruct(
-            locus=hl.tlocus(reference_genome.value),
-            alleles=hl.tarray(hl.tstr),
-        )
 
     def select(self, reference_genome: ReferenceGenome):
         """
