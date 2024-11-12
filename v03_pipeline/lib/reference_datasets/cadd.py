@@ -37,11 +37,7 @@ def import_cadd_table(
             if reference_genome == ReferenceGenome.GRCh38
             else cadd_ht.chrom
         )
-        locus = hl.locus(
-            chrom,
-            cadd_ht.pos,
-            reference_genome=hl.get_reference(ReferenceGenome.GRCh38),
-        )
+        locus = hl.locus(chrom, cadd_ht.pos, reference_genome.value)
         alleles = hl.array([cadd_ht.ref, cadd_ht.alt])
         cadd_ht = cadd_ht.transmute(locus=locus, alleles=alleles)
         return cadd_ht.key_by('locus', 'alleles')
