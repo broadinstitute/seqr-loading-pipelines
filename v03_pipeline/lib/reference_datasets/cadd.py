@@ -4,6 +4,7 @@ import urllib
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.utils import key_by_locus_alleles
 
 
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_cadd_ht.py
@@ -32,15 +33,7 @@ def import_cadd_table(
             min_partitions=10000,
         )
         cadd_ht = cadd_ht.rename(column_names)
-        chrom = (
-            hl.format('chr%s', cadd_ht.chrom)
-            if reference_genome == ReferenceGenome.GRCh38
-            else cadd_ht.chrom
-        )
-        locus = hl.locus(chrom, cadd_ht.pos, reference_genome.value)
-        alleles = hl.array([cadd_ht.ref, cadd_ht.alt])
-        cadd_ht = cadd_ht.transmute(locus=locus, alleles=alleles)
-        return cadd_ht.key_by('locus', 'alleles')
+        return key_by_locus_alleles(cadd_ht, reference_genome)
 
 
 def get_ht(
