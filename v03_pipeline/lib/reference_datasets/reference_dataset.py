@@ -24,7 +24,8 @@ class ReferenceDataset(str, Enum):
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
-            if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES, [])
+            if dataset_type
+            in config.get(reference_genome, {}).get(DATASET_TYPES, set())
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [
@@ -55,8 +56,8 @@ class ReferenceDataset(str, Enum):
 
 CONFIG = {
     ReferenceDataset.cadd: {
-        DATASET_TYPES: [DatasetType.SNV_INDEL],
         ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: [
                 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
@@ -64,6 +65,7 @@ CONFIG = {
             ],
         },
         ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: [
                 'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
