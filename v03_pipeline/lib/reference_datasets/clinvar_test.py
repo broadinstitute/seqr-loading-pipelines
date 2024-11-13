@@ -146,7 +146,7 @@ class ClinvarTest(unittest.TestCase):
                         submitters=None,
                         conditions=None,
                         pathogenicity_id=14,
-                        assertion_id=[],
+                        assertion_ids=[],
                     ),
                     hl.Struct(
                         locus=hl.Locus(
@@ -164,7 +164,7 @@ class ClinvarTest(unittest.TestCase):
                             'Hereditary spastic paraplegia 48',
                         ],
                         pathogenicity_id=12,
-                        assertion_id=[],
+                        assertion_ids=[],
                     ),
                     hl.Struct(
                         locus=hl.Locus(
@@ -179,7 +179,7 @@ class ClinvarTest(unittest.TestCase):
                         submitters=['OMIM'],
                         conditions=['Hereditary spastic paraplegia 48'],
                         pathogenicity_id=12,
-                        assertion_id=[],
+                        assertion_ids=[],
                     ),
                 ],
             )
