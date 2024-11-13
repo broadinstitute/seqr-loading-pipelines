@@ -5,7 +5,7 @@ import zipfile
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.utils import key_by_locus_alleles
+from v03_pipeline.lib.reference_datasets.misc import key_by_locus_alleles
 
 SHARED_TYPES = {
     'REVEL_score': hl.tfloat32,

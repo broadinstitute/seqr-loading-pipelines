@@ -14,7 +14,6 @@ ENUM_SELECT = 'enum_select'
 
 
 class ReferenceDataset(str, Enum):
-    cadd = 'cadd'
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     hgmd = 'hgmd'
@@ -69,16 +68,6 @@ class ReferenceDataset(str, Enum):
 
 
 CONFIG = {
-    ReferenceDataset.cadd: {
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            RAW_DATASET_PATH: [
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
-            ],
-        },
-    },
     ReferenceDataset.clinvar: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
