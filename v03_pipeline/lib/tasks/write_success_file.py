@@ -10,6 +10,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
+from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -25,6 +26,7 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self):
         requirements = [
+            self.clone(WriteMetadataForRunTask),
             self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask),
         ]
         return [

@@ -72,7 +72,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         )
 
     def requires(self) -> luigi.Task:
-        if self.crdq.query_raw_dataset:
+        if not self.crdq.reference_dataset_collection:
             return HailTableTask(
                 get_ht_path(
                     CONFIG[self.crdq.dataset(self.dataset_type)][
@@ -83,7 +83,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
         # Special nested import to avoid a circular dependency issue
         # (ValidateCallset -> this file -> UpdatedReferenceDatasetCollection -> ValidateCallset)
         # The specific CRDQ referenced in ValidateCallset will never reach
-        # this line due to it being a "query_raw_dataset".  In theory this
+        # this line due to it being a raw dataset query.  In theory this
         # would be fixed by splitting the CRDQ into raw_dataset and non-raw_dataset
         # queries.
         from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
@@ -97,7 +97,7 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
 
     def create_table(self) -> hl.Table:
         dataset: str = self.crdq.dataset(self.dataset_type)
-        if self.crdq.query_raw_dataset:
+        if not self.crdq.reference_dataset_collection:
             query_ht = import_ht_from_config_path(
                 CONFIG[dataset][self.reference_genome.v02_value],
                 dataset,
@@ -120,21 +120,21 @@ class UpdatedCachedReferenceDatasetQuery(BaseWriteTask):
             paths=hl.Struct(
                 **{
                     dataset: query_ht.index_globals().path
-                    if self.crdq.query_raw_dataset
+                    if not self.crdq.reference_dataset_collection
                     else query_ht.index_globals().paths[dataset],
                 },
             ),
             versions=hl.Struct(
                 **{
                     dataset: query_ht.index_globals().version
-                    if self.crdq.query_raw_dataset
+                    if not self.crdq.reference_dataset_collection
                     else query_ht.index_globals().versions[dataset],
                 },
             ),
             enums=hl.Struct(
                 **{
                     dataset: query_ht.index_globals().enums
-                    if self.crdq.query_raw_dataset
+                    if not self.crdq.reference_dataset_collection
                     else query_ht.index_globals().enums[dataset],
                 },
             ),
