@@ -12,7 +12,7 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.misc import enum_map
+from v03_pipeline.lib.reference_datasets.misc import get_enum_select_fields
 
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
@@ -137,7 +137,7 @@ def select_fields(ht):
             clnsigs[0],
             CLINVAR_DEFAULT_PATHOGENICITY,
         ),
-        assertions=hl.if_else(
+        assertion=hl.if_else(
             CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
             clnsigs[1:],
             clnsigs,
@@ -152,9 +152,9 @@ def select_fields(ht):
             ht.conditions,
         ),
     )
+    enum_select_fields = get_enum_select_fields(ht, ENUMS)
     return ht.transmute(
-        pathogenicity_id=enum_map(ht.pathogenicity, CLINVAR_PATHOGENICITIES),
-        assertion_ids=enum_map(ht.assertions, CLINVAR_ASSERTIONS),
+        **enum_select_fields,
     )
 
 
