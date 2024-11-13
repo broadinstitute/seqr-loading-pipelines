@@ -53,25 +53,25 @@ def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_dbnsfp_ht.py
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
+    rename = RENAME[reference_genome]
+
     with tempfile.TemporaryDirectory() as temp_dir:
         zip_path, _ = urllib.request.urlretrieve(raw_dataset_path)
         with zipfile.ZipFile(zip_path, 'r') as f:
             f.extractall(temp_dir)
-            ht = hl.import_table(
-            f'temp_dir/dbNSFP*_variant.chr*.gz',
-                 types=types,
-                 missing='.',
-                 force=True,
-            )
 
-    ht = ht.filter(ht.alt != ht.ref)
-    rename = RENAME[reference_genome]
-    select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
-    ht = ht.select(
-        *select_fields,
-        **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
-        **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
-    )
-    ht = ht.rename(**rename)
+        ht = hl.import_table(
+        f'{temp_dir}/dbNSFP*_variant.chr*.gz',
+             types=types,
+             missing='.',
+             force=True,
+        )
+        select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
+        ht = ht.select(
+            *select_fields,
+            **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
+            **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
+        )
+        ht = ht.rename(**rename)
 
-    return key_by_locus_alleles(ht, reference_genome)
+        return key_by_locus_alleles(ht, reference_genome)
