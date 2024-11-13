@@ -91,18 +91,6 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
 
 
 CONFIG = {
-    ReferenceDataset.clinvar: {
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-        },
-    },
     ReferenceDataset.dbnsfp: {
         ENUM_SELECT: {
             'MutationTaster_pred': ['D', 'A', 'N', 'P'],
@@ -116,6 +104,18 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+        },
+    },
+    ReferenceDataset.clinvar: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
         },
     },
 }

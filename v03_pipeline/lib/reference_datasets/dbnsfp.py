@@ -74,8 +74,4 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
     )
     ht = ht.rename(**rename)
 
-    # We have to upper case alleles because 37 is known to have some non uppercases :(
-    if reference_genome == ReferenceGenome.GRCh37:
-        ht = ht.annotate(ref=ht.ref.upper(), alt=ht.alt.upper())
-
     return key_by_locus_alleles(ht, reference_genome)
