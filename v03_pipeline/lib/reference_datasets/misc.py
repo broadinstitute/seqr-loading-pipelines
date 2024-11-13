@@ -25,7 +25,7 @@ def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
 
 def filter_contigs(ht, reference_genome: ReferenceGenome, dataset_type: DatasetType):
     if dataset_type == DatasetType.MITO:
-        ht = ht.filter(ht.locus.contig == reference_genome.mito_contig)
+        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
     return ht.filter(
         hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
     )
