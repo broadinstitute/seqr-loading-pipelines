@@ -25,6 +25,7 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self):
         requirements = [
+            self.clone(WriteMetadataForRunTask),
             self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask),
         ]
         return [
