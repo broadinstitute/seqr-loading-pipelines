@@ -12,11 +12,7 @@ VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 
 
-class ReferenceDataset(str, Enum):
-    cadd = 'cadd'
-    clinvar = 'clinvar'
-    hgmd = 'hgmd'
-
+class BaseReferenceDataset:
     @classmethod
     def for_reference_genome_dataset_type(
         cls,
@@ -65,6 +61,23 @@ class ReferenceDataset(str, Enum):
         return module.get_ht(path, reference_genome, dataset_type)
 
 
+class ReferenceDataset(BaseReferenceDataset, str, Enum):
+    cadd = 'cadd'
+    clinvar = 'clinvar'
+    hgmd = 'hgmd'
+
+
+class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
+    clinvar_path = 'clinvar_path'
+    high_af_variants = 'high_af_variants'
+
+    def requires(self) -> ReferenceDataset:
+        return {
+            self.clinvar_path: ReferenceDataset.clinvar,
+            self.high_af_variants: None,
+        }
+
+
 CONFIG = {
     ReferenceDataset.cadd: {
         ReferenceGenome.GRCh37: {
@@ -97,3 +110,4 @@ CONFIG = {
         },
     },
 }
+CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
