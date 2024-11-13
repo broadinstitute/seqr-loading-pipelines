@@ -152,9 +152,8 @@ def select_fields(ht):
             ht.conditions,
         ),
     )
-    enum_select_fields = get_enum_select_fields(ht, ENUMS)
     return ht.transmute(
-        **enum_select_fields,
+        **get_enum_select_fields(ht, ENUMS),
     )
 
 
