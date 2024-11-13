@@ -6,6 +6,7 @@ import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets.misc import filter_contigs, get_enum_field_expressions
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
@@ -13,11 +14,7 @@ RAW_DATASET_PATH = 'raw_dataset_path'
 ENUM_SELECT = 'enum_select'
 
 
-class ReferenceDataset(str, Enum):
-    clinvar = 'clinvar'
-    dbnsfp = 'dbnsfp'
-    hgmd = 'hgmd'
-
+class BaseReferenceDataset:
     @classmethod
     def for_reference_genome_dataset_type(
         cls,
@@ -59,12 +56,38 @@ class ReferenceDataset(str, Enum):
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(self, reference_genome: ReferenceGenome) -> hl.Table:
+    def get_ht(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
         path = self.raw_dataset_path(reference_genome)
-        return module.get_ht(path, reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        # TODO do not run this for clinvar!
+        if self.enum_select:
+            ht = ht.transmute(**get_enum_field_expressions(ht, self.enum_select))
+        return filter_contigs(ht, reference_genome)
+
+
+
+class ReferenceDataset(BaseReferenceDataset, str, Enum):
+    clinvar = 'clinvar'
+    dbnsfp = 'dbnsfp'
+    hgmd = 'hgmd'
+
+
+class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
+    clinvar_path = 'clinvar_path'
+    high_af_variants = 'high_af_variants'
+
+    @property
+    def requires(self) -> ReferenceDataset:
+        return {
+            self.clinvar_path: ReferenceDataset.clinvar,
+            self.high_af_variants: None,
+        }[self]
 
 
 CONFIG = {
@@ -96,3 +119,4 @@ CONFIG = {
         },
     },
 }
+CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]

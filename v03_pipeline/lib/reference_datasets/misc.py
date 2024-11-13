@@ -1,6 +1,5 @@
 import hail as hl
 
-from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
@@ -34,9 +33,7 @@ def get_enum_field_expressions(ht: hl.Table, enum_select: dict) -> dict:
     return enum_select_fields
 
 
-def filter_contigs(ht, reference_genome: ReferenceGenome, dataset_type: DatasetType):
-    if dataset_type == DatasetType.MITO:
-        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
+def filter_contigs(ht, reference_genome: ReferenceGenome):
     return ht.filter(
         hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
     )
