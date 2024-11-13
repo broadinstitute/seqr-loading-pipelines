@@ -10,6 +10,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 class WriteSuccessFileTaskTest(MockedDatarootTestCase):
     @mock.patch(
+        'v03_pipeline.lib.tasks.write_success_file.WriteMetadataForRunTask',
+    )
+    @mock.patch(
         'v03_pipeline.lib.tasks.write_success_file.WriteProjectFamilyTablesTask',
     )
     @mock.patch(
@@ -19,7 +22,9 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
         self,
         mock_update_variant_annotations_task,
         mock_write_project_fam_tables,
+        mock_write_metadata_for_run_task,
     ) -> None:
+        mock_write_metadata_for_run_task.return_value = MockCompleteTask()
         mock_update_variant_annotations_task.return_value = MockCompleteTask()
         mock_write_project_fam_tables.return_value = MockCompleteTask()
 
