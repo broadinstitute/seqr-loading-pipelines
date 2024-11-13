@@ -138,8 +138,7 @@ def select_fields(ht):
             clnsigs[1:],
             clnsigs,
         ),
-        # NB: the `enum_select` does not support mapping a list of tuples
-        # so there's a hidden enum-mapping inside this clinvar function.
+        # NB: there's a hidden enum-mapping inside this clinvar function.
         conflictingPathogenicities=parsed_and_mapped_clnsigconf(ht),
         goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
         submitters=ht.submitters,
