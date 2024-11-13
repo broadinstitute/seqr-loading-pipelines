@@ -7,27 +7,43 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.utils import key_by_locus_alleles
 
-TYPES = {
-    '#chr': hl.tstr,
-    'pos(1-based)': hl.tint,
+SHARED_TYPES = {
     'REVEL_score': hl.tfloat32,
-}
-TYPES_38 = {
-    **TYPES,
     'fathmm-MKL_coding_score': hl.tfloat32,
     'MutPred_score': hl.tfloat32,
-    'CADD_phred': hl.tfloat32,
     'PrimateAI_score': hl.tfloat32,
 }
-
-RENAME = {
-    '#chr': 'chrom',
-    'pos(1-based)': 'pos',
-    'fathmm-MKL_coding_score': 'fathmm_MKL_coding_score',
+TYPES = {
+    ReferenceGenome.GRCh37: {
+        **SHARED_TYPES,
+        'pos(1-based)': hl.tint,
+        'CADD_phred_hg19': hl.tfloat32,
+    },
+    ReferenceGenome.GRCh38: {
+        **SHARED_TYPES,
+        'hg19_pos(1-based)': hl.tint,
+        'CADD_phred': hl.tfloat32,
+    },
 }
 
-PREDICTOR_SCORES = {'REVEL_score', 'SIFT_score', 'Polyphen2_HVAR_score'}
-PREDICTOR_SCORES_38 = {*PREDICTOR_SCORES, 'VEST4_score', 'MPC_score'}
+SHARED_RENAME = {
+    'fathmm-MKL_coding_score': 'fathmm_MKL_coding_score',
+}
+RENAME = {
+    ReferenceGenome.GRCh37: {
+        **SHARED_RENAME,
+        'hg19_chr': 'chrom',
+        'hg19_pos(1-based)': 'pos',
+    },
+    ReferenceGenome.GRCh38: {
+        **SHARED_RENAME,
+        '#chr': 'chrom',
+        'pos(1-based)': 'pos',
+
+    },
+}
+
+PREDICTOR_SCORES = {'REVEL_score', 'SIFT_score', 'Polyphen2_HVAR_score', 'VEST4_score', 'MPC_score'}
 PREDICTOR_FIELDS = ['MutationTaster_pred']
 
 
@@ -36,8 +52,7 @@ def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
 
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_dbnsfp_ht.py
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
-    types = TYPES_38 if reference_genome == ReferenceGenome.GRCh38 else TYPES
-    predictor_scores = PREDICTOR_SCORES_38 if reference_genome == ReferenceGenome.GRCh38 else PREDICTOR_SCORES
+    types = TYPES[reference_genome]
     with tempfile.TemporaryDirectory() as temp_dir:
         zip_path, _ = urllib.request.urlretrieve(raw_dataset_path)
         with zipfile.ZipFile(zip_path, 'r') as f:
@@ -47,16 +62,17 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
                  types=types,
                  missing='.',
                  force=True,
-                 min_partitions=10000,
             )
 
     ht = ht.filter(ht.alt != ht.ref)
+    rename = RENAME[reference_genome]
+    select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
     ht = ht.select(
-        'ref', 'alt', *types.keys(),
-        **{k: hl.parse_float32(predictor_parse(ht[k])) for k in predictor_scores},
+        *select_fields,
+        **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
         **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
     )
-    ht = ht.rename(**{k: v for k, v in RENAME.items() if k in types})
+    ht = ht.rename(**rename)
 
     # We have to upper case alleles because 37 is known to have some non uppercases :(
     if reference_genome == ReferenceGenome.GRCh37:
