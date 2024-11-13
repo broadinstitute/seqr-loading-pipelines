@@ -21,37 +21,8 @@ class UpdatedReferenceDataset(BaseWriteTask):
         )
 
     def create_table(self):
-        ht = self.reference_dataset.get_ht(self.reference_genome)
-        enum_select_fields = self.get_enum_select_fields(ht)
-        if enum_select_fields:
-            ht = ht.transmute(**enum_select_fields)
+        ht = self.reference_dataset.get_ht(self.reference_genome, self.dataset_type)
         return ht.annotate_globals(
             version=self.reference_dataset.version,
             enums=self.reference_dataset.enum_select or hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr))),
         )
-
-    def get_enum_select_fields(self, ht: hl.Table) -> dict:
-        enum_selects = self.reference_dataset.enum_select
-        enum_select_fields = {}
-        if enum_selects is None:
-            return enum_select_fields
-        for field_name, values in enum_selects.items():
-            lookup = hl.dict(
-                hl.enumerate(values, index_first=False).extend(
-                    # NB: adding missing values here allows us to
-                    # hard fail if a mapped key is present and has an unexpected value
-                    # but propagate missing values.
-                    [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
-                ),
-            )
-            # NB: this conditioning on type is "outside" the hail expression context.
-            if (
-                    isinstance(ht[field_name].dtype, hl.tarray | hl.tset)
-                    and ht[field_name].dtype.element_type == hl.tstr
-            ):
-                enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
-                    lambda x: lookup[x],  # noqa: B023
-                )
-            else:
-                enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
-        return enum_select_fields

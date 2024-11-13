@@ -5,7 +5,10 @@ from unittest.mock import ANY
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.annotations.enums import CLINVAR_PATHOGENICITIES
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
+)
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceDatasetCollection,
@@ -13,7 +16,6 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.reference_data.config import CONFIG
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
     UpdatedReferenceDatasetCollectionTask,
