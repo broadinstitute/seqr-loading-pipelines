@@ -6,6 +6,7 @@ import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets.misc import filter_contigs
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
@@ -57,7 +58,9 @@ class BaseReferenceDataset:
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
         path = self.raw_dataset_path(reference_genome)
-        return module.get_ht(path, reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        return filter_contigs(ht, reference_genome)
+
 
 
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
