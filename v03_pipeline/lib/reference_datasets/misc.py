@@ -4,7 +4,11 @@ from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
-def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
+def enum_map(field: hl.Expression, enum_values: list[str]) -> hl.Expression:
+    return _enum_map(field, enum_values)[0]
+
+
+def _enum_map(field: hl.Expression, enum_values: list[str]) -> tuple[hl.Expression, bool]:
     lookup = hl.dict(
         hl.enumerate(enum_values, index_first=False).extend(
             # NB: adding missing values here allows us to
@@ -19,8 +23,15 @@ def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
     ):
         return field.map(
             lambda x: lookup[x],
-        )
-    return lookup[field]
+        ), True
+    return lookup[field], False
+
+def get_enum_field_expressions(ht: hl.Table, enum_select: dict) -> dict:
+    enum_select_fields = {}
+    for field_name, enum_values in enum_select.items():
+        expression, is_array = _enum_map(ht[field_name], enum_values)
+        enum_select_fields[f"{field_name}_id{'s' if is_array else ''}"] = expression
+    return enum_select_fields
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome, dataset_type: DatasetType):
