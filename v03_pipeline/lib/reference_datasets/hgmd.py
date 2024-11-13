@@ -5,7 +5,7 @@ from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import enum_map
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome, *_) -> hl.Table:
+def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
     mt = hl.import_vcf(
         raw_dataset_path,
         reference_genome=reference_genome.value,

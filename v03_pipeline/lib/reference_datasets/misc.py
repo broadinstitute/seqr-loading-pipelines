@@ -1,8 +1,5 @@
 import hail as hl
 
-from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome
-
 
 def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
     lookup = hl.dict(
@@ -21,11 +18,3 @@ def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
             lambda x: lookup[x],
         )
     return lookup[field]
-
-
-def filter_contigs(ht, reference_genome: ReferenceGenome, dataset_type: DatasetType):
-    if dataset_type == DatasetType.MITO:
-        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
-    return ht.filter(
-        hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
-    )

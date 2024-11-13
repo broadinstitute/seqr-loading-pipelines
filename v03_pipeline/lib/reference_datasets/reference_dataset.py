@@ -52,7 +52,6 @@ class ReferenceDataset(str, Enum):
     def get_ht(
         self,
         reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
     ) -> hl.Table:
         file_name = (
             self.name
@@ -64,7 +63,7 @@ class ReferenceDataset(str, Enum):
             f'v03_pipeline.lib.reference_datasets.{file_name}',
         )
         path = self.raw_dataset_path(reference_genome)
-        return module.get_ht(path, reference_genome, dataset_type)
+        return module.get_ht(path, reference_genome)
 
 
 CONFIG = {
@@ -87,7 +86,6 @@ CONFIG = {
         },
     },
     ReferenceDataset.hgmd: {
-        # TODO hgmd enums
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',

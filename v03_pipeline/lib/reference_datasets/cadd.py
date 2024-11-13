@@ -46,7 +46,6 @@ def import_cadd_table(
 def get_ht(
     raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
-    *_,
 ) -> hl.Table:
     snv_path, indel_path = raw_dataset_paths
     snvs_ht = import_cadd_table(snv_path, reference_genome)
