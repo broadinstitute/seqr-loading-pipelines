@@ -21,7 +21,7 @@ class UpdatedReferenceDataset(BaseWriteTask):
         )
 
     def create_table(self):
-        ht = self.reference_dataset.get_ht(self.reference_genome, self.dataset_type)
+        ht = self.reference_dataset.get_ht(self.reference_genome)
         # enum logic goes here
         return ht.annotate_globals(
             version=self.reference_dataset.version,

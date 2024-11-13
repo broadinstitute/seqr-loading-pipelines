@@ -11,7 +11,6 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES,
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
-from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import enum_map, filter_contigs
 
@@ -157,7 +156,6 @@ def select_fields(ht):
 def get_ht(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
 ) -> hl.Table:
     version = parse_clinvar_release_date(clinvar_url)
     with tempfile.NamedTemporaryFile(
@@ -173,7 +171,7 @@ def get_ht(
         contig_recoding=reference_genome.contig_recoding(include_mt=True),
         force_bgz=True,
     ).rows()
-    ht = filter_contigs(ht, reference_genome, dataset_type)
+    ht = filter_contigs(ht, reference_genome)
     submitters_ht = get_submission_summary_ht()
     ht = ht.annotate(
         submitters=submitters_ht[ht.rsid].Submitters,

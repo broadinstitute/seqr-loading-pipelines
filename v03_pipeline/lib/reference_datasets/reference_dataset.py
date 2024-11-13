@@ -52,13 +52,12 @@ class BaseReferenceDataset:
     def get_ht(
         self,
         reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
     ) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
         path = self.raw_dataset_path(reference_genome)
-        return module.get_ht(path, reference_genome, dataset_type)
+        return module.get_ht(path, reference_genome)
 
 
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
