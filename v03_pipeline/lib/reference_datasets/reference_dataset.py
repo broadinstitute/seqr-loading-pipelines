@@ -76,6 +76,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
     hgmd = 'hgmd'
+    topmed = 'topmed'
 
 
 class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
@@ -123,5 +124,19 @@ CONFIG = {
             ENUMS: clinvar.ENUMS,
         },
     },
+    ReferenceDataset.topmed: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.vcf.gz',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
+            # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
+        },
+    }
 }
 CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
