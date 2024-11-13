@@ -133,7 +133,7 @@ def select_fields(ht):
             clnsigs[0],
             CLINVAR_DEFAULT_PATHOGENICITY,
         ),
-        assertion=hl.if_else(
+        assertions=hl.if_else(
             CLINVAR_PATHOGENICITIES_LOOKUP.contains(clnsigs[0]),
             clnsigs[1:],
             clnsigs,
@@ -151,7 +151,7 @@ def select_fields(ht):
     )
     return ht.transmute(
         pathogenicity_id=enum_map(ht.pathogenicity, CLINVAR_PATHOGENICITIES),
-        assertion_id=enum_map(ht.assertion, CLINVAR_ASSERTIONS),
+        assertion_ids=enum_map(ht.assertions, CLINVAR_ASSERTIONS),
     )
 
 
