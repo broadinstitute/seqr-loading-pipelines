@@ -1,20 +1,20 @@
 import importlib
+import types
 from enum import Enum
 
 import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets.misc import filter_contigs
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
-ENUM_SELECT = 'enum_select'
+ENUMS = 'enums'
 
 
-class ReferenceDataset(str, Enum):
-    cadd = 'cadd'
-    hgmd = 'hgmd'
-
+class BaseReferenceDataset:
     @classmethod
     def for_reference_genome_dataset_type(
         cls,
@@ -41,16 +41,53 @@ class ReferenceDataset(str, Enum):
         return AccessControl.PUBLIC
 
     def version(self, reference_genome: ReferenceGenome) -> str:
-        return CONFIG[self][reference_genome][VERSION]
+        version = CONFIG[self][reference_genome][VERSION]
+        if isinstance(version, types.FunctionType):
+            return version(
+                self.raw_dataset_path(reference_genome),
+            )
+        return version
+
+    def enums(self, reference_genome) -> hl.Struct:
+        if ENUMS in CONFIG[self][reference_genome]:
+            return hl.Struct(**CONFIG[self][reference_genome][ENUMS])
+        return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
 
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(self, reference_genome: ReferenceGenome) -> hl.Table:
+    def get_ht(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
-        return module.get_ht(self.raw_dataset_path, reference_genome)
+        path = self.raw_dataset_path(reference_genome)
+        ht = module.get_ht(path, reference_genome)
+        ht = filter_contigs(ht, reference_genome)
+        return ht.annotate_globals(
+            version=self.version(reference_genome),
+            enums=self.enums(reference_genome),
+        )
+
+
+class ReferenceDataset(BaseReferenceDataset, str, Enum):
+    cadd = 'cadd'
+    clinvar = 'clinvar'
+    hgmd = 'hgmd'
+
+
+class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
+    clinvar_path = 'clinvar_path'
+    high_af_variants = 'high_af_variants'
+
+    @property
+    def requires(self) -> ReferenceDataset:
+        return {
+            self.clinvar_path: ReferenceDataset.clinvar,
+            self.high_af_variants: None,
+        }[self]
 
 
 CONFIG = {
@@ -72,4 +109,19 @@ CONFIG = {
             ],
         },
     },
+    ReferenceDataset.clinvar: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+            ENUMS: clinvar.ENUMS,
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: clinvar.parse_clinvar_release_date,
+            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+            ENUMS: clinvar.ENUMS,
+        },
+    },
 }
+CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
