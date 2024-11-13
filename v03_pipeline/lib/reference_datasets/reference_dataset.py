@@ -71,11 +71,12 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
     clinvar_path = 'clinvar_path'
     high_af_variants = 'high_af_variants'
 
+    @property
     def requires(self) -> ReferenceDataset:
         return {
             self.clinvar_path: ReferenceDataset.clinvar,
             self.high_af_variants: None,
-        }
+        }[self]
 
 
 CONFIG = {

@@ -20,7 +20,7 @@ class UpdatedReferenceDatasetQuery(BaseWriteTask):
     def requires(self):
         return self.clone(
             UpdatedReferenceDataset(
-                reference_dataset=self.reference_dataset_query,
+                reference_dataset=self.reference_dataset_query.requires,
             ),
         )
 
