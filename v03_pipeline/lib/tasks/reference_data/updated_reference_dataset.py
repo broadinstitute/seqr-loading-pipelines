@@ -1,4 +1,3 @@
-import hail as hl
 import luigi
 
 from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
@@ -21,9 +20,4 @@ class UpdatedReferenceDataset(BaseWriteTask):
         )
 
     def create_table(self):
-        ht = self.reference_dataset.get_ht(self.reference_genome)
-        # enum logic goes here
-        return ht.annotate_globals(
-            version=self.reference_dataset.version,
-            enums=hl.Struct(),  # expect more complex enum logic
-        )
+        return self.reference_dataset.get_ht(self.reference_genome)

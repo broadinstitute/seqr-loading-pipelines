@@ -3,11 +3,13 @@ import unittest
 import hail as hl
 import responses
 
-from v03_pipeline.lib.model.dataset_type import DatasetType
+from v03_pipeline.lib.annotations.enums import (
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
+)
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.clinvar import (
     CLINVAR_SUBMISSION_SUMMARY_URL,
-    get_ht,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
 )
@@ -122,13 +124,18 @@ class ClinvarTest(unittest.TestCase):
                 body=f2.read(),
             )
             responses.add_passthru('http://localhost')
-            clinvar_url = ReferenceDataset.clinvar.raw_dataset_path(
+            ht = ReferenceDataset.clinvar.get_ht(
                 ReferenceGenome.GRCh38,
             )
-            ht = get_ht(
-                clinvar_url,
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
+            self.assertEqual(
+                ht.globals.collect()[0],
+                hl.Struct(
+                    version='2024-11-11',
+                    enums=hl.Struct(
+                        assertion=CLINVAR_ASSERTIONS,
+                        pathogenicity=CLINVAR_PATHOGENICITIES,
+                    ),
+                ),
             )
             self.assertEqual(
                 ht.collect()[:3],

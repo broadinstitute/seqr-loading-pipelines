@@ -31,6 +31,11 @@ CLINVAR_SUBMISSION_SUMMARY_URL = (
     'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz'
 )
 
+ENUMS = {
+    'assertion': CLINVAR_ASSERTIONS,
+    'pathogenicity': CLINVAR_PATHOGENICITIES,
+}
+
 
 def parsed_clnsig(ht: hl.Table):
     return (
@@ -157,7 +162,6 @@ def get_ht(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    version = parse_clinvar_release_date(clinvar_url)
     with tempfile.NamedTemporaryFile(
         suffix='.vcf.gz',
         delete=False,
@@ -176,11 +180,4 @@ def get_ht(
         submitters=submitters_ht[ht.rsid].Submitters,
         conditions=submitters_ht[ht.rsid].Conditions,
     )
-    ht = select_fields(ht)
-    return ht.annotate_globals(
-        version=version,
-        enums=hl.Struct(
-            pathogenicity=CLINVAR_PATHOGENICITIES,
-            assertion=CLINVAR_ASSERTIONS,
-        ),
-    )
+    return select_fields(ht)
