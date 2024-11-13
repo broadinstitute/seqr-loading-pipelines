@@ -41,11 +41,17 @@ class ReferenceDataset(str, Enum):
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
+    @property
+    def enum_select(self) -> dict:
+        return CONFIG[self].get(ENUM_SELECT)
+
+
     def version(self, reference_genome: ReferenceGenome) -> str:
         return CONFIG[self][reference_genome][VERSION]
 
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
+
 
     def get_ht(self, reference_genome: ReferenceGenome) -> hl.Table:
         module = importlib.import_module(
@@ -66,10 +72,18 @@ CONFIG = {
         },
     },
     ReferenceDataset.dbnsfp: {
+        ENUM_SELECT: {
+            'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+        },
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFPv2.9.zip',
+        },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'https://usf.box.com/shared/static/nqgw17r4zzuluk5ginqm33hhopiak26c',
+            RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
         },
     },
 }
