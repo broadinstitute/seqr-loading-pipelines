@@ -24,7 +24,7 @@ def import_cadd_table(
     with tempfile.NamedTemporaryFile(suffix='.tsv.gz', delete=False) as tmp_file:
         urllib.request.urlretrieve(raw_dataset_path, tmp_file.name)  # noqa: S310
         cadd_ht = hl.import_table(
-            tmp_file,
+            tmp_file.name,
             force_bgz=True,
             comment='#',
             no_header=True,
@@ -46,6 +46,7 @@ def import_cadd_table(
 def get_ht(
     raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
+    *_,
 ) -> hl.Table:
     snv_path, indel_path = raw_dataset_paths
     snvs_ht = import_cadd_table(snv_path, reference_genome)

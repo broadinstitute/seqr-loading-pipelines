@@ -233,3 +233,12 @@ CLINVAR_PATHOGENICITIES = [
 CLINVAR_PATHOGENICITIES_LOOKUP = hl.dict(
     hl.enumerate(CLINVAR_PATHOGENICITIES, index_first=False),
 )
+
+HGMD_CLASSES = [
+    'DM',
+    'DM?',
+    'DP',
+    'DFP',
+    'FP',
+    'R',
+]

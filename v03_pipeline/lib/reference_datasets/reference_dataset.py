@@ -49,7 +49,11 @@ class ReferenceDataset(str, Enum):
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
-    def get_ht(self, reference_genome: ReferenceGenome) -> hl.Table:
+    def get_ht(
+        self,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> hl.Table:
         file_name = (
             self.name
             if self
@@ -59,7 +63,8 @@ class ReferenceDataset(str, Enum):
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{file_name}',
         )
-        return module.get_ht(self.raw_dataset_path, reference_genome)
+        path = self.raw_dataset_path(reference_genome)
+        return module.get_ht(path, reference_genome, dataset_type)
 
 
 CONFIG = {

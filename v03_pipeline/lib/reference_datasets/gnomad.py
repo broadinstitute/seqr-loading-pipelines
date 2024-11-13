@@ -47,15 +47,8 @@ def process_gnomad_v4_ht(ht: hl.Table) -> hl.Table:
     return ht.select(**selects)
 
 
-def get_ht(
-    raw_dataset_path: str,
-    reference_genome: ReferenceGenome,
-) -> hl.Table:
+def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome, *_) -> hl.Table:
     ht = hl.read_table(raw_dataset_path)
-
     if reference_genome == ReferenceGenome.GRCh37:
-        ht = process_gnomad_v2_ht(ht)
-    else:
-        ht = process_gnomad_v4_ht(ht)
-
-    return ht
+        return process_gnomad_v2_ht(ht)
+    return process_gnomad_v4_ht(ht)
