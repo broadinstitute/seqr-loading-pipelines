@@ -11,7 +11,7 @@ from v03_pipeline.lib.reference_datasets.misc import filter_contigs, get_enum_fi
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
-ENUM_SELECT = 'enum_select'
+ENUMS = 'enums'
 
 
 class BaseReferenceDataset:
@@ -40,11 +40,6 @@ class BaseReferenceDataset:
             return AccessControl.PRIVATE
         return AccessControl.PUBLIC
 
-    @property
-    def enum_select(self) -> dict:
-        return CONFIG[self].get(ENUM_SELECT)
-
-
     def version(self, reference_genome: ReferenceGenome) -> str:
         version = CONFIG[self][reference_genome][VERSION]
         if isinstance(version, types.FunctionType):
@@ -52,6 +47,15 @@ class BaseReferenceDataset:
                 self.raw_dataset_path(reference_genome),
             )
         return version
+
+    @property
+    def enum_selects(self) -> dict:
+        return CONFIG[self].get(ENUMS)
+
+    def enums(self) -> hl.Struct:
+        if self.enum_selects:
+            return hl.Struct(**self.enum_selects)
+        return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
 
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
@@ -68,8 +72,11 @@ class BaseReferenceDataset:
         # TODO do not run this for clinvar!
         if self.enum_select:
             ht = ht.transmute(**get_enum_field_expressions(ht, self.enum_select))
-        return filter_contigs(ht, reference_genome)
-
+        ht = filter_contigs(ht, reference_genome)
+        return ht.annotate_globals(
+            version=self.version(reference_genome),
+            enums=self.enums(),
+        )
 
 
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
@@ -92,7 +99,7 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
 
 CONFIG = {
     ReferenceDataset.dbnsfp: {
-        ENUM_SELECT: {
+        ENUMS: {
             'MutationTaster_pred': ['D', 'A', 'N', 'P'],
         },
         ReferenceGenome.GRCh37: {
@@ -107,6 +114,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.clinvar: {
+        ENUMS: clinvar.ENUMS,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: clinvar.parse_clinvar_release_date,
