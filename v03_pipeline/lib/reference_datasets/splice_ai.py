@@ -19,10 +19,14 @@ def get_ht(
     ds_end_index = 6
     num_delta_scores = ds_end_index - ds_start_index
     ht = ht.select(
-        delta_scores=ht.info.SpliceAI[0].split(delim="\\|")[ds_start_index:ds_end_index].map(hl.float32),
+        delta_scores=ht.info.SpliceAI[0]
+        .split(delim='\\|')[ds_start_index:ds_end_index]
+        .map(hl.float32),
     )
     ht = ht.annotate(delta_score=hl.max(ht.delta_scores))
     # Splice Consequence enum ID is the index of the max score. If no score, use the last index for "No Consequence"
     return ht.annotate(
-        splice_consequence_id=hl.if_else(ht.delta_score > 0, ht.delta_scores.index(ht.delta_score), num_delta_scores),
+        splice_consequence_id=hl.if_else(
+            ht.delta_score > 0, ht.delta_scores.index(ht.delta_score), num_delta_scores
+        ),
     ).drop('delta_scores')
