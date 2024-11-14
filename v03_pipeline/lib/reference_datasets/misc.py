@@ -46,9 +46,10 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
         if reference_genome == ReferenceGenome.GRCh38
         else ht.chrom
     )
-    locus = hl.locus(chrom, ht.pos, reference_genome.value)
-    alleles = hl.array([ht.ref, ht.alt])
-    ht = ht.transmute(locus=locus, alleles=alleles)
+    ht = ht.transmute(
+        locus=hl.locus(chrom, ht.pos, reference_genome.value),
+        alleles=hl.array([ht.ref, ht.alt]),
+    )
     return ht.key_by('locus', 'alleles')
 
 
