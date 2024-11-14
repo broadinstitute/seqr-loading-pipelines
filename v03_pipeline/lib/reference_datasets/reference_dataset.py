@@ -170,19 +170,6 @@ CONFIG = {
             RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/exomes/gnomad.exomes.v4.1.sites.ht',
         },
     },
-    ReferenceDataset.gnomad_genomes: {
-        MODULE_NAME: 'gnomad',
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
-        },
-    },
     ReferenceDataset.gnomad_qc: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
@@ -197,3 +184,4 @@ CONFIG = {
     },
 }
 CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
+CONFIG[ReferenceDataset.gnomad_genomes] = CONFIG[ReferenceDataset.gnomad_exomes]
