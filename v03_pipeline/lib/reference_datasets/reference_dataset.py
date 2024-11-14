@@ -6,7 +6,10 @@ import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar
-from v03_pipeline.lib.reference_datasets.misc import filter_contigs, get_enum_select_fields
+from v03_pipeline.lib.reference_datasets.misc import (
+    filter_contigs,
+    get_enum_select_fields,
+)
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
