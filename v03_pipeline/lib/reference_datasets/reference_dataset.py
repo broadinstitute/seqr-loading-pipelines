@@ -6,7 +6,6 @@ import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar
-from v03_pipeline.lib.reference_datasets.hgmd import HGMD_CLASSES
 from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
     get_enum_select_fields,
@@ -88,6 +87,7 @@ class BaseReferenceDataset:
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
+    dbnsfp = 'dbnsfp'
     hgmd = 'hgmd'
     mitimpact = 'mitimpact'
     topmed = 'topmed'
@@ -109,22 +109,19 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
 
 
 CONFIG = {
-    ReferenceDataset.cadd: {
+    ReferenceDataset.dbnsfp: {
+        ENUMS: {
+            'MutationTaster_pred': ['D', 'A', 'N', 'P'],
+        },
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: [
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh37/gnomad.genomes-exomes.r4.0.indel.tsv.gz',
-            ],
+            RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
         },
         ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: [
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/whole_genome_SNVs.tsv.gz',
-                'https://krishna.gs.washington.edu/download/CADD/v1.7/GRCh38/gnomad.genomes.r4.0.indel.tsv.gz',
-            ],
+            RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
         },
     },
     ReferenceDataset.clinvar: {
@@ -162,7 +159,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.hgmd: {
-        ENUMS: {'class': HGMD_CLASSES},
+        ENUMS: {'class': ['DM', 'DM?', 'DP', 'DFP', 'FP', 'R']},
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
