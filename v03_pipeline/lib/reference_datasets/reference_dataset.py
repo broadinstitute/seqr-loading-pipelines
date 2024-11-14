@@ -5,7 +5,7 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.reference_datasets import clinvar, hgmd
+from v03_pipeline.lib.reference_datasets import clinvar, hgmd, screen
 from v03_pipeline.lib.reference_datasets.misc import filter_contigs
 
 DATASET_TYPES = 'dataset_types'
@@ -87,6 +87,10 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
     gnomad_qc = 'gnomad_qc'
+    gnomad_mito = 'gnomad_mito'
+    gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
+    screen = 'screen'
+    local_constraint_mito = 'local_constraint_mito'
 
 
 class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
@@ -196,6 +200,37 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
+        },
+    },
+    ReferenceDataset.gnomad_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+        },
+    },
+    ReferenceDataset.gnomad_non_coding_constraint: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+        },
+    },
+    ReferenceDataset.screen: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            ENUMS: screen.ENUMS,
+        },
+    },
+    ReferenceDataset.local_constraint_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            # Originally sourced from https://www.biorxiv.org/content/10.1101/2022.12.16.520778v2.supplementary-material
+            # Supplementary Table 7.
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
         },
     },
 }
