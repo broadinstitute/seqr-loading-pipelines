@@ -52,9 +52,10 @@ class BaseReferenceDataset:
         return version
 
     @property
-    def enums(self) -> dict:
+    def enums(self) -> dict | None:
         return CONFIG[self].get(ENUMS)
 
+    @property
     def enum_globals(self) -> hl.Struct:
         if self.enums:
             return hl.Struct(**self.enums)
@@ -86,6 +87,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     hgmd = 'hgmd'
+    mitimpact = 'mitimpact'
     splice_ai = 'splice_ai'
     topmed = 'topmed'
 
@@ -171,6 +173,13 @@ CONFIG = {
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
+        },
+    },
+    ReferenceDataset.mitimpact: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
         },
     },
 }
