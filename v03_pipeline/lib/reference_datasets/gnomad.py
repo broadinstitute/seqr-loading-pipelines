@@ -3,7 +3,7 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 
 
-def process_gnomad_v2_ht(ht: hl.Table) -> hl.Table:
+def select_fields_v2(ht: hl.Table) -> hl.Table:
     selects = {}
     global_idx = hl.eval(ht.globals.freq_index_dict['gnomad'])
     selects['AF'] = hl.float32(ht.freq[global_idx].AF)
@@ -26,7 +26,7 @@ def process_gnomad_v2_ht(ht: hl.Table) -> hl.Table:
     return ht.select(**selects)
 
 
-def process_gnomad_v4_ht(ht: hl.Table) -> hl.Table:
+def select_fields_v4(ht: hl.Table) -> hl.Table:
     selects = {}
     global_idx = hl.eval(ht.globals.freq_index_dict['adj'])
     selects['AF'] = hl.float32(ht.freq[global_idx].AF)
@@ -50,5 +50,5 @@ def process_gnomad_v4_ht(ht: hl.Table) -> hl.Table:
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = hl.read_table(raw_dataset_path)
     if reference_genome == ReferenceGenome.GRCh37:
-        return process_gnomad_v2_ht(ht)
-    return process_gnomad_v4_ht(ht)
+        return select_fields_v2(ht)
+    return select_fields_v4(ht)

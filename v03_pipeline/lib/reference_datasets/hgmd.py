@@ -1,8 +1,17 @@
 import hail as hl
 
-from v03_pipeline.lib.annotations.enums import HGMD_CLASSES
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.misc import enum_map
+
+HGMD_CLASSES = [
+    'DM',
+    'DM?',
+    'DP',
+    'DFP',
+    'FP',
+    'R',
+]
+
+ENUMS = {'class': HGMD_CLASSES}
 
 
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
@@ -21,4 +30,5 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
             'class': ht.info.CLASS,
         },
     )
-    return ht.transmute(class_id=enum_map(ht['class'], HGMD_CLASSES))
+    return ht
+    # return ht.transmute(class_id=enum_map(ht['class'], HGMD_CLASSES))

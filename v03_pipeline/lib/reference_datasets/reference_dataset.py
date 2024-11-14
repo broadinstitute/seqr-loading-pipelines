@@ -53,6 +53,7 @@ class ReferenceDataset(str, Enum):
         self,
         reference_genome: ReferenceGenome,
     ) -> hl.Table:
+        # NB: gnomad_exomes and gnomad_genomes share a get_ht implementation
         file_name = (
             self.name
             if self
