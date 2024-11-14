@@ -10,7 +10,6 @@ from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
     get_enum_select_fields,
 )
-from v03_pipeline.lib.reference_datasets.screen import SCREEN_REGION_TYPES
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
@@ -229,7 +228,18 @@ CONFIG = {
         },
     },
     ReferenceDataset.screen: {
-        ENUMS: {'region_type': SCREEN_REGION_TYPES},
+        ENUMS: {
+            'region_type': [
+                'CTCF-bound',
+                'CTCF-only',
+                'DNase-H3K4me3',
+                'PLS',
+                'dELS',
+                'pELS',
+                'DNase-only',
+                'low-DNase',
+            ],
+        },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
