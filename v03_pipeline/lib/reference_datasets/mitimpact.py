@@ -16,7 +16,7 @@ def get_ht(
             os.path.join(
                 unzipped_dir,
                 extracted_filename,
-            )
+            ),
         )
         ht = ht.select(
             locus=hl.locus('chrM', hl.parse_int32(ht.Start), reference_genome),
