@@ -15,6 +15,7 @@ DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
+SKIP_ENUM_ANNOTATION = 'skip_enum_annotation'
 
 
 class BaseReferenceDataset:
@@ -73,7 +74,7 @@ class BaseReferenceDataset:
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
-        if self.enums:
+        if self.enums and not CONFIG[self].get(SKIP_ENUM_ANNOTATION):
             ht = ht.transmute(**get_enum_select_fields(ht, self.enums))
         ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
@@ -143,6 +144,7 @@ CONFIG = {
                 'No consequence',
             ],
         },
+        SKIP_ENUM_ANNOTATION: True,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
