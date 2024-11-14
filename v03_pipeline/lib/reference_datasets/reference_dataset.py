@@ -137,6 +137,6 @@ CONFIG = {
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
         },
-    }
+    },
 }
 CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
