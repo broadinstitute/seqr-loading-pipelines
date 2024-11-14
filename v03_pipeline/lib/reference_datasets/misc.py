@@ -1,9 +1,9 @@
+import contextlib
 import os
 import shutil
 import tempfile
 import zipfile
 
-from contextlib import contextmanager
 import hail as hl
 import requests
 
@@ -52,7 +52,7 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     return ht.key_by('locus', 'alleles')
 
 
-@contextmanager
+@contextlib.contextmanager
 def download_zip_file(url, suffix='.zip'):
     extracted_filename = url.removesuffix('.zip').split('/')[-1]
     with tempfile.NamedTemporaryFile(
