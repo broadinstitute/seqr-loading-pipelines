@@ -124,20 +124,6 @@ CONFIG = {
             ENUMS: clinvar.ENUMS,
         },
     },
-    ReferenceDataset.clinvar: {
-        ReferenceGenome.GRCh37: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-            ENUMS: clinvar.ENUMS,
-        },
-        ReferenceGenome.GRCh38: {
-            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
-            VERSION: clinvar.parse_clinvar_release_date,
-            RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-            ENUMS: clinvar.ENUMS,
-        },
-    },
     ReferenceDataset.topmed: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
