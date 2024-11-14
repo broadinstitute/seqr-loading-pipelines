@@ -5,8 +5,12 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.reference_datasets import clinvar, hgmd
-from v03_pipeline.lib.reference_datasets.misc import filter_contigs
+from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets.hgmd import HGMD_CLASSES
+from v03_pipeline.lib.reference_datasets.misc import (
+    filter_contigs,
+    get_enum_select_fields,
+)
 
 DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
@@ -49,9 +53,14 @@ class BaseReferenceDataset:
             )
         return version
 
-    def enums(self, reference_genome) -> hl.Struct:
-        if ENUMS in CONFIG[self][reference_genome]:
-            return hl.Struct(**CONFIG[self][reference_genome][ENUMS])
+    @property
+    def enums(self) -> dict | None:
+        return CONFIG[self].get(ENUMS)
+
+    @property
+    def enum_globals(self) -> hl.Struct:
+        if self.enums:
+            return hl.Struct(**self.enums)
         return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
 
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
@@ -67,10 +76,12 @@ class BaseReferenceDataset:
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
+        if self.enums:
+            ht = ht.transmute(**get_enum_select_fields(ht, self.enums))
         ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
             version=self.version(reference_genome),
-            enums=self.enums(reference_genome),
+            enums=self.enum_globals,
         )
 
 
@@ -117,17 +128,16 @@ CONFIG = {
         },
     },
     ReferenceDataset.clinvar: {
+        ENUMS: clinvar.ENUMS,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: clinvar.parse_clinvar_release_date,
             RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
-            ENUMS: clinvar.ENUMS,
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: clinvar.parse_clinvar_release_date,
             RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-            ENUMS: clinvar.ENUMS,
         },
     },
     ReferenceDataset.topmed: {
@@ -152,17 +162,16 @@ CONFIG = {
         },
     },
     ReferenceDataset.hgmd: {
+        ENUMS: {'class': HGMD_CLASSES},
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
-            ENUMS: hgmd.ENUMS,
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
-            ENUMS: hgmd.ENUMS,
         },
     },
     ReferenceDataset.gnomad_exomes: {
