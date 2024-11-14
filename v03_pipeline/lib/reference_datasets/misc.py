@@ -1,4 +1,11 @@
+import contextlib
+import os
+import shutil
+import tempfile
+import zipfile
+
 import hail as hl
+import requests
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
@@ -31,3 +38,28 @@ def filter_contigs(ht, reference_genome: ReferenceGenome):
     return ht.filter(
         hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
     )
+
+
+def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
+    chrom = (
+        hl.format('chr%s', ht.chrom)
+        if reference_genome == ReferenceGenome.GRCh38
+        else ht.chrom
+    )
+    ht = ht.transmute(
+        locus=hl.locus(chrom, ht.pos, reference_genome.value),
+        alleles=hl.array([ht.ref, ht.alt]),
+    )
+    return ht.key_by('locus', 'alleles')
+
+
+@contextlib.contextmanager
+def download_zip_file(url, suffix='.zip'):
+    with tempfile.NamedTemporaryFile(
+        suffix=suffix,
+    ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
+        shutil.copyfileobj(r.raw, tmp_file)
+        with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
+            zipf.extractall(os.path.dirname(tmp_file.name))
+        # Extracting the zip file
+        yield os.path.dirname(tmp_file.name)
