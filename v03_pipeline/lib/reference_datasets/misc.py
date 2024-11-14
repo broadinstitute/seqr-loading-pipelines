@@ -1,10 +1,11 @@
 from contextlib import contextmanager
-import hail as hl
 import os
-import requests
 import shutil
 import tempfile
 import zipfile
+
+import hail as hl
+import requests
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
