@@ -40,6 +40,17 @@ def filter_contigs(ht, reference_genome: ReferenceGenome):
     )
 
 
+def vcf_to_ht(file_name: str, reference_genome: ReferenceGenome) -> hl.Table:
+    return hl.import_vcf(
+        file_name,
+        reference_genome=reference_genome.value,
+        drop_samples=True,
+        skip_invalid_loci=True,
+        contig_recoding=reference_genome.contig_recoding(include_mt=True),
+        force_bgz=True,
+    ).rows()
+
+
 def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
     chrom = (
         hl.format('chr%s', ht.chrom)

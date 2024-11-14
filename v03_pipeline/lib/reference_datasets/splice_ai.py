@@ -1,6 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_splice_ai.py
@@ -8,14 +9,7 @@ def get_ht(
     raw_dataset_paths: list[str],
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    ht = hl.import_vcf(
-        raw_dataset_paths,
-        rreference_genome=reference_genome.value,
-        drop_samples=True,
-        skip_invalid_loci=True,
-        contig_recoding=reference_genome.contig_recoding(include_mt=True),
-        force_bgz=True,
-    ).rows()
+    ht = vcf_to_ht(raw_dataset_paths, reference_genome)
 
     # TODO
     delta_scores = ht.info.SpliceAI[0].split(delim="\\|")[2:6]
