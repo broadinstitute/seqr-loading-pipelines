@@ -52,9 +52,10 @@ class BaseReferenceDataset:
         return version
 
     @property
-    def enums(self) -> dict:
+    def enums(self) -> dict | None:
         return CONFIG[self].get(ENUMS)
 
+    @property
     def enum_globals(self) -> hl.Struct:
         if self.enums:
             return hl.Struct(**self.enums)
