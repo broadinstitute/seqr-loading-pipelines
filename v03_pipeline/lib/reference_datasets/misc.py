@@ -1,4 +1,10 @@
+from contextlib import contextmanager
 import hail as hl
+import os
+import requests
+import shutil
+import tempfile
+import zipfile
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
@@ -43,3 +49,19 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     alleles = hl.array([ht.ref, ht.alt])
     ht = ht.transmute(locus=locus, alleles=alleles)
     return ht.key_by('locus', 'alleles')
+
+
+@contextmanager
+def download_zip_file(url, suffix='.zip'):
+    extracted_filename = url.removesuffix('.zip').split('/')[-1]
+    with tempfile.NamedTemporaryFile(
+            suffix=suffix,
+    ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
+        shutil.copyfileobj(r.raw, tmp_file)
+        with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
+            zipf.extractall(os.path.dirname(tmp_file.name))
+        yield os.path.join(
+            # Extracting the zip file
+            os.path.dirname(tmp_file.name),
+            extracted_filename,
+        )
