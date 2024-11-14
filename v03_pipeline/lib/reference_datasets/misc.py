@@ -54,15 +54,11 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
 
 @contextlib.contextmanager
 def download_zip_file(url, suffix='.zip'):
-    extracted_filename = url.removesuffix('.zip').split('/')[-1]
     with tempfile.NamedTemporaryFile(
         suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         shutil.copyfileobj(r.raw, tmp_file)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(os.path.dirname(tmp_file.name))
-        yield os.path.join(
-            # Extracting the zip file
-            os.path.dirname(tmp_file.name),
-            extracted_filename,
-        )
+        # Extracting the zip file
+        yield os.path.dirname(tmp_file.name)

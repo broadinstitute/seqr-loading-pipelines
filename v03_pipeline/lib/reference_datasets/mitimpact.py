@@ -1,3 +1,5 @@
+import os
+
 import hail as hl
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
@@ -8,8 +10,12 @@ def get_ht(
     url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    with download_zip_file(url, suffix='.txt.zip') as unzipped_file:
-        ht = hl.import_table(unzipped_file)
+    extracted_filename = url.removesuffix('.zip').split('/')[-1]
+    with download_zip_file(url, suffix='.txt.zip') as unzipped_dir:
+        ht = hl.import_table(os.path.join(
+            unzipped_dir,
+            extracted_filename,
+        ))
         ht = ht.select(
             locus=hl.locus('chrM', hl.parse_int32(ht.Start), reference_genome),
             alleles=[ht.Ref, ht.Alt],
