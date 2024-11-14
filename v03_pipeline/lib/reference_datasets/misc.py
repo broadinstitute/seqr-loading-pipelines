@@ -3,23 +3,28 @@ import hail as hl
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
-def enum_map(field: hl.Expression, enum_values: list[str]) -> dict:
-    lookup = hl.dict(
-        hl.enumerate(enum_values, index_first=False).extend(
-            # NB: adding missing values here allows us to
-            # hard fail if a mapped key is present and has an unexpected value
-            # but propagate missing values.
-            [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
-        ),
-    )
-    if (
-        isinstance(field.dtype, hl.tarray | hl.tset)
-        and field.dtype.element_type == hl.tstr
-    ):
-        return field.map(
-            lambda x: lookup[x],
+def get_enum_select_fields(ht: hl.Table, enums: dict) -> dict[str, hl.Expression]:
+    enum_select_fields = {}
+    for field_name, values in enums.items():
+        lookup = hl.dict(
+            hl.enumerate(values, index_first=False).extend(
+                # NB: adding missing values here allows us to
+                # hard fail if a mapped key is present and has an unexpected value
+                # but propagate missing values.
+                [(hl.missing(hl.tstr), hl.missing(hl.tint32))],
+            ),
         )
-    return lookup[field]
+        # NB: this conditioning on type is "outside" the hail expression context.
+        if (
+            isinstance(ht[field_name].dtype, hl.tarray | hl.tset)
+            and ht[field_name].dtype.element_type == hl.tstr
+        ):
+            enum_select_fields[f'{field_name}_ids'] = ht[field_name].map(
+                lambda x: lookup[x],  # noqa: B023
+            )
+        else:
+            enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
+    return enum_select_fields
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):
