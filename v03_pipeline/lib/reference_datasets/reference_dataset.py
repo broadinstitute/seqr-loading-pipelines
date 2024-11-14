@@ -123,5 +123,12 @@ CONFIG = {
             ENUMS: clinvar.ENUMS,
         },
     },
+    ReferenceDataset.mitimpact: {
+        ReferenceDataset.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
+        },
+    },
 }
 CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
