@@ -50,5 +50,7 @@ def select_fields_v4(ht: hl.Table) -> hl.Table:
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = hl.read_table(raw_dataset_path)
     if reference_genome == ReferenceGenome.GRCh37:
-        return select_fields_v2(ht)
-    return select_fields_v4(ht)
+        ht = select_fields_v2(ht)
+    else:
+        ht = select_fields_v4(ht)
+    return ht.select_globals()

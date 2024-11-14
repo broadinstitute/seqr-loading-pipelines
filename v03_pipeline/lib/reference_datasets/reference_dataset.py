@@ -5,7 +5,7 @@ from enum import Enum
 import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets import clinvar, hgmd
 from v03_pipeline.lib.reference_datasets.misc import filter_contigs
 
 DATASET_TYPES = 'dataset_types'
@@ -64,7 +64,7 @@ class BaseReferenceDataset:
         file_name = (
             self.name
             if self
-               not in {ReferenceDataset.gnomad_exomes, ReferenceDataset.gnomad_genomes}
+            not in {ReferenceDataset.gnomad_exomes, ReferenceDataset.gnomad_genomes}
             else 'gnomad'
         )
         module = importlib.import_module(
@@ -138,11 +138,13 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://seqr-reference-data-private/GRCh37/HGMD/HGMD_Pro_2023.1_hg19.vcf.gz',
+            ENUMS: hgmd.ENUMS,
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://seqr-reference-data-private/GRCh38/HGMD/HGMD_Pro_2023.1_hg38.vcf.gz',
+            ENUMS: hgmd.ENUMS,
         },
     },
     ReferenceDataset.gnomad_exomes: {

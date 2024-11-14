@@ -1,6 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.misc import get_enum_select_fields
 
 HGMD_CLASSES = [
     'DM',
@@ -30,5 +31,4 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
             'class': ht.info.CLASS,
         },
     )
-    return ht
-    # return ht.transmute(class_id=enum_map(ht['class'], HGMD_CLASSES))
+    return ht.transmute(**get_enum_select_fields(ht, ENUMS))
