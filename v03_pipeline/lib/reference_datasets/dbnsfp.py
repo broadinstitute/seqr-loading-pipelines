@@ -1,11 +1,10 @@
-import tempfile
-import urllib
-import zipfile
-
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.misc import key_by_locus_alleles, download_zip_file
+from v03_pipeline.lib.reference_datasets.misc import (
+    key_by_locus_alleles,
+    download_zip_file,
+)
 
 SHARED_TYPES = {
     'REVEL_score': hl.tfloat32,

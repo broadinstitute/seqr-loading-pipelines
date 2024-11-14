@@ -55,7 +55,7 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
 def download_zip_file(url, suffix='.zip'):
     extracted_filename = url.removesuffix('.zip').split('/')[-1]
     with tempfile.NamedTemporaryFile(
-            suffix=suffix,
+        suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         shutil.copyfileobj(r.raw, tmp_file)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
