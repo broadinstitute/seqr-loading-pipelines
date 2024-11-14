@@ -7,6 +7,7 @@ import luigi.worker
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    CLINVAR_ASSERTIONS,
     CLINVAR_PATHOGENICITIES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
@@ -32,7 +33,6 @@ from v03_pipeline.lib.paths import (
     cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
 )
-from v03_pipeline.lib.reference_data.clinvar import CLINVAR_ASSERTIONS
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )

@@ -206,6 +206,21 @@ SV_CONSEQUENCE_RANKS = [
     'NEAREST_TSS',
 ]
 
+CLINVAR_ASSERTIONS = [
+    'Affects',
+    'association',
+    'association_not_found',
+    'confers_sensitivity',
+    'drug_response',
+    'low_penetrance',
+    'not_provided',
+    'other',
+    'protective',
+    'risk_factor',
+    'no_classification_for_the_single_variant',
+    'no_classifications_from_unflagged_records',
+]
+
 CLINVAR_DEFAULT_PATHOGENICITY = 'No_pathogenic_assertion'
 
 # NB: sorted by pathogenicity
