@@ -78,7 +78,7 @@ class BaseReferenceDataset:
         ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
             version=self.version(reference_genome),
-            enums=self.enum_globals(),
+            enums=self.enum_globals,
         )
 
 
