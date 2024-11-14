@@ -2,8 +2,8 @@ import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
-    key_by_locus_alleles,
     download_zip_file,
+    key_by_locus_alleles,
 )
 
 SHARED_TYPES = {
@@ -60,9 +60,9 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
 
-    with download_zip_file(raw_dataset_path) as unzipped_file:
+    with download_zip_file(raw_dataset_path) as unzipped_dir:
         ht = hl.import_table(
-            f'{unzipped_file}_variant.chr*.gz',
+            f'{unzipped_dir}/dbNSFP*_variant.chr*.gz',
             types=types,
             missing='.',
             force=True,
