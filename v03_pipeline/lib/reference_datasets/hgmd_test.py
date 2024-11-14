@@ -4,7 +4,6 @@ from unittest.mock import patch
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.hgmd import HGMD_CLASSES
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 TEST_HGMD_VCF = 'v03_pipeline/var/test/reference_data/test_hgmd.vcf'
@@ -37,8 +36,6 @@ class HGMDTest(unittest.TestCase):
                 ht.globals.collect()[0],
                 hl.Struct(
                     version='1.0',
-                    enums=hl.Struct(
-                        **{'class': HGMD_CLASSES},
-                    ),
+                    enums=hl.Struct(**ReferenceDataset.hgmd.enums),
                 ),
             )

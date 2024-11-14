@@ -2,15 +2,6 @@ import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
 
-HGMD_CLASSES = [
-    'DM',
-    'DM?',
-    'DP',
-    'DFP',
-    'FP',
-    'R',
-]
-
 
 def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
     mt = hl.import_vcf(
