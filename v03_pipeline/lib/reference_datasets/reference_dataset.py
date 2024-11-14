@@ -12,6 +12,7 @@ DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
+MODULE_NAME = 'module_name'
 
 
 class BaseReferenceDataset:
@@ -60,15 +61,9 @@ class BaseReferenceDataset:
         self,
         reference_genome: ReferenceGenome,
     ) -> hl.Table:
-        # NB: gnomad_exomes and gnomad_genomes share a get_ht implementation
-        file_name = (
-            self.name
-            if self
-            not in {ReferenceDataset.gnomad_exomes, ReferenceDataset.gnomad_genomes}
-            else 'gnomad'
-        )
+        module_file_name = CONFIG[self].get(MODULE_NAME, self.name)
         module = importlib.import_module(
-            f'v03_pipeline.lib.reference_datasets.{file_name}',
+            f'v03_pipeline.lib.reference_datasets.{module_file_name}',
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
@@ -83,6 +78,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
     hgmd = 'hgmd'
+    mitimpact = 'mitimpact'
     topmed = 'topmed'
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
@@ -152,6 +148,13 @@ CONFIG = {
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
         },
     },
+    ReferenceDataset.mitimpact: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
+        },
+    },
     ReferenceDataset.hgmd: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
@@ -167,6 +170,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_exomes: {
+        MODULE_NAME: 'gnomad',
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -179,6 +183,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_genomes: {
+        MODULE_NAME: 'gnomad',
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -194,12 +199,12 @@ CONFIG = {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/2.1.1/ht/genomes/gnomad.genomes.r2.1.1.sites.ht',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/gnomad_qc/GRCh37/gnomad.joint.high_callrate_common_biallelic_snps.pruned.mt',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.1/ht/genomes/gnomad.genomes.v4.1.sites.ht',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
         },
     },
     ReferenceDataset.gnomad_mito: {
