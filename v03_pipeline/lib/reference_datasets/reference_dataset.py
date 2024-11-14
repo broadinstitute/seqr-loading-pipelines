@@ -76,6 +76,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
     hgmd = 'hgmd'
+    mitimpact = 'mitimpact'
     topmed = 'topmed'
 
 
