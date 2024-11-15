@@ -87,6 +87,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
+    eigen = 'eigen'
     hgmd = 'hgmd'
     hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
@@ -120,6 +121,20 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+        },
+    },
+    ReferenceDataset.eigen: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: The download link on the Eigen website (http://www.columbia.edu/~ii2135/download.html) is broken
+            # as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
         },
     },
     ReferenceDataset.clinvar: {
