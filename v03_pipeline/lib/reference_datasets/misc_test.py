@@ -42,9 +42,25 @@ class MiscTest(unittest.TestCase):
             ],
         )
 
+        mapped_enum_select_fields = get_enum_select_fields(
+            mapped_ht,
+            {
+                'variant': ['1', '2', '3', '4'],
+                'sv_type': ['a', 'b', 'c', 'd'],
+            },
+        )
+        self.assertDictEqual(mapped_enum_select_fields, {})
+
+
         enum_select_fields = get_enum_select_fields(
             ht,
             {'sv_type': ['d']},
         )
         mapped_ht = ht.select(**enum_select_fields)
         self.assertRaises(Exception, mapped_ht.collect)
+
+        with self.assertRaises(ValueError) as cm:
+            get_enum_select_fields(ht, {'variant_renamed': ['1', '2', '3', '4']})
+        self.assertEqual(str(cm.exception), 'Unused enum variant_renamed')
+
+        self.assertDictEqual(get_enum_select_fields(ht, None), {})
