@@ -73,8 +73,9 @@ class BaseReferenceDataset:
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
-        if self.enums:
-            ht = ht.transmute(**get_enum_select_fields(ht, self.enums))
+        enum_selects = get_enum_select_fields(ht, self.enums)
+        if enum_selects:
+            ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
             version=self.version(reference_genome),
@@ -88,6 +89,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     dbnsfp = 'dbnsfp'
     hgmd = 'hgmd'
     mitimpact = 'mitimpact'
+    splice_ai = 'splice_ai'
     topmed = 'topmed'
 
 
@@ -130,6 +132,34 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: clinvar.parse_clinvar_release_date,
             RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+        },
+    },
+    ReferenceDataset.splice_ai: {
+        ENUMS: {
+            'splice_consequence': [
+                'Acceptor gain',
+                'Acceptor loss',
+                'Donor gain',
+                'Donor loss',
+                'No consequence',
+            ],
+        },
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: [
+                'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.snv.hg19.vcf.gz',
+                'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.indel.hg19.vcf.gz',
+            ],
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: SpliceAI data is only available to download for authenticated Illumina users, so we will host the data
+            RAW_DATASET_PATH: [
+                'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.masked.snv.hg38.vcf.gz',
+                'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.masked.indel.hg38.vcf.gz',
+            ],
         },
     },
     ReferenceDataset.topmed: {
