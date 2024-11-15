@@ -8,7 +8,6 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
         raw_dataset_path,
         reference_genome=reference_genome.value,
         force=True,
-        min_partitions=100,
         skip_invalid_loci=True,
         contig_recoding=reference_genome.contig_recoding(),
     )

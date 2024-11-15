@@ -104,7 +104,7 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
     def requires(self) -> ReferenceDataset:
         return {
             self.clinvar_path: ReferenceDataset.clinvar,
-            self.high_af_variants: None,
+            self.high_af_variants: ReferenceDataset.gnomad_genomes,
         }[self]
 
 
