@@ -51,7 +51,6 @@ class MiscTest(unittest.TestCase):
         )
         self.assertDictEqual(mapped_enum_select_fields, {})
 
-
         enum_select_fields = get_enum_select_fields(
             ht,
             {'sv_type': ['d']},
