@@ -11,7 +11,8 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
 def get_enum_select_fields(
-    ht: hl.Table, enums: dict | None,
+    ht: hl.Table,
+    enums: dict | None,
 ) -> dict[str, hl.Expression]:
     enum_select_fields = {}
     for field_name, values in (enums or {}).items():
