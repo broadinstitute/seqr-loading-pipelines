@@ -88,6 +88,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     hgmd = 'hgmd'
+    hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
     splice_ai = 'splice_ai'
     topmed = 'topmed'
@@ -174,6 +175,14 @@ CONFIG = {
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
+        },
+    },
+    ReferenceDataset.hmtvar: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            #  NB: https://www.hmtvar.uniba.it is unavailable as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'https://storage.googleapis.com/seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
         },
     },
     ReferenceDataset.mitimpact: {
