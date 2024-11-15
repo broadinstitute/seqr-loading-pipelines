@@ -88,7 +88,9 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     exac = 'exac'
+    eigen = 'eigen'
     hgmd = 'hgmd'
+    hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
     splice_ai = 'splice_ai'
     topmed = 'topmed'
@@ -120,6 +122,20 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+        },
+    },
+    ReferenceDataset.eigen: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: The download link on the Eigen website (http://www.columbia.edu/~ii2135/download.html) is broken
+            # as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
         },
     },
     ReferenceDataset.clinvar: {
@@ -188,6 +204,14 @@ CONFIG = {
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
+        },
+    },
+    ReferenceDataset.hmtvar: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            #  NB: https://www.hmtvar.uniba.it is unavailable as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'https://storage.googleapis.com/seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
         },
     },
     ReferenceDataset.mitimpact: {
