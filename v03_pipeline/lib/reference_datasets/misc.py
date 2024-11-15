@@ -10,9 +10,15 @@ import requests
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
-def get_enum_select_fields(ht: hl.Table, enums: dict) -> dict[str, hl.Expression]:
+def get_enum_select_fields(ht: hl.Table, enums: dict | None) -> dict[str, hl.Expression]:
     enum_select_fields = {}
-    for field_name, values in enums.items():
+    for field_name, values in (enums or {}).items():
+        if not hasattr(ht, field_name):
+            if hasattr(ht, f'{field_name}_id') or hasattr(ht, f'{field_name}_ids'):
+                continue
+            else:
+                raise ValueError(f'Unused enum {field_name}')
+
         lookup = hl.dict(
             hl.enumerate(values, index_first=False).extend(
                 # NB: adding missing values here allows us to
