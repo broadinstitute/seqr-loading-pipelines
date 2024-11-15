@@ -12,7 +12,11 @@ def get_ht(
     data = response.json()
     ht = hl.Table.parallelize(data)
     ht = ht.select(
-        locus=hl.locus(reference_genome.mito_contig, ht.nt_start, reference_genome.value),
+        locus=hl.locus(
+            reference_genome.mito_contig,
+            ht.nt_start,
+            reference_genome.value,
+        ),
         alleles=hl.array([ht.ref_rCRS, ht.alt]),
         score=ht.disease_score,
     )
