@@ -87,6 +87,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     cadd = 'cadd'
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
+    exac = 'exac'
     eigen = 'eigen'
     hgmd = 'hgmd'
     hmtvar = 'hmtvar'
@@ -148,6 +149,19 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: clinvar.parse_clinvar_release_date,
             RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+        },
+    },
+    ReferenceDataset.exac: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/legacy/exacv1_downloads/release1/ExAC.r1.sites.vep.vcf.gz',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: Exac is only available on GRCh37 so we host a lifted over version
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
         },
     },
     ReferenceDataset.splice_ai: {
