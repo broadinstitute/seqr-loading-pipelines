@@ -145,7 +145,7 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             # NB: Exac is only available on GRCh37 so we host a lifted over version
-            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.ht',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
         },
     },
     ReferenceDataset.splice_ai: {
