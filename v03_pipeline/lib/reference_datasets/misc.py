@@ -7,7 +7,10 @@ import zipfile
 import hail as hl
 import requests
 
+from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+
+BIALLELIC = 2
 
 
 def get_enum_select_fields(
@@ -49,15 +52,30 @@ def filter_contigs(ht, reference_genome: ReferenceGenome):
     )
 
 
-def vcf_to_ht(file_name: str, reference_genome: ReferenceGenome) -> hl.Table:
-    return hl.import_vcf(
+def vcf_to_ht(
+    file_name: str,
+    reference_genome: ReferenceGenome,
+    split_multi=False,
+) -> hl.Table:
+    mt = hl.import_vcf(
         file_name,
         reference_genome=reference_genome.value,
         drop_samples=True,
         skip_invalid_loci=True,
         contig_recoding=reference_genome.contig_recoding(include_mt=True),
         force_bgz=True,
-    ).rows()
+    )
+    if split_multi:
+        return split_multi_hts(mt, True).rows()
+
+    # Validate that there exist no multialellic variants in the table.
+    count_non_biallelic = mt.aggregate_rows(
+        hl.agg.count_where(hl.len(mt.alleles) > BIALLELIC),
+    )
+    if count_non_biallelic:
+        error = f'Encountered {count_non_biallelic} multiallelic variants'
+        raise ValueError(error)
+    return mt.rows()
 
 
 def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
