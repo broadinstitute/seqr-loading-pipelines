@@ -5,7 +5,7 @@ from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 SELECT = {
-    'AF_POPMAX': 'info.AF_POPMAX',
+    'AF_POPMAX': 'info.POPMAX',
     'AF': 'info.AF#',
     'AC_Adj': 'info.AC_Adj#',
     'AC_Het': 'info.AC_Het#',
