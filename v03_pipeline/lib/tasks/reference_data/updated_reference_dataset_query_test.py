@@ -51,6 +51,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
         self,
     ) -> None:
         with open(CLINVAR_VCF, 'rb') as f:
+            responses.add_passthru('http://localhost')
             responses.get(
                 ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
                 body=f.read(),

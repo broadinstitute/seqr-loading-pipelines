@@ -342,8 +342,8 @@ def valid_reference_dataset_path(
             reference_genome,
         ),
         'reference_datasets',
-        f'{reference_dataset.name}',
-        f'{reference_dataset.version}.ht',
+        f'{reference_dataset.value}',
+        f'{reference_dataset.version(reference_genome)}.ht',
     )
 
 

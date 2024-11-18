@@ -35,9 +35,4 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
 
     def create_table(self):
         reference_dataset_ht = hl.read_table(self.input().path)
-        ht = self.reference_dataset.get_ht(reference_dataset_ht)
-        # enum logic goes here
-        return ht.annotate_globals(
-            version=self.reference_dataset.version,
-            enums=hl.Struct(),  # expect more complex enum logic
-        )
+        return self.reference_dataset_query.get_ht(reference_dataset_ht)
