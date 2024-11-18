@@ -22,7 +22,9 @@ class ExacTest(unittest.TestCase):
                 [
                     hl.Struct(
                         locus=hl.Locus(
-                            contig='chr1', position=1046973, reference_genome='GRCh38'
+                            contig='chr1',
+                            position=1046973,
+                            reference_genome='GRCh38',
                         ),
                         alleles=['G', 'A'],
                         AF_POPMAX=['NA', 'NFE'],
@@ -35,7 +37,9 @@ class ExacTest(unittest.TestCase):
                     ),
                     hl.Struct(
                         locus=hl.Locus(
-                            contig='chr1', position=1046973, reference_genome='GRCh38'
+                            contig='chr1',
+                            position=1046973,
+                            reference_genome='GRCh38',
                         ),
                         alleles=['G', 'T'],
                         AF_POPMAX=['NA', 'NFE'],
