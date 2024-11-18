@@ -73,8 +73,9 @@ class BaseReferenceDataset:
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
-        if self.enums:
-            ht = ht.transmute(**get_enum_select_fields(ht, self.enums))
+        enum_selects = get_enum_select_fields(ht, self.enums)
+        if enum_selects:
+            ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
             version=self.version(reference_genome),
@@ -83,11 +84,15 @@ class BaseReferenceDataset:
 
 
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
-    cadd = 'cadd'
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
+    exac = 'exac'
+    eigen = 'eigen'
+    helix_mito = 'helix_mito'
     hgmd = 'hgmd'
+    hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
+    splice_ai = 'splice_ai'
     topmed = 'topmed'
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
@@ -96,6 +101,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
     screen = 'screen'
     local_constraint_mito = 'local_constraint_mito'
+    mitomap = 'mitomap'
 
 
 class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
@@ -126,6 +132,20 @@ CONFIG = {
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
         },
     },
+    ReferenceDataset.eigen: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: The download link on the Eigen website (http://www.columbia.edu/~ii2135/download.html) is broken
+            # as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
+        },
+    },
     ReferenceDataset.clinvar: {
         ENUMS: clinvar.ENUMS,
         ReferenceGenome.GRCh37: {
@@ -137,6 +157,54 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: clinvar.parse_clinvar_release_date,
             RAW_DATASET_PATH: 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+        },
+    },
+    ReferenceDataset.exac: {
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/legacy/exacv1_downloads/release1/ExAC.r1.sites.vep.vcf.gz',
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: Exac is only available on GRCh37 so we host a lifted over version
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
+        },
+    },
+    ReferenceDataset.helix_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://helix-research-public.s3.amazonaws.com/mito/HelixMTdb_20200327.tsv',
+        },
+    },
+    ReferenceDataset.splice_ai: {
+        ENUMS: {
+            'splice_consequence': [
+                'Acceptor gain',
+                'Acceptor loss',
+                'Donor gain',
+                'Donor loss',
+                'No consequence',
+            ],
+        },
+        ReferenceGenome.GRCh37: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: [
+                'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.snv.hg19.vcf.gz',
+                'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.indel.hg19.vcf.gz',
+            ],
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            # NB: SpliceAI data is only available to download for authenticated Illumina users, so we will host the data
+            RAW_DATASET_PATH: [
+                'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.masked.snv.hg38.vcf.gz',
+                'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.masked.indel.hg38.vcf.gz',
+            ],
         },
     },
     ReferenceDataset.topmed: {
@@ -151,6 +219,14 @@ CONFIG = {
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
+        },
+    },
+    ReferenceDataset.hmtvar: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            #  NB: https://www.hmtvar.uniba.it is unavailable as of 11/15/24 so we will host the data
+            RAW_DATASET_PATH: 'https://storage.googleapis.com/seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
         },
     },
     ReferenceDataset.mitimpact: {
@@ -209,6 +285,14 @@ CONFIG = {
             RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
         },
     },
+    ReferenceDataset.mitomap: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            # Downloaded via https://www.mitomap.org/foswiki/bin/view/MITOMAP/ConfirmedMutations
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap_confirmed_mutations_nov_2024.csv',
+        },
+    },
     ReferenceDataset.gnomad_mito: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
@@ -220,7 +304,7 @@ CONFIG = {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad_nc_constraint/gnomad_non-coding_constraint_z_scores.ht',
+            RAW_DATASET_PATH: 'gcp-public-data--gnomad/release/3.1/secondary_analyses/genomic_constraint/constraint_z_genome_1kb.raw.download.txt.gz',
         },
     },
     ReferenceDataset.screen: {

@@ -10,9 +10,18 @@ import requests
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
-def get_enum_select_fields(ht: hl.Table, enums: dict) -> dict[str, hl.Expression]:
+def get_enum_select_fields(
+    ht: hl.Table,
+    enums: dict | None,
+) -> dict[str, hl.Expression]:
     enum_select_fields = {}
-    for field_name, values in enums.items():
+    for field_name, values in (enums or {}).items():
+        if not hasattr(ht, field_name):
+            if hasattr(ht, f'{field_name}_id') or hasattr(ht, f'{field_name}_ids'):
+                continue
+            error = f'Unused enum {field_name}'
+            raise ValueError(error)
+
         lookup = hl.dict(
             hl.enumerate(values, index_first=False).extend(
                 # NB: adding missing values here allows us to
@@ -38,6 +47,17 @@ def filter_contigs(ht, reference_genome: ReferenceGenome):
     return ht.filter(
         hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
     )
+
+
+def vcf_to_ht(file_name: str, reference_genome: ReferenceGenome) -> hl.Table:
+    return hl.import_vcf(
+        file_name,
+        reference_genome=reference_genome.value,
+        drop_samples=True,
+        skip_invalid_loci=True,
+        contig_recoding=reference_genome.contig_recoding(include_mt=True),
+        force_bgz=True,
+    ).rows()
 
 
 def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.Table:
