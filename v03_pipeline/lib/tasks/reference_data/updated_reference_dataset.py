@@ -9,7 +9,9 @@ from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class UpdatedReferenceDatasetTask(BaseWriteTask):
-    reference_dataset: ReferenceDataset
+    reference_dataset: ReferenceDataset = luigi.EnumParameter(
+        enum=ReferenceDataset,
+    )
 
     def output(self):
         return GCSorLocalTarget(

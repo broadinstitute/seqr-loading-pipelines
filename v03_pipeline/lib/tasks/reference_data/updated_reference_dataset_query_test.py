@@ -59,7 +59,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             task = UpdatedReferenceDatasetQueryTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                reference_dataset_query=ReferenceDatasetQuery.CLINVAR_PATH,
+                reference_dataset_query=ReferenceDatasetQuery.clinvar_path,
                 sample_type=SampleType.WGS,
                 callset_path='',
                 project_guids=[],
