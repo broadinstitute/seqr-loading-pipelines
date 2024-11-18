@@ -2,7 +2,10 @@ import unittest
 
 import hail as hl
 
-from v03_pipeline.lib.reference_datasets.misc import get_enum_select_fields
+from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.misc import get_enum_select_fields, vcf_to_ht
+
+EXAC_PATH = 'v03_pipeline/var/test/reference_data/exac_1.vcf'
 
 
 class MiscTest(unittest.TestCase):
@@ -63,3 +66,11 @@ class MiscTest(unittest.TestCase):
         self.assertEqual(str(cm.exception), 'Unused enum variant_renamed')
 
         self.assertDictEqual(get_enum_select_fields(ht, None), {})
+
+    def test_vcf_to_ht_throw_multiallelic(self):
+        self.assertRaises(
+            ValueError,
+            vcf_to_ht,
+            EXAC_PATH,
+            ReferenceGenome.GRCh38,
+        )
