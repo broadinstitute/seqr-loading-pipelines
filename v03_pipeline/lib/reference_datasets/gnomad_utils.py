@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import hail as hl
 
 from v03_pipeline.lib.model import ReferenceGenome
@@ -5,15 +7,6 @@ from v03_pipeline.lib.model import ReferenceGenome
 
 def global_idx_field(reference_genome: ReferenceGenome) -> str:
     return 'gnomad' if reference_genome == ReferenceGenome.GRCh37 else 'adj'
-
-
-def af_popmax_expression(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-) -> hl.Expression:
-    if reference_genome == ReferenceGenome.GRCh37:
-        return ht.popmax[ht.globals.popmax_index_dict['gnomad']].AF
-    return ht.grpmax['gnomad'].AF if hasattr(ht.grpmax, 'gnomad') else ht.grpmax.AF
 
 
 def faf_globals_field(reference_genome: ReferenceGenome) -> str:
@@ -28,7 +21,11 @@ def hemi_field(reference_genome: ReferenceGenome) -> str:
     return 'gnomad_male' if reference_genome == ReferenceGenome.GRCh37 else 'XY_adj'
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(
+    raw_dataset_path: str,
+    reference_genome: ReferenceGenome,
+    af_popmax_expression: Callable,
+) -> hl.Table:
     ht = hl.read_table(raw_dataset_path)
     global_idx = hl.eval(ht.globals.freq_index_dict[global_idx_field(reference_genome)])
     ht = ht.select(
