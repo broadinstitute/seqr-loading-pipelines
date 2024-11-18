@@ -84,11 +84,11 @@ class BaseReferenceDataset:
 
 
 class ReferenceDataset(BaseReferenceDataset, str, Enum):
-    cadd = 'cadd'
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     exac = 'exac'
     eigen = 'eigen'
+    helix_mito = 'helix_mito'
     hgmd = 'hgmd'
     hmtvar = 'hmtvar'
     mitimpact = 'mitimpact'
@@ -162,6 +162,13 @@ CONFIG = {
             VERSION: '1.0',
             # NB: Exac is only available on GRCh37 so we host a lifted over version
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
+        },
+    },
+    ReferenceDataset.helix_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://helix-research-public.s3.amazonaws.com/mito/HelixMTdb_20200327.tsv',
         },
     },
     ReferenceDataset.splice_ai: {
