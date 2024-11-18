@@ -239,7 +239,7 @@ CONFIG = {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/ccREs/GRCh38-ccREs.ht',
+            RAW_DATASET_PATH: 'https://downloads.wenglab.org/V3/GRCh38-cCREs.bed',
         },
     },
     ReferenceDataset.local_constraint_mito: {
