@@ -1,6 +1,5 @@
 import contextlib
 import os
-import shutil
 import tempfile
 import zipfile
 
@@ -78,7 +77,7 @@ def download_zip_file(url, suffix='.zip'):
     with tempfile.NamedTemporaryFile(
         suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
-        shutil.copyfileobj(r.raw, tmp_file)
+        tmp_file.write(r.content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(os.path.dirname(tmp_file.name))
         # Extracting the zip file

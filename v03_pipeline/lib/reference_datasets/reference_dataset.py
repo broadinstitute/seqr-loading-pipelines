@@ -330,9 +330,7 @@ CONFIG = {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
             VERSION: '1.0',
-            # Originally sourced from https://www.biorxiv.org/content/10.1101/2022.12.16.520778v2.supplementary-material
-            # Supplementary Table 7.
-            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
+            RAW_DATASET_PATH: 'https://www.biorxiv.org/content/biorxiv/early/2023/01/27/2022.12.16.520778/DC3/embed/media-3.zip',
         },
     },
 }
