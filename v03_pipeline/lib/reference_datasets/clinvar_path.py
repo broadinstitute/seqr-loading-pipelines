@@ -10,6 +10,7 @@ CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele
 
 def get_ht(
     ht: hl.Table,
+    *_,
 ) -> hl.Table:
     ht = ht.select_globals()
     ht = ht.select(

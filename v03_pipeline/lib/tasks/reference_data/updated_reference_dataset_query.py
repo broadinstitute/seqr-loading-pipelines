@@ -34,5 +34,6 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
         )
 
     def create_table(self):
-        reference_dataset_ht = hl.read_table(self.input().path)
-        return self.reference_dataset_query.get_ht(reference_dataset_ht)
+        return self.reference_dataset_query.get_ht(
+            self.reference_genome, hl.read_table(self.input().path)
+        )
