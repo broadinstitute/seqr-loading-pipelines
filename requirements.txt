@@ -10,7 +10,7 @@ aiofiles==24.1.0
     # via -r requirements.in
 aiohappyeyeballs==2.4.3
     # via aiohttp
-aiohttp==3.10.10
+aiohttp==3.10.11
     # via
     #   hail
     #   slackclient
@@ -256,7 +256,9 @@ pygments==2.18.0
     #   ipython
     #   rich
 pyjwt[crypto]==2.9.0
-    # via msal
+    # via
+    #   msal
+    #   pyjwt
 pyspark==3.5.3
     # via hail
 python-daemon==3.1.0
