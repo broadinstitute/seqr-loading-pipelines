@@ -15,7 +15,6 @@ DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
-MODULE_NAME = 'module_name'
 
 
 class BaseReferenceDataset:
@@ -69,9 +68,8 @@ class BaseReferenceDataset:
         self,
         reference_genome: ReferenceGenome,
     ) -> hl.Table:
-        module_file_name = CONFIG[self].get(MODULE_NAME, self.name)
         module = importlib.import_module(
-            f'v03_pipeline.lib.reference_datasets.{module_file_name}',
+            f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
         path = self.raw_dataset_path(reference_genome)
         ht = module.get_ht(path, reference_genome)
@@ -172,7 +170,6 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_exomes: {
-        MODULE_NAME: 'gnomad',
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -185,7 +182,6 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_genomes: {
-        MODULE_NAME: 'gnomad',
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
