@@ -8,7 +8,7 @@ from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class UpdatedReferenceDataset(BaseWriteTask):
+class UpdatedReferenceDatasetTask(BaseWriteTask):
     reference_dataset: ReferenceDataset
 
     def output(self):

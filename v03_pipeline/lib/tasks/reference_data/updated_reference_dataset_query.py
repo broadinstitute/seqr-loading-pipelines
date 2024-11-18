@@ -14,7 +14,7 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class UpdatedReferenceDatasetQuery(BaseWriteTask):
+class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
     reference_dataset_query: ReferenceDatasetQuery
 
     def requires(self):
