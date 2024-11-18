@@ -20,6 +20,8 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
+        # clinvar ReferenceDataset exists but is old
+        # clinvar_path ReferenceDatasetQuery dne 
         write(
             hl.Table.parallelize(
                 [
@@ -66,3 +68,25 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             worker.add(task)
             worker.run()
             self.assertTrue(task.complete())
+        clinvar_ht_path = valid_reference_dataset_path(
+            ReferenceGenome.GRCh38,
+            ReferenceDataset.clinvar,
+        )
+        clinvar_ht = hl.read_table(clinvar_ht_path)
+        self.assertTrue('2024-11-11' in clinvar_ht_path)
+        self.assertEqual(
+            hl.eval(clinvar_ht.version),
+            '2024-11-11',
+        )
+        self.assertTrue(hasattr(clinvar_ht, 'submitters'))
+        clinvar_path_ht_path = valid_reference_dataset_path(
+            ReferenceGenome.GRCh38,
+            ReferenceDatasetQuery.clinvar_path,
+        )
+        clinvar_path_ht = hl.read_table(clinvar_path_ht_path)
+        self.assertTrue('2024-11-11' in clinvar_path_ht_path)
+        self.assertEqual(
+            hl.eval(clinvar_path_ht.version),
+            '2024-11-11',
+        )
+        self.assertTrue(hasattr(clinvar_path_ht, 'is_likely_pathogenic'))
