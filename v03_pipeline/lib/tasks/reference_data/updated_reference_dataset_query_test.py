@@ -13,9 +13,8 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
     UpdatedReferenceDatasetQueryTask,
 )
+from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
-
-CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf.gz'
 
 
 class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
@@ -50,12 +49,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     def test_updated_query_and_dependency(
         self,
     ) -> None:
-        with open(CLINVAR_VCF, 'rb') as f:
-            responses.add_passthru('http://localhost')
-            responses.get(
-                ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
-                body=f.read(),
-            )
+        with mock_clinvar_urls():
             worker = luigi.worker.Worker()
             task = UpdatedReferenceDatasetQueryTask(
                 reference_genome=ReferenceGenome.GRCh38,

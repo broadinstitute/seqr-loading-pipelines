@@ -9,11 +9,11 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.clinvar import (
-    CLINVAR_SUBMISSION_SUMMARY_URL,
     parsed_and_mapped_clnsigconf,
     parsed_clnsig,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
+from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 
 CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf.gz'
 CLINVAR_SUBMISSION_SUMMARY = (
@@ -24,13 +24,9 @@ CLINVAR_SUBMISSION_SUMMARY = (
 class ClinvarTest(unittest.TestCase):
     @responses.activate
     def test_get_clinvar_version(self):
-        with open(CLINVAR_VCF, 'rb') as f:
-            responses.get(
-                ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh37),
-                body=f.read(),
-            )
+        with mock_clinvar_urls():
             self.assertEqual(
-                ReferenceDataset.clinvar.version(ReferenceGenome.GRCh37),
+                ReferenceDataset.clinvar.version(ReferenceGenome.GRCh38),
                 '2024-11-11',
             )
 
@@ -111,19 +107,7 @@ class ClinvarTest(unittest.TestCase):
 
     @responses.activate
     def test_get_ht(self):
-        with open(CLINVAR_VCF, 'rb') as f1, open(
-            CLINVAR_SUBMISSION_SUMMARY,
-            'rb',
-        ) as f2:
-            responses.get(
-                ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
-                body=f1.read(),
-            )
-            responses.get(
-                CLINVAR_SUBMISSION_SUMMARY_URL,
-                body=f2.read(),
-            )
-            responses.add_passthru('http://localhost')
+        with mock_clinvar_urls():
             ht = ReferenceDataset.clinvar.get_ht(
                 ReferenceGenome.GRCh38,
             )

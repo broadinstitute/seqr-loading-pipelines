@@ -19,6 +19,12 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
         enum=ReferenceDatasetQuery,
     )
 
+    def complete(self):
+        return super().complete() and hl.eval(
+            hl.read_table(self.output().path).version
+            == self.reference_dataset_query.version(self.reference_genome),
+        )
+
     def requires(self):
         return self.clone(
             UpdatedReferenceDatasetTask,
@@ -35,5 +41,6 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
 
     def create_table(self):
         return self.reference_dataset_query.get_ht(
-            self.reference_genome, hl.read_table(self.input().path)
+            self.reference_genome,
+            hl.read_table(self.input().path),
         )
