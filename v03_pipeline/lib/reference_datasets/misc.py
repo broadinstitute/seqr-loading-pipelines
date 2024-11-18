@@ -64,6 +64,7 @@ def vcf_to_ht(
         skip_invalid_loci=True,
         contig_recoding=reference_genome.contig_recoding(include_mt=True),
         force_bgz=True,
+        array_elements_required=False,
     )
     if split_multi:
         return split_multi_hts(mt, True).rows()
