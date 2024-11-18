@@ -21,7 +21,7 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         # clinvar ReferenceDataset exists but is old
-        # clinvar_path ReferenceDatasetQuery dne 
+        # clinvar_path ReferenceDatasetQuery dne
         write(
             hl.Table.parallelize(
                 [
