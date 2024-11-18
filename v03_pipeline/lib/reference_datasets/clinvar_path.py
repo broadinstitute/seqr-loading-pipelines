@@ -13,7 +13,6 @@ def get_ht(
     *_,
 ) -> hl.Table:
     ht = ht.select_globals()
-    ht.describe()
     ht = ht.select(
         is_pathogenic=(
             (
