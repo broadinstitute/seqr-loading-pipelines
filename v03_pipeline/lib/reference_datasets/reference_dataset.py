@@ -97,6 +97,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
     gnomad_qc = 'gnomad_qc'
+    mitomap = 'mitomap'
 
 
 class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
@@ -278,6 +279,14 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht',
+        },
+    },
+    ReferenceDataset.mitomap: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            # Downloaded via https://www.mitomap.org/foswiki/bin/view/MITOMAP/ConfirmedMutations
+            RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap_confirmed_mutations_nov_2024.csv',
         },
     },
 }
