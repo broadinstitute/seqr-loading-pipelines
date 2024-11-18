@@ -1,7 +1,23 @@
 import hail as hl
 
+from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.misc import (
+    select_for_interval_reference_dataset,
+)
 
-def get_ht(raw_dataset_path: str, *_) -> hl.Table:
-    # TODO
-    ht = hl.read_table(raw_dataset_path)
-    return ht.select(z_score=hl.float32(ht.target))
+
+def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+    ht = hl.import_table(
+        raw_dataset_path,
+        types={
+            'start': hl.tint32,
+            'end': hl.tint32,
+            'z': hl.tfloat32,
+        },
+        force_bgz=True,
+    )
+    return select_for_interval_reference_dataset(
+        ht,
+        reference_genome,
+        {'z_score': ht['z']},
+    )

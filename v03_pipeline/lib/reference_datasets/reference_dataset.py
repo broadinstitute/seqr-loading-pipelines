@@ -304,7 +304,7 @@ CONFIG = {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
-            RAW_DATASET_PATH: 'gcp-public-data--gnomad/release/3.1/secondary_analyses/genomic_constraint/constraint_z_genome_1kb.raw.download.txt.gz',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/genomic_constraint/constraint_z_genome_1kb.qc.download.txt.gz',
         },
     },
     ReferenceDataset.screen: {

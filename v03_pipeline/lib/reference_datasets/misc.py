@@ -83,3 +83,24 @@ def download_zip_file(url, suffix='.zip'):
             zipf.extractall(os.path.dirname(tmp_file.name))
         # Extracting the zip file
         yield os.path.dirname(tmp_file.name)
+
+
+def select_for_interval_reference_dataset(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    additional_selects: dict,
+    chrom_field: str = 'chrom',
+    start_field: str = 'start',
+    end_field: str = 'end',
+) -> hl.Table:
+    ht = ht.select(
+        interval=hl.locus_interval(
+            ht[chrom_field],
+            ht[start_field] + 1,
+            ht[end_field] + 1,
+            reference_genome=reference_genome.value,
+            invalid_missing=True,
+        ),
+        **additional_selects,
+    )
+    return ht.key_by('interval')
