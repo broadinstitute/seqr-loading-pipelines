@@ -111,6 +111,19 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
             self.high_af_variants: ReferenceDataset.gnomad_genomes,
         }[self]
 
+    def get_ht(
+        self,
+        reference_genome: ReferenceGenome,
+        reference_dataset_ht: hl.Table,
+    ) -> hl.Table:
+        module = importlib.import_module(
+            f'v03_pipeline.lib.reference_datasets.{self.name}',
+        )
+        ht = module.get_ht(reference_dataset_ht)
+        return ht.annotate_globals(
+            version=self.version(reference_genome),
+        )
+
 
 CONFIG = {
     ReferenceDataset.dbnsfp: {
