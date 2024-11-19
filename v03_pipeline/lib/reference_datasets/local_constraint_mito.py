@@ -9,7 +9,7 @@ EXTRACTED_FILE_NAME = 'supplementary_dataset_7.tsv'
 
 
 def get_ht(url: str, reference_genome: ReferenceGenome) -> hl.Table:
-    with download_zip_file(url) as unzipped_dir:
+    with download_zip_file(url, decode_content=True) as unzipped_dir:
         ht = hl.import_table(
             os.path.join(
                 unzipped_dir,

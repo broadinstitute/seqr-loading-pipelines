@@ -72,12 +72,21 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     return ht.key_by('locus', 'alleles')
 
 
+def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
+    """Copy data from file-like object fsrc to file-like object fdst."""
+    while True:
+        buf = fsrc.read(length, decode_content=decode_content)
+        if not buf:
+            break
+        fdst.write(buf)
+
+
 @contextlib.contextmanager
-def download_zip_file(url, suffix='.zip'):
+def download_zip_file(url, suffix='.zip', decode_content=False):
     with tempfile.NamedTemporaryFile(
         suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
-        tmp_file.write(r.content)
+        copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(os.path.dirname(tmp_file.name))
         # Extracting the zip file
