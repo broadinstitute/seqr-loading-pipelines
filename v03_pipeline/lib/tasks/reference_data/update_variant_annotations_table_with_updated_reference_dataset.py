@@ -1,6 +1,7 @@
 import hail as hl
 import luigi
 
+from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
@@ -71,28 +72,26 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             if reference_dataset.name in ht.row:
                 ht = ht.drop(reference_dataset.name)
 
-            rd_ht = hl.read_table(
+            reference_dataset_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
             )
             if reference_dataset.is_keyed_by_interval:
-                # TODO handle intervals
-                pass
-                # formatting_fn = next(
-                #     x
-                #     for x in self.dataset_type.formatting_annotation_fns(
-                #         self.reference_genome,
-                #     )
-                #     if x.__name__ == dataset
-                # )
-                # ht = ht.annotate(
-                #     **get_fields(
-                #         ht,
-                #         [formatting_fn],
-                #         **self.rdc_annotation_dependencies,
-                #         **self.param_kwargs,
-                #     ),
-                # )
+                formatting_fn = next(
+                    x
+                    for x in self.dataset_type.formatting_annotation_fns(
+                        self.reference_genome,
+                    )
+                    if x.__name__ == reference_dataset.name
+                )
+                ht = ht.annotate(
+                    **get_fields(
+                        ht,
+                        [formatting_fn],
+                        interval_ht=reference_dataset_ht,
+                        **self.param_kwargs,
+                    ),
+                )
             else:
-                ht = ht.join(rd_ht, 'left')
+                ht = ht.join(reference_dataset_ht, 'left')
 
         return self.annotate_globals(ht)
