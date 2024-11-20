@@ -9,34 +9,38 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
-    UpdatedReferenceDataset,
+    UpdatedReferenceDatasetTask,
 )
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
-class UpdatedReferenceDatasetQuery(BaseWriteTask):
-    reference_dataset_query: ReferenceDatasetQuery
+class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
+    reference_dataset_query: ReferenceDatasetQuery = luigi.EnumParameter(
+        enum=ReferenceDatasetQuery,
+    )
+
+    def complete(self):
+        return super().complete() and hl.eval(
+            hl.read_table(self.output().path).version
+            == self.reference_dataset_query.version(self.reference_genome),
+        )
 
     def requires(self):
         return self.clone(
-            UpdatedReferenceDataset(
-                reference_dataset=self.reference_dataset_query.requires,
-            ),
+            UpdatedReferenceDatasetTask,
+            reference_dataset=self.reference_dataset_query.requires,
         )
 
     def output(self):
         return GCSorLocalTarget(
             valid_reference_dataset_path(
                 self.reference_genome,
-                self.reference_dataset,
+                self.reference_dataset_query,
             ),
         )
 
     def create_table(self):
-        reference_dataset_ht = hl.read_table(self.input().path)
-        ht = self.reference_dataset.get_ht(reference_dataset_ht)
-        # enum logic goes here
-        return ht.annotate_globals(
-            version=self.reference_dataset.version,
-            enums=hl.Struct(),  # expect more complex enum logic
+        return self.reference_dataset_query.get_ht(
+            self.reference_genome,
+            hl.read_table(self.input().path),
         )
