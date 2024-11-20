@@ -25,6 +25,7 @@ class BaseReferenceDataset:
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
+        include_queries: bool = True,
     ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
         reference_datasets = [
             dataset
@@ -32,10 +33,16 @@ class BaseReferenceDataset:
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES)
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
-            return [
+            reference_datasets = [
                 dataset
                 for dataset in reference_datasets
                 if dataset.access_control == AccessControl.PUBLIC
+            ]
+        if not include_queries:
+            reference_datasets = [
+                dataset
+                for dataset in reference_datasets
+                if not isinstance(dataset, ReferenceDatasetQuery)
             ]
         return reference_datasets
 
