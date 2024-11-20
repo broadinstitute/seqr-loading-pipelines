@@ -97,8 +97,8 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
                         valid_reference_dataset_path(
                             ReferenceGenome.GRCh38,
                             ReferenceDataset.gnomad_qc,
-                        )
-                    ).version
+                        ),
+                    ).version,
                 ),
                 '2.0',
             )
