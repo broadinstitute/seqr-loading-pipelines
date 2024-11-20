@@ -97,6 +97,10 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
     gnomad_qc = 'gnomad_qc'
+    gnomad_mito = 'gnomad_mito'
+    gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
+    screen = 'screen'
+    local_constraint_mito = 'local_constraint_mito'
     mitomap = 'mitomap'
 
 
@@ -300,6 +304,46 @@ CONFIG = {
             VERSION: '1.0',
             # Downloaded via https://www.mitomap.org/foswiki/bin/view/MITOMAP/ConfirmedMutations
             RAW_DATASET_PATH: 'gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap_confirmed_mutations_nov_2024.csv',
+        },
+    },
+    ReferenceDataset.gnomad_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
+        },
+    },
+    ReferenceDataset.gnomad_non_coding_constraint: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'gs://gcp-public-data--gnomad/release/3.1/secondary_analyses/genomic_constraint/constraint_z_genome_1kb.qc.download.txt.gz',
+        },
+    },
+    ReferenceDataset.screen: {
+        ENUMS: {
+            'region_type': [
+                'CTCF-bound',
+                'CTCF-only',
+                'DNase-H3K4me3',
+                'PLS',
+                'dELS',
+                'pELS',
+                'DNase-only',
+                'low-DNase',
+            ],
+        },
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://downloads.wenglab.org/V3/GRCh38-cCREs.bed',
+        },
+    },
+    ReferenceDataset.local_constraint_mito: {
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.MITO]),
+            VERSION: '1.0',
+            RAW_DATASET_PATH: 'https://www.biorxiv.org/content/biorxiv/early/2023/01/27/2022.12.16.520778/DC3/embed/media-3.zip',
         },
     },
 }

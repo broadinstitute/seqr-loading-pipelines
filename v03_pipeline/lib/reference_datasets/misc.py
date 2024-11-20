@@ -1,6 +1,5 @@
 import contextlib
 import os
-import shutil
 import tempfile
 import zipfile
 
@@ -92,13 +91,43 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     return ht.key_by('locus', 'alleles')
 
 
+def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
+    """Copy data from file-like object fsrc to file-like object fdst."""
+    while True:
+        buf = fsrc.read(length, decode_content=decode_content)
+        if not buf:
+            break
+        fdst.write(buf)
+
+
 @contextlib.contextmanager
-def download_zip_file(url, suffix='.zip'):
+def download_zip_file(url, suffix='.zip', decode_content=False):
     with tempfile.NamedTemporaryFile(
         suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
-        shutil.copyfileobj(r.raw, tmp_file)
+        copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(os.path.dirname(tmp_file.name))
         # Extracting the zip file
         yield os.path.dirname(tmp_file.name)
+
+
+def select_for_interval_reference_dataset(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    additional_selects: dict,
+    chrom_field: str = 'chrom',
+    start_field: str = 'start',
+    end_field: str = 'end',
+) -> hl.Table:
+    ht = ht.select(
+        interval=hl.locus_interval(
+            ht[chrom_field],
+            ht[start_field] + 1,
+            ht[end_field] + 1,
+            reference_genome=reference_genome.value,
+            invalid_missing=True,
+        ),
+        **additional_selects,
+    )
+    return ht.key_by('interval')
