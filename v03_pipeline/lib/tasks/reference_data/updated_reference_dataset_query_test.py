@@ -128,4 +128,3 @@ class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
             '1.0',
         )
         self.assertTrue(hasattr(high_af_variants_ht, 'is_gt_1_percent'))
-
