@@ -1,4 +1,3 @@
-import hail as hl
 import luigi
 
 from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
@@ -13,12 +12,6 @@ class UpdatedReferenceDatasetTask(BaseWriteTask):
     reference_dataset: ReferenceDataset = luigi.EnumParameter(
         enum=ReferenceDataset,
     )
-
-    def complete(self):
-        return super().complete() and hl.eval(
-            hl.read_table(self.output().path).version
-            == self.reference_dataset.version(self.reference_genome),
-        )
 
     def output(self):
         return GCSorLocalTarget(
