@@ -2,6 +2,7 @@ import importlib
 import types
 from enum import Enum
 from typing import Union
+from xml.etree.ElementInclude import include
 
 import hail as hl
 
@@ -17,6 +18,7 @@ VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
 IS_INTERVAL = 'is_interval'
+EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
 
 
 class BaseReferenceDataset:
@@ -25,24 +27,19 @@ class BaseReferenceDataset:
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-        include_queries: bool = True,
+        include_all: bool = True
     ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES)
+            and (include_all or not config.get(EXCLUDE_FROM_ANNOTATIONS, False))
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
-            reference_datasets = [
+            return [
                 dataset
                 for dataset in reference_datasets
                 if dataset.access_control == AccessControl.PUBLIC
-            ]
-        if not include_queries:
-            reference_datasets = [
-                dataset
-                for dataset in reference_datasets
-                if not isinstance(dataset, ReferenceDatasetQuery)
             ]
         return reference_datasets
 
@@ -301,6 +298,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_qc: {
+        EXCLUDE_FROM_ANNOTATIONS: True,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -364,7 +362,12 @@ CONFIG = {
     },
 }
 CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = CONFIG[ReferenceDataset.clinvar]
+CONFIG[ReferenceDatasetQuery.clinvar_path_variants].EXCLUDE_FROM_ANNOTATIONS = True
+
 CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = CONFIG[
     ReferenceDataset.gnomad_genomes
 ]
+CONFIG[ReferenceDataset.gnomad_coding_and_noncoding].EXCLUDE_FROM_ANNOTATIONS = True
+
 CONFIG[ReferenceDatasetQuery.high_af_variants] = CONFIG[ReferenceDataset.gnomad_genomes]
+CONFIG[ReferenceDatasetQuery.high_af_variants].EXCLUDE_FROM_ANNOTATIONS = True
