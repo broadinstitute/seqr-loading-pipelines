@@ -107,6 +107,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     mitimpact = 'mitimpact'
     splice_ai = 'splice_ai'
     topmed = 'topmed'
+    gnomad_coding_and_noncoding = 'gnomad_coding_and_noncoding'
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
     gnomad_qc = 'gnomad_qc'
@@ -118,13 +119,13 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
 
 
 class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
-    clinvar_path = 'clinvar_path'
+    clinvar_path_variants = 'clinvar_path_variants'
     high_af_variants = 'high_af_variants'
 
     @property
     def requires(self) -> ReferenceDataset:
         return {
-            self.clinvar_path: ReferenceDataset.clinvar,
+            self.clinvar_path_variants: ReferenceDataset.clinvar,
             self.high_af_variants: ReferenceDataset.gnomad_genomes,
         }[self]
 
@@ -362,4 +363,8 @@ CONFIG = {
         },
     },
 }
-CONFIG[ReferenceDatasetQuery.clinvar_path] = CONFIG[ReferenceDataset.clinvar]
+CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = CONFIG[ReferenceDataset.clinvar]
+CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = CONFIG[
+    ReferenceDataset.gnomad_genomes
+]
+CONFIG[ReferenceDatasetQuery.high_af_variants] = CONFIG[ReferenceDataset.gnomad_genomes]
