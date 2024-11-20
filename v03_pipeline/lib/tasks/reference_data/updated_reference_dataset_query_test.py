@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import hail as hl
 import luigi
 import responses
@@ -17,35 +19,40 @@ from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
-class UpdatedReferenceDatasetCollectionTaskTest(MockedDatarootTestCase):
+class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         # clinvar ReferenceDataset exists but is old
         # clinvar_path ReferenceDatasetQuery dne
-        write(
-            hl.Table.parallelize(
-                [
-                    {
-                        'locus': hl.Locus(
-                            contig='chr1',
-                            position=1,
-                            reference_genome='GRCh38',
-                        ),
-                        'alleles': ['A', 'C'],
-                    },
-                ],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
+        with patch.object(
+            ReferenceDataset,
+            'version',
+            return_value='2021-01-01',
+        ):
+            write(
+                hl.Table.parallelize(
+                    [
+                        {
+                            'locus': hl.Locus(
+                                contig='chr1',
+                                position=1,
+                                reference_genome='GRCh38',
+                            ),
+                            'alleles': ['A', 'C'],
+                        },
+                    ],
+                    hl.tstruct(
+                        locus=hl.tlocus('GRCh38'),
+                        alleles=hl.tarray(hl.tstr),
+                    ),
+                    key=['locus', 'alleles'],
+                    globals=hl.Struct(version='2021-01-01'),
                 ),
-                key=['locus', 'alleles'],
-                globals=hl.Struct(version='2021-01-01'),
-            ),
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.clinvar,
-            ),
-        )
+                valid_reference_dataset_path(
+                    ReferenceGenome.GRCh38,
+                    ReferenceDataset.clinvar,
+                ),
+            )
 
     @responses.activate
     def test_updated_query_and_dependency(
