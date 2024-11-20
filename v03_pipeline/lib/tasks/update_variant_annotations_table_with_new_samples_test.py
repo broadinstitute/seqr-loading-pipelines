@@ -28,11 +28,11 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_collection_path,
     valid_reference_dataset_path,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
