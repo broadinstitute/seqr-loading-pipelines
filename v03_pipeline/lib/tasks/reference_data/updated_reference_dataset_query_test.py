@@ -18,6 +18,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query impor
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
+GNOMAD_GENOMES_38_PATH = 'v03_pipeline/var/test/reference_data/gnomad_genomes_38.ht'
+
 
 class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
@@ -63,7 +65,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             task = UpdatedReferenceDatasetQueryTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                reference_dataset_query=ReferenceDatasetQuery.clinvar_path,
+                reference_dataset_query=ReferenceDatasetQuery.clinvar_path_variants,
                 sample_type=SampleType.WGS,
                 callset_path='',
                 project_guids=[],
@@ -88,7 +90,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
         self.assertTrue(hasattr(clinvar_ht, 'submitters'))
         clinvar_path_ht_path = valid_reference_dataset_path(
             ReferenceGenome.GRCh38,
-            ReferenceDatasetQuery.clinvar_path,
+            ReferenceDatasetQuery.clinvar_path_variants,
         )
         clinvar_path_ht = hl.read_table(clinvar_path_ht_path)
         self.assertTrue('2024-11-11' in clinvar_path_ht_path)
@@ -97,3 +99,37 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             '2024-11-11',
         )
         self.assertTrue(hasattr(clinvar_path_ht, 'is_likely_pathogenic'))
+
+    def test_updated_query_high_af_variants(self) -> None:
+        with patch.object(
+            ReferenceDataset,
+            'raw_dataset_path',
+            return_value=GNOMAD_GENOMES_38_PATH,
+        ):
+            worker = luigi.worker.Worker()
+            task = UpdatedReferenceDatasetQueryTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
+                sample_type=SampleType.WGS,
+                callset_path='',
+                project_guids=[],
+                project_remap_paths=[],
+                project_pedigree_paths=[],
+                skip_validation=True,
+                run_id='2',
+            )
+            worker.add(task)
+            worker.run()
+            self.assertTrue(task.complete())
+        high_af_variants_ht_path = valid_reference_dataset_path(
+            ReferenceGenome.GRCh38,
+            ReferenceDatasetQuery.high_af_variants,
+        )
+        high_af_variants_ht = hl.read_table(high_af_variants_ht_path)
+        self.assertTrue('1.0' in high_af_variants_ht_path)
+        self.assertEqual(
+            hl.eval(high_af_variants_ht.version),
+            '1.0',
+        )
+        self.assertTrue(hasattr(high_af_variants_ht, 'is_gt_1_percent'))
