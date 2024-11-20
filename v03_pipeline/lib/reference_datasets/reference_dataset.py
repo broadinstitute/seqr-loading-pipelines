@@ -320,6 +320,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_non_coding_constraint: {
+        IS_INTERVAL: True,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -339,6 +340,7 @@ CONFIG = {
                 'low-DNase',
             ],
         },
+        IS_INTERVAL: True,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
