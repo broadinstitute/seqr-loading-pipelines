@@ -10,26 +10,27 @@ CLINVAR_LIKELY_PATH_RANGE = ('Pathogenic/Likely_pathogenic', 'Likely_risk_allele
 
 def get_ht(
     ht: hl.Table,
+    *_,
 ) -> hl.Table:
     ht = ht.select_globals()
     ht = ht.select(
         is_pathogenic=(
             (
-                ht.clinvar.pathogenicity_id
+                ht.pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[0]]
             )
             & (
-                ht.clinvar.pathogenicity_id
+                ht.pathogenicity_id
                 <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_PATH_RANGE[1]]
             )
         ),
         is_likely_pathogenic=(
             (
-                ht.clinvar.pathogenicity_id
+                ht.pathogenicity_id
                 >= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[0]]
             )
             & (
-                ht.clinvar.pathogenicity_id
+                ht.pathogenicity_id
                 <= CLINVAR_PATHOGENICITIES_LOOKUP[CLINVAR_LIKELY_PATH_RANGE[1]]
             )
         ),
