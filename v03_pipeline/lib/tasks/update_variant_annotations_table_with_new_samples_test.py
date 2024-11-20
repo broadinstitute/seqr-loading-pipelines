@@ -23,15 +23,15 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
-    CachedReferenceDatasetQuery,
     DatasetType,
     ReferenceDatasetCollection,
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
     valid_reference_dataset_collection_path,
+    valid_reference_dataset_path,
 )
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
@@ -217,7 +217,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
-        'v03_pipeline.lib.tasks.validate_callset.UpdatedCachedReferenceDatasetQuery',
+        'v03_pipeline.lib.tasks.validate_callset.UpdatedReferenceDatasetTask',
     )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
@@ -237,13 +237,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rdc_task: Mock,
-        mock_updated_cached_reference_dataset_query,
+        mock_updated_reference_dataset: Mock,
         mock_env: Mock,
         mock_register_alleles: Mock,
         mock_update_crdqs_task,
         mock_update_rdc_task: Mock,
     ) -> None:
-        mock_updated_cached_reference_dataset_query.return_value = MockCompleteTask()
+        mock_updated_reference_dataset.return_value = MockCompleteTask()
         mock_update_rdc_task.return_value = MockCompleteTask()
         mock_update_crdqs_task.return_value = MockCompleteTask()
         mock_update_vat_with_rdc_task.return_value = (
@@ -360,10 +360,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedDatarootTestCase
             ),
         )
         coding_and_noncoding_variants_ht.write(
-            cached_reference_dataset_query_path(
+            valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                ReferenceDataset.gnomad_coding_and_noncoding,
             ),
         )
         worker = luigi.worker.Worker()
