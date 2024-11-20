@@ -14,12 +14,6 @@ class UpdatedReferenceDatasetTask(BaseWriteTask):
         enum=ReferenceDataset,
     )
 
-    def complete(self):
-        return super().complete() and hl.eval(
-            hl.read_table(self.output().path).version
-            == self.reference_dataset.version(self.reference_genome),
-        )
-
     def output(self):
         return GCSorLocalTarget(
             valid_reference_dataset_path(

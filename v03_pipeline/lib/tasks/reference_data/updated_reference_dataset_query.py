@@ -19,12 +19,6 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
         enum=ReferenceDatasetQuery,
     )
 
-    def complete(self):
-        return super().complete() and hl.eval(
-            hl.read_table(self.output().path).version
-            == self.reference_dataset_query.version(self.reference_genome),
-        )
-
     def requires(self):
         return self.clone(
             UpdatedReferenceDatasetTask,
