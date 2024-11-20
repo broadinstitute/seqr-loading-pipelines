@@ -4,7 +4,6 @@ import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
-    get_validation_dependencies,
     validate_allele_type,
     validate_expected_contig_frequency,
     validate_imputed_sex_ploidy,
@@ -14,6 +13,8 @@ from v03_pipeline.lib.misc.validation import (
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     imported_callset_path,
+    sex_check_table_path,
+    valid_reference_dataset_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
@@ -31,6 +32,28 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
+    def get_validation_dependencies(self) -> dict[str, hl.Table]:
+        deps = {}
+        deps['coding_and_noncoding_variants_ht'] = hl.read_table(
+            valid_reference_dataset_path(
+                self.reference_genome,
+                ReferenceDataset.gnomad_coding_and_noncoding,
+            ),
+        )
+        if (
+            Env.CHECK_SEX_AND_RELATEDNESS
+            and self.dataset_type.check_sex_and_relatedness
+            and not self.skip_check_sex_and_relatedness
+        ):
+            deps['sex_check_ht'] = hl.read_table(
+                sex_check_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                ),
+            )
+        return deps
+
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
@@ -58,7 +81,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 (
                     self.clone(
                         UpdatedReferenceDatasetTask,
-                        crdq=ReferenceDataset.gnomad_coding_and_noncoding,
+                        reference_dataset=ReferenceDataset.gnomad_coding_and_noncoding,
                     )
                 ),
             ]
@@ -98,9 +121,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 callset_path=self.callset_path,
                 validated_sample_type=self.sample_type.value,
             )
-        validation_dependencies = get_validation_dependencies(
-            **self.param_kwargs,
-        )
+        validation_dependencies = self.get_validation_dependencies()
         for validation_f in [
             validate_allele_type,
             validate_imputed_sex_ploidy,
