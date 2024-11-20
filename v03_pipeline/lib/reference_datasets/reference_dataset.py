@@ -361,13 +361,15 @@ CONFIG = {
         },
     },
 }
-CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = CONFIG[ReferenceDataset.clinvar]
-CONFIG[ReferenceDatasetQuery.clinvar_path_variants].EXCLUDE_FROM_ANNOTATIONS = True
-
-CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = CONFIG[
-    ReferenceDataset.gnomad_genomes
-]
-CONFIG[ReferenceDataset.gnomad_coding_and_noncoding].EXCLUDE_FROM_ANNOTATIONS = True
-
-CONFIG[ReferenceDatasetQuery.high_af_variants] = CONFIG[ReferenceDataset.gnomad_genomes]
-CONFIG[ReferenceDatasetQuery.high_af_variants].EXCLUDE_FROM_ANNOTATIONS = True
+CONFIG[ReferenceDatasetQuery.clinvar_path_variants] = {
+    EXCLUDE_FROM_ANNOTATIONS: True,
+    **CONFIG[ReferenceDataset.clinvar],
+}
+CONFIG[ReferenceDataset.gnomad_coding_and_noncoding] = {
+    EXCLUDE_FROM_ANNOTATIONS: True,
+    **CONFIG[ReferenceDataset.gnomad_genomes],
+}
+CONFIG[ReferenceDatasetQuery.high_af_variants] = {
+    EXCLUDE_FROM_ANNOTATIONS: True,
+    **CONFIG[ReferenceDataset.gnomad_genomes],
+}
