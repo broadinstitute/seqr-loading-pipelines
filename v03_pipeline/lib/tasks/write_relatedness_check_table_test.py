@@ -29,13 +29,12 @@ TEST_RUN_ID = 'manual__2024-04-03'
 class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.gnomad_qc_path = valid_reference_dataset_path(
-            ReferenceGenome.GRCh38,
-            ReferenceDataset.gnomad_qc,
-        )
         shutil.copytree(
             TEST_GNOMAD_QC_HT,
-            self.gnomad_qc_path,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.gnomad_qc,
+            ),
         )
 
         # Force imported callset to be complete
@@ -56,7 +55,10 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
         self.assertEqual(
             hl.eval(
                 hl.read_table(
-                    self.gnomad_qc_path,
+                    valid_reference_dataset_path(
+                        ReferenceGenome.GRCh38,
+                        ReferenceDataset.gnomad_qc,
+                    ),
                 ).version,
             ),
             '1.0',
@@ -68,7 +70,7 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
         ), patch.object(
             ReferenceDataset,
             'get_ht',
-            hl.Table.parallelize(
+            lambda *_: hl.Table.parallelize(
                 [],
                 hl.tstruct(
                     locus=hl.tlocus('GRCh38'),
@@ -90,8 +92,15 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
             worker.run()
             self.assertTrue(task.complete())
             self.assertEqual(
-                hl.eval(hl.read_table(self.gnomad_qc_path).version),
-                '4.0',
+                hl.eval(
+                    hl.read_table(
+                        valid_reference_dataset_path(
+                            ReferenceGenome.GRCh38,
+                            ReferenceDataset.gnomad_qc,
+                        )
+                    ).version
+                ),
+                '2.0',
             )
             ht = hl.read_table(
                 relatedness_check_table_path(
