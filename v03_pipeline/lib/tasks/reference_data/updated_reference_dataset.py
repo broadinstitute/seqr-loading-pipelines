@@ -1,4 +1,3 @@
-import hail as hl
 import luigi
 
 from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
