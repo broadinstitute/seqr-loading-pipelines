@@ -11,16 +11,16 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
     imported_callset_path,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
-    UpdatedCachedReferenceDatasetQuery,
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
+    UpdatedReferenceDatasetTask,
 )
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
@@ -57,8 +57,8 @@ class ValidateCallsetTask(BaseUpdateTask):
                 *requirements,
                 (
                     self.clone(
-                        UpdatedCachedReferenceDatasetQuery,
-                        crdq=CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
+                        UpdatedReferenceDatasetTask,
+                        crdq=ReferenceDataset.gnomad_coding_and_noncoding,
                     )
                 ),
             ]
