@@ -1,6 +1,7 @@
 import importlib
 import types
 from enum import Enum
+from typing import Union
 
 import hail as hl
 
@@ -15,6 +16,7 @@ DATASET_TYPES = 'dataset_types'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
+IS_INTERVAL = 'is_interval'
 
 
 class BaseReferenceDataset:
@@ -23,7 +25,7 @@ class BaseReferenceDataset:
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-    ) -> list['ReferenceDataset']:
+    ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
@@ -36,6 +38,10 @@ class BaseReferenceDataset:
                 if dataset.access_control == AccessControl.PUBLIC
             ]
         return reference_datasets
+
+    @property
+    def is_keyed_by_interval(self):
+        return CONFIG[self].get(IS_INTERVAL, False)
 
     @property
     def access_control(self) -> AccessControl:

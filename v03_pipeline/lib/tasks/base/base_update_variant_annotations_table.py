@@ -2,30 +2,25 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.misc import annotate_enums
-from v03_pipeline.lib.annotations.rdc_dependencies import (
-    get_rdc_annotation_dependencies,
-)
-from v03_pipeline.lib.model import (
-    ReferenceDatasetCollection,
-)
 from v03_pipeline.lib.paths import (
+    valid_reference_dataset_path,
     variant_annotations_table_path,
+)
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    BaseReferenceDataset,
+    ReferenceDatasetQuery,
 )
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.update_cached_reference_dataset_queries import (
-    UpdateCachedReferenceDatasetQueries,
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
+    UpdatedReferenceDatasetTask,
 )
-from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_collection import (
-    UpdatedReferenceDatasetCollectionTask,
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
+    UpdatedReferenceDatasetQueryTask,
 )
 
 
 class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
-    @property
-    def rdc_annotation_dependencies(self) -> dict[str, hl.Table]:
-        return get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
-
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             variant_annotations_table_path(
@@ -35,20 +30,26 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = [
-            self.clone(UpdateCachedReferenceDatasetQueries),
-        ]
-        requirements.extend(
-            self.clone(
-                UpdatedReferenceDatasetCollectionTask,
-                reference_dataset_collection=rdc,
-            )
-            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
-                self.reference_genome,
-                self.dataset_type,
-            )
-        )
-        return requirements
+        reqs = []
+        for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            if isinstance(reference_dataset, ReferenceDatasetQuery):
+                reqs.append(
+                    self.clone(
+                        UpdatedReferenceDatasetQueryTask,
+                        reference_dataset_query=reference_dataset,
+                    ),
+                )
+            else:
+                reqs.append(
+                    self.clone(
+                        UpdatedReferenceDatasetTask,
+                        reference_dataset=reference_dataset,
+                    ),
+                )
+        return reqs
 
     def initialize_table(self) -> hl.Table:
         key_type = self.dataset_type.table_key_type(self.reference_genome)
@@ -57,7 +58,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
             key_type,
             key=key_type.fields,
             globals=hl.Struct(
-                paths=hl.Struct(),
                 versions=hl.Struct(),
                 enums=hl.Struct(),
                 updates=hl.empty_set(
@@ -79,28 +79,25 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         ht: hl.Table,
     ) -> hl.Table:
         ht = ht.annotate_globals(
-            paths=hl.Struct(),
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+        for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
         ):
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-            rdc_globals = rdc_ht.index_globals()
+            rd_ht = hl.read_table(
+                valid_reference_dataset_path(self.reference_genome, reference_dataset),
+            )
+            rd_ht_globals = rd_ht.index_globals()
             ht = ht.select_globals(
-                paths=hl.Struct(
-                    **ht.globals.paths,
-                    **rdc_globals.paths,
-                ),
                 versions=hl.Struct(
                     **ht.globals.versions,
-                    **rdc_globals.versions,
+                    **{reference_dataset.name: rd_ht_globals.version},
                 ),
                 enums=hl.Struct(
                     **ht.globals.enums,
-                    **rdc_globals.enums,
+                    **{reference_dataset.name: rd_ht_globals.enums},
                 ),
                 updates=ht.globals.updates,
                 migrations=ht.globals.migrations,
