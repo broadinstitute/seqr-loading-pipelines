@@ -15,11 +15,11 @@ CLINVAR_SUBMISSION_SUMMARY = (
 
 
 @contextmanager
-def mock_clinvar_urls():
+def mock_clinvar_urls(reference_genome=ReferenceGenome.GRCh38):
     with open(CLINVAR_VCF, 'rb') as f, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
         responses.add_passthru('http://localhost')
         responses.get(
-            ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
+            ReferenceDataset.clinvar.raw_dataset_path(reference_genome),
             body=f.read(),
         )
         responses.get(

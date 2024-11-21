@@ -30,7 +30,7 @@ class BaseReferenceDataset:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
-            if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES)
+            if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES, [])
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [
