@@ -39,7 +39,7 @@ else
   fi
 fi
 
-gsutil -m rsync -rd "gs://seqr-reference-data/v03/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
+gsutil -m rsync -rd "gs://seqr-reference-data/v3.1/$REFERENCE_GENOME" $REFERENCE_DATASETS_DIR/$REFERENCE_GENOME
 if ! [[ $REFERENCE_DATASETS_DIR =~ gs://* ]]; then
   touch "$REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME"/_SUCCESS
 else 
