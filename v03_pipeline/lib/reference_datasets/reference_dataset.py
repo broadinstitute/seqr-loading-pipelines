@@ -2,7 +2,6 @@ import importlib
 import types
 from enum import Enum
 from typing import Union
-from xml.etree.ElementInclude import include
 
 import hail as hl
 
@@ -27,7 +26,7 @@ class BaseReferenceDataset:
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-        include_all: bool = True
+        include_all: bool = True,
     ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
         reference_datasets = [
             dataset
@@ -86,7 +85,8 @@ class BaseReferenceDataset:
         enum_selects = get_enum_select_fields(ht, self.enums)
         if enum_selects:
             ht = ht.transmute(**enum_selects)
-        ht = filter_contigs(ht, reference_genome)
+        if not self.is_keyed_by_interval:
+            ht = filter_contigs(ht, reference_genome)
         return ht.annotate_globals(
             version=self.version(reference_genome),
             enums=self.enum_globals,

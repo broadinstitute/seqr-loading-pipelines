@@ -80,9 +80,9 @@ def gnomad_non_coding_constraint(
         z_score=(
             interval_ht.index(ht.locus, all_matches=True)
             .filter(
-                lambda x: hl.is_defined(x.gnomad_non_coding_constraint['z_score']),
+                lambda x: hl.is_defined(x['z_score']),
             )
-            .gnomad_non_coding_constraint.z_score.first()
+            .z_score.first()
         ),
     )
 
@@ -107,7 +107,7 @@ def screen(
                 ht.locus,
                 all_matches=True,
             ).flatmap(
-                lambda x: x.screen['region_type_ids'],
+                lambda x: x['region_type_ids'],
             )
         ),
     )

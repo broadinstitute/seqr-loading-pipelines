@@ -120,7 +120,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
     )
-    def test_annotate_intervals(
+    def test_update_vat_snv_indel_38(
         self,
         mock_rd_query_task,
         mock_rd_task,
@@ -189,7 +189,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         enums=hl.Struct(
                             screen=ReferenceDataset.screen.enum_globals,
-                            gnomad_non_coding_constraint=ReferenceDataset.gnomad_non_coding_constraint.enum_globals,
+                            gnomad_non_coding_constraint=hl.Struct(),
                             **BASE_ENUMS,
                         ),
                         migrations=[],

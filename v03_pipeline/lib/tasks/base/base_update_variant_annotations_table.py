@@ -85,7 +85,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
-            include_all=False
+            include_all=False,
         ):
             rd_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
