@@ -32,6 +32,7 @@ from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
+TEST_DBNSFP_HT = 'v03_pipeline/var/test/reference_datasets/dbnsfp/1.0.ht'
 TEST_EIGEN_HT = 'v03_pipeline/var/test/reference_datasets/eigen/1.0.ht'
 TEST_CLINVAR_HT = 'v03_pipeline/var/test/reference_datasets/clinvar/2024-11-11.ht'
 TEST_EXAC_HT = 'v03_pipeline/var/test/reference_datasets/exac/1.0.ht'
@@ -74,19 +75,27 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
+            TEST_DBNSFP_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.dbnsfp,
+            ),
+        )
+        shutil.copytree(
             TEST_EIGEN_HT,
             valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
                 ReferenceDataset.eigen,
             ),
         )
-        # shutil.copytree(
-        #     TEST_CLINVAR_HT,
-        #     valid_reference_dataset_path(
-        #         ReferenceGenome.GRCh38,
-        #         ReferenceDataset.clinvar,
-        #     ),
-        # )
+        with mock_clinvar_urls():
+            shutil.copytree(
+                TEST_CLINVAR_HT,
+                valid_reference_dataset_path(
+                    ReferenceGenome.GRCh38,
+                    ReferenceDataset.clinvar,
+                ),
+            )
         shutil.copytree(
             TEST_EXAC_HT,
             valid_reference_dataset_path(
@@ -223,22 +232,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
 
-        with mock_clinvar_urls(), patch.object(
-            BaseReferenceDataset,
-            '_for_reference_genome_dataset_type',
-            return_value=[
-                ReferenceDataset.gnomad_non_coding_constraint,
-                ReferenceDataset.screen,
-                ReferenceDataset.eigen,
-                # ReferenceDataset.clinvar,
-                ReferenceDataset.exac,
-                ReferenceDataset.splice_ai,
-                ReferenceDataset.topmed,
-                ReferenceDataset.hgmd,
-                ReferenceDataset.gnomad_exomes,
-                ReferenceDataset.gnomad_genomes,
-            ],
-        ):
+        with mock_clinvar_urls():
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
@@ -262,8 +256,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 [
                     hl.Struct(
                         versions=hl.Struct(
+                            dbnsfp='1.0',
                             eigen='1.0',
-                            # clinvar='2024-11-11',
+                            clinvar='2024-11-11',
                             exac='1.0',
                             splice_ai='1.0',
                             topmed='1.0',
@@ -274,8 +269,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             gnomad_non_coding_constraint='1.0',
                         ),
                         enums=hl.Struct(
+                            dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
                             eigen=hl.Struct(),
-                            # clinvar=ReferenceDataset.clinvar.enum_globals,
+                            clinvar=ReferenceDataset.clinvar.enum_globals,
                             exac=hl.Struct(),
                             splice_ai=ReferenceDataset.splice_ai.enum_globals,
                             topmed=hl.Struct(),
@@ -302,16 +298,28 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             reference_genome='GRCh38',
                         ),
                         alleles=['A', 'C'],
+                        dbnsfp=hl.Struct(
+                            REVEL_score=0.0430000014603138,
+                            SIFT_score=None,
+                            Polyphen2_HVAR_score=None,
+                            MutationTaster_pred_id=0,
+                            VEST4_score=None,
+                            MutPred_score=None,
+                            fathmm_MKL_coding_score=None,
+                            MPC_score=None,
+                            CADD_phred=2,
+                            PrimateAI_score=None,
+                        ),
                         eigen=hl.Struct(Eigen_phred=1.5880000591278076),
-                        # clinvar=hl.Struct(
-                        #     alleleId=None,
-                        #     conflictingPathogenicities=None,
-                        #     goldStars=None,
-                        #     pathogenicity_id=None,
-                        #     assertion_ids=None,
-                        #     submitters=None,
-                        #     conditions=None,
-                        # ),
+                        clinvar=hl.Struct(
+                            alleleId=None,
+                            conflictingPathogenicities=None,
+                            goldStars=None,
+                            pathogenicity_id=None,
+                            assertion_ids=None,
+                            submitters=None,
+                            conditions=None,
+                        ),
                         exac=hl.Struct(
                             AF_POPMAX=0.0004100881633348763,
                             AF=0.0004633000062312931,
