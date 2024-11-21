@@ -35,6 +35,7 @@ TEST_CLINVAR_HT = 'v03_pipeline/var/test/reference_datasets/clinvar/2024-11-21.h
 TEST_EXAC_HT = 'v03_pipeline/var/test/reference_datasets/exac/1.0.ht'
 TEST_SPLICE_AI_HT = 'v03_pipeline/var/test/reference_datasets/splice_ai/1.0.ht'
 TEST_TOPMED_HT = 'v03_pipeline/var/test/reference_datasets/topmed/1.0.ht'
+TEST_HGMD_HT = 'v03_pipeline/var/test/reference_datasets/hgmd/1.0.ht'
 TEST_GNOMAD_NONCODING_CONSTRAINT_HT = (
     'v03_pipeline/var/test/reference_datasets/gnomad_non_coding_constraint/1.0.ht'
 )
@@ -98,6 +99,13 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
                 ReferenceDataset.topmed,
+            ),
+        )
+        shutil.copytree(
+            TEST_HGMD_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.hgmd,
             ),
         )
         shutil.copytree(
@@ -174,8 +182,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         mock_rd_query_task.return_value = MockCompleteTask()
         # mock_parse_clinvar_release_date.return_value = '2024-11-21'
 
-        print(ReferenceDataset.clinvar.version(reference_genome=ReferenceGenome.GRCh38))
-
         mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -211,6 +217,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ReferenceDataset.exac,
                 ReferenceDataset.splice_ai,
                 ReferenceDataset.topmed,
+                ReferenceDataset.hgmd,
             ],
         ):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -241,6 +248,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             exac='1.0',
                             splice_ai='1.0',
                             topmed='1.0',
+                            hgmd='1.0',
                             screen='1.0',
                             gnomad_non_coding_constraint='1.0',
                         ),
@@ -248,8 +256,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             eigen=hl.Struct(),
                             # clinvar=ReferenceDataset.clinvar.enum_globals,
                             exac=hl.Struct(),
-                            topmed=hl.Struct(),
                             splice_ai=ReferenceDataset.splice_ai.enum_globals,
+                            topmed=hl.Struct(),
+                            hgmd=ReferenceDataset.hgmd.enum_globals,
                             screen=ReferenceDataset.screen.enum_globals,
                             gnomad_non_coding_constraint=hl.Struct(),
                             **BASE_ENUMS,
@@ -294,6 +303,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                             splice_consequence_id=3,
                         ),
                         topmed=hl.Struct(AC=None, AF=None, AN=None, Hom=None, Het=None),
+                        hgmd=hl.Struct(accession='abcdefg', class_id=3),
                         gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
                         screen=hl.Struct(region_type_ids=[1]),
                     ),
