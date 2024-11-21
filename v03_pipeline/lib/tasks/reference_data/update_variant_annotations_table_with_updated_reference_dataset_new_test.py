@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import hail as hl
 import luigi.worker
+import responses
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
@@ -27,11 +28,12 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
+from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_EIGEN_HT = 'v03_pipeline/var/test/reference_datasets/eigen/1.0.ht'
-TEST_CLINVAR_HT = 'v03_pipeline/var/test/reference_datasets/clinvar/2024-11-21.ht'
+TEST_CLINVAR_HT = 'v03_pipeline/var/test/reference_datasets/clinvar/2024-11-11.ht'
 TEST_EXAC_HT = 'v03_pipeline/var/test/reference_datasets/exac/1.0.ht'
 TEST_SPLICE_AI_HT = 'v03_pipeline/var/test/reference_datasets/splice_ai/1.0.ht'
 TEST_TOPMED_HT = 'v03_pipeline/var/test/reference_datasets/topmed/1.0.ht'
@@ -159,9 +161,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 ],
             )
 
-    # @patch(
-    #     'v03_pipeline.lib.reference_datasets.clinvar.parse_clinvar_release_date',
-    # )
+    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
     )
@@ -176,11 +176,9 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
         mock_rd_query_task,
         mock_rd_task,
         mock_initialize_annotations_ht,
-        # mock_parse_clinvar_release_date,
     ):
         mock_rd_task.return_value = MockCompleteTask()
         mock_rd_query_task.return_value = MockCompleteTask()
-        # mock_parse_clinvar_release_date.return_value = '2024-11-21'
 
         mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
             [
@@ -206,14 +204,14 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             ),
         )
 
-        with patch.object(
+        with mock_clinvar_urls(), patch.object(
             BaseReferenceDataset,
             '_for_reference_genome_dataset_type',
             return_value=[
                 ReferenceDataset.gnomad_non_coding_constraint,
                 ReferenceDataset.screen,
                 ReferenceDataset.eigen,
-                # ReferenceDataset.clinvar,
+                ReferenceDataset.clinvar,
                 ReferenceDataset.exac,
                 ReferenceDataset.splice_ai,
                 ReferenceDataset.topmed,
@@ -244,7 +242,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     hl.Struct(
                         versions=hl.Struct(
                             eigen='1.0',
-                            # clinvar='2024-11-21',
+                            clinvar='2024-11-11',
                             exac='1.0',
                             splice_ai='1.0',
                             topmed='1.0',
@@ -254,7 +252,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         enums=hl.Struct(
                             eigen=hl.Struct(),
-                            # clinvar=ReferenceDataset.clinvar.enum_globals,
+                            clinvar=ReferenceDataset.clinvar.enum_globals,
                             exac=hl.Struct(),
                             splice_ai=ReferenceDataset.splice_ai.enum_globals,
                             topmed=hl.Struct(),
@@ -280,15 +278,15 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         alleles=['A', 'C'],
                         eigen=hl.Struct(Eigen_phred=1.5880000591278076),
-                        # clinvar=hl.Struct(
-                        #     alleleId=None,
-                        #     conflictingPathogenicities=None,
-                        #     goldStars=None,
-                        #     pathogenicity_id=None,
-                        #     assertion_ids=None,
-                        #     submitters=None,
-                        #     conditions=None,
-                        # ),
+                        clinvar=hl.Struct(
+                            alleleId=None,
+                            conflictingPathogenicities=None,
+                            goldStars=None,
+                            pathogenicity_id=None,
+                            assertion_ids=None,
+                            submitters=None,
+                            conditions=None,
+                        ),
                         exac=hl.Struct(
                             AF_POPMAX=0.0004100881633348763,
                             AF=0.0004633000062312931,
