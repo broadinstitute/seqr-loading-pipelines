@@ -76,6 +76,7 @@ class BaseReferenceDataset:
     def version(self, reference_genome: ReferenceGenome) -> str:
         version = CONFIG[self][reference_genome][VERSION]
         if isinstance(version, types.FunctionType):
+            print(type(version))
             return version(
                 self.raw_dataset_path(reference_genome),
             )
