@@ -9,6 +9,7 @@ from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
+    MITOTIP_PATHOGENICITIES,
     MOTIF_CONSEQUENCE_TERMS,
     REGULATORY_BIOTYPES,
     REGULATORY_CONSEQUENCE_TERMS,
@@ -47,6 +48,15 @@ TEST_GNOMAD_NONCODING_CONSTRAINT_HT = (
     'v03_pipeline/var/test/reference_datasets/gnomad_non_coding_constraint/1.0.ht'
 )
 TEST_SCREEN_HT = 'v03_pipeline/var/test/reference_datasets/screen/1.0.ht'
+TEST_HELIX_MITO_HT = 'v03_pipeline/var/test/reference_datasets/helix_mito/1.0.ht'
+TEST_HMTVAR_HT = 'v03_pipeline/var/test/reference_datasets/hmtvar/1.0.ht'
+TEST_MITIMPACT_HT = 'v03_pipeline/var/test/reference_datasets/mitimpact/1.0.ht'
+TEST_MITOMAP_HT = 'v03_pipeline/var/test/reference_datasets/mitomap/1.0.ht'
+TEST_GNOMAD_MITO_HT = 'v03_pipeline/var/test/reference_datasets/gnomad_mito/1.0.ht'
+TEST_LOCAL_CONSTRAINT_MITO_HT = (
+    'v03_pipeline/var/test/reference_datasets/local_constraint_mito/1.0.ht'
+)
+
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 BASE_ENUMS = {
@@ -66,6 +76,17 @@ BASE_ENUMS = {
         utrannotator=hl.Struct(
             fiveutr_consequence=FIVEUTR_CONSEQUENCES,
         ),
+    ),
+}
+
+BASE_MITO_ENUMS = {
+    'sorted_transcript_consequences': hl.Struct(
+        biotype=BIOTYPES,
+        consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+        lof_filter=LOF_FILTERS,
+    ),
+    'mitotip': hl.Struct(
+        trna_prediction=MITOTIP_PATHOGENICITIES,
     ),
 }
 
@@ -150,6 +171,48 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
             valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
                 ReferenceDataset.screen,
+            ),
+        )
+        shutil.copytree(
+            TEST_HELIX_MITO_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.helix_mito,
+            ),
+        )
+        shutil.copytree(
+            TEST_HMTVAR_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.hmtvar,
+            ),
+        )
+        shutil.copytree(
+            TEST_MITIMPACT_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.mitimpact,
+            ),
+        )
+        shutil.copytree(
+            TEST_MITOMAP_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.mitomap,
+            ),
+        )
+        shutil.copytree(
+            TEST_GNOMAD_MITO_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.gnomad_mito,
+            ),
+        )
+        shutil.copytree(
+            TEST_LOCAL_CONSTRAINT_MITO_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.local_constraint_mito,
             ),
         )
 
@@ -287,7 +350,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                     ),
                 ],
             )
-
             self.assertCountEqual(
                 ht.collect(),
                 [
@@ -355,6 +417,153 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         ),
                         gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
                         screen=hl.Struct(region_type_ids=[1]),
+                    ),
+                ],
+            )
+
+    @responses.activate
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
+    )
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetTask',
+    )
+    @patch(
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
+    )
+    def test_update_vat_mito_38(
+        self,
+        mock_rd_query_task,
+        mock_rd_task,
+        mock_initialize_annotations_ht,
+    ):
+        mock_rd_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
+
+        mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
+            [
+                hl.Struct(
+                    locus=hl.Locus(
+                        contig='chrM',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                    alleles=['A', 'C'],
+                ),
+            ],
+            hl.tstruct(
+                locus=hl.tlocus('GRCh38'),
+                alleles=hl.tarray(hl.tstr),
+            ),
+            key=['locus', 'alleles'],
+            globals=hl.Struct(
+                versions=hl.Struct(),
+                enums=hl.Struct(),
+                updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
+                migrations=hl.empty_array(hl.tstr),
+            ),
+        )
+
+        with mock_clinvar_urls():
+            task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.MITO,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SNV_INDEL_VCF,
+                project_guids=[],
+                project_remap_paths=[],
+                project_pedigree_paths=[],
+                skip_validation=True,
+                run_id='3',
+            )
+            worker = luigi.worker.Worker()
+            worker.add(task)
+            worker.run()
+            self.assertTrue(GCSorLocalFolderTarget(task.output().path).exists())
+            self.assertTrue(task.complete())
+
+            ht = hl.read_table(task.output().path)
+            self.assertCountEqual(
+                ht.globals.collect(),
+                [
+                    hl.Struct(
+                        versions=hl.Struct(
+                            helix_mito='1.0',
+                            hmtvar='1.0',
+                            mitimpact='1.0',
+                            mitomap='1.0',
+                            gnomad_mito='1.0',
+                            local_constraint_mito='1.0',
+                            clinvar='2024-11-11',
+                            dbnsfp='1.0',
+                        ),
+                        enums=hl.Struct(
+                            helix_mito=hl.Struct(),
+                            hmtvar=hl.Struct(),
+                            mitimpact=hl.Struct(),
+                            mitomap=hl.Struct(),
+                            gnomad_mito=hl.Struct(),
+                            local_constraint_mito=hl.Struct(),
+                            clinvar=ReferenceDataset.clinvar.enum_globals,
+                            dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
+                            **BASE_MITO_ENUMS,
+                        ),
+                        migrations=[],
+                        updates=set(),
+                    ),
+                ],
+            )
+            self.assertCountEqual(
+                ht.collect(),
+                [
+                    hl.Struct(
+                        locus=hl.Locus(
+                            contig='chrM',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        alleles=['A', 'C'],
+                        helix_mito=hl.Struct(
+                            AC_het=0,
+                            AF_het=0.0,
+                            AN=195982,
+                            max_hl=None,
+                            AC_hom=0,
+                            AF_hom=0,
+                        ),
+                        hmtvar=hl.Struct(score=0.6700000166893005),
+                        mitimpact=hl.Struct(score=0.42500001192092896),
+                        mitomap=hl.Struct(pathogenic=None),
+                        gnomad_mito=hl.Struct(
+                            AC_het=0,
+                            AF_het=0.0,
+                            AN=195982,
+                            max_hl=None,
+                            AC_hom=0,
+                            AF_hom=0,
+                        ),
+                        local_constraint_mito=hl.Struct(score=0.5),
+                        clinvar=hl.Struct(
+                            alleleId=None,
+                            conflictingPathogenicities=None,
+                            goldStars=None,
+                            pathogenicity_id=None,
+                            assertion_ids=None,
+                            submitters=None,
+                            conditions=None,
+                        ),
+                        dbnsfp=hl.Struct(
+                            SIFT_score=None,
+                            MutationTaster_pred_id=2,
+                            REVEL_score=None,
+                            Polyphen2_HVAR_score=None,
+                            VEST4_score=None,
+                            MutPred_score=None,
+                            fathmm_MKL_coding_score=None,
+                            MPC_score=None,
+                            CADD_phred=None,
+                            PrimateAI_score=None,
+                        ),
                     ),
                 ],
             )
