@@ -73,12 +73,12 @@ def gt_stats(
 
 def gnomad_non_coding_constraint(
     ht: hl.Table,
-    interval_ht: hl.Table,
+    gnomad_non_coding_constraint_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
     return hl.Struct(
         z_score=(
-            interval_ht.index(ht.locus, all_matches=True)
+            gnomad_non_coding_constraint_ht.index(ht.locus, all_matches=True)
             .filter(
                 lambda x: hl.is_defined(x['z_score']),
             )
@@ -98,12 +98,12 @@ def rg38_locus(
 
 def screen(
     ht: hl.Table,
-    interval_ht: hl.Table,
+    screen_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
     return hl.Struct(
         region_type_ids=(
-            interval_ht.index(
+            screen_ht.index(
                 ht.locus,
                 all_matches=True,
             ).flatmap(

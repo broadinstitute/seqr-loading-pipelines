@@ -88,11 +88,18 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     **get_fields(
                         ht,
                         [formatting_fn],
-                        interval_ht=reference_dataset_ht,
+                        **{f'{reference_dataset.name}_ht': reference_dataset_ht},
                         **self.param_kwargs,
                     ),
                 )
             else:
+                reference_dataset_ht = reference_dataset_ht.select(
+                    **{
+                        f'{reference_dataset.name}': hl.Struct(
+                            **reference_dataset_ht.row_value,
+                        ),
+                    },
+                )
                 ht = ht.join(reference_dataset_ht, 'left')
 
         return self.annotate_globals(ht)

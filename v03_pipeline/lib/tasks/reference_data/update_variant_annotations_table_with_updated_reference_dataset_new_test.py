@@ -30,6 +30,7 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
+TEST_EIGEN_HT = 'v03_pipeline/var/test/reference_datasets/eigen/1.0.ht'
 TEST_GNOMAD_NONCODING_CONSTRAINT_HT = (
     'v03_pipeline/var/test/reference_datasets/gnomad_non_coding_constraint/1.0.ht'
 )
@@ -60,6 +61,13 @@ BASE_ENUMS = {
 class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
+        shutil.copytree(
+            TEST_EIGEN_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.eigen,
+            ),
+        )
         shutil.copytree(
             TEST_GNOMAD_NONCODING_CONSTRAINT_HT,
             valid_reference_dataset_path(
@@ -155,10 +163,11 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
 
         with patch.object(
             BaseReferenceDataset,
-            '_for_reference_genome_dataset_typeg',
+            '_for_reference_genome_dataset_type',
             return_value=[
                 ReferenceDataset.gnomad_non_coding_constraint,
                 ReferenceDataset.screen,
+                ReferenceDataset.eigen,
             ],
         ):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -184,16 +193,34 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                 [
                     hl.Struct(
                         versions=hl.Struct(
+                            eigen='1.0',
                             screen='1.0',
                             gnomad_non_coding_constraint='1.0',
                         ),
                         enums=hl.Struct(
+                            eigen=hl.Struct(),
                             screen=ReferenceDataset.screen.enum_globals,
                             gnomad_non_coding_constraint=hl.Struct(),
                             **BASE_ENUMS,
                         ),
                         migrations=[],
                         updates=set(),
+                    ),
+                ],
+            )
+            self.assertCountEqual(
+                ht.collect(),
+                [
+                    hl.Struct(
+                        locus=hl.Locus(
+                            contig='chr1',
+                            position=871269,
+                            reference_genome='GRCh38',
+                        ),
+                        alleles=['A', 'C'],
+                        eigen=hl.Struct(Eigen_phred=1.5880000591278076),
+                        gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
+                        screen=hl.Struct(region_type_ids=[1]),
                     ),
                 ],
             )
