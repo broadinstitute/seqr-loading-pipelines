@@ -1,7 +1,6 @@
 import hashlib
 import os
 import re
-from typing import TYPE_CHECKING, Union
 
 from v03_pipeline.lib.model import (
     AccessControl,
@@ -13,12 +12,10 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-
-if TYPE_CHECKING:
-    from v03_pipeline.lib.reference_datasets.reference_dataset import (
-        ReferenceDataset,
-        ReferenceDatasetQuery,
-    )
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    ReferenceDataset,
+    ReferenceDatasetQuery,
+)
 
 
 def _pipeline_prefix(
@@ -334,7 +331,7 @@ def valid_reference_dataset_collection_path(
 
 def valid_reference_dataset_path(
     reference_genome: ReferenceGenome,
-    reference_dataset: Union['ReferenceDataset', 'ReferenceDatasetQuery'],
+    reference_dataset: ReferenceDataset,
 ) -> str | None:
     return os.path.join(
         _v03_reference_dataset_prefix(
@@ -344,6 +341,20 @@ def valid_reference_dataset_path(
         'reference_datasets',
         f'{reference_dataset.value}',
         f'{reference_dataset.version(reference_genome)}.ht',
+    )
+
+
+def valid_reference_dataset_query_path(
+    reference_genome: ReferenceGenome,
+    reference_dataset_query: ReferenceDatasetQuery,
+) -> str | None:
+    return os.path.join(
+        _v03_reference_dataset_prefix(
+            reference_dataset_query.access_control,
+            reference_genome,
+        ),
+        'reference_datasets',
+        f'{reference_dataset_query.value}.ht',
     )
 
 

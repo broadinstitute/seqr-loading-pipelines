@@ -2,7 +2,7 @@ import hail as hl
 import luigi
 
 from luigi_pipeline.lib.hail_tasks import GCSorLocalTarget
-from v03_pipeline.lib.paths import valid_reference_dataset_path
+from v03_pipeline.lib.paths import valid_reference_dataset_query_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDatasetQuery,
 )
@@ -19,6 +19,16 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
         enum=ReferenceDatasetQuery,
     )
 
+    # Reference Dataset Queries do not include version
+    # in the path to allow for simpler reading logic
+    # when they are used downstream by the hail search
+    # service.
+    def complete(self):
+        return super().complete() and hl.eval(
+            hl.read_table(self.output().path).version
+            == self.reference_dataset_query.version(self.reference_genome),
+        )
+
     def requires(self):
         return self.clone(
             UpdatedReferenceDatasetTask,
@@ -27,7 +37,7 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
 
     def output(self):
         return GCSorLocalTarget(
-            valid_reference_dataset_path(
+            valid_reference_dataset_query_path(
                 self.reference_genome,
                 self.reference_dataset_query,
             ),
