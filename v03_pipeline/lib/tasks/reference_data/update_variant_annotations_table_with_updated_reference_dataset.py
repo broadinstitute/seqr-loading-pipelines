@@ -32,10 +32,11 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         self._datasets_to_update = []
         self._datasets_to_drop = []
 
-        reference_datasets = BaseReferenceDataset.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-            include_queries=False,
+        reference_datasets = (
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+                self.reference_genome,
+                self.dataset_type,
+            )
         )
         if not super().complete():
             self._datasets_to_update.extend(reference_datasets)

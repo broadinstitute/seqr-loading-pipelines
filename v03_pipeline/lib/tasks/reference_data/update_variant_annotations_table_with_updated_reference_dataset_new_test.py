@@ -78,7 +78,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
     def test_create_empty_annotations_table(self):
         with patch.object(
             BaseReferenceDataset,
-            'for_reference_genome_dataset_type',
+            '_for_reference_genome_dataset_type',
             return_value=[],
         ):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
@@ -155,7 +155,7 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
 
         with patch.object(
             BaseReferenceDataset,
-            'for_reference_genome_dataset_type',
+            '_for_reference_genome_dataset_typeg',
             return_value=[
                 ReferenceDataset.gnomad_non_coding_constraint,
                 ReferenceDataset.screen,

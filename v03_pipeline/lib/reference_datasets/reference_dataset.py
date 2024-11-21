@@ -22,17 +22,15 @@ EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
 
 class BaseReferenceDataset:
     @classmethod
-    def for_reference_genome_dataset_type(
+    def _for_reference_genome_dataset_type(
         cls,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,
-        include_all: bool = True,
     ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
         reference_datasets = [
             dataset
             for dataset, config in CONFIG.items()
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES)
-            and (include_all or not config.get(EXCLUDE_FROM_ANNOTATIONS, False))
         ]
         if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return [
@@ -41,6 +39,29 @@ class BaseReferenceDataset:
                 if dataset.access_control == AccessControl.PUBLIC
             ]
         return reference_datasets
+
+    @classmethod
+    def for_reference_genome_dataset_type_all(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> list[Union['ReferenceDataset', 'ReferenceDatasetQuery']]:
+        return cls._for_reference_genome_dataset_type(reference_genome, dataset_type)
+
+    @classmethod
+    def for_reference_genome_dataset_type_annotations(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ):
+        return [
+            dataset
+            for dataset in cls._for_reference_genome_dataset_type(
+                reference_genome,
+                dataset_type,
+            )
+            if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS, False)
+        ]
 
     @property
     def is_keyed_by_interval(self):

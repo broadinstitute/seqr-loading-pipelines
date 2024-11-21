@@ -31,7 +31,9 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         reqs = []
-        for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
+        for (
+            reference_dataset
+        ) in BaseReferenceDataset.for_reference_genome_dataset_type_all(
             self.reference_genome,
             self.dataset_type,
         ):
@@ -82,10 +84,11 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
             versions=hl.Struct(),
             enums=hl.Struct(),
         )
-        for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
+        for (
+            reference_dataset
+        ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
             self.reference_genome,
             self.dataset_type,
-            include_all=False,
         ):
             rd_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
