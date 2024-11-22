@@ -329,7 +329,7 @@ tenacity==8.5.0
     #   plotly
 threadpoolctl==3.5.0
     # via scikit-learn
-tornado==6.4.1
+tornado==6.4.2
     # via
     #   bokeh
     #   luigi
