@@ -1,5 +1,4 @@
 import shutil
-import unittest
 from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -9,8 +8,6 @@ import responses
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
-    CLINVAR_ASSERTIONS,
-    CLINVAR_PATHOGENICITIES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
@@ -26,12 +23,10 @@ from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.validation import validate_expected_contig_frequency
 from v03_pipeline.lib.model import (
     DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    valid_reference_dataset_collection_path,
     valid_reference_dataset_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
@@ -44,7 +39,9 @@ from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples im
 )
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
-from v03_pipeline.lib.test.mocked_reference_dataset_test_case import MockedReferenceDataTestCase
+from v03_pipeline.lib.test.mocked_reference_dataset_test_case import (
+    MockedReferenceDataTestCase,
+)
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
 GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
@@ -131,7 +128,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
         shutil.rmtree(
             valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
-                ReferenceDataset.screen
+                ReferenceDataset.screen,
             ),
         )
         uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -586,7 +583,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_37_VEP_DATA)
         mock_register_alleles.side_effect = None
 
-        with mock_clinvar_urls():
+        with mock_clinvar_urls(ReferenceGenome.GRCh37):
             worker = luigi.worker.Worker()
             uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh37,
@@ -608,7 +605,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
             self.assertEqual(
                 ht.collect()[0],
                 hl.Struct(
-                    locus=hl.Locus(contig=1, position=871269, reference_genome='GRCh37'),
+                    locus=hl.Locus(
+                        contig=1,
+                        position=871269,
+                        reference_genome='GRCh37',
+                    ),
                     alleles=['A', 'C'],
                     rsid=None,
                     variant_id='1-871269-A-C',
@@ -687,12 +688,20 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
                         FAF_AF=9.315000352216884e-05,
                         Hemi=0,
                     ),
-                    gnomad_genomes=None,
+                    gnomad_genomes=hl.Struct(
+                        AF=None,
+                        AN=None,
+                        AC=None,
+                        Hom=None,
+                        AF_POPMAX_OR_GLOBAL=None,
+                        FAF_AF=None,
+                        Hemi=None,
+                    ),
                     splice_ai=hl.Struct(
                         delta_score=0.029999999329447746,
                         splice_consequence_id=3,
                     ),
-                    topmed=None,
+                    topmed=hl.Struct(AC=None, AF=None, AN=None, Hom=None, Het=None),
                     dbnsfp=hl.Struct(
                         REVEL_score=0.0430000014603138,
                         SIFT_score=None,
@@ -708,11 +717,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
                 ),
             )
 
+    @responses.activate
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
-    @patch('v03_pipeline.lib.model.reference_dataset_collection.Env')
+    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.Env')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
@@ -721,177 +731,159 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
         self,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
-        mock_rdc_env: Mock,
-        mock_update_vat_with_rdc_task: Mock,
+        mock_rd_env: Mock,
+        mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
-        mock_update_crdqs_task,
-        mock_update_rdc_task: Mock,
+        mock_rd_query_task,
+        mock_rd_task,
     ) -> None:
         mock_load_gencode_ensembl_to_refseq_id.return_value = hl.dict(
             {'ENST00000327044': 'NM_015658.4'},
         )
-        mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_crdqs_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = (
+        mock_rd_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rd_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
             )
         )
         shutil.rmtree(
-            valid_reference_dataset_collection_path(
+            valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                ReferenceDatasetCollection.HGMD,
+                ReferenceDataset.hgmd,
             ),
         )
-        mock_rdc_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_rd_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_register_alleles.side_effect = None
-        worker = luigi.worker.Worker()
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
-            skip_validation=True,
-            run_id=TEST_RUN_ID,
-        )
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertTrue(uvatwns_task.complete())
-        ht = hl.read_table(uvatwns_task.output().path)
-        self.assertEqual(ht.count(), 30)
-        self.assertCountEqual(
-            ht.globals.versions.collect(),
-            [
-                hl.Struct(
-                    cadd='v1.6',
-                    clinvar='2023-11-26',
-                    dbnsfp='2.9.3',
-                    eigen=None,
-                    exac=None,
-                    gnomad_exomes='4.1',
-                    gnomad_genomes='4.1',
-                    mpc=None,
-                    primate_ai='v0.2',
-                    splice_ai=None,
-                    topmed=None,
-                    gnomad_non_coding_constraint=None,
-                    screen=None,
-                ),
-            ],
-        )
 
+        with mock_clinvar_urls():
+            worker = luigi.worker.Worker()
+            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SNV_INDEL_VCF,
+                project_guids=['R0113_test_project'],
+                project_remap_paths=[TEST_REMAP],
+                project_pedigree_paths=[TEST_PEDIGREE_3],
+                skip_validation=True,
+                run_id=TEST_RUN_ID,
+            )
+            worker.add(uvatwns_task)
+            worker.run()
+            self.assertTrue(uvatwns_task.complete())
+            ht = hl.read_table(uvatwns_task.output().path)
+            self.assertEqual(ht.count(), 30)
+            self.assertCountEqual(
+                ht.globals.versions.collect(),
+                [
+                    hl.Struct(
+                        clinvar='2024-11-11',
+                        dbnsfp='1.0',
+                        eigen='1.0',
+                        exac='1.0',
+                        gnomad_exomes='1.0',
+                        gnomad_genomes='1.0',
+                        splice_ai='1.0',
+                        topmed='1.0',
+                        gnomad_non_coding_constraint='1.0',
+                        screen='1.0',
+                    ),
+                ],
+            )
+
+    @responses.activate
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
     def test_mito_update_vat(
         self,
-        mock_update_vat_with_rdc_task: Mock,
+        mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
-        mock_update_crdqs_task,
-        mock_update_rdc_task: Mock,
+        mock_rd_query_task,
+        mock_rd_task,
     ) -> None:
-        mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_crdqs_task.return_value = MockCompleteTask()
-        mock_update_vat_with_rdc_task.return_value = (
+        mock_rd_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
+        mock_update_vat_with_rd_task.return_value = (
             BaseUpdateVariantAnnotationsTableTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
             )
         )
         mock_register_alleles.side_effect = None
-        worker = luigi.worker.Worker()
-        update_variant_annotations_task = (
-            UpdateVariantAnnotationsTableWithNewSamplesTask(
-                reference_genome=ReferenceGenome.GRCh38,
-                dataset_type=DatasetType.MITO,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_MITO_MT,
-                project_guids=['R0115_test_project2'],
-                project_remap_paths=['not_a_real_file'],
-                project_pedigree_paths=[TEST_PEDIGREE_5],
-                skip_validation=True,
-                run_id=TEST_RUN_ID,
+
+        with mock_clinvar_urls():
+            worker = luigi.worker.Worker()
+            update_variant_annotations_task = (
+                UpdateVariantAnnotationsTableWithNewSamplesTask(
+                    reference_genome=ReferenceGenome.GRCh38,
+                    dataset_type=DatasetType.MITO,
+                    sample_type=SampleType.WGS,
+                    callset_path=TEST_MITO_MT,
+                    project_guids=['R0115_test_project2'],
+                    project_remap_paths=['not_a_real_file'],
+                    project_pedigree_paths=[TEST_PEDIGREE_5],
+                    skip_validation=True,
+                    run_id=TEST_RUN_ID,
+                )
             )
-        )
-        worker.add(update_variant_annotations_task)
-        worker.run()
-        self.assertTrue(update_variant_annotations_task.complete())
-        ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 5)
-        self.assertCountEqual(
-            ht.globals.collect(),
-            [
-                hl.Struct(
-                    paths=hl.Struct(
-                        high_constraint_region_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix high constraint intervals Feb-15-2022.tsv',
-                        clinvar_mito='https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
-                        dbnsfp_mito='gs://seqr-reference-data/GRCh38/dbNSFP/v4.2/dbNSFP4.2a_variant.with_new_scores.ht',
-                        gnomad_mito='gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
-                        helix_mito='gs://seqr-reference-data/GRCh38/mitochondrial/Helix/HelixMTdb_20200327.ht',
-                        hmtvar='gs://seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.ht',
-                        mitomap='gs://seqr-reference-data/GRCh38/mitochondrial/MITOMAP/mitomap-confirmed-mutations-2022-02-04.ht',
-                        mitimpact='gs://seqr-reference-data/GRCh38/mitochondrial/MitImpact/MitImpact_db_3.1.3.ht',
-                        local_constraint_mito='gs://seqr-reference-data/GRCh38/mitochondrial/local_constraint.tsv',
-                    ),
-                    versions=hl.Struct(
-                        high_constraint_region_mito='Feb-15-2022',
-                        clinvar_mito='2023-07-22',
-                        dbnsfp_mito='4.2',
-                        gnomad_mito='v3.1',
-                        helix_mito='20200327',
-                        hmtvar='Jan. 10 2022',
-                        mitomap='Feb. 04 2022',
-                        mitimpact='3.1.3',
-                        local_constraint_mito='2024-07-24',
-                    ),
-                    enums=hl.Struct(
-                        high_constraint_region_mito=hl.Struct(),
-                        local_constraint_mito=hl.Struct(),
-                        clinvar_mito=hl.Struct(
-                            assertion=CLINVAR_ASSERTIONS,
-                            pathogenicity=CLINVAR_PATHOGENICITIES,
+            worker.add(update_variant_annotations_task)
+            worker.run()
+            self.assertTrue(update_variant_annotations_task.complete())
+            ht = hl.read_table(update_variant_annotations_task.output().path)
+            self.assertEqual(ht.count(), 5)
+            self.assertCountEqual(
+                ht.globals.collect(),
+                [
+                    hl.Struct(
+                        versions=hl.Struct(
+                            clinvar='2024-11-11',
+                            dbnsfp='1.0',
+                            gnomad_mito='1.0',
+                            helix_mito='1.0',
+                            hmtvar='1.0',
+                            mitomap='1.0',
+                            mitimpact='1.0',
+                            local_constraint_mito='1.0',
                         ),
-                        dbnsfp_mito=hl.Struct(
-                            MutationTaster_pred=['D', 'A', 'N', 'P'],
+                        enums=hl.Struct(
+                            local_constraint_mito=hl.Struct(),
+                            clinvar=ReferenceDataset.clinvar.enum_globals,
+                            dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
+                            gnomad_mito=hl.Struct(),
+                            helix_mito=hl.Struct(),
+                            hmtvar=hl.Struct(),
+                            mitomap=hl.Struct(),
+                            mitimpact=hl.Struct(),
+                            sorted_transcript_consequences=hl.Struct(
+                                biotype=BIOTYPES,
+                                consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
+                                lof_filter=LOF_FILTERS,
+                            ),
+                            mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
                         ),
-                        gnomad_mito=hl.Struct(),
-                        helix_mito=hl.Struct(),
-                        hmtvar=hl.Struct(),
-                        mitomap=hl.Struct(),
-                        mitimpact=hl.Struct(),
-                        sorted_transcript_consequences=hl.Struct(
-                            biotype=BIOTYPES,
-                            consequence_term=TRANSCRIPT_CONSEQUENCE_TERMS,
-                            lof_filter=LOF_FILTERS,
-                        ),
-                        mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
-                    ),
-                    migrations=[],
-                    updates={
-                        hl.Struct(
-                            callset='v03_pipeline/var/test/callsets/mito_1.mt',
-                            project_guid='R0115_test_project2',
-                            remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(
-                                    'not_a_real_file',
-                                    TEST_PEDIGREE_5,
+                        migrations=[],
+                        updates={
+                            hl.Struct(
+                                callset='v03_pipeline/var/test/callsets/mito_1.mt',
+                                project_guid='R0115_test_project2',
+                                remap_pedigree_hash=hl.eval(
+                                    remap_pedigree_hash(
+                                        'not_a_real_file',
+                                        TEST_PEDIGREE_5,
+                                    ),
                                 ),
                             ),
-                        ),
-                    },
-                ),
-            ],
-        )
-        self.assertCountEqual(
-            ht.collect(),
-            [
+                        },
+                    ),
+                ],
+            )
+            self.assertCountEqual(
+                ht.collect()[0],
                 hl.Struct(
                     locus=hl.Locus(
                         contig='chrM',
@@ -901,7 +893,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
                     alleles=['T', 'C'],
                     common_low_heteroplasmy=False,
                     haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region_mito=True,
                     mitotip=hl.Struct(trna_prediction_id=None),
                     rg37_locus=hl.Locus(
                         contig='MT',
@@ -912,8 +903,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
                     sorted_transcript_consequences=None,
                     variant_id='M-3-T-C',
                     xpos=25000000003,
-                    clinvar_mito=None,
-                    dbnsfp_mito=None,
+                    clinvar=None,
+                    dbnsfp=None,
                     gnomad_mito=None,
                     helix_mito=None,
                     hmtvar=None,
@@ -928,152 +919,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
                     ),
                     local_constraint_mito=None,
                 ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=8,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['G', 'T'],
-                    common_low_heteroplasmy=False,
-                    haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region_mito=True,
-                    mitotip=hl.Struct(trna_prediction_id=None),
-                    rg37_locus=hl.Locus(
-                        contig='MT',
-                        position=8,
-                        reference_genome='GRCh37',
-                    ),
-                    rsid=None,
-                    sorted_transcript_consequences=None,
-                    variant_id='M-8-G-T',
-                    xpos=25000000008,
-                    clinvar_mito=None,
-                    dbnsfp_mito=None,
-                    gnomad_mito=None,
-                    helix_mito=None,
-                    hmtvar=None,
-                    mitomap=None,
-                    mitimpact=None,
-                    gt_stats=hl.Struct(
-                        AC_het=1,
-                        AF_het=0.25,
-                        AC_hom=0,
-                        AF_hom=0.0,
-                        AN=4,
-                    ),
-                    local_constraint_mito=None,
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=12,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['T', 'C'],
-                    common_low_heteroplasmy=False,
-                    haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region_mito=False,
-                    mitotip=hl.Struct(trna_prediction_id=None),
-                    rg37_locus=hl.Locus(
-                        contig='MT',
-                        position=12,
-                        reference_genome='GRCh37',
-                    ),
-                    rsid=None,
-                    sorted_transcript_consequences=None,
-                    variant_id='M-12-T-C',
-                    xpos=25000000012,
-                    clinvar_mito=None,
-                    dbnsfp_mito=None,
-                    gnomad_mito=None,
-                    helix_mito=None,
-                    hmtvar=None,
-                    mitomap=None,
-                    mitimpact=None,
-                    gt_stats=hl.Struct(
-                        AC_het=1,
-                        AF_het=0.25,
-                        AC_hom=0,
-                        AF_hom=0.0,
-                        AN=4,
-                    ),
-                    local_constraint_mito=None,
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=16,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['A', 'T'],
-                    common_low_heteroplasmy=False,
-                    haplogroup=hl.Struct(is_defining=True),
-                    high_constraint_region_mito=False,
-                    mitotip=hl.Struct(trna_prediction_id=None),
-                    rg37_locus=hl.Locus(
-                        contig='MT',
-                        position=16,
-                        reference_genome='GRCh37',
-                    ),
-                    rsid='rs1556422363',
-                    sorted_transcript_consequences=None,
-                    variant_id='M-16-A-T',
-                    xpos=25000000016,
-                    clinvar_mito=None,
-                    dbnsfp_mito=None,
-                    gnomad_mito=None,
-                    helix_mito=None,
-                    hmtvar=None,
-                    mitomap=None,
-                    mitimpact=None,
-                    gt_stats=hl.Struct(
-                        AC_het=1,
-                        AF_het=0.25,
-                        AC_hom=0,
-                        AF_hom=0.0,
-                        AN=4,
-                    ),
-                    local_constraint_mito=None,
-                ),
-                hl.Struct(
-                    locus=hl.Locus(
-                        contig='chrM',
-                        position=18,
-                        reference_genome='GRCh38',
-                    ),
-                    alleles=['C', 'T'],
-                    common_low_heteroplasmy=False,
-                    haplogroup=hl.Struct(is_defining=False),
-                    high_constraint_region_mito=False,
-                    mitotip=hl.Struct(trna_prediction_id=None),
-                    rg37_locus=hl.Locus(
-                        contig='MT',
-                        position=18,
-                        reference_genome='GRCh37',
-                    ),
-                    rsid=None,
-                    sorted_transcript_consequences=None,
-                    variant_id='M-18-C-T',
-                    xpos=25000000018,
-                    clinvar_mito=None,
-                    dbnsfp_mito=None,
-                    gnomad_mito=None,
-                    helix_mito=None,
-                    hmtvar=None,
-                    mitomap=None,
-                    mitimpact=None,
-                    gt_stats=hl.Struct(
-                        AC_het=1,
-                        AF_het=0.25,
-                        AC_hom=0,
-                        AF_hom=0.0,
-                        AN=4,
-                    ),
-                    local_constraint_mito=None,
-                ),
-            ],
-        )
+            )
 
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
@@ -1081,11 +927,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
     def test_sv_update_vat(
         self,
         mock_load_gencode: Mock,
-        mock_update_crdqs_task,
-        mock_update_rdc_task: Mock,
+        mock_rd_query_task,
+        mock_rd_task,
     ) -> None:
-        mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_crdqs_task.return_value = MockCompleteTask()
+        mock_rd_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
         mock_load_gencode.return_value = GENE_ID_MAPPING
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
@@ -1115,7 +961,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
             ht.globals.collect(),
             [
                 hl.Struct(
-                    paths=hl.Struct(),
                     versions=hl.Struct(),
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
@@ -1663,11 +1508,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
 
     def test_gcnv_update_vat(
         self,
-        mock_update_crdqs_task,
-        mock_update_rdc_task,
+        mock_rd_query_task,
+        mock_rd_task,
     ) -> None:
-        mock_update_rdc_task.return_value = MockCompleteTask()
-        mock_update_crdqs_task.return_value = MockCompleteTask()
+        mock_rd_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -1696,7 +1541,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(MockedReferenceDataTes
             ht.globals.collect(),
             [
                 hl.Struct(
-                    paths=hl.Struct(),
                     versions=hl.Struct(),
                     enums=hl.Struct(
                         sv_type=SV_TYPES,
