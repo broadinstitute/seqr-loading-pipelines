@@ -338,7 +338,6 @@ def valid_reference_dataset_path(
             reference_dataset.access_control,
             reference_genome,
         ),
-        'reference_datasets',
         f'{reference_dataset.value}',
         f'{reference_dataset.version(reference_genome)}.ht',
     )
@@ -346,6 +345,7 @@ def valid_reference_dataset_path(
 
 def valid_reference_dataset_query_path(
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
     reference_dataset_query: ReferenceDatasetQuery,
 ) -> str | None:
     return os.path.join(
@@ -353,7 +353,7 @@ def valid_reference_dataset_query_path(
             reference_dataset_query.access_control,
             reference_genome,
         ),
-        'reference_datasets',
+        dataset_type.value,
         f'{reference_dataset_query.value}.ht',
     )
 
