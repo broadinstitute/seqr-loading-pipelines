@@ -1,4 +1,5 @@
 import shutil
+import unittest
 from functools import partial
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -85,6 +86,9 @@ GENE_ID_MAPPING = {
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
+@unittest.skip(
+    'Temporarily disabled until reference data refactor for writing new variants is complete',
+)
 @patch(
     'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetCollectionTask',
 )

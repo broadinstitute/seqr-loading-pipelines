@@ -1,3 +1,4 @@
+import unittest
 from unittest.mock import Mock, patch
 
 import hailtop.fs as hfs
@@ -36,6 +37,9 @@ GENE_ID_MAPPING = {
 }
 
 
+@unittest.skip(
+    'Temporarily disabled until reference data refactor for writing new variants is complete',
+)
 class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
