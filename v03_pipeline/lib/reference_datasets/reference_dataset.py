@@ -1,5 +1,6 @@
 import importlib
 import types
+from collections.abc import Callable
 from enum import Enum
 
 import hail as hl
@@ -9,9 +10,11 @@ from v03_pipeline.lib.reference_datasets import clinvar
 from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
     get_enum_select_fields,
+    mito_contig_filter,
 )
 
 DATASET_TYPES = 'dataset_types'
+FILTER = 'filter'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
@@ -61,6 +64,12 @@ class BaseReferenceDataset:
             return hl.Struct(**self.enums)
         return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
 
+    @property
+    def filter(  # noqa: A003
+        self,
+    ) -> Callable[[DatasetType, ReferenceGenome, hl.Table], hl.Expression] | None:
+        return CONFIG[self].get(FILTER)
+
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
 
@@ -77,6 +86,9 @@ class BaseReferenceDataset:
         if enum_selects:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
+        # NB: we do not filter with "filter" here
+        # ReferenceDatasets are DatasetType agnoistic and that
+        # filter is only used at annotation time.
         return ht.annotate_globals(
             version=self.version(reference_genome),
             enums=self.enum_globals,
@@ -119,12 +131,15 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
     def get_ht(
         self,
         reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
         reference_dataset_ht: hl.Table,
     ) -> hl.Table:
         module = importlib.import_module(
             f'v03_pipeline.lib.reference_datasets.{self.name}',
         )
         ht = module.get_ht(reference_dataset_ht)
+        if self.filter:
+            ht = ht.filter(self.filter(reference_genome, dataset_type, ht))
         return ht.annotate_globals(
             version=self.version(reference_genome),
         )
@@ -135,6 +150,7 @@ CONFIG = {
         ENUMS: {
             'MutationTaster_pred': ['D', 'A', 'N', 'P'],
         },
+        FILTER: mito_contig_filter,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -162,6 +178,7 @@ CONFIG = {
     },
     ReferenceDataset.clinvar: {
         ENUMS: clinvar.ENUMS,
+        FILTER: mito_contig_filter,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: clinvar.parse_clinvar_release_date,

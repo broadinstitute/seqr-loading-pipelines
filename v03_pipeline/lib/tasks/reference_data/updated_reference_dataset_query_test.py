@@ -93,6 +93,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
         self.assertTrue(hasattr(clinvar_ht, 'submitters'))
         clinvar_path_ht_path = valid_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
             ReferenceDatasetQuery.clinvar_path_variants,
         )
         clinvar_path_ht = hl.read_table(clinvar_path_ht_path)
@@ -126,6 +127,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             self.assertTrue(task.complete())
         high_af_variants_ht_path = valid_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
             ReferenceDatasetQuery.high_af_variants,
         )
         high_af_variants_ht = hl.read_table(high_af_variants_ht_path)
