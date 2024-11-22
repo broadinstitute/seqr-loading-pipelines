@@ -80,5 +80,5 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
 
 def select(_: ReferenceGenome, dataset_type: DatasetType, ht: hl.Table) -> hl.Table:
     if dataset_type == DatasetType.MITO:
-        return ht.select(dbnsfp_ht.SIFT_score, dbnsfp_ht.MutationTaster_pred_id)
+        return ht.select(ht.SIFT_score, ht.MutationTaster_pred_id)
     return ht
