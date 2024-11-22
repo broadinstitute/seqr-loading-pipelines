@@ -53,7 +53,7 @@ def filter_mito_contigs(
 ) -> hl.Table:
     if dataset_type == DatasetType.MITO:
         return ht.filter(ht.locus.contig == reference_genome.mito_contig)
-    return ht.filter(ht.locus.contig == reference_genome.mito_contig)
+    return ht.filter(ht.locus.contig != reference_genome.mito_contig)
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):

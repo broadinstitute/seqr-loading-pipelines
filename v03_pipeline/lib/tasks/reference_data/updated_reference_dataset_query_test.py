@@ -91,6 +91,13 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             '2024-11-11',
         )
         self.assertTrue(hasattr(clinvar_ht, 'submitters'))
+        contigs = clinvar_ht.aggregate(hl.agg.collect_as_set(clinvar_ht.locus.contig))
+        self.assertTrue(
+            'chr1' in contigs,
+        )
+        self.assertTrue(
+            'chrM' in contigs,
+        )
         clinvar_path_ht_path = valid_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -102,6 +109,62 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             '2024-11-11',
         )
         self.assertTrue(hasattr(clinvar_path_ht, 'is_likely_pathogenic'))
+        contigs = clinvar_path_ht.aggregate(
+            hl.agg.collect_as_set(clinvar_path_ht.locus.contig),
+        )
+        self.assertTrue(
+            'chr1' in contigs,
+        )
+        self.assertFalse(
+            'chrM' in contigs,
+        )
+
+    @responses.activate
+    def test_updated_clinvar_query_and_dependency_mito(
+        self,
+    ) -> None:
+        with mock_clinvar_urls():
+            worker = luigi.worker.Worker()
+            task = UpdatedReferenceDatasetQueryTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.MITO,
+                reference_dataset_query=ReferenceDatasetQuery.clinvar_path_variants,
+                sample_type=SampleType.WGS,
+                callset_path='',
+                project_guids=[],
+                project_remap_paths=[],
+                project_pedigree_paths=[],
+                skip_validation=True,
+                run_id='1',
+            )
+            worker.add(task)
+            worker.run()
+            self.assertTrue(task.complete())
+        clinvar_ht = hl.read_table(
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.clinvar,
+            ),
+        )
+        self.assertEqual(
+            hl.eval(clinvar_ht.version),
+            '2024-11-11',
+        )
+        clinvar_path_ht_path = valid_reference_dataset_query_path(
+            ReferenceGenome.GRCh38,
+            DatasetType.MITO,
+            ReferenceDatasetQuery.clinvar_path_variants,
+        )
+        clinvar_path_ht = hl.read_table(clinvar_path_ht_path)
+        contigs = clinvar_path_ht.aggregate(
+            hl.agg.collect_as_set(clinvar_path_ht.locus.contig),
+        )
+        self.assertFalse(
+            'chr1' in contigs,
+        )
+        self.assertTrue(
+            'chrM' in contigs,
+        )
 
     def test_updated_query_high_af_variants(self) -> None:
         with patch.object(

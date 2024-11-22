@@ -1,6 +1,8 @@
 import gzip
+import tempfile
 from contextlib import contextmanager
 
+import pysam
 import responses
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
@@ -17,11 +19,16 @@ CLINVAR_SUBMISSION_SUMMARY = (
 
 @contextmanager
 def mock_clinvar_urls():
-    with open(CLINVAR_VCF, 'rb') as f, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
+    with tempfile.NamedTemporaryFile(
+        suffix='.vcf.bgz',
+    ) as f1, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
         responses.add_passthru('http://localhost')
+        # pysam is being used as it was the cleanest way to
+        # get a bgzip formatted file :/
+        pysam.tabix_compress(CLINVAR_VCF, f1.name, force=True)
         responses.get(
             ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
-            body=gzip.compress(f.read()),
+            body=f1.read(),
         )
         responses.get(
             CLINVAR_SUBMISSION_SUMMARY_URL,
