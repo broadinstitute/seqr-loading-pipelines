@@ -11,6 +11,10 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
+from v03_pipeline.lib.test.mocked_reference_dataset_test_case import (
+    TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT,
+    TEST_SCREEN_38_HT,
+)
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
@@ -20,9 +24,6 @@ GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
 GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
     'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 )
-
-TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
-TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
 
 
 class FieldsTest(MockedDatarootTestCase):
