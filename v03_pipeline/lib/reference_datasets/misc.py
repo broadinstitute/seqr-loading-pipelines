@@ -2,7 +2,6 @@ import contextlib
 import os
 import tempfile
 import zipfile
-from collections.abc import Callable
 
 import hail as hl
 import requests
@@ -47,14 +46,14 @@ def get_enum_select_fields(
     return enum_select_fields
 
 
-def mito_contig_filter(
+def filter_mito_contigs(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     ht: hl.Table,
-) -> Callable[[DatasetType, ReferenceGenome, hl.Table], hl.Expression]:
+) -> hl.Table:
     if dataset_type == DatasetType.MITO:
-        return ht.locus.contig == reference_genome.mito_contig
-    return ht.locus.contig != reference_genome.mito_contig
+        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
+    return ht.filter(ht.locus.contig == reference_genome.mito_contig)
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):

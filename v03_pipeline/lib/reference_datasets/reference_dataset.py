@@ -9,8 +9,8 @@ from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGen
 from v03_pipeline.lib.reference_datasets import clinvar
 from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
+    filter_mito_contigs,
     get_enum_select_fields,
-    mito_contig_filter,
 )
 
 DATASET_TYPES = 'dataset_types'
@@ -139,7 +139,7 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
         )
         ht = module.get_ht(reference_dataset_ht)
         if self.filter:
-            ht = ht.filter(self.filter(reference_genome, dataset_type, ht))
+            ht = self.filter(reference_genome, dataset_type, ht)
         return ht.annotate_globals(
             version=self.version(reference_genome),
         )
@@ -150,7 +150,7 @@ CONFIG = {
         ENUMS: {
             'MutationTaster_pred': ['D', 'A', 'N', 'P'],
         },
-        FILTER: mito_contig_filter,
+        FILTER: filter_mito_contigs,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -178,7 +178,7 @@ CONFIG = {
     },
     ReferenceDataset.clinvar: {
         ENUMS: clinvar.ENUMS,
-        FILTER: mito_contig_filter,
+        FILTER: filter_mito_contigs,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: clinvar.parse_clinvar_release_date,
