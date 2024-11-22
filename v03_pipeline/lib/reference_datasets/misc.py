@@ -7,6 +7,7 @@ import hail as hl
 import requests
 
 from v03_pipeline.lib.misc.io import split_multi_hts
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 BIALLELIC = 2
@@ -43,6 +44,16 @@ def get_enum_select_fields(
         else:
             enum_select_fields[f'{field_name}_id'] = lookup[ht[field_name]]
     return enum_select_fields
+
+
+def filter_mito_contigs(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    ht: hl.Table,
+) -> hl.Table:
+    if dataset_type == DatasetType.MITO:
+        return ht.filter(ht.locus.contig == reference_genome.mito_contig)
+    return ht.filter(ht.locus.contig != reference_genome.mito_contig)
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):

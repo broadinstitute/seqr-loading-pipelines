@@ -39,6 +39,7 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
         return GCSorLocalTarget(
             valid_reference_dataset_query_path(
                 self.reference_genome,
+                self.dataset_type,
                 self.reference_dataset_query,
             ),
         )
@@ -46,5 +47,6 @@ class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
     def create_table(self):
         return self.reference_dataset_query.get_ht(
             self.reference_genome,
+            self.dataset_type,
             hl.read_table(self.input().path),
         )
