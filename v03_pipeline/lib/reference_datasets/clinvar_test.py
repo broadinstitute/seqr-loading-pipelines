@@ -131,7 +131,7 @@ class ClinvarTest(unittest.TestCase):
                         goldStars=1,
                         submitters=None,
                         conditions=None,
-                        pathogenicity_id=14,
+                        pathogenicity_id=0,
                         assertion_ids=[],
                     ),
                     hl.Struct(
