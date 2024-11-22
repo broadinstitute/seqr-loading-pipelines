@@ -7,7 +7,10 @@ import responses
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleType
-from v03_pipeline.lib.paths import valid_reference_dataset_path
+from v03_pipeline.lib.paths import (
+    valid_reference_dataset_path,
+    valid_reference_dataset_query_path,
+)
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
     ReferenceDatasetQuery,
@@ -88,12 +91,11 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             '2024-11-11',
         )
         self.assertTrue(hasattr(clinvar_ht, 'submitters'))
-        clinvar_path_ht_path = valid_reference_dataset_path(
+        clinvar_path_ht_path = valid_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
             ReferenceDatasetQuery.clinvar_path_variants,
         )
         clinvar_path_ht = hl.read_table(clinvar_path_ht_path)
-        self.assertTrue('2024-11-11' in clinvar_path_ht_path)
         self.assertEqual(
             hl.eval(clinvar_path_ht.version),
             '2024-11-11',
@@ -122,12 +124,11 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
             worker.add(task)
             worker.run()
             self.assertTrue(task.complete())
-        high_af_variants_ht_path = valid_reference_dataset_path(
+        high_af_variants_ht_path = valid_reference_dataset_query_path(
             ReferenceGenome.GRCh38,
             ReferenceDatasetQuery.high_af_variants,
         )
         high_af_variants_ht = hl.read_table(high_af_variants_ht_path)
-        self.assertTrue('1.0' in high_af_variants_ht_path)
         self.assertEqual(
             hl.eval(high_af_variants_ht.version),
             '1.0',
