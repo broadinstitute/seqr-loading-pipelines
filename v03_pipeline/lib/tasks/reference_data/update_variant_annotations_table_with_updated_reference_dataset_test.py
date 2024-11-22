@@ -107,7 +107,7 @@ BASE_ENUMS = {
 }
 
 
-class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
+class UpdateVATWithUpdatedReferenceDatasets(MockedDatarootTestCase):
     @responses.activate
     def setUp(self) -> None:
         super().setUp()
@@ -642,14 +642,6 @@ class UpdateVATWithUpdatedRDC(MockedDatarootTestCase):
                         dbnsfp=hl.Struct(
                             SIFT_score=None,
                             MutationTaster_pred_id=2,
-                            REVEL_score=None,
-                            Polyphen2_HVAR_score=None,
-                            VEST4_score=None,
-                            MutPred_score=None,
-                            fathmm_MKL_coding_score=None,
-                            MPC_score=None,
-                            CADD_phred=None,
-                            PrimateAI_score=None,
                         ),
                     ),
                 ],

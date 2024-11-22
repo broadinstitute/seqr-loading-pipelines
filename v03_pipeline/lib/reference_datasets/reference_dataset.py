@@ -6,7 +6,7 @@ from typing import Union
 import hail as hl
 
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
-from v03_pipeline.lib.reference_datasets import clinvar
+from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
     get_enum_select_fields,
@@ -18,6 +18,7 @@ RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
 IS_INTERVAL = 'is_interval'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
+CUSTOM_SELECT = 'custom_select'
 
 
 class BaseReferenceDataset:
@@ -66,6 +67,15 @@ class BaseReferenceDataset:
     @property
     def is_keyed_by_interval(self):
         return CONFIG[self].get(IS_INTERVAL, False)
+
+    def custom_select(
+        self,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+        ht: hl.Table,
+    ) -> hl.Table:
+        custom_select_fn = CONFIG[self].get(reference_genome, {}).get(CUSTOM_SELECT)
+        return custom_select_fn(dataset_type, ht) if custom_select_fn else ht
 
     @property
     def access_control(self) -> AccessControl:
@@ -175,6 +185,7 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+            CUSTOM_SELECT: dbnsfp.custom_select,
         },
     },
     ReferenceDataset.eigen: {

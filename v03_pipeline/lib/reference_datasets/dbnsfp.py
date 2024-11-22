@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
     download_zip_file,
     key_by_locus_alleles,
@@ -76,3 +76,10 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
         ht = ht.rename(**rename)
 
         return key_by_locus_alleles(ht, reference_genome)
+
+
+def custom_select(dataset_type: DatasetType, dbnsfp_ht: hl.Table) -> hl.Table:
+    if dataset_type != DatasetType.MITO:
+        return dbnsfp_ht
+
+    return dbnsfp_ht.select(dbnsfp_ht.SIFT_score, dbnsfp_ht.MutationTaster_pred_id)
