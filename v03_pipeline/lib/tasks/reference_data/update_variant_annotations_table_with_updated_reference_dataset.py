@@ -93,11 +93,18 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                     ),
                 )
             else:
-                reference_dataset_ht = reference_dataset.custom_select(
-                    self.reference_genome,
-                    self.dataset_type,
-                    reference_dataset_ht,
-                )
+                if reference_dataset.select:
+                    reference_dataset_ht = reference_dataset.select(
+                        self.reference_genome,
+                        self.dataset_type,
+                        reference_dataset_ht,
+                    )
+                if reference_dataset.filter:
+                    reference_dataset_ht = reference_dataset.filter(
+                        self.reference_genome,
+                        self.dataset_type,
+                        reference_dataset_ht,
+                    )
                 reference_dataset_ht = reference_dataset_ht.select(
                     **{
                         f'{reference_dataset.name}': hl.Struct(

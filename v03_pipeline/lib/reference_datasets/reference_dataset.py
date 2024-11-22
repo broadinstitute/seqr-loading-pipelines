@@ -16,12 +16,12 @@ from v03_pipeline.lib.reference_datasets.misc import (
 
 DATASET_TYPES = 'dataset_types'
 FILTER = 'filter'
+SELECT = 'select'
 VERSION = 'version'
 RAW_DATASET_PATH = 'raw_dataset_path'
 ENUMS = 'enums'
 IS_INTERVAL = 'is_interval'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
-CUSTOM_SELECT = 'custom_select'
 
 
 class BaseReferenceDataset:
@@ -71,15 +71,6 @@ class BaseReferenceDataset:
     def is_keyed_by_interval(self):
         return CONFIG[self].get(IS_INTERVAL, False)
 
-    def custom_select(
-        self,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-        ht: hl.Table,
-    ) -> hl.Table:
-        custom_select_fn = CONFIG[self].get(reference_genome, {}).get(CUSTOM_SELECT)
-        return custom_select_fn(dataset_type, ht) if custom_select_fn else ht
-
     @property
     def access_control(self) -> AccessControl:
         if self == ReferenceDataset.hgmd:
@@ -107,8 +98,14 @@ class BaseReferenceDataset:
     @property
     def filter(  # noqa: A003
         self,
-    ) -> Callable[[DatasetType, ReferenceGenome, hl.Table], hl.Expression] | None:
+    ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
         return CONFIG[self].get(FILTER)
+
+    @property
+    def select(
+        self,
+    ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
+        return CONFIG[self].get(SELECT)
 
     def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][RAW_DATASET_PATH]
@@ -192,6 +189,7 @@ CONFIG = {
             'MutationTaster_pred': ['D', 'A', 'N', 'P'],
         },
         FILTER: filter_mito_contigs,
+        SELECT: dbnsfp.select,
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -201,7 +199,6 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
             RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
-            CUSTOM_SELECT: dbnsfp.custom_select,
         },
     },
     ReferenceDataset.eigen: {
