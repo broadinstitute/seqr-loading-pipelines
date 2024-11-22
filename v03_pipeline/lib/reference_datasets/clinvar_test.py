@@ -15,11 +15,6 @@ from v03_pipeline.lib.reference_datasets.clinvar import (
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 
-CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf.gz'
-CLINVAR_SUBMISSION_SUMMARY = (
-    'v03_pipeline/var/test/reference_data/submission_summary.txt.gz'
-)
-
 
 class ClinvarTest(unittest.TestCase):
     @responses.activate
@@ -136,7 +131,7 @@ class ClinvarTest(unittest.TestCase):
                         goldStars=1,
                         submitters=None,
                         conditions=None,
-                        pathogenicity_id=14,
+                        pathogenicity_id=0,
                         assertion_ids=[],
                     ),
                     hl.Struct(
