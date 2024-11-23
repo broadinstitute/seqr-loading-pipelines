@@ -6,9 +6,9 @@ from v03_pipeline.lib.reference_datasets.misc import (
 )
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = hl.import_table(
-        raw_dataset_path,
+        path,
         types={
             'start': hl.tint32,
             'end': hl.tint32,

@@ -169,7 +169,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
     def test_updated_query_high_af_variants(self) -> None:
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=GNOMAD_GENOMES_38_PATH,
         ):
             worker = luigi.worker.Worker()

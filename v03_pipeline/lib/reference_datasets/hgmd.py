@@ -3,9 +3,9 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     mt = hl.import_vcf(
-        raw_dataset_path,
+        path,
         reference_genome=reference_genome.value,
         force=True,
         skip_invalid_loci=True,

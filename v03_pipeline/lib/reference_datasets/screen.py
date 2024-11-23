@@ -11,12 +11,12 @@ from v03_pipeline.lib.reference_datasets.misc import (
 
 
 # Adapted from download_and_create_reference_datasets/v02/hail_scripts/write_ccREs_ht.py
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     with tempfile.NamedTemporaryFile(
         suffix='.bed',
         delete=False,
     ) as tmp_file, requests.get(
-        raw_dataset_path,
+        path,
         stream=True,
         timeout=10,
     ) as r:

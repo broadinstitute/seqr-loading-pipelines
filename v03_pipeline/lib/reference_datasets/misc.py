@@ -57,6 +57,12 @@ def filter_mito_contigs(
 
 
 def filter_contigs(ht, reference_genome: ReferenceGenome):
+    if hasattr(ht, 'interval'):
+        return ht.filter(
+            hl.set(reference_genome.standard_contigs).contains(
+                ht.interval.start.contig
+            ),
+        )
     return ht.filter(
         hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
     )
