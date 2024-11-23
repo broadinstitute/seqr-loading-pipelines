@@ -15,13 +15,23 @@ from v03_pipeline.lib.reference_datasets.misc import (
 )
 
 DATASET_TYPES = 'dataset_types'
+<<<<<<< HEAD
+=======
+FILTER = 'filter'
+SELECT = 'select'
+VERSION = 'version'
+RAW_DATASET_PATH = 'raw_dataset_path'
+>>>>>>> 2f90b768dfea510608a15295d265bc73078a7b51
 ENUMS = 'enums'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
+<<<<<<< HEAD
 FILTER = 'filter'
 IS_INTERVAL = 'is_interval'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
+=======
+>>>>>>> 2f90b768dfea510608a15295d265bc73078a7b51
 
 
 class BaseReferenceDataset:
@@ -99,8 +109,13 @@ class BaseReferenceDataset:
     ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
         return CONFIG[self].get(SELECT)
 
+<<<<<<< HEAD
     def path(self, reference_genome: ReferenceGenome) -> str | list[str]:
         return CONFIG[self][reference_genome][PATH]
+=======
+    def raw_dataset_path(self, reference_genome: ReferenceGenome) -> str | list[str]:
+        return CONFIG[self][reference_genome][RAW_DATASET_PATH]
+>>>>>>> 2f90b768dfea510608a15295d265bc73078a7b51
 
     def get_ht(
         self,
@@ -189,7 +204,11 @@ CONFIG = {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL, DatasetType.MITO]),
             VERSION: '1.0',
+<<<<<<< HEAD
             PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+=======
+            RAW_DATASET_PATH: 'https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip',
+>>>>>>> 2f90b768dfea510608a15295d265bc73078a7b51
         },
     },
     ReferenceDataset.eigen: {
