@@ -78,8 +78,7 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
         return key_by_locus_alleles(ht, reference_genome)
 
 
-def custom_select(dataset_type: DatasetType, dbnsfp_ht: hl.Table) -> hl.Table:
-    if dataset_type != DatasetType.MITO:
-        return dbnsfp_ht
-
-    return dbnsfp_ht.select(dbnsfp_ht.SIFT_score, dbnsfp_ht.MutationTaster_pred_id)
+def select(_: ReferenceGenome, dataset_type: DatasetType, ht: hl.Table) -> hl.Table:
+    if dataset_type == DatasetType.MITO:
+        return ht.select(ht.SIFT_score, ht.MutationTaster_pred_id)
+    return ht
