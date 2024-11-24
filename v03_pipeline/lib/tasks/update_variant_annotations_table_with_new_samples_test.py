@@ -79,7 +79,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
-    MockedReferenceDatasetsTestCase
+    MockedReferenceDatasetsTestCase,
 ):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
