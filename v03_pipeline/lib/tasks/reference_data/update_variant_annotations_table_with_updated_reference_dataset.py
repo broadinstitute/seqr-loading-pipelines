@@ -36,7 +36,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         }
         if not super().complete():
             self._datasets_to_update = reference_dataset_names
-            return not self._datasets_to_update
+            return False
         # Find datasets with mismatched versions
         annotation_ht_versions = dict(
             hl.eval(hl.read_table(self.output().path).globals.versions),
