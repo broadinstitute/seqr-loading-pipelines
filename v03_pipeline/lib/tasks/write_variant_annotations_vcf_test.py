@@ -1,4 +1,3 @@
-import unittest
 from unittest.mock import Mock, patch
 
 import hailtop.fs as hfs
@@ -37,23 +36,20 @@ GENE_ID_MAPPING = {
 }
 
 
-@unittest.skip(
-    'Temporarily disabled until reference data refactor for writing new variants is complete',
-)
 class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
     @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdateCachedReferenceDatasetQueries',
+        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
     )
     def test_sv_export_vcf(
         self,
-        mock_update_crdqs_task: Mock,
+        mock_rd_query_task: Mock,
         mock_load_gencode: Mock,
     ) -> None:
         mock_load_gencode.return_value = GENE_ID_MAPPING
-        mock_update_crdqs_task.return_value = MockCompleteTask()
+        mock_rd_query_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
