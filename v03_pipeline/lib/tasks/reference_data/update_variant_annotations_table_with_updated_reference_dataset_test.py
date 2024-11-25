@@ -19,7 +19,6 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
@@ -68,13 +67,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -137,13 +129,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -295,13 +280,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -430,13 +408,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh37,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
