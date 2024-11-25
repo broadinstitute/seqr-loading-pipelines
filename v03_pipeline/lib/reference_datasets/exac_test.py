@@ -6,7 +6,7 @@ import hail as hl
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-EXAC_PATH = 'v03_pipeline/var/test/reference_data/exac_1.vcf'
+EXAC_PATH = 'v03_pipeline/var/test/reference_datasets/raw/exac.vcf'
 
 
 class ExacTest(unittest.TestCase):

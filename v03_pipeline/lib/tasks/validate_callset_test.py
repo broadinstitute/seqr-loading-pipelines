@@ -21,7 +21,7 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_CODING_AND_NONCODING_HT = (
-    'v03_pipeline/var/test/reference_data/gnomad_coding_and_noncoding_38.ht'
+    'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_coding_and_noncoding/1.0.ht'
 )
 MULTIPLE_VALIDATION_EXCEPTIONS_VCF = (
     'v03_pipeline/var/test/callsets/multiple_validation_exceptions.vcf'

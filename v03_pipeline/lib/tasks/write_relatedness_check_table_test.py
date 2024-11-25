@@ -21,7 +21,7 @@ from v03_pipeline.lib.tasks.write_relatedness_check_table import (
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-TEST_GNOMAD_QC_HT = 'v03_pipeline/var/test/reference_data/gnomad_qc_38.ht'
+TEST_GNOMAD_QC_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_qc/1.0.ht'
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_RUN_ID = 'manual__2024-04-03'
 

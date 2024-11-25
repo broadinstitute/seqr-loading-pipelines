@@ -13,7 +13,6 @@ SELECT = {
 }
 
 
-# adapted from download_and_create_reference_datasets/v02/create_ht__topmed.py
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = vcf_to_ht(path, reference_genome)
     return ht.select(

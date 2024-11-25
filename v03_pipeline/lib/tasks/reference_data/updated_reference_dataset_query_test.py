@@ -21,7 +21,9 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query impor
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
-GNOMAD_GENOMES_38_PATH = 'v03_pipeline/var/test/reference_data/gnomad_genomes_38.ht'
+GNOMAD_GENOMES_38_PATH = (
+    'v03_pipeline/var/test/reference_datasets/raw/gnomad_genomes_38.ht'
+)
 
 
 class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):

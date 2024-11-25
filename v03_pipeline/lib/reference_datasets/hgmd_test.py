@@ -6,7 +6,7 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-TEST_HGMD_VCF = 'v03_pipeline/var/test/reference_data/test_hgmd.vcf'
+TEST_HGMD_VCF = 'v03_pipeline/var/test/reference_datasets/raw/test_hgmd.vcf'
 
 
 class HGMDTest(unittest.TestCase):

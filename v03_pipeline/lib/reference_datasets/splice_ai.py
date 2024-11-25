@@ -4,7 +4,6 @@ from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 
-# adapted from download_and_create_reference_datasets/v02/hail_scripts/write_splice_ai.py
 def get_ht(
     paths: list[str],
     reference_genome: ReferenceGenome,
