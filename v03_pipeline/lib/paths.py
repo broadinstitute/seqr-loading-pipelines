@@ -4,11 +4,9 @@ import re
 
 from v03_pipeline.lib.model import (
     AccessControl,
-    CachedReferenceDatasetQuery,
     DatasetType,
     Env,
     PipelineVersion,
-    ReferenceDatasetCollection,
     ReferenceGenome,
     SampleType,
 )
@@ -79,22 +77,6 @@ def _v03_reference_dataset_prefix(
     return os.path.join(
         root,
         reference_genome.value,
-    )
-
-
-def cached_reference_dataset_query_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    cached_reference_dataset_query: CachedReferenceDatasetQuery,
-) -> str:
-    return os.path.join(
-        _v03_reference_data_prefix(
-            AccessControl.PUBLIC,
-            reference_genome,
-            dataset_type,
-        ),
-        'cached_reference_dataset_queries',
-        f'{cached_reference_dataset_query.value}.ht',
     )
 
 
@@ -305,27 +287,6 @@ def valid_filters_path(
         'part_one_outputs/.*$',
         'part_two_outputs/*.filtered.*.vcf.gz',
         callset_path,
-    )
-
-
-def valid_reference_dataset_collection_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    reference_dataset_collection: ReferenceDatasetCollection,
-) -> str | None:
-    if (
-        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
-        and reference_dataset_collection.access_control == AccessControl.PRIVATE
-    ):
-        return None
-    return os.path.join(
-        _v03_reference_data_prefix(
-            reference_dataset_collection.access_control,
-            reference_genome,
-            dataset_type,
-        ),
-        'reference_datasets',
-        f'{reference_dataset_collection.value}.ht',
     )
 
 
