@@ -116,7 +116,7 @@ class BaseReferenceDataset:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
         # NB: we do not filter with "filter" here
-        # ReferenceDatasets are DatasetType agnoistic and that
+        # ReferenceDatasets are DatasetType agnostic and that
         # filter is only used at annotation time.
         return ht.annotate_globals(
             version=self.version(reference_genome),

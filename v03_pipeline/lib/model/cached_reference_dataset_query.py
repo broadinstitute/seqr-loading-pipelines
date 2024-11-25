@@ -8,7 +8,7 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.model.reference_dataset_collection import (
     ReferenceDatasetCollection,
 )
-from v03_pipeline.lib.reference_data.queries import (
+from v03_pipeline.lib.reference_datasets.queries import (
     clinvar_path_variants,
     gnomad_coding_and_noncoding_variants,
     gnomad_qc,

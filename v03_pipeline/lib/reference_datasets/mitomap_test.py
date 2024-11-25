@@ -6,7 +6,7 @@ import hail as hl
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-TEST_MITOMAP_CSV = 'v03_pipeline/var/test/reference_data/test_mitomap.csv'
+TEST_MITOMAP_CSV = 'v03_pipeline/var/test/reference_datasets/raw/test_mitomap.csv'
 
 
 class MitomapTest(unittest.TestCase):

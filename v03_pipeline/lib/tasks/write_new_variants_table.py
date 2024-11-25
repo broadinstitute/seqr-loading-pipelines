@@ -17,7 +17,7 @@ from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
+from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )

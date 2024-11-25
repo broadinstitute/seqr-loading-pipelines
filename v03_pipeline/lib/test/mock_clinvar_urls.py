@@ -11,9 +11,9 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
 )
 
-CLINVAR_VCF = 'v03_pipeline/var/test/reference_data/clinvar.vcf'
+CLINVAR_VCF = 'v03_pipeline/var/test/reference_datasets/raw/clinvar.vcf'
 CLINVAR_SUBMISSION_SUMMARY = (
-    'v03_pipeline/var/test/reference_data/submission_summary.txt'
+    'v03_pipeline/var/test/reference_datasets/raw/submission_summary.txt'
 )
 
 

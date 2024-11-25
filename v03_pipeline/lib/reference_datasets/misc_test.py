@@ -5,7 +5,7 @@ import hail as hl
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import get_enum_select_fields, vcf_to_ht
 
-EXAC_PATH = 'v03_pipeline/var/test/reference_data/exac_1.vcf'
+EXAC_PATH = 'v03_pipeline/var/test/reference_datasets/raw/exac.vcf'
 
 
 class MiscTest(unittest.TestCase):

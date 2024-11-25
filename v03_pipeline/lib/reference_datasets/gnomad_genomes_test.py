@@ -6,8 +6,8 @@ import hail as hl
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-GNOMAD_GENOMES_37_PATH = 'v03_pipeline/var/test/reference_data/gnomad_genomes_37.ht'
-GNOMAD_GENOMES_38_PATH = 'v03_pipeline/var/test/reference_data/gnomad_genomes_38.ht'
+GNOMAD_GENOMES_37_PATH = 'v03_pipeline/var/test/reference_datasets/raw/gnomad_genomes_37.ht'
+GNOMAD_GENOMES_38_PATH = 'v03_pipeline/var/test/reference_datasets/raw/gnomad_genomes_38.ht'
 
 
 class GnomadTest(unittest.TestCase):
