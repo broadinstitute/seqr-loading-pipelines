@@ -4,9 +4,9 @@ from v03_pipeline.lib.model import ReferenceGenome
 
 
 # adapted from download_and_create_reference_datasets/v02/mito/write_mito_mitomap_ht.py
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = hl.import_table(
-        raw_dataset_path,
+        path,
         delimiter=',',
         quote='"',
         types={'Position': hl.tint32},

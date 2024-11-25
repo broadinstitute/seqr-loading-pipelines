@@ -6,6 +6,8 @@ import responses
 
 from v03_pipeline.lib.annotations.enums import (
     BIOTYPES,
+    CLINVAR_ASSERTIONS,
+    CLINVAR_PATHOGENICITIES,
     FIVEUTR_CONSEQUENCES,
     LOF_FILTERS,
     MITOTIP_PATHOGENICITIES,
@@ -17,7 +19,6 @@ from v03_pipeline.lib.annotations.enums import (
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
-    SampleType,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
@@ -28,9 +29,8 @@ from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
 )
 from v03_pipeline.lib.test.mock_clinvar_urls import mock_clinvar_urls
-from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
-from v03_pipeline.lib.test.mocked_reference_dataset_test_case import (
-    MockedReferenceDataTestCase,
+from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
+    MockedReferenceDatasetsTestCase,
 )
 
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
@@ -56,23 +56,17 @@ BASE_ENUMS = {
 }
 
 
-class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
+class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
+    @responses.activate
     def test_create_empty_annotations_table(self):
         with patch.object(
             BaseReferenceDataset,
-            '_for_reference_genome_dataset_type',
-            return_value=[],
-        ):
+            'for_reference_genome_dataset_type_annotations',
+            return_value=[ReferenceDataset.clinvar],
+        ), mock_clinvar_urls(ReferenceGenome.GRCh38):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -85,8 +79,14 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
                 ht.globals.collect(),
                 [
                     hl.Struct(
-                        versions=hl.Struct(),
-                        enums=hl.Struct(**BASE_ENUMS),
+                        versions=hl.Struct(clinvar='2024-11-11'),
+                        enums=hl.Struct(
+                            clinvar=hl.Struct(
+                                assertion=CLINVAR_ASSERTIONS,
+                                pathogenicity=CLINVAR_PATHOGENICITIES,
+                            ),
+                            **BASE_ENUMS,
+                        ),
                         migrations=[],
                         updates=set(),
                     ),
@@ -97,21 +97,10 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetTask',
-    )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
-    )
     def test_update_vat_snv_indel_38(
         self,
-        mock_rd_query_task,
-        mock_rd_task,
         mock_initialize_annotations_ht,
     ):
-        mock_rd_task.return_value = MockCompleteTask()
-        mock_rd_query_task.return_value = MockCompleteTask()
-
         mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -140,13 +129,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -266,21 +248,10 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetTask',
-    )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
-    )
     def test_update_vat_mito_38(
         self,
-        mock_rd_query_task,
-        mock_rd_task,
         mock_initialize_annotations_ht,
     ):
-        mock_rd_task.return_value = MockCompleteTask()
-        mock_rd_query_task.return_value = MockCompleteTask()
-
         mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -309,13 +280,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)
@@ -412,21 +376,10 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
     @patch(
         'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.BaseUpdateVariantAnnotationsTableTask.initialize_table',
     )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetTask',
-    )
-    @patch(
-        'v03_pipeline.lib.tasks.base.base_update_variant_annotations_table.UpdatedReferenceDatasetQueryTask',
-    )
     def test_update_vat_snv_indel_37(
         self,
-        mock_rd_query_task,
-        mock_rd_task,
         mock_initialize_annotations_ht,
     ):
-        mock_rd_task.return_value = MockCompleteTask()
-        mock_rd_query_task.return_value = MockCompleteTask()
-
         mock_initialize_annotations_ht.return_value = hl.Table.parallelize(
             [
                 hl.Struct(
@@ -455,13 +408,6 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDataTestCase):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh37,
                 dataset_type=DatasetType.SNV_INDEL,
-                sample_type=SampleType.WGS,
-                callset_path=TEST_SNV_INDEL_VCF,
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='3',
             )
             worker = luigi.worker.Worker()
             worker.add(task)

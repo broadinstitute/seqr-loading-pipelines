@@ -6,14 +6,16 @@ from v03_pipeline.lib.paths import valid_reference_dataset_query_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDatasetQuery,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
+)
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdatedReferenceDatasetQueryTask(BaseWriteTask):
     reference_dataset_query: ReferenceDatasetQuery = luigi.EnumParameter(
         enum=ReferenceDatasetQuery,
