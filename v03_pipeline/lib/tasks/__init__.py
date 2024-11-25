@@ -8,6 +8,9 @@ from v03_pipeline.lib.tasks.migrate_all_lookup_tables import MigrateAllLookupTab
 from v03_pipeline.lib.tasks.migrate_all_variant_annotations_tables import (
     MigrateAllVariantAnnotationsTablesTask,
 )
+from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
+    UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
+)
 from v03_pipeline.lib.tasks.update_lookup_table import (
     UpdateLookupTableTask,
 )
@@ -51,6 +54,7 @@ __all__ = [
     'UpdateVariantAnnotationsTableWithNewSamplesTask',
     'UpdateVariantAnnotationsTableWithDeletedProjectTask',
     'UpdateVariantAnnotationsTableWithDeletedFamiliesTask',
+    'UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     'WriteMetadataForRunTask',
     'WriteProjectFamilyTablesTask',
     'WriteSuccessFileTask',
