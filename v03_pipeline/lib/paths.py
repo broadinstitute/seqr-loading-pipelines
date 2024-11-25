@@ -4,13 +4,15 @@ import re
 
 from v03_pipeline.lib.model import (
     AccessControl,
-    CachedReferenceDatasetQuery,
     DatasetType,
     Env,
     PipelineVersion,
-    ReferenceDatasetCollection,
     ReferenceGenome,
     SampleType,
+)
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    ReferenceDataset,
+    ReferenceDatasetQuery,
 )
 
 
@@ -57,19 +59,24 @@ def _v03_reference_data_prefix(
     )
 
 
-def cached_reference_dataset_query_path(
+def _v03_reference_dataset_prefix(
+    access_control: AccessControl,
     reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    cached_reference_dataset_query: CachedReferenceDatasetQuery,
 ) -> str:
+    root = (
+        Env.PRIVATE_REFERENCE_DATASETS_DIR
+        if access_control == AccessControl.PRIVATE
+        else Env.REFERENCE_DATASETS_DIR
+    )
+    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+        return os.path.join(
+            root,
+            PipelineVersion.V3_1.value,
+            reference_genome.value,
+        )
     return os.path.join(
-        _v03_reference_data_prefix(
-            AccessControl.PUBLIC,
-            reference_genome,
-            dataset_type,
-        ),
-        'cached_reference_dataset_queries',
-        f'{cached_reference_dataset_query.value}.ht',
+        root,
+        reference_genome.value,
     )
 
 
@@ -283,24 +290,32 @@ def valid_filters_path(
     )
 
 
-def valid_reference_dataset_collection_path(
+def valid_reference_dataset_path(
+    reference_genome: ReferenceGenome,
+    reference_dataset: ReferenceDataset,
+) -> str | None:
+    return os.path.join(
+        _v03_reference_dataset_prefix(
+            reference_dataset.access_control,
+            reference_genome,
+        ),
+        f'{reference_dataset.value}',
+        f'{reference_dataset.version(reference_genome)}.ht',
+    )
+
+
+def valid_reference_dataset_query_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    reference_dataset_collection: ReferenceDatasetCollection,
+    reference_dataset_query: ReferenceDatasetQuery,
 ) -> str | None:
-    if (
-        not Env.ACCESS_PRIVATE_REFERENCE_DATASETS
-        and reference_dataset_collection.access_control == AccessControl.PRIVATE
-    ):
-        return None
     return os.path.join(
-        _v03_reference_data_prefix(
-            reference_dataset_collection.access_control,
+        _v03_reference_dataset_prefix(
+            reference_dataset_query.access_control,
             reference_genome,
-            dataset_type,
         ),
-        'reference_datasets',
-        f'{reference_dataset_collection.value}.ht',
+        dataset_type.value,
+        f'{reference_dataset_query.value}.ht',
     )
 
 

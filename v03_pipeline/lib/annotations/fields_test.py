@@ -6,32 +6,39 @@ import hail as hl
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import (
     DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
 )
-from v03_pipeline.lib.paths import valid_reference_dataset_collection_path
+from v03_pipeline.lib.paths import valid_reference_dataset_path
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-TEST_INTERVAL_1 = 'v03_pipeline/var/test/reference_data/test_interval_1.ht'
 GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
     'v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz'
 )
 GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
     'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 )
+TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
+TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
 
 
 class FieldsTest(MockedDatarootTestCase):
     def setUp(self) -> None:
         super().setUp()
         shutil.copytree(
-            TEST_INTERVAL_1,
-            valid_reference_dataset_collection_path(
+            TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT,
+            valid_reference_dataset_path(
                 ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                ReferenceDatasetCollection.INTERVAL,
+                ReferenceDataset.gnomad_non_coding_constraint,
+            ),
+        )
+        shutil.copytree(
+            TEST_SCREEN_38_HT,
+            valid_reference_dataset_path(
+                ReferenceGenome.GRCh38,
+                ReferenceDataset.screen,
             ),
         )
 
@@ -120,18 +127,17 @@ class FieldsTest(MockedDatarootTestCase):
                             reference_genome,
                         ),
                         **{
-                            f'{rdc.value}_ht': hl.read_table(
-                                valid_reference_dataset_collection_path(
+                            f'{reference_dataset}_ht': hl.read_table(
+                                valid_reference_dataset_path(
                                     reference_genome,
-                                    DatasetType.SNV_INDEL,
-                                    rdc,
+                                    reference_dataset,
                                 ),
                             )
-                            for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+                            for reference_dataset in ReferenceDataset.for_reference_genome_dataset_type_annotations(
                                 reference_genome,
                                 DatasetType.SNV_INDEL,
                             )
-                            if rdc.requires_annotation
+                            if reference_dataset.is_keyed_by_interval
                         },
                         **(
                             {
