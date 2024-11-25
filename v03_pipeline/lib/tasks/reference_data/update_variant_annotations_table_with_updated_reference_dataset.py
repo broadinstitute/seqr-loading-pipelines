@@ -8,8 +8,8 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import (
-    BaseLoadingRunParams,
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
@@ -18,7 +18,7 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseUpdateVariantAnnotationsTableTask,
 ):
