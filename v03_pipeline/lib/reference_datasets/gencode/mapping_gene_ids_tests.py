@@ -3,7 +3,7 @@ import unittest
 
 import responses
 
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
+from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     GENCODE_ENSEMBL_TO_REFSEQ_URL,
     GENCODE_GTF_URL,
     load_gencode_ensembl_to_refseq_id,
