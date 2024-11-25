@@ -7,10 +7,9 @@ from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
-    ReferenceDatasetQuery,
 )
-from v03_pipeline.lib.tasks.base.base_loading_run_params import (
-    BaseLoadingRunParams,
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
@@ -19,60 +18,50 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingRunParams)
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseUpdateVariantAnnotationsTableTask,
 ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._datasets_to_update: list[ReferenceDataset | ReferenceDatasetQuery] = []
-        self._datasets_to_drop: list[str] = []
+        self._datasets_to_update: set[str] = set()
 
     def complete(self) -> bool:
-        self._datasets_to_update = []
-        self._datasets_to_drop = []
-
-        reference_datasets = (
-            BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+        reference_dataset_names = {
+            rd.name
+            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
                 self.reference_genome,
                 self.dataset_type,
             )
-        )
+        }
         if not super().complete():
-            self._datasets_to_update.extend(reference_datasets)
+            self._datasets_to_update = reference_dataset_names
             return False
-
+        # Find datasets with mismatched versions
         annotation_ht_versions = dict(
             hl.eval(hl.read_table(self.output().path).globals.versions),
         )
-
-        # Find datasets with mismatched versions
-        for dataset in reference_datasets:
-            if annotation_ht_versions.get(dataset.name) != dataset.version(
-                self.reference_genome,
-            ):
-                self._datasets_to_update.append(dataset)
-
-        if self._datasets_to_update:
-            logger.info(
-                f"Updating annotations for: {', '.join(d.name for d in self._datasets_to_update)}",
-            )
-
-        # Find datasets that are no longer valid and need to be dropped
-        self._datasets_to_drop.extend(
-            set(annotation_ht_versions.keys())
-            - {dataset.name for dataset in reference_datasets},
+        self._datasets_to_update = (
+            reference_dataset_names ^ annotation_ht_versions.keys()
         )
-        return not self._datasets_to_update and not self._datasets_to_drop
+        for dataset_name in reference_dataset_names & annotation_ht_versions.keys():
+            if (
+                ReferenceDataset(dataset_name).version(self.reference_genome)
+                != annotation_ht_versions[dataset_name]
+            ):
+                self._datasets_to_update.add(dataset_name)
+        logger.info(
+            f"Datasets to update: {', '.join(d for d in self._datasets_to_update)}",
+        )
+        return not self._datasets_to_update
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        for dataset in self._datasets_to_drop:
-            ht = ht.drop(dataset)
-
-        for reference_dataset in self._datasets_to_update:
-            if reference_dataset.name in ht.row:
-                ht = ht.drop(reference_dataset.name)
-
+        for dataset_name in self._datasets_to_update:
+            if dataset_name in ht.row:
+                ht = ht.drop(dataset_name)
+            if dataset_name not in set(ReferenceDataset):
+                continue
+            reference_dataset = ReferenceDataset(dataset_name)
             reference_dataset_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
             )

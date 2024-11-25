@@ -13,7 +13,7 @@ class HGMDTest(unittest.TestCase):
     def test_hgmd_38(self):
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=TEST_HGMD_VCF,
         ):
             ht = ReferenceDataset.hgmd.get_ht(ReferenceGenome.GRCh38)

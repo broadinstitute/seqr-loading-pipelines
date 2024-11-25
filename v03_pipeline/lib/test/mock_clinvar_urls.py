@@ -27,7 +27,7 @@ def mock_clinvar_urls(reference_genome=ReferenceGenome.GRCh38):
         # get a bgzip formatted file :/
         pysam.tabix_compress(CLINVAR_VCF, f1.name, force=True)
         responses.get(
-            ReferenceDataset.clinvar.raw_dataset_path(reference_genome),
+            ReferenceDataset.clinvar.path(reference_genome),
             body=f1.read(),
         )
         responses.get(

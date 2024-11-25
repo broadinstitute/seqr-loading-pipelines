@@ -14,7 +14,7 @@ class GnomadTest(unittest.TestCase):
     def test_gnomad_genomes_37(self):
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=GNOMAD_GENOMES_37_PATH,
         ):
             ht = ReferenceDataset.gnomad_genomes.get_ht(ReferenceGenome.GRCh37)
@@ -42,7 +42,7 @@ class GnomadTest(unittest.TestCase):
     def test_gnomad_genomes_38(self):
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=GNOMAD_GENOMES_38_PATH,
         ):
             ht = ReferenceDataset.gnomad_genomes.get_ht(ReferenceGenome.GRCh38)

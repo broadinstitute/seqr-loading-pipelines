@@ -6,7 +6,7 @@ import responses
 
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleType
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
     valid_reference_dataset_query_path,
@@ -69,13 +69,6 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
                 reference_dataset_query=ReferenceDatasetQuery.clinvar_path_variants,
-                sample_type=SampleType.WGS,
-                callset_path='',
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='1',
             )
             worker.add(task)
             worker.run()
@@ -129,13 +122,6 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.MITO,
                 reference_dataset_query=ReferenceDatasetQuery.clinvar_path_variants,
-                sample_type=SampleType.WGS,
-                callset_path='',
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='1',
             )
             worker.add(task)
             worker.run()
@@ -169,7 +155,7 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
     def test_updated_query_high_af_variants(self) -> None:
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=GNOMAD_GENOMES_38_PATH,
         ):
             worker = luigi.worker.Worker()
@@ -177,13 +163,6 @@ class UpdatedReferenceDatasetQueryTaskTest(MockedDatarootTestCase):
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,
                 reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
-                sample_type=SampleType.WGS,
-                callset_path='',
-                project_guids=[],
-                project_remap_paths=[],
-                project_pedigree_paths=[],
-                skip_validation=True,
-                run_id='2',
             )
             worker.add(task)
             worker.run()

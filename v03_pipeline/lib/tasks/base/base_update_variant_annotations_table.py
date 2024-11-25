@@ -31,9 +31,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
 
     def requires(self) -> list[luigi.Task]:
         reqs = []
-        for (
-            reference_dataset
-        ) in BaseReferenceDataset.for_reference_genome_dataset_type_all(
+        for reference_dataset in BaseReferenceDataset.for_reference_genome_dataset_type(
             self.reference_genome,
             self.dataset_type,
         ):

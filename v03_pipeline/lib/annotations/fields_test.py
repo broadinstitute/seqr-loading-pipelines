@@ -20,7 +20,6 @@ GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
 GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
     'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
 )
-
 TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
 TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
 

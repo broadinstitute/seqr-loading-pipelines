@@ -1,8 +1,8 @@
 import hail as hl
 
 
-def get_ht(raw_dataset_path: str, *_) -> hl.Table:
-    ht = hl.read_table(raw_dataset_path)
+def get_ht(path: str, *_) -> hl.Table:
+    ht = hl.read_table(path)
     ht = ht.select(
         AN=hl.int32(ht.AN),
         AC_hom=hl.int32(ht.AC_hom),

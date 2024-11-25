@@ -6,10 +6,10 @@ from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_splice_ai.py
 def get_ht(
-    raw_dataset_paths: list[str],
+    paths: list[str],
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    ht = vcf_to_ht(raw_dataset_paths, reference_genome)
+    ht = vcf_to_ht(paths, reference_genome)
 
     # SpliceAI INFO field description from the VCF header: SpliceAIv1.3 variant annotation. These include
     # delta scores (DS) and delta positions (DP) for acceptor gain (AG), acceptor loss (AL), donor gain (DG), and

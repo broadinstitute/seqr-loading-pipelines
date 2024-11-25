@@ -13,9 +13,9 @@ def af_popmax_expression(
     return ht.grpmax['gnomad'].AF
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     return _get_ht(
-        raw_dataset_path,
+        path,
         reference_genome,
         af_popmax_expression,
     )

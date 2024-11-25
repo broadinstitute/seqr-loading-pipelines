@@ -13,7 +13,7 @@ class MitomapTest(unittest.TestCase):
     def test_mitomap(self):
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=TEST_MITOMAP_CSV,
         ):
             ht = ReferenceDataset.mitomap.get_ht(ReferenceGenome.GRCh38)
