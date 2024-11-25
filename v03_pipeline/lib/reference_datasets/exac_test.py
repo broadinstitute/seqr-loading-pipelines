@@ -13,7 +13,7 @@ class ExacTest(unittest.TestCase):
     def test_exac(self):
         with patch.object(
             ReferenceDataset,
-            'raw_dataset_path',
+            'path',
             return_value=EXAC_PATH,
         ):
             ht = ReferenceDataset.exac.get_ht(ReferenceGenome.GRCh38)

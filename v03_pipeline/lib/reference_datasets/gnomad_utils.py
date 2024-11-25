@@ -22,11 +22,11 @@ def hemi_field(reference_genome: ReferenceGenome) -> str:
 
 
 def get_ht(
-    raw_dataset_path: str,
+    path: str,
     reference_genome: ReferenceGenome,
     af_popmax_expression: Callable,
 ) -> hl.Table:
-    ht = hl.read_table(raw_dataset_path)
+    ht = hl.read_table(path)
     global_idx = hl.eval(ht.globals.freq_index_dict[global_idx_field(reference_genome)])
     ht = ht.select(
         AF=hl.float32(ht.freq[global_idx].AF),

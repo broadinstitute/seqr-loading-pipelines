@@ -18,7 +18,7 @@ CLINVAR_SUBMISSION_SUMMARY = (
 
 
 @contextmanager
-def mock_clinvar_urls():
+def mock_clinvar_urls(reference_genome=ReferenceGenome.GRCh38):
     with tempfile.NamedTemporaryFile(
         suffix='.vcf.bgz',
     ) as f1, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
@@ -27,7 +27,7 @@ def mock_clinvar_urls():
         # get a bgzip formatted file :/
         pysam.tabix_compress(CLINVAR_VCF, f1.name, force=True)
         responses.get(
-            ReferenceDataset.clinvar.raw_dataset_path(ReferenceGenome.GRCh38),
+            ReferenceDataset.clinvar.path(reference_genome),
             body=f1.read(),
         )
         responses.get(

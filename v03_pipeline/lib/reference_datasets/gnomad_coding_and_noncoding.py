@@ -16,10 +16,10 @@ TRANSCRIPT_CONSEQUENCE_TERM_RANK_LOOKUP = hl.dict(
 
 
 def get_ht(
-    raw_dataset_path: str,
+    path: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    ht = hl.read_table(raw_dataset_path)
+    ht = hl.read_table(path)
     filtered_contig = 'chr1' if reference_genome == ReferenceGenome.GRCh38 else '1'
     ht = hl.filter_intervals(
         ht,

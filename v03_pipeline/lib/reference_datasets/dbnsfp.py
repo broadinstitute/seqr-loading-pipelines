@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.model import ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
     download_zip_file,
     key_by_locus_alleles,
@@ -56,11 +56,11 @@ def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
 
 
 # adapted from download_and_create_reference_datasets/v02/hail_scripts/write_dbnsfp_ht.py
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
 
-    with download_zip_file(raw_dataset_path) as unzipped_dir:
+    with download_zip_file(path) as unzipped_dir:
         ht = hl.import_table(
             f'{unzipped_dir}/dbNSFP*_variant.chr*.gz',
             types=types,
@@ -76,3 +76,9 @@ def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table
         ht = ht.rename(**rename)
 
         return key_by_locus_alleles(ht, reference_genome)
+
+
+def select(_: ReferenceGenome, dataset_type: DatasetType, ht: hl.Table) -> hl.Table:
+    if dataset_type == DatasetType.MITO:
+        return ht.select(ht.SIFT_score, ht.MutationTaster_pred_id)
+    return ht

@@ -15,8 +15,8 @@ SELECT = {
 }
 
 
-def get_ht(raw_dataset_path: str, reference_genome: ReferenceGenome) -> hl.Table:
-    ht = vcf_to_ht(raw_dataset_path, reference_genome, split_multi=True)
+def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
+    ht = vcf_to_ht(path, reference_genome, split_multi=True)
     return ht.select(
         **{k: parse_nested_field(ht, v) for k, v in SELECT.items()},
     )
