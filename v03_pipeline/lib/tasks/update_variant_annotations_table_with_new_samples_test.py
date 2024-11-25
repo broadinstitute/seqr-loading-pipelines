@@ -81,6 +81,7 @@ TEST_RUN_ID = 'manual__2024-04-03'
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
+    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -88,23 +89,25 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_update_vat_with_rdc_task,
     ) -> None:
-        mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=['bad_pedigree'],
-            skip_validation=True,
-            run_id=TEST_RUN_ID,
-        )
-        worker = luigi.worker.Worker()
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertFalse(uvatwns_task.complete())
+        with mock_clinvar_urls():
+            mock_update_vat_with_rdc_task.return_value = MockCompleteTask()
+            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SNV_INDEL_VCF,
+                project_guids=['R0113_test_project'],
+                project_remap_paths=[TEST_REMAP],
+                project_pedigree_paths=['bad_pedigree'],
+                skip_validation=True,
+                run_id=TEST_RUN_ID,
+            )
+            worker = luigi.worker.Worker()
+            worker.add(uvatwns_task)
+            worker.run()
+            self.assertFalse(uvatwns_task.complete())
 
+    @responses.activate
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -112,28 +115,29 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_update_vat_with_rd_task,
     ) -> None:
-        mock_update_vat_with_rd_task.return_value = MockCompleteTask()
-        shutil.rmtree(
-            valid_reference_dataset_path(
-                ReferenceGenome.GRCh38,
-                ReferenceDataset.screen,
-            ),
-        )
-        uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WGS,
-            callset_path=TEST_SNV_INDEL_VCF,
-            project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
-            skip_validation=True,
-            run_id=TEST_RUN_ID,
-        )
-        worker = luigi.worker.Worker()
-        worker.add(uvatwns_task)
-        worker.run()
-        self.assertFalse(uvatwns_task.complete())
+        with mock_clinvar_urls():
+            mock_update_vat_with_rd_task.return_value = MockCompleteTask()
+            shutil.rmtree(
+                valid_reference_dataset_path(
+                    ReferenceGenome.GRCh38,
+                    ReferenceDataset.screen,
+                ),
+            )
+            uvatwns_task = UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SNV_INDEL,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SNV_INDEL_VCF,
+                project_guids=['R0113_test_project'],
+                project_remap_paths=[TEST_REMAP],
+                project_pedigree_paths=[TEST_PEDIGREE_3],
+                skip_validation=True,
+                run_id=TEST_RUN_ID,
+            )
+            worker = luigi.worker.Worker()
+            worker.add(uvatwns_task)
+            worker.run()
+            self.assertFalse(uvatwns_task.complete())
 
     @responses.activate
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
