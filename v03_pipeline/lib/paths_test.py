@@ -2,14 +2,11 @@ import unittest
 from unittest.mock import patch
 
 from v03_pipeline.lib.model import (
-    CachedReferenceDatasetQuery,
     DatasetType,
-    ReferenceDatasetCollection,
     ReferenceGenome,
     SampleType,
 )
 from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
     family_table_path,
     imported_callset_path,
     imputed_sex_path,
@@ -23,23 +20,12 @@ from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
     valid_filters_path,
-    valid_reference_dataset_collection_path,
     validation_errors_for_run_path,
     variant_annotations_table_path,
 )
 
 
 class TestPaths(unittest.TestCase):
-    def test_cached_reference_dataset_query_path(self) -> None:
-        self.assertEqual(
-            cached_reference_dataset_query_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                CachedReferenceDatasetQuery.CLINVAR_PATH_VARIANTS,
-            ),
-            '/var/seqr/seqr-reference-data/v03/GRCh38/SNV_INDEL/cached_reference_dataset_queries/clinvar_path_variants.ht',
-        )
-
     def test_family_table_path(self) -> None:
         self.assertEqual(
             family_table_path(
@@ -101,26 +87,6 @@ class TestPaths(unittest.TestCase):
                 'R0652_pipeline_test',
             ),
             '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/MITO/projects/WES/R0652_pipeline_test.ht',
-        )
-
-    def test_valid_reference_dataset_collection_path(self) -> None:
-        with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
-            self.assertEqual(
-                valid_reference_dataset_collection_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    ReferenceDatasetCollection.HGMD,
-                ),
-                None,
-            )
-        self.assertEqual(
-            valid_reference_dataset_collection_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                ReferenceDatasetCollection.HGMD,
-            ),
-            '/var/seqr/seqr-reference-data-private/v03/GRCh38/SNV_INDEL/reference_datasets/hgmd.ht',
         )
 
     def test_lookup_table_path(self) -> None:

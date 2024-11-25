@@ -63,6 +63,13 @@ class ReferenceGenome(str, Enum):
             },
         }[self]
 
+    @property
+    def mito_contig(self) -> str:
+        return {
+            ReferenceGenome.GRCh37: 'MT',
+            ReferenceGenome.GRCh38: 'chrM',
+        }[self]
+
     def contig_recoding(self, include_mt: bool = False) -> dict[str, str]:
         recode = {
             ReferenceGenome.GRCh37: {
