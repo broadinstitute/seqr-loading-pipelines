@@ -55,7 +55,6 @@ def predictor_parse(field: hl.StringExpression) -> hl.StringExpression:
     return field.split(';').find(lambda p: p != '.')
 
 
-# adapted from download_and_create_reference_datasets/v02/hail_scripts/write_dbnsfp_ht.py
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
