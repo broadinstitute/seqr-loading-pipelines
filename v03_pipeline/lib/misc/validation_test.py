@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -111,8 +110,7 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-    @patch('v03_pipeline.lib.misc.validation.Env')
-    def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
+    def test_validate_imputed_sex_ploidy(self) -> None:
         female_sample = 'HG00731_1'
         male_sample_1 = 'HG00732_1'
         male_sample_2 = 'HG00732_1'
@@ -121,7 +119,6 @@ class ValidationTest(unittest.TestCase):
         xyy_sample = 'NA20891_1'
         xxx_sample = 'NA20892_1'
 
-        mock_env.CHECK_SEX_AND_RELATEDNESS = True
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
 
         # All calls on X chromosome are valid

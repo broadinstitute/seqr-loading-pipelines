@@ -3,15 +3,15 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.methods.relatedness import call_relatedness
-from v03_pipeline.lib.model import CachedReferenceDatasetQuery
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.reference_data.updated_cached_reference_dataset_query import (
-    UpdatedCachedReferenceDatasetQuery,
+from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
+    UpdatedReferenceDatasetTask,
 )
 from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 
@@ -31,8 +31,8 @@ class WriteRelatednessCheckTableTask(BaseWriteTask):
         return [
             self.clone(ValidateCallsetTask),
             self.clone(
-                UpdatedCachedReferenceDatasetQuery,
-                crdq=CachedReferenceDatasetQuery.GNOMAD_QC,
+                UpdatedReferenceDatasetTask,
+                reference_dataset=ReferenceDataset.gnomad_qc,
             ),
         ]
 

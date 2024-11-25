@@ -5,25 +5,23 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.annotations.rdc_dependencies import (
-    get_rdc_annotation_dependencies,
-)
 from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import checkpoint, remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import (
     Env,
-    ReferenceDatasetCollection,
 )
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
+    valid_reference_dataset_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.reference_data.gencode.mapping_gene_ids import (
+from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -49,7 +47,17 @@ GENCODE_FOR_VEP_RELEASE = 44
 class WriteNewVariantsTableTask(BaseWriteTask):
     @property
     def annotation_dependencies(self) -> dict[str, hl.Table]:
-        deps = get_rdc_annotation_dependencies(self.dataset_type, self.reference_genome)
+        deps = {}
+        for (
+            reference_dataset
+        ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+            self.reference_genome,
+            self.dataset_type,
+        ):
+            deps[f'{reference_dataset.value}_ht'] = hl.read_table(
+                valid_reference_dataset_path(self.reference_genome, reference_dataset),
+            )
+
         if self.dataset_type.has_gencode_ensembl_to_refseq_id_mapping(
             self.reference_genome,
         ):
@@ -163,15 +171,26 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             ),
         )
 
-        # Join new variants against the reference dataset collections that are not "annotated".
-        for rdc in ReferenceDatasetCollection.for_reference_genome_dataset_type(
+        # Join new variants against the reference datasets that are not "annotated".
+        for (
+            reference_dataset
+        ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
             self.reference_genome,
             self.dataset_type,
         ):
-            if rdc.requires_annotation:
+            if reference_dataset.is_keyed_by_interval:
                 continue
-            rdc_ht = self.annotation_dependencies[f'{rdc.value}_ht']
-            new_variants_ht = new_variants_ht.join(rdc_ht, 'left')
+            reference_dataset_ht = self.annotation_dependencies[
+                f'{reference_dataset.value}_ht'
+            ]
+            reference_dataset_ht = reference_dataset_ht.select(
+                **{
+                    f'{reference_dataset.name}': hl.Struct(
+                        **reference_dataset_ht.row_value,
+                    ),
+                },
+            )
+            new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
 
         # Register the new variant alleles to the Clingen Allele Registry
         # and annotate new_variants table with CAID.
@@ -198,6 +217,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             new_variants_ht = new_variants_ht.join(ar_ht, 'left')
         elif self.dataset_type.should_send_to_allele_registry:
             new_variants_ht = new_variants_ht.annotate(CAID=hl.missing(hl.tstr))
+
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(

@@ -67,6 +67,8 @@ pygments==2.18.0
     #   sphinx
 pyproject-hooks==1.0.0
     # via build
+pysam==0.22.1
+    # via -r requirements-dev.in
 pyyaml==6.0.2
     # via
     #   -c requirements.txt

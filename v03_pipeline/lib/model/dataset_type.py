@@ -246,7 +246,6 @@ class DatasetType(str, Enum):
             DatasetType.MITO: [
                 mito.common_low_heteroplasmy,
                 mito.haplogroup,
-                mito.high_constraint_region_mito,
                 mito.mitotip,
                 mito.rsid,
                 shared.variant_id,
