@@ -12,7 +12,7 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
+from v03_pipeline.lib.reference_datasets.misc import safely_add_to_hdfs, vcf_to_ht
 
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
@@ -109,6 +109,7 @@ def get_submission_summary_ht() -> hl.Table:
         timeout=10,
     ) as r:
         shutil.copyfileobj(r.raw, tmp_file)
+        safely_add_to_hdfs(tmp_file.name)
     ht = hl.import_table(
         tmp_file.name,
         force=True,
@@ -163,6 +164,7 @@ def get_ht(
         delete=False,
     ) as tmp_file, requests.get(clinvar_url, stream=True, timeout=10) as r:
         shutil.copyfileobj(r.raw, tmp_file)
+        safely_add_to_hdfs(tmp_file.name)
     ht = vcf_to_ht(tmp_file.name, reference_genome)
     submitters_ht = get_submission_summary_ht()
     ht = ht.annotate(

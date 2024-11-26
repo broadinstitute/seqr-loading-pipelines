@@ -11,7 +11,7 @@ def get_ht(
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     extracted_filename = url.removesuffix('.zip').split('/')[-1]
-    with download_zip_file(url, suffix='.txt.zip') as unzipped_dir:
+    with download_zip_file(url, 'mitimpact', suffix='.txt.zip') as unzipped_dir:
         ht = hl.import_table(
             os.path.join(
                 unzipped_dir,

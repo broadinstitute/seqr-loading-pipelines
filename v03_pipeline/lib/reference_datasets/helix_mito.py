@@ -5,6 +5,7 @@ import hail as hl
 import requests
 
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.misc import safely_add_to_hdfs
 
 RENAME = {
     'counts_hom': 'AC_hom',
@@ -22,6 +23,7 @@ def get_ht(
         delete=False,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         shutil.copyfileobj(r.raw, tmp_file)
+        safely_add_to_hdfs(tmp_file.name)
     ht = hl.import_table(
         tmp_file.name,
         types={

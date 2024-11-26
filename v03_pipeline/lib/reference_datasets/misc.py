@@ -1,5 +1,6 @@
 import contextlib
 import os
+import subprocess
 import tempfile
 import zipfile
 
@@ -118,14 +119,16 @@ def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
 
 
 @contextlib.contextmanager
-def download_zip_file(url, suffix='.zip', decode_content=False):
+def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=False):
+    dir_ = f'/tmp/{dataset_name}'  # noqa: S108
     with tempfile.NamedTemporaryFile(
+        dir=dir_,
         suffix=suffix,
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(os.path.dirname(tmp_file.name))
-        # Extracting the zip file
+        safely_add_to_hdfs(dir_)
         yield os.path.dirname(tmp_file.name)
 
 
@@ -148,3 +151,21 @@ def select_for_interval_reference_dataset(
         **additional_selects,
     )
     return ht.key_by('interval')
+
+
+def safely_add_to_hdfs(file_name: str):
+    if os.getenv('HAIL_DATAPROC') != '1':
+        return
+    subprocess.run(
+        [  # noqa: S603
+            '/usr/bin/hdfs',
+            'dfs',
+            '-copyFromLocal',
+            '-f',
+            f'file://{file_name}',
+            file_name,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )

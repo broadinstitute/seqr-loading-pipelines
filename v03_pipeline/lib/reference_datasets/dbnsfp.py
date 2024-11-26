@@ -59,7 +59,7 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     types = TYPES[reference_genome]
     rename = RENAME[reference_genome]
 
-    with download_zip_file(path) as unzipped_dir:
+    with download_zip_file(path, 'dbnsfp') as unzipped_dir:
         ht = hl.import_table(
             f'{unzipped_dir}/dbNSFP*_variant.chr*.gz',
             types=types,
