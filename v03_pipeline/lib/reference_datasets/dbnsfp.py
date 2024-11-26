@@ -7,9 +7,7 @@ from v03_pipeline.lib.reference_datasets.misc import (
 )
 
 SHARED_TYPES = {
-    'REVEL_score': hl.tfloat32,
     'fathmm-MKL_coding_score': hl.tfloat32,
-    'MutPred_score': hl.tfloat32,
     'PrimateAI_score': hl.tfloat32,
 }
 TYPES = {
@@ -46,6 +44,8 @@ PREDICTOR_SCORES = {
     'Polyphen2_HVAR_score',
     'VEST4_score',
     'MPC_score',
+    'MutPred_score',
+    'REVEL_score',
 }
 PREDICTOR_FIELDS = ['MutationTaster_pred']
 
