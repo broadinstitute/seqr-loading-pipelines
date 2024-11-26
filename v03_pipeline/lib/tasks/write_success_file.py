@@ -3,16 +3,17 @@ import luigi.util
 
 from v03_pipeline.lib.paths import pipeline_run_success_file_path
 from v03_pipeline.lib.tasks import WriteProjectFamilyTablesTask
-from v03_pipeline.lib.tasks.base.base_project_info_params import (
-    BaseLoadingRunWithProjectInfoParams,
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
     UpdateVariantAnnotationsTableWithNewSamplesTask,
 )
+from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
 
 
-@luigi.util.inherits(BaseLoadingRunWithProjectInfoParams)
+@luigi.util.inherits(BaseLoadingRunParams)
 class WriteSuccessFileTask(luigi.Task):
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -25,6 +26,7 @@ class WriteSuccessFileTask(luigi.Task):
 
     def requires(self):
         requirements = [
+            self.clone(WriteMetadataForRunTask),
             self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask),
         ]
         return [
@@ -32,9 +34,7 @@ class WriteSuccessFileTask(luigi.Task):
             *[
                 self.clone(
                     WriteProjectFamilyTablesTask,
-                    project_guid=self.project_guids[i],
-                    project_remap_path=self.project_remap_paths[i],
-                    project_pedigree_path=self.project_pedigree_paths[i],
+                    project_i=i,
                 )
                 for i in range(len(self.project_guids))
             ],

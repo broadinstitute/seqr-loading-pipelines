@@ -3,16 +3,10 @@ from typing import Any
 import hail as hl
 
 from v03_pipeline.lib.model import (
-    CachedReferenceDatasetQuery,
     DatasetType,
-    Env,
     ReferenceGenome,
     SampleType,
     Sex,
-)
-from v03_pipeline.lib.paths import (
-    cached_reference_dataset_query_path,
-    sex_check_table_path,
 )
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
@@ -22,36 +16,6 @@ SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
 class SeqrValidationError(Exception):
     pass
-
-
-def get_validation_dependencies(
-    dataset_type: DatasetType,
-    reference_genome: ReferenceGenome,
-    callset_path: str,
-    skip_check_sex_and_relatedness: bool,
-    **_: Any,
-) -> dict[str, hl.Table]:
-    deps = {}
-    deps['coding_and_noncoding_variants_ht'] = hl.read_table(
-        cached_reference_dataset_query_path(
-            reference_genome,
-            dataset_type,
-            CachedReferenceDatasetQuery.GNOMAD_CODING_AND_NONCODING_VARIANTS,
-        ),
-    )
-    if (
-        Env.CHECK_SEX_AND_RELATEDNESS
-        and dataset_type.check_sex_and_relatedness
-        and not skip_check_sex_and_relatedness
-    ):
-        deps['sex_check_ht'] = hl.read_table(
-            sex_check_table_path(
-                reference_genome,
-                dataset_type,
-                callset_path,
-            ),
-        )
-    return deps
 
 
 def validate_allele_type(
@@ -173,9 +137,17 @@ def validate_imputed_sex_ploidy(
                 & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
             )
             | (
-                # At least one call is haploid but the sex is Female
+                # At least one call is haploid but the sex is Female, X0, XXY, XYY, or XXX
                 hl.agg.any(~mt.GT.is_diploid())
-                & (sex_check_ht[mt.s].predicted_sex == Sex.FEMALE.value)
+                & hl.literal(
+                    {
+                        Sex.FEMALE.value,
+                        Sex.X0.value,
+                        Sex.XYY.value,
+                        Sex.XXY.value,
+                        Sex.XXX.value,
+                    },
+                ).contains(sex_check_ht[mt.s].predicted_sex)
             )
         ),
     )

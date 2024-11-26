@@ -12,6 +12,10 @@ class Sex(str, Enum):
     FEMALE = 'F'
     MALE = 'M'
     UNKNOWN = 'U'
+    XXX = 'XXX'
+    X0 = 'X0'
+    XXY = 'XXY'
+    XYY = 'XYY'
 
     @property
     def imputed_sex_value(self):
@@ -19,7 +23,7 @@ class Sex(str, Enum):
             Sex.MALE: 'Male',
             Sex.FEMALE: 'Female',
             Sex.UNKNOWN: 'Unknown',
-        }[self]
+        }.get(self, self.name)
 
 
 class PipelineVersion(str, Enum):
@@ -57,6 +61,13 @@ class ReferenceGenome(str, Enum):
                 'chrY',
                 'chrM',
             },
+        }[self]
+
+    @property
+    def mito_contig(self) -> str:
+        return {
+            ReferenceGenome.GRCh37: 'MT',
+            ReferenceGenome.GRCh38: 'chrM',
         }[self]
 
     def contig_recoding(self, include_mt: bool = False) -> dict[str, str]:

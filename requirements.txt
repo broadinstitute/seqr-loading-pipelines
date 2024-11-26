@@ -10,7 +10,7 @@ aiofiles==24.1.0
     # via -r requirements.in
 aiohappyeyeballs==2.4.3
     # via aiohttp
-aiohttp==3.10.10
+aiohttp==3.10.11
     # via
     #   hail
     #   slackclient
@@ -256,7 +256,6 @@ pygments==2.18.0
     #   ipython
     #   rich
 pyjwt[crypto]==2.9.0
-    # via msal
 pyspark==3.5.3
     # via hail
 python-daemon==3.1.0
@@ -327,7 +326,7 @@ tenacity==8.5.0
     #   plotly
 threadpoolctl==3.5.0
     # via scikit-learn
-tornado==6.4.1
+tornado==6.4.2
     # via
     #   bokeh
     #   luigi

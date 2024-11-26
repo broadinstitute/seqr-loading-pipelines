@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import Mock, patch
 
 import hail as hl
 
@@ -111,10 +110,18 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-    @patch('v03_pipeline.lib.misc.validation.Env')
-    def test_validate_imputed_sex_ploidy(self, mock_env: Mock) -> None:
-        mock_env.CHECK_SEX_AND_RELATEDNESS = True
+    def test_validate_imputed_sex_ploidy(self) -> None:
+        female_sample = 'HG00731_1'
+        male_sample_1 = 'HG00732_1'
+        male_sample_2 = 'HG00732_1'
+        x0_sample = 'NA20899_1'
+        xxy_sample = 'NA20889_1'
+        xyy_sample = 'NA20891_1'
+        xxx_sample = 'NA20892_1'
+
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
+
+        # All calls on X chromosome are valid
         mt = hl.MatrixTable.from_parts(
             rows={
                 'locus': [
@@ -125,17 +132,68 @@ class ValidationTest(unittest.TestCase):
                     ),
                 ],
             },
-            cols={'s': ['HG00731_1', 'HG00732_1']},
+            cols={
+                's': [
+                    female_sample,
+                    male_sample_1,
+                    x0_sample,
+                    xxy_sample,
+                    xyy_sample,
+                    xxx_sample,
+                ],
+            },
             entries={
                 'GT': [
                     [
                         hl.Call(alleles=[0, 0], phased=False),
                         hl.Call(alleles=[0], phased=False),
+                        hl.Call(alleles=[0, 0], phased=False),  # X0
+                        hl.Call(alleles=[0, 0], phased=False),  # XXY
+                        hl.Call(alleles=[0, 0], phased=False),  # XYY
+                        hl.Call(alleles=[0, 0], phased=False),  # XXX
                     ],
                 ],
             },
         ).key_rows_by('locus')
         validate_imputed_sex_ploidy(mt, sex_check_ht)
+
+        # All calls on Y chromosome are valid
+        mt = hl.MatrixTable.from_parts(
+            rows={
+                'locus': [
+                    hl.Locus(
+                        contig='chrY',
+                        position=1,
+                        reference_genome='GRCh38',
+                    ),
+                ],
+            },
+            cols={
+                's': [
+                    female_sample,
+                    male_sample_1,
+                    x0_sample,
+                    xxy_sample,
+                    xyy_sample,
+                    xxx_sample,
+                ],
+            },
+            entries={
+                'GT': [
+                    [
+                        hl.missing(hl.tcall),
+                        hl.Call(alleles=[0], phased=False),
+                        hl.missing(hl.tcall),  # X0
+                        hl.Call(alleles=[0, 0], phased=False),  # XXY
+                        hl.Call(alleles=[0, 0], phased=False),  # XYY
+                        hl.missing(hl.tcall),  # XXX
+                    ],
+                ],
+            },
+        ).key_rows_by('locus')
+        validate_imputed_sex_ploidy(mt, sex_check_ht)
+
+        # Invalid X chromosome case
         mt = hl.MatrixTable.from_parts(
             rows={
                 'locus': [
@@ -146,21 +204,34 @@ class ValidationTest(unittest.TestCase):
                     ),
                 ],
             },
-            # Male, Female, Male
-            cols={'s': ['HG00731_1', 'HG00732_1', 'NA19678_1']},
+            cols={
+                's': [
+                    female_sample,
+                    male_sample_1,
+                    male_sample_2,
+                    x0_sample,
+                    xxy_sample,
+                    xyy_sample,
+                    xxx_sample,
+                ],
+            },
             entries={
                 'GT': [
                     [
-                        hl.Call(alleles=[0], phased=False),
-                        hl.Call(alleles=[0], phased=False),
-                        hl.missing(hl.tcall),
+                        hl.Call(alleles=[0], phased=False),  # invalid Female call
+                        hl.Call(alleles=[0], phased=False),  # valid Male call
+                        hl.missing(hl.tcall),  # invalid Male call
+                        hl.Call(alleles=[0], phased=False),  # invalid X0 call
+                        hl.Call(alleles=[0], phased=False),  # invalid XXY call
+                        hl.missing(hl.tcall),  # valid XYY call
+                        hl.Call(alleles=[0, 0], phased=False),  # valid XXX call
                     ],
                 ],
             },
         ).key_rows_by('locus')
         self.assertRaisesRegex(
             SeqrValidationError,
-            '66.67% of samples have misaligned ploidy',
+            '57.14% of samples have misaligned ploidy',
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,

@@ -1,13 +1,16 @@
 import hail as hl
+import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import ReferenceDatasetCollection
-from v03_pipeline.lib.reference_data.compare_globals import (
-    Globals,
-    get_datasets_to_update,
+from v03_pipeline.lib.paths import valid_reference_dataset_path
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    BaseReferenceDataset,
+    ReferenceDataset,
 )
-from v03_pipeline.lib.reference_data.config import CONFIG
+from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
+    BaseLoadingPipelineParams,
+)
 from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
     BaseUpdateVariantAnnotationsTableTask,
 )
@@ -15,82 +18,89 @@ from v03_pipeline.lib.tasks.base.base_update_variant_annotations_table import (
 logger = get_logger(__name__)
 
 
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     BaseUpdateVariantAnnotationsTableTask,
 ):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._datasets_to_update = []
-
-    @property
-    def reference_dataset_collections(self) -> list[ReferenceDatasetCollection]:
-        return ReferenceDatasetCollection.for_reference_genome_dataset_type(
-            self.reference_genome,
-            self.dataset_type,
-        )
+        self._datasets_to_update: set[str] = set()
 
     def complete(self) -> bool:
-        logger.info(
-            'Checking if UpdateVariantAnnotationsTableWithUpdatedReferenceDataset is complete',
-        )
-        self._datasets_to_update = []
-
+        reference_dataset_names = {
+            rd.name
+            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+                self.reference_genome,
+                self.dataset_type,
+            )
+        }
         if not super().complete():
-            for rdc in self.reference_dataset_collections:
-                self._datasets_to_update.extend(
-                    rdc.datasets(
-                        self.dataset_type,
-                    ),
-                )
+            self._datasets_to_update = reference_dataset_names
             return False
-
-        datasets_to_check = [
-            dataset
-            for rdc in self.reference_dataset_collections
-            for dataset in rdc.datasets(self.dataset_type)
-        ]
-        annotations_ht_globals = Globals.from_ht(
-            hl.read_table(self.output().path),
-            datasets_to_check,
+        # Find datasets with mismatched versions
+        annotation_ht_versions = dict(
+            hl.eval(hl.read_table(self.output().path).globals.versions),
         )
-        rdc_ht_globals = Globals.from_dataset_configs(
-            self.reference_genome,
-            datasets_to_check,
+        self._datasets_to_update = (
+            reference_dataset_names ^ annotation_ht_versions.keys()
         )
-        self._datasets_to_update.extend(
-            get_datasets_to_update(
-                annotations_ht_globals,
-                rdc_ht_globals,
-            ),
+        for dataset_name in reference_dataset_names & annotation_ht_versions.keys():
+            if (
+                ReferenceDataset(dataset_name).version(self.reference_genome)
+                != annotation_ht_versions[dataset_name]
+            ):
+                self._datasets_to_update.add(dataset_name)
+        logger.info(
+            f"Datasets to update: {', '.join(d for d in self._datasets_to_update)}",
         )
-        logger.info(f'Datasets to update: {self._datasets_to_update}')
         return not self._datasets_to_update
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        for dataset in self._datasets_to_update:
-            if dataset in ht.row:
-                ht = ht.drop(dataset)
-            if dataset not in CONFIG:
+        for dataset_name in self._datasets_to_update:
+            if dataset_name in ht.row:
+                ht = ht.drop(dataset_name)
+            if dataset_name not in set(ReferenceDataset):
                 continue
-
-            rdc = ReferenceDatasetCollection.for_dataset(dataset, self.dataset_type)
-            rdc_ht = self.rdc_annotation_dependencies[f'{rdc.value}_ht']
-            if rdc.requires_annotation:
+            reference_dataset = ReferenceDataset(dataset_name)
+            reference_dataset_ht = hl.read_table(
+                valid_reference_dataset_path(self.reference_genome, reference_dataset),
+            )
+            if reference_dataset.is_keyed_by_interval:
                 formatting_fn = next(
                     x
                     for x in self.dataset_type.formatting_annotation_fns(
                         self.reference_genome,
                     )
-                    if x.__name__ == dataset
+                    if x.__name__ == reference_dataset.name
                 )
                 ht = ht.annotate(
                     **get_fields(
                         ht,
                         [formatting_fn],
-                        **self.rdc_annotation_dependencies,
+                        **{f'{reference_dataset.name}_ht': reference_dataset_ht},
                         **self.param_kwargs,
                     ),
                 )
             else:
-                ht = ht.join(rdc_ht.select(dataset), 'left')
+                if reference_dataset.select:
+                    reference_dataset_ht = reference_dataset.select(
+                        self.reference_genome,
+                        self.dataset_type,
+                        reference_dataset_ht,
+                    )
+                if reference_dataset.filter:
+                    reference_dataset_ht = reference_dataset.filter(
+                        self.reference_genome,
+                        self.dataset_type,
+                        reference_dataset_ht,
+                    )
+                reference_dataset_ht = reference_dataset_ht.select(
+                    **{
+                        f'{reference_dataset.name}': hl.Struct(
+                            **reference_dataset_ht.row_value,
+                        ),
+                    },
+                )
+                ht = ht.join(reference_dataset_ht, 'left')
+
         return self.annotate_globals(ht)
