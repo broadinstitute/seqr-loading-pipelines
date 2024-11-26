@@ -15,12 +15,12 @@ SHARED_TYPES = {
 TYPES = {
     ReferenceGenome.GRCh37: {
         **SHARED_TYPES,
-        'pos(1-based)': hl.tint,
+        'hg19_pos(1-based)': hl.tint,
         'CADD_phred_hg19': hl.tfloat32,
     },
     ReferenceGenome.GRCh38: {
         **SHARED_TYPES,
-        'hg19_pos(1-based)': hl.tint,
+        'pos(1-based)': hl.tint,
         'CADD_phred': hl.tfloat32,
     },
 }
