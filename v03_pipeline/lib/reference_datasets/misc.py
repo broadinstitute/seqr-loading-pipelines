@@ -121,6 +121,7 @@ def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
 @contextlib.contextmanager
 def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=False):
     dir_ = f'/tmp/{dataset_name}'  # noqa: S108
+    os.makedirs(dir_, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=dir_,
         suffix=suffix,
