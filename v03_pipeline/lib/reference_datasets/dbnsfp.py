@@ -42,7 +42,6 @@ RENAME = {
 }
 
 PREDICTOR_SCORES = {
-    'REVEL_score',
     'SIFT_score',
     'Polyphen2_HVAR_score',
     'VEST4_score',
