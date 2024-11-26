@@ -71,7 +71,7 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
             **{k: hl.parse_float32(predictor_parse(ht[k])) for k in PREDICTOR_SCORES},
             **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
         )
-        ht = ht.rename(**rename)
+        ht = ht.rename(rename)
 
         return key_by_locus_alleles(ht, reference_genome)
 
