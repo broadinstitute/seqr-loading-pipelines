@@ -1,5 +1,6 @@
 import hail as hl
 
+from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import (
     download_zip_file,
