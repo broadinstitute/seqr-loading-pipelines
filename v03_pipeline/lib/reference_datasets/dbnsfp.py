@@ -32,6 +32,7 @@ RENAME = {
         **SHARED_RENAME,
         'hg19_chr': 'chrom',
         'hg19_pos(1-based)': 'pos',
+        'CADD_phred_hg19': 'CADD_phred',
     },
     ReferenceGenome.GRCh38: {
         **SHARED_RENAME,
