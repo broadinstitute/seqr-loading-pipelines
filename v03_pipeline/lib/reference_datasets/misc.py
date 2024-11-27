@@ -9,7 +9,8 @@ import requests
 
 from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import Env, ReferenceGenome
+from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 
 BIALLELIC = 2
 
