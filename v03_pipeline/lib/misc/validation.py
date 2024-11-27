@@ -19,11 +19,11 @@ class SeqrValidationError(Exception):
 
 
 def validate_allele_type(
-    mt: hl.MatrixTable,
+    t: hl.Table | hl.MatrixTable,
     dataset_type: DatasetType,
     **_: Any,
 ) -> None:
-    ht = mt.rows()
+    ht = t.rows() if isinstance(t, hl.MatrixTable) else t
     ht = ht.filter(
         dataset_type.invalid_allele_types.contains(
             hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
@@ -42,12 +42,12 @@ def validate_allele_type(
 
 
 def validate_no_duplicate_variants(
-    mt: hl.MatrixTable,
+    t: hl.Table | hl.MatrixTable,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     **_: Any,
 ) -> None:
-    ht = mt.rows()
+    ht = t.rows() if isinstance(t, hl.MatrixTable) else t
     ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
     ht = ht.filter(ht.n > 1)
     ht = ht.select()
