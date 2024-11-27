@@ -1,15 +1,15 @@
 import contextlib
 import os
-import subprocess
 import tempfile
 import zipfile
 
 import hail as hl
+import hailtop.fs as hfs
 import requests
 
 from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model.dataset_type import DatasetType
-from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.definitions import Env, ReferenceGenome
 
 BIALLELIC = 2
 
@@ -128,9 +128,8 @@ def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=Fals
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
-            zipf.extractall(os.path.dirname(tmp_file.name))
-        safely_add_to_hdfs(dir_)
-        yield os.path.dirname(tmp_file.name)
+            zipf.extractall(dir_)
+        yield copy_to_cloud_storage(dir_)
 
 
 def select_for_interval_reference_dataset(
@@ -154,19 +153,12 @@ def select_for_interval_reference_dataset(
     return ht.key_by('interval')
 
 
-def safely_add_to_hdfs(file_name: str):
-    if os.getenv('HAIL_DATAPROC') != '1':
-        return
-    subprocess.run(
-        [  # noqa: S603
-            '/usr/bin/hdfs',
-            'dfs',
-            '-copyFromLocal',
-            '-f',
-            f'file://{file_name}',
-            file_name,
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+def copy_to_cloud_storage(file_name: str) -> str:
+    if not Env.HAIL_TMP_DIR.startswith('gs://'):
+        return file_name
+    if os.path.isdir(file_name):
+        path = os.path.join(Env.HAIL_TMP_DIR, file_name)
+    else:
+        path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
+    hfs.copy(file_name, path)
+    return path
