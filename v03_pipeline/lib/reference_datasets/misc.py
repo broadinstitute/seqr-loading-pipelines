@@ -109,7 +109,7 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     chrom = (
         hl.format('chr%s', ht.chrom)
         if reference_genome == ReferenceGenome.GRCh38
-        else ht.chrom
+        else hl.if_else(ht.chrom == 'M', 'MT', ht.chrom)
     )
     ht = ht.transmute(
         locus=hl.locus(chrom, ht.pos, reference_genome.value),
