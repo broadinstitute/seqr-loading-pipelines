@@ -1,5 +1,7 @@
 import contextlib
 import os
+import random
+import string
 import tempfile
 import zipfile
 
@@ -13,6 +15,12 @@ from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 
 BIALLELIC = 2
+
+
+def generate_random_string(length=5):
+    """Generates a random string of the specified length."""
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))  # noqa: S311
 
 
 def get_enum_select_fields(
@@ -121,7 +129,7 @@ def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
 
 @contextlib.contextmanager
 def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=False):
-    dir_ = f'/tmp/{dataset_name}'  # noqa: S108
+    dir_ = f'/tmp/{generate_random_string()}/{dataset_name}'  # noqa: S108
     os.makedirs(dir_, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=dir_,
@@ -158,7 +166,7 @@ def copy_to_cloud_storage(file_name: str) -> str:
     if not Env.HAIL_TMP_DIR.startswith('gs://'):
         return file_name
     if os.path.isdir(file_name):
-        path = os.path.join(Env.HAIL_TMP_DIR, file_name)
+        path = os.path.join(Env.HAIL_TMP_DIR, file_name.lstrip('/'))
     else:
         path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
     hfs.copy(file_name, path)
