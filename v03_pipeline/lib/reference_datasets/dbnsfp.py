@@ -65,6 +65,9 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
             missing='.',
             force=True,
         )
+        # NB: We ran into weird issues...running out
+        # of file descriptors on dataproc :/
+        ht = checkpoint(ht)
         select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
         ht = ht.select(
             *select_fields,
