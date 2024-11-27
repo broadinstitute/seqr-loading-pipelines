@@ -20,4 +20,5 @@ def get_ht(
         alleles=hl.array([ht.ref_rCRS, ht.alt]),
         score=ht.disease_score,
     )
-    return ht.key_by('locus', 'alleles')
+    ht = ht.key_by('locus', 'alleles')
+    return ht.group_by(*ht.key).aggregate(score=hl.agg.max(ht.score))

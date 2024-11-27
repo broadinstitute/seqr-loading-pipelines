@@ -77,8 +77,10 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
             **{k: predictor_parse(ht[k]) for k in PREDICTOR_FIELDS},
         )
         ht = ht.rename(rename)
-
-        return key_by_locus_alleles(ht, reference_genome)
+        ht = key_by_locus_alleles(ht, reference_genome)
+        return ht.group_by(*ht.key).aggregate(
+            **{f: hl.agg.max(ht[f]) for f in ht.row_key},
+        )
 
 
 def select(_: ReferenceGenome, dataset_type: DatasetType, ht: hl.Table) -> hl.Table:
