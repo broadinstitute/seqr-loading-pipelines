@@ -6,6 +6,10 @@ from typing import Union
 
 import hail as hl
 
+from v03_pipeline.lib.misc.validation import (
+    validate_allele_type,
+    validate_no_duplicate_variants,
+)
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
@@ -115,6 +119,11 @@ class BaseReferenceDataset:
         if enum_selects:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
+        # Reference Datasets are DatasetType agnostic, but these
+        # methods (in theory) support SV/GCNV.  SNV_INDEL
+        # is passed as a proxy for non-SV/GCNV.
+        validate_allele_type(ht, DatasetType.SNV_INDEL)
+        validate_no_duplicate_variants(ht, reference_genome, DatasetType.SNV_INDEL)
         # NB: we do not filter with "filter" here
         # ReferenceDatasets are DatasetType agnostic and that
         # filter is only used at annotation time.
