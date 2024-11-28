@@ -79,10 +79,8 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
         ht = ht.rename(rename)
         ht = key_by_locus_alleles(ht, reference_genome)
         return ht.group_by(*ht.key).aggregate(
-            MutationTaster_pred=hl.agg.take(ht.MutationTaster_pred, 1)[0],
-            **{
-                f: hl.agg.max(ht[f]) for f in ht.row_value if f != 'MutationTaster_pred'
-            },
+            **{f: hl.agg.take(ht[f], 1)[0] for f in PREDICTOR_FIELDS},
+            **{f: hl.agg.max(ht[f]) for f in ht.row_value if f not in PREDICTOR_FIELDS},
         )
 
 
