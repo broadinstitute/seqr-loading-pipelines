@@ -70,7 +70,7 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
         # NB: We ran into weird issues...running out
         # of file descriptors on dataproc :/
         ht, _ = checkpoint(ht)
-        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')
+        hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
         select_fields = {'ref', 'alt', *types.keys(), *rename.keys()}
         ht = ht.select(
             *select_fields,
