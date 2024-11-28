@@ -1,5 +1,6 @@
 import hail as hl
 
+from v03_pipeline.lib.misc.io import checkpoint
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
@@ -9,6 +10,11 @@ def get_ht(
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
     ht = vcf_to_ht(paths, reference_genome)
+
+    # NB: We ran into weird issues...running out
+    # of file descriptors on dataproc :/
+    ht, _ = checkpoint(ht)
+    hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
 
     # SpliceAI INFO field description from the VCF header: SpliceAIv1.3 variant annotation. These include
     # delta scores (DS) and delta positions (DP) for acceptor gain (AG), acceptor loss (AL), donor gain (DG), and
