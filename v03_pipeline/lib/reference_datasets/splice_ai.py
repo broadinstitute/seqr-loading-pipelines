@@ -20,8 +20,10 @@ def get_ht(
     ht, checkpoint_path = checkpoint(ht)
     # The default partitions are too big, leading to OOMs.
     ht = ht.repartition(
-        compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
-        shuffle=False,
+        compute_hail_n_partitions(file_size_bytes(checkpoint_path)) * 1.5,
+        # Note that shuffle=True here, since this is one of the few
+        # cases in the pipeline where we want to increase the number
+        # of partititons.
     )
     ht, _ = checkpoint(ht)
 
