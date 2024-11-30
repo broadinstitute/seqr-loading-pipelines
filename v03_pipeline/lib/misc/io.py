@@ -273,7 +273,6 @@ def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> hl.Int32Expressi
 
 def checkpoint(
     t: hl.Table | hl.MatrixTable,
-    repartition_factor: int = 1,
 ) -> tuple[hl.Table | hl.MatrixTable, str]:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     read_fn = hl.read_matrix_table if isinstance(t, hl.MatrixTable) else hl.read_table
@@ -281,7 +280,7 @@ def checkpoint(
         Env.HAIL_TMP_DIR,
         f'{uuid.uuid4()}.{suffix}',
     )
-    t.write(checkpoint_path, repartition_factor=repartition_factor)
+    t.write(checkpoint_path)
     return read_fn(checkpoint_path), checkpoint_path
 
 
@@ -289,15 +288,11 @@ def write(
     t: hl.Table | hl.MatrixTable,
     destination_path: str,
     repartition: bool = True,
-    # May be used to increase the number of partitions beyond
-    # the optimally computed number.  A higher number will
-    # shard the table into more partitions.
-    repartition_factor: int = 1,
 ) -> hl.Table | hl.MatrixTable:
     t, path = checkpoint(t)
     if repartition:
         t = t.repartition(
-            (compute_hail_n_partitions(file_size_bytes(path)) * repartition_factor),
+            compute_hail_n_partitions(file_size_bytes(path)),
             shuffle=False,
         )
     return t.write(destination_path, overwrite=True)

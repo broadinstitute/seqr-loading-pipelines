@@ -1,6 +1,10 @@
 import hail as hl
 
-from v03_pipeline.lib.misc.io import checkpoint
+from v03_pipeline.lib.misc.io import (
+    checkpoint,
+    compute_hail_n_partitions,
+    file_size_bytes,
+)
 from v03_pipeline.lib.model import ReferenceGenome
 from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
@@ -13,7 +17,12 @@ def get_ht(
     # of file descriptors on dataproc :/
     hl._set_flags(use_new_shuffle=None, no_whole_stage_codegen='1')  # noqa: SLF001
     ht = vcf_to_ht(paths, reference_genome)
-    ht, _ = checkpoint(ht, repartition_factor=2)
+    ht, checkpoint_path = checkpoint(ht)
+    # The default partitions are too big, leading to OOMs.
+    ht = ht.repartition(
+        compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
+        shuffle=False,
+    )
 
     # SpliceAI INFO field description from the VCF header: SpliceAIv1.3 variant annotation. These include
     # delta scores (DS) and delta positions (DP) for acceptor gain (AG), acceptor loss (AL), donor gain (DG), and
