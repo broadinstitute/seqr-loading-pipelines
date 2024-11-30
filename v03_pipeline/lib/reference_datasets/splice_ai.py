@@ -23,6 +23,7 @@ def get_ht(
         compute_hail_n_partitions(file_size_bytes(checkpoint_path)),
         shuffle=False,
     )
+    ht, _ = checkpoint(ht)
 
     # SpliceAI INFO field description from the VCF header: SpliceAIv1.3 variant annotation. These include
     # delta scores (DS) and delta positions (DP) for acceptor gain (AG), acceptor loss (AL), donor gain (DG), and
