@@ -15,7 +15,6 @@ def get_ht(
     ht = vcf_to_ht(paths, reference_genome)
     ht, _ = checkpoint(ht)
 
-
     # SpliceAI INFO field description from the VCF header: SpliceAIv1.3 variant annotation. These include
     # delta scores (DS) and delta positions (DP) for acceptor gain (AG), acceptor loss (AL), donor gain (DG), and
     # donor loss (DL). Format: ALLELE|SYMBOL|DS_AG|DS_AL|DS_DG|DS_DL|DP_AG|DP_AL|DP_DG|DP_DL
