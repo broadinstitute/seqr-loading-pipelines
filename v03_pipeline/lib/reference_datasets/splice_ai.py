@@ -39,7 +39,7 @@ def get_ht(
         .map(hl.float32),
     )
     ht = ht.annotate(delta_score=hl.max(ht.delta_scores))
-    return ht.annotate(
+    ht = ht.annotate(
         splice_consequence_id=hl.if_else(
             ht.delta_score > 0,
             # Splice Consequence enum ID is the index of the max score
@@ -48,3 +48,4 @@ def get_ht(
             num_delta_scores,
         ),
     ).drop('delta_scores')
+    return ht.group_by(*ht.key).aggregate(splice_consequence_id=hl.agg.min(ht.splice_consequence_id))

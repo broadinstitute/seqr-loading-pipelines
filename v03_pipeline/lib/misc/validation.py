@@ -53,7 +53,7 @@ def validate_no_duplicate_variants(
     ht = ht.select()
     if ht.count() > 0:
         variant_format = dataset_type.table_key_format_fn(reference_genome)
-        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.collect()][:10]}'
+        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.take(10)]}'
         raise SeqrValidationError(msg)
 
 
