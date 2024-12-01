@@ -49,5 +49,5 @@ def get_ht(
         ),
     ).drop('delta_scores')
     return ht.group_by(*ht.key).aggregate(
-        splice_consequence_id=hl.agg.min(ht.splice_consequence_id)
+        splice_consequence_id=hl.agg.min(ht.splice_consequence_id),
     )
