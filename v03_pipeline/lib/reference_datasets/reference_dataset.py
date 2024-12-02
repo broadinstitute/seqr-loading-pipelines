@@ -204,14 +204,14 @@ CONFIG = {
     ReferenceDataset.eigen: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: The download link on the Eigen website (http://www.columbia.edu/~ii2135/download.html) is broken
             # as of 11/15/24 so we will host the data
             PATH: 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
         },
     },
