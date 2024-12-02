@@ -19,7 +19,7 @@ def get_ht(
             reference_genome.value,
         ),
         alleles=hl.array([ht.ref_rCRS, ht.alt]),
-        score=ht.disease_score,
+        score=hl.float32(ht.disease_score),
     )
     ht = ht.key_by('locus', 'alleles')
     ht = ht.filter(
