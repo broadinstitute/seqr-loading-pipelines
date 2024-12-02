@@ -302,7 +302,7 @@ CONFIG = {
     ReferenceDataset.mitimpact: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.1',
+            VERSION: '1.0',
             PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
         },
     },
