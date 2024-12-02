@@ -15,9 +15,12 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     # HGMD represents DELETIONS as Structural Variants
     # which is less than ideal.
     ht = ht.filter(ht.alleles[1] != '<DEL>')
-    return ht.select(
+    ht = ht.select(
         **{
             'accession': ht.rsid,
             'class': ht.info.CLASS,
         },
     )
+    # HGMD duplicates exist due to phenotype information
+    # arbitrarily choosing a value should be sufficient.
+    return ht.distinct()
