@@ -280,12 +280,12 @@ CONFIG = {
     ReferenceDataset.topmed: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.vcf.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
@@ -294,7 +294,7 @@ CONFIG = {
     ReferenceDataset.hmtvar: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             #  NB: https://www.hmtvar.uniba.it is unavailable as of 11/15/24 so we will host the data
             PATH: 'https://storage.googleapis.com/seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
         },
@@ -302,7 +302,7 @@ CONFIG = {
     ReferenceDataset.mitimpact: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'https://mitimpact.css-mendel.it/cdn/MitImpact_db_3.1.3.txt.zip',
         },
     },
