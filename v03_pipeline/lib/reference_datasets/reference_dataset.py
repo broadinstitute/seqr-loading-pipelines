@@ -232,12 +232,12 @@ CONFIG = {
     ReferenceDataset.exac: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/legacy/exacv1_downloads/release1/ExAC.r1.sites.vep.vcf.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: Exac is only available on GRCh37 so we host a lifted over version
             PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
         },
