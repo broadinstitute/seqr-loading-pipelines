@@ -24,8 +24,8 @@ def remove_duplicate_scores(ht: hl.Table):
         # Remove rows that 1) are part of duplicate variant groupings
         # and 2) contain dots.
         duplicates_ht.filter(
-            ~duplicates_ht.info.SpliceAI[0].split(delim='\\|')[1].contains('.')
-        )
+            ~duplicates_ht.info.SpliceAI[0].split(delim='\\|')[1].contains('.'),
+        ),
     )
 
 
