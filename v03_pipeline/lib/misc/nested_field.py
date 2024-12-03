@@ -12,7 +12,4 @@ def parse_nested_field(t: hl.MatrixTable | hl.Table, fields: str):
             ]
         else:
             expression = expression[field]
-    # Parse float64s into float32s to save space!
-    if expression.dtype == hl.tfloat64:
-        expression = hl.float32(expression)
     return expression
