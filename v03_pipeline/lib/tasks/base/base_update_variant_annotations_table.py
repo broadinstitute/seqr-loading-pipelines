@@ -99,7 +99,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
                 enums=hl.Struct(
                     **ht.globals.enums,
-                    **{reference_dataset.name: rd_ht_globals.enums},
+                    **{reference_dataset.name: rd_ht_globals.enum_globals},
                 ),
                 updates=ht.globals.updates,
                 migrations=ht.globals.migrations,
