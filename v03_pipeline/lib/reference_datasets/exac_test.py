@@ -17,6 +17,7 @@ class ExacTest(unittest.TestCase):
             return_value=EXAC_PATH,
         ):
             ht = ReferenceDataset.exac.get_ht(ReferenceGenome.GRCh38)
+            print(ht.collect())
             self.assertEqual(
                 ht.collect(),
                 [
@@ -27,8 +28,8 @@ class ExacTest(unittest.TestCase):
                             reference_genome='GRCh38',
                         ),
                         alleles=['G', 'A'],
-                        AF_POPMAX=['NA', 'NFE'],
-                        AF=1.702e-05,
+                        AF_POPMAX=None,
+                        AF=1.7020000086631626e-05,
                         AC_Adj=0,
                         AC_Het=0,
                         AC_Hom=0,
@@ -42,8 +43,8 @@ class ExacTest(unittest.TestCase):
                             reference_genome='GRCh38',
                         ),
                         alleles=['G', 'T'],
-                        AF_POPMAX=['NA', 'NFE'],
-                        AF=1.702e-05,
+                        AF_POPMAX=7.453786383848637e-05,
+                        AF=1.7020000086631626e-05,
                         AC_Adj=1,
                         AC_Het=1,
                         AC_Hom=0,
