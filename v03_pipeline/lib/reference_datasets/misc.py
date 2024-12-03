@@ -17,6 +17,16 @@ from v03_pipeline.lib.model.environment import Env
 BIALLELIC = 2
 
 
+def compress_floats(ht: hl.Table):
+    # Parse float64s into float32s to save space!
+    return ht.select(
+        **{
+            k: hl.float32(v) if v.dtype == hl.tfloat64 else v
+            for k, v in ht.row_value.items()
+        },
+    )
+
+
 def generate_random_string(length=5):
     """Generates a random string of the specified length."""
     letters = string.ascii_letters + string.digits

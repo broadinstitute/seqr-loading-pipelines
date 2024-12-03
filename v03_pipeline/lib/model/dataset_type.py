@@ -138,7 +138,7 @@ class DatasetType(str, Enum):
                 'lof_genes': hl.tset(hl.tstr),
                 'num_exon': hl.tint32,
                 'sc': hl.tint32,
-                'sf': hl.tfloat32,
+                'sf': hl.tfloat64,
                 'start': hl.tint32,
                 'strvctvre_score': hl.tstr,
                 'svtype': hl.tstr,

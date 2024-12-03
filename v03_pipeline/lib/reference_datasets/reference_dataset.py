@@ -16,6 +16,7 @@ from v03_pipeline.lib.reference_datasets.misc import (
     filter_contigs,
     filter_mito_contigs,
     get_enum_select_fields,
+    compress_floats,
 )
 
 DATASET_TYPES = 'dataset_types'
@@ -115,6 +116,7 @@ class BaseReferenceDataset:
         )
         path = self.path(reference_genome)
         ht = module.get_ht(path, reference_genome)
+        ht = compress_floats(ht)
         enum_selects = get_enum_select_fields(ht, self.enums)
         if enum_selects:
             ht = ht.transmute(**enum_selects)
