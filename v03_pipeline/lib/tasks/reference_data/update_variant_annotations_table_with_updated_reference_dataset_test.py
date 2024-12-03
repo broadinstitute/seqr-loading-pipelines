@@ -143,9 +143,9 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                     hl.Struct(
                         versions=hl.Struct(
                             dbnsfp='1.0',
-                            eigen='1.0',
+                            eigen='1.1',
                             clinvar='2024-11-11',
-                            exac='1.0',
+                            exac='1.1',
                             splice_ai='1.0',
                             topmed='1.0',
                             hgmd='1.0',
@@ -294,7 +294,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                     hl.Struct(
                         versions=hl.Struct(
                             helix_mito='1.0',
-                            hmtvar='1.0',
+                            hmtvar='1.1',
                             mitimpact='1.0',
                             mitomap='1.0',
                             gnomad_mito='1.0',
@@ -422,9 +422,9 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                     hl.Struct(
                         versions=hl.Struct(
                             dbnsfp='1.0',
-                            eigen='1.0',
+                            eigen='1.1',
                             clinvar='2024-11-11',
-                            exac='1.0',
+                            exac='1.1',
                             splice_ai='1.0',
                             topmed='1.0',
                             hgmd='1.0',
