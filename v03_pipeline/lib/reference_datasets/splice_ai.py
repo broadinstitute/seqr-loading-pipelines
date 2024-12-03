@@ -17,8 +17,8 @@ def remove_duplicate_scores(ht: hl.Table):
     #  1:861264      | ["C","A"]  | NA   | -1.00e+01 | NA       | ["A|SAMD11|0.02|0.01|0.00|0.00|14|38|14|38"]
     #
     count_ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
-    duplicates_variants_ht = count_ht.filter(count_ht.n > 1)
-    duplicates_ht = ht.semi_join(duplicates_variants_ht)
+    duplicate_variants_ht = count_ht.filter(count_ht.n > 1)
+    duplicates_ht = ht.semi_join(duplicate_variants_ht)
     non_duplicates_ht = ht.anti_join(duplicates_ht)
     return non_duplicates_ht.union(
         # Remove rows that 1) are part of duplicate variant groupings
