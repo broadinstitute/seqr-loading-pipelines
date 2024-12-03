@@ -52,3 +52,9 @@ class ExacTest(unittest.TestCase):
                     ),
                 ],
             )
+            self.assertEqual(
+                ht.globals.collect(),
+                [
+                    hl.Struct(version='1.1', enums=hl.Struct()),
+                ],
+            )
