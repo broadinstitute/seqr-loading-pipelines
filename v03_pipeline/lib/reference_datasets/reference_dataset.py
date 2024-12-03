@@ -90,7 +90,7 @@ class BaseReferenceDataset:
     def enum_globals(self) -> hl.Struct:
         if self.enums:
             return hl.Struct(**self.enums)
-        return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
+        return hl.Struct()
 
     @property
     def filter(  # noqa: A003
