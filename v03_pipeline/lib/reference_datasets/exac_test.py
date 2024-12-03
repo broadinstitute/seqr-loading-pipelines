@@ -17,7 +17,6 @@ class ExacTest(unittest.TestCase):
             return_value=EXAC_PATH,
         ):
             ht = ReferenceDataset.exac.get_ht(ReferenceGenome.GRCh38)
-            print(ht.collect())
             self.assertEqual(
                 ht.collect(),
                 [
