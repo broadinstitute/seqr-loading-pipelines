@@ -19,10 +19,10 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     return ht.select(
         AF_POPMAX=hl.or_missing(
             ht.info.AC_POPMAX[ht.a_index - 1] != 'NA',
-            hl.float(
-                hl.int(ht.info.AC_POPMAX[ht.a_index - 1])
-                / hl.int(ht.info.AN_POPMAX[ht.a_index - 1]),
+            hl.float32(
+                hl.int32(ht.info.AC_POPMAX[ht.a_index - 1])
+                / hl.int32(ht.info.AN_POPMAX[ht.a_index - 1]),
             ),
-        )
-        ** {k: parse_nested_field(ht, v) for k, v in SELECT.items()},
+        ),
+        **{k: parse_nested_field(ht, v) for k, v in SELECT.items()},
     )

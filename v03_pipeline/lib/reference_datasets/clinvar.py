@@ -12,7 +12,11 @@ from v03_pipeline.lib.annotations.enums import (
     CLINVAR_PATHOGENICITIES_LOOKUP,
 )
 from v03_pipeline.lib.model.definitions import ReferenceGenome
-from v03_pipeline.lib.reference_datasets.misc import copy_to_cloud_storage, vcf_to_ht
+from v03_pipeline.lib.reference_datasets.misc import (
+    BIALLELIC,
+    copy_to_cloud_storage,
+    vcf_to_ht,
+)
 
 CLINVAR_GOLD_STARS_LOOKUP = hl.dict(
     {
@@ -166,6 +170,8 @@ def get_ht(
         shutil.copyfileobj(r.raw, tmp_file)
         cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = vcf_to_ht(cloud_tmp_file, reference_genome)
+    # Filter deletions present as single alleles
+    ht = ht.filter(hl.len(ht.alleles) == BIALLELIC)
     submitters_ht = get_submission_summary_ht()
     ht = ht.annotate(
         submitters=submitters_ht[ht.rsid].Submitters,

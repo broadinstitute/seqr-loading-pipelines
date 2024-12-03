@@ -12,9 +12,15 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
         contig_recoding=reference_genome.contig_recoding(),
     )
     ht = mt.rows()
-    return ht.select(
+    # HGMD represents DELETIONS as Structural Variants
+    # which is less than ideal.
+    ht = ht.filter(ht.alleles[1] != '<DEL>')
+    ht = ht.select(
         **{
             'accession': ht.rsid,
             'class': ht.info.CLASS,
         },
     )
+    # HGMD duplicates exist due to phenotype information
+    # arbitrarily choosing a value should be sufficient.
+    return ht.distinct()

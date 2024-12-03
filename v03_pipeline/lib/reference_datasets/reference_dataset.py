@@ -13,6 +13,7 @@ from v03_pipeline.lib.misc.validation import (
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
+    compress_floats,
     filter_contigs,
     filter_mito_contigs,
     get_enum_select_fields,
@@ -115,6 +116,7 @@ class BaseReferenceDataset:
         )
         path = self.path(reference_genome)
         ht = module.get_ht(path, reference_genome)
+        ht = compress_floats(ht)
         enum_selects = get_enum_select_fields(ht, self.enums)
         if enum_selects:
             ht = ht.transmute(**enum_selects)
