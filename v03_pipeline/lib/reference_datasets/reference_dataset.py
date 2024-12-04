@@ -369,7 +369,7 @@ CONFIG = {
     ReferenceDataset.gnomad_mito: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
         },
     },

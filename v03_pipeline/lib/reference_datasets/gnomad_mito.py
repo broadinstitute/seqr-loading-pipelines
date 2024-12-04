@@ -9,6 +9,6 @@ def get_ht(path: str, *_) -> hl.Table:
         AC_het=hl.int32(ht.AC_het),
         AF_hom=ht.AF_hom,
         AF_het=ht.AF_het,
-        max_hl=ht.max_hl,
+        max_hl=hl.float32(ht.max_hl),
     )
     return ht.select_globals()
