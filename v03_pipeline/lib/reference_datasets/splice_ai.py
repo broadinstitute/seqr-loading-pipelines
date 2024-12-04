@@ -11,7 +11,7 @@ from v03_pipeline.lib.reference_datasets.misc import vcf_to_ht
 
 def remove_duplicate_scores(ht: hl.Table):
     #
-    # SpliceAI has duplicate rows of the ilk:
+    # SpliceAI has many duplicate rows of the ilk:
     #
     #  1:861264      | ["C","A"]  | NA   | -1.00e+01 | NA       | ["A|AL645608.1|0.00|0.00|0.00|0.00|2|27|12|1"] |
     #  1:861264      | ["C","A"]  | NA   | -1.00e+01 | NA       | ["A|SAMD11|0.02|0.01|0.00|0.00|14|38|14|38"]
@@ -22,10 +22,10 @@ def remove_duplicate_scores(ht: hl.Table):
     non_duplicates_ht = ht.anti_join(duplicates_ht)
     return non_duplicates_ht.union(
         # Remove rows that 1) are part of duplicate variant groupings
-        # and 2) contain dots.
+        # and 2) contain dots.  Then, remove arbitrarily with .distinct()
         duplicates_ht.filter(
             ~duplicates_ht.info.SpliceAI[0].split(delim='\\|')[1].contains('.'),
-        ),
+        ).distinct(),
     )
 
 
