@@ -297,7 +297,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                             hmtvar='1.1',
                             mitimpact='1.0',
                             mitomap='1.0',
-                            gnomad_mito='1.0',
+                            gnomad_mito='1.1',
                             local_constraint_mito='1.0',
                             clinvar='2024-11-11',
                             dbnsfp='1.0',

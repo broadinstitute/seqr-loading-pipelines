@@ -815,7 +815,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         versions=hl.Struct(
                             clinvar='2024-11-11',
                             dbnsfp='1.0',
-                            gnomad_mito='1.0',
+                            gnomad_mito='1.1',
                             helix_mito='1.0',
                             hmtvar='1.1',
                             mitomap='1.0',
