@@ -15,7 +15,8 @@ SELECT = {
 
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
     ht = vcf_to_ht(path, reference_genome)
-    ht = ht.filter(ht.locus.position == hl.int(ht.info.OriginalStart))
+    if reference_genome == ReferenceGenome.GRCh37:
+        ht = ht.filter(ht.locus.position == hl.int(ht.info.OriginalStart))
     return ht.select(
         **{k: parse_nested_field(ht, v) for k, v in SELECT.items()},
     )
