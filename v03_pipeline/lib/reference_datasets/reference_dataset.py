@@ -6,9 +6,14 @@ from typing import Union
 
 import hail as hl
 
+from v03_pipeline.lib.misc.validation import (
+    validate_allele_type,
+    validate_no_duplicate_variants,
+)
 from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
 from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
+    compress_floats,
     filter_contigs,
     filter_mito_contigs,
     get_enum_select_fields,
@@ -111,10 +116,16 @@ class BaseReferenceDataset:
         )
         path = self.path(reference_genome)
         ht = module.get_ht(path, reference_genome)
+        ht = compress_floats(ht)
         enum_selects = get_enum_select_fields(ht, self.enums)
         if enum_selects:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
+        # Reference Datasets are DatasetType agnostic, but these
+        # methods (in theory) support SV/GCNV.  SNV_INDEL
+        # is passed as a proxy for non-SV/GCNV.
+        validate_allele_type(ht, DatasetType.SNV_INDEL)
+        validate_no_duplicate_variants(ht, reference_genome, DatasetType.SNV_INDEL)
         # NB: we do not filter with "filter" here
         # ReferenceDatasets are DatasetType agnostic and that
         # filter is only used at annotation time.
@@ -195,14 +206,14 @@ CONFIG = {
     ReferenceDataset.eigen: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: The download link on the Eigen website (http://www.columbia.edu/~ii2135/download.html) is broken
             # as of 11/15/24 so we will host the data
             PATH: 'gs://seqr-reference-data/GRCh37/eigen/EIGEN_coding_noncoding.grch37.ht',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh38/eigen/EIGEN_coding_noncoding.liftover_grch38.ht',
         },
     },
@@ -223,12 +234,12 @@ CONFIG = {
     ReferenceDataset.exac: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/legacy/exacv1_downloads/release1/ExAC.r1.sites.vep.vcf.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: Exac is only available on GRCh37 so we host a lifted over version
             PATH: 'gs://seqr-reference-data/GRCh38/gnomad/ExAC.r1.sites.liftover.b38.vcf.gz',
         },
@@ -271,12 +282,12 @@ CONFIG = {
     ReferenceDataset.topmed: {
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://seqr-reference-data/GRCh37/TopMed/bravo-dbsnp-all.removed_chr_prefix.liftunder_GRCh37.vcf.gz',
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: TopMed data is available to download via https://legacy.bravo.sph.umich.edu/freeze8/hg38/downloads/vcf/<chrom>
             # However, users must be authenticated and accept TOS to access it so for now we will host a copy of the data
             PATH: 'gs://seqr-reference-data/GRCh38/TopMed/bravo-dbsnp-all.vcf.gz',
@@ -285,7 +296,7 @@ CONFIG = {
     ReferenceDataset.hmtvar: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             #  NB: https://www.hmtvar.uniba.it is unavailable as of 11/15/24 so we will host the data
             PATH: 'https://storage.googleapis.com/seqr-reference-data/GRCh38/mitochondrial/HmtVar/HmtVar%20Jan.%2010%202022.json',
         },

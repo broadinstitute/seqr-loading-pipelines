@@ -24,6 +24,7 @@ class BaseHailTableTask(luigi.Task):
     def init_hail(self):
         # Need to use the GCP bucket as temp storage for very large callset joins
         hl.init(tmp_dir=Env.HAIL_TMP_DIR, idempotent=True)
+        logger.info(f'Initialized hail w/ tmp_dir {Env.HAIL_TMP_DIR}')
 
         # Interval ref data join causes shuffle death, this prevents it
         hl._set_flags(use_new_shuffle='1', no_whole_stage_codegen='1')  # noqa: SLF001

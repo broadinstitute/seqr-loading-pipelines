@@ -1,6 +1,7 @@
 import hail as hl
 import requests
 
+from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
@@ -18,6 +19,12 @@ def get_ht(
             reference_genome.value,
         ),
         alleles=hl.array([ht.ref_rCRS, ht.alt]),
-        score=ht.disease_score,
+        score=hl.float32(ht.disease_score),
     )
-    return ht.key_by('locus', 'alleles')
+    ht = ht.key_by('locus', 'alleles')
+    ht = ht.filter(
+        ~DatasetType.SNV_INDEL.invalid_allele_types.contains(
+            hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
+        ),
+    )
+    return ht.group_by(*ht.key).aggregate(score=hl.agg.max(ht.score))

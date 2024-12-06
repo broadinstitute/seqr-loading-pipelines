@@ -1,17 +1,36 @@
 import contextlib
 import os
-import subprocess
+import random
+import string
 import tempfile
 import zipfile
 
 import hail as hl
+import hailtop.fs as hfs
 import requests
 
 from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.model.environment import Env
 
 BIALLELIC = 2
+
+
+def compress_floats(ht: hl.Table):
+    # Parse float64s into float32s to save space!
+    return ht.select(
+        **{
+            k: hl.float32(v) if v.dtype == hl.tfloat64 else v
+            for k, v in ht.row_value.items()
+        },
+    )
+
+
+def generate_random_string(length=5):
+    """Generates a random string of the specified length."""
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))  # noqa: S311
 
 
 def get_enum_select_fields(
@@ -100,7 +119,7 @@ def key_by_locus_alleles(ht: hl.Table, reference_genome: ReferenceGenome) -> hl.
     chrom = (
         hl.format('chr%s', ht.chrom)
         if reference_genome == ReferenceGenome.GRCh38
-        else ht.chrom
+        else hl.if_else(ht.chrom == 'M', 'MT', ht.chrom)
     )
     ht = ht.transmute(
         locus=hl.locus(chrom, ht.pos, reference_genome.value),
@@ -120,7 +139,7 @@ def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
 
 @contextlib.contextmanager
 def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=False):
-    dir_ = f'/tmp/{dataset_name}'  # noqa: S108
+    dir_ = f'/tmp/{generate_random_string()}/{dataset_name}'  # noqa: S108
     os.makedirs(dir_, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         dir=dir_,
@@ -128,9 +147,8 @@ def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=Fals
     ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
         copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
-            zipf.extractall(os.path.dirname(tmp_file.name))
-        safely_add_to_hdfs(dir_)
-        yield os.path.dirname(tmp_file.name)
+            zipf.extractall(dir_)
+        yield copy_to_cloud_storage(dir_)
 
 
 def select_for_interval_reference_dataset(
@@ -154,19 +172,12 @@ def select_for_interval_reference_dataset(
     return ht.key_by('interval')
 
 
-def safely_add_to_hdfs(file_name: str):
-    if os.getenv('HAIL_DATAPROC') != '1':
-        return
-    subprocess.run(
-        [  # noqa: S603
-            '/usr/bin/hdfs',
-            'dfs',
-            '-copyFromLocal',
-            '-f',
-            f'file://{file_name}',
-            file_name,
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+def copy_to_cloud_storage(file_name: str) -> str:
+    if not Env.HAIL_TMP_DIR.startswith('gs://'):
+        return file_name
+    if os.path.isdir(file_name):
+        path = os.path.join(Env.HAIL_TMP_DIR, file_name.lstrip('/'))
+    else:
+        path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
+    hfs.copy(file_name, path)
+    return path

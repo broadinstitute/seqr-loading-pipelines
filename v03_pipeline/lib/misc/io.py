@@ -271,7 +271,9 @@ def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> hl.Int32Expressi
     return hl.int32(int(sha256.hexdigest()[:8], 16))
 
 
-def checkpoint(t: hl.Table | hl.MatrixTable) -> tuple[hl.Table | hl.MatrixTable, str]:
+def checkpoint(
+    t: hl.Table | hl.MatrixTable,
+) -> tuple[hl.Table | hl.MatrixTable, str]:
     suffix = 'mt' if isinstance(t, hl.MatrixTable) else 'ht'
     read_fn = hl.read_matrix_table if isinstance(t, hl.MatrixTable) else hl.read_table
     checkpoint_path = os.path.join(

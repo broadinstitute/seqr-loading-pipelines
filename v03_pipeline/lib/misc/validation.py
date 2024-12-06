@@ -19,11 +19,11 @@ class SeqrValidationError(Exception):
 
 
 def validate_allele_type(
-    mt: hl.MatrixTable,
+    t: hl.Table | hl.MatrixTable,
     dataset_type: DatasetType,
     **_: Any,
 ) -> None:
-    ht = mt.rows()
+    ht = t.rows() if isinstance(t, hl.MatrixTable) else t
     ht = ht.filter(
         dataset_type.invalid_allele_types.contains(
             hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
@@ -42,18 +42,18 @@ def validate_allele_type(
 
 
 def validate_no_duplicate_variants(
-    mt: hl.MatrixTable,
+    t: hl.Table | hl.MatrixTable,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     **_: Any,
 ) -> None:
-    ht = mt.rows()
+    ht = t.rows() if isinstance(t, hl.MatrixTable) else t
     ht = ht.group_by(*ht.key).aggregate(n=hl.agg.count())
     ht = ht.filter(ht.n > 1)
     ht = ht.select()
     if ht.count() > 0:
         variant_format = dataset_type.table_key_format_fn(reference_genome)
-        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.collect()][:10]}'
+        msg = f'Variants are present multiple times in the callset: {[variant_format(v) for v in ht.take(10)]}'
         raise SeqrValidationError(msg)
 
 

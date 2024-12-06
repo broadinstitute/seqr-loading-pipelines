@@ -23,4 +23,5 @@ def get_ht(
             alleles=[ht.Ref, ht.Alt],
             score=hl.parse_float32(ht.APOGEE2_score),
         )
-        return ht.key_by('locus', 'alleles')
+        ht = ht.key_by('locus', 'alleles')
+        return ht.group_by(*ht.key).aggregate(score=hl.agg.max(ht.score))
