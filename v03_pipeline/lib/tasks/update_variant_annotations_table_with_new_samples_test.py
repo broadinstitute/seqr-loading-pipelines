@@ -140,7 +140,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             self.assertFalse(uvatwns_task.complete())
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
+    @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
@@ -160,7 +163,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rd_task: Mock,
-        mock_env: Mock,
+        mock_env_new_variants: Mock,
+        mock_env_caids: Mock,
         mock_register_alleles: Mock,
     ) -> None:
         mock_update_vat_with_rd_task.return_value = (
@@ -174,9 +178,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             {'ENST00000327044': 'NM_015658.4'},
         )
         # make register_alleles return CAIDs for 4 of 30 variants
-        mock_env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
-        mock_env.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
-        mock_env.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
+        mock_env_new_variants.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+            GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
+        )
+        mock_env_caids.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
+        mock_env_caids.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
         mock_register_alleles.side_effect = [
             iter(
                 [
@@ -543,7 +549,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -698,7 +706,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -771,7 +781,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
