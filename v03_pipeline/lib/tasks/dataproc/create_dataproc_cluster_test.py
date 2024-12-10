@@ -23,7 +23,11 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.dataproc.ClusterControllerClient',
 )
 class CreateDataprocClusterTaskTest(unittest.TestCase):
-    def test_dataset_type_unsupported(self, mock_cluster_controller: Mock, _: Mock) -> None:
+    def test_dataset_type_unsupported(
+        self,
+        mock_cluster_controller: Mock,
+        _: Mock,
+    ) -> None:
         worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -37,7 +41,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_failed(
         self,
         mock_cluster_controller: Mock,
-        _: Mock
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -59,7 +63,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_success(
         self,
         mock_cluster_controller: Mock,
-        _: Mock
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -83,7 +87,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -109,7 +113,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
