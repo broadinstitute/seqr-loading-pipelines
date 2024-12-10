@@ -6,6 +6,7 @@ from google.cloud import dataproc_v1 as dataproc
 from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.gcp import get_service_account_credentials
 from v03_pipeline.lib.model import Env, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
@@ -22,9 +23,11 @@ logger = get_logger(__name__)
 
 
 def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
+    service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
         'cluster_name': f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}',
+        # Schema found at https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig
         'config': {
             'gce_cluster_config': {
                 'zone_uri': Env.GCLOUD_ZONE,
@@ -35,6 +38,8 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'REFERENCE_GENOME': reference_genome.value,
                     'PIPELINE_RUNNER_APP_VERSION': Env.PIPELINE_RUNNER_APP_VERSION,
                 },
+                'service_account': service_account_credentials.service_account_email,
+                'service_account_scopes': service_account_credentials.scopes,
             },
             'master_config': {
                 'num_instances': 1,
