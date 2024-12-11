@@ -10,6 +10,8 @@ import responses
 from v03_pipeline.lib.misc.terra_data_repository import (
     TDR_ROOT_URL,
     _get_dataset_ids,
+    gen_bq_sample_metrics,
+    gen_bq_table_names,
 )
 
 TDR_DATASETS = [
@@ -206,7 +208,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         )
 
     @responses.activate
-    def test_get_bq_table_names(self, _: Mock) -> None:
+    def test_gen_bq_table_names(self, _: Mock) -> None:
         responses.get(
             os.path.join(TDR_ROOT_URL, 'datasets'),
             body=json.dumps(
@@ -294,7 +296,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 ),
             )
         self.assertCountEqual(
-            get_bq_table_names(),
+            list(gen_bq_table_names()),
             [
                 'datarepo-7242affb.datarepo_RP_3053',
                 'datarepo-5a72e31b.datarepo_RP_3056',

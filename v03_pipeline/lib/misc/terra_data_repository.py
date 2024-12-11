@@ -54,8 +54,7 @@ def _get_dataset_ids() -> list[str]:
     return [x['id'] for x in items]
 
 
-def get_bq_table_names() -> list[str]:
-    results = []
+def gen_bq_table_names() -> Generator[str]:
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
             executor.submit(
@@ -66,10 +65,7 @@ def get_bq_table_names() -> list[str]:
         ]
         for future in as_completed(futures):
             result = future.result()
-            results.append(
-                f"{result['accessInformation']['bigQuery']['projectId']}.{result['accessInformation']['bigQuery']['datasetName']}",
-            )
-    return results
+            yield f"{result['accessInformation']['bigQuery']['projectId']}.{result['accessInformation']['bigQuery']['datasetName']}"
 
 
 def gen_bq_sample_metrics(
