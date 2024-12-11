@@ -10,8 +10,6 @@ import responses
 from v03_pipeline.lib.misc.terra_data_repository import (
     TDR_ROOT_URL,
     _get_dataset_ids,
-    gen_bigquery_sample_metrics,
-    get_bigquery_table_names,
 )
 
 TDR_DATASETS = [
@@ -158,7 +156,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         )
 
     @responses.activate
-    def test_get_dataset_ids_no_bigquery(self, _: Mock) -> None:
+    def test_get_dataset_ids_no_bq(self, _: Mock) -> None:
         responses.get(
             os.path.join(TDR_ROOT_URL, 'datasets'),
             body=json.dumps(
@@ -208,7 +206,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         )
 
     @responses.activate
-    def test_get_bigquery_table_names(self, _: Mock) -> None:
+    def test_get_bq_table_names(self, _: Mock) -> None:
         responses.get(
             os.path.join(TDR_ROOT_URL, 'datasets'),
             body=json.dumps(
@@ -296,7 +294,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 ),
             )
         self.assertCountEqual(
-            get_bigquery_table_names(),
+            get_bq_table_names(),
             [
                 'datarepo-7242affb.datarepo_RP_3053',
                 'datarepo-5a72e31b.datarepo_RP_3056',
@@ -305,7 +303,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         )
 
     @patch('v03_pipeline.lib.misc.terra_data_repository._bq_metrics_query')
-    def test_gen_bigquery_sample_metrics(
+    def test_gen_bq_sample_metrics(
         self,
         bq_metrics_query_mock: Mock,
         _: Mock,
@@ -346,7 +344,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         ]
         self.assertCountEqual(
             list(
-                gen_bigquery_sample_metrics(
+                gen_bq_sample_metrics(
                     [
                         'datarepo-7242affb.datarepo_RP_3053',
                         'datarepo-5a72e31b.datarepo_RP_3056',

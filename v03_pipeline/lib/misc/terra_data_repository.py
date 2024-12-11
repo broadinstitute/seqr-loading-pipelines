@@ -54,7 +54,7 @@ def _get_dataset_ids() -> list[str]:
     return [x['id'] for x in items]
 
 
-def get_bigquery_table_names() -> list[str]:
+def get_bq_table_names() -> list[str]:
     results = []
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
@@ -72,7 +72,7 @@ def get_bigquery_table_names() -> list[str]:
     return results
 
 
-def gen_bigquery_sample_metrics(
+def gen_bq_sample_metrics(
     table_names: list[str],
 ) -> Generator[google.cloud.bigquery.table.Row]:
     with ThreadPoolExecutor(max_workers=5) as executor:
