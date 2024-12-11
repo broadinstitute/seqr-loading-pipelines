@@ -4,12 +4,14 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import google.cloud.bigquery
 import responses
 
 from v03_pipeline.lib.misc.terra_data_repository import (
     TDR_ROOT_URL,
+    _get_dataset_ids,
+    gen_bigquery_sample_metrics,
     get_bigquery_table_names,
-    get_dataset_ids,
 )
 
 TDR_DATASETS = [
@@ -146,8 +148,8 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 },
             ),
         )
-        self.assertEqual(
-            get_dataset_ids(),
+        self.assertListEqual(
+            _get_dataset_ids(),
             [
                 '2dc51ee0-a037-499d-a915-a7c20a0b216d',
                 'beef77e8-575b-40e5-9340-a6f10e0bec67',
@@ -202,7 +204,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
         )
         self.assertRaises(
             ValueError,
-            get_dataset_ids,
+            _get_dataset_ids,
         )
 
     @responses.activate
@@ -293,11 +295,88 @@ class TerraDataRepositoryTest(unittest.TestCase):
                     },
                 ),
             )
-        self.assertEqual(
+        self.assertCountEqual(
             get_bigquery_table_names(),
             [
                 'datarepo-7242affb.datarepo_RP_3053',
                 'datarepo-5a72e31b.datarepo_RP_3056',
                 'datarepo-aada2e3b.datarepo_RP_3059',
+            ],
+        )
+
+    @patch('v03_pipeline.lib.misc.terra_data_repository._bq_metrics_query')
+    def test_gen_bigquery_sample_metrics(
+        self,
+        bq_metrics_query_mock: Mock,
+        _: Mock,
+    ) -> None:
+        bq_metrics_query_mock.side_effect = [
+            iter(
+                [
+                    google.cloud.bigquery.table.Row(
+                        ('SM-NJ8MF', ''),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        ('SM-MWOGC', 'Female'),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        ('SM-MWKWL', 'Male'),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                ],
+            ),
+            iter(
+                [
+                    google.cloud.bigquery.table.Row(
+                        ('SM-NGE65', 'Male'),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        ('SM-NGE5G', 'Male'),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        ('SM-NC6LM', 'Male'),
+                        {'sample_id': 0, 'predicted_sex': 1},
+                    ),
+                ],
+            ),
+        ]
+        self.assertCountEqual(
+            list(
+                gen_bigquery_sample_metrics(
+                    [
+                        'datarepo-7242affb.datarepo_RP_3053',
+                        'datarepo-5a72e31b.datarepo_RP_3056',
+                    ],
+                ),
+            ),
+            [
+                google.cloud.bigquery.table.Row(
+                    ('SM-NJ8MF', ''),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
+                google.cloud.bigquery.table.Row(
+                    ('SM-MWOGC', 'Female'),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
+                google.cloud.bigquery.table.Row(
+                    ('SM-MWKWL', 'Male'),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
+                google.cloud.bigquery.table.Row(
+                    ('SM-NGE65', 'Male'),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
+                google.cloud.bigquery.table.Row(
+                    ('SM-NGE5G', 'Male'),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
+                google.cloud.bigquery.table.Row(
+                    ('SM-NC6LM', 'Male'),
+                    {'sample_id': 0, 'predicted_sex': 1},
+                ),
             ],
         )
