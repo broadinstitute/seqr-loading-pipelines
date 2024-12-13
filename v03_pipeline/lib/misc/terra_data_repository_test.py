@@ -315,15 +315,15 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 [
                     google.cloud.bigquery.table.Row(
                         ('SM-NJ8MF', ''),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                     google.cloud.bigquery.table.Row(
                         ('SM-MWOGC', 'Female'),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                     google.cloud.bigquery.table.Row(
                         ('SM-MWKWL', 'Male'),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                 ],
             ),
@@ -331,15 +331,15 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 [
                     google.cloud.bigquery.table.Row(
                         ('SM-NGE65', 'Male'),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                     google.cloud.bigquery.table.Row(
                         ('SM-NGE5G', 'Male'),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                     google.cloud.bigquery.table.Row(
                         ('SM-NC6LM', 'Male'),
-                        {'sample_id': 0, 'predicted_sex': 1},
+                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
                     ),
                 ],
             ),
@@ -356,27 +356,27 @@ class TerraDataRepositoryTest(unittest.TestCase):
             [
                 google.cloud.bigquery.table.Row(
                     ('SM-NJ8MF', ''),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
                 google.cloud.bigquery.table.Row(
                     ('SM-MWOGC', 'Female'),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
                 google.cloud.bigquery.table.Row(
                     ('SM-MWKWL', 'Male'),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
                 google.cloud.bigquery.table.Row(
                     ('SM-NGE65', 'Male'),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
                 google.cloud.bigquery.table.Row(
                     ('SM-NGE5G', 'Male'),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
                 google.cloud.bigquery.table.Row(
                     ('SM-NC6LM', 'Male'),
-                    {'sample_id': 0, 'predicted_sex': 1},
+                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
                 ),
             ],
         )

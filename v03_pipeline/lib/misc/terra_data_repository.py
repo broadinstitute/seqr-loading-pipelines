@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.gcp import get_service_account_credentials
 from v03_pipeline.lib.misc.requests import requests_retry_session
 
 BIGQUERY_METRICS = [
-    'sample_id',
+    'collaborator_sample_id',
     'predicted_sex',
 ]
 BIGQUERY_RESOURCE = 'bigquery'
