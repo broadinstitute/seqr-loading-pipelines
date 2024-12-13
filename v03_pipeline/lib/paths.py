@@ -98,10 +98,9 @@ def family_table_path(
     )
 
 
-def imputed_sex_path(
+def tdr_metrics_dir(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    callset_path: str,
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
@@ -109,8 +108,18 @@ def imputed_sex_path(
             reference_genome,
             dataset_type,
         ),
-        'imputed_sex',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+        'tdr_metrics',
+    )
+
+
+def tdr_metrics_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    bq_table_name: str,
+) -> str:
+    return os.path.join(
+        tdr_metrics_dir(reference_genome, dataset_type),
+        f'{bq_table_name}.tsv',
     )
 
 
