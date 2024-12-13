@@ -4,13 +4,11 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-import google.cloud.bigquery
 import responses
 
 from v03_pipeline.lib.misc.terra_data_repository import (
     TDR_ROOT_URL,
     _get_dataset_ids,
-    gen_bq_sample_metrics,
     gen_bq_table_names,
 )
 
@@ -301,82 +299,5 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 'datarepo-7242affb.datarepo_RP_3053',
                 'datarepo-5a72e31b.datarepo_RP_3056',
                 'datarepo-aada2e3b.datarepo_RP_3059',
-            ],
-        )
-
-    @patch('v03_pipeline.lib.misc.terra_data_repository._bq_metrics_query')
-    def test_gen_bq_sample_metrics(
-        self,
-        bq_metrics_query_mock: Mock,
-        _: Mock,
-    ) -> None:
-        bq_metrics_query_mock.side_effect = [
-            iter(
-                [
-                    google.cloud.bigquery.table.Row(
-                        ('SM-NJ8MF', ''),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                    google.cloud.bigquery.table.Row(
-                        ('SM-MWOGC', 'Female'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                    google.cloud.bigquery.table.Row(
-                        ('SM-MWKWL', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                ],
-            ),
-            iter(
-                [
-                    google.cloud.bigquery.table.Row(
-                        ('SM-NGE65', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                    google.cloud.bigquery.table.Row(
-                        ('SM-NGE5G', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                    google.cloud.bigquery.table.Row(
-                        ('SM-NC6LM', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                    ),
-                ],
-            ),
-        ]
-        self.assertCountEqual(
-            list(
-                gen_bq_sample_metrics(
-                    [
-                        'datarepo-7242affb.datarepo_RP_3053',
-                        'datarepo-5a72e31b.datarepo_RP_3056',
-                    ],
-                ),
-            ),
-            [
-                google.cloud.bigquery.table.Row(
-                    ('SM-NJ8MF', ''),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
-                google.cloud.bigquery.table.Row(
-                    ('SM-MWOGC', 'Female'),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
-                google.cloud.bigquery.table.Row(
-                    ('SM-MWKWL', 'Male'),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
-                google.cloud.bigquery.table.Row(
-                    ('SM-NGE65', 'Male'),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
-                google.cloud.bigquery.table.Row(
-                    ('SM-NGE5G', 'Male'),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
-                google.cloud.bigquery.table.Row(
-                    ('SM-NC6LM', 'Male'),
-                    {'collaborator_sample_id': 0, 'predicted_sex': 1},
-                ),
             ],
         )

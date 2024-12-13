@@ -30,19 +30,6 @@ def _tdr_request(resource: str) -> dict:
     return res.json()
 
 
-def _bq_metrics_query(table_name: str):
-    if not re.match(TABLE_NAME_VALIDATION_REGEX, table_name):
-        msg = f'{table_name} does not match expected pattern'
-        raise ValueError(msg)
-    client = bigquery.Client()
-    return client.query_and_wait(
-        f"""
-        SELECT {','.join(BIGQUERY_METRICS)}
-        FROM `{table_name}.sample`
-    """,  # noqa: S608
-    )
-
-
 def _get_dataset_ids() -> list[str]:
     res_body = _tdr_request('datasets')
     items = res_body['items']
@@ -68,15 +55,14 @@ def gen_bq_table_names() -> Generator[str]:
             yield f"{result['accessInformation']['bigQuery']['projectId']}.{result['accessInformation']['bigQuery']['datasetName']}"
 
 
-def gen_bq_sample_metrics(
-    table_names: list[str],
-) -> Generator[google.cloud.bigquery.table.Row]:
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [
-            executor.submit(_bq_metrics_query, table_name) for table_name in table_names
-        ]
-        for future in as_completed(futures):
-            # NB: future.result() is a RowIterator returned
-            # by the bq client library.  We delegate to that
-            # iterator.
-            yield from future.result()
+def bq_metrics_query(bq_table_name: str) -> google.cloud.bigquery.table.RowIterator:
+    if not re.match(TABLE_NAME_VALIDATION_REGEX, bq_table_name):
+        msg = f'{bq_table_name} does not match expected pattern'
+        raise ValueError(msg)
+    client = bigquery.Client()
+    return client.query_and_wait(
+        f"""
+        SELECT {','.join(BIGQUERY_METRICS)}
+        FROM `{bq_table_name}.sample`
+    """,  # noqa: S608
+    )

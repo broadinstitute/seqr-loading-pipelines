@@ -186,6 +186,14 @@ class DatasetType(str, Enum):
     ) -> bool:
         return self == DatasetType.SNV_INDEL and sample_type == SampleType.WES
 
+    def expect_tdr_metrics(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> bool:
+        return (
+            self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
+        )
+
     @property
     def has_gencode_gene_symbol_to_gene_id_mapping(self) -> bool:
         return self == DatasetType.SV
