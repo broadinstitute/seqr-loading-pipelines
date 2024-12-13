@@ -31,7 +31,7 @@ def _tdr_request(resource: str) -> dict:
 
 
 def _get_dataset_ids() -> list[str]:
-    res_body = _tdr_request('datasets')
+    res_body = _tdr_request('datasets?limit=50000')  # Arbitrary large number :/
     items = res_body['items']
     for item in items:
         if not any(x['cloudResource'] == BIGQUERY_RESOURCE for x in item['storage']):
