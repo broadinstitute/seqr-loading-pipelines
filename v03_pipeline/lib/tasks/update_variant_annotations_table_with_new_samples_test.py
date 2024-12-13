@@ -712,7 +712,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
-    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.Env')
+    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
@@ -721,7 +721,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
-        mock_rd_env: Mock,
+        mock_rd_ff: Mock,
         mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
     ) -> None:
@@ -740,7 +740,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ReferenceDataset.hgmd,
             ),
         )
-        mock_rd_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_register_alleles.side_effect = None
 

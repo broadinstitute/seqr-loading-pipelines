@@ -10,7 +10,12 @@ from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
 )
-from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import (
+    AccessControl,
+    DatasetType,
+    FeatureFlag,
+    ReferenceGenome,
+)
 from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
@@ -41,7 +46,7 @@ class BaseReferenceDataset:
             for dataset, config in CONFIG.items()
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES, [])
         ]
-        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+        if not FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return {
                 dataset
                 for dataset in reference_datasets

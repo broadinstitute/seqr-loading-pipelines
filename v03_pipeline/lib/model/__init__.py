@@ -1,3 +1,4 @@
+from v03_pipeline.lib.mode.feature_flag import FeatureFlag
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import (
     AccessControl,
@@ -12,6 +13,7 @@ __all__ = [
     'AccessControl',
     'DatasetType',
     'Env',
+    'FeatureFlag',
     'Sex',
     'PipelineVersion',
     'ReferenceGenome',
