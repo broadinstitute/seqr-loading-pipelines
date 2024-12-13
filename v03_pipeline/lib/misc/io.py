@@ -219,7 +219,11 @@ def select_relevant_fields(
 def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
     ht = hl.import_table(imputed_sex_path)
     imputed_sex_lookup = hl.dict(
-        {s.imputed_sex_value: s.value for s in Sex},
+        {
+            imputed_sex_value: s.value
+            for s in Sex
+            for imputed_sex_value in s.imputed_sex_values
+        },
     )
     ht = ht.select(
         s=ht.collaborator_sample_id,

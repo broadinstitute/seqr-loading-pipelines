@@ -47,6 +47,7 @@ class IOTest(unittest.TestCase):
                 hl.Struct(s='abc_2', predicted_sex='F'),
                 hl.Struct(s='abc_3', predicted_sex='U'),
                 hl.Struct(s='abc_4', predicted_sex='XYY'),
+                hl.Struct(s='abc_5', predicted_sex='U'),
             ],
         )
 
