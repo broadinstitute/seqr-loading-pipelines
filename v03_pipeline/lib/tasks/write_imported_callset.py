@@ -14,7 +14,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_filters_path,
@@ -45,7 +45,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         requirements = []
         if (
-            Env.EXPECT_WES_FILTERS
+            FeatureFlag.EXPECT_WES_FILTERS
             and not self.skip_expect_filters
             and self.dataset_type.expect_filters(
                 self.sample_type,
@@ -62,7 +62,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
                 ),
             ]
         if (
-            Env.EXPECT_TDR_METRICS
+            FeatureFlag.EXPECT_TDR_METRICS
             and not self.skip_expect_tdr_metrics
             and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
@@ -87,7 +87,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
             filters_path = None
             if (
-                Env.EXPECT_WES_FILTERS
+                FeatureFlag.EXPECT_WES_FILTERS
                 and not self.skip_expect_filters
                 and self.dataset_type.expect_filters(
                     self.sample_type,

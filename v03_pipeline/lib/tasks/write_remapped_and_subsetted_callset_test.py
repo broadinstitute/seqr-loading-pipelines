@@ -115,12 +115,12 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             ],
         )
 
-    @patch('v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset.Env')
+    @patch('v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset.FeatureFlag')
     def test_write_remapped_and_subsetted_callset_task_failed_sex_check_family(
         self,
-        mock_env: Mock,
+        mock_ff: Mock,
     ) -> None:
-        mock_env.CHECK_SEX_AND_RELATEDNESS = True
+        mock_ff.CHECK_SEX_AND_RELATEDNESS = True
         worker = luigi.worker.Worker()
         wrsc_task = WriteRemappedAndSubsettedCallsetTask(
             reference_genome=ReferenceGenome.GRCh38,

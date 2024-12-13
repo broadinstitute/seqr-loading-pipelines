@@ -7,7 +7,7 @@ from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.gcp import get_service_account_credentials
-from v03_pipeline.lib.model import Env, ReferenceGenome
+from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
@@ -88,18 +88,21 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'spark:spark.executorEnv.HAIL_WORKER_OFF_HEAP_MEMORY_PER_CORE_MB': '6323',
                     'spark:spark.speculation': 'true',
                     'spark-env:ACCESS_PRIVATE_REFERENCE_DATASETS': '1'
-                    if Env.ACCESS_PRIVATE_REFERENCE_DATASETS
+                    if FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS
                     else '0',
                     'spark-env:CHECK_SEX_AND_RELATEDNESS': '1'
-                    if Env.CHECK_SEX_AND_RELATEDNESS
+                    if FeatureFlag.CHECK_SEX_AND_RELATEDNESS
+                    else '0',
+                    'spark-env:EXPECT_TDR_METRICS': '1'
+                    if FeatureFlag.EXPECT_TDR_METRICS
                     else '0',
                     'spark-env:EXPECT_WES_FILTERS': '1'
-                    if Env.EXPECT_WES_FILTERS
+                    if FeatureFlag.EXPECT_WES_FILTERS
                     else '0',
                     'spark-env:HAIL_SEARCH_DATA_DIR': Env.HAIL_SEARCH_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,
                     'spark-env:INCLUDE_PIPELINE_VERSION_IN_PREFIX': '1'
-                    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX
+                    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX
                     else '0',
                     'spark-env:LOADING_DATASETS_DIR': Env.LOADING_DATASETS_DIR,
                     'spark-env:PRIVATE_REFERENCE_DATASETS_DIR': Env.PRIVATE_REFERENCE_DATASETS_DIR,
