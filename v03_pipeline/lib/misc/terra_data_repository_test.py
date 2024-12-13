@@ -137,7 +137,7 @@ class TerraDataRepositoryTest(unittest.TestCase):
     @responses.activate
     def test_get_dataset_ids(self, _: Mock) -> None:
         responses.get(
-            os.path.join(TDR_ROOT_URL, 'datasets'),
+            os.path.join(TDR_ROOT_URL, 'datasets?limit=50000'),
             body=json.dumps(
                 {
                     'total': 3,
