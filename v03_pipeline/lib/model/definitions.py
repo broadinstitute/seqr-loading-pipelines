@@ -18,12 +18,12 @@ class Sex(str, Enum):
     XYY = 'XYY'
 
     @property
-    def imputed_sex_value(self):
+    def imputed_sex_values(self) -> list[str]:
         return {
-            Sex.MALE: 'Male',
-            Sex.FEMALE: 'Female',
-            Sex.UNKNOWN: 'Unknown',
-        }.get(self, self.name)
+            Sex.MALE: ['Male'],
+            Sex.FEMALE: ['Female'],
+            Sex.UNKNOWN: ['', 'Unknown'],
+        }.get(self, [self.name])
 
 
 class PipelineVersion(str, Enum):
