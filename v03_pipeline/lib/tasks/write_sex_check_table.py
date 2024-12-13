@@ -1,10 +1,12 @@
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 
 from v03_pipeline.lib.misc.io import import_imputed_sex
-from v03_pipeline.lib.paths import imputed_sex_path, sex_check_table_path
+from v03_pipeline.lib.paths import sex_check_table_path, tdr_metrics_dir
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.files import GCSorLocalTarget, RawFileTask
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
+from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 
 
 class WriteSexCheckTableTask(BaseWriteTask):
@@ -20,13 +22,15 @@ class WriteSexCheckTableTask(BaseWriteTask):
         )
 
     def requires(self) -> luigi.Task:
-        return RawFileTask(
-            imputed_sex_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.callset_path,
-            ),
-        )
+        return self.clone(WriteTDRMetricsFilesTask)
 
     def create_table(self) -> hl.Table:
-        return import_imputed_sex(self.input().path)
+        ht = None
+        for tdr_metrics_file in hfs.ls(
+            tdr_metrics_dir(self.reference_genome, self.dataset_type),
+        ):
+            if not ht:
+                ht = import_imputed_sex(tdr_metrics_file.path)
+                continue
+            ht = ht.union(import_imputed_sex(tdr_metrics_file.path))
+        return ht
