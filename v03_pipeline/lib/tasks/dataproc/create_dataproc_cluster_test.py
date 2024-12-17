@@ -28,15 +28,12 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_cluster_controller: Mock,
         _: Mock,
     ) -> None:
-        worker = luigi.worker.Worker()
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
             run_id='1',
         )
-        worker.add(task)
-        worker.run()
-        self.assertTrue(task.complete())
+        self.assertRaises(RuntimeError, task.complete)
 
     def test_spinup_cluster_already_exists_failed(
         self,
@@ -45,7 +42,8 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='FAILED'),
+            status=SimpleNamespace(state='ERROR'),
+            cluster_name='abc',
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')
@@ -122,7 +120,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         operation = mock_client.create_cluster.return_value
         operation.done.side_effect = [False, True]
         operation.result.return_value = SimpleNamespace(
-            cluster_name='dataproc-cluster-1',
+            cluster_name='dataproc-cluster-5',
             cluster_uuid='12345',
         )
         worker = luigi.worker.Worker()
@@ -136,6 +134,6 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call('Waiting for cluster spinup'),
-                call('Created cluster dataproc-cluster-1 with cluster uuid: 12345'),
+                call('Created cluster dataproc-cluster-5 with cluster uuid: 12345'),
             ],
         )
