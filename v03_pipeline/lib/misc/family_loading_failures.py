@@ -16,7 +16,7 @@ def passes_relatedness_check(
     relatedness_check_lookup: dict[tuple[str, str], list],
     sample_id: str,
     other_id: str,
-    relation: Relation,
+    relations: list[Relation],
 ) -> tuple[bool, str | None]:
     # No relationship to check, return true
     if other_id is None:
@@ -24,85 +24,56 @@ def passes_relatedness_check(
     coefficients = relatedness_check_lookup.get(
         (min(sample_id, other_id), max(sample_id, other_id)),
     )
-    if not coefficients or not np.allclose(
-        coefficients,
-        relation.coefficients,
-        atol=RELATEDNESS_TOLERANCE,
+    if not coefficients or not any(
+        np.allclose(
+            coefficients,
+            relation.coefficients,
+            atol=RELATEDNESS_TOLERANCE,
+        )
+        for relation in relations
     ):
         return (
             False,
-            f'Sample {sample_id} has expected relation "{relation.value}" to {other_id} but has coefficients {coefficients or []}',
+            f'Sample {sample_id} has expected relation "{relations[0].value}" to {other_id} but has coefficients {coefficients or []}',
         )
     return True, None
 
 
-def all_relatedness_checks(  # noqa: C901
+def all_relatedness_checks(
     relatedness_check_lookup: dict[tuple[str, str], list],
+    family: Family,
     sample: Sample,
 ) -> list[str]:
     failure_reasons = []
-    for parent_id in [sample.mother, sample.father]:
-        success, reason = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            parent_id,
-            Relation.PARENT,
-        )
-        if not success:
-            failure_reasons.append(reason)
-
-    for grandparent_id in [
-        sample.maternal_grandmother,
-        sample.maternal_grandfather,
-        sample.paternal_grandmother,
-        sample.paternal_grandfather,
+    for relationship_set, relations in [
+        ([sample.mother, sample.father], [Relation.PARENT_CHILD]),
+        (
+            [
+                sample.maternal_grandmother,
+                sample.maternal_grandfather,
+                sample.paternal_grandmother,
+                sample.paternal_grandfather,
+            ],
+            [Relation.GRANDPARENT_GRANDCHILD],
+        ),
+        (sample.siblings, [Relation.SIBLING]),
+        (sample.half_siblings, [Relation.HALF_SIBLING, Relation.SIBLING]),
+        (sample.aunt_nephews, [Relation.AUNT_NEPHEW]),
     ]:
-        success, reason = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            grandparent_id,
-            Relation.GRANDPARENT,
-        )
-        if not success:
-            failure_reasons.append(reason)
-
-    for sibling_id in sample.siblings:
-        success, reason = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            sibling_id,
-            Relation.SIBLING,
-        )
-        if not success:
-            failure_reasons.append(reason)
-
-    for half_sibling_id in sample.half_siblings:
-        # NB: A "half sibling" parsed from the pedigree may actually be a sibling, so we allow those
-        # through as well.
-        success1, _ = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            half_sibling_id,
-            Relation.SIBLING,
-        )
-        success2, reason = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            half_sibling_id,
-            Relation.HALF_SIBLING,
-        )
-        if not success1 and not success2:
-            failure_reasons.append(reason)
-
-    for aunt_nephew_id in sample.aunt_nephews:
-        success, reason = passes_relatedness_check(
-            relatedness_check_lookup,
-            sample.sample_id,
-            aunt_nephew_id,
-            Relation.AUNT_NEPHEW,
-        )
-        if not success:
-            failure_reasons.append(reason)
+        for other_id in relationship_set:
+            # Handle case where relation is identified in the
+            # pedigree as a "dummy" but is not included in
+            # the list of samples to load.
+            if other_id not in family.samples:
+                continue
+            success, reason = passes_relatedness_check(
+                relatedness_check_lookup,
+                sample.sample_id,
+                other_id,
+                relations,
+            )
+            if not success:
+                failure_reasons.append(reason)
     return failure_reasons
 
 
@@ -162,6 +133,7 @@ def get_families_failed_relatedness_check(
         for sample in family.samples.values():
             failure_reasons = all_relatedness_checks(
                 relatedness_check_lookup,
+                family,
                 sample,
             )
             if failure_reasons:
