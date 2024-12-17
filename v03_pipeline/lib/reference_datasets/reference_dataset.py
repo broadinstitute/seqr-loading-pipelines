@@ -10,7 +10,12 @@ from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
 )
-from v03_pipeline.lib.model import AccessControl, DatasetType, Env, ReferenceGenome
+from v03_pipeline.lib.model import (
+    AccessControl,
+    DatasetType,
+    FeatureFlag,
+    ReferenceGenome,
+)
 from v03_pipeline.lib.reference_datasets import clinvar, dbnsfp
 from v03_pipeline.lib.reference_datasets.misc import (
     compress_floats,
@@ -41,7 +46,7 @@ class BaseReferenceDataset:
             for dataset, config in CONFIG.items()
             if dataset_type in config.get(reference_genome, {}).get(DATASET_TYPES, [])
         ]
-        if not Env.ACCESS_PRIVATE_REFERENCE_DATASETS:
+        if not FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS:
             return {
                 dataset
                 for dataset in reference_datasets
@@ -90,7 +95,7 @@ class BaseReferenceDataset:
     def enum_globals(self) -> hl.Struct:
         if self.enums:
             return hl.Struct(**self.enums)
-        return hl.missing(hl.tstruct(hl.tstr, hl.tarray(hl.tstr)))
+        return hl.Struct()
 
     @property
     def filter(  # noqa: A003
@@ -263,7 +268,7 @@ CONFIG = {
         },
         ReferenceGenome.GRCh37: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: [
                 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.snv.hg19.vcf.gz',
                 'gs://seqr-reference-data/GRCh37/spliceai/spliceai_scores.masked.indel.hg19.vcf.gz',
@@ -271,7 +276,7 @@ CONFIG = {
         },
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             # NB: SpliceAI data is only available to download for authenticated Illumina users, so we will host the data
             PATH: [
                 'gs://seqr-reference-data/GRCh38/spliceai/spliceai_scores.masked.snv.hg38.vcf.gz',
@@ -369,7 +374,7 @@ CONFIG = {
     ReferenceDataset.gnomad_mito: {
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/release/3.1/ht/genomes/gnomad.genomes.v3.1.sites.chrM.ht',
         },
     },

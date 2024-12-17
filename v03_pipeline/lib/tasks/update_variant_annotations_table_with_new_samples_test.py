@@ -140,7 +140,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             self.assertFalse(uvatwns_task.complete())
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
+    @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
     @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
@@ -160,7 +163,8 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rd_task: Mock,
-        mock_env: Mock,
+        mock_env_new_variants: Mock,
+        mock_env_caids: Mock,
         mock_register_alleles: Mock,
     ) -> None:
         mock_update_vat_with_rd_task.return_value = (
@@ -174,9 +178,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             {'ENST00000327044': 'NM_015658.4'},
         )
         # make register_alleles return CAIDs for 4 of 30 variants
-        mock_env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
-        mock_env.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
-        mock_env.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
+        mock_env_new_variants.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+            GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
+        )
+        mock_env_caids.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
+        mock_env_caids.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
         mock_register_alleles.side_effect = [
             iter(
                 [
@@ -501,7 +507,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             exac='1.1',
                             gnomad_exomes='1.0',
                             gnomad_genomes='1.0',
-                            splice_ai='1.0',
+                            splice_ai='1.1',
                             topmed='1.1',
                             gnomad_non_coding_constraint='1.0',
                             screen='1.0',
@@ -543,7 +549,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -698,11 +706,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
-    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.Env')
+    @patch('v03_pipeline.lib.reference_datasets.reference_dataset.FeatureFlag')
     @patch('v03_pipeline.lib.vep.hl.vep')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_ensembl_to_refseq_id',
@@ -711,7 +721,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         self,
         mock_load_gencode_ensembl_to_refseq_id: Mock,
         mock_vep: Mock,
-        mock_rd_env: Mock,
+        mock_rd_ff: Mock,
         mock_update_vat_with_rd_task: Mock,
         mock_register_alleles: Mock,
     ) -> None:
@@ -730,7 +740,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ReferenceDataset.hgmd,
             ),
         )
-        mock_rd_env.ACCESS_PRIVATE_REFERENCE_DATASETS = False
+        mock_rd_ff.ACCESS_PRIVATE_REFERENCE_DATASETS = False
         mock_vep.side_effect = lambda ht, **_: ht.annotate(vep=MOCK_38_VEP_DATA)
         mock_register_alleles.side_effect = None
 
@@ -762,7 +772,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         exac='1.1',
                         gnomad_exomes='1.0',
                         gnomad_genomes='1.0',
-                        splice_ai='1.0',
+                        splice_ai='1.1',
                         topmed='1.1',
                         gnomad_non_coding_constraint='1.0',
                         screen='1.0',
@@ -771,7 +781,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             )
 
     @responses.activate
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.register_alleles_in_chunks')
+    @patch(
+        'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
+    )
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -815,7 +827,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         versions=hl.Struct(
                             clinvar='2024-11-11',
                             dbnsfp='1.0',
-                            gnomad_mito='1.0',
+                            gnomad_mito='1.1',
                             helix_mito='1.0',
                             hmtvar='1.1',
                             mitomap='1.0',

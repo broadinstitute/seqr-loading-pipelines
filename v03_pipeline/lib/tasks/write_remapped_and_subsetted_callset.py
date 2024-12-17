@@ -16,7 +16,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
@@ -62,7 +62,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             RawFileTask(self.project_pedigree_paths[self.project_i]),
         ]
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
             and not self.skip_check_sex_and_relatedness
         ):
@@ -98,7 +98,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
             and not self.skip_check_sex_and_relatedness
         ):

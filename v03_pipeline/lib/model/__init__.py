@@ -7,11 +7,13 @@ from v03_pipeline.lib.model.definitions import (
     Sex,
 )
 from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 
 __all__ = [
     'AccessControl',
     'DatasetType',
     'Env',
+    'FeatureFlag',
     'Sex',
     'PipelineVersion',
     'ReferenceGenome',

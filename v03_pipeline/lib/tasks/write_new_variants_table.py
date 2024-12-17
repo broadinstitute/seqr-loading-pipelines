@@ -5,9 +5,8 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.allele_registry import register_alleles_in_chunks
 from v03_pipeline.lib.misc.callsets import get_callset_ht
-from v03_pipeline.lib.misc.io import checkpoint, remap_pedigree_hash
+from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
 from v03_pipeline.lib.model import (
     Env,
@@ -191,33 +190,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 },
             )
             new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
-
-        # Register the new variant alleles to the Clingen Allele Registry
-        # and annotate new_variants table with CAID.
-        if (
-            Env.CLINGEN_ALLELE_REGISTRY_LOGIN
-            and Env.CLINGEN_ALLELE_REGISTRY_PASSWORD
-            and self.dataset_type.should_send_to_allele_registry
-        ):
-            ar_ht = hl.Table.parallelize(
-                [],
-                hl.tstruct(
-                    locus=hl.tlocus(self.reference_genome.value),
-                    alleles=hl.tarray(hl.tstr),
-                    CAID=hl.tstr,
-                ),
-                key=('locus', 'alleles'),
-            )
-            for ar_ht_chunk in register_alleles_in_chunks(
-                new_variants_ht,
-                self.reference_genome,
-            ):
-                ar_ht = ar_ht.union(ar_ht_chunk)
-                ar_ht, _ = checkpoint(ar_ht)
-            new_variants_ht = new_variants_ht.join(ar_ht, 'left')
-        elif self.dataset_type.should_send_to_allele_registry:
-            new_variants_ht = new_variants_ht.annotate(CAID=hl.missing(hl.tstr))
-
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(

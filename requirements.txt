@@ -97,17 +97,30 @@ frozenlist==1.5.0
 gnomad==0.6.4
     # via -r requirements.in
 google-api-core[grpc]==2.22.0
-    # via google-cloud-dataproc
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-core
+    #   google-cloud-dataproc
 google-auth==2.35.0
     # via
     #   google-api-core
     #   google-auth-oauthlib
+    #   google-cloud-bigquery
+    #   google-cloud-core
     #   google-cloud-dataproc
     #   hail
 google-auth-oauthlib==0.8.0
     # via hail
+google-cloud-bigquery==3.27.0
+    # via -r requirements.in
+google-cloud-core==2.4.1
+    # via google-cloud-bigquery
 google-cloud-dataproc==5.14.0
     # via -r requirements.in
+google-crc32c==1.6.0
+    # via google-resumable-media
+google-resumable-media==2.7.2
+    # via google-cloud-bigquery
 googleapis-common-protos[grpc]==1.65.0
     # via
     #   google-api-core
@@ -197,6 +210,7 @@ orjson==3.10.10
 packaging==24.1
     # via
     #   bokeh
+    #   google-cloud-bigquery
     #   plotly
 pandas==2.2.3
     # via
@@ -264,6 +278,7 @@ python-daemon==3.1.0
 python-dateutil==2.9.0.post0
     # via
     #   botocore
+    #   google-cloud-bigquery
     #   luigi
     #   pandas
 python-json-logger==2.0.7
@@ -280,6 +295,7 @@ requests==2.32.3
     # via
     #   azure-core
     #   google-api-core
+    #   google-cloud-bigquery
     #   hail
     #   msal
     #   msrest

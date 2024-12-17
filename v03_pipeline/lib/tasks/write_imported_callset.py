@@ -14,7 +14,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_filters_path,
@@ -22,6 +22,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
+from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
@@ -44,7 +45,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
     def requires(self) -> list[luigi.Task]:
         requirements = []
         if (
-            Env.EXPECT_WES_FILTERS
+            FeatureFlag.EXPECT_WES_FILTERS
             and not self.skip_expect_filters
             and self.dataset_type.expect_filters(
                 self.sample_type,
@@ -59,6 +60,17 @@ class WriteImportedCallsetTask(BaseWriteTask):
                         self.callset_path,
                     ),
                 ),
+            ]
+        if (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
+                self.reference_genome,
+            )
+        ):
+            requirements = [
+                *requirements,
+                self.clone(WriteTDRMetricsFilesTask),
             ]
         return [
             *requirements,
@@ -75,7 +87,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             )
             filters_path = None
             if (
-                Env.EXPECT_WES_FILTERS
+                FeatureFlag.EXPECT_WES_FILTERS
                 and not self.skip_expect_filters
                 and self.dataset_type.expect_filters(
                     self.sample_type,

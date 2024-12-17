@@ -9,7 +9,6 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     family_table_path,
     imported_callset_path,
-    imputed_sex_path,
     lookup_table_path,
     metadata_for_run_path,
     new_variants_table_path,
@@ -19,6 +18,7 @@ from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
+    tdr_metrics_path,
     valid_filters_path,
     validation_errors_for_run_path,
     variant_annotations_table_path,
@@ -36,7 +36,9 @@ class TestPaths(unittest.TestCase):
             ),
             '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
-        with patch('v03_pipeline.lib.paths.Env') as mock_env:
+        with patch('v03_pipeline.lib.paths.Env') as mock_env, patch(
+            'v03_pipeline.lib.paths.FeatureFlag',
+        ) as mock_ff:
             mock_env.HAIL_SEARCH_DATA_DIR = 'gs://seqr-datasets/'
             self.assertEqual(
                 family_table_path(
@@ -47,7 +49,7 @@ class TestPaths(unittest.TestCase):
                 ),
                 'gs://seqr-datasets/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
             )
-            mock_env.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
+            mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
             self.assertEqual(
                 family_table_path(
                     ReferenceGenome.GRCh37,
@@ -67,8 +69,8 @@ class TestPaths(unittest.TestCase):
             ),
             None,
         )
-        with patch('v03_pipeline.lib.paths.Env') as mock_env:
-            mock_env.EXPECT_WES_FILTERS = True
+        with patch('v03_pipeline.lib.paths.FeatureFlag') as mock_ff:
+            mock_ff.EXPECT_WES_FILTERS = True
             self.assertEqual(
                 valid_filters_path(
                     DatasetType.SNV_INDEL,
@@ -177,14 +179,14 @@ class TestPaths(unittest.TestCase):
             '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.mt',
         )
 
-    def test_imputed_sex_path(self) -> None:
+    def test_tdr_metrics_path(self) -> None:
         self.assertEqual(
-            imputed_sex_path(
+            tdr_metrics_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                'gs://abc.efg/callset.vcf.gz',
+                'datarepo-7242affb.datarepo_RP_3053',
             ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imputed_sex/ead56bb177a5de24178e1e622ce1d8beb3f8892bdae1c925d22ca0af4013d6dd.tsv',
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/tdr_metrics/datarepo-7242affb.datarepo_RP_3053.tsv',
         )
 
     def test_new_variants_table_path(self) -> None:

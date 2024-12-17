@@ -5,6 +5,7 @@ from unittest.mock import Mock, call, patch
 import google.api_core.exceptions
 import luigi
 
+from v03_pipeline.lib.misc.gcp import SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     CreateDataprocClusterTask,
@@ -12,41 +13,37 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 
 
 @patch(
+    'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.get_service_account_credentials',
+    return_value=SimpleNamespace(
+        service_account_email='test@serviceaccount.com',
+        scopes=SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE,
+    ),
+)
+@patch(
     'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.dataproc.ClusterControllerClient',
 )
 class CreateDataprocClusterTaskTest(unittest.TestCase):
-    def test_dataset_type_unsupported(self, mock_cluster_controller: Mock) -> None:
-<<<<<<< HEAD
-=======
-        worker = luigi.worker.Worker()
->>>>>>> 2665ef84eec91536940988541c3bf35d1e57fbb2
+    def test_dataset_type_unsupported(
+        self,
+        mock_cluster_controller: Mock,
+        _: Mock,
+    ) -> None:
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.MITO,
             run_id='1',
         )
-<<<<<<< HEAD
         self.assertRaises(RuntimeError, task.complete)
 
-    def test_spinup_cluster_already_exists_error(
-=======
-        worker.add(task)
-        worker.run()
-        self.assertTrue(task.complete())
-
     def test_spinup_cluster_already_exists_failed(
->>>>>>> 2665ef84eec91536940988541c3bf35d1e57fbb2
         self,
         mock_cluster_controller: Mock,
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-<<<<<<< HEAD
             status=SimpleNamespace(state='ERROR'),
             cluster_name='abc',
-=======
-            status=SimpleNamespace(state='FAILED'),
->>>>>>> 2665ef84eec91536940988541c3bf35d1e57fbb2
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')
@@ -64,6 +61,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_success(
         self,
         mock_cluster_controller: Mock,
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -87,6 +85,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -112,6 +111,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
+        _: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -120,11 +120,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         operation = mock_client.create_cluster.return_value
         operation.done.side_effect = [False, True]
         operation.result.return_value = SimpleNamespace(
-<<<<<<< HEAD
             cluster_name='dataproc-cluster-5',
-=======
-            cluster_name='dataproc-cluster-1',
->>>>>>> 2665ef84eec91536940988541c3bf35d1e57fbb2
             cluster_uuid='12345',
         )
         worker = luigi.worker.Worker()
@@ -138,10 +134,6 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call('Waiting for cluster spinup'),
-<<<<<<< HEAD
                 call('Created cluster dataproc-cluster-5 with cluster uuid: 12345'),
-=======
-                call('Created cluster dataproc-cluster-1 with cluster uuid: 12345'),
->>>>>>> 2665ef84eec91536940988541c3bf35d1e57fbb2
             ],
         )

@@ -6,6 +6,7 @@ from v03_pipeline.lib.model import (
     AccessControl,
     DatasetType,
     Env,
+    FeatureFlag,
     PipelineVersion,
     ReferenceGenome,
     SampleType,
@@ -21,7 +22,7 @@ def _pipeline_prefix(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> str:
-    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
             root,
             PipelineVersion.V3_1.value,
@@ -45,7 +46,7 @@ def _v03_reference_data_prefix(
         if access_control == AccessControl.PRIVATE
         else Env.REFERENCE_DATASETS_DIR
     )
-    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
             root,
             PipelineVersion.V03.value,
@@ -68,7 +69,7 @@ def _v03_reference_dataset_prefix(
         if access_control == AccessControl.PRIVATE
         else Env.REFERENCE_DATASETS_DIR
     )
-    if Env.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
+    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
             root,
             PipelineVersion.V3_1.value,
@@ -98,10 +99,9 @@ def family_table_path(
     )
 
 
-def imputed_sex_path(
+def tdr_metrics_dir(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
-    callset_path: str,
 ) -> str:
     return os.path.join(
         _pipeline_prefix(
@@ -109,8 +109,18 @@ def imputed_sex_path(
             reference_genome,
             dataset_type,
         ),
-        'imputed_sex',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+        'tdr_metrics',
+    )
+
+
+def tdr_metrics_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    bq_table_name: str,
+) -> str:
+    return os.path.join(
+        tdr_metrics_dir(reference_genome, dataset_type),
+        f'{bq_table_name}.tsv',
     )
 
 
@@ -278,7 +288,7 @@ def valid_filters_path(
     callset_path: str,
 ) -> str | None:
     if (
-        not Env.EXPECT_WES_FILTERS
+        not FeatureFlag.EXPECT_WES_FILTERS
         or not dataset_type.expect_filters(sample_type)
         or 'part_one_outputs' not in callset_path
     ):

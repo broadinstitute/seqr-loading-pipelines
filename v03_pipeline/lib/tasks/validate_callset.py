@@ -10,7 +10,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.model.environment import Env
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     sex_check_table_path,
@@ -41,7 +41,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             ),
         )
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
             and not self.skip_check_sex_and_relatedness
         ):
@@ -86,7 +86,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                 ),
             ]
         if (
-            Env.CHECK_SEX_AND_RELATEDNESS
+            FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
             and not self.skip_check_sex_and_relatedness
         ):
