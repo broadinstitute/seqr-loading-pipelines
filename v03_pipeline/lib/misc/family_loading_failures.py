@@ -16,7 +16,8 @@ def passes_relatedness_check(
     relatedness_check_lookup: dict[tuple[str, str], list],
     sample_id: str,
     other_id: str,
-    relations: list[Relation],
+    expected_relation: Relation,
+    additional_allowed_relation: Relation | None,
 ) -> tuple[bool, str | None]:
     # No relationship to check, return true
     if other_id is None:
@@ -30,11 +31,15 @@ def passes_relatedness_check(
             relation.coefficients,
             atol=RELATEDNESS_TOLERANCE,
         )
-        for relation in relations
+        for relation in (
+            [expected_relation, additional_allowed_relation]
+            if additional_allowed_relation
+            else [expected_relation]
+        )
     ):
         return (
             False,
-            f'Sample {sample_id} has expected relation "{relations[0].value}" to {other_id} but has coefficients {coefficients or []}',
+            f'Sample {sample_id} has expected relation "{expected_relation.value}" to {other_id} but has coefficients {coefficients or []}',
         )
     return True, None
 
@@ -45,8 +50,8 @@ def all_relatedness_checks(
     sample: Sample,
 ) -> list[str]:
     failure_reasons = []
-    for relationship_set, relations in [
-        ([sample.mother, sample.father], [Relation.PARENT_CHILD]),
+    for relationship_set, relation, additional_allowed_relation in [
+        ([sample.mother, sample.father], Relation.PARENT_CHILD, None),
         (
             [
                 sample.maternal_grandmother,
@@ -54,11 +59,12 @@ def all_relatedness_checks(
                 sample.paternal_grandmother,
                 sample.paternal_grandfather,
             ],
-            [Relation.GRANDPARENT_GRANDCHILD],
+            Relation.GRANDPARENT_GRANDCHILD,
+            None,
         ),
-        (sample.siblings, [Relation.SIBLING]),
-        (sample.half_siblings, [Relation.HALF_SIBLING, Relation.SIBLING]),
-        (sample.aunt_nephews, [Relation.AUNT_NEPHEW]),
+        (sample.siblings, Relation.SIBLING, None),
+        (sample.half_siblings, Relation.HALF_SIBLING, Relation.SIBLING),
+        (sample.aunt_nephews, Relation.AUNT_NEPHEW, None),
     ]:
         for other_id in relationship_set:
             # Handle case where relation is identified in the
@@ -70,7 +76,8 @@ def all_relatedness_checks(
                 relatedness_check_lookup,
                 sample.sample_id,
                 other_id,
-                relations,
+                relation,
+                additional_allowed_relation,
             )
             if not success:
                 failure_reasons.append(reason)
