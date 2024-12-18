@@ -8,8 +8,8 @@ from v03_pipeline.lib.model import Sex
 
 
 class Relation(Enum):
-    PARENT = 'parent'
-    GRANDPARENT = 'grandparent'
+    PARENT_CHILD = 'parent_child'
+    GRANDPARENT_GRANDCHILD = 'grandparent_grandchild'
     SIBLING = 'sibling'
     HALF_SIBLING = 'half_sibling'
     AUNT_NEPHEW = 'aunt_nephew'
@@ -17,8 +17,8 @@ class Relation(Enum):
     @property
     def coefficients(self):
         return {
-            Relation.PARENT: [0, 1, 0, 0.5],
-            Relation.GRANDPARENT: [0.5, 0.5, 0, 0.25],
+            Relation.PARENT_CHILD: [0, 1, 0, 0.5],
+            Relation.GRANDPARENT_GRANDCHILD: [0.5, 0.5, 0, 0.25],
             Relation.SIBLING: [0.25, 0.5, 0.25, 0.5],
             Relation.HALF_SIBLING: [0.5, 0.5, 0, 0.25],
             Relation.AUNT_NEPHEW: [0.5, 0.5, 0, 0.25],
