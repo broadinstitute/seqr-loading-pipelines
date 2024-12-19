@@ -14,12 +14,7 @@ class DeleteProjectTableTask(BaseDeleteTableTask):
     project_guid = luigi.Parameter()
 
     def requires(self) -> luigi.Task:
-        return DeleteProjectFamilyTablesTask(
-            self.reference_genome,
-            self.dataset_type,
-            self.sample_type,
-            self.project_guid,
-        )
+        return self.clone(DeleteProjectFamilyTablesTask)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
