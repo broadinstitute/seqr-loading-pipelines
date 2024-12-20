@@ -3,10 +3,10 @@ import unittest
 import hail as hl
 
 from v03_pipeline.lib.misc.sample_ids import (
-    MatrixTableSampleSetError,
     remap_sample_ids,
     subset_samples,
 )
+from v03_pipeline.lib.misc.validation import SeqrValidationError
 
 CALLSET_MT = hl.MatrixTable.from_parts(
     rows={'variants': [1, 2]},
@@ -76,7 +76,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(SeqrValidationError):
             remap_sample_ids(
                 CALLSET_MT,
                 project_remap_ht,
@@ -99,7 +99,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
 
-        with self.assertRaises(MatrixTableSampleSetError):
+        with self.assertRaises(SeqrValidationError):
             remap_sample_ids(
                 CALLSET_MT,
                 project_remap_ht,
@@ -114,7 +114,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
 
-        with self.assertRaises(MatrixTableSampleSetError):
+        with self.assertRaises(SeqrValidationError):
             subset_samples(
                 CALLSET_MT,
                 sample_subset_ht,
@@ -132,7 +132,7 @@ class SampleLookupTest(unittest.TestCase):
             key='s',
         )
 
-        with self.assertRaises(MatrixTableSampleSetError):
+        with self.assertRaises(SeqrValidationError):
             subset_samples(
                 CALLSET_MT,
                 sample_subset_ht,
