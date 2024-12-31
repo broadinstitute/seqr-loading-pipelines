@@ -30,7 +30,6 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
-
     def setUp(self) -> None:
         super().setUp()
         # +-------------+---------------+
