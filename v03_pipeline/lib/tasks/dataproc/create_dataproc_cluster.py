@@ -3,6 +3,8 @@ import time
 import hail as hl
 import luigi
 from google.cloud import dataproc_v1 as dataproc
+import google.api_core.exceptions
+
 from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
@@ -157,12 +159,13 @@ class CreateDataprocClusterTask(luigi.Task):
                     ),
                 },
             )
-        except Exception:  # noqa: BLE001
+        except google.api_core.exceptions.NotFound:
             return False
         else:
             if cluster.status.state == ERROR_STATE:
                 msg = f'Cluster {cluster.cluster_name} entered ERROR state'
                 logger.error(msg)
+            # This will return False when the cluster is "CREATING"
             return cluster.status.state == RUNNING_STATE
 
     def run(self):
