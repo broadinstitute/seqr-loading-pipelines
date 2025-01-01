@@ -18,7 +18,7 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 @patch(
     'v03_pipeline.lib.tasks.dataproc.run_dataproc_job.dataproc.JobControllerClient',
 )
-class CreateDataprocClusterTaskTest(unittest.TestCase):
+class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
     def test_job_already_exists_failed(
         self,
         mock_job_controller_client: Mock,

@@ -1,17 +1,21 @@
+import re
 import time
 
+import google.api_core.exceptions
 import luigi
 from google.cloud import dataproc_v1 as dataproc
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import Env
-from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
-    BaseLoadingPipelineParams,
+from v03_pipeline.lib.paths import pipeline_run_success_file_path
+from v03_pipeline.lib.tasks.base.base_loading_run_params import (
+    BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     CreateDataprocClusterTask,
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
 SUCCESS_STATE = 'DONE'
@@ -19,11 +23,20 @@ SUCCESS_STATE = 'DONE'
 logger = get_logger(__name__)
 
 
-@luigi.util.inherits(BaseLoadingPipelineParams)
-class RunDataprocJobTask(luigi.Task):
-    run_id = luigi.Parameter()
-    job_id = luigi.Parameter()
-    additional_args = luigi.ListParameter(default=[])
+def snake_to_kebab_arg(snake_string: str) -> str:
+    return '--' + re.sub(r'\_', '-', snake_string).lower()
+
+
+@luigi.util.inherits(BaseLoadingRunParams)
+class WriteSuccessFileOnDataprocTask(luigi.Task):
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(
+            pipeline_run_success_file_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.run_id,
+            ),
+        )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -45,10 +58,10 @@ class RunDataprocJobTask(luigi.Task):
                 request={
                     'project_id': Env.GCLOUD_PROJECT,
                     'region': Env.GCLOUD_REGION,
-                    'job_id': f'{self.job_id}-{self.run_id}',
+                    'job_id': f'WriteSuccessFileTask-{self.run_id}',
                 },
             )
-        except Exception:  # noqa: BLE001
+        except google.api_core.exceptions.NotFound:
             return False
         else:
             return job.status.state == SUCCESS_STATE
@@ -60,7 +73,7 @@ class RunDataprocJobTask(luigi.Task):
                 'region': Env.GCLOUD_REGION,
                 'job': {
                     'reference': {
-                        'job_id': f'{self.job_id}-{self.run_id}',
+                        'job_id': f'WriteSuccessFileTask-{self.run_id}',
                     },
                     'placement': {
                         'cluster_name': get_cluster_name(
@@ -71,13 +84,13 @@ class RunDataprocJobTask(luigi.Task):
                     'pyspark_job': {
                         'main_python_file_uri': f'{SEQR_PIPELINE_RUNNER_BUILD}/bin/run_task.py',
                         'args': [
-                            self.job_id,
+                            'WriteSuccessFileTask',
                             '--local-scheduler',
-                            '--reference-genome',
-                            self.reference_genome.value,
-                            '--dataset-type',
-                            self.dataset_type.value,
-                            *self.additional_args,
+                            *[
+                                e
+                                for k, v in self.to_str_params().items()
+                                for e in (snake_to_kebab_arg(k), v)
+                            ],
                         ],
                         'python_file_uris': f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
                     },
@@ -86,9 +99,11 @@ class RunDataprocJobTask(luigi.Task):
         )
         while True:
             if operation.done():
-                result = operation.result()  # Will throw on failure!
-                msg = f'Finished job {self.job_id}-{self.run_id}'
+                _ = operation.result()  # Will throw on failure!
+                msg = f'Finished WriteSuccessFileTask-{self.run_id}'
                 logger.info(msg)
                 break
-            logger.info(f'Waiting for job completion {self.job_id}-{self.run_id}')
+            logger.info(
+                f'Waiting for job completion WriteSuccessFileTask-{self.run_id}',
+            )
             time.sleep(3)

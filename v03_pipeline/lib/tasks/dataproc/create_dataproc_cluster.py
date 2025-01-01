@@ -1,10 +1,9 @@
 import time
 
+import google.api_core.exceptions
 import hail as hl
 import luigi
 from google.cloud import dataproc_v1 as dataproc
-import google.api_core.exceptions
-
 from pip._internal.operations import freeze as pip_freeze
 
 from v03_pipeline.lib.logger import get_logger
