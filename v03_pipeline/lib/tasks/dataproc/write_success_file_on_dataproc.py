@@ -1,4 +1,3 @@
-import re
 import time
 
 import google.api_core.exceptions
@@ -14,17 +13,13 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
     CreateDataprocClusterTask,
 )
-from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
+from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_args
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
 SUCCESS_STATE = 'DONE'
 
 logger = get_logger(__name__)
-
-
-def snake_to_kebab_arg(snake_string: str) -> str:
-    return '--' + re.sub(r'\_', '-', snake_string).lower()
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -86,11 +81,7 @@ class WriteSuccessFileOnDataprocTask(luigi.Task):
                         'args': [
                             'WriteSuccessFileTask',
                             '--local-scheduler',
-                            *[
-                                e
-                                for k, v in self.to_str_params().items()
-                                for e in (snake_to_kebab_arg(k), v)
-                            ],
+                            *to_kebab_str_args(self),
                         ],
                         'python_file_uris': f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
                     },
