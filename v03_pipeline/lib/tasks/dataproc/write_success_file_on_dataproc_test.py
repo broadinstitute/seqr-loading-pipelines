@@ -118,3 +118,30 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
                 ),
             ],
         )
+
+    def test_job_success(
+        self,
+        mock_job_controller_client: Mock,
+        mock_create_dataproc_cluster: Mock,
+    ) -> None:
+        mock_create_dataproc_cluster.return_value = MockCompleteTask()
+        mock_client = mock_job_controller_client.return_value
+        mock_client.get_job.side_effect = google.api_core.exceptions.NotFound(
+            'job not found',
+        )
+        operation = mock_client.submit_job_as_operation.return_value
+        operation.done.side_effect = [False, True]
+        worker = luigi.worker.Worker()
+        task = WriteSuccessFileOnDataprocTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path='test_callset',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=['test_remap'],
+            project_pedigree_paths=['test_pedigree'],
+            run_id='manual__2024-04-06',
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.complete())

@@ -89,7 +89,9 @@ class WriteSuccessFileOnDataprocTask(luigi.Task):
                             '--local-scheduler',
                             *to_kebab_str_args(self),
                         ],
-                        'python_file_uris': f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
+                        'python_file_uris': [
+                            f'{SEQR_PIPELINE_RUNNER_BUILD}/pyscripts.zip',
+                        ],
                     },
                 },
             },
