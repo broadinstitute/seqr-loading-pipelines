@@ -21,7 +21,7 @@ class MiscTest(unittest.TestCase):
             project_guids=['R0113_test_project'],
             project_remap_paths=['test_remap'],
             project_pedigree_paths=['test_pedigree'],
-            run_id='manual__2024-04-03',
+            run_id='a_misc_run',
         )
         self.assertListEqual(
             to_kebab_str_args(t),
@@ -31,7 +31,7 @@ class MiscTest(unittest.TestCase):
                 '--dataset-type',
                 'SNV_INDEL',
                 '--run-id',
-                'manual__2024-04-03',
+                'a_misc_run',
                 '--sample-type',
                 'WGS',
                 '--callset-path',
