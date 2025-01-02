@@ -2,7 +2,6 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_missing_samples,
     get_families_failed_relatedness_check,
@@ -16,6 +15,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     relatedness_check_table_path,
@@ -29,8 +29,19 @@ from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
     WriteRelatednessCheckTsvTask,
 )
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
+from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
+    with_persisted_validation_errors,
+)
 
-logger = get_logger(__name__)
+
+def format_failures(failed_families):
+    return {
+        f.family_guid: {
+            'samples': sorted(f.samples.keys()),
+            'reasons': reasons,
+        }
+        for f, reasons in failed_families.items()
+    }
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -73,6 +84,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ]
         return requirements
 
+    @with_persisted_validation_errors
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
         pedigree_ht = import_pedigree(self.input()[1].path)
@@ -130,16 +142,21 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             - families_failed_sex_check.keys()
         )
         if not len(loadable_families):
-            msg = (
-                f'families_failed_missing_samples: {families_failed_missing_samples}\n'
-                f'families_failed_relatedness_check: {families_failed_relatedness_check}\n'
-                f'families_failed_sex_check: {families_failed_sex_check}'
-            )
-            logger.info(
+            msg = 'All families failed validation checks'
+            raise SeqrValidationError(
                 msg,
+                {
+                    'failed_family_samples': {
+                        'missing_samples': format_failures(
+                            families_failed_missing_samples,
+                        ),
+                        'relatedness_check': format_failures(
+                            families_failed_relatedness_check,
+                        ),
+                        'sex_check': format_failures(families_failed_sex_check),
+                    },
+                },
             )
-            msg = 'All families failed checks'
-            raise RuntimeError(msg)
 
         mt = subset_samples(
             callset_mt,
@@ -172,33 +189,15 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             ),
             failed_family_samples=hl.Struct(
                 missing_samples=(
-                    {
-                        f.family_guid: {
-                            'samples': sorted(f.samples.keys()),
-                            'reasons': reasons,
-                        }
-                        for f, reasons in families_failed_missing_samples.items()
-                    }
+                    format_failures(families_failed_missing_samples)
                     or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
                 ),
                 relatedness_check=(
-                    {
-                        f.family_guid: {
-                            'samples': sorted(f.samples.keys()),
-                            'reasons': reasons,
-                        }
-                        for f, reasons in families_failed_relatedness_check.items()
-                    }
+                    format_failures(families_failed_relatedness_check)
                     or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
                 ),
                 sex_check=(
-                    {
-                        f.family_guid: {
-                            'samples': sorted(f.samples.keys()),
-                            'reasons': reasons,
-                        }
-                        for f, reasons in families_failed_sex_check.items()
-                    }
+                    format_failures(families_failed_sex_check)
                     or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
                 ),
             ),

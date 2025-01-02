@@ -3,19 +3,9 @@ from collections import Counter
 import hail as hl
 
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.validation import SeqrValidationError
 
 logger = get_logger(__name__)
-
-
-class MatrixTableSampleSetError(Exception):
-    def __init__(self, message, missing_samples):
-        super().__init__(message)
-        self.missing_samples = missing_samples
-
-
-def vcf_remap(mt: hl.MatrixTable) -> hl.MatrixTable:
-    # TODO: add logic from Mike to remap vcf samples delivered from Broad WGS
-    return mt
 
 
 def remap_sample_ids(
@@ -23,8 +13,6 @@ def remap_sample_ids(
     project_remap_ht: hl.Table,
     ignore_missing_samples_when_remapping: bool,
 ) -> hl.MatrixTable:
-    mt = vcf_remap(mt)
-
     collected_remap = project_remap_ht.collect()
     s_dups = [k for k, v in Counter([r.s for r in collected_remap]).items() if v > 1]
     seqr_dups = [
@@ -33,7 +21,7 @@ def remap_sample_ids(
 
     if len(s_dups) > 0 or len(seqr_dups) > 0:
         msg = f'Duplicate s or seqr_id entries in remap file were found. Duplicate s:{s_dups}. Duplicate seqr_id:{seqr_dups}.'
-        raise ValueError(msg)
+        raise SeqrValidationError(msg)
 
     missing_samples = project_remap_ht.anti_join(mt.cols()).collect()
     remap_count = len(collected_remap)
@@ -48,7 +36,7 @@ def remap_sample_ids(
         if ignore_missing_samples_when_remapping:
             logger.info(message)
         else:
-            raise MatrixTableSampleSetError(message, missing_samples)
+            raise SeqrValidationError(message)
 
     mt = mt.annotate_cols(**project_remap_ht[mt.s])
     remap_expr = hl.if_else(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)
@@ -67,7 +55,7 @@ def subset_samples(
     anti_join_ht_count = anti_join_ht.count()
     if subset_count == 0:
         message = '0 sample ids found the subset HT, something is probably wrong.'
-        raise MatrixTableSampleSetError(message, [])
+        raise SeqrValidationError(message)
 
     if anti_join_ht_count != 0:
         missing_samples = anti_join_ht.s.collect()
@@ -77,7 +65,7 @@ def subset_samples(
             f"IDs that aren't in the callset: {missing_samples}\n"
             f'All callset sample IDs:{mt.s.collect()}'
         )
-        raise MatrixTableSampleSetError(message, missing_samples)
+        raise SeqrValidationError(message)
     logger.info(f'Subsetted to {subset_count} sample ids')
     mt = mt.semi_join_cols(sample_subset_ht)
     return mt.filter_rows(hl.agg.any(hl.is_defined(mt.GT)))
