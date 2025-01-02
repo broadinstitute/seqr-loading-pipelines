@@ -16,8 +16,10 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_args
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 
+DONE_STATE = 'DONE'
+ERROR_STATE = 'ERROR'
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
-SUCCESS_STATE = 'DONE'
+
 
 logger = get_logger(__name__)
 
@@ -59,7 +61,11 @@ class WriteSuccessFileOnDataprocTask(luigi.Task):
         except google.api_core.exceptions.NotFound:
             return False
         else:
-            return job.status.state == SUCCESS_STATE
+            if job.status.state == ERROR_STATE:
+                msg = f'Job WriteSuccessFileTask-{self.run_id} entered ERROR state'
+                logger.error(msg)
+                logger.error(job.status.details)
+            return job.status.state == DONE_STATE
 
     def run(self):
         operation = self.client.submit_job_as_operation(
@@ -90,7 +96,7 @@ class WriteSuccessFileOnDataprocTask(luigi.Task):
         )
         while True:
             if operation.done():
-                _ = operation.result()  # Will throw on failure!
+                operation.result()  # Will throw on failure!
                 msg = f'Finished WriteSuccessFileTask-{self.run_id}'
                 logger.info(msg)
                 break
