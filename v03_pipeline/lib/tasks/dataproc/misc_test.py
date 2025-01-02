@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import Mock, patch
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.misc import to_kebab_str_args
@@ -7,8 +8,11 @@ from v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc import (
 )
 
 
+@patch(
+    'v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.dataproc.JobControllerClient',
+)
 class MiscTest(unittest.TestCase):
-    def test_to_kebab_str_args(self):
+    def test_to_kebab_str_args(self, _: Mock):
         t = WriteSuccessFileOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
