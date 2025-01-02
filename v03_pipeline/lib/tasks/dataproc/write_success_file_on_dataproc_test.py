@@ -52,7 +52,11 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         worker.run()
         self.assertFalse(task.complete())
         mock_logger.error.assert_has_calls(
-            [call('Job WriteSuccessFileTask-manual__2024-04-03 entered ERROR state')],
+            [
+                call(
+                    'Job WriteSuccessFileOnDataprocTask-manual__2024-04-03 entered ERROR state'
+                )
+            ],
         )
 
     def test_job_already_exists_success(
@@ -114,7 +118,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for job completion WriteSuccessFileTask-manual__2024-04-05',
+                    'Waiting for job completion WriteSuccessFileOnDataprocTask-manual__2024-04-05',
                 ),
             ],
         )
@@ -126,9 +130,14 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
     ) -> None:
         mock_create_dataproc_cluster.return_value = MockCompleteTask()
         mock_client = mock_job_controller_client.return_value
-        mock_client.get_job.side_effect = google.api_core.exceptions.NotFound(
-            'job not found',
-        )
+        mock_client.get_job.side_effect = [
+            google.api_core.exceptions.NotFound(
+                'job not found',
+            ),
+            SimpleNamespace(
+                status=SimpleNamespace(state='DONE'),
+            ),
+        ]
         operation = mock_client.submit_job_as_operation.return_value
         operation.done.side_effect = [False, True]
         worker = luigi.worker.Worker()

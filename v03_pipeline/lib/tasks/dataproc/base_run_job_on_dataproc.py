@@ -32,6 +32,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
             },
         )
 
+    @property
     def task_name(self):
         return self.get_task_family().split('.')[-1]
 
