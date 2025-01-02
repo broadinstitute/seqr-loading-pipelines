@@ -2,8 +2,8 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
-import luigi
 import google.api_core.exceptions
+import luigi
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc import (
@@ -112,5 +112,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         worker.run()
         self.assertFalse(task.complete())
         mock_logger.info.assert_has_calls(
-            [call('Waiting for job completion WriteSuccessFileTask-manual__2024-04-05')],
+            [
+                call(
+                    'Waiting for job completion WriteSuccessFileTask-manual__2024-04-05',
+                ),
+            ],
         )
