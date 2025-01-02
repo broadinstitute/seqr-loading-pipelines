@@ -54,8 +54,8 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job WriteSuccessFileOnDataprocTask-manual__2024-04-03 entered ERROR state'
-                )
+                    'Job WriteSuccessFileOnDataprocTask-manual__2024-04-03 entered ERROR state',
+                ),
             ],
         )
 
