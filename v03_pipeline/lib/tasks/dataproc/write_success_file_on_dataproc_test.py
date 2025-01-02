@@ -13,13 +13,13 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 
 
 @patch(
-    'v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc.CreateDataprocClusterTask',
+    'v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.CreateDataprocClusterTask',
 )
 @patch(
-    'v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc.dataproc.JobControllerClient',
+    'v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.dataproc.JobControllerClient',
 )
 class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
-    @patch('v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc.logger')
+    @patch('v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.logger')
     def test_job_already_exists_failed(
         self,
         mock_logger: Mock,
@@ -80,7 +80,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         worker.run()
         self.assertTrue(task.complete())
 
-    @patch('v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc.logger')
+    @patch('v03_pipeline.lib.tasks.dataproc.base_run_job_on_dataproc.logger')
     def test_job_failed(
         self,
         mock_logger: Mock,
