@@ -36,15 +36,15 @@ def pipeline_prefix(
     )
 
 
-def v03_reference_dataset_prefix(
-    default_root: str,
+def _v03_reference_dataset_prefix(
+    root: str,
     access_control: AccessControl,
     reference_genome: ReferenceGenome,
 ) -> str:
     root = (
         Env.PRIVATE_REFERENCE_DATASETS_DIR
         if access_control == AccessControl.PRIVATE
-        else default_root
+        else root
     )
     if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
@@ -282,7 +282,7 @@ def valid_reference_dataset_path(
     reference_dataset: ReferenceDataset,
 ) -> str | None:
     return os.path.join(
-        v03_reference_dataset_prefix(
+        _v03_reference_dataset_prefix(
             Env.REFERENCE_DATASETS_DIR,
             reference_dataset.access_control,
             reference_genome,
@@ -296,10 +296,13 @@ def valid_reference_dataset_query_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     reference_dataset_query: ReferenceDatasetQuery,
+    root=None,
 ) -> str | None:
+    if not root:
+        root = Env.REFERENCE_DATASETS_DIR
     return os.path.join(
-        v03_reference_dataset_prefix(
-            Env.REFERENCE_DATASETS_DIR,
+        _v03_reference_dataset_prefix(
+            root,
             reference_dataset_query.access_control,
             reference_genome,
         ),
