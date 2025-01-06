@@ -1,5 +1,6 @@
 import time
 
+import google.api_core.exceptions
 import hail as hl
 import luigi
 from google.cloud import dataproc_v1 as dataproc
@@ -11,13 +12,15 @@ from v03_pipeline.lib.model import Env, FeatureFlag, ReferenceGenome
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
+from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
-CLUSTER_NAME_PREFIX = 'pipeline-runner'
 DEBIAN_IMAGE = '2.1.33-debian11'
+ERROR_STATE = 'ERROR'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(pip_freeze.freeze())
-SUCCESS_STATE = 'RUNNING'
+RUNNING_STATE = 'RUNNING'
+TIMEOUT_S = 900
 
 logger = get_logger(__name__)
 
@@ -26,7 +29,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
     service_account_credentials = get_service_account_credentials()
     return {
         'project_id': Env.GCLOUD_PROJECT,
-        'cluster_name': f'{CLUSTER_NAME_PREFIX}-{reference_genome.value.lower()}-{run_id}',
+        'cluster_name': get_cluster_name(reference_genome, run_id),
         # Schema found at https://cloud.google.com/dataproc/docs/reference/rest/v1/ClusterConfig
         'config': {
             'gce_cluster_config': {
@@ -136,27 +139,32 @@ class CreateDataprocClusterTask(luigi.Task):
         # https://cloud.google.com/dataproc/docs/tutorials/python-library-example
         self.client = dataproc.ClusterControllerClient(
             client_options={
-                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443'.format(
-                    Env.GCLOUD_REGION,
-                ),
+                'api_endpoint': f'{Env.GCLOUD_REGION}-dataproc.googleapis.com:443',
             },
         )
 
     def complete(self) -> bool:
         if not self.dataset_type.requires_dataproc:
-            return True
+            msg = f'{self.dataset_type} should not require a dataproc cluster'
+            raise RuntimeError(msg)
         try:
-            client = self.client.get_cluster(
+            cluster = self.client.get_cluster(
                 request={
                     'project_id': Env.GCLOUD_PROJECT,
                     'region': Env.GCLOUD_REGION,
-                    'cluster_name': f'{CLUSTER_NAME_PREFIX}-{self.reference_genome.value.lower()}',
+                    'cluster_name': get_cluster_name(
+                        self.reference_genome,
+                        self.run_id,
+                    ),
                 },
             )
-        except Exception:  # noqa: BLE001
+        except google.api_core.exceptions.NotFound:
             return False
-        else:
-            return client.status.state == SUCCESS_STATE
+        if cluster.status.state == ERROR_STATE:
+            msg = f'Cluster {cluster.cluster_name} entered ERROR state'
+            logger.error(msg)
+        # This will return False when the cluster is "CREATING"
+        return cluster.status.state == RUNNING_STATE
 
     def run(self):
         operation = self.client.create_cluster(
@@ -166,7 +174,8 @@ class CreateDataprocClusterTask(luigi.Task):
                 'cluster': get_cluster_config(self.reference_genome, self.run_id),
             },
         )
-        while True:
+        wait_s = 0
+        while wait_s < TIMEOUT_S:
             if operation.done():
                 result = operation.result()  # Will throw on failure!
                 msg = f'Created cluster {result.cluster_name} with cluster uuid: {result.cluster_uuid}'
@@ -174,3 +183,4 @@ class CreateDataprocClusterTask(luigi.Task):
                 break
             logger.info('Waiting for cluster spinup')
             time.sleep(3)
+            wait_s += 3
