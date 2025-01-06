@@ -17,7 +17,7 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 )
 
 
-def _pipeline_prefix(
+def pipeline_prefix(
     root: str,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -36,38 +36,15 @@ def _pipeline_prefix(
     )
 
 
-def _v03_reference_data_prefix(
-    access_control: AccessControl,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    root = (
-        Env.PRIVATE_REFERENCE_DATASETS_DIR
-        if access_control == AccessControl.PRIVATE
-        else Env.REFERENCE_DATASETS_DIR
-    )
-    if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
-        return os.path.join(
-            root,
-            PipelineVersion.V03.value,
-            reference_genome.value,
-            dataset_type.value,
-        )
-    return os.path.join(
-        root,
-        reference_genome.value,
-        dataset_type.value,
-    )
-
-
-def _v03_reference_dataset_prefix(
+def v03_reference_dataset_prefix(
+    default_root: str,
     access_control: AccessControl,
     reference_genome: ReferenceGenome,
 ) -> str:
     root = (
         Env.PRIVATE_REFERENCE_DATASETS_DIR
         if access_control == AccessControl.PRIVATE
-        else Env.REFERENCE_DATASETS_DIR
+        else default_root
     )
     if FeatureFlag.INCLUDE_PIPELINE_VERSION_IN_PREFIX:
         return os.path.join(
@@ -88,7 +65,7 @@ def family_table_path(
     family_guid: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -104,7 +81,7 @@ def tdr_metrics_dir(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -130,7 +107,7 @@ def imported_callset_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -177,7 +154,7 @@ def project_table_path(
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -194,7 +171,7 @@ def relatedness_check_table_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -210,7 +187,7 @@ def relatedness_check_tsv_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -227,7 +204,7 @@ def remapped_and_subsetted_callset_path(
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -243,7 +220,7 @@ def lookup_table_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -257,7 +234,7 @@ def runs_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -272,7 +249,7 @@ def sex_check_table_path(
     callset_path: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -305,7 +282,8 @@ def valid_reference_dataset_path(
     reference_dataset: ReferenceDataset,
 ) -> str | None:
     return os.path.join(
-        _v03_reference_dataset_prefix(
+        v03_reference_dataset_prefix(
+            Env.REFERENCE_DATASETS_DIR,
             reference_dataset.access_control,
             reference_genome,
         ),
@@ -320,7 +298,8 @@ def valid_reference_dataset_query_path(
     reference_dataset_query: ReferenceDatasetQuery,
 ) -> str | None:
     return os.path.join(
-        _v03_reference_dataset_prefix(
+        v03_reference_dataset_prefix(
+            Env.REFERENCE_DATASETS_DIR,
             reference_dataset_query.access_control,
             reference_genome,
         ),
@@ -334,7 +313,7 @@ def variant_annotations_table_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -348,7 +327,7 @@ def variant_annotations_vcf_path(
     dataset_type: DatasetType,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.HAIL_SEARCH_DATA_DIR,
             reference_genome,
             dataset_type,
@@ -386,7 +365,7 @@ def project_remap_path(
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
@@ -404,7 +383,7 @@ def project_pedigree_path(
     project_guid: str,
 ) -> str:
     return os.path.join(
-        _pipeline_prefix(
+        pipeline_prefix(
             Env.LOADING_DATASETS_DIR,
             reference_genome,
             dataset_type,
