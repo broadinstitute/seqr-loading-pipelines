@@ -160,12 +160,11 @@ class CreateDataprocClusterTask(luigi.Task):
             )
         except google.api_core.exceptions.NotFound:
             return False
-        else:
-            if cluster.status.state == ERROR_STATE:
-                msg = f'Cluster {cluster.cluster_name} entered ERROR state'
-                logger.error(msg)
-            # This will return False when the cluster is "CREATING"
-            return cluster.status.state == RUNNING_STATE
+        if cluster.status.state == ERROR_STATE:
+            msg = f'Cluster {cluster.cluster_name} entered ERROR state'
+            logger.error(msg)
+        # This will return False when the cluster is "CREATING"
+        return cluster.status.state == RUNNING_STATE
 
     def run(self):
         operation = self.client.create_cluster(

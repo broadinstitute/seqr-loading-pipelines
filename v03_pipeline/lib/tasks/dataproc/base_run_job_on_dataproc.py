@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_
 DONE_STATE = 'DONE'
 ERROR_STATE = 'ERROR'
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
-
+TIMEOUT_S = 172800  # 2 days
 
 logger = get_logger(__name__)
 
@@ -36,6 +36,10 @@ class BaseRunJobOnDataprocTask(luigi.Task):
     def task_name(self):
         return self.get_task_family().split('.')[-1]
 
+    @property
+    def job_id(self):
+        return f'{self.task_name}-{self.run_id}'
+
     def requires(self) -> [luigi.Task]:
         return [self.clone(CreateDataprocClusterTask)]
 
@@ -48,17 +52,16 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                 request={
                     'project_id': Env.GCLOUD_PROJECT,
                     'region': Env.GCLOUD_REGION,
-                    'job_id': f'{self.task_name}-{self.run_id}',
+                    'job_id': self.job_id,
                 },
             )
         except google.api_core.exceptions.NotFound:
             return False
-        else:
-            if job.status.state == ERROR_STATE:
-                msg = f'Job {self.task_name}-{self.run_id} entered ERROR state'
-                logger.error(msg)
-                logger.error(job.status.details)
-            return job.status.state == DONE_STATE
+        if job.status.state == ERROR_STATE:
+            msg = f'Job {self.task_name}-{self.run_id} entered ERROR state'
+            logger.error(msg)
+            logger.error(job.status.details)
+        return job.status.state == DONE_STATE
 
     def run(self):
         operation = self.client.submit_job_as_operation(
@@ -67,7 +70,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                 'region': Env.GCLOUD_REGION,
                 'job': {
                     'reference': {
-                        'job_id': f'{self.task_name}-{self.run_id}',
+                        'job_id': self.job_id,
                     },
                     'placement': {
                         'cluster_name': get_cluster_name(
@@ -89,13 +92,15 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                 },
             },
         )
-        while True:
+        wait_s = 0
+        while wait_s < TIMEOUT_S:
             if operation.done():
                 operation.result()  # Will throw on failure!
-                msg = f'Finished {self.task_name}-{self.run_id}'
+                msg = f'Finished {self.job_id}'
                 logger.info(msg)
                 break
             logger.info(
-                f'Waiting for job completion {self.task_name}-{self.run_id}',
+                f'Waiting for job completion {self.job_id}',
             )
             time.sleep(3)
+            wait_s += 3
