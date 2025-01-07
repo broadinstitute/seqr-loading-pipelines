@@ -113,7 +113,7 @@ def get_submission_summary_ht() -> hl.Table:
         timeout=10,
     ) as r:
         shutil.copyfileobj(r.raw, tmp_file)
-        cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
+    cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = hl.import_table(
         cloud_tmp_file,
         force=True,
