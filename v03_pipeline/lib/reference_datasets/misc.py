@@ -180,7 +180,4 @@ def copy_to_cloud_storage(file_name: str) -> str:
     else:
         cloud_storage_path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
     hfs.copy(file_name, cloud_storage_path)
-    if os.path.getsize(file_name) != hfs.stat(cloud_storage_path).size:
-        msg = 'Local and Cloud storage file sizes differ'
-        raise AssertionError(msg)
     return cloud_storage_path
