@@ -7,7 +7,7 @@ import luigi
 
 from v03_pipeline.api.model import LoadingPipelineRequest
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.model import Env
+from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
     loading_pipeline_queue_path,
     project_pedigree_path,
@@ -54,7 +54,7 @@ def main():
                 'run_id': run_id,
                 **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
             }
-            if Env.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
+            if FeatureFlag.SHOULD_TRIGGER_HAIL_BACKEND_RELOAD:
                 tasks = [
                     TriggerHailBackendReload(**loading_run_task_params),
                 ]

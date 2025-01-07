@@ -9,7 +9,7 @@ from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_sex_check,
 )
 from v03_pipeline.lib.misc.io import import_pedigree
-from v03_pipeline.lib.misc.pedigree import Sample, parse_pedigree_ht_to_families
+from v03_pipeline.lib.misc.pedigree import Family, Sample, parse_pedigree_ht_to_families
 from v03_pipeline.lib.model import Sex
 
 TEST_PEDIGREE_6 = 'v03_pipeline/var/test/pedigrees/test_pedigree_6.tsv'
@@ -104,7 +104,21 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             paternal_grandfather='sample_3',
             half_siblings=['sample_4'],
         )
-        failure_reasons = all_relatedness_checks(relatedness_check_lookup, sample)
+        family = Family(
+            family_guid='family_1a',
+            samples={
+                'sample_1': sample,
+                'sample_2': Sample(sex=Sex.MALE, sample_id='sample_2'),
+                'sample_3': Sample(sex=Sex.MALE, sample_id='sample_3'),
+                'sample_4': Sample(sex=Sex.MALE, sample_id='sample_4'),
+                'sample_5': Sample(sex=Sex.MALE, sample_id='sample_5'),
+            },
+        )
+        failure_reasons = all_relatedness_checks(
+            relatedness_check_lookup,
+            family,
+            sample,
+        )
         self.assertListEqual(failure_reasons, [])
 
         # Defined grandparent missing in relatedness table
@@ -117,12 +131,13 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         failure_reasons = all_relatedness_checks(
             relatedness_check_lookup,
+            family,
             sample,
         )
         self.assertListEqual(
             failure_reasons,
             [
-                'Sample sample_1 has expected relation "grandparent" to sample_5 but has coefficients []',
+                'Sample sample_1 has expected relation "grandparent_grandchild" to sample_5 but has coefficients []',
             ],
         )
 
@@ -140,6 +155,7 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         failure_reasons = all_relatedness_checks(
             relatedness_check_lookup,
+            family,
             sample,
         )
         self.assertListEqual(
@@ -167,14 +183,40 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         )
         failure_reasons = all_relatedness_checks(
             relatedness_check_lookup,
+            family,
             sample,
         )
         self.assertListEqual(
             failure_reasons,
             [
-                'Sample sample_1 has expected relation "parent" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]',
+                'Sample sample_1 has expected relation "parent_child" to sample_2 but has coefficients [0.5, 0.5, 0.5, 0.5]',
                 'Sample sample_1 has expected relation "sibling" to sample_4 but has coefficients [0.5, 0.5, 0, 0.25]',
             ],
+        )
+
+        # Some samples will include relationships with
+        # samples that are not expected to be included
+        # in the callset.  These should not trigger relatedness
+        # failures.
+        sample = Sample(
+            sex=Sex.FEMALE,
+            sample_id='sample_1',
+            mother='sample_2',
+        )
+        family = Family(
+            family_guid='family_1a',
+            samples={
+                'sample_1': sample,
+            },
+        )
+        failure_reasons = all_relatedness_checks(
+            {},
+            family,
+            sample,
+        )
+        self.assertListEqual(
+            failure_reasons,
+            [],
         )
 
     def test_get_families_failed_sex_check(self):
