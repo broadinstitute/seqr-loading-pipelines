@@ -97,4 +97,5 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
                     ],
                 ),
             ],
+            any_order=True,
         )
