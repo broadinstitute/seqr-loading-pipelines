@@ -1,4 +1,4 @@
-from unittest import Mock, mock
+from unittest import mock
 
 import luigi.worker
 
@@ -14,7 +14,7 @@ class WriteSuccessFileTaskTest(MockedDatarootTestCase):
     )
     def test_write_success_file_task(
         self,
-        mock_run_pipeline_task: Mock,
+        mock_run_pipeline_task: mock.Mock,
     ) -> None:
         mock_run_pipeline_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
