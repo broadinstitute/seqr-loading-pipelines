@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest import Mock, mock
 
 import luigi.worker
 
@@ -10,24 +10,13 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 class WriteSuccessFileTaskTest(MockedDatarootTestCase):
     @mock.patch(
-        'v03_pipeline.lib.tasks.write_success_file.WriteMetadataForRunTask',
-    )
-    @mock.patch(
-        'v03_pipeline.lib.tasks.write_success_file.WriteProjectFamilyTablesTask',
-    )
-    @mock.patch(
-        'v03_pipeline.lib.tasks.write_success_file.UpdateVariantAnnotationsTableWithNewSamplesTask',
+        'v03_pipeline.lib.tasks.write_success_file.RunPipelineTask',
     )
     def test_write_success_file_task(
         self,
-        mock_update_variant_annotations_task,
-        mock_write_project_fam_tables,
-        mock_write_metadata_for_run_task,
+        mock_run_pipeline_task: Mock,
     ) -> None:
-        mock_write_metadata_for_run_task.return_value = MockCompleteTask()
-        mock_update_variant_annotations_task.return_value = MockCompleteTask()
-        mock_write_project_fam_tables.return_value = MockCompleteTask()
-
+        mock_run_pipeline_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         write_success_file = WriteSuccessFileTask(
             reference_genome=ReferenceGenome.GRCh38,
