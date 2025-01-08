@@ -18,7 +18,7 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 
 class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
     @patch(
-        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask'
+        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask',
     )
     @patch('v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.subprocess')
     def test_rsync_to_seqr_app_dirs_no_sync(
@@ -44,7 +44,7 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
         mock_subprocess.call.assert_not_called()
 
     @patch(
-        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask'
+        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask',
     )
     @patch('v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.subprocess')
     @patch.object(Env, 'HAIL_SEARCH_DATA_DIR', 'gs://test-hail-search-dir')
