@@ -141,7 +141,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         'v03_pipeline.lib.tasks.update_new_variants_with_caids.register_alleles_in_chunks',
     )
     @patch('v03_pipeline.lib.tasks.update_new_variants_with_caids.Env')
-    @patch('v03_pipeline.lib.tasks.write_new_variants_table.Env')
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.UpdateVariantAnnotationsTableWithUpdatedReferenceDataset',
     )
@@ -160,7 +159,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
         mock_vep: Mock,
         mock_standard_contigs: Mock,
         mock_update_vat_with_rd_task: Mock,
-        mock_env_new_variants: Mock,
         mock_env_caids: Mock,
         mock_register_alleles: Mock,
     ) -> None:
