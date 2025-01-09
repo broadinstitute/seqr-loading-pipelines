@@ -10,3 +10,9 @@ PROJECTS_EXCLUDED_FROM_LOOKUP = {
     'R0815_gregor_training_project_',
     'R0816_gregor_training_project_',
 }
+GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/liftover/grch37_to_grch38.over.chain.gz'
+)
+GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
+    'v03_pipeline/var/liftover/grch38_to_grch37.over.chain.gz'
+)

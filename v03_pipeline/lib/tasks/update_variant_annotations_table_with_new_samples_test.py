@@ -44,9 +44,6 @@ from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
 )
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
-    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
-)
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
@@ -178,9 +175,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             {'ENST00000327044': 'NM_015658.4'},
         )
         # make register_alleles return CAIDs for 4 of 30 variants
-        mock_env_new_variants.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
-            GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
-        )
         mock_env_caids.CLINGEN_ALLELE_REGISTRY_LOGIN = 'login'
         mock_env_caids.CLINGEN_ALLELE_REGISTRY_PASSWORD = 'password1'  # noqa: S105
         mock_register_alleles.side_effect = [

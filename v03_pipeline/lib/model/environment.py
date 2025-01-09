@@ -3,14 +3,6 @@ from dataclasses import dataclass
 from typing import Literal
 
 # NB: using os.environ.get inside the dataclass defaults gives a lint error.
-GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = os.environ.get(
-    'GRCH37_TO_GRCH38_LIFTOVER_REF_PATH',
-    'gs://hail-common/references/grch37_to_grch38.over.chain.gz',
-)
-GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = os.environ.get(
-    'GRCH38_TO_GRCH37_LIFTOVER_REF_PATH',
-    'gs://hail-common/references/grch38_to_grch37.over.chain.gz',
-)
 HAIL_TMP_DIR = os.environ.get('HAIL_TMP_DIR', '/tmp')  # noqa: S108
 HAIL_SEARCH_DATA_DIR = os.environ.get(
     'HAIL_SEARCH_DATA_DIR',
@@ -61,8 +53,6 @@ class Env:
     GCLOUD_PROJECT: str | None = GCLOUD_PROJECT
     GCLOUD_ZONE: str | None = GCLOUD_ZONE
     GCLOUD_REGION: str | None = GCLOUD_REGION
-    GRCH37_TO_GRCH38_LIFTOVER_REF_PATH: str = GRCH37_TO_GRCH38_LIFTOVER_REF_PATH
-    GRCH38_TO_GRCH37_LIFTOVER_REF_PATH: str = GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
     HAIL_BACKEND_SERVICE_HOSTNAME: str | None = HAIL_BACKEND_SERVICE_HOSTNAME
     HAIL_BACKEND_SERVICE_PORT: int = HAIL_BACKEND_SERVICE_PORT
     HAIL_TMP_DIR: str = HAIL_TMP_DIR

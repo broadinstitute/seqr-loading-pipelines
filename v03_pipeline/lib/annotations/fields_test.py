@@ -7,6 +7,7 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
+    constants,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
@@ -14,12 +15,6 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 from v03_pipeline.lib.vep import run_vep
 from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VEP_DATA
 
-GRCH37_TO_GRCH38_LIFTOVER_REF_PATH = (
-    'v03_pipeline/var/test/liftover/grch37_to_grch38.over.chain.gz'
-)
-GRCH38_TO_GRCH37_LIFTOVER_REF_PATH = (
-    'v03_pipeline/var/test/liftover/grch38_to_grch37.over.chain.gz'
-)
 TEST_GNOMAD_NONCODING_CONSTRAINT_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/gnomad_non_coding_constraint/1.0.ht'
 TEST_SCREEN_38_HT = 'v03_pipeline/var/test/reference_datasets/GRCh38/screen/1.0.ht'
 
@@ -144,11 +139,11 @@ class FieldsTest(MockedDatarootTestCase):
                                 'gencode_ensembl_to_refseq_id_mapping': hl.dict(
                                     {'a': 'b'},
                                 ),
-                                'grch38_to_grch37_liftover_ref_path': GRCH38_TO_GRCH37_LIFTOVER_REF_PATH,
+                                'grch38_to_grch37_liftover_ref_path': constants.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH,
                             }
                             if reference_genome == ReferenceGenome.GRCh38
                             else {
-                                'grch37_to_grch38_liftover_ref_path': GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
+                                'grch37_to_grch38_liftover_ref_path': constants.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
                             }
                         ),
                         dataset_type=DatasetType.SNV_INDEL,
