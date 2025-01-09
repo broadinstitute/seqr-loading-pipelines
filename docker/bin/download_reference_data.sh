@@ -34,3 +34,6 @@ mkdir -p "/seqr-reference-data/GRCh${BUILD_VERSION}/${CLINVAR_HT}"
 cd "/seqr-reference-data/GRCh${BUILD_VERSION}"
 gsutil -m rsync -r "gs://seqr-reference-data/GRCh${BUILD_VERSION}/all_reference_data/${REF_DATA_HT}" "./${REF_DATA_HT}"
 gsutil -m rsync -r "gs://seqr-reference-data/GRCh${BUILD_VERSION}/clinvar/${CLINVAR_HT}" "./${CLINVAR_HT}"
+
+cd "/seqr-reference-data/"
+gsutil -m rsync -r "gs://hail-common/references/grch38_to_grch37.over.chain.gz" "./grch38_to_grch37.over.chain.gz"
