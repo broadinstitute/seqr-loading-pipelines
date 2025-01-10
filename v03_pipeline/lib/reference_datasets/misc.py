@@ -176,8 +176,8 @@ def copy_to_cloud_storage(file_name: str) -> str:
     if not Env.HAIL_TMP_DIR.startswith('gs://'):
         return file_name
     if os.path.isdir(file_name):
-        path = os.path.join(Env.HAIL_TMP_DIR, file_name.lstrip('/'))
+        cloud_storage_path = os.path.join(Env.HAIL_TMP_DIR, file_name.lstrip('/'))
     else:
-        path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
-    hfs.copy(file_name, path)
-    return path
+        cloud_storage_path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
+    hfs.copy(file_name, cloud_storage_path)
+    return cloud_storage_path
