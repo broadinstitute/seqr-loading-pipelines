@@ -33,12 +33,12 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         )
 
     @property
-    def task_name(self):
-        return self.get_task_family().split('.')[-1]
+    def task(self):
+        raise NotImplementedError
 
     @property
     def job_id(self):
-        return f'{self.task_name}-{self.run_id}'
+        return f'{self.task.task_family}-{self.run_id}'
 
     def requires(self) -> [luigi.Task]:
         return [self.clone(CreateDataprocClusterTask)]
@@ -58,7 +58,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
         except google.api_core.exceptions.NotFound:
             return False
         if job.status.state == ERROR_STATE:
-            msg = f'Job {self.task_name}-{self.run_id} entered ERROR state'
+            msg = f'Job {self.task.task_family}-{self.run_id} entered ERROR state'
             logger.error(msg)
             logger.error(job.status.details)
         return job.status.state == DONE_STATE
@@ -81,7 +81,7 @@ class BaseRunJobOnDataprocTask(luigi.Task):
                     'pyspark_job': {
                         'main_python_file_uri': f'{SEQR_PIPELINE_RUNNER_BUILD}/bin/run_task.py',
                         'args': [
-                            self.task_name,
+                            self.task.task_family,
                             '--local-scheduler',
                             *to_kebab_str_args(self),
                         ],

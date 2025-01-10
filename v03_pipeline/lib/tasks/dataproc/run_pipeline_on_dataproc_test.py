@@ -6,8 +6,8 @@ import google.api_core.exceptions
 import luigi
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.dataproc.write_success_file_on_dataproc import (
-    WriteSuccessFileOnDataprocTask,
+from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
+    RunPipelineOnDataprocTask,
 )
 from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 
@@ -38,7 +38,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             google.api_core.exceptions.AlreadyExists('job exists')
         )
         worker = luigi.worker.Worker()
-        task = WriteSuccessFileOnDataprocTask(
+        task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -54,7 +54,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job WriteSuccessFileOnDataprocTask-manual__2024-04-03 entered ERROR state',
+                    'Job RunPipelineTask-manual__2024-04-03 entered ERROR state',
                 ),
             ],
         )
@@ -70,7 +70,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             status=SimpleNamespace(state='DONE'),
         )
         worker = luigi.worker.Worker()
-        task = WriteSuccessFileOnDataprocTask(
+        task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -102,7 +102,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             'FailedPrecondition: 400 Job failed with message',
         )
         worker = luigi.worker.Worker()
-        task = WriteSuccessFileOnDataprocTask(
+        task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,
@@ -118,7 +118,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.info.assert_has_calls(
             [
                 call(
-                    'Waiting for job completion WriteSuccessFileOnDataprocTask-manual__2024-04-05',
+                    'Waiting for job completion RunPipelineTask-manual__2024-04-05',
                 ),
             ],
         )
@@ -141,7 +141,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         operation = mock_client.submit_job_as_operation.return_value
         operation.done.side_effect = [False, True]
         worker = luigi.worker.Worker()
-        task = WriteSuccessFileOnDataprocTask(
+        task = RunPipelineOnDataprocTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
             sample_type=SampleType.WGS,

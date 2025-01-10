@@ -13,14 +13,20 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs import (
     RsyncToSeqrAppDirsTask,
 )
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 
 
 class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
+    @patch(
+        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask',
+    )
     @patch('v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.subprocess')
     def test_rsync_to_seqr_app_dirs_no_sync(
         self,
         mock_subprocess: Mock,
+        mock_run_pipeline_task: Mock,
     ) -> None:
+        mock_run_pipeline_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = RsyncToSeqrAppDirsTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -37,6 +43,9 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
         self.assertTrue(task.complete())
         mock_subprocess.call.assert_not_called()
 
+    @patch(
+        'v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.RunPipelineOnDataprocTask',
+    )
     @patch('v03_pipeline.lib.tasks.dataproc.rsync_to_seqr_app_dirs.subprocess')
     @patch.object(Env, 'HAIL_SEARCH_DATA_DIR', 'gs://test-hail-search-dir')
     @patch.object(Env, 'REFERENCE_DATASETS_DIR', 'gs://test-reference-data-dir')
@@ -58,7 +67,9 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
     def test_rsync_to_seqr_app_dirs_sync(
         self,
         mock_subprocess: Mock,
+        mock_run_pipeline_task: Mock,
     ) -> None:
+        mock_run_pipeline_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = RsyncToSeqrAppDirsTask(
             reference_genome=ReferenceGenome.GRCh38,

@@ -9,6 +9,9 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDatas
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
+from v03_pipeline.lib.tasks.dataproc.run_pipeline_on_dataproc import (
+    RunPipelineOnDataprocTask,
+)
 
 
 def hail_search_value(value: str) -> str:
@@ -37,6 +40,9 @@ class RsyncToSeqrAppDirsTask(luigi.Task):
 
     def complete(self) -> bool:
         return self.done
+
+    def requires(self) -> luigi.Task:
+        return self.clone(RunPipelineOnDataprocTask)
 
     def run(self) -> None:
         if not (
