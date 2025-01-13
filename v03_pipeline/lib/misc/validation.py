@@ -130,7 +130,6 @@ def validate_imputed_sex_ploidy(
     if not sex_check_ht:
         return
     mt = mt.select_cols(
-        s=mt.s,
         discrepant=(
             (
                 # All calls are diploid or missing but the sex is Male
@@ -156,8 +155,12 @@ def validate_imputed_sex_ploidy(
         hl.agg.filter(mt.discrepant, hl.agg.collect_as_set(mt.s)),
     )
     if discrepant_samples:
-        msg = f'Found samples with misaligned ploidy with their provided imputed sex: {sorted(discrepant_samples)}'
-        raise SeqrValidationError(msg)
+        sorted_discrepant_samples = sorted(discrepant_samples)
+        msg = f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples[:10]}'
+        raise SeqrValidationError(
+            msg,
+            {'imputed_sex_ploidy_failures': sorted_discrepant_samples},
+        )
 
 
 def validate_sample_type(
