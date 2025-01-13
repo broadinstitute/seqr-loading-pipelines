@@ -231,7 +231,7 @@ class ValidationTest(unittest.TestCase):
         ).key_rows_by('locus')
         self.assertRaisesRegex(
             SeqrValidationError,
-            '57.14% of samples have misaligned ploidy',
+            "Found samples with misaligned ploidy with their provided imputed sex: ['HG00731_1', 'HG00732_1', 'NA20889_1', 'NA20899_1']",
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,
