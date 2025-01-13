@@ -18,60 +18,68 @@ TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 
 
 def _mt_from_contigs(contigs):
-    return hl.MatrixTable.from_parts(
-        rows={
-            'locus': [
-                hl.Locus(
-                    contig=contig,
-                    position=1,
-                    reference_genome='GRCh38',
-                )
-                for contig in contigs
-            ],
-        },
-        cols={'s': ['sample_1']},
-        entries={'HL': [[0.0] for _ in range(len(contigs))]},
-    ).key_rows_by('locus')
+    return (
+        hl.MatrixTable.from_parts(
+            rows={
+                'locus': [
+                    hl.Locus(
+                        contig=contig,
+                        position=1,
+                        reference_genome='GRCh38',
+                    )
+                    for contig in contigs
+                ],
+            },
+            cols={'s': ['sample_1']},
+            entries={'HL': [[0.0] for _ in range(len(contigs))]},
+        )
+        .key_rows_by('locus')
+        .key_cols_by('s')
+    )
 
 
 class ValidationTest(unittest.TestCase):
     def test_validate_allele_type(self) -> None:
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=3,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=4,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-                'alleles': [
-                    ['A', 'T'],
-                    # NB: star alleles should pass through this validation just fine,
-                    # but are eventually filtered out upstream.
-                    ['A', '*'],
-                    ['A', '-'],
-                    ['A', '<NON_REF>'],
-                ],
-            },
-            cols={'s': ['sample_1']},
-            entries={'HL': [[0.0], [0.0], [0.0], [0.0]]},
-        ).key_rows_by('locus', 'alleles')
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=2,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=3,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=4,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['A', 'T'],
+                        # NB: star alleles should pass through this validation just fine,
+                        # but are eventually filtered out upstream.
+                        ['A', '*'],
+                        ['A', '-'],
+                        ['A', '<NON_REF>'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={'HL': [[0.0], [0.0], [0.0], [0.0]]},
+            )
+            .key_rows_by('locus', 'alleles')
+            .key_cols_by('s')
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
             "Alleles with invalid AlleleType are present in the callset: \\[\\('A', '-'\\), \\('A', '<NON_REF>'\\)\\]",
@@ -80,28 +88,32 @@ class ValidationTest(unittest.TestCase):
             DatasetType.SNV_INDEL,
         )
 
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-                'alleles': [
-                    ['C', '<NON_REF>'],
-                    ['A', '<NON_REF>'],
-                ],
-            },
-            cols={'s': ['sample_1']},
-            entries={'HL': [[0.0], [0.0]]},
-        ).key_rows_by('locus', 'alleles')
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=2,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['C', '<NON_REF>'],
+                        ['A', '<NON_REF>'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={'HL': [[0.0], [0.0]]},
+            )
+            .key_rows_by('locus', 'alleles')
+            .key_cols_by('s')
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
             'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.',
@@ -122,116 +134,128 @@ class ValidationTest(unittest.TestCase):
         sex_check_ht = hl.read_table(TEST_SEX_CHECK_1)
 
         # All calls on X chromosome are valid
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chrX',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-            },
-            cols={
-                's': [
-                    female_sample,
-                    male_sample_1,
-                    x0_sample,
-                    xxy_sample,
-                    xyy_sample,
-                    xxx_sample,
-                ],
-            },
-            entries={
-                'GT': [
-                    [
-                        hl.Call(alleles=[0, 0], phased=False),
-                        hl.Call(alleles=[0], phased=False),
-                        hl.Call(alleles=[0, 0], phased=False),  # X0
-                        hl.Call(alleles=[0, 0], phased=False),  # XXY
-                        hl.Call(alleles=[0, 0], phased=False),  # XYY
-                        hl.Call(alleles=[0, 0], phased=False),  # XXX
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chrX',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
                     ],
-                ],
-            },
-        ).key_rows_by('locus')
+                },
+                cols={
+                    's': [
+                        female_sample,
+                        male_sample_1,
+                        x0_sample,
+                        xxy_sample,
+                        xyy_sample,
+                        xxx_sample,
+                    ],
+                },
+                entries={
+                    'GT': [
+                        [
+                            hl.Call(alleles=[0, 0], phased=False),
+                            hl.Call(alleles=[0], phased=False),
+                            hl.Call(alleles=[0, 0], phased=False),  # X0
+                            hl.Call(alleles=[0, 0], phased=False),  # XXY
+                            hl.Call(alleles=[0, 0], phased=False),  # XYY
+                            hl.Call(alleles=[0, 0], phased=False),  # XXX
+                        ],
+                    ],
+                },
+            )
+            .key_rows_by('locus')
+            .key_cols_by('s')
+        )
         validate_imputed_sex_ploidy(mt, sex_check_ht)
 
         # All calls on Y chromosome are valid
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chrY',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-            },
-            cols={
-                's': [
-                    female_sample,
-                    male_sample_1,
-                    x0_sample,
-                    xxy_sample,
-                    xyy_sample,
-                    xxx_sample,
-                ],
-            },
-            entries={
-                'GT': [
-                    [
-                        hl.missing(hl.tcall),
-                        hl.Call(alleles=[0], phased=False),
-                        hl.missing(hl.tcall),  # X0
-                        hl.Call(alleles=[0, 0], phased=False),  # XXY
-                        hl.Call(alleles=[0, 0], phased=False),  # XYY
-                        hl.missing(hl.tcall),  # XXX
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chrY',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
                     ],
-                ],
-            },
-        ).key_rows_by('locus')
+                },
+                cols={
+                    's': [
+                        female_sample,
+                        male_sample_1,
+                        x0_sample,
+                        xxy_sample,
+                        xyy_sample,
+                        xxx_sample,
+                    ],
+                },
+                entries={
+                    'GT': [
+                        [
+                            hl.missing(hl.tcall),
+                            hl.Call(alleles=[0], phased=False),
+                            hl.missing(hl.tcall),  # X0
+                            hl.Call(alleles=[0, 0], phased=False),  # XXY
+                            hl.Call(alleles=[0, 0], phased=False),  # XYY
+                            hl.missing(hl.tcall),  # XXX
+                        ],
+                    ],
+                },
+            )
+            .key_rows_by('locus')
+            .key_cols_by('s')
+        )
         validate_imputed_sex_ploidy(mt, sex_check_ht)
 
         # Invalid X chromosome case
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chrX',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-            },
-            cols={
-                's': [
-                    female_sample,
-                    male_sample_1,
-                    male_sample_2,
-                    x0_sample,
-                    xxy_sample,
-                    xyy_sample,
-                    xxx_sample,
-                ],
-            },
-            entries={
-                'GT': [
-                    [
-                        hl.Call(alleles=[0], phased=False),  # invalid Female call
-                        hl.Call(alleles=[0], phased=False),  # valid Male call
-                        hl.missing(hl.tcall),  # invalid Male call
-                        hl.Call(alleles=[0], phased=False),  # invalid X0 call
-                        hl.Call(alleles=[0], phased=False),  # invalid XXY call
-                        hl.missing(hl.tcall),  # valid XYY call
-                        hl.Call(alleles=[0, 0], phased=False),  # valid XXX call
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chrX',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
                     ],
-                ],
-            },
-        ).key_rows_by('locus')
+                },
+                cols={
+                    's': [
+                        female_sample,
+                        male_sample_1,
+                        male_sample_2,
+                        x0_sample,
+                        xxy_sample,
+                        xyy_sample,
+                        xxx_sample,
+                    ],
+                },
+                entries={
+                    'GT': [
+                        [
+                            hl.Call(alleles=[0], phased=False),  # invalid Female call
+                            hl.Call(alleles=[0], phased=False),  # valid Male call
+                            hl.missing(hl.tcall),  # invalid Male call
+                            hl.Call(alleles=[0], phased=False),  # invalid X0 call
+                            hl.Call(alleles=[0], phased=False),  # invalid XXY call
+                            hl.missing(hl.tcall),  # valid XYY call
+                            hl.Call(alleles=[0, 0], phased=False),  # valid XXX call
+                        ],
+                    ],
+                },
+            )
+            .key_rows_by('locus')
+            .key_cols_by('s')
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
-            '57.14% of samples have misaligned ploidy',
+            "Found samples with misaligned ploidy with their provided imputed sex \\(first 10, if applicable\\) : \\['HG00731_1', 'HG00732_1', 'NA20889_1', 'NA20899_1'\\].*",
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,
@@ -253,34 +277,38 @@ class ValidationTest(unittest.TestCase):
         )
 
     def test_validate_no_duplicate_variants(self) -> None:
-        mt = hl.MatrixTable.from_parts(
-            rows={
-                'locus': [
-                    hl.Locus(
-                        contig='chr1',
-                        position=1,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                    hl.Locus(
-                        contig='chr1',
-                        position=2,
-                        reference_genome='GRCh38',
-                    ),
-                ],
-                'alleles': [
-                    ['A', 'C'],
-                    ['A', 'C'],
-                    ['A', 'C'],
-                ],
-            },
-            cols={'s': ['sample_1']},
-            entries={'HL': [[0.0], [0.0], [0.0]]},
-        ).key_rows_by('locus', 'alleles')
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=2,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=2,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['A', 'C'],
+                        ['A', 'C'],
+                        ['A', 'C'],
+                    ],
+                },
+                cols={'s': ['sample_1']},
+                entries={'HL': [[0.0], [0.0], [0.0]]},
+            )
+            .key_rows_by('locus', 'alleles')
+            .key_cols_by('s')
+        )
         self.assertRaisesRegex(
             SeqrValidationError,
             "Variants are present multiple times in the callset: \\['1-2-A-C'\\]",
