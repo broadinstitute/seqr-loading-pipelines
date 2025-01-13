@@ -166,6 +166,21 @@ class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
     clinvar_path_variants = 'clinvar_path_variants'
     high_af_variants = 'high_af_variants'
 
+    @classmethod
+    def for_reference_genome_dataset_type(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> set['ReferenceDatasetQuery']:
+        return {
+            dataset
+            for dataset in super().for_reference_genome_dataset_type(
+                reference_genome,
+                dataset_type,
+            )
+            if isinstance(dataset, cls)
+        }
+
     @property
     def requires(self) -> ReferenceDataset:
         return {

@@ -15,7 +15,7 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 class WriteValidationErrorsForRunTask(luigi.Task):
     project_guids = luigi.ListParameter()
     error_messages = luigi.ListParameter(default=[])
-    failed_family_samples = luigi.DictParameter(default={})
+    error_body = luigi.DictParameter(default={})
 
     def to_single_error_message(self) -> str:
         with self.output().open('r') as f:
@@ -37,8 +37,8 @@ class WriteValidationErrorsForRunTask(luigi.Task):
         validation_errors_json = {
             'project_guids': self.project_guids,
             'error_messages': self.error_messages,
-            'failed_family_samples': luigi.freezing.recursively_unfreeze(
-                self.failed_family_samples,
+            **luigi.freezing.recursively_unfreeze(
+                self.error_body,
             ),
         }
         with self.output().open('w') as f:
@@ -57,7 +57,7 @@ def with_persisted_validation_errors(f: Callable) -> Callable[[Callable], Callab
                 write_validation_errors_for_run_task = self.clone(
                     WriteValidationErrorsForRunTask,
                     error_messages=[str(e.args[0])],
-                    failed_family_samples=e.args[1]['failed_family_samples'],
+                    error_body=e.args[1],
                 )
             else:
                 write_validation_errors_for_run_task = self.clone(
