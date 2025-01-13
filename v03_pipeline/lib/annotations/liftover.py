@@ -1,6 +1,6 @@
 import hail as hl
 
-from v03_pipeline.lib.constants import (
+from v03_pipeline.lib.model.constants import (
     GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
     GRCH38_TO_GRCH37_LIFTOVER_REF_PATH,
 )
