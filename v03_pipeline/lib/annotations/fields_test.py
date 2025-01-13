@@ -7,7 +7,6 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
-    constants,
 )
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
@@ -139,12 +138,9 @@ class FieldsTest(MockedDatarootTestCase):
                                 'gencode_ensembl_to_refseq_id_mapping': hl.dict(
                                     {'a': 'b'},
                                 ),
-                                'grch38_to_grch37_liftover_ref_path': constants.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH,
                             }
                             if reference_genome == ReferenceGenome.GRCh38
-                            else {
-                                'grch37_to_grch38_liftover_ref_path': constants.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
-                            }
+                            else {}
                         ),
                         dataset_type=DatasetType.SNV_INDEL,
                         reference_genome=reference_genome,

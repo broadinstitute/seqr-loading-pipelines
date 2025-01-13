@@ -2,7 +2,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations import snv_indel
 from v03_pipeline.lib.migration.base_migration import BaseMigration
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, constants
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 
 class AddRG38Locus(BaseMigration):
@@ -17,6 +17,5 @@ class AddRG38Locus(BaseMigration):
         return ht.annotate(
             rg38_locus=snv_indel.rg38_locus(
                 ht,
-                constants.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH,
             ),
         )
