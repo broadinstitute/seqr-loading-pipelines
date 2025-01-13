@@ -156,7 +156,7 @@ def validate_imputed_sex_ploidy(
     )
     if discrepant_samples:
         sorted_discrepant_samples = sorted(discrepant_samples)
-        msg = f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples[:10]}'
+        msg = f'Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : {sorted_discrepant_samples[:10]}'
         raise SeqrValidationError(
             msg,
             {'imputed_sex_ploidy_failures': sorted_discrepant_samples},
