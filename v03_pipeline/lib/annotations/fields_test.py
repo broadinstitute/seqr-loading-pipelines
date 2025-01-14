@@ -185,7 +185,7 @@ class FieldsTest(MockedDatarootTestCase):
                         hl.tstruct(
                             **{
                                 field: hl.tint32
-                                for field in DatasetType.SNV_INDEL.variant_frequency_annotation_fns
+                                for field in DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns
                             },
                         ),
                     ),

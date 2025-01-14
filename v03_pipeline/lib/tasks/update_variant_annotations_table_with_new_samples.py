@@ -91,6 +91,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             # callset_variants_ht consists of variants present in the new callset, fully annotated,
             # and either present or not present in the existing annotations table.
             callset_variants_ht = ht.semi_join(callset_ht)
+            non_callset_variants_ht = ht.anti_join(callset_ht)
             callset_variants_ht = callset_variants_ht.annotate(
                 **get_fields(
                     callset_variants_ht,
@@ -100,7 +101,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                     **self.param_kwargs,
                 ),
             )
-            non_callset_variants_ht = ht.anti_join(callset_ht)
             ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
 
         # Fix up the globals and mark the table as updated with these callset/project pairs.
