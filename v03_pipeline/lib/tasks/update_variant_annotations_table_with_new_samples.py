@@ -96,6 +96,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                     callset_variants_ht,
                     self.dataset_type.variant_frequency_annotation_fns,
                     lookup_ht=lookup_ht,
+                    callset_ht=callset_ht,
                     **self.param_kwargs,
                 ),
             )
