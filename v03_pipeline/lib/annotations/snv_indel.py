@@ -89,10 +89,9 @@ def gnomad_non_coding_constraint(
 
 def rg38_locus(
     ht: hl.Table,
-    grch37_to_grch38_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg37_liftover(grch37_to_grch38_liftover_ref_path)
+    liftover.add_rg37_liftover()
     return hl.liftover(ht.locus, ReferenceGenome.GRCh38.value)
 
 

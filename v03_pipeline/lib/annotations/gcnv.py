@@ -85,10 +85,9 @@ def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def rg37_locus(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     return hl.liftover(
         start_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,
@@ -97,10 +96,9 @@ def rg37_locus(
 
 def rg37_locus_end(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     return hl.liftover(
         end_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,

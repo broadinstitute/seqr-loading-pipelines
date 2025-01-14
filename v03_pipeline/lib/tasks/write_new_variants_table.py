@@ -8,9 +8,6 @@ from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
-from v03_pipeline.lib.model import (
-    Env,
-)
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
     valid_reference_dataset_path,
@@ -67,12 +64,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             deps['gencode_gene_symbol_to_gene_id_mapping'] = hl.literal(
                 load_gencode_gene_symbol_to_gene_id(GENCODE_RELEASE),
             )
-        deps[
-            'grch37_to_grch38_liftover_ref_path'
-        ] = Env.GRCH37_TO_GRCH38_LIFTOVER_REF_PATH
-        deps[
-            'grch38_to_grch37_liftover_ref_path'
-        ] = Env.GRCH38_TO_GRCH37_LIFTOVER_REF_PATH
         return deps
 
     def output(self) -> luigi.Target:
