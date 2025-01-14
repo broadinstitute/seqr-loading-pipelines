@@ -185,7 +185,7 @@ class FieldsTest(MockedDatarootTestCase):
                         hl.tstruct(
                             **{
                                 field: hl.tint32
-                                for field in DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns
+                                for field in DatasetType.SNV_INDEL.variant_frequency_annotation_fns
                             },
                         ),
                     ),
@@ -208,7 +208,7 @@ class FieldsTest(MockedDatarootTestCase):
             list(
                 get_fields(
                     ht,
-                    DatasetType.SNV_INDEL.lookup_table_annotation_fns,
+                    DatasetType.SNV_INDEL.variant_frequency_annotation_fns,
                     lookup_ht=lookup_ht,
                     dataset_type=DatasetType.SNV_INDEL,
                     reference_genome=ReferenceGenome.GRCh38,
