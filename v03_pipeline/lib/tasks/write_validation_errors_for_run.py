@@ -36,9 +36,7 @@ class WriteValidationErrorsForRunTask(luigi.Task):
     def run(self) -> None:
         validation_errors_json = {
             'project_guids': self.project_guids,
-            'error_messages': [self.error_messages]
-            if isinstance(self.error_messages, str)
-            else self.error_messages,
+            'error_messages': self.error_messages,
             **luigi.freezing.recursively_unfreeze(
                 self.error_body,
             ),
