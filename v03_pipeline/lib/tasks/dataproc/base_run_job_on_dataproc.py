@@ -1,6 +1,7 @@
 import time
 
 import google.api_core.exceptions
+import google.cloud.dataproc_v1.types.jobs
 import luigi
 from google.cloud import dataproc_v1 as dataproc
 
@@ -14,8 +15,6 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name, to_kebab_str_args
 
-DONE_STATE = 'DONE'
-ERROR_STATE = 'ERROR'
 SEQR_PIPELINE_RUNNER_BUILD = f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}'
 TIMEOUT_S = 172800  # 2 days
 
@@ -57,11 +56,17 @@ class BaseRunJobOnDataprocTask(luigi.Task):
             )
         except google.api_core.exceptions.NotFound:
             return False
-        if job.status.state == ERROR_STATE:
-            msg = f'Job {self.task.task_family}-{self.run_id} entered ERROR state'
+        if job.status.state in {
+            google.cloud.dataproc_v1.types.jobs.JobStatus.State.CANCELLED,
+            google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
+            google.cloud.dataproc_v1.types.jobs.JobStatus.State.ATTEMPT_FAILURE,
+        }:
+            msg = f'Job {self.task.task_family}-{self.run_id} entered {job.status.state!s} state'
             logger.error(msg)
             logger.error(job.status.details)
-        return job.status.state == DONE_STATE
+        return (
+            job.status.state == google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+        )
 
     def run(self):
         operation = self.client.submit_job_as_operation(

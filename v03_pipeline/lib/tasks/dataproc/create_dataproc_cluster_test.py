@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import google.api_core.exceptions
+import google.cloud.dataproc_v1.types.clusters
 import luigi
 
 from v03_pipeline.lib.misc.gcp import SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE
@@ -48,7 +49,9 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='ERROR'),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR
+            ),
             cluster_name='abc',
         )
         mock_client.create_cluster.side_effect = (
@@ -71,7 +74,9 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='RUNNING'),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING
+            ),
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')

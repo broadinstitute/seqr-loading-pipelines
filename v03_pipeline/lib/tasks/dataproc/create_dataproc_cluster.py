@@ -1,6 +1,7 @@
 import time
 
 import google.api_core.exceptions
+import google.cloud.dataproc_v1.types.clusters
 import hail as hl
 import luigi
 from google.cloud import dataproc_v1 as dataproc
@@ -15,11 +16,9 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
 DEBIAN_IMAGE = '2.1.33-debian11'
-ERROR_STATE = 'ERROR'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(pip_freeze.freeze())
-RUNNING_STATE = 'RUNNING'
 TIMEOUT_S = 900
 
 logger = get_logger(__name__)
@@ -160,11 +159,20 @@ class CreateDataprocClusterTask(luigi.Task):
             )
         except google.api_core.exceptions.NotFound:
             return False
-        if cluster.status.state == ERROR_STATE:
-            msg = f'Cluster {cluster.cluster_name} entered ERROR state'
+        if cluster.status.state in {
+            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.UNKNOWN,
+            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
+            google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
+        }:
+            msg = (
+                f'Cluster {cluster.cluster_name} entered {cluster.status.state!s} state'
+            )
             logger.error(msg)
         # This will return False when the cluster is "CREATING"
-        return cluster.status.state == RUNNING_STATE
+        return (
+            cluster.status.state
+            == google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING
+        )
 
     def run(self):
         if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION or not Env.GCLOUD_ZONE:
