@@ -1,3 +1,4 @@
+LOCAL_DISK_MOUNT_PATH = '/var/seqr'
 PROJECTS_EXCLUDED_FROM_LOOKUP = {
     'R0555_seqr_demo',
     'R0607_gregor_training_project_',

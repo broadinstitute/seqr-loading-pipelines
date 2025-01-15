@@ -11,6 +11,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
+from v03_pipeline.lib.model.constants import LOCAL_DISK_MOUNT_PATH
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
     ReferenceDatasetQuery,
@@ -399,7 +400,7 @@ def project_pedigree_path(
 
 def loading_pipeline_queue_path() -> str:
     return os.path.join(
-        Env.LOADING_DATASETS_DIR,
+        LOCAL_DISK_MOUNT_PATH,
         'loading_pipeline_queue',
         'request.json',
     )
