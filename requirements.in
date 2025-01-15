@@ -6,3 +6,4 @@ pydantic==2.8.2
 google-cloud-dataproc==5.14.0
 google-cloud-bigquery==3.27.0
 httplib2==0.22.0
+google-api-python-client==2.108.0

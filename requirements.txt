@@ -98,17 +98,24 @@ gnomad==0.6.4
     # via -r requirements.in
 google-api-core[grpc]==2.22.0
     # via
+    #   google-api-python-client
     #   google-cloud-bigquery
     #   google-cloud-core
     #   google-cloud-dataproc
+google-api-python-client==2.108.0
+    # via -r requirements.in
 google-auth==2.35.0
     # via
     #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
     #   google-auth-oauthlib
     #   google-cloud-bigquery
     #   google-cloud-core
     #   google-cloud-dataproc
     #   hail
+google-auth-httplib2==0.2.0
+    # via google-api-python-client
 google-auth-oauthlib==0.8.0
     # via hail
 google-cloud-bigquery==3.27.0
@@ -141,7 +148,10 @@ hail==0.2.132
 hdbscan==0.8.39
     # via gnomad
 httplib2==0.22.0
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   google-api-python-client
+    #   google-auth-httplib2
 humanize==1.1.0
     # via hail
 idna==3.10
@@ -372,6 +382,8 @@ typing-extensions==4.12.2
     #   typer
 tzdata==2024.2
     # via pandas
+uritemplate==4.1.1
+    # via google-api-python-client
 urllib3==2.2.3
     # via
     #   botocore
