@@ -140,6 +140,8 @@ hail==0.2.132
     # via -r requirements.in
 hdbscan==0.8.39
     # via gnomad
+httplib2==0.22.0
+    # via -r requirements.in
 humanize==1.1.0
     # via hail
 idna==3.10
@@ -271,6 +273,8 @@ pygments==2.18.0
     #   rich
 pyjwt[crypto]==2.9.0
     # via msal
+pyparsing==3.2.1
+    # via httplib2
 pyspark==3.5.3
     # via hail
 python-daemon==3.1.0
