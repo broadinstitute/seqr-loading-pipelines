@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import google.api_core.exceptions
+import google.cloud.dataproc_v1.types.jobs
 import luigi
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
@@ -30,7 +31,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_client = mock_job_controller_client.return_value
         mock_client.get_job.return_value = SimpleNamespace(
             status=SimpleNamespace(
-                state='ERROR',
+                state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.ERROR,
                 details='Google Cloud Dataproc Agent reports job failure. If logs are available, they can be found at...',
             ),
         )
@@ -54,7 +55,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job RunPipelineTask-manual__2024-04-03 entered ERROR state',
+                    'Job RunPipelineTask-manual__2024-04-03 entered State.ERROR state',
                 ),
             ],
         )
@@ -67,7 +68,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_create_dataproc_cluster.return_value = MockCompleteTask()
         mock_client = mock_job_controller_client.return_value
         mock_client.get_job.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='DONE'),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE,
+            ),
         )
         worker = luigi.worker.Worker()
         task = RunPipelineOnDataprocTask(
@@ -135,7 +138,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
                 'job not found',
             ),
             SimpleNamespace(
-                status=SimpleNamespace(state='DONE'),
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE,
+                ),
             ),
         ]
         operation = mock_client.submit_job_as_operation.return_value

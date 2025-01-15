@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock, call, patch
 
 import google.api_core.exceptions
+import google.cloud.dataproc_v1.types.clusters
 import luigi
 
 from v03_pipeline.lib.misc.gcp import SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE
@@ -12,6 +13,12 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 )
 
 
+@patch.multiple(
+    'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.Env',
+    GCLOUD_PROJECT='proj',
+    GCLOUD_REGION='us-a',
+    GCLOUD_ZONE='us-a-1',
+)
 @patch(
     'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.get_service_account_credentials',
     return_value=SimpleNamespace(
@@ -26,7 +33,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_dataset_type_unsupported(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -38,11 +45,13 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_failed(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='ERROR'),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
+            ),
             cluster_name='abc',
         )
         mock_client.create_cluster.side_effect = (
@@ -61,11 +70,13 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_success(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
-            status=SimpleNamespace(state='RUNNING'),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING,
+            ),
         )
         mock_client.create_cluster.side_effect = (
             google.api_core.exceptions.AlreadyExists('cluster exists')
@@ -85,7 +96,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -111,7 +122,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
