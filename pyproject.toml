@@ -4,7 +4,10 @@ dynamic = ['version']
 requires-python = ">=3.10"
 
 [tool.setuptools]
-include-package-data = false
+include-package-data = true
+
+[tool.setuptools.package-data]
+"*" = ["v03_pipeline*.over.chain.gz"]
 
 [tool.setuptools.dynamic]
 version = {attr = "v03_pipeline.__version__"}

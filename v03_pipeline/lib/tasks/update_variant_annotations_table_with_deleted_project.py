@@ -43,7 +43,7 @@ class UpdateVariantAnnotationsTableWithDeletedProjectTask(
         ht = ht.annotate(
             **get_fields(
                 ht,
-                self.dataset_type.lookup_table_annotation_fns,
+                self.dataset_type.variant_frequency_annotation_fns,
                 lookup_ht=lookup_ht,
                 **self.param_kwargs,
             ),

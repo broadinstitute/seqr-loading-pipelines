@@ -25,10 +25,9 @@ def rsid(mt: hl.MatrixTable, **_: Any) -> hl.Expression:
 
 def rg37_locus(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     return hl.liftover(ht.locus, ReferenceGenome.GRCh37.value)
 
 

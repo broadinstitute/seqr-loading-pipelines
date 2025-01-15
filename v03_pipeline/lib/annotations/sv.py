@@ -194,10 +194,9 @@ def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
 
 def rg37_locus_end(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     end = end_locus(ht)
     return hl.or_missing(
         hl.is_defined(end),

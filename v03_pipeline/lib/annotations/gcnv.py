@@ -57,11 +57,11 @@ def end_locus(
     return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
-def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
+def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
-        AF=hl.float32(ht.sf),
-        AC=ht.sc,
-        AN=hl.int32(ht.sc / ht.sf),
+        AF=hl.float32(callset_ht[ht.variant_id].sf),
+        AC=callset_ht[ht.variant_id].sc,
+        AN=hl.int32(callset_ht[ht.variant_id].sc / callset_ht[ht.variant_id].sf),
         Hom=hl.missing(hl.tint32),
         Het=hl.missing(hl.tint32),
     )
@@ -85,10 +85,9 @@ def QS(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802
 
 def rg37_locus(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     return hl.liftover(
         start_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,
@@ -97,10 +96,9 @@ def rg37_locus(
 
 def rg37_locus_end(
     ht: hl.Table,
-    grch38_to_grch37_liftover_ref_path: str,
     **_: Any,
 ) -> hl.Expression | None:
-    liftover.add_rg38_liftover(grch38_to_grch37_liftover_ref_path)
+    liftover.add_rg38_liftover()
     return hl.liftover(
         end_locus(ht, ReferenceGenome.GRCh38),
         ReferenceGenome.GRCh37.value,
