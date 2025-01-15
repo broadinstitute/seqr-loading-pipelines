@@ -36,7 +36,9 @@ class WriteValidationErrorsForRunTask(luigi.Task):
     def run(self) -> None:
         validation_errors_json = {
             'project_guids': self.project_guids,
-            'error_messages': self.error_messages,
+            'error_messages': [self.error_messages]
+            if isinstance(self.error_messages, str)
+            else self.error_messages,
             **luigi.freezing.recursively_unfreeze(
                 self.error_body,
             ),
@@ -50,20 +52,11 @@ def with_persisted_validation_errors(f: Callable) -> Callable[[Callable], Callab
         try:
             return f(self)
         except SeqrValidationError as e:
-            if isinstance(
-                e.args[1],
-                object,
-            ):  # TODO: improve type checking with a pydantic model/typed dict
-                write_validation_errors_for_run_task = self.clone(
-                    WriteValidationErrorsForRunTask,
-                    error_messages=[str(e.args[0])],
-                    error_body=e.args[1],
-                )
-            else:
-                write_validation_errors_for_run_task = self.clone(
-                    WriteValidationErrorsForRunTask,
-                    error_messages=[str(e)],
-                )
+            write_validation_errors_for_run_task = self.clone(
+                WriteValidationErrorsForRunTask,
+                error_messages=e.msg,
+                error_body=e.error_body,
+            )
             write_validation_errors_for_run_task.run()
             raise SeqrValidationError(
                 write_validation_errors_for_run_task.to_single_error_message(),
