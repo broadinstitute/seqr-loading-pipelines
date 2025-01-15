@@ -57,11 +57,11 @@ def end_locus(
     return hl.locus(ht.chr, ht.end, reference_genome.value)
 
 
-def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
+def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
-        AF=hl.float32(ht.sf),
-        AC=ht.sc,
-        AN=hl.int32(ht.sc / ht.sf),
+        AF=hl.float32(callset_ht[ht.variant_id].sf),
+        AC=callset_ht[ht.variant_id].sc,
+        AN=hl.int32(callset_ht[ht.variant_id].sc / callset_ht[ht.variant_id].sf),
         Hom=hl.missing(hl.tint32),
         Het=hl.missing(hl.tint32),
     )

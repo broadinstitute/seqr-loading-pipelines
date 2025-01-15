@@ -277,7 +277,6 @@ class DatasetType(str, Enum):
             ],
             DatasetType.GCNV: [
                 gcnv.end_locus,
-                gcnv.gt_stats,
                 gcnv.num_exon,
                 gcnv.sorted_gene_consequences,
                 gcnv.start_locus,
@@ -354,7 +353,7 @@ class DatasetType(str, Enum):
         }[self]
 
     @property
-    def lookup_table_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
+    def variant_frequency_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SNV_INDEL: [
                 snv_indel.gt_stats,
@@ -362,7 +361,10 @@ class DatasetType(str, Enum):
             DatasetType.MITO: [
                 mito.gt_stats,
             ],
-        }[self]
+            DatasetType.GCNV: [
+                gcnv.gt_stats,
+            ],
+        }.get(self, [])
 
     @property
     def should_send_to_allele_registry(self):

@@ -48,10 +48,12 @@ TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
+TEST_GCNV_BED_FILE_2 = 'v03_pipeline/var/test/callsets/gcnv_2.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
+TEST_PEDIGREE_8 = 'v03_pipeline/var/test/pedigrees/test_pedigree_8.tsv'
 
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
@@ -1478,7 +1480,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-    def test_gcnv_update_vat(
+    def test_gcnv_update_vat_multiple(
         self,
     ) -> None:
         worker = luigi.worker.Worker()
@@ -1611,6 +1613,61 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     strvctvre=hl.Struct(score=0.5070000290870667),
                     sv_type_id=5,
                     xpos=1100017586,
+                ),
+            ],
+        )
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.GCNV,
+                sample_type=SampleType.WES,
+                callset_path=TEST_GCNV_BED_FILE_2,
+                project_guids=['R0115_test_project2'],
+                project_remap_paths=['not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_8],
+                skip_validation=True,
+                run_id='second_run_id',
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 3)
+        self.assertCountEqual(
+            ht.select('gt_stats').collect(),
+            [
+                hl.Struct(
+                    # Existing variant, gt_stats are preserved
+                    variant_id='suffix_16456_DEL',
+                    gt_stats=hl.Struct(
+                        AF=hl.eval(hl.float32(4.401408e-05)),
+                        AC=1,
+                        AN=22720,
+                        Hom=None,
+                        Het=None,
+                    ),
+                ),
+                hl.Struct(
+                    # Exiting variant, gt_stats are updated
+                    variant_id='suffix_16457_DEL',
+                    gt_stats=hl.Struct(
+                        AF=8.111110946629196e-05,
+                        AC=3,
+                        AN=36986,
+                        Hom=None,
+                        Het=None,
+                    ),
+                ),
+                hl.Struct(
+                    # New variant.
+                    variant_id='suffix_99999_DEL',
+                    gt_stats=hl.Struct(
+                        AF=8.802817319519818e-05,
+                        AC=2,
+                        AN=22719,
+                        Hom=None,
+                        Het=None,
+                    ),
                 ),
             ],
         )
