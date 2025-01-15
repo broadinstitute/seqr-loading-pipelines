@@ -52,7 +52,7 @@ def with_persisted_validation_errors(f: Callable) -> Callable[[Callable], Callab
         except SeqrValidationError as e:
             write_validation_errors_for_run_task = self.clone(
                 WriteValidationErrorsForRunTask,
-                error_messages=e.msg,
+                error_messages=[e.msg],
                 error_body=e.error_body,
             )
             write_validation_errors_for_run_task.run()
