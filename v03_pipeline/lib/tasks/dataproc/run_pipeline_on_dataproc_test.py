@@ -69,7 +69,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_client = mock_job_controller_client.return_value
         mock_client.get_job.return_value = SimpleNamespace(
             status=SimpleNamespace(
-                state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+                state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE,
             ),
         )
         worker = luigi.worker.Worker()
@@ -139,7 +139,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
             ),
             SimpleNamespace(
                 status=SimpleNamespace(
-                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE,
                 ),
             ),
         ]
