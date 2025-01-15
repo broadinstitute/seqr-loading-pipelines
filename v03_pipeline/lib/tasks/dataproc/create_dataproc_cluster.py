@@ -167,6 +167,9 @@ class CreateDataprocClusterTask(luigi.Task):
         return cluster.status.state == RUNNING_STATE
 
     def run(self):
+        if not Env.GCLOUD_PROJECT or not Env.GCLOUD_REGION or not Env.GCLOUD_ZONE:
+            msg = 'Environment Variables GCLOUD_PROJECT, GCLOUD_REGION, GCLOUD_ZONE are required for running the pipeline on dataproc.'
+            raise RuntimeError(msg)
         operation = self.client.create_cluster(
             request={
                 'project_id': Env.GCLOUD_PROJECT,

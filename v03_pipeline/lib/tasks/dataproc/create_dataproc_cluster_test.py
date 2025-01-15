@@ -12,6 +12,12 @@ from v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster import (
 )
 
 
+@patch.multiple(
+    'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.Env',
+    GCLOUD_PROJECT='proj',
+    GCLOUD_REGION='us-a',
+    GCLOUD_ZONE='us-a-1',
+)
 @patch(
     'v03_pipeline.lib.tasks.dataproc.create_dataproc_cluster.get_service_account_credentials',
     return_value=SimpleNamespace(
@@ -26,7 +32,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_dataset_type_unsupported(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         task = CreateDataprocClusterTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -38,7 +44,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_failed(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -61,7 +67,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
     def test_spinup_cluster_already_exists_success(
         self,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
@@ -85,7 +91,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
@@ -111,7 +117,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         self,
         mock_logger: Mock,
         mock_cluster_controller: Mock,
-        _: Mock,
+        *_: Mock,
     ) -> None:
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.side_effect = google.api_core.exceptions.NotFound(
