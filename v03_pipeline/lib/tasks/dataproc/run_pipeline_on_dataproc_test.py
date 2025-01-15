@@ -68,7 +68,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_create_dataproc_cluster.return_value = MockCompleteTask()
         mock_client = mock_job_controller_client.return_value
         mock_client.get_job.return_value = SimpleNamespace(
-            status=SimpleNamespace(state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE),
+            status=SimpleNamespace(
+                state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+            ),
         )
         worker = luigi.worker.Worker()
         task = RunPipelineOnDataprocTask(
@@ -136,7 +138,9 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
                 'job not found',
             ),
             SimpleNamespace(
-                status=SimpleNamespace(state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE),
+                status=SimpleNamespace(
+                    state=google.cloud.dataproc_v1.types.jobs.JobStatus.State.DONE
+                ),
             ),
         ]
         operation = mock_client.submit_job_as_operation.return_value

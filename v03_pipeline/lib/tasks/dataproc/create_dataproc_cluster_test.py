@@ -50,7 +50,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
             status=SimpleNamespace(
-                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR,
             ),
             cluster_name='abc',
         )
@@ -75,7 +75,7 @@ class CreateDataprocClusterTaskTest(unittest.TestCase):
         mock_client = mock_cluster_controller.return_value
         mock_client.get_cluster.return_value = SimpleNamespace(
             status=SimpleNamespace(
-                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING
+                state=google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.RUNNING,
             ),
         )
         mock_client.create_cluster.side_effect = (
