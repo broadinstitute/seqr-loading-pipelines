@@ -18,7 +18,7 @@ from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 DEBIAN_IMAGE = '2.1.33-debian11'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
-PKGS = '|'.join(pip_freeze.freeze())
+PKGS = '|'.join([x for x in pip_freeze.freeze() if 'hail @' not in x])
 TIMEOUT_S = 900
 
 logger = get_logger(__name__)
