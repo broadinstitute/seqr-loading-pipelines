@@ -20,6 +20,7 @@ RUN python3 -m pip install --no-cache-dir -r ./requirements.txt -r requirements-
 COPY v03_pipeline/api api
 COPY v03_pipeline/bin bin
 COPY v03_pipeline/lib lib
+COPY v03_pipeline/var/liftover var/liftover
 COPY v03_pipeline/migrations migrations
 
 # Special paths
