@@ -7,4 +7,5 @@ google-cloud-dataproc==5.14.0
 google-cloud-bigquery==3.27.0
 httplib2==0.22.0
 google-api-python-client==2.108.0
+ipykernel==6.22.0 # matches a pinned version in hail init_notebook.py
 ipywidgets==8.0.6 # matches a pinned version in hail init_notebook.py

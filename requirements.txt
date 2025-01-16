@@ -162,8 +162,10 @@ idna==3.10
     # via
     #   requests
     #   yarl
-ipykernel==6.29.5
-    # via ipywidgets
+ipykernel==6.22.0
+    # via
+    #   -r requirements.in
+    #   ipywidgets
 ipython==8.29.0
     # via
     #   ipykernel
