@@ -119,6 +119,11 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
             'endpoint_config': {},
             'initialization_actions': [
                 {
+                    # NB: this script initializes the python env.
+                    'executable_file': f'gs://hail-common/hailctl/dataproc/{HAIL_VERSION}/init_notebook.py',
+                    'execution_timeout': {'seconds': 1200},
+                },
+                {
                     'executable_file': f'gs://seqr-pipeline-runner-builds/{Env.DEPLOYMENT_TYPE}/{Env.PIPELINE_RUNNER_APP_VERSION}/bin/dataproc_vep_init.bash',
                     'execution_timeout': {'seconds': 1200},
                 },
