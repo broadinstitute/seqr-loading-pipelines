@@ -15,7 +15,14 @@ SAMPLE_TYPE_MATCH_THRESHOLD = 0.3
 
 
 class SeqrValidationError(Exception):
-    pass
+    def __init__(
+        self,
+        msg: str,
+        error_body: dict | None = None,
+    ):
+        super().__init__(msg)
+        self.msg = msg
+        self.error_body = error_body if error_body is not None else {}
 
 
 def validate_allele_type(
