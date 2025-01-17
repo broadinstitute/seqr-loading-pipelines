@@ -14,6 +14,7 @@ class LoadingPipelineRequest(BaseModel):
     dataset_type: DatasetType
     ignore_missing_samples_when_remapping: bool = False
     skip_validation: bool = False
+    skip_check_sex_and_relatedness: bool = False
 
     @field_validator('callset_path')
     @classmethod
