@@ -15,7 +15,7 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
 )
 from v03_pipeline.lib.tasks.dataproc.misc import get_cluster_name
 
-DEBIAN_IMAGE = '2.1.33-debian11'
+DEBIAN_IMAGE = '2.2.5-debian12'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join([x for x in pip_freeze.freeze() if 'hail @' not in x])
