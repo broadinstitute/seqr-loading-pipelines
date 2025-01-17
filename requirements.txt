@@ -59,7 +59,7 @@ azure-storage-blob==12.23.1
     # via hail
 beautifulsoup4==4.12.3
     # via nbconvert
-bleach[css]==6.2.0
+bleach==6.2.0
     # via nbconvert
 bokeh==3.3.4
     # via hail
@@ -281,7 +281,7 @@ matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
-mistune==3.1.0
+mistune==2.0.5
     # via nbconvert
 msal==1.31.0
     # via
@@ -299,8 +299,9 @@ nbclassic==1.2.0
     # via notebook
 nbclient==0.10.2
     # via nbconvert
-nbconvert==7.16.5
+nbconvert==7.3.1
     # via
+    #   -r requirements.in
     #   jupyter-server
     #   notebook
 nbformat==5.10.4
@@ -532,7 +533,7 @@ terminado==0.18.1
 threadpoolctl==3.5.0
     # via scikit-learn
 tinycss2==1.4.0
-    # via bleach
+    # via nbconvert
 tornado==6.4.2
     # via
     #   bokeh
@@ -569,7 +570,6 @@ typing-extensions==4.12.2
     #   azure-storage-blob
     #   ipython
     #   janus
-    #   mistune
     #   multidict
     #   pydantic
     #   pydantic-core
