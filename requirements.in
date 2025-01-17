@@ -9,3 +9,4 @@ httplib2==0.22.0
 google-api-python-client==2.108.0
 ipykernel==6.22.0 # matches a pinned version in hail init_notebook.py
 ipywidgets==8.0.6 # matches a pinned version in hail init_notebook.py
+notebook==6.5.6 # matches a pinned version in hail init_notebook.py
