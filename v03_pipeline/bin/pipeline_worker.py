@@ -44,7 +44,7 @@ def main():
                 )
                 for project_guid in lpr.projects_to_run
             ]
-            run_id = datetime.datetime.now(datetime.timezone.utc).strftime(
+            run_id = datetime.datetime.now(datetime.UTC).strftime(
                 '%Y%m%d-%H%M%S',
             )
             loading_run_task_params = {

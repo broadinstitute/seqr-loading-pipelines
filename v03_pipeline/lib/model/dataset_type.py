@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from enum import Enum
+from enum import StrEnum
 
 import hail as hl
 
@@ -10,7 +10,7 @@ MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
 
 
-class DatasetType(str, Enum):
+class DatasetType(StrEnum):
     GCNV = 'GCNV'
     MITO = 'MITO'
     SNV_INDEL = 'SNV_INDEL'

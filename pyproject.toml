@@ -1,7 +1,7 @@
 [project]
 name = "seqr-loading-pipeline"
 dynamic = ['version']
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [tool.setuptools]
 include-package-data = true
@@ -19,7 +19,7 @@ namespaces = false
 
 [tool.mypy]
 packages = 'v03_pipeline'
-python_version = "3.10"
+python_version = "3.11"
 ignore_missing_imports = true
 strict = true
 
@@ -55,7 +55,7 @@ line-length = 88
 select = [
     "ALL"
 ]
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.flake8-quotes]
 inline-quotes = "single"

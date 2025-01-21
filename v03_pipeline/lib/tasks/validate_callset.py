@@ -135,7 +135,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                     **self.param_kwargs,
                     **validation_dependencies,
                 )
-            except SeqrValidationError as e:  # noqa: PERF203
+            except SeqrValidationError as e:
                 validation_exceptions.append(e)
         if validation_exceptions:
             write_validation_errors_for_run_task = self.clone(

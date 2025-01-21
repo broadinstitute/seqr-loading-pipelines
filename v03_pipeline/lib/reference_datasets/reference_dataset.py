@@ -1,7 +1,7 @@
 import importlib
 import types
 from collections.abc import Callable
-from enum import Enum
+from enum import StrEnum
 from typing import Union
 
 import hail as hl
@@ -140,7 +140,7 @@ class BaseReferenceDataset:
         )
 
 
-class ReferenceDataset(BaseReferenceDataset, str, Enum):
+class ReferenceDataset(BaseReferenceDataset, StrEnum):
     clinvar = 'clinvar'
     dbnsfp = 'dbnsfp'
     exac = 'exac'
@@ -162,7 +162,7 @@ class ReferenceDataset(BaseReferenceDataset, str, Enum):
     mitomap = 'mitomap'
 
 
-class ReferenceDatasetQuery(BaseReferenceDataset, str, Enum):
+class ReferenceDatasetQuery(BaseReferenceDataset, StrEnum):
     clinvar_path_variants = 'clinvar_path_variants'
     high_af_variants = 'high_af_variants'
 

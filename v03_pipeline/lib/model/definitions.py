@@ -1,14 +1,14 @@
-from enum import Enum
+from enum import StrEnum
 
 import hail as hl
 
 
-class AccessControl(str, Enum):
+class AccessControl(StrEnum):
     PUBLIC = 'public'
     PRIVATE = 'private'
 
 
-class Sex(str, Enum):
+class Sex(StrEnum):
     FEMALE = 'F'
     MALE = 'M'
     UNKNOWN = 'U'
@@ -26,13 +26,13 @@ class Sex(str, Enum):
         }.get(self, [self.name])
 
 
-class PipelineVersion(str, Enum):
+class PipelineVersion(StrEnum):
     V02 = 'v02'
     V03 = 'v03'
     V3_1 = 'v3.1'
 
 
-class ReferenceGenome(str, Enum):
+class ReferenceGenome(StrEnum):
     GRCh37 = 'GRCh37'
     GRCh38 = 'GRCh38'
 
@@ -158,6 +158,6 @@ class ReferenceGenome(str, Enum):
         }[self]
 
 
-class SampleType(str, Enum):
+class SampleType(StrEnum):
     WES = 'WES'
     WGS = 'WGS'
