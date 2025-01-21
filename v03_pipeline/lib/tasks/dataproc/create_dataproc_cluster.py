@@ -19,7 +19,7 @@ DEBIAN_IMAGE = '2.2.5-debian12'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join([x for x in pip_freeze.freeze() if 'hail @' not in x])
-TIMEOUT_S = 900
+TIMEOUT_S = 1500
 
 logger = get_logger(__name__)
 
