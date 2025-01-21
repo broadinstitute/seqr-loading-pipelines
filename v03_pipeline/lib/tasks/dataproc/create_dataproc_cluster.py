@@ -19,7 +19,7 @@ DEBIAN_IMAGE = '2.2.5-debian12'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join([x for x in pip_freeze.freeze() if 'hail @' not in x])
-TIMEOUT_S = 1500
+TIMEOUT_S = 1200
 
 logger = get_logger(__name__)
 
@@ -40,6 +40,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'REFERENCE_GENOME': reference_genome.value,
                     'PIPELINE_RUNNER_APP_VERSION': Env.PIPELINE_RUNNER_APP_VERSION,
                 },
+                'internal_ip_only': False, # Recent change with 2.2 dataproc images.
                 'service_account': service_account_credentials.service_account_email,
                 'service_account_scopes': service_account_credentials.scopes,
             },
