@@ -40,7 +40,7 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     'REFERENCE_GENOME': reference_genome.value,
                     'PIPELINE_RUNNER_APP_VERSION': Env.PIPELINE_RUNNER_APP_VERSION,
                 },
-                'internal_ip_only': False, # Recent change with 2.2 dataproc images.
+                'internal_ip_only': False,  # Recent change with 2.2 dataproc images.
                 'service_account': service_account_credentials.service_account_email,
                 'service_account_scopes': service_account_credentials.scopes,
             },
