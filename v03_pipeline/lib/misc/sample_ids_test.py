@@ -38,7 +38,6 @@ class SampleLookupTest(unittest.TestCase):
         remapped_mt = remap_sample_ids(
             CALLSET_MT,
             project_remap_ht,
-            ignore_missing_samples_when_remapping=True,
         )
 
         self.assertEqual(remapped_mt.cols().count(), 3)
@@ -80,7 +79,6 @@ class SampleLookupTest(unittest.TestCase):
             remap_sample_ids(
                 CALLSET_MT,
                 project_remap_ht,
-                ignore_missing_samples_when_remapping=True,
             )
 
     def test_remap_sample_ids_remap_has_missing_samples(self) -> None:
@@ -103,7 +101,6 @@ class SampleLookupTest(unittest.TestCase):
             remap_sample_ids(
                 CALLSET_MT,
                 project_remap_ht,
-                ignore_missing_samples_when_remapping=False,
             )
 
     def test_subset_samples_zero_samples(self):

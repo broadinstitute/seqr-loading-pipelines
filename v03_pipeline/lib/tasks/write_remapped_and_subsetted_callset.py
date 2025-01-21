@@ -96,7 +96,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             callset_mt = remap_sample_ids(
                 callset_mt,
                 project_remap_ht,
-                self.ignore_missing_samples_when_remapping,
             )
             remap_lookup = hl.dict(
                 {r.s: r.seqr_id for r in project_remap_ht.collect()},

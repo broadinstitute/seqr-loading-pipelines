@@ -22,10 +22,6 @@ class BaseLoadingRunParams(luigi.Task):
     project_guids = luigi.ListParameter(default=[])
     project_remap_paths = luigi.ListParameter(default=[])
     project_pedigree_paths = luigi.ListParameter(default=[])
-    ignore_missing_samples_when_remapping = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     skip_check_sex_and_relatedness = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
