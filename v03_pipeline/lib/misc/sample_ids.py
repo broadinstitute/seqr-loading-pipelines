@@ -11,7 +11,6 @@ logger = get_logger(__name__)
 def remap_sample_ids(
     mt: hl.MatrixTable,
     project_remap_ht: hl.Table,
-    ignore_missing_samples_when_remapping: bool,
 ) -> hl.MatrixTable:
     collected_remap = project_remap_ht.collect()
     s_dups = [k for k, v in Counter([r.s for r in collected_remap]).items() if v > 1]
@@ -31,12 +30,8 @@ def remap_sample_ids(
             f'Only {project_remap_ht.semi_join(mt.cols()).count()} out of {remap_count} '
             'remap IDs matched IDs in the variant callset.\n'
             f"IDs that aren't in the callset: {missing_samples}\n"
-            f'All callset sample IDs:{mt.s.collect()}'
         )
-        if ignore_missing_samples_when_remapping:
-            logger.info(message)
-        else:
-            raise SeqrValidationError(message)
+        raise SeqrValidationError(message)
 
     mt = mt.annotate_cols(**project_remap_ht[mt.s])
     remap_expr = hl.if_else(hl.is_missing(mt.seqr_id), mt.s, mt.seqr_id)

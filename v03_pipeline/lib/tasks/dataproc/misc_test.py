@@ -42,8 +42,6 @@ class MiscTest(unittest.TestCase):
                 '["test_remap"]',
                 '--project-pedigree-paths',
                 '["test_pedigree"]',
-                '--ignore-missing-samples-when-remapping',
-                'False',
                 '--skip-check-sex-and-relatedness',
                 'False',
                 '--skip-expect-filters',
