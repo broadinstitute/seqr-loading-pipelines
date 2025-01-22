@@ -171,7 +171,7 @@ class CreateDataprocClusterTask(luigi.Task):
             google.cloud.dataproc_v1.types.clusters.ClusterStatus.State.ERROR_DUE_TO_UPDATE,
         }:
             msg = (
-                f'Cluster {cluster.cluster_name} entered {cluster.status.state!s} state'
+                f'Cluster {cluster.cluster_name} entered {cluster.status.state.name} state'
             )
             logger.error(msg)
         # This will return False when the cluster is "CREATING"

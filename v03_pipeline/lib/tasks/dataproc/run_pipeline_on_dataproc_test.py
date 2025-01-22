@@ -55,7 +55,7 @@ class WriteSuccessFileOnDataprocTaskTest(unittest.TestCase):
         mock_logger.error.assert_has_calls(
             [
                 call(
-                    'Job RunPipelineTask-manual__2024-04-03 entered State.ERROR state',
+                    'Job RunPipelineTask-manual__2024-04-03 entered ERROR state',
                 ),
             ],
         )
