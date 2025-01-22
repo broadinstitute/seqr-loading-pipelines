@@ -15,7 +15,7 @@ WORKDIR /v03_pipeline
 COPY requirements.txt .
 COPY requirements-dataproc.txt .
 COPY requirements-prod.txt .
-RUN python3 -m pip install --no-cache-dir -r ./requirements.txt -r ./requirements-dataproc.txt -r requirements-prod.txt
+RUN python3 -m pip install --no-dependencies --no-cache-dir -r ./requirements.txt -r ./requirements-dataproc.txt -r requirements-prod.txt
 
 # Application Code
 COPY v03_pipeline/api api
