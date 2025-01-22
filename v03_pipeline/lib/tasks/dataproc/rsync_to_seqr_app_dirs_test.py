@@ -90,21 +90,21 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
                     [
                         '/bin/bash',
                         '-cx',
-                        'mkdir -p /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL && gsutil -qm rsync -rd -x .*runs.* gs://test-hail-search-dir/GRCh38/SNV_INDEL /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL && sync /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL',
+                        'mkdir -p /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL && gsutil -qm rsync -rd gs://test-hail-search-dir/GRCh38/SNV_INDEL /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL && sync /var/seqr/seqr-hail-search-data/GRCh38/SNV_INDEL',
                     ],
                 ),
                 call(
                     [
                         '/bin/bash',
                         '-cx',
-                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && gsutil -qm rsync -rd -x .*runs.* gs://test-reference-data-dir/GRCh38/SNV_INDEL/high_af_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht',
+                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && gsutil -qm rsync -rd -x gs://test-reference-data-dir/GRCh38/SNV_INDEL/high_af_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht',
                     ],
                 ),
                 call(
                     [
                         '/bin/bash',
                         '-cx',
-                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht && gsutil -qm rsync -rd -x .*runs.* gs://test-reference-data-dir/GRCh38/SNV_INDEL/clinvar_path_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht',
+                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht && gsutil -qm rsync -rd gs://test-reference-data-dir/GRCh38/SNV_INDEL/clinvar_path_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/clinvar_path_variants.ht',
                     ],
                 ),
             ],

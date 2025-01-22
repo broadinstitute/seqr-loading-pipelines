@@ -25,7 +25,7 @@ def rsync_command(src_path: str, dst_path: str) -> list[str]:
     return [
         '/bin/bash',
         '-cx',
-        f'mkdir -p {dst_path} && gsutil -qm rsync -rd -x .*runs.* {src_path} {dst_path} && sync {dst_path}',
+        f'mkdir -p {dst_path} && gsutil -qm rsync -rd {src_path} {dst_path} && sync {dst_path}',
     ]
 
 
