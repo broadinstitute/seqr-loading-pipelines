@@ -97,7 +97,7 @@ class RsyncToSeqrAppDirsTaskTest(unittest.TestCase):
                     [
                         '/bin/bash',
                         '-cx',
-                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && gsutil -qm rsync -rd -x gs://test-reference-data-dir/GRCh38/SNV_INDEL/high_af_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht',
+                        'mkdir -p /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && gsutil -qm rsync -rd gs://test-reference-data-dir/GRCh38/SNV_INDEL/high_af_variants.ht /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht && sync /var/seqr/seqr-reference-data/GRCh38/SNV_INDEL/high_af_variants.ht',
                     ],
                 ),
                 call(
