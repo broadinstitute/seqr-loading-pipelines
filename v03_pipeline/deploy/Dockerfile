@@ -1,5 +1,5 @@
 FROM docker:dind as BUILD
-FROM hailgenetics/hail:0.2.132-py3.11
+FROM hailgenetics/hail:0.2.133-py3.11
 COPY --from=BUILD /usr/local/bin/docker /usr/local/bin/docker
 LABEL maintainer="Broad TGG"
 

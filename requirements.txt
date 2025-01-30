@@ -104,11 +104,11 @@ google-auth==2.35.0
     #   hail
 google-auth-oauthlib==0.8.0
     # via hail
-hail==0.2.132
+hail==0.2.133
     # via -r requirements.in
 hdbscan==0.8.39
     # via gnomad
-humanize==1.1.0
+humanize==4.11.0
     # via hail
 idna==3.10
     # via
