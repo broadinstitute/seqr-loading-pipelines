@@ -1,4 +1,4 @@
-hail==0.2.132
+hail==0.2.133
 luigi==3.5.2
 gnomad==0.6.4
 aiofiles==24.1.0
