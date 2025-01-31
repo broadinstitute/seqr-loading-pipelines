@@ -8,6 +8,7 @@ from v03_pipeline.lib.model import Sex
 
 TEST_PEDIGREE_1 = 'v03_pipeline/var/test/pedigrees/test_pedigree_1.tsv'
 TEST_PEDIGREE_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_2.tsv'
+TEST_PEDIGREE_9 = 'v03_pipeline/var/test/pedigrees/test_pedigree_9.tsv'
 
 
 class PedigreesTest(unittest.TestCase):
@@ -489,4 +490,21 @@ class PedigreesTest(unittest.TestCase):
         self.assertEqual(
             family.samples['BBL_BC1-000345_01_D1'].mother,
             'BBL_BC1-000345_03_D1',
+        )
+
+    def test_pedigree_ungrouped_families(self) -> None:
+        pedigree_ht = import_pedigree(TEST_PEDIGREE_9)
+        parsed_pedigree = parse_pedigree_ht_to_families(pedigree_ht)
+        self.assertEqual(len(parsed_pedigree), 2)
+        family = next(
+            iter(
+                [
+                    family
+                    for family in parsed_pedigree
+                    if family.family_guid == 'family_2_1'
+                ],
+            ),
+        )
+        self.assertTrue(
+            family.samples.keys() == {'RGP_164_1', 'RGP_164_2', 'RGP_164_4'},
         )
