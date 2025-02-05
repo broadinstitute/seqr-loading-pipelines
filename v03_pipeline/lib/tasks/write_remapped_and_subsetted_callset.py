@@ -176,7 +176,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
         if (
-            FeatureFlag.overwrite_male_non_par_calls
+            FeatureFlag.OVERWRITE_SV_MALE_NON_PAR_CALLS
             and self.dataset_type.overwrite_male_non_par_calls
         ):
             overwrite_male_non_par_calls(
