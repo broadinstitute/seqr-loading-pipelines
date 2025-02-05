@@ -57,5 +57,5 @@ class SVTest(unittest.TestCase):
             mt.GT.collect(),
         )
         self.assertFalse(
-            hasattr(mt, 'start_locus')
+            hasattr(mt, 'start_locus'),
         )
