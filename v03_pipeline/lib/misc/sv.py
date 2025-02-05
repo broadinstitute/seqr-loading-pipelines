@@ -22,6 +22,10 @@ def overwrite_male_non_par_calls(
             if i.start.contig == ReferenceGenome.GRCh38.x_contig
         ],
     )
+    non_par_interval = hl.interval(
+        par_intervals[0].end,
+        par_intervals[1].start,
+    )
     # NB: making use of existing formatting_annotation_fns.
     # We choose to annotate & drop here as the sample level
     # fields are dropped by the time we format variants.
@@ -33,14 +37,10 @@ def overwrite_male_non_par_calls(
         GT=hl.if_else(
             (
                 male_sample_ids.contains(mt.s)
-                & hl.any(
-                    par_intervals.map(
-                        lambda i: i.overlaps(
-                            hl.interval(
-                                mt.start_locus,
-                                mt.end_locus,
-                            ),
-                        ),
+                & non_par_interval.overlaps(
+                    hl.interval(
+                        mt.start_locus,
+                        mt.end_locus,
                     ),
                 )
             ),

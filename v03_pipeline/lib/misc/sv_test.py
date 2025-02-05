@@ -49,11 +49,13 @@ class SVTest(unittest.TestCase):
         self.assertEqual(
             [
                 hl.Call(alleles=[0, 0], phased=False),
-                # This call belongs to a MALE and intercepts
-                # the par region on the X chromosome. Therefore it is modified.
-                hl.Call(alleles=[1, 1], phased=False),
-                hl.Call(alleles=[0, 0], phased=False),
+                # END of this variant < start of the non-par region.
                 hl.Call(alleles=[0, 1], phased=False),
+                hl.Call(alleles=[0, 0], phased=False),
+                hl.Call(alleles=[1, 1], phased=False),
             ],
             mt.GT.collect(),
+        )
+        self.assertFalse(
+            hasattr(mt, 'start_locus')
         )
