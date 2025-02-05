@@ -1,8 +1,8 @@
 import hail as hl
 
 from v03_pipeline.lib.annotations import sv
+from v03_pipeline.lib.misc.pedigree import Family
 from v03_pipeline.lib.model import ReferenceGenome, Sex
-from v03_pipeline.lib.pedigree import Family
 
 
 def overwrite_male_non_par_calls(
@@ -10,9 +10,11 @@ def overwrite_male_non_par_calls(
     families: set[Family],
 ) -> hl.MatrixTable:
     male_sample_ids = {
-        s.sample_id for f in families for s in f.samples if s.sex == Sex.MALE
+        s.sample_id for f in families for s in f.samples.values() if s.sex == Sex.MALE
     }
-    male_sample_ids = hl.set(male_sample_ids) or hl.empty_set(hl.str)
+    male_sample_ids = (
+        hl.set(male_sample_ids) if male_sample_ids else hl.empty_set(hl.str)
+    )
     par_intervals = hl.array(
         [
             i

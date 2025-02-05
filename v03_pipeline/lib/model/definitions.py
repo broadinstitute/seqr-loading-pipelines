@@ -70,6 +70,7 @@ class ReferenceGenome(StrEnum):
             ReferenceGenome.GRCh38: 'chrM',
         }[self]
 
+    @property
     def x_contig(self) -> str:
         return 'X' if self == ReferenceGenome.GRCh37 else 'chrX'
 
