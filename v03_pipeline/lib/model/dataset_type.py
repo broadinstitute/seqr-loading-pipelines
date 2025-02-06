@@ -121,8 +121,8 @@ class DatasetType(StrEnum):
                 'info.CPX_TYPE': hl.tstr,
                 'info.END': hl.tint32,
                 'info.END2': hl.tint32,
-                'info.gnomAD_V2_AF': hl.tfloat64,
-                'info.gnomAD_V2_SVID': hl.tstr,
+                'info.gnomad_v4.1_sv_AF': hl.tfloat64,
+                'info.gnomad_v4.1_sv_SVID': hl.tstr,
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
                 'info.StrVCTVRE': hl.tstr,
@@ -387,3 +387,7 @@ class DatasetType(StrEnum):
                 sv.info,
             ],
         }[self]
+
+    @property
+    def overwrite_male_non_par_calls(self) -> None:
+        return self == DatasetType.SV
