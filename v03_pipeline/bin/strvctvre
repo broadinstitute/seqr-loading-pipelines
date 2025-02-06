@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -eux
+
+REFERENCE_GENOME=$1
+STRVCTVRE_REFERENCE_DATASETS_DIR=${STRVCTVRE_REFERENCE_DATASETS_DIR:-/var/seqr/strvctvre-reference-data}
+STRVCTVRE_DOCKER_IMAGE="gcr.io/seqr-project/strvctvre-docker-image"
+
+case $REFERENCE_GENOME in
+  GRCh38)
+    ;;
+   *)
+    echo "Invalid reference genome $REFERENCE_GENOME, should be GRCh38"
+    exit 1
+esac
+
+shift # Remove the REFERENCE_GENOME arg.
+BIGWIG_FILE="$STRVCTVRE_REFERENCE_DATASETS_DIR"/"$REFERENCE_GENOME/hg38.phyloP100way.bw"
+docker run --platform linux/amd64 -i -v $BIGWIG_FILE:$BIGWIG_FILE:ro $STRVCTVRE_DOCKER_IMAGE -p $BIGWIG_FILE "$@"
