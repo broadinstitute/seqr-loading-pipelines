@@ -388,6 +388,3 @@ class DatasetType(StrEnum):
             ],
         }[self]
 
-    @property
-    def overwrite_male_non_par_calls(self) -> None:
-        return self == DatasetType.SV
