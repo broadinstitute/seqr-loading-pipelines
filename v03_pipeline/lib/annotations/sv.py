@@ -178,7 +178,10 @@ def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
 def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.or_missing(
         hl.is_defined(ht['info.gnomad_v4.1_sv_AF']),
-        hl.struct(AF=hl.float32(ht['info.gnomad_v4.1_sv_AF']), ID=ht['info.gnomad_v4.1_sv_SVID']),
+        hl.struct(
+            AF=hl.float32(ht['info.gnomad_v4.1_sv_AF']),
+            ID=ht['info.gnomad_v4.1_sv_SVID'],
+        ),
     )
 
 
