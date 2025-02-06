@@ -18,6 +18,7 @@ class TestConstrainFunction(unittest.TestCase):
                     'alleles': ['A', 'C'],
                     'a': hl.Struct(d=1),
                     'b': hl.Struct(e=[2, 9]),
+                    'h': hl.Struct(**{'i.j': 1}),
                     'a_index': 1,
                 },
                 {
@@ -29,6 +30,7 @@ class TestConstrainFunction(unittest.TestCase):
                     'alleles': ['A', 'C'],
                     'a': hl.Struct(d=3),
                     'b': hl.Struct(e=[4, 5]),
+                    'h': hl.Struct(**{'i.j': 2}),
                     'a_index': 1,
                 },
             ],
@@ -37,6 +39,7 @@ class TestConstrainFunction(unittest.TestCase):
                 alleles=hl.tarray(hl.tstr),
                 a=hl.tstruct(d=hl.tint32),
                 b=hl.tstruct(e=hl.tarray(hl.tint32)),
+                h=hl.tstruct(**{'i.j': hl.tint32}),
                 a_index=hl.tint32,
             ),
             key=['locus', 'alleles'],
@@ -45,6 +48,7 @@ class TestConstrainFunction(unittest.TestCase):
             d=parse_nested_field(ht, 'a.d'),
             e=parse_nested_field(ht, 'b.e#'),
             f=parse_nested_field(ht, 'a'),
+            g=parse_nested_field(ht, 'h.i.j'),
         )
         self.assertListEqual(
             ht.collect(),
@@ -59,6 +63,7 @@ class TestConstrainFunction(unittest.TestCase):
                     d=1,
                     e=2,
                     f=hl.Struct(d=1),
+                    g=1,
                 ),
                 hl.Struct(
                     locus=hl.Locus(
@@ -70,6 +75,7 @@ class TestConstrainFunction(unittest.TestCase):
                     d=3,
                     e=4,
                     f=hl.Struct(d=3),
+                    g=2,
                 ),
             ],
         )
