@@ -198,6 +198,22 @@ def relatedness_check_tsv_path(
     )
 
 
+def sample_qc_tsv_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+) -> str:
+    return os.path.join(
+        pipeline_prefix(
+            Env.LOADING_DATASETS_DIR,
+            reference_genome,
+            dataset_type,
+        ),
+        'sample_qc',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+    )
+
+
 def remapped_and_subsetted_callset_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
