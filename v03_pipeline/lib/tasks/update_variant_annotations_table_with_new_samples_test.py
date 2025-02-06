@@ -930,7 +930,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 11)
+        self.assertEqual(ht.count(), 13)
         self.assertCountEqual(
             ht.globals.collect(),
             [
