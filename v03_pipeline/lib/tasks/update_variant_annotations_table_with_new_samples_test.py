@@ -1301,10 +1301,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     ],
                     end_locus=hl.Locus(
-                        contig='chrX', position=2781000, reference_genome='GRCh38',
+                        contig='chrX',
+                        position=2781000,
+                        reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=0.251803994178772, AC=3, AN=8, Hom=114, Het=1238,
+                        AF=0.251803994178772,
+                        AC=3,
+                        AN=8,
+                        Hom=114,
+                        Het=1238,
                     ),
                     gnomad_svs=None,
                     sorted_gene_consequences=[
@@ -1314,7 +1320,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
                     ],
                     start_locus=hl.Locus(
-                        contig='chrX', position=3, reference_genome='GRCh38',
+                        contig='chrX',
+                        position=3,
+                        reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -1323,7 +1331,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     xpos=23000000003,
                     rg37_locus=None,
                     rg37_locus_end=hl.Locus(
-                        contig='X', position=2699041, reference_genome='GRCh37',
+                        contig='X',
+                        position=2699041,
+                        reference_genome='GRCh37',
                     ),
                 ),
                 hl.Struct(
@@ -1359,10 +1369,16 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     ],
                     end_locus=hl.Locus(
-                        contig='chrX', position=2781900, reference_genome='GRCh38',
+                        contig='chrX',
+                        position=2781900,
+                        reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=0.251803994178772, AC=3, AN=8, Hom=114, Het=1238,
+                        AF=0.251803994178772,
+                        AC=3,
+                        AN=8,
+                        Hom=114,
+                        Het=1238,
                     ),
                     gnomad_svs=None,
                     sorted_gene_consequences=[
@@ -1372,7 +1388,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
                     ],
                     start_locus=hl.Locus(
-                        contig='chrX', position=2781700, reference_genome='GRCh38',
+                        contig='chrX',
+                        position=2781700,
+                        reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
                     sv_type_id=3,
@@ -1380,10 +1398,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_len=534718,
                     xpos=23002781700,
                     rg37_locus=hl.Locus(
-                        contig='X', position=2699741, reference_genome='GRCh37',
+                        contig='X',
+                        position=2699741,
+                        reference_genome='GRCh37',
                     ),
                     rg37_locus_end=hl.Locus(
-                        contig='X', position=2699941, reference_genome='GRCh37',
+                        contig='X',
+                        position=2699941,
+                        reference_genome='GRCh37',
                     ),
                 ),
                 hl.Struct(
