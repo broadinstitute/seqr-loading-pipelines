@@ -191,7 +191,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             ht.count(),
-            11,
+            13,
         )
         self.assertCountEqual(
             ht.entries.collect()[:5],
