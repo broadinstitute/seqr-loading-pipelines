@@ -387,4 +387,3 @@ class DatasetType(StrEnum):
                 sv.info,
             ],
         }[self]
-
