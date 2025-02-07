@@ -83,9 +83,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 self.clone(WriteRelatednessCheckTsvTask),
                 self.clone(WriteSexCheckTableTask),
             ]
-        # There is no functional dependency between `sample_qc` and this task,
-        # we just want it to run it at the same time as the sex and relatedness checks.
-        # Note we are also co-opting the 'EXPECT_TDR_METRICS' flag.
         if (
             FeatureFlag.EXPECT_TDR_METRICS
             and not self.skip_expect_tdr_metrics

@@ -4,9 +4,11 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.methods.sample_qc import sample_qc_tsv_to_dict
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     relatedness_check_tsv_path,
+    sample_qc_tsv_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -67,6 +69,12 @@ class WriteMetadataForRunTask(luigi.Task):
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
                 }
-
+        metadata_json['sample_qc'] = sample_qc_tsv_to_dict(
+            sample_qc_tsv_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_path,
+            ),
+        )
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

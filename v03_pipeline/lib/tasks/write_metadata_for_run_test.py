@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 
 import luigi.worker
 
@@ -11,9 +12,14 @@ TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP_2 = 'v03_pipeline/var/test/remaps/test_remap_2.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_SAMPLE_QC_TSV = 'v03_pipeline/var/test/sample_qc_1.tsv'
 
 
 class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
+    @mock.patch(
+        'v03_pipeline.lib.tasks.write_metadata_for_run.sample_qc_tsv_path',
+        lambda *_: TEST_SAMPLE_QC_TSV,
+    )
     def test_write_metadata_for_run_task(self) -> None:
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
@@ -77,5 +83,11 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         DatasetType.SNV_INDEL,
                         TEST_VCF,
                     ),
+                    'sample_qc': {
+                        'HG00731': {'filtered_callrate': '1.0000e+00'},
+                        'HG00732': {'filtered_callrate': '1.0000e+00'},
+                        'HG00733': {'filtered_callrate': '1.0000e+00'},
+                        'NA19675': {'filtered_callrate': '1.0000e+00'},
+                    },
                 },
             )

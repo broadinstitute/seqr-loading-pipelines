@@ -1,3 +1,5 @@
+import csv
+
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
@@ -29,3 +31,13 @@ def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
         filtered_callrate=hl.agg.fraction(hl.is_defined(filtered_mt.GT)),
     ).cols()
     return mt.annotate_cols(**callrate_ht[mt.col_key])
+
+
+def sample_qc_tsv_to_dict(tsv_file_path: str) -> dict:
+    sample_qc_dict = {}
+    with open(tsv_file_path) as f:
+        reader = csv.DictReader(f, delimiter='\t')
+        for row in reader:
+            sample_id = row.pop('s')
+            sample_qc_dict[sample_id] = row
+    return sample_qc_dict
