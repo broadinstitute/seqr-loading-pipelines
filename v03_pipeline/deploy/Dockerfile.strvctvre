@@ -1,0 +1,18 @@
+FROM python:3.11-bullseye as build
+LABEL maintainer="Broad TGG"
+
+# Sourced from https://stackoverflow.com/a/58269633
+ENV PATH="/root/miniconda3/bin:${PATH}"
+RUN apt-get update && \
+    apt-get install -y wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh && \
+    mkdir -p /root/.conda && \
+    bash miniconda.sh -b -p /root/miniconda3 && \
+    rm -f miniconda.sh
+
+RUN git clone --depth 1 https://github.com/andrewSharo/StrVCTVRE
+WORKDIR /StrVCTVRE
+RUN conda env create -f environment_py3.yml
+ENTRYPOINT ["conda", "run", "-n", "StrVCTVRE_py_3", "python3", "StrVCTVRE.py"]
