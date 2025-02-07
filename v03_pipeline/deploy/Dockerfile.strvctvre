@@ -13,5 +13,6 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
     rm -f miniconda.sh
 
 RUN git clone --depth 1 https://github.com/andrewSharo/StrVCTVRE
-RUN conda env create -f StrVCTVRE/environment_py3.yml
-ENTRYPOINT ["conda", "run", "-n", "StrVCTVRE_py_3", "python3", "StrVCTVRE/StrVCTVRE.py"]
+WORKDIR /StrVCTVRE
+RUN conda env create -f environment_py3.yml
+ENTRYPOINT ["conda", "run", "-n", "StrVCTVRE_py_3", "python3", "StrVCTVRE.py"]
