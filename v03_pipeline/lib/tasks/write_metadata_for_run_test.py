@@ -22,14 +22,16 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.write_metadata_for_run.sample_qc_tsv_path',
         lambda *_: TEST_SAMPLE_QC_TSV,
     )
+    @mock.patch('v03_pipeline.lib.paths.FeatureFlag')
     @mock.patch(
         'v03_pipeline.lib.tasks.write_imported_callset.WriteTDRMetricsFilesTask',
     )
     def test_write_metadata_for_run_task(
         self,
         write_tdr_metrics_task: Mock,
+        mock_ff: Mock,
     ) -> None:
-        self.mock_env.EXPECT_TDR_METRICS = True
+        mock_ff.EXPECT_TDR_METRICS = True
         write_tdr_metrics_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
