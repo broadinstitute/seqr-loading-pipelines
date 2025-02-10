@@ -5,6 +5,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.methods.sample_qc import sample_qc_tsv_to_dict
+from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     relatedness_check_tsv_path,
@@ -56,6 +57,7 @@ class WriteMetadataForRunTask(luigi.Task):
                 self.dataset_type,
                 self.callset_path,
             ),
+            'sample_qc': {},
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
@@ -69,12 +71,19 @@ class WriteMetadataForRunTask(luigi.Task):
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
                 }
-        metadata_json['sample_qc'] = sample_qc_tsv_to_dict(
-            sample_qc_tsv_path(
+        if (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
-                self.dataset_type,
-                self.callset_path,
-            ),
-        )
+            )
+        ):
+            metadata_json['sample_qc'] = sample_qc_tsv_to_dict(
+                sample_qc_tsv_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                ),
+            )
         with self.output().open('w') as f:
             json.dump(metadata_json, f)
