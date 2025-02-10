@@ -1,3 +1,7 @@
+from decimal import Decimal
+from unittest.mock import Mock, patch
+
+import google.cloud.bigquery
 import hailtop.fs as hfs
 import luigi.worker
 
@@ -10,7 +14,78 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteSampleQCTsvTaskTest(MockedDatarootTestCase):
-    def test_call_sample_qc(self):
+    @patch('v03_pipeline.lib.tasks.write_tdr_metrics_files.gen_bq_table_names')
+    @patch('v03_pipeline.lib.tasks.write_tdr_metrics_file.bq_metrics_query')
+    def test_call_sample_qc(
+        self,
+        mock_bq_metrics_query: Mock,
+        mock_gen_bq_table_names: Mock,
+    ) -> None:
+        mock_gen_bq_table_names.return_value = ['datarepo-7242affb.datarepo_RP_0113']
+        mock_bq_metrics_query.side_effect = [
+            iter(
+                [
+                    google.cloud.bigquery.table.Row(
+                        (
+                            'HG00731',
+                            'Unknown',
+                            Decimal('5.1'),
+                            Decimal('93.69'),
+                            Decimal('29.31'),
+                        ),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        (
+                            'HG00732',
+                            'Female',
+                            Decimal('5'),
+                            Decimal('90'),
+                            Decimal('28'),
+                        ),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        (
+                            'HG00733',
+                            'Male',
+                            Decimal('6'),
+                            Decimal('85'),
+                            Decimal('36.4'),
+                        ),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
+                    ),
+                    google.cloud.bigquery.table.Row(
+                        ('NA19675', 'Male', Decimal('0'), Decimal('80'), Decimal('30')),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
+                    ),
+                ],
+            ),
+        ]
         worker = luigi.worker.Worker()
         task = WriteSampleQCTsvTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -29,11 +104,11 @@ class WriteSampleQCTsvTaskTest(MockedDatarootTestCase):
         with task.output().open('r') as f:
             lines = f.readlines()
             expected_first_five_lines = [
-                's\tfiltered_callrate\n',
-                'HG00731\t1.0000e+00\n',
-                'HG00732\t1.0000e+00\n',
-                'HG00733\t1.0000e+00\n',
-                'NA19675\t1.0000e+00\n',
+                's\tfiltered_callrate\tfilter_flags\n',
+                'HG00731\t1.0000e+00\t["contamination","coverage"]\n',
+                'HG00732\t1.0000e+00\t["coverage"]\n',
+                'HG00733\t1.0000e+00\t["contamination"]\n',
+                'NA19675\t1.0000e+00\t[]\n',
             ]
             for expected_line, actual_line in zip(
                 expected_first_five_lines,
