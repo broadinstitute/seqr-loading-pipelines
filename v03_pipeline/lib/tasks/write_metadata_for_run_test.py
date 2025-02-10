@@ -29,6 +29,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         self,
         write_tdr_metrics_task: Mock,
     ) -> None:
+        self.mock_env.EXPECT_TDR_METRICS = True
         write_tdr_metrics_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
