@@ -24,6 +24,8 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30*.vcf'
+
 
 class TestPaths(unittest.TestCase):
     def test_family_table_path(self) -> None:
@@ -175,6 +177,15 @@ class TestPaths(unittest.TestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 '/var/abc.efg/callset.vcf.gz',
+            ),
+            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
+        )
+
+        self.assertEqual(
+            imported_callset_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_VCF,
             ),
             '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
         )
