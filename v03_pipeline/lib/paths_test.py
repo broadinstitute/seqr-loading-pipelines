@@ -39,7 +39,7 @@ class TestPaths(unittest.TestCase):
         with patch('v03_pipeline.lib.paths.Env') as mock_env, patch(
             'v03_pipeline.lib.paths.FeatureFlag',
         ) as mock_ff:
-            mock_env.HAIL_SEARCH_DATA_DIR = 'gs://seqr-datasets/'
+            mock_env.HAIL_SEARCH_DATA_DIR = 'gs://bucket/'
             self.assertEqual(
                 family_table_path(
                     ReferenceGenome.GRCh37,
@@ -47,7 +47,7 @@ class TestPaths(unittest.TestCase):
                     SampleType.WES,
                     'franklin',
                 ),
-                'gs://seqr-datasets/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+                'gs://bucket/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
             )
             mock_ff.INCLUDE_PIPELINE_VERSION_IN_PREFIX = False
             self.assertEqual(
@@ -57,7 +57,7 @@ class TestPaths(unittest.TestCase):
                     SampleType.WES,
                     'franklin',
                 ),
-                'gs://seqr-datasets/GRCh37/SNV_INDEL/families/WES/franklin.ht',
+                'gs://bucket/GRCh37/SNV_INDEL/families/WES/franklin.ht',
             )
 
     def test_valid_filters_path(self) -> None:

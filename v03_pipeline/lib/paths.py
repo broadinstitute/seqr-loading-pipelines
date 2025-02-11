@@ -2,6 +2,8 @@ import hashlib
 import os
 import re
 
+import hailtop.fs as hfs
+
 from v03_pipeline.lib.model import (
     AccessControl,
     DatasetType,
@@ -59,6 +61,21 @@ def _v03_reference_dataset_prefix(
     )
 
 
+def _callset_path_hash(callset_path: str) -> str:
+    shards = hfs.ls(callset_path)
+    if shards:
+        # Include the most recent modified time of any
+        # of the callset shards if they exist.
+        key = callset_path + str(max(f.modification_time for f in shards)).encode(
+            'utf8',
+        )
+    else:
+        key = callset_path
+    return hashlib.sha256(
+        key.encode('utf8'),
+    ).hexdigest()
+
+
 def family_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -114,7 +131,7 @@ def imported_callset_path(
             dataset_type,
         ),
         'imported_callsets',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
+        f'{_callset_path_hash(callset_path)}.mt',
     )
 
 
@@ -178,7 +195,7 @@ def relatedness_check_table_path(
             dataset_type,
         ),
         'relatedness_check',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
+        f'{_callset_path_hash(callset_path)}.ht',
     )
 
 
@@ -194,7 +211,7 @@ def relatedness_check_tsv_path(
             dataset_type,
         ),
         'relatedness_check',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+        f'{_callset_path_hash(callset_path)}.tsv',
     )
 
 
@@ -212,7 +229,7 @@ def remapped_and_subsetted_callset_path(
         ),
         'remapped_and_subsetted_callsets',
         project_guid,
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.mt',
+        f'{_callset_path_hash(callset_path)}.mt',
     )
 
 
@@ -256,7 +273,7 @@ def sex_check_table_path(
             dataset_type,
         ),
         'sex_check',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.ht',
+        f'{_callset_path_hash(callset_path)}.ht',
     )
 
 
