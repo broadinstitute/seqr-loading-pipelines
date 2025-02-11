@@ -96,10 +96,16 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         TEST_VCF,
                     ),
                     'sample_qc': {
-                        'HG00731': {'filtered_callrate': '1.0000e+00'},
-                        'HG00732': {'filtered_callrate': '1.0000e+00'},
-                        'HG00733': {'filtered_callrate': '1.0000e+00'},
-                        'NA19675': {'filtered_callrate': '1.0000e+00'},
+                        'HG00731': {
+                            'filtered_callrate': '1.0000e+00',
+                            'filter_flags': '["contamination","coverage"]',
+                        },
+                        'HG00732': {'filtered_callrate': '1.0000e+00', 'filter_flags': '["coverage"]'},
+                        'HG00733': {
+                            'filtered_callrate': '1.0000e+00',
+                            'filter_flags': '["contamination"]',
+                        },
+                        'NA19675': {'filtered_callrate': '1.0000e+00', 'filter_flags': '[]'},
                     },
                 },
             )
