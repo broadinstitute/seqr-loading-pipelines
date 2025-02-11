@@ -65,15 +65,16 @@ def _callset_path_hash(callset_path: str) -> str:
     # Include the most recent modified time of any
     # of the callset shards if they exist.
     try:
-        # hfs.ls throws FileNotFoundError if a non-wildcard is passed 
+        # hfs.ls throws FileNotFoundError if a non-wildcard is passed
         # but not found, but does not throw if a wildcard is passed and
         # there are no results.
         shards = hfs.ls(callset_path)
         if not shards:
-            raise FileNotFoundError
-        key = callset_path + str(max(f.modification_time for f in shards)).encode(
-            'utf8',
-        )
+            key = callset_path
+        else:
+            key = callset_path + str(max(f.modification_time for f in shards)).encode(
+                'utf8',
+            )
     except FileNotFoundError:
         key = callset_path
     return hashlib.sha256(
