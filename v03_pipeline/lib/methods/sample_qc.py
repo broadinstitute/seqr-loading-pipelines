@@ -1,4 +1,6 @@
 import csv
+import json
+from collections import defaultdict
 
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
@@ -67,10 +69,12 @@ def annotate_filter_flags(
 
 
 def sample_qc_tsv_to_dict(tsv_file_path: str) -> dict:
-    sample_qc_dict = {}
+    field_types = {'filtered_callrate': float, 'filter_flags': json.loads}
+    sample_qc_dict = defaultdict(dict)
     with open(tsv_file_path) as f:
         reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
             sample_id = row.pop('s')
-            sample_qc_dict[sample_id] = row
+            for field, value in row.items():
+                sample_qc_dict[sample_id][field] = field_types[field](value)
     return sample_qc_dict
