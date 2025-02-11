@@ -22,7 +22,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
         'v03_pipeline.lib.tasks.write_metadata_for_run.sample_qc_tsv_path',
         lambda *_: TEST_SAMPLE_QC_TSV,
     )
-    @mock.patch('v03_pipeline.lib.paths.FeatureFlag')
+    @mock.patch('v03_pipeline.lib.tasks.write_metadata_for_run.FeatureFlag')
     @mock.patch(
         'v03_pipeline.lib.tasks.write_imported_callset.WriteTDRMetricsFilesTask',
     )
