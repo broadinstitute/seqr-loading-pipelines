@@ -72,9 +72,7 @@ def _callset_path_hash(callset_path: str) -> str:
         if not shards:
             key = callset_path
         else:
-            key = callset_path + str(max(f.modification_time for f in shards)).encode(
-                'utf8',
-            )
+            key = callset_path + str(max(f.modification_time for f in shards))
     except FileNotFoundError:
         key = callset_path
     return hashlib.sha256(

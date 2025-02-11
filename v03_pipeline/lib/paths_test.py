@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch
 
+import hailtop.fs as hfs
+
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -23,6 +25,8 @@ from v03_pipeline.lib.paths import (
     validation_errors_for_run_path,
     variant_annotations_table_path,
 )
+
+TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30varia*.vcf'
 
 
 class TestPaths(unittest.TestCase):
@@ -178,6 +182,25 @@ class TestPaths(unittest.TestCase):
             ),
             '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/f92b8ab6b5b8c41fa20d7d49a5626b96dcd2ba79fa6f61eab7ffb80d550d951c.mt',
         )
+
+        with patch('v03_pipeline.lib.paths.hfs.ls') as mock_ls:
+            mock_ls.return_value = [
+                hfs.stat_result.FileListEntry(
+                    path='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
+                    owner=None,
+                    size=104481,
+                    typ=hfs.stat_result.FileType(2),
+                    modification_time=1732033623.804012,
+                ),
+            ]
+            self.assertEqual(
+                imported_callset_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_VCF,
+                ),
+                '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/imported_callsets/42f2c9e2025c4b61106b3fecfd30443f882a1849b73c6f6903a7e421c20117e0.mt',
+            )
 
     def test_tdr_metrics_path(self) -> None:
         self.assertEqual(
