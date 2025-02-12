@@ -35,6 +35,12 @@ class DeleteProjectFamilyTablesTask(luigi.Task):
                 os.path.join(project_ht_path, '_SUCCESS'),
             )
         ):
+            # Task should succeed even if there are no
+            # project tables.  We rely on the premise 
+            # that a family table is generated from a
+            # project table to assert that if a project
+            # table does not exist, the family tables must
+            # also not exist. 
             return True
         return len(self.dynamic_delete_family_table_tasks) >= 1 and all(
             delete_family_table_task.complete()

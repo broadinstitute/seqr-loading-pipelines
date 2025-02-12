@@ -152,7 +152,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
         )
         worker.add(task)
         worker.run()
-        self.assertFalse(task.complete())
+        self.assertTrue(task.complete())
 
     def test_delete_project_family_tables_task(self) -> None:
         self.assertTrue(
