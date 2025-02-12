@@ -18,6 +18,7 @@ def call_sample_qc(
     tdr_metrics_ht: hl.Table,
     sample_type: SampleType,
 ):
+    mt = mt.annotate_cols(sample_type=sample_type)
     mt = mt.annotate_entries(
         GT=hl.case()
         .when(mt.GT.is_diploid(), hl.call(mt.GT[0], mt.GT[1], phased=False))
@@ -65,16 +66,21 @@ def annotate_filter_flags(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
     )
-    return mt.drop('contamination_rate', 'percent_bases_at_20x', 'mean_coverage')
+    return mt.drop(
+        'contamination_rate',
+        'percent_bases_at_20x',
+        'mean_coverage',
+        'filtered_callrate',
+    )
 
 
 def sample_qc_tsv_to_dict(tsv_file_path: str) -> dict:
-    field_types = {'filtered_callrate': float, 'filter_flags': json.loads}
+    parse_field_types = {'sample_type': str, 'filter_flags': json.loads}
     sample_qc_dict = defaultdict(dict)
     with open(tsv_file_path) as f:
         reader = csv.DictReader(f, delimiter='\t')
         for row in reader:
             sample_id = row.pop('s')
             for field, value in row.items():
-                sample_qc_dict[sample_id][field] = field_types[field](value)
+                sample_qc_dict[sample_id][field] = parse_field_types[field](value)
     return sample_qc_dict

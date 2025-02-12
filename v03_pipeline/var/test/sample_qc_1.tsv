@@ -1,5 +1,5 @@
-s	filtered_callrate	filter_flags
-HG00731	1.0000e+00	["contamination","coverage"]
-HG00732	1.0000e+00	["coverage"]
-HG00733	1.0000e+00	["contamination"]
-NA19675	1.0000e+00	[]
+s	sample_type	filter_flags
+HG00731	WGS	["contamination","coverage"]
+HG00732	WGS	["coverage"]
+HG00733	WGS	["contamination"]
+NA19675	WGS	[]

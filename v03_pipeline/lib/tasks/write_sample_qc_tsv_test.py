@@ -104,11 +104,11 @@ class WriteSampleQCTsvTaskTest(MockedDatarootTestCase):
         with task.output().open('r') as f:
             lines = f.readlines()
             expected_first_five_lines = [
-                's\tfiltered_callrate\tfilter_flags\n',
-                'HG00731\t1.0000e+00\t["contamination","coverage"]\n',
-                'HG00732\t1.0000e+00\t["coverage"]\n',
-                'HG00733\t1.0000e+00\t["contamination"]\n',
-                'NA19675\t1.0000e+00\t[]\n',
+                's\tsample_type\tfilter_flags\n',
+                'HG00731\tWGS\t["contamination","coverage"]\n',
+                'HG00732\tWGS\t["coverage"]\n',
+                'HG00733\tWGS\t["contamination"]\n',
+                'NA19675\tWGS\t[]\n',
             ]
             for expected_line, actual_line in zip(
                 expected_first_five_lines,
