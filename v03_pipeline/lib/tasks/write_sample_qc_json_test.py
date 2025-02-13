@@ -104,7 +104,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
 
         with task.output().open('r') as f:
             res = json.load(f)
-g
+
         self.assertCountEqual(
             res['HG00731'],
             {
