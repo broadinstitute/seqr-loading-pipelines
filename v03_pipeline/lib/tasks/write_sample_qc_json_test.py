@@ -104,25 +104,26 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
 
         with task.output().open('r') as f:
             res = json.load(f)
-            self.assertCountEqual(
-                res['HG00731'],
-                {
-                    'sample_type': 'WGS',
-                    'filter_flags': ['contamination', 'coverage'],
-                },
-            )
-            self.assertCountEqual(
-                res['HG00732'],
-                {'sample_type': 'WGS', 'filter_flags': ['coverage']},
-            )
-            self.assertCountEqual(
-                res['HG00733'],
-                {
-                    'sample_type': 'WGS',
-                    'filter_flags': ['contamination'],
-                },
-            )
-            self.assertCountEqual(
-                res['HG00732'],
-                {'sample_type': 'WGS', 'filter_flags': []},
-            )
+g
+        self.assertCountEqual(
+            res['HG00731'],
+            {
+                'sample_type': 'WGS',
+                'filter_flags': ['contamination', 'coverage'],
+            },
+        )
+        self.assertCountEqual(
+            res['HG00732'],
+            {'sample_type': 'WGS', 'filter_flags': ['coverage']},
+        )
+        self.assertCountEqual(
+            res['HG00733'],
+            {
+                'sample_type': 'WGS',
+                'filter_flags': ['contamination'],
+            },
+        )
+        self.assertCountEqual(
+            res['HG00732'],
+            {'sample_type': 'WGS', 'filter_flags': []},
+        )
