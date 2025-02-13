@@ -54,9 +54,7 @@ class WriteSampleQCJsonTask(luigi.Task):
             r = dict(row)
             sample_id = r.pop('s')
             for field, value in r.items():
-                sample_qc_dict[sample_id][field] = (
-                    list(value) if isinstance(value, set) else value
-                )
+                sample_qc_dict[sample_id][field] = value
 
         with self.output().open('w') as f:
             json.dump(sample_qc_dict, f)

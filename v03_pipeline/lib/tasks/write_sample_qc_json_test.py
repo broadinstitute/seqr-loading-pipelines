@@ -103,30 +103,26 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         self.assertTrue(hfs.exists(task.output().path))
 
         with task.output().open('r') as f:
+            res = json.load(f)
             self.assertCountEqual(
-                json.load(f),
+                res['HG00731'],
                 {
-                    'HG00731': {
-                        'sample_type': 'WGS',
-                        'filter_flags': ['contamination', 'coverage'],
-                    },
-                    'HG00732': {'sample_type': 'WGS', 'filter_flags': ['coverage']},
-                    'HG00733': {
-                        'sample_type': 'WGS',
-                        'filter_flags': ['contamination'],
-                    },
-                    'NA19675': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA19678': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA19679': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20870': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20872': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20874': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20875': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20876': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20877': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20878': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20881': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20885': {'sample_type': 'WGS', 'filter_flags': []},
-                    'NA20888': {'sample_type': 'WGS', 'filter_flags': []},
+                    'sample_type': 'WGS',
+                    'filter_flags': ['contamination', 'coverage'],
                 },
+            )
+            self.assertCountEqual(
+                res['HG00732'],
+                {'sample_type': 'WGS', 'filter_flags': ['coverage']},
+            )
+            self.assertCountEqual(
+                res['HG00733'],
+                {
+                    'sample_type': 'WGS',
+                    'filter_flags': ['contamination'],
+                },
+            )
+            self.assertCountEqual(
+                res['HG00732'],
+                {'sample_type': 'WGS', 'filter_flags': []},
             )

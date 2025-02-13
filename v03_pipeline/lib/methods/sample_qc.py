@@ -57,12 +57,11 @@ def annotate_filter_flags(
     else:
         flags['coverage'] = mt.mean_coverage < WGS_CALLRATE_LOW_THRESHOLD
 
-    mt = mt.annotate_cols(
-        filter_flags=hl.set(
+    return mt.annotate_cols(
+        filter_flags=hl.array(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
-    )
-    return mt.drop(
+    ).drop(
         'contamination_rate',
         'percent_bases_at_20x',
         'mean_coverage',
