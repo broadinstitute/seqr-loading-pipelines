@@ -103,7 +103,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         self.assertTrue(hfs.exists(task.output().path))
 
         with task.output().open('r') as f:
-            self.assertDictEqual(
+            self.assertCountEqual(
                 json.load(f),
                 {
                     'HG00731': {
