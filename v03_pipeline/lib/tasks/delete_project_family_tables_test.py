@@ -147,11 +147,12 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
         task = DeleteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             project_guid='project_b',
         )
         worker.add(task)
         worker.run()
-        self.assertFalse(task.complete())
+        self.assertTrue(task.complete())
 
     def test_delete_project_family_tables_task(self) -> None:
         self.assertTrue(
@@ -198,6 +199,7 @@ class DeleteTableTaskTest(MockedDatarootTestCase):
         task = DeleteProjectFamilyTablesTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             project_guid='project_a',
         )
         worker.add(task)
