@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import Mock, patch
 
 import google.cloud.bigquery
+import hail as hl
 import hailtop.fs as hfs
 import luigi.worker
 
@@ -13,14 +14,56 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_RUN_ID = 'manual__2024-04-03'
 
+PCA_SCORES = [2.12e-03, 1.10e-02, 1.05e-02, 1.61e-01, 2.60e-02] + [
+    0.1 for _ in range(15)
+]
+EXPECTED_QC_POP = {
+    'qc_pop': 'asj',
+    'prob_afr': 0.02,
+    'prob_ami': 0.0,
+    'prob_amr': 0.02,
+    'prob_asj': 0.9,
+    'prob_eas': 0.0,
+    'prob_fin': 0.0,
+    'prob_mid': 0.0,
+    'prob_nfe': 0.05,
+    'prob_sas': 0.01,
+}
+EXPECTED_POP_PC_VALUES = {
+    'pop_PC1': 0.00212,
+    'pop_PC2': 0.011,
+    'pop_PC3': 0.0105,
+    'pop_PC4': 0.161,
+    'pop_PC5': 0.026,
+    'pop_PC6': 0.1,
+    'pop_PC7': 0.1,
+    'pop_PC8': 0.1,
+    'pop_PC9': 0.1,
+    'pop_PC10': 0.1,
+    'pop_PC11': 0.1,
+    'pop_PC12': 0.1,
+    'pop_PC13': 0.1,
+    'pop_PC14': 0.1,
+    'pop_PC15': 0.1,
+    'pop_PC16': 0.1,
+    'pop_PC17': 0.1,
+    'pop_PC18': 0.1,
+    'pop_PC19': 0.1,
+    'pop_PC20': 0.1,
+}
+
 
 class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
+    @patch('v03_pipeline.lib.methods.sample_qc.assign_population_pcs')
+    @patch('v03_pipeline.lib.methods.sample_qc._get_pop_pca_scores')
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_files.gen_bq_table_names')
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_file.bq_metrics_query')
     def test_call_sample_qc(
         self,
         mock_bq_metrics_query: Mock,
         mock_gen_bq_table_names: Mock,
+        mock_get_pop_pca_scores: Mock,
+        mock_assign_population_pcs: Mock,
     ) -> None:
         mock_gen_bq_table_names.return_value = ['datarepo-7242affb.datarepo_RP_0113']
         mock_bq_metrics_query.side_effect = [
@@ -87,6 +130,50 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 ],
             ),
         ]
+        mock_get_pop_pca_scores.return_value = hl.Table.parallelize(
+            [
+                {
+                    's': sample_id,
+                    'scores': PCA_SCORES,
+                    'known_pop': 'Unknown',
+                }
+                for sample_id in ('HG00731', 'HG00732', 'HG00733', 'NA19675')
+            ],
+            hl.tstruct(
+                s=hl.tstr,
+                scores=hl.tarray(hl.tfloat64),
+                known_pop=hl.tstr,
+            ),
+            key='s',
+        )
+        mock_assign_population_pcs.return_value = (
+            hl.Table.parallelize(
+                [
+                    {
+                        's': sample_id,
+                        'pca_scores': PCA_SCORES,
+                        **EXPECTED_QC_POP,
+                    }
+                    for sample_id in ('HG00731', 'HG00732', 'HG00733', 'NA19675')
+                ],
+                hl.tstruct(
+                    s=hl.tstr,
+                    pca_scores=hl.tarray(hl.tfloat64),
+                    qc_pop=hl.tstr,
+                    prob_afr=hl.tfloat64,
+                    prob_ami=hl.tfloat64,
+                    prob_amr=hl.tfloat64,
+                    prob_asj=hl.tfloat64,
+                    prob_eas=hl.tfloat64,
+                    prob_fin=hl.tfloat64,
+                    prob_mid=hl.tfloat64,
+                    prob_nfe=hl.tfloat64,
+                    prob_sas=hl.tfloat64,
+                ),
+                key='s',
+            ),
+            None,
+        )
         worker = luigi.worker.Worker()
         task = WriteSampleQCJsonTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -102,27 +189,39 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         self.assertTrue(task)
         self.assertTrue(hfs.exists(task.output().path))
 
+        expected_qc_pop_results = {
+            'pca_scores': PCA_SCORES,
+            **EXPECTED_QC_POP,
+            **EXPECTED_POP_PC_VALUES,
+        }
         with task.output().open('r') as f:
             res = json.load(f)
-            self.assertCountEqual(
-                res['HG00731'],
-                {
-                    'sample_type': 'WGS',
-                    'filter_flags': ['contamination', 'coverage'],
-                },
-            )
-            self.assertCountEqual(
-                res['HG00732'],
-                {'sample_type': 'WGS', 'filter_flags': ['coverage']},
-            )
-            self.assertCountEqual(
-                res['HG00733'],
-                {
-                    'sample_type': 'WGS',
-                    'filter_flags': ['contamination'],
-                },
-            )
-            self.assertCountEqual(
-                res['HG00732'],
-                {'sample_type': 'WGS', 'filter_flags': []},
-            )
+
+        self.assertCountEqual(
+            res['HG00731'],
+            {
+                'sample_type': 'WGS',
+                'filter_flags': ['contamination', 'coverage'],
+                **expected_qc_pop_results,
+            },
+        )
+        self.assertCountEqual(
+            res['HG00732'],
+            {
+                'sample_type': 'WGS',
+                'filter_flags': ['coverage'],
+                **expected_qc_pop_results,
+            },
+        )
+        self.assertCountEqual(
+            res['HG00733'],
+            {
+                'sample_type': 'WGS',
+                'filter_flags': ['contamination'],
+                **expected_qc_pop_results,
+            },
+        )
+        self.assertCountEqual(
+            res['HG00732'],
+            {'sample_type': 'WGS', 'filter_flags': [], **expected_qc_pop_results},
+        )
