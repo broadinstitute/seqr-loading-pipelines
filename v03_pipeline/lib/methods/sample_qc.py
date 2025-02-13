@@ -1,7 +1,3 @@
-import csv
-import json
-from collections import defaultdict
-
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
@@ -72,15 +68,3 @@ def annotate_filter_flags(
         'mean_coverage',
         'filtered_callrate',
     )
-
-
-def sample_qc_tsv_to_dict(tsv_file_path: str) -> dict:
-    parse_field_types = {'sample_type': str, 'filter_flags': json.loads}
-    sample_qc_dict = defaultdict(dict)
-    with open(tsv_file_path) as f:
-        reader = csv.DictReader(f, delimiter='\t')
-        for row in reader:
-            sample_id = row.pop('s')
-            for field, value in row.items():
-                sample_qc_dict[sample_id][field] = parse_field_types[field](value)
-    return sample_qc_dict

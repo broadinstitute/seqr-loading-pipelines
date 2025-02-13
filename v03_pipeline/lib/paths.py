@@ -219,7 +219,7 @@ def relatedness_check_tsv_path(
     )
 
 
-def sample_qc_tsv_path(
+def sample_qc_json_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     callset_path: str,
@@ -231,7 +231,7 @@ def sample_qc_tsv_path(
             dataset_type,
         ),
         'sample_qc',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.tsv',
+        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.json',
     )
 
 

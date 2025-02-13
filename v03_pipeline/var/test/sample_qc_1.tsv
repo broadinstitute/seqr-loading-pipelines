@@ -1,5 +1,0 @@
-s	sample_type	filter_flags
-HG00731	WGS	["contamination","coverage"]
-HG00732	WGS	["coverage"]
-HG00733	WGS	["contamination"]
-NA19675	WGS	[]

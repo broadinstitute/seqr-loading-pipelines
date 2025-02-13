@@ -28,7 +28,7 @@ from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
     WriteRelatednessCheckTsvTask,
 )
-from v03_pipeline.lib.tasks.write_sample_qc_tsv import WriteSampleQCTsvTask
+from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
@@ -92,7 +92,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         ):
             requirements = [
                 *requirements,
-                self.clone(WriteSampleQCTsvTask),
+                self.clone(WriteSampleQCJsonTask),
             ]
         return requirements
 
