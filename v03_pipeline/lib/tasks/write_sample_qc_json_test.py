@@ -14,9 +14,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_RUN_ID = 'manual__2024-04-03'
 
-PCA_SCORES = [2.12e-03, 1.10e-02, 1.05e-02, 1.61e-01, 2.60e-02] + [
-    0.1 for _ in range(15)
-]
+PCA_SCORES = [0.00212, 0.011, 0.0105, 0.161, 0.026] + [0.1 for _ in range(15)]
 EXPECTED_QC_POP = {
     'qc_pop': 'asj',
     'prob_afr': 0.02,
@@ -28,28 +26,6 @@ EXPECTED_QC_POP = {
     'prob_mid': 0.0,
     'prob_nfe': 0.05,
     'prob_sas': 0.01,
-}
-EXPECTED_POP_PC_VALUES = {
-    'pop_PC1': 0.00212,
-    'pop_PC2': 0.011,
-    'pop_PC3': 0.0105,
-    'pop_PC4': 0.161,
-    'pop_PC5': 0.026,
-    'pop_PC6': 0.1,
-    'pop_PC7': 0.1,
-    'pop_PC8': 0.1,
-    'pop_PC9': 0.1,
-    'pop_PC10': 0.1,
-    'pop_PC11': 0.1,
-    'pop_PC12': 0.1,
-    'pop_PC13': 0.1,
-    'pop_PC14': 0.1,
-    'pop_PC15': 0.1,
-    'pop_PC16': 0.1,
-    'pop_PC17': 0.1,
-    'pop_PC18': 0.1,
-    'pop_PC19': 0.1,
-    'pop_PC20': 0.1,
 }
 
 
@@ -192,7 +168,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         expected_qc_pop_results = {
             'pca_scores': PCA_SCORES,
             **EXPECTED_QC_POP,
-            **EXPECTED_POP_PC_VALUES,
+            **{f'pop_PC{i + 1}': PCA_SCORES[i] for i in range(20)},
         }
         with task.output().open('r') as f:
             res = json.load(f)
