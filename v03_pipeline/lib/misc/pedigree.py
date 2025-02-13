@@ -80,6 +80,9 @@ class Family:
     def __hash__(self):
         return hash(self.family_guid)
 
+    def __eq__(self, other):
+        return self.family_guid == other.family_guid
+
     @staticmethod
     def parse_direct_lineage(rows: list[hl.Struct]) -> dict[str, Sample]:
         samples = {}
@@ -162,7 +165,7 @@ def parse_pedigree_ht_to_families(
 ) -> set[Family]:
     families = set()
     for family_guid, rows in itertools.groupby(
-        pedigree_ht.collect(),
+        sorted(pedigree_ht.collect(), key=lambda x: x.family_guid),
         lambda x: x.family_guid,
     ):
         families.add(Family.parse(family_guid, list(rows)))
