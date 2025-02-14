@@ -1,3 +1,4 @@
+
 import hail as hl
 import luigi
 import luigi.util
@@ -28,6 +29,7 @@ from v03_pipeline.lib.tasks.validate_callset import ValidateCallsetTask
 from v03_pipeline.lib.tasks.write_relatedness_check_tsv import (
     WriteRelatednessCheckTsvTask,
 )
+from v03_pipeline.lib.tasks.write_sample_qc_json import WriteSampleQCJsonTask
 from v03_pipeline.lib.tasks.write_sex_check_table import WriteSexCheckTableTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
@@ -81,6 +83,17 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 *requirements,
                 self.clone(WriteRelatednessCheckTsvTask),
                 self.clone(WriteSexCheckTableTask),
+            ]
+        if (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
+                self.reference_genome,
+            )
+        ):
+            requirements = [
+                *requirements,
+                self.clone(WriteSampleQCJsonTask),
             ]
         return requirements
 
