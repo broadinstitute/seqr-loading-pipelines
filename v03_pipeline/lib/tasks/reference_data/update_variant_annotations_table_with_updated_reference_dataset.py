@@ -65,18 +65,11 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_dataset_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
             )
-            if reference_dataset.is_keyed_by_interval:
-                formatting_fn = next(
-                    x
-                    for x in self.dataset_type.formatting_annotation_fns(
-                        self.reference_genome,
-                    )
-                    if x.__name__ == reference_dataset.name
-                )
+            if reference_dataset.formatting_annotation:
                 ht = ht.annotate(
                     **get_fields(
                         ht,
-                        [formatting_fn],
+                        [reference_dataset.formatting_annotation],
                         **{f'{reference_dataset.name}_ht': reference_dataset_ht},
                         **self.param_kwargs,
                     ),

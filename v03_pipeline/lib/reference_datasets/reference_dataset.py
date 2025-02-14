@@ -6,6 +6,7 @@ from typing import Union
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import snv_indel, sv
 from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
@@ -27,8 +28,8 @@ from v03_pipeline.lib.reference_datasets.misc import (
 DATASET_TYPES = 'dataset_types'
 ENUMS = 'enums'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
+FORMATTING_ANNOTATION = 'formatting_annotation'
 FILTER = 'filter'
-IS_INTERVAL = 'is_interval'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
@@ -70,8 +71,8 @@ class BaseReferenceDataset:
         }
 
     @property
-    def is_keyed_by_interval(self) -> bool:
-        return CONFIG[self].get(IS_INTERVAL, False)
+    def formatting_annotation(self) -> Callable | None:
+        return CONFIG[self].get(FORMATTING_ANNOTATION)
 
     @property
     def access_control(self) -> AccessControl:
@@ -394,7 +395,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_non_coding_constraint: {
-        IS_INTERVAL: True,
+        FORMATTING_ANNOTATION: snv_indel.gnomad_non_coding_constraint,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -414,7 +415,7 @@ CONFIG = {
                 'low-DNase',
             ],
         },
-        IS_INTERVAL: True,
+        FORMATTING_ANNOTATION: snv_indel.screen,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -426,6 +427,19 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
             VERSION: '1.0',
             PATH: 'https://www.biorxiv.org/content/biorxiv/early/2023/01/27/2022.12.16.520778/DC3/embed/media-3.zip',
+        },
+    },
+    ReferenceDataset.gnomad_svs: {
+        # NB: this reference dataset is not automatically
+        # updatable in the same way as the others due to
+        # the requirement that a concordance algorithm
+        # must first be run to align internal variants
+        # with gnomAD variants and requires a join on that key.
+        FORMATTING_ANNOTATION: sv.gnomad_svs,
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SV]),
+            VERSION: '1.0',
+            PATH: 'gs://gcp-public-data--gnomad/release/4.1/genome_sv/gnomad.v4.1.sv.sites.vcf.gz',
         },
     },
 }
