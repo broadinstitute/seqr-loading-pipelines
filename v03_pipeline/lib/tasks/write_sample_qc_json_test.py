@@ -1,8 +1,6 @@
 import json
-from decimal import Decimal
 from unittest.mock import Mock, patch
 
-import google.cloud.bigquery
 import hailtop.fs as hfs
 import luigi.worker
 
