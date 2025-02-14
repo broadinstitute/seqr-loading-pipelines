@@ -1,4 +1,7 @@
+import pickle
+
 import hail as hl
+from gnomad.sample_qc.ancestry import assign_population_pcs, pc_project
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
 from v03_pipeline.lib.model import SampleType
@@ -7,6 +10,12 @@ CALLRATE_LOW_THRESHOLD = 0.85
 CONTAMINATION_UPPER_THRESHOLD = 5
 WES_COVERAGE_LOW_THRESHOLD = 85
 WGS_CALLRATE_LOW_THRESHOLD = 30
+
+POP_PCA_LOADINGS_PATH = (
+    'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
+)
+ANCESTRY_RF_MODEL_PATH = 'v03_pipeline/var/ancestry_imputation_model.pickle'
+NUM_PCS = 20
 
 
 def call_sample_qc(
@@ -22,7 +31,8 @@ def call_sample_qc(
         .default(hl.missing(hl.tcall)),
     )
     mt = annotate_filtered_callrate(mt)
-    return annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
+    mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
+    return annotate_qc_pop(mt)
 
 
 def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
@@ -67,3 +77,29 @@ def annotate_filter_flags(
         'mean_coverage',
         'filtered_callrate',
     )
+
+
+def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
+    mt = mt.select_entries('GT')
+    scores = _get_pop_pca_scores(mt)
+    with open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+        fit = pickle.load(f)  # noqa: S301
+
+    pop_pca_ht, _ = assign_population_pcs(
+        scores,
+        pc_cols=scores.scores,
+        output_col='qc_pop',
+        fit=fit,
+    )
+    pop_pca_ht = pop_pca_ht.key_by('s')
+    scores = scores.annotate(
+        **{f'pop_PC{i + 1}': scores.scores[i] for i in range(NUM_PCS)},
+    ).drop('scores', 'known_pop')
+    pop_pca_ht = pop_pca_ht.annotate(**scores[pop_pca_ht.key])
+    return mt.annotate_cols(**pop_pca_ht[mt.col_key])
+
+
+def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
+    loadings = hl.read_table(POP_PCA_LOADINGS_PATH)
+    scores = pc_project(mt, loadings)
+    return scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
