@@ -70,6 +70,10 @@ class ReferenceGenome(StrEnum):
             ReferenceGenome.GRCh38: 'chrM',
         }[self]
 
+    @property
+    def x_contig(self) -> str:
+        return 'X' if self == ReferenceGenome.GRCh37 else 'chrX'
+
     def contig_recoding(self, include_mt: bool = False) -> dict[str, str]:
         recode = {
             ReferenceGenome.GRCh37: {
