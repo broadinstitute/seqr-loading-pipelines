@@ -12,6 +12,9 @@ from v03_pipeline.lib.misc.requests import requests_retry_session
 BIGQUERY_METRICS = [
     'collaborator_sample_id',
     'predicted_sex',
+    'contamination_rate',
+    'percent_bases_at_20x',
+    'mean_coverage',
 ]
 BIGQUERY_RESOURCE = 'bigquery'
 TABLE_NAME_VALIDATION_REGEX = r'datarepo-\w+.datarepo_\w+'
