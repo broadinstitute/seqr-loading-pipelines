@@ -180,8 +180,9 @@ def gnomad_svs(
     gnomad_svs_ht: hl.Table,
     **_: Any,
 ) -> hl.Expression:
-    return gnomad_svs_ht[ht['info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID']]
-
+    return gnomad_svs_ht.annotate(
+        ID=gnomad_svs_ht.KEY,
+    )[ht['info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID']]
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(

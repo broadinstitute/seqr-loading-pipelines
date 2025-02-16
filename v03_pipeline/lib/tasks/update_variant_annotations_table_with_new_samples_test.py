@@ -935,8 +935,9 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(),
+                    versions=hl.Struct(gnomad_svs='1.0'),
                     enums=hl.Struct(
+                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
@@ -959,6 +960,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
+        print(ht.collect())
         self.assertCountEqual(
             ht.collect(),
             [
@@ -1408,8 +1410,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         Het=590,
                     ),
                     gnomad_svs=hl.Struct(
-                        AF=hl.eval(hl.float32(0.06896299868822098)),
-                        ID='gnomAD-SV_v2.1_INS_chr1_65',
+                        ID='gnomAD-SV_v3_BND_chr1_0001f5b7',
+                        AF=3.2e-05,
+                        AC=4,
+                        AN=126092,
+                        N_HET=4,
+                        N_HOMREF=63042,
                     ),
                     rg37_locus=hl.Locus(
                         contig=1,
