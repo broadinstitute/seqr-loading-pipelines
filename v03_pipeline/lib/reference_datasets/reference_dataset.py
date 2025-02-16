@@ -6,6 +6,7 @@ from typing import Union
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import snv_indel, sv
 from v03_pipeline.lib.misc.validation import (
     validate_allele_type,
     validate_no_duplicate_variants,
@@ -27,8 +28,9 @@ from v03_pipeline.lib.reference_datasets.misc import (
 DATASET_TYPES = 'dataset_types'
 ENUMS = 'enums'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
+EXCLUDE_FROM_ANNOTATIONS_UPDATES = 'exclude_from_annotations_updates'
+FORMATTING_ANNOTATION = 'formatting_annotation'
 FILTER = 'filter'
-IS_INTERVAL = 'is_interval'
 SELECT = 'select'
 VERSION = 'version'
 PATH = 'path'
@@ -69,9 +71,24 @@ class BaseReferenceDataset:
             if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS, False)
         }
 
+    @classmethod
+    def for_reference_genome_dataset_type_annotations_updates(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> set['ReferenceDataset']:
+        return {
+            dataset
+            for dataset in cls.for_reference_genome_dataset_type_annotations(
+                reference_genome,
+                dataset_type,
+            )
+            if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS_UPDATES, False)
+        }
+
     @property
-    def is_keyed_by_interval(self) -> bool:
-        return CONFIG[self].get(IS_INTERVAL, False)
+    def formatting_annotation(self) -> Callable | None:
+        return CONFIG[self].get(FORMATTING_ANNOTATION)
 
     @property
     def access_control(self) -> AccessControl:
@@ -154,9 +171,10 @@ class ReferenceDataset(BaseReferenceDataset, StrEnum):
     gnomad_coding_and_noncoding = 'gnomad_coding_and_noncoding'
     gnomad_exomes = 'gnomad_exomes'
     gnomad_genomes = 'gnomad_genomes'
-    gnomad_qc = 'gnomad_qc'
     gnomad_mito = 'gnomad_mito'
     gnomad_non_coding_constraint = 'gnomad_non_coding_constraint'
+    gnomad_qc = 'gnomad_qc'
+    gnomad_svs = 'gnomad_svs'
     screen = 'screen'
     local_constraint_mito = 'local_constraint_mito'
     mitomap = 'mitomap'
@@ -394,7 +412,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_non_coding_constraint: {
-        IS_INTERVAL: True,
+        FORMATTING_ANNOTATION: snv_indel.gnomad_non_coding_constraint,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -414,7 +432,7 @@ CONFIG = {
                 'low-DNase',
             ],
         },
-        IS_INTERVAL: True,
+        FORMATTING_ANNOTATION: snv_indel.screen,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SNV_INDEL]),
             VERSION: '1.0',
@@ -426,6 +444,15 @@ CONFIG = {
             DATASET_TYPES: frozenset([DatasetType.MITO]),
             VERSION: '1.0',
             PATH: 'https://www.biorxiv.org/content/biorxiv/early/2023/01/27/2022.12.16.520778/DC3/embed/media-3.zip',
+        },
+    },
+    ReferenceDataset.gnomad_svs: {
+        EXCLUDE_FROM_ANNOTATIONS_UPDATES: True,
+        FORMATTING_ANNOTATION: sv.gnomad_svs,
+        ReferenceGenome.GRCh38: {
+            DATASET_TYPES: frozenset([DatasetType.SV]),
+            VERSION: '1.0',
+            PATH: 'gs://gcp-public-data--gnomad/release/4.1/genome_sv/gnomad.v4.1.sv.sites.vcf.gz',
         },
     },
 }

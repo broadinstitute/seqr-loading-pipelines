@@ -175,11 +175,12 @@ def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
     )
 
 
-def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.or_missing(
-        hl.is_defined(ht['info.gnomAD_V2_AF']),
-        hl.struct(AF=hl.float32(ht['info.gnomAD_V2_AF']), ID=ht['info.gnomAD_V2_SVID']),
-    )
+def gnomad_svs(
+    ht: hl.Table,
+    gnomad_svs_ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    return gnomad_svs_ht[ht['info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID']]
 
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:

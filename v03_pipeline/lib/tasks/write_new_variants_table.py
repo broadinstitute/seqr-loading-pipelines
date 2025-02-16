@@ -168,7 +168,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.reference_genome,
             self.dataset_type,
         ):
-            if reference_dataset.is_keyed_by_interval:
+            if reference_dataset.formatting_annotation:
                 continue
             reference_dataset_ht = self.annotation_dependencies[
                 f'{reference_dataset.value}_ht'
