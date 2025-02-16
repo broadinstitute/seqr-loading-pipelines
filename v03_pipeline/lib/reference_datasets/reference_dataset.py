@@ -28,6 +28,7 @@ from v03_pipeline.lib.reference_datasets.misc import (
 DATASET_TYPES = 'dataset_types'
 ENUMS = 'enums'
 EXCLUDE_FROM_ANNOTATIONS = 'exclude_from_annotations'
+EXCLUDE_FROM_ANNOTATIONS_UPDATES = 'exclude_from_annotations_updates'
 FORMATTING_ANNOTATION = 'formatting_annotation'
 FILTER = 'filter'
 SELECT = 'select'
@@ -68,6 +69,21 @@ class BaseReferenceDataset:
                 dataset_type,
             )
             if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS, False)
+        }
+
+    @classmethod
+    def for_reference_genome_dataset_type_annotations_updates(
+        cls,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+    ) -> set['ReferenceDataset']:
+        return {
+            dataset
+            for dataset in cls.for_reference_genome_dataset_type_annotations(
+                reference_genome,
+                dataset_type,
+            )
+            if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS_UPDATES, False)
         }
 
     @property
@@ -431,11 +447,7 @@ CONFIG = {
         },
     },
     ReferenceDataset.gnomad_svs: {
-        # NB: this reference dataset is not automatically
-        # updatable in the same way as the others due to
-        # the requirement that a concordance algorithm
-        # must first be run to align internal variants
-        # with gnomAD variants and requires a join on that key.
+        EXCLUDE_FROM_ANNOTATIONS_UPDATES: True,
         FORMATTING_ANNOTATION: sv.gnomad_svs,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SV]),
