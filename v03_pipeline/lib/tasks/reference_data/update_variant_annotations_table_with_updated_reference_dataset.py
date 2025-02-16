@@ -29,7 +29,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     def complete(self) -> bool:
         reference_dataset_names = {
             rd.name
-            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
                 self.reference_genome,
                 self.dataset_type,
             )
