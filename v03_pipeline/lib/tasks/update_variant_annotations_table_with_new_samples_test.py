@@ -960,7 +960,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
-        print(ht.collect())
         self.assertCountEqual(
             ht.collect(),
             [

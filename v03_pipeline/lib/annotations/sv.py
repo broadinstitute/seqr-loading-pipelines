@@ -184,6 +184,7 @@ def gnomad_svs(
         ID=gnomad_svs_ht.KEY,
     )[ht['info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID']]
 
+
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
     return hl.struct(
         AF=hl.float32(ht['info.AF'][0]),
