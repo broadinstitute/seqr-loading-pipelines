@@ -83,9 +83,12 @@ def filter_contigs(ht, reference_genome: ReferenceGenome):
                 ht.interval.start.contig,
             ),
         )
-    return ht.filter(
-        hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
-    )
+    # SV reference datasets are not keyed by locus.
+    if hasattr(ht, 'locus'):
+        return ht.filter(
+            hl.set(reference_genome.standard_contigs).contains(ht.locus.contig),
+        )
+    return ht
 
 
 def vcf_to_ht(

@@ -96,4 +96,10 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
                 ht = ht.join(reference_dataset_ht, 'left')
 
-        return self.annotate_globals(ht)
+        return self.annotate_globals(
+            ht,
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
