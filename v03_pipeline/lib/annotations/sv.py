@@ -182,7 +182,7 @@ def gnomad_svs(
 ) -> hl.Expression:
     return gnomad_svs_ht.annotate(
         ID=gnomad_svs_ht.KEY,
-    )[ht['info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID']]
+    )[ht['info.GNOMAD_V4.1_TRUTH_VID']]
 
 
 def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:

@@ -123,7 +123,7 @@ class DatasetType(StrEnum):
                 'info.END2': hl.tint32,
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
-                'info.SEQR_INTERNAL_GNOMAD_V4.1_TRUTH_VID': hl.tstr,
+                'info.GNOMAD_V4.1_TRUTH_VID': hl.tstr,
                 'info.StrVCTVRE': hl.tstr,
                 'info.SVLEN': hl.tint32,
                 **sv.CONSEQ_PREDICTED_GENE_COLS,
