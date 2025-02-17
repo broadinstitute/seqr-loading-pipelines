@@ -264,7 +264,6 @@ class DatasetType(StrEnum):
                 sv.bothsides_support,
                 sv.cpx_intervals,
                 sv.end_locus,
-                sv.gt_stats,
                 sv.gnomad_svs,
                 sv.sorted_gene_consequences,
                 sv.start_locus,
@@ -362,6 +361,9 @@ class DatasetType(StrEnum):
             ],
             DatasetType.GCNV: [
                 gcnv.gt_stats,
+            ],
+            DatasetType.SV: [
+                sv.gt_stats,
             ],
         }.get(self, [])
 
