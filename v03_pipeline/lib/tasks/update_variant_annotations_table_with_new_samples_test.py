@@ -930,7 +930,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 11)
+        self.assertEqual(ht.count(), 13)
         self.assertCountEqual(
             ht.globals.collect(),
             [
@@ -1267,6 +1267,146 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=3,
                     sv_type_detail_id=13,
                     xpos=1021427498,
+                ),
+                hl.Struct(
+                    variant_id='CPX_chrX_251',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=[
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=180540234,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074938,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                    ],
+                    end_locus=hl.Locus(
+                        contig='chrX',
+                        position=2781000,
+                        reference_genome='GRCh38',
+                    ),
+                    gt_stats=hl.Struct(
+                        AF=0.251803994178772,
+                        AC=3,
+                        AN=8,
+                        Hom=114,
+                        Het=1238,
+                    ),
+                    gnomad_svs=None,
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
+                    ],
+                    start_locus=hl.Locus(
+                        contig='chrX',
+                        position=3,
+                        reference_genome='GRCh38',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=9,
+                    sv_len=534718,
+                    xpos=23000000003,
+                    rg37_locus=None,
+                    rg37_locus_end=hl.Locus(
+                        contig='X',
+                        position=2699041,
+                        reference_genome='GRCh37',
+                    ),
+                ),
+                hl.Struct(
+                    variant_id='CPX_chrX_252',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=[
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=180540234,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074938,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                    ],
+                    end_locus=hl.Locus(
+                        contig='chrX',
+                        position=2781900,
+                        reference_genome='GRCh38',
+                    ),
+                    gt_stats=hl.Struct(
+                        AF=0.251803994178772,
+                        AC=3,
+                        AN=8,
+                        Hom=114,
+                        Het=1238,
+                    ),
+                    gnomad_svs=None,
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
+                    ],
+                    start_locus=hl.Locus(
+                        contig='chrX',
+                        position=2781700,
+                        reference_genome='GRCh38',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=9,
+                    sv_len=534718,
+                    xpos=23002781700,
+                    rg37_locus=hl.Locus(
+                        contig='X',
+                        position=2699741,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig='X',
+                        position=2699941,
+                        reference_genome='GRCh37',
+                    ),
                 ),
                 hl.Struct(
                     variant_id='DEL_chr1_12',

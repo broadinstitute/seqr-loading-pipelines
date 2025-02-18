@@ -1,3 +1,4 @@
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 import google.cloud.bigquery
@@ -28,32 +29,80 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             iter(
                 [
                     google.cloud.bigquery.table.Row(
-                        ('SM-NJ8MF', 'Unknown'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        (
+                            'SM-NJ8MF',
+                            'Unknown',
+                            Decimal('0'),
+                            Decimal('0'),
+                            Decimal('0'),
+                        ),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                     google.cloud.bigquery.table.Row(
-                        ('SM-MWOGC', 'Female'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        (
+                            'SM-MWOGC',
+                            'Female',
+                            Decimal('0'),
+                            Decimal('0'),
+                            Decimal('0'),
+                        ),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                     google.cloud.bigquery.table.Row(
-                        ('SM-MWKWL', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        ('SM-MWKWL', 'Male', Decimal('0'), Decimal('0'), Decimal('0')),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                 ],
             ),
             iter(
                 [
                     google.cloud.bigquery.table.Row(
-                        ('SM-NGE65', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        ('SM-NGE65', 'Male', Decimal('0'), Decimal('0'), Decimal('0')),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                     google.cloud.bigquery.table.Row(
-                        ('SM-NGE5G', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        ('SM-NGE5G', 'Male', Decimal('0'), Decimal('0'), Decimal('0')),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                     google.cloud.bigquery.table.Row(
-                        ('SM-NC6LM', 'Male'),
-                        {'collaborator_sample_id': 0, 'predicted_sex': 1},
+                        ('SM-NC6LM', 'Male', Decimal('0'), Decimal('0'), Decimal('0')),
+                        {
+                            'collaborator_sample_id': 0,
+                            'predicted_sex': 1,
+                            'contamination_rate': 2,
+                            'percent_bases_at_20x': 3,
+                            'mean_coverage': 4,
+                        },
                     ),
                 ],
             ),
