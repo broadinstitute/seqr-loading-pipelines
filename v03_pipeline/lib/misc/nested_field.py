@@ -2,9 +2,11 @@ import hail as hl
 
 
 def parse_nested_field(t: hl.MatrixTable | hl.Table, fields: str):
-    # Grab the field and continually select it from the hail table.
     expression = t
-    for field in fields.split('.'):
+    # Behavior here allows only a single nested field.
+    # Additional nesting is considered to be part of the
+    # name of the field. e.g. `gnomadv4.1_AF`.
+    for field in fields.split('.', maxsplit=1):
         # Select from multi-allelic list.
         if field.endswith('#'):
             expression = expression[field[:-1]][
