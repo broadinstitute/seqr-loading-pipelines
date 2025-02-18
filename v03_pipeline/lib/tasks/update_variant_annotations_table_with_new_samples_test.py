@@ -78,7 +78,6 @@ GENE_ID_MAPPING = {
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
-
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
