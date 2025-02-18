@@ -42,7 +42,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             dataset_name: version
             for dataset_name, version in hl.eval(
                 hl.read_table(self.output().path).globals.versions,
-            )
+            ).items()
             if not ReferenceDataset(dataset_name).exclude_from_annotations_updates
         }
         self._datasets_to_update = (
