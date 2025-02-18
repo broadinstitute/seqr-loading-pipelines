@@ -174,6 +174,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         for field in mt.row_value:
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
+
+        if self.dataset_type.overwrite_male_non_par_calls:
+            mt = overwrite_male_non_par_calls(mt, loadable_families)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
                 self.project_remap_paths[self.project_i],

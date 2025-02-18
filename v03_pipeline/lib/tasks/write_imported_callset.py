@@ -123,9 +123,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             # NB: throws SeqrValidationError
             mt = split_multi_hts(mt, self.skip_validation)
 
-        if self.dataset_type.overwrite_male_non_par_calls:
-            mt = overwrite_male_non_par_calls(mt)
-
         # Special handling of variant-level filter annotation for VETs filters.
         # The annotations are present on the sample-level FT field but are
         # expected upstream on "filters".
