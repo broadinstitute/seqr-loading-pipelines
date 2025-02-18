@@ -1625,6 +1625,63 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
+        update_variant_annotations_task2 = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SV,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SV_VCF_2,
+                project_guids=['R0115_test_project2'],
+                project_remap_paths=['not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_5],
+                skip_validation=True,
+                run_id=TEST_RUN_ID,
+            )
+        )
+        worker.add(update_variant_annotations_task2)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task2.complete())
+        ht = hl.read_table(update_variant_annotations_task2.output().path)
+        self.assertEqual(ht.count(), 14)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    versions=hl.Struct(gnomad_svs='1.0'),
+                    enums=hl.Struct(
+                        gnomad_svs=hl.Struct(),
+                        sv_type=SV_TYPES,
+                        sv_type_detail=SV_TYPE_DETAILS,
+                        sorted_gene_consequences=hl.Struct(
+                            major_consequence=SV_CONSEQUENCE_RANKS,
+                        ),
+                    ),
+                    migrations=[],
+                    updates={
+                        hl.Struct(
+                            callset=TEST_SV_VCF,
+                            project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
+                        ),
+                        hl.Struct(
+                            callset=TEST_SV_VCF_2,
+                            project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
+                        ),
+                    },
+                ),
+            ],
+        )
 
     def test_gcnv_update_vat_multiple(
         self,
