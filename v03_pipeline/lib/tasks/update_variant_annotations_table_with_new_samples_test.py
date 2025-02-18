@@ -47,6 +47,7 @@ from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VE
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
+TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_GCNV_BED_FILE_2 = 'v03_pipeline/var/test/callsets/gcnv_2.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -902,7 +903,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
-    def test_sv_update_vat(
+    def test_sv_multiple_update_vat(
         self,
         mock_load_gencode: Mock,
     ) -> None:
