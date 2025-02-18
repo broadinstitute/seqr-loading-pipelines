@@ -43,8 +43,9 @@ def overwrite_male_non_par_calls(
                         mt.end_locus,
                     ),
                 )
+                & mt.GT.is_het()
             ),
-            hl.Call([1, 1], phased=False),
+            hl.Call([1], phased=False),
             mt.GT,
         ),
     )

@@ -52,7 +52,7 @@ class SVTest(unittest.TestCase):
                 # END of this variant < start of the non-par region.
                 hl.Call(alleles=[0, 1], phased=False),
                 hl.Call(alleles=[0, 0], phased=False),
-                hl.Call(alleles=[1, 1], phased=False),
+                hl.Call(alleles=[1], phased=False),
             ],
             mt.GT.collect(),
         )

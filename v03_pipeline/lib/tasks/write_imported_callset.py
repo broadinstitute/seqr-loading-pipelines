@@ -9,6 +9,7 @@ from v03_pipeline.lib.misc.io import (
     select_relevant_fields,
     split_multi_hts,
 )
+from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
@@ -121,6 +122,10 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.dataset_type.has_multi_allelic_variants:
             # NB: throws SeqrValidationError
             mt = split_multi_hts(mt, self.skip_validation)
+
+        if self.dataset_type.overwrite_male_non_par_calls:
+            mt = overwrite_male_non_par_calls(mt)
+
         # Special handling of variant-level filter annotation for VETs filters.
         # The annotations are present on the sample-level FT field but are
         # expected upstream on "filters".
