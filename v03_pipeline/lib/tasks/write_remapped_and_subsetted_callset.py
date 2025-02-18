@@ -15,6 +15,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
@@ -174,6 +175,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         for field in mt.row_value:
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
+
+        if self.dataset_type.overwrite_male_non_par_calls:
+            mt = overwrite_male_non_par_calls(mt, loadable_families)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
                 self.project_remap_paths[self.project_i],
