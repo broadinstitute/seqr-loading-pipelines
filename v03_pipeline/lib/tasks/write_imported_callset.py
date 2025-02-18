@@ -9,7 +9,6 @@ from v03_pipeline.lib.misc.io import (
     select_relevant_fields,
     split_multi_hts,
 )
-from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
