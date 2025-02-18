@@ -2,6 +2,7 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.annotations import sv
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.model import DatasetType
 
@@ -166,6 +167,79 @@ class SVTest(unittest.TestCase):
                         SVTYPE='INS',
                         SVLEN=245,
                     ),
+                ),
+            ],
+        )
+
+    def test_allele_count_annotations(self) -> None:
+        ht = hl.Table.parallelize(
+            [
+                {
+                    'variant_id': 0,
+                    'gt_stats': hl.Struct(
+                        AC=4,
+                        AN=8,
+                        AF=hl.float32(0.5),
+                        Hom=1,
+                        Het=2,
+                    ),
+                },
+                {'variant_id': 1, 'gt_stats': None},
+            ],
+            hl.tstruct(
+                variant_id=hl.tint32,
+                gt_stats=hl.tstruct(
+                    AC=hl.tint32,
+                    AN=hl.tint32,
+                    AF=hl.tfloat32,
+                    Hom=hl.tint32,
+                    Het=hl.tint32,
+                ),
+            ),
+            key='variant_id',
+        )
+        callset_ht = hl.Table.parallelize(
+            [
+                {
+                    'variant_id': 0,
+                    'info.AC': [1],
+                    'info.AN': [2],
+                    'info.AF': hl.float32(0.5),
+                    'info.N_HOMALT': 0,
+                    'info.N_HET': 1,
+                },
+                {
+                    'variant_id': 2,
+                    'info.AC': [2],
+                    'info.AN': [6],
+                    'info.AF': hl.float32(0.33333),
+                    'info.N_HOMALT': 0,
+                    'info.N_HET': 2,
+                },
+            ],
+            hl.tstruct(
+                variant_id=hl.tint32,
+                **{
+                    'info.AC': hl.tarray(hl.tint32),
+                    'info.AN': hl.tarray(hl.tint32),
+                    'info.AF': hl.tfloat32,
+                    'info.N_HOMALT': hl.tint32,
+                    'info.N_HET': hl.tint32,
+                },
+            ),
+            key='variant_id',
+        )
+        ht = ht.select(gt_stats=sv.gt_stats(ht, callset_ht))
+        self.assertCountEqual(
+            ht.collect(),
+            [
+                hl.Struct(
+                    variant_id=0,
+                    gt_stats=hl.Struct(AC=5, AN=10, AF=0.5, Hom=1, Het=3),
+                ),
+                hl.Struct(
+                    variant_id=1,
+                    gt_stats=hl.Struct(AC=None, AN=None, AF=None, Hom=None, Het=None),
                 ),
             ],
         )
