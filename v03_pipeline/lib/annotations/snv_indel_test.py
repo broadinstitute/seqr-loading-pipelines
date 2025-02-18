@@ -82,6 +82,7 @@ class SNVTest(unittest.TestCase):
                 ),
             ],
         )
+
     @patch('v03_pipeline.lib.vep.hl.vep')
     def test_sorted_transcript_consequences_37(
         self,
