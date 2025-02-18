@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -eux
+
+STRVCTVRE_REFERENCE_DATASETS_DIR=${STRVCTVRE_REFERENCE_DATASETS_DIR:-/var/seqr/strvctvre-reference-data}
+STRVCTVRE_DOCKER_IMAGE="gcr.io/seqr-project/strvctvre-docker-image"
+docker run --platform linux/amd64 -i -v $STRVCTVRE_DOCKER_IMAGE:$STRVCTVRE_DOCKER_IMAGE:ro $STRVCTVRE_DOCKER_IMAGE -p $WORKDIR "$@"
