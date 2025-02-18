@@ -975,7 +975,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.04775)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=0,
@@ -1018,7 +1018,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.910684)),
+                        AF=0.875,
                         AC=7,
                         AN=8,
                         Hom=2391,
@@ -1072,7 +1072,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.169873)),
+                        AF=0.25,
                         AC=2,
                         AN=8,
                         Hom=3,
@@ -1125,7 +1125,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.251804)),
+                        AF=0.375,
                         AC=3,
                         AN=8,
                         Hom=114,
@@ -1181,7 +1181,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.218138)),
+                        AF=0.25,
                         AC=2,
                         AN=8,
                         Hom=18,
@@ -1239,7 +1239,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.499656)),
+                        AF=0.5,
                         AC=4,
                         AN=8,
                         Hom=49,
@@ -1308,7 +1308,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=0.251803994178772,
+                        AF=0.375,
                         AC=3,
                         AN=8,
                         Hom=114,
@@ -1376,7 +1376,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=0.251803994178772,
+                        AF=0.375,
                         AC=3,
                         AN=8,
                         Hom=114,
@@ -1421,7 +1421,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.064926)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=5,
@@ -1463,7 +1463,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.115596)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=110,
@@ -1501,7 +1501,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.004466)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=0,
@@ -1543,7 +1543,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.10237)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=3,
@@ -1592,7 +1592,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.06338)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=2,

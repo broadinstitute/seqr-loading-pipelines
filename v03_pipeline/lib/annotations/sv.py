@@ -187,19 +187,23 @@ def gnomad_svs(
 
 
 def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
+    def _safe_gt_stats_fetch(ht: hl.Table, field: str):
+        return hl.or_else(ht.gt_stats[field], 0) if hasattr(ht, 'gt_stats') else 0
+
     # note that "ht" here is the annotations table
     # union-ed with new variants, subsetted to variants
     # present in the callset. gt_stats will be "missing"
-    # on the new variants.
+    # on the new variants (due to union=True) or not at
+    # all present if the annotations table does not yet exist.
     row = callset_ht[ht.key]
-    AC = row['info.AC'][0] + hl.or_else(ht.gt_stats.AC, 0)
-    AN = row['info.AN'][0] + hl.or_else(ht.gt_stats.AN, 0)
+    AC = row['info.AC'][0] + _safe_gt_stats_fetch(ht, 'AC')
+    AN = row['info.AN'] + _safe_gt_stats_fetch(ht, 'AN')
     return hl.struct(
         AC=AC,
         AN=AN,
         AF=hl.float32(AC / AN),
-        Hom=row['info.N_HOMALT'] + hl.or_else(ht.gt_stats.Hom, 0),
-        Het=row['info.N_HET'] + hl.or_else(ht.gt_stats.Het, 0),
+        Hom=row['info.N_HOMALT'] + _safe_gt_stats_fetch(ht, 'Hom'),
+        Het=row['info.N_HET'] + _safe_gt_stats_fetch(ht, 'Het'),
     )
 
 
