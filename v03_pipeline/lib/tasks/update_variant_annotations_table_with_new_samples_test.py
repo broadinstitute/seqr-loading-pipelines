@@ -78,6 +78,7 @@ GENE_ID_MAPPING = {
 TEST_RUN_ID = 'manual__2024-04-03'
 
 
+
 class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     MockedReferenceDatasetsTestCase,
 ):
@@ -1625,7 +1626,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 ),
             ],
         )
-        update_variant_annotations_task2 = (
+        update_variant_annotations_task = (
             UpdateVariantAnnotationsTableWithNewSamplesTask(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SV,
@@ -1635,13 +1636,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
-                run_id=TEST_RUN_ID,
+                run_id='second_run_id',
             )
         )
-        worker.add(update_variant_annotations_task2)
+        worker.add(update_variant_annotations_task)
         worker.run()
-        self.assertTrue(update_variant_annotations_task2.complete())
-        ht = hl.read_table(update_variant_annotations_task2.output().path)
+        self.assertTrue(update_variant_annotations_task.complete())
+        ht = hl.read_table(update_variant_annotations_task.output().path)
         self.assertEqual(ht.count(), 14)
         self.assertCountEqual(
             ht.globals.collect(),
