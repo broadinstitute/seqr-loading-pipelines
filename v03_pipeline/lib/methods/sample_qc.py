@@ -1,7 +1,11 @@
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
+from v03_pipeline.lib.misc.terra_data_repository import BIGQUERY_METRICS
 from v03_pipeline.lib.model import SampleType
+
+GNOMAD_FILTER_MIN_AF = 0.001
+GNOMAD_FILTER_MIN_CALLRATE = 0.99
 
 CALLRATE_LOW_THRESHOLD = 0.85
 CONTAMINATION_UPPER_THRESHOLD = 5
@@ -14,7 +18,6 @@ def call_sample_qc(
     tdr_metrics_ht: hl.Table,
     sample_type: SampleType,
 ):
-    mt = mt.annotate_cols(sample_type=sample_type)
     mt = mt.annotate_entries(
         GT=hl.case()
         .when(mt.GT.is_diploid(), hl.call(mt.GT[0], mt.GT[1], phased=False))
@@ -28,8 +31,8 @@ def call_sample_qc(
 def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
     filtered_mt = filter_rows_for_qc(
         mt,
-        min_af=0.001,
-        min_callrate=0.99,
+        min_af=GNOMAD_FILTER_MIN_AF,
+        min_callrate=GNOMAD_FILTER_MIN_CALLRATE,
         bi_allelic_only=True,
         snv_only=True,
         apply_hard_filters=False,
@@ -62,8 +65,6 @@ def annotate_filter_flags(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
     ).drop(
-        'contamination_rate',
-        'percent_bases_at_20x',
-        'mean_coverage',
+        *BIGQUERY_METRICS[2:5],
         'filtered_callrate',
     )
