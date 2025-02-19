@@ -62,6 +62,7 @@ class WriteVariantAnnotationsVCFTest(MockedDatarootTestCase):
                 project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
+                skip_expect_tdr_metrics=True,
             )
         )
         worker.add(update_variant_annotations_task)
