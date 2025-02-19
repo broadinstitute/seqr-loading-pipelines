@@ -18,7 +18,7 @@ WGS_CALLRATE_LOW_THRESHOLD = 30
 POP_PCA_LOADINGS_PATH = (
     'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
 )
-ANCESTRY_RF_MODEL_PATH = 'v03_pipeline/var/ancestry_imputation_model.pickle'
+ANCESTRY_RF_MODEL_PATH = 'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.pickle'
 NUM_PCS = 20
 
 
@@ -83,7 +83,7 @@ def annotate_filter_flags(
 def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
-    with open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
         fit = pickle.load(f)  # noqa: S301
 
     pop_pca_ht, _ = assign_population_pcs(
