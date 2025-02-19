@@ -202,30 +202,22 @@ class SVTest(unittest.TestCase):
             [
                 {
                     'variant_id': 0,
-                    'info.AC': [1],
-                    'info.AN': [2],
-                    'info.AF': hl.float32(0.5),
-                    'info.N_HOMALT': 0,
-                    'info.N_HET': 1,
+                    'AC': [0, 3],
+                    'AN': 6,
+                    'homozygote_count': [0, 1],
                 },
                 {
                     'variant_id': 2,
-                    'info.AC': [2],
-                    'info.AN': [6],
-                    'info.AF': hl.float32(0.33333),
-                    'info.N_HOMALT': 0,
-                    'info.N_HET': 2,
+                    'AC': [0, 2],
+                    'AN': 6,
+                    'homozygote_count': [0, 1],
                 },
             ],
             hl.tstruct(
                 variant_id=hl.tint32,
-                **{
-                    'info.AC': hl.tarray(hl.tint32),
-                    'info.AN': hl.tarray(hl.tint32),
-                    'info.AF': hl.tfloat32,
-                    'info.N_HOMALT': hl.tint32,
-                    'info.N_HET': hl.tint32,
-                },
+                AC=hl.tarray(hl.tint32),
+                AN=hl.tint32,
+                homozygote_count=hl.tarray(hl.tint32),
             ),
             key='variant_id',
         )
@@ -235,7 +227,7 @@ class SVTest(unittest.TestCase):
             [
                 hl.Struct(
                     variant_id=0,
-                    gt_stats=hl.Struct(AC=5, AN=10, AF=0.5, Hom=1, Het=3),
+                    gt_stats=hl.Struct(AC=7, AN=14, AF=0.5, Hom=2, Het=3),
                 ),
                 hl.Struct(
                     variant_id=1,
