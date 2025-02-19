@@ -23,7 +23,6 @@ TEST_INVALID_VCF = 'v03_pipeline/var/test/callsets/improperly_formatted.vcf'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 
 
 class IOTest(unittest.TestCase):

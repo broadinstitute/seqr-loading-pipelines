@@ -131,7 +131,7 @@ class FieldsTest(MockedDatarootTestCase):
                                 reference_genome,
                                 DatasetType.SNV_INDEL,
                             )
-                            if reference_dataset.is_keyed_by_interval
+                            if reference_dataset.formatting_annotation
                         },
                         **(
                             {

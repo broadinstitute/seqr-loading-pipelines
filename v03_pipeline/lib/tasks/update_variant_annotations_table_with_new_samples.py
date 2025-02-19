@@ -9,6 +9,9 @@ from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    BaseReferenceDataset,
+)
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -104,7 +107,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
 
         # Fix up the globals and mark the table as updated with these callset/project pairs.
-        ht = self.annotate_globals(ht)
+        ht = self.annotate_globals(
+            ht,
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {
