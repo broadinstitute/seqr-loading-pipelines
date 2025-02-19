@@ -96,19 +96,10 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         TEST_VCF,
                     ),
                     'sample_qc': {
-                        'HG00731': {
-                            'sample_type': 'WGS',
-                            'filter_flags': ['coverage', 'contamination'],
-                        },
-                        'HG00732': {
-                            'sample_type': 'WGS',
-                            'filter_flags': ['coverage'],
-                        },
-                        'HG00733': {
-                            'sample_type': 'WGS',
-                            'filter_flags': ['contamination'],
-                        },
-                        'NA19675': {'sample_type': 'WGS', 'filter_flags': []},
+                        'HG00731': {'filter_flags': ['coverage', 'contamination']},
+                        'HG00732': {'filter_flags': ['coverage']},
+                        'HG00733': {'filter_flags': ['contamination']},
+                        'NA19675': {'filter_flags': []},
                     },
                 },
             )
