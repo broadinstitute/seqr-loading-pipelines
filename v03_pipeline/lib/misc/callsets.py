@@ -24,10 +24,34 @@ def get_callset_ht(
         for project_guid in project_guids
     ]
     callset_ht = functools.reduce(
-        (lambda ht1, ht2: ht1.union(ht2, unify=True)),
+        (lambda ht1, ht2: ht1.union(ht2)),
         callset_hts,
     )
     return callset_ht.distinct()
+
+
+def get_callset_mt(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    callset_path: str,
+    project_guids: list[str],
+):
+    callset_mts = [
+        hl.read_matrix_table(
+            remapped_and_subsetted_callset_path(
+                reference_genome,
+                dataset_type,
+                callset_path,
+                project_guid,
+            ),
+        )
+        for project_guid in project_guids
+    ]
+    callset_mt = functools.reduce(
+        (lambda mt1, mt2: mt1.union_rows(mt2)),
+        callset_mts,
+    )
+    return callset_mt.distinct()
 
 
 def get_additional_row_fields(
