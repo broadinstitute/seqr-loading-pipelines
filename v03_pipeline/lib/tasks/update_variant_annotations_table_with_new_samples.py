@@ -88,7 +88,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 # have been removed from the lookup table during modification.
                 # Ensure we don't proceed with those variants.
                 ht = ht.semi_join(lookup_ht)
-            elif self.dataset_type.call_hl_call_stats:
+            elif self.dataset_type.gt_stats_from_hl_call_stats:
                 callset_mt = get_callset_mt(
                     self.reference_genome,
                     self.dataset_type,

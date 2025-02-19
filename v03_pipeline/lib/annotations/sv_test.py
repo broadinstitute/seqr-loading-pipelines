@@ -202,22 +202,28 @@ class SVTest(unittest.TestCase):
             [
                 {
                     'variant_id': 0,
-                    'AC': [0, 3],
-                    'AN': 6,
-                    'homozygote_count': [0, 1],
+                    'gt_stats': hl.Struct(
+                        AC=[0, 3],
+                        AN=6,
+                        homozygote_count=[0, 1],
+                    ),
                 },
                 {
                     'variant_id': 2,
-                    'AC': [0, 2],
-                    'AN': 6,
-                    'homozygote_count': [0, 1],
+                    'gt_stats': hl.Struct(
+                        AC=[0, 2],
+                        AN=6,
+                        homozygote_count=[0, 1],
+                    ),
                 },
             ],
             hl.tstruct(
                 variant_id=hl.tint32,
-                AC=hl.tarray(hl.tint32),
-                AN=hl.tint32,
-                homozygote_count=hl.tarray(hl.tint32),
+                gt_stats=hl.tstruct(
+                    AC=hl.tarray(hl.tint32),
+                    AN=hl.tint32,
+                    homozygote_count=hl.tarray(hl.tint32),
+                ),
             ),
             key='variant_id',
         )

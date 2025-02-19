@@ -196,10 +196,12 @@ def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
     # on the new variants (due to union=True) or not at
     # all present if the annotations table does not yet exist.
     row = callset_ht[ht.key]
-    AC = row.AC[1] + _safe_gt_stats_fetch(ht, 'AC')
-    AN = row.AN + _safe_gt_stats_fetch(ht, 'AN')
-    Hom = row.homozygote_count[1] + _safe_gt_stats_fetch(ht, 'Hom')
-    Het = (row.AC[1] - (row.homozygote_count[1] * 2)) + _safe_gt_stats_fetch(ht, 'Het')
+    AC = row.gt_stats.AC[1] + _safe_gt_stats_fetch(ht, 'AC')
+    AN = row.gt_stats.AN + _safe_gt_stats_fetch(ht, 'AN')
+    Hom = row.gt_stats.homozygote_count[1] + _safe_gt_stats_fetch(ht, 'Hom')
+    Het = (
+        row.gt_stats.AC[1] - (row.gt_stats.homozygote_count[1] * 2)
+    ) + _safe_gt_stats_fetch(ht, 'Het')
     return hl.struct(
         AC=AC,
         AN=AN,

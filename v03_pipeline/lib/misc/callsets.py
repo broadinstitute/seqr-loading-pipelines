@@ -51,7 +51,7 @@ def get_callset_mt(
         (lambda mt1, mt2: mt1.union_rows(mt2)),
         callset_mts,
     )
-    return callset_mt.distinct()
+    return callset_mt.distinct_by_row()
 
 
 def get_additional_row_fields(
