@@ -47,17 +47,41 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
 
         self.assertCountEqual(
             res['HG00731'],
-            {'filter_flags': ['contamination', 'coverage']},
+            {
+                'filtered_callrate': 1.0,
+                'contamination_rate': 5.099999904632568,
+                'percent_bases_at_20x': 93.69000244140625,
+                'mean_coverage': 29.309999465942383,
+                'filter_flags': ['contamination', 'coverage'],
+            },
         )
         self.assertCountEqual(
             res['HG00732'],
-            {'filter_flags': ['coverage']},
+            {
+                'filtered_callrate': 1.0,
+                'contamination_rate': 5.0,
+                'percent_bases_at_20x': 90.0,
+                'mean_coverage': 28.0,
+                'filter_flags': ['coverage'],
+            },
         )
         self.assertCountEqual(
             res['HG00733'],
-            {'filter_flags': ['contamination']},
+            {
+                'filtered_callrate': 1.0,
+                'contamination_rate': 6.0,
+                'percent_bases_at_20x': 85.0,
+                'mean_coverage': 36.400001525878906,
+                'filter_flags': ['contamination'],
+            },
         )
         self.assertCountEqual(
-            res['HG00732'],
-            {'filter_flags': []},
+            res['NA19675'],
+            {
+                'filtered_callrate': 1.0,
+                'contamination_rate': 0.0,
+                'percent_bases_at_20x': 80.0,
+                'mean_coverage': 30.0,
+                'filter_flags': [],
+            },
         )

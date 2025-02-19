@@ -1,7 +1,6 @@
 import hail as hl
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 
-from v03_pipeline.lib.misc.terra_data_repository import BIGQUERY_METRICS
 from v03_pipeline.lib.model import SampleType
 
 GNOMAD_FILTER_MIN_AF = 0.001
@@ -64,7 +63,4 @@ def annotate_filter_flags(
         filter_flags=hl.array(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
-    ).drop(
-        *BIGQUERY_METRICS[2:5],
-        'filtered_callrate',
     )
