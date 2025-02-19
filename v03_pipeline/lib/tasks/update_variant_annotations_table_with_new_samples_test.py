@@ -1518,7 +1518,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
 
-
     def test_gcnv_update_vat_multiple(
         self,
     ) -> None:
