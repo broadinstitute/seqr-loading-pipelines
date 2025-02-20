@@ -25,8 +25,8 @@ class AddGnomadSVs(BaseMigration):
         ).key_rows_by('rsid').rows()
         ht = ht.annotate(
             **{
-                'info.GNOMAD_V4.1_TRUTH_VID': mapping_ht[ht.key][
-                    'info.GNOMAD_V4.1_TRUTH_VID'
+                'info.GNOMAD_V4.1_TRUTH_VID': mapping_ht[ht.key].info[
+                    'GNOMAD_V4.1_TRUTH_VID'
                 ],
             },
         )
