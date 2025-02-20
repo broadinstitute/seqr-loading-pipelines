@@ -20,7 +20,8 @@ class AddGnomadSVs(BaseMigration):
     def migrate(ht: hl.Table, **_) -> hl.Table:
         mapping_ht = hl.import_vcf(
             PHASE_4_CALLSET_WITH_GNOMAD_V4,
-            ReferenceGenome.GRCh38.value,
+            reference_genome=ReferenceGenome.GRCh38.value,
+            force_bgz=True
         ).rows()
         ht = ht.annotate(
             **{
