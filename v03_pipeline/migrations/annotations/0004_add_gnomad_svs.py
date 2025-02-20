@@ -29,12 +29,13 @@ class AddGnomadSVs(BaseMigration):
     def migrate(ht: hl.Table, **_) -> hl.Table:
         mapping_ht = hl.import_vcf(
             PHASE_4_CALLSET_WITH_GNOMAD_V4,
-            ReferenceGenome.GRCh38.value,
-        ).rows()
+            reference_genome=ReferenceGenome.GRCh38.value,
+            force_bgz=True
+        ).key_rows_by('rsid').rows()
         ht = ht.annotate(
             **{
-                'info.GNOMAD_V4.1_TRUTH_VID': mapping_ht[ht.key][
-                    'info.GNOMAD_V4.1_TRUTH_VID'
+                'info.GNOMAD_V4.1_TRUTH_VID': mapping_ht[ht.key].info[
+                    'GNOMAD_V4.1_TRUTH_VID'
                 ],
             },
         )
