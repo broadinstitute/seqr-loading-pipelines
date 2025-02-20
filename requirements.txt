@@ -98,6 +98,8 @@ frozenlist==1.5.0
     #   hail
 gnomad==0.6.4
     # via -r requirements.in
+gnomad-qc @ git+https://github.com/broadinstitute/gnomad_qc.git@main
+    # via -r requirements.in
 google-auth==2.35.0
     # via
     #   google-auth-oauthlib
@@ -244,7 +246,9 @@ pygments==2.18.0
     #   ipython
     #   rich
 pyjwt[crypto]==2.9.0
-    # via msal
+    # via
+    #   msal
+    #   pyjwt
 pyspark==3.5.3
     # via hail
 python-daemon==3.1.0

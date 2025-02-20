@@ -3,6 +3,7 @@ import pickle
 import hail as hl
 from gnomad.sample_qc.ancestry import assign_population_pcs, pc_project
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
+from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
 from v03_pipeline.lib.model import SampleType
 
@@ -21,6 +22,17 @@ ANCESTRY_RF_MODEL_PATH = (
     'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.pickle'
 )
 NUM_PCS = 20
+GNOMAD_POP_PROBABILITY_CUTOFFS = {
+    'afr': 0.93,
+    'ami': 0.98,
+    'amr': 0.89,
+    'asj': 0.94,
+    'eas': 0.95,
+    'fin': 0.92,
+    'mid': 0.55,
+    'nfe': 0.75,
+    'sas': 0.92,
+}
 
 
 def call_sample_qc(
@@ -93,6 +105,11 @@ def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
         **{f'pop_PC{i + 1}': scores.scores[i] for i in range(NUM_PCS)},
     ).drop('scores', 'known_pop')
     pop_pca_ht = pop_pca_ht.annotate(**scores[pop_pca_ht.key])
+    pop_pca_ht = assign_pop_with_per_pop_probs(
+        pop_pca_ht,
+        min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
+        missing_label='oth',
+    )
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
