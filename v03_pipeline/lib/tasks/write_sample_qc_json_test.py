@@ -15,8 +15,7 @@ TEST_TDR_METRICS_FILE = 'v03_pipeline/var/test/tdr_metrics.tsv'
 TEST_RUN_ID = 'manual__2024-04-03'
 
 PCA_SCORES = [0.00212, 0.011, 0.0105, 0.161, 0.026] + [0.1 for _ in range(15)]
-EXPECTED_QC_POP = {
-    'qc_pop': 'asj',
+EXPECTED_ANC_PROBABILITIES = {
     'prob_afr': 0.02,
     'prob_ami': 0.0,
     'prob_amr': 0.02,
@@ -70,7 +69,8 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                     {
                         's': sample_id,
                         'pca_scores': PCA_SCORES,
-                        **EXPECTED_QC_POP,
+                        'qc_pop': 'asj',
+                        **EXPECTED_ANC_PROBABILITIES,
                     }
                     for sample_id in ('HG00731', 'HG00732', 'HG00733', 'NA19675')
                 ],
@@ -110,8 +110,9 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
 
         expected_qc_pop_results = {
             'pca_scores': PCA_SCORES,
-            **EXPECTED_QC_POP,
+            **EXPECTED_ANC_PROBABILITIES,
             **{f'pop_PC{i + 1}': PCA_SCORES[i] for i in range(20)},
+            'gq_gen_anc': 'oth',
         }
         with task.output().open('r') as f:
             res = json.load(f)

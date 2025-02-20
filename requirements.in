@@ -1,6 +1,6 @@
 hail==0.2.133
 luigi==3.5.2
-gnomad==0.6.4
+gnomad==0.8.0
 aiofiles==24.1.0
 pydantic==2.8.2
-git+https://github.com/broadinstitute/gnomad_qc.git@main
+git+https://github.com/broadinstitute/gnomad_qc.git@v4.1

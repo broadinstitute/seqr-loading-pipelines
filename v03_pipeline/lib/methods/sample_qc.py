@@ -110,6 +110,7 @@ def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
         min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
         missing_label='oth',
     )
+    pop_pca_ht = pop_pca_ht.transmute(gq_gen_anc=pop_pca_ht.pop).drop('qc_pop')
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
