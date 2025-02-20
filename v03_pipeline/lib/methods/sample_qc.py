@@ -81,9 +81,7 @@ def annotate_filter_flags(
 def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
-    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
-        fit = pickle.load(f)  # noqa: S301
-
+    fit = _get_rf_model_fit()
     pop_pca_ht, _ = assign_population_pcs(
         scores,
         pc_cols=scores.scores,
@@ -102,3 +100,8 @@ def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
     loadings = hl.read_table(POP_PCA_LOADINGS_PATH)
     scores = pc_project(mt, loadings)
     return scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
+
+
+def _get_rf_model_fit():
+    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+        return pickle.load(f)  # noqa: S301

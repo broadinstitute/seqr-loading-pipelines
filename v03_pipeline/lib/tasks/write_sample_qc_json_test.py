@@ -30,6 +30,7 @@ EXPECTED_QC_POP = {
 
 
 class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
+    @patch('v03_pipeline.lib.methods.sample_qc._get_rf_model_fit')
     @patch('v03_pipeline.lib.methods.sample_qc.assign_population_pcs')
     @patch('v03_pipeline.lib.methods.sample_qc._get_pop_pca_scores')
     @patch('v03_pipeline.lib.tasks.write_sample_qc_json.WriteTDRMetricsFilesTask')
@@ -40,11 +41,13 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         mock_tdr_task: Mock,
         mock_get_pop_pca_scores: Mock,
         mock_assign_population_pcs: Mock,
+        mock_get_rf_model_fit: Mock,
     ) -> None:
         mock_tdr_task.return_value = MockCompleteTask()
         mock_tdr_table = Mock()
         mock_tdr_table.path = TEST_TDR_METRICS_FILE
         mock_ls_tdr_dir.return_value = [mock_tdr_table]
+        mock_get_rf_model_fit.return_value = None
         mock_get_pop_pca_scores.return_value = hl.Table.parallelize(
             [
                 {
