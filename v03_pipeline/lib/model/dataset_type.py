@@ -171,6 +171,10 @@ class DatasetType(StrEnum):
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
 
+    @property
+    def gt_stats_from_hl_call_stats(self) -> bool:
+        return self == DatasetType.SV
+
     def has_gencode_ensembl_to_refseq_id_mapping(
         self,
         reference_genome: ReferenceGenome,
@@ -264,7 +268,6 @@ class DatasetType(StrEnum):
                 sv.bothsides_support,
                 sv.cpx_intervals,
                 sv.end_locus,
-                sv.gt_stats,
                 sv.gnomad_svs,
                 sv.sorted_gene_consequences,
                 sv.start_locus,
@@ -362,6 +365,9 @@ class DatasetType(StrEnum):
             ],
             DatasetType.GCNV: [
                 gcnv.gt_stats,
+            ],
+            DatasetType.SV: [
+                sv.gt_stats,
             ],
         }.get(self, [])
 

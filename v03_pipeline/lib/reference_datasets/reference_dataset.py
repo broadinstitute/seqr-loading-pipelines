@@ -83,8 +83,12 @@ class BaseReferenceDataset:
                 reference_genome,
                 dataset_type,
             )
-            if not CONFIG[dataset].get(EXCLUDE_FROM_ANNOTATIONS_UPDATES, False)
+            if not dataset.exclude_from_annotations_updates
         }
+
+    @property
+    def exclude_from_annotations_updates(self) -> bool:
+        return CONFIG[self].get(EXCLUDE_FROM_ANNOTATIONS_UPDATES, False)
 
     @property
     def formatting_annotation(self) -> Callable | None:
