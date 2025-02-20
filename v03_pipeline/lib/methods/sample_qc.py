@@ -1,6 +1,5 @@
-import pickle
-
 import hail as hl
+import onnx
 from gnomad.sample_qc.ancestry import assign_population_pcs, pc_project
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
@@ -94,7 +93,9 @@ def annotate_filter_flags(
 def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
-    fit = _get_rf_model_fit()
+    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+        fit = onnx.load(f)
+
     pop_pca_ht, _ = assign_population_pcs(
         scores,
         pc_cols=scores.scores,
@@ -119,8 +120,3 @@ def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
     loadings = hl.read_table(POP_PCA_LOADINGS_PATH)
     scores = pc_project(mt, loadings)
     return scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
-
-
-def _get_rf_model_fit():
-    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
-        return pickle.load(f)  # noqa: S301

@@ -26,10 +26,16 @@ EXPECTED_ANC_PROBABILITIES = {
     'prob_nfe': 0.05,
     'prob_sas': 0.01,
 }
+TEST_ANCESTRY_IMPUTATION_MODEL_PATH = (
+    'v03_pipeline/var/test/ancestry_imputation_model.onnx'
+)
 
 
 class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
-    @patch('v03_pipeline.lib.methods.sample_qc._get_rf_model_fit')
+    @patch(
+        'v03_pipeline.lib.methods.sample_qc.ANCESTRY_RF_MODEL_PATH',
+        TEST_ANCESTRY_IMPUTATION_MODEL_PATH,
+    )
     @patch('v03_pipeline.lib.methods.sample_qc.assign_population_pcs')
     @patch('v03_pipeline.lib.methods.sample_qc._get_pop_pca_scores')
     @patch('v03_pipeline.lib.tasks.write_sample_qc_json.WriteTDRMetricsFilesTask')
@@ -40,13 +46,11 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         mock_tdr_task: Mock,
         mock_get_pop_pca_scores: Mock,
         mock_assign_population_pcs: Mock,
-        mock_get_rf_model_fit: Mock,
     ) -> None:
         mock_tdr_task.return_value = MockCompleteTask()
         mock_tdr_table = Mock()
         mock_tdr_table.path = TEST_TDR_METRICS_FILE
         mock_ls_tdr_dir.return_value = [mock_tdr_table]
-        mock_get_rf_model_fit.return_value = None
         mock_get_pop_pca_scores.return_value = hl.Table.parallelize(
             [
                 {
