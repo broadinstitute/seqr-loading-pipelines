@@ -22,7 +22,7 @@ class AddGnomadSVs(BaseMigration):
             PHASE_4_CALLSET_WITH_GNOMAD_V4,
             reference_genome=ReferenceGenome.GRCh38.value,
             force_bgz=True
-        ).annotate_rows(variant_id=mapping_ht.rsid).key_rows_by(mapping_ht.variant_id).rows()
+        ).key_rows_by('rsid').rows()
         ht = ht.annotate(
             **{
                 'info.GNOMAD_V4.1_TRUTH_VID': mapping_ht[ht.key][
