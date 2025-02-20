@@ -5,7 +5,16 @@ from v03_pipeline.lib.migration.base_migration import BaseMigration
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
-# This vcf was generated with the gatk command
+# This vcf was generated with the gatk command:
+#
+# gatk SVConcordance --verbosity DEBUG --evaluation /var/seqr/phase4.seqr.gnomad_v4_tmp.vcf.gz
+# --truth  /var/seqr/gnomad.v4.1.sv.sites.modified.vcf.bgz
+# --sequence-dictionary gs://gcp-public-data--broad-references/hg38/v0/Homo_sapiens_assembly38.dict
+#
+# Followed by:
+# bcftools annotate --rename-annots /var/seqr/remap /var/seqr/phase4.seqr.gnomad_v4_tmp.vcf.gz | bgzip > /var/seqr/phase4.seqr.gnomad_v4.vcf.gz
+#
+# where remap contains "INFO/TRUTH_VID GNOMAD_V4.1_TRUTH_VID"
 PHASE_4_CALLSET_WITH_GNOMAD_V4 = 'gs://seqr-loading-temp/phase4.seqr.gnomad_v4.vcf.gz'
 
 
