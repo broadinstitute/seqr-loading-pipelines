@@ -19,7 +19,7 @@ POP_PCA_LOADINGS_PATH = (
     'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
 )
 ANCESTRY_RF_MODEL_PATH = (
-    'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.pickle'
+    'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.onnx'
 )
 NUM_PCS = 20
 GNOMAD_POP_PROBABILITY_CUTOFFS = {
@@ -33,6 +33,7 @@ GNOMAD_POP_PROBABILITY_CUTOFFS = {
     'nfe': 0.75,
     'sas': 0.92,
 }
+POPULATION_MISSING_LABEL = 'oth'
 
 
 def call_sample_qc(
@@ -108,7 +109,7 @@ def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
     pop_pca_ht = assign_pop_with_per_pop_probs(
         pop_pca_ht,
         min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
-        missing_label='oth',
+        missing_label=POPULATION_MISSING_LABEL,
     )
     pop_pca_ht = pop_pca_ht.transmute(gq_gen_anc=pop_pca_ht.pop).drop('qc_pop')
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
