@@ -58,15 +58,13 @@ def deduplicate_merged_sv_concordance_calls(
     )
 
     # Then, collect into memory the necessary existing variants & the new variants
+    annotations_ht = annotations_ht.select('end_locus')
     existing_variants = {
         v.variant_id: v
         for v in (
-            annotations_ht.select('end_locus')
-            .filter_rows(
+            annotations_ht.filter(
                 duplicate_existing_variant_ids.contains(annotations_ht.variant_id),
-            )
-            .rows()
-            .collect()
+            ).collect()
         )
     }
     grouped_new_variants = _get_grouped_new_callset_variants(
