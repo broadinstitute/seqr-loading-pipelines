@@ -18,12 +18,18 @@ aiosignal==1.3.1
     # via aiohttp
 annotated-types==0.7.0
     # via pydantic
+annoy==1.17.3
+    # via gnomad
 appnope==0.1.4
     # via ipykernel
 asttokens==2.4.1
     # via stack-data
 attrs==24.2.0
-    # via aiohttp
+    # via
+    #   aiohttp
+    #   bioutils
+    #   hgvs
+    #   jsonschema
 avro==1.11.3
     # via hail
 azure-common==1.1.28
@@ -42,6 +48,15 @@ azure-mgmt-storage==20.1.0
     # via hail
 azure-storage-blob==12.23.1
     # via hail
+biocommons-seqrepo==0.6.9
+    # via
+    #   ga4gh-vrs
+    #   hgvs
+bioutils==0.6.1
+    # via
+    #   biocommons-seqrepo
+    #   ga4gh-vrs
+    #   hgvs
 bokeh==3.3.4
     # via hail
 boto3==1.35.53
@@ -53,6 +68,8 @@ botocore==1.35.53
     #   s3transfer
 cachetools==5.5.0
     # via google-auth
+canonicaljson==2.0.0
+    # via ga4gh-vrs
 certifi==2024.8.30
     # via
     #   msrest
@@ -64,11 +81,20 @@ cffi==1.17.1
 charset-normalizer==3.4.0
     # via requests
 click==8.1.7
-    # via typer
+    # via
+    #   ga4gh-vrs
+    #   typer
+coloredlogs==15.0.1
+    # via
+    #   biocommons-seqrepo
+    #   ga4gh-vrs
+    #   onnxruntime
 comm==0.2.2
     # via ipykernel
 commonmark==0.9.1
     # via rich
+configparser==7.1.0
+    # via hgvs
 contourpy==1.3.0
     # via bokeh
 cryptography==43.0.3
@@ -91,12 +117,20 @@ entrypoints==0.4
     # via jupyter-client
 executing==2.1.0
     # via stack-data
+flatbuffers==25.2.10
+    # via onnxruntime
 frozenlist==1.5.0
     # via
     #   aiohttp
     #   aiosignal
     #   hail
-gnomad==0.6.4
+ga4gh-vrs[extras]==0.8.4
+    # via
+    #   ga4gh-vrs
+    #   gnomad
+gnomad==0.8.0
+    # via -r requirements.in
+gnomad-qc @ git+https://github.com/broadinstitute/gnomad_qc.git@v4.1
     # via -r requirements.in
 google-auth==2.35.0
     # via
@@ -108,16 +142,26 @@ hail==0.2.133
     # via -r requirements.in
 hdbscan==0.8.39
     # via gnomad
+hgvs==1.5.4
+    # via ga4gh-vrs
+humanfriendly==10.0
+    # via coloredlogs
 humanize==4.11.0
     # via hail
 idna==3.10
     # via
     #   requests
     #   yarl
+importlib-metadata==8.6.1
+    # via yoyo-migrations
+inflection==0.5.1
+    # via python-jsonschema-objects
 ipykernel==6.22.0
     # via ipywidgets
 ipython==8.29.0
     # via
+    #   biocommons-seqrepo
+    #   hgvs
     #   ipykernel
     #   ipywidgets
 ipywidgets==8.0.6
@@ -142,6 +186,10 @@ joblib==1.4.2
     #   scikit-learn
 jproperties==2.1.2
     # via hail
+jsonschema==3.2.0
+    # via
+    #   ga4gh-vrs
+    #   python-jsonschema-objects
 jupyter-client==7.4.9
     # via ipykernel
 jupyter-core==5.7.2
@@ -154,12 +202,16 @@ lockfile==0.12.2
     # via python-daemon
 luigi==3.5.2
     # via -r requirements.in
+markdown==3.7
+    # via python-jsonschema-objects
 markupsafe==3.0.2
     # via jinja2
 matplotlib-inline==0.1.7
     # via
     #   ipykernel
     #   ipython
+mpmath==1.3.0
+    # via sympy
 msal==1.31.0
     # via
     #   azure-identity
@@ -177,32 +229,57 @@ nest-asyncio==1.6.0
     #   hail
     #   ipykernel
     #   jupyter-client
+networkx==3.4.2
+    # via gnomad
 numpy==1.26.4
     # via
     #   bokeh
     #   contourpy
+    #   ga4gh-vrs
     #   hail
     #   hdbscan
+    #   onnx
+    #   onnxconverter-common
+    #   onnxruntime
     #   pandas
+    #   patsy
     #   scikit-learn
     #   scipy
+    #   statsmodels
 oauthlib==3.2.2
     # via requests-oauthlib
+onnx==1.17.0
+    # via
+    #   gnomad
+    #   onnxconverter-common
+    #   skl2onnx
+onnxconverter-common==1.14.0
+    # via skl2onnx
+onnxruntime==1.20.1
+    # via gnomad
 orjson==3.10.10
     # via hail
 packaging==24.1
     # via
     #   bokeh
     #   ipykernel
+    #   onnxconverter-common
+    #   onnxruntime
     #   plotly
+    #   statsmodels
 pandas==2.2.3
     # via
     #   bokeh
     #   hail
+    #   statsmodels
 parsimonious==0.10.0
     # via hail
+parsley==1.3
+    # via hgvs
 parso==0.8.4
     # via jedi
+patsy==1.0.1
+    # via statsmodels
 pexpect==4.9.0
     # via ipython
 pillow==11.0.0
@@ -219,6 +296,10 @@ propcache==0.2.0
     # via yarl
 psutil==6.1.1
     # via ipykernel
+psycopg2==2.9.10
+    # via hgvs
+psycopg2-binary==2.9.10
+    # via ga4gh-vrs
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.3
@@ -244,7 +325,13 @@ pygments==2.18.0
     #   ipython
     #   rich
 pyjwt[crypto]==2.9.0
-    # via msal
+    # via
+    #   msal
+    #   pyjwt
+pyrsistent==0.20.0
+    # via jsonschema
+pysam==0.23.0
+    # via biocommons-seqrepo
 pyspark==3.5.3
     # via hail
 python-daemon==3.1.0
@@ -257,11 +344,14 @@ python-dateutil==2.9.0.post0
     #   pandas
 python-json-logger==2.0.7
     # via hail
+python-jsonschema-objects==0.4.6
+    # via ga4gh-vrs
 pytz==2024.2
     # via pandas
 pyyaml==6.0.2
     # via
     #   bokeh
+    #   ga4gh-vrs
     #   hail
 pyzmq==24.0.1
     # via
@@ -272,6 +362,9 @@ regex==2024.9.11
 requests==2.32.3
     # via
     #   azure-core
+    #   biocommons-seqrepo
+    #   bioutils
+    #   ga4gh-vrs
     #   hail
     #   msal
     #   msrest
@@ -292,29 +385,47 @@ scikit-learn==1.5.2
     # via
     #   gnomad
     #   hdbscan
+    #   skl2onnx
 scipy==1.11.4
     # via
     #   hail
     #   hdbscan
     #   scikit-learn
+    #   statsmodels
 setuptools==75.8.0
-    # via python-daemon
+    # via
+    #   jsonschema
+    #   python-daemon
 shellingham==1.5.4
     # via typer
 six==1.16.0
     # via
     #   asttokens
     #   azure-core
+    #   biocommons-seqrepo
+    #   hgvs
     #   jproperties
+    #   jsonschema
     #   python-dateutil
+    #   python-jsonschema-objects
+skl2onnx==1.18.0
+    # via gnomad
 slackclient==2.5.0
     # via gnomad
 sortedcontainers==2.4.0
     # via hail
+sqlparse==0.5.3
+    # via yoyo-migrations
 stack-data==0.6.3
     # via ipython
+statsmodels==0.14.4
+    # via gnomad
+sympy==1.13.3
+    # via onnxruntime
 tabulate==0.9.0
-    # via hail
+    # via
+    #   hail
+    #   yoyo-migrations
 tenacity==8.5.0
     # via
     #   luigi
@@ -327,6 +438,8 @@ tornado==6.4.2
     #   ipykernel
     #   jupyter-client
     #   luigi
+tqdm==4.67.1
+    # via biocommons-seqrepo
 traitlets==5.14.3
     # via
     #   comm
@@ -366,6 +479,10 @@ xyzservices==2024.9.0
     # via bokeh
 yarl==1.17.1
     # via aiohttp
+yoyo-migrations==8.2.0
+    # via biocommons-seqrepo
+zipp==3.21.0
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # protobuf
