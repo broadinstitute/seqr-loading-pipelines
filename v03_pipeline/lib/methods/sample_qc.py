@@ -1,12 +1,19 @@
-import pickle
-
 import hail as hl
-from gnomad.sample_qc.ancestry import assign_population_pcs, pc_project
+import onnx
+from gnomad.sample_qc.ancestry import (
+    apply_onnx_classification_model,
+    assign_population_pcs,
+    pc_project,
+)
 from gnomad.sample_qc.filtering import compute_stratified_metrics_filter
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad.utils.filtering import filter_to_autosomes
+from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
 from v03_pipeline.lib.model import SampleType
+
+GNOMAD_FILTER_MIN_AF = 0.001
+GNOMAD_FILTER_MIN_CALLRATE = 0.99
 
 CALLRATE_LOW_THRESHOLD = 0.85
 CONTAMINATION_UPPER_THRESHOLD = 5
@@ -16,8 +23,22 @@ WGS_CALLRATE_LOW_THRESHOLD = 30
 POP_PCA_LOADINGS_PATH = (
     'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
 )
-ANCESTRY_RF_MODEL_PATH = 'v03_pipeline/var/ancestry_imputation_model.pickle'
+ANCESTRY_RF_MODEL_PATH = (
+    'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.onnx'
+)
 NUM_PCS = 20
+GNOMAD_POP_PROBABILITY_CUTOFFS = {
+    'afr': 0.93,
+    'ami': 0.98,
+    'amr': 0.89,
+    'asj': 0.94,
+    'eas': 0.95,
+    'fin': 0.92,
+    'mid': 0.55,
+    'nfe': 0.75,
+    'sas': 0.92,
+}
+POPULATION_MISSING_LABEL = 'oth'
 
 HAIL_QC_METRICS = [
     'n_snp',
@@ -34,7 +55,6 @@ def call_sample_qc(
     tdr_metrics_ht: hl.Table,
     sample_type: SampleType,
 ):
-    mt = mt.annotate_cols(sample_type=sample_type)
     mt = mt.annotate_entries(
         GT=hl.case()
         .when(mt.GT.is_diploid(), hl.call(mt.GT[0], mt.GT[1], phased=False))
@@ -43,15 +63,16 @@ def call_sample_qc(
     )
     mt = annotate_filtered_callrate(mt)
     mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
-    mt = annotate_qc_pop(mt)
-    return run_hail_sample_qc(mt, sample_type)
+    mt = annotate_qc_gen_anc(mt)
+    mt = run_hail_sample_qc(mt, sample_type)
+    return mt.drop('qc_pop')
 
 
 def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
     filtered_mt = filter_rows_for_qc(
         mt,
-        min_af=0.001,
-        min_callrate=0.99,
+        min_af=GNOMAD_FILTER_MIN_AF,
+        min_callrate=GNOMAD_FILTER_MIN_CALLRATE,
         bi_allelic_only=True,
         snv_only=True,
         apply_hard_filters=False,
@@ -83,31 +104,33 @@ def annotate_filter_flags(
         filter_flags=hl.array(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
-    ).drop(
-        'contamination_rate',
-        'percent_bases_at_20x',
-        'mean_coverage',
-        'filtered_callrate',
     )
 
 
-def annotate_qc_pop(mt: hl.MatrixTable) -> hl.MatrixTable:
+def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
-    with open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
-        fit = pickle.load(f)  # noqa: S301
+    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+        fit = onnx.load(f)
 
     pop_pca_ht, _ = assign_population_pcs(
         scores,
         pc_cols=scores.scores,
         output_col='qc_pop',
         fit=fit,
+        apply_model_func=apply_onnx_classification_model,
     )
     pop_pca_ht = pop_pca_ht.key_by('s')
     scores = scores.annotate(
         **{f'pop_PC{i + 1}': scores.scores[i] for i in range(NUM_PCS)},
     ).drop('scores', 'known_pop')
     pop_pca_ht = pop_pca_ht.annotate(**scores[pop_pca_ht.key])
+    pop_pca_ht = assign_pop_with_per_pop_probs(
+        pop_pca_ht,
+        min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
+        missing_label=POPULATION_MISSING_LABEL,
+    )
+    pop_pca_ht = pop_pca_ht.transmute(gq_gen_anc=pop_pca_ht.pop)
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
