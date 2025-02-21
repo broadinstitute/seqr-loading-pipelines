@@ -1,6 +1,10 @@
 import hail as hl
 import onnx
-from gnomad.sample_qc.ancestry import assign_population_pcs, pc_project
+from gnomad.sample_qc.ancestry import (
+    apply_onnx_classification_model,
+    assign_population_pcs,
+    pc_project,
+)
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
@@ -101,6 +105,7 @@ def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
         pc_cols=scores.scores,
         output_col='qc_pop',
         fit=fit,
+        apply_model_func=apply_onnx_classification_model,
     )
     pop_pca_ht = pop_pca_ht.key_by('s')
     scores = scores.annotate(
