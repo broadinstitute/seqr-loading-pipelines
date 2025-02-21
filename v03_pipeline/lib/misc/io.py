@@ -11,8 +11,10 @@ import hailtop.fs as hfs
 
 from v03_pipeline.lib.misc.gcnv import parse_gcnv_genes
 from v03_pipeline.lib.misc.nested_field import parse_nested_field
+from v03_pipeline.lib.misc.sv import deduplicate_merged_sv_concordance_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model import DatasetType, Env, ReferenceGenome, Sex
+from v03_pipeline.lib.paths import variant_annotations_table_path
 
 BIALLELIC = 2
 B_PER_MB = 1 << 20  # 1024 * 1024
@@ -181,16 +183,24 @@ def import_callset(
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SV:
-        mt = mt.annotate_rows(
-            # Note, SEQR_INTERNAL_TRUTH_VID is an entirely optional
-            # and unvalidated field.  It will not be properly imported.
-            # It simply overrides the existing variant_id if present.
-            variant_id=(
-                hl.or_else(mt.info.SEQR_INTERNAL_TRUTH_VID, mt.rsid)
-                if hasattr(mt.info, 'SEQR_INTERNAL_TRUTH_VID')
-                else mt.rsid
-            ),
-        )
+        if hasattr(mt.info, 'SEQR_INTERNAL_TRUTH_VID'):
+            mt = deduplicate_merged_sv_concordance_calls(
+                mt,
+                hl.read_table(
+                    # Table must exist for SEQR_INTERNAL_TRUTH_VID to exist.
+                    variant_annotations_table_path(
+                        ReferenceGenome.GRCh38,
+                        DatasetType.GCNV,
+                    ),
+                ),
+            )
+            mt = mt.annotate_rows(
+                variant_id=hl.or_else(mt.info.SEQR_INTERNAL_TRUTH_VID, mt.rsid),
+            )
+        else:
+            mt = mt.annotate_rows(
+                variant_id=mt.rsid,
+            )
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
