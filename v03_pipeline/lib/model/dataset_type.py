@@ -396,3 +396,7 @@ class DatasetType(StrEnum):
     @property
     def overwrite_male_non_par_calls(self) -> None:
         return self == DatasetType.SV
+
+    @property
+    def re_key_by_seqr_internal_variant_id(self) -> None:
+        return self == DatasetType.SV

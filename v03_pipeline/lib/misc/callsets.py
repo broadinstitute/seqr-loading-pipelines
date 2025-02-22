@@ -1,9 +1,13 @@
 import functools
 
 import hail as hl
+import hailtop.fs as hfs
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
-from v03_pipeline.lib.paths import remapped_and_subsetted_callset_path
+from v03_pipeline.lib.paths import (
+    remapped_and_subsetted_callset_path,
+    variant_annotations_table_path,
+)
 
 
 def get_callset_ht(
@@ -56,6 +60,7 @@ def get_callset_mt(
 
 def get_additional_row_fields(
     mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     skip_check_sex_and_relatedness: bool,
 ):
@@ -72,6 +77,17 @@ def get_additional_row_fields(
         **(
             {'info.CALIBRATION_SENSITIVITY': hl.tarray(hl.tstr)}
             if hasattr(mt, 'info') and hasattr(mt.info, 'CALIBRATION_SENSITIVITY')
+            else {}
+        ),
+        **(
+            {'info.SEQR_INTERNAL_TRUTH_VID': hl.tstr}
+            if dataset_type.re_key_by_seqr_internal_variant_id
+            and hfs.exists(
+                variant_annotations_table_path(
+                    reference_genome,
+                    dataset_type,
+                ),
+            )
             else {}
         ),
     }
