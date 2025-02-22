@@ -398,5 +398,5 @@ class DatasetType(StrEnum):
         return self == DatasetType.SV
 
     @property
-    def re_key_by_seqr_internal_variant_id(self) -> None:
+    def re_key_by_seqr_internal_truth_vid(self) -> None:
         return self == DatasetType.SV

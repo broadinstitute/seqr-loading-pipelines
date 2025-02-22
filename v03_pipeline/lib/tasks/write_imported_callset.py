@@ -124,7 +124,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.dataset_type.has_multi_allelic_variants:
             # NB: throws SeqrValidationError
             mt = split_multi_hts(mt, self.skip_validation)
-        if self.dataset_type.re_key_by_seqr_internal_variant_id and hasattr(
+        if self.dataset_type.re_key_by_seqr_internal_truth_vid and hasattr(
             mt,
             'info.SEQR_INTERNAL_TRUTH_VID',
         ):
