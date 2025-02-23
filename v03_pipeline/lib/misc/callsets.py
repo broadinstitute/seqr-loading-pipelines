@@ -97,7 +97,7 @@ def get_additional_row_fields(
                         ),
                     ).globals.updates,
                 )
-                > 1,
+                > 0
             )
             else {}
         ),
