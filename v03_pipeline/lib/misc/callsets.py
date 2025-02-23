@@ -81,12 +81,23 @@ def get_additional_row_fields(
         ),
         **(
             {'info.SEQR_INTERNAL_TRUTH_VID': hl.tstr}
-            if dataset_type.re_key_by_seqr_internal_variant_id
+            if dataset_type.re_key_by_seqr_internal_truth_vid
             and hfs.exists(
                 variant_annotations_table_path(
                     reference_genome,
                     dataset_type,
                 ),
+            )
+            and hl.eval(
+                hl.len(
+                    hl.read_table(
+                        variant_annotations_table_path(
+                            reference_genome,
+                            dataset_type,
+                        ),
+                    ).globals.updates,
+                )
+                > 1,
             )
             else {}
         ),
