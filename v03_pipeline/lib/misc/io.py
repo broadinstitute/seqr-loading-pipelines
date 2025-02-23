@@ -182,14 +182,7 @@ def import_callset(
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SV:
         mt = mt.annotate_rows(
-            # Note, SEQR_INTERNAL_TRUTH_VID is an entirely optional
-            # and unvalidated field.  It will not be properly imported.
-            # It simply overrides the existing variant_id if present.
-            variant_id=(
-                hl.or_else(mt.info.SEQR_INTERNAL_TRUTH_VID, mt.rsid)
-                if hasattr(mt.info, 'SEQR_INTERNAL_TRUTH_VID')
-                else mt.rsid
-            ),
+            variant_id=mt.rsid,
         )
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
