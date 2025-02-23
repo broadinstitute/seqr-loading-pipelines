@@ -121,6 +121,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.dataset_type.has_multi_allelic_variants:
             # NB: throws SeqrValidationError
             mt = split_multi_hts(mt, self.skip_validation)
+
         # Special handling of variant-level filter annotation for VETs filters.
         # The annotations are present on the sample-level FT field but are
         # expected upstream on "filters".

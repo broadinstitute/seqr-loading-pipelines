@@ -29,7 +29,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     def complete(self) -> bool:
         reference_dataset_names = {
             rd.name
-            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
                 self.reference_genome,
                 self.dataset_type,
             )
@@ -65,18 +65,11 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_dataset_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
             )
-            if reference_dataset.is_keyed_by_interval:
-                formatting_fn = next(
-                    x
-                    for x in self.dataset_type.formatting_annotation_fns(
-                        self.reference_genome,
-                    )
-                    if x.__name__ == reference_dataset.name
-                )
+            if reference_dataset.formatting_annotation:
                 ht = ht.annotate(
                     **get_fields(
                         ht,
-                        [formatting_fn],
+                        [reference_dataset.formatting_annotation],
                         **{f'{reference_dataset.name}_ht': reference_dataset_ht},
                         **self.param_kwargs,
                     ),
@@ -103,4 +96,10 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
                 ht = ht.join(reference_dataset_ht, 'left')
 
-        return self.annotate_globals(ht)
+        return self.annotate_globals(
+            ht,
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )

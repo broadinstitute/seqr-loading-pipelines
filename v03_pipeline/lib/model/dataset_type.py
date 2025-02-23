@@ -121,10 +121,9 @@ class DatasetType(StrEnum):
                 'info.CPX_TYPE': hl.tstr,
                 'info.END': hl.tint32,
                 'info.END2': hl.tint32,
-                'info.gnomAD_V2_AF': hl.tfloat64,
-                'info.gnomAD_V2_SVID': hl.tstr,
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
+                'info.GNOMAD_V4.1_TRUTH_VID': hl.tstr,
                 'info.StrVCTVRE': hl.tstr,
                 'info.SVLEN': hl.tint32,
                 **sv.CONSEQ_PREDICTED_GENE_COLS,
@@ -387,3 +386,7 @@ class DatasetType(StrEnum):
                 sv.info,
             ],
         }[self]
+
+    @property
+    def overwrite_male_non_par_calls(self) -> None:
+        return self == DatasetType.SV
