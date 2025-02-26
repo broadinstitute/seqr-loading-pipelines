@@ -245,12 +245,19 @@ def import_imputed_sex(imputed_sex_path: str) -> hl.Table:
 
 
 def import_tdr_qc_metrics(file_path: str) -> hl.Table:
-    ht = hl.import_table(file_path)
+    ht = hl.import_table(
+        file_path,
+        types={
+            'contamination_rate': hl.tfloat32,
+            'percent_bases_at_20x': hl.tfloat32,
+            'mean_coverage': hl.tfloat32,
+        },
+    )
     ht = ht.select(
         s=ht.collaborator_sample_id,
-        contamination_rate=hl.parse_float32(ht.contamination_rate),
-        percent_bases_at_20x=hl.parse_float32(ht.percent_bases_at_20x),
-        mean_coverage=hl.parse_float32(ht.mean_coverage),
+        contamination_rate=ht.contamination_rate,
+        percent_bases_at_20x=ht.percent_bases_at_20x,
+        mean_coverage=ht.mean_coverage,
     )
     return ht.key_by(ht.s)
 

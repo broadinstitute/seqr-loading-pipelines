@@ -231,7 +231,7 @@ def sample_qc_json_path(
             dataset_type,
         ),
         'sample_qc',
-        f'{hashlib.sha256(callset_path.encode("utf8")).hexdigest()}.json',
+        f'{_callset_path_hash(callset_path)}.json',
     )
 
 
