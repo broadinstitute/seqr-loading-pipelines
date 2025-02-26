@@ -10,6 +10,7 @@ from gnomad.sample_qc.pipeline import filter_rows_for_qc
 from gnomad.utils.filtering import filter_to_autosomes
 from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
+from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model import SampleType
 
 GNOMAD_FILTER_MIN_AF = 0.001
@@ -142,7 +143,7 @@ def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
 
 def run_hail_sample_qc(mt: hl.MatrixTable, sample_type: SampleType) -> hl.MatrixTable:
     mt = filter_to_autosomes(mt)
-    mt = hl.split_multi_hts(mt)
+    mt = split_multi_hts(mt, True)
     mt = hl.sample_qc(mt)
     mt = mt.annotate_cols(
         sample_qc=mt.sample_qc.annotate(
