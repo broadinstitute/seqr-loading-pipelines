@@ -45,4 +45,8 @@ class AddGnomadSVs(BaseMigration):
         )
         gnomad_svs_ht = ReferenceDataset.gnomad_svs.get_ht(ReferenceGenome.GRCh38)
         ht = ht.annotate(gnomad_svs=sv.gnomad_svs(ht, gnomad_svs_ht))
-        return ht.drop('info.GNOMAD_V4.1_TRUTH_VID')
+        ht = ht.drop('info.GNOMAD_V4.1_TRUTH_VID')
+        return ht.annotate_globals(
+            versions=ht.globals.versions.annotate(gnomad_svs='1.0'),
+            enums=ht.globals.enums.annotate(gnomad_svs=hl.Struct()),
+        )
