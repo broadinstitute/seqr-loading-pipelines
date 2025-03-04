@@ -31,6 +31,9 @@ def validate_allele_type(
     **_: Any,
 ) -> None:
     ht = t.rows() if isinstance(t, hl.MatrixTable) else t
+    if not hasattr(ht, 'alleles'):
+        return
+
     ht = ht.filter(
         dataset_type.invalid_allele_types.contains(
             hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
