@@ -4,9 +4,11 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     relatedness_check_tsv_path,
+    sample_qc_json_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -54,6 +56,7 @@ class WriteMetadataForRunTask(luigi.Task):
                 self.dataset_type,
                 self.callset_path,
             ),
+            'sample_qc': {},
         }
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
@@ -67,6 +70,20 @@ class WriteMetadataForRunTask(luigi.Task):
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
                 }
-
+        if (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
+                self.reference_genome,
+            )
+        ):
+            with open(
+                sample_qc_json_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                ),
+            ) as f:
+                metadata_json['sample_qc'] = json.load(f)
         with self.output().open('w') as f:
             json.dump(metadata_json, f)
