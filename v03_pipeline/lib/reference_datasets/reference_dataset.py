@@ -149,7 +149,7 @@ class BaseReferenceDataset:
         if enum_selects:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
-        for dataset_type in self.dataset_types(reference_genome)
+        for dataset_type in self.dataset_types(reference_genome):
             validate_allele_type(ht, dataset_type)
         validate_no_duplicate_variants(ht, reference_genome, DatasetType.SNV_INDEL)
         # NB: we do not filter with "filter" here
