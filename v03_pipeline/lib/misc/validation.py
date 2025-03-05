@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from typing import Any
 
 import hail as hl
@@ -28,29 +27,25 @@ class SeqrValidationError(Exception):
 
 def validate_allele_type(
     t: hl.Table | hl.MatrixTable,
-    dataset_type: DatasetType | Iterable[DatasetType],
+    dataset_type: DatasetType,
     **_: Any,
 ) -> None:
     ht = t.rows() if isinstance(t, hl.MatrixTable) else t
-    dataset_types = (
-        [dataset_type] if isinstance(dataset_type, DatasetType) else dataset_type
+    ht = ht.filter(
+        dataset_type.invalid_allele_types.contains(
+            hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
+        ),
     )
-    for dataset_type in dataset_types:
-        ht = ht.filter(
-            dataset_type.invalid_allele_types.contains(
-                hl.numeric_allele_type(ht.alleles[0], ht.alleles[1]),
-            ),
+    if ht.count() > 0:
+        collected_alleles = sorted(
+            [tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))],
         )
-        if ht.count() > 0:
-            collected_alleles = sorted(
-                [tuple(x) for x in ht.aggregate(hl.agg.collect_as_set(ht.alleles))],
-            )
-            # Handle case where all invalid alleles are NON_REF, indicating a gvcf:
-            if all('<NON_REF>' in alleles for alleles in collected_alleles):
-                msg = 'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.'
-                raise SeqrValidationError(msg)
-            msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles[:10]}'
+        # Handle case where all invalid alleles are NON_REF, indicating a gvcf:
+        if all('<NON_REF>' in alleles for alleles in collected_alleles):
+            msg = 'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.'
             raise SeqrValidationError(msg)
+        msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles[:10]}'
+        raise SeqrValidationError(msg)
 
 
 def validate_no_duplicate_variants(
