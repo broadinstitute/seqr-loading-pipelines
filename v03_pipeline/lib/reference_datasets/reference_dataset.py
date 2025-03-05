@@ -151,7 +151,7 @@ class BaseReferenceDataset:
         ht = filter_contigs(ht, reference_genome)
         for dataset_type in self.dataset_types(reference_genome):
             validate_allele_type(ht, dataset_type)
-        validate_no_duplicate_variants(ht, reference_genome, DatasetType.SNV_INDEL)
+            validate_no_duplicate_variants(ht, reference_genome, dataset_type)
         # NB: we do not filter with "filter" here
         # ReferenceDatasets are DatasetType agnostic and that
         # filter is only used at annotation time.

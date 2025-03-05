@@ -21,6 +21,12 @@ class GnomadSVsTest(unittest.TestCase):
             [
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_1a45f73a',
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=10434,
+                        reference_genome=ReferenceGenome.GRCh38,
+                    ),
+                    alleles=['N', '<BND>'],
                     AF=0.11413399875164032,
                     AC=8474,
                     AN=74246,
@@ -29,6 +35,12 @@ class GnomadSVsTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_3fa36917',
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=10440,
+                        reference_genome=ReferenceGenome.GRCh38,
+                    ),
+                    alleles=['N', '<BND>'],
                     AF=0.004201000090688467,
                     AC=466,
                     AN=110936,
@@ -37,6 +49,12 @@ class GnomadSVsTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_7bbf34b5',
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=10464,
+                        reference_genome=ReferenceGenome.GRCh38,
+                    ),
+                    alleles=['N', '<BND>'],
                     AF=0.03698499873280525,
                     AC=3119,
                     AN=84332,
@@ -45,6 +63,12 @@ class GnomadSVsTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_933a2971',
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=10450,
+                        reference_genome=ReferenceGenome.GRCh38,
+                    ),
+                    alleles=['N', '<BND>'],
                     AF=0.3238990008831024,
                     AC=21766,
                     AN=67200,
@@ -53,6 +77,12 @@ class GnomadSVsTest(unittest.TestCase):
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_DUP_chr1_01c2781c',
+                    locus=hl.Locus(
+                        contig='chr1',
+                        position=10000,
+                        reference_genome=ReferenceGenome.GRCh38,
+                    ),
+                    alleles=['N', '<DUP>'],
                     AF=0.0019970000721514225,
                     AC=139,
                     AN=69594,
