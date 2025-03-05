@@ -85,7 +85,7 @@ class ValidationTest(unittest.TestCase):
             "Alleles with invalid AlleleType are present in the callset: \\[\\('A', '-'\\), \\('A', '<NON_REF>'\\)\\]",
             validate_allele_type,
             mt,
-            DatasetType.SNV_INDEL,
+            [DatasetType.SNV_INDEL],
         )
 
         mt = (
@@ -119,7 +119,7 @@ class ValidationTest(unittest.TestCase):
             'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.',
             validate_allele_type,
             mt,
-            DatasetType.SNV_INDEL,
+            [DatasetType.SNV_INDEL],
         )
 
     def test_validate_imputed_sex_ploidy(self) -> None:
