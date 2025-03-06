@@ -14,5 +14,4 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
         N_HET=ht.info.N_HET,
         N_HOMREF=ht.info.N_HOMREF,
     )
-    ht = ht.key_by('KEY')
-    return ht.drop('locus', 'alleles')
+    return ht.key_by('KEY')
