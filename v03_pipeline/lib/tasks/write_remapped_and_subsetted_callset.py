@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.family_loading_failures import (
+    get_families_failed_imputed_sex_ploidy,
     get_families_failed_missing_samples,
     get_families_failed_relatedness_check,
     get_families_failed_sex_check,
@@ -109,6 +110,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         )
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
+        families_failed_imputed_sex_ploidy = {}
         if (
             FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
@@ -134,12 +136,21 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 sex_check_ht,
                 remap_lookup,
             )
+            families_failed_imputed_sex_ploidy = get_families_failed_imputed_sex_ploidy(
+                callset_mt,
+                sex_check_ht,
+                families
+                - families_failed_missing_samples.keys()
+                - families_failed_relatedness_check.keys()
+                - families_failed_sex_check.keys(),
+            )
 
         loadable_families = (
             families
             - families_failed_missing_samples.keys()
             - families_failed_relatedness_check.keys()
             - families_failed_sex_check.keys()
+            - families_failed_imputed_sex_ploidy.keys()
         )
         if not len(loadable_families):
             msg = 'All families failed validation checks'
@@ -154,6 +165,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                             families_failed_relatedness_check,
                         ),
                         'sex_check': format_failures(families_failed_sex_check),
+                        'ploidy_check': format_failures(
+                            families_failed_imputed_sex_ploidy,
+                        ),
                     },
                 },
             )
@@ -201,6 +215,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 ),
                 sex_check=(
                     format_failures(families_failed_sex_check)
+                    or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
+                ),
+                ploidy_check=(
+                    format_failures(families_failed_imputed_sex_ploidy)
                     or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
                 ),
             ),
