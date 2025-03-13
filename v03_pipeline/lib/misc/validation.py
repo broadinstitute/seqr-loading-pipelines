@@ -2,6 +2,7 @@ from typing import Any
 
 import hail as hl
 
+from v03_pipeline.lib.misc.pedigree import Family
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -132,6 +133,7 @@ def validate_imputed_sex_ploidy(
     mt: hl.MatrixTable,
     # NB: sex_check_ht will be undefined if sex checking is disabled for the run
     sex_check_ht: hl.Table | None = None,
+    pedigree_families: set[Family] | None = None,
     **_: Any,
 ) -> None:
     if not sex_check_ht:
@@ -161,8 +163,15 @@ def validate_imputed_sex_ploidy(
     discrepant_samples = mt.aggregate_cols(
         hl.agg.filter(mt.discrepant, hl.agg.collect_as_set(mt.s)),
     )
-    if discrepant_samples:
-        sorted_discrepant_samples = sorted(discrepant_samples)
+    loading_samples = (
+        {sample_id for family in pedigree_families for sample_id in family.samples}
+        if pedigree_families
+        else set()
+    )
+    discrepant_loading_samples = discrepant_samples & loading_samples
+
+    if discrepant_loading_samples:
+        sorted_discrepant_samples = sorted(discrepant_loading_samples)
         msg = f'Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : {sorted_discrepant_samples[:10]}'
         raise SeqrValidationError(
             msg,

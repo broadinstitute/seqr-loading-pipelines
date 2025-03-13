@@ -2,6 +2,7 @@ import unittest
 
 import hail as hl
 
+from v03_pipeline.lib.misc.pedigree import Family, Sample
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     validate_allele_type,
@@ -11,7 +12,7 @@ from v03_pipeline.lib.misc.validation import (
     validate_no_duplicate_variants,
     validate_sample_type,
 )
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType, Sex
 
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
@@ -171,7 +172,20 @@ class ValidationTest(unittest.TestCase):
             .key_rows_by('locus')
             .key_cols_by('s')
         )
-        validate_imputed_sex_ploidy(mt, sex_check_ht)
+        pedigree_families = {
+            Family(
+                family_guid='',
+                samples={
+                    female_sample: Sample(female_sample, Sex.FEMALE),
+                    male_sample_1: Sample(male_sample_1, Sex.MALE),
+                    x0_sample: Sample(x0_sample, Sex.X0),
+                    xxy_sample: Sample(xxy_sample, Sex.XXY),
+                    xyy_sample: Sample(xyy_sample, Sex.XYY),
+                    xxx_sample: Sample(xxx_sample, Sex.XXX),
+                },
+            ),
+        }
+        validate_imputed_sex_ploidy(mt, sex_check_ht, pedigree_families)
 
         # All calls on Y chromosome are valid
         mt = (
@@ -211,7 +225,7 @@ class ValidationTest(unittest.TestCase):
             .key_rows_by('locus')
             .key_cols_by('s')
         )
-        validate_imputed_sex_ploidy(mt, sex_check_ht)
+        validate_imputed_sex_ploidy(mt, sex_check_ht, pedigree_families)
 
         # Invalid X chromosome case
         mt = (
@@ -259,7 +273,11 @@ class ValidationTest(unittest.TestCase):
             validate_imputed_sex_ploidy,
             mt,
             sex_check_ht,
+            pedigree_families,
         )
+
+        # Invalid X chromosome case, but invalid samples are missing from pedigree
+        validate_imputed_sex_ploidy(mt, sex_check_ht, pedigree_families=set())
 
     def test_validate_imported_field_types(self) -> None:
         mt = hl.read_matrix_table(TEST_MITO_MT)

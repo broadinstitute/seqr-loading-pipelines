@@ -2,6 +2,8 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.misc.io import import_pedigree
+from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
     validate_allele_type,
@@ -19,7 +21,7 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
-from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget, RawFileTask
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset import (
     UpdatedReferenceDatasetTask,
 )
@@ -52,6 +54,10 @@ class ValidateCallsetTask(BaseUpdateTask):
                     self.callset_path,
                 ),
             )
+            deps['pedigree_families'] = parse_pedigree_ht_to_families(
+                import_pedigree(self.input()[1].path),
+            )
+
         return deps
 
     def complete(self) -> luigi.Target:
@@ -74,6 +80,7 @@ class ValidateCallsetTask(BaseUpdateTask):
     def requires(self) -> list[luigi.Task]:
         requirements = [
             self.clone(WriteImportedCallsetTask),
+            RawFileTask(self.project_pedigree_paths[self.project_i]),
         ]
         if not self.skip_validation and self.dataset_type.can_run_validation:
             requirements = [
