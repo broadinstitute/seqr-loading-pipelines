@@ -28,16 +28,6 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
-    def get_validation_dependencies(self) -> dict[str, hl.Table]:
-        deps = {}
-        deps['coding_and_noncoding_variants_ht'] = hl.read_table(
-            valid_reference_dataset_path(
-                self.reference_genome,
-                ReferenceDataset.gnomad_coding_and_noncoding,
-            ),
-        )
-        return deps
-
     def complete(self) -> luigi.Target:
         if super().complete():
             mt = hl.read_matrix_table(self.output().path)
