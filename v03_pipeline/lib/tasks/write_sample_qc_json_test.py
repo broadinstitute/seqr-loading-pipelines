@@ -112,11 +112,11 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         self.assertTrue(task)
         self.assertTrue(hfs.exists(task.output().path))
 
-        expected_gq_gen_anc_results = {
+        expected_qc_gen_anc_results = {
             'pca_scores': PCA_SCORES,
             **EXPECTED_ANC_PROBABILITIES,
             **{f'pop_PC{i + 1}': PCA_SCORES[i] for i in range(20)},
-            'gq_gen_anc': 'oth',
+            'qc_gen_anc': 'oth',
         }
         with task.output().open('r') as f:
             res = json.load(f)
@@ -129,7 +129,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 93.69000244140625,
                 'mean_coverage': 29.309999465942383,
                 'filter_flags': ['contamination', 'coverage'],
-                **expected_gq_gen_anc_results,
+                **expected_qc_gen_anc_results,
             },
         )
         self.assertCountEqual(
@@ -140,7 +140,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 90.0,
                 'mean_coverage': 28.0,
                 'filter_flags': ['coverage'],
-                **expected_gq_gen_anc_results,
+                **expected_qc_gen_anc_results,
             },
         )
         self.assertCountEqual(
@@ -151,7 +151,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 85.0,
                 'mean_coverage': 36.400001525878906,
                 'filter_flags': ['contamination'],
-                **expected_gq_gen_anc_results,
+                **expected_qc_gen_anc_results,
             },
         )
         self.assertCountEqual(
@@ -162,6 +162,6 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 80.0,
                 'mean_coverage': 30.0,
                 'filter_flags': [],
-                **expected_gq_gen_anc_results,
+                **expected_qc_gen_anc_results,
             },
         )

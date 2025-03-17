@@ -52,7 +52,7 @@ def call_sample_qc(
     )
     mt = annotate_filtered_callrate(mt)
     mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
-    return annotate_gq_gen_anc(mt)
+    return annotate_qc_gen_anc(mt)
 
 
 def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
@@ -94,7 +94,7 @@ def annotate_filter_flags(
     )
 
 
-def annotate_gq_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
+def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
     with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
@@ -117,7 +117,7 @@ def annotate_gq_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
         min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
         missing_label=POPULATION_MISSING_LABEL,
     )
-    pop_pca_ht = pop_pca_ht.transmute(gq_gen_anc=pop_pca_ht.pop).drop('qc_pop')
+    pop_pca_ht = pop_pca_ht.transmute(qc_gen_anc=pop_pca_ht.pop).drop('qc_pop')
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
