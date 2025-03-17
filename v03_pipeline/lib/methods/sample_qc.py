@@ -64,7 +64,7 @@ def call_sample_qc(
     )
     mt = annotate_filtered_callrate(mt)
     mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
-    mt = annotate_gq_gen_anc(mt)
+    mt = annotate_qc_gen_anc(mt)
     return run_hail_sample_qc(mt, sample_type)
 
 
@@ -107,7 +107,7 @@ def annotate_filter_flags(
     )
 
 
-def annotate_gq_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
+def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
     mt = mt.select_entries('GT')
     scores = _get_pop_pca_scores(mt)
     with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
@@ -130,7 +130,7 @@ def annotate_gq_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
         min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
         missing_label=POPULATION_MISSING_LABEL,
     )
-    pop_pca_ht = pop_pca_ht.transmute(gq_gen_anc=pop_pca_ht.pop).drop('qc_pop')
+    pop_pca_ht = pop_pca_ht.transmute(qc_gen_anc=pop_pca_ht.pop).drop('qc_pop')
     return mt.annotate_cols(**pop_pca_ht[mt.col_key])
 
 
@@ -155,7 +155,7 @@ def run_hail_sample_qc(mt: hl.MatrixTable, sample_type: SampleType) -> hl.Matrix
 
     strat_ht = mt.cols()
     qc_metrics = {metric: strat_ht.sample_qc[metric] for metric in sample_qc_metrics}
-    strata = {'gq_gen_anc': strat_ht.gq_gen_anc}
+    strata = {'qc_gen_anc': strat_ht.qc_gen_anc}
 
     metric_ht = compute_stratified_metrics_filter(strat_ht, qc_metrics, strata)
     metric_ht = metric_ht.annotate(
