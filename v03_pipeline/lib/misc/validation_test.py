@@ -173,7 +173,7 @@ class ValidationTest(unittest.TestCase):
         )
         self.assertRaisesRegex(
             SeqrValidationError,
-            "Found variants with multiple AD lengths \\(first 10, if applicable\\): \\{'1-2-A-TC-TG': \\{1, 3\\}, '1-3-A-TTT': \\{1, 2\\}\\}",
+            "Found variants with unequal Allele Depth array lengths over samples \\(first 10, if applicable\\): \\{'1-2-A-TC-TG': \\{1, 3\\}, '1-3-A-TTT': \\{1, 2\\}\\}",
             validate_allele_depth_length,
             mt,
             ReferenceGenome.GRCh38,
