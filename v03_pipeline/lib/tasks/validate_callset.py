@@ -4,6 +4,7 @@ import luigi.util
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
+    validate_allele_depth_length,
     validate_allele_type,
     validate_expected_contig_frequency,
     validate_imputed_sex_ploidy,
@@ -123,6 +124,7 @@ class ValidateCallsetTask(BaseUpdateTask):
             )
         validation_dependencies = self.get_validation_dependencies()
         for validation_f in [
+            validate_allele_depth_length,
             validate_allele_type,
             validate_imputed_sex_ploidy,
             validate_no_duplicate_variants,
