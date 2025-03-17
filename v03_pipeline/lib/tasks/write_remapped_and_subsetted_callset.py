@@ -129,20 +129,20 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 relatedness_check_ht,
                 remap_lookup,
             )
-            families_failed_sex_check = get_families_failed_sex_check(
+            families_failed_imputed_sex_ploidy = get_families_failed_imputed_sex_ploidy(
                 families
                 - families_failed_missing_samples.keys()
                 - families_failed_relatedness_check.keys(),
-                sex_check_ht,
-                remap_lookup,
-            )
-            families_failed_imputed_sex_ploidy = get_families_failed_imputed_sex_ploidy(
                 callset_mt,
                 sex_check_ht,
+            )
+            families_failed_sex_check = get_families_failed_sex_check(
                 families
                 - families_failed_missing_samples.keys()
                 - families_failed_relatedness_check.keys()
-                - families_failed_sex_check.keys(),
+                - families_failed_imputed_sex_ploidy.keys(),
+                sex_check_ht,
+                remap_lookup,
             )
 
         loadable_families = (

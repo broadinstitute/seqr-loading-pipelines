@@ -177,9 +177,9 @@ def get_families_failed_sex_check(
 
 
 def get_families_failed_imputed_sex_ploidy(
+    families: set[Family],
     mt: hl.MatrixTable,
     sex_check_ht: hl.Table,
-    families: set[Family],
 ) -> dict[Family, str]:
     mt = mt.select_cols(
         discrepant=(

@@ -317,9 +317,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             .key_cols_by('s')
         )
         failed_families = get_families_failed_imputed_sex_ploidy(
+            families,
             mt,
             sex_check_ht,
-            families,
         )
         self.assertDictEqual(failed_families, {})
 
@@ -362,9 +362,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             .key_cols_by('s')
         )
         failed_families = get_families_failed_imputed_sex_ploidy(
+            families,
             mt,
             sex_check_ht,
-            families,
         )
         self.assertDictEqual(failed_families, {})
 
@@ -409,9 +409,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             .key_cols_by('s')
         )
         failed_families = get_families_failed_imputed_sex_ploidy(
+            families,
             mt,
             sex_check_ht,
-            families,
         )
         self.assertCountEqual(
             failed_families.values(),
@@ -428,9 +428,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
             ),
         }
         failed_families = get_families_failed_imputed_sex_ploidy(
+            families,
             mt,
             sex_check_ht,
-            families,
         )
         self.assertCountEqual(
             failed_families.values(),

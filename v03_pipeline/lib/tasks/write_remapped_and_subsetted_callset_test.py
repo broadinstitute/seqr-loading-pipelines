@@ -237,123 +237,84 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             self.assertDictEqual(
                 json.load(f),
                 {
-                    'project_guids': [
-                        'R0114_project4',
-                    ],
-                    'error_messages': [
-                        'All families failed validation checks',
-                    ],
+                    'project_guids': ['R0114_project4'],
+                    'error_messages': ['All families failed validation checks'],
                     'failed_family_samples': {
                         'missing_samples': {
                             'efg_1': {
-                                'samples': [
-                                    'NA99999_1',
-                                ],
-                                'reasons': [
-                                    "Missing samples: {'NA99999_1'}",
-                                ],
+                                'samples': ['NA99999_1'],
+                                'reasons': ["Missing samples: {'NA99999_1'}"],
                             },
                         },
                         'relatedness_check': {},
                         'sex_check': {
-                            '789_1': {
-                                'samples': [
-                                    'NA20875_1',
-                                ],
+                            '890_1': {
+                                'samples': ['NA20876_1'],
                                 'reasons': [
-                                    'Sample NA20875_1 has pedigree sex M but imputed sex F',
+                                    'Sample NA20876_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
                             '456_1': {
-                                'samples': [
-                                    'NA20870_1',
-                                ],
+                                'samples': ['NA20870_1'],
                                 'reasons': [
                                     'Sample NA20870_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
                             '123_1': {
-                                'samples': [
-                                    'NA19675_1',
-                                ],
+                                'samples': ['NA19675_1'],
                                 'reasons': [
                                     'Sample NA19675_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
-                            'cde_1': {
-                                'samples': [
-                                    'NA20881_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA20881_1 has pedigree sex F but imputed sex M',
-                                ],
-                            },
-                            '901_1': {
-                                'samples': [
-                                    'NA20877_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA20877_1 has pedigree sex M but imputed sex F',
-                                ],
-                            },
                             '678_1': {
-                                'samples': [
-                                    'NA20874_1',
-                                ],
+                                'samples': ['NA20874_1'],
                                 'reasons': [
                                     'Sample NA20874_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
-                            '345_1': {
-                                'samples': [
-                                    'NA19679_1',
+                            '789_1': {
+                                'samples': ['NA20875_1'],
+                                'reasons': [
+                                    'Sample NA20875_1 has pedigree sex M but imputed sex F',
                                 ],
+                            },
+                            '901_1': {
+                                'samples': ['NA20877_1'],
+                                'reasons': [
+                                    'Sample NA20877_1 has pedigree sex M but imputed sex F',
+                                ],
+                            },
+                            '345_1': {
+                                'samples': ['NA19679_1'],
                                 'reasons': [
                                     'Sample NA19679_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
-                            '890_1': {
-                                'samples': [
-                                    'NA20876_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA20876_1 has pedigree sex M but imputed sex F',
-                                ],
-                            },
                             'def_1': {
-                                'samples': [
-                                    'NA20885_1',
-                                ],
+                                'samples': ['NA20885_1'],
                                 'reasons': [
                                     'Sample NA20885_1 has pedigree sex M but imputed sex F',
                                 ],
                             },
+                        },
+                        'ploidy_check': {
+                            'cde_1': {
+                                'samples': ['NA20881_1'],
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20881_1']",
+                            },
                             '234_1': {
-                                'samples': [
-                                    'NA19678_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA19678_1 has pedigree sex F but imputed sex M',
-                                ],
+                                'samples': ['NA19678_1'],
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA19678_1']",
                             },
                             'bcd_1': {
-                                'samples': [
-                                    'NA20878_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA20878_1 has pedigree sex F but imputed sex M',
-                                ],
+                                'samples': ['NA20878_1'],
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20878_1']",
                             },
                             '567_1': {
-                                'samples': [
-                                    'NA20872_1',
-                                ],
-                                'reasons': [
-                                    'Sample NA20872_1 has pedigree sex F but imputed sex M',
-                                ],
+                                'samples': ['NA20872_1'],
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20872_1']",
                             },
                         },
-                        'ploidy_check': {},
                     },
                 },
             )
