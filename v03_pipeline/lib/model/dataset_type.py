@@ -36,7 +36,7 @@ class DatasetType(StrEnum):
         if self in {DatasetType.GCNV, DatasetType.SV}:
             return lambda s: s.variant_id
         return (
-            lambda s: f'{s.locus.contig if reference_genome == ReferenceGenome.GRCh37 else s.locus.contig.replace("chr", "")}-{s.locus.position}-{s.alleles[0]}-{s.alleles[1]}'
+            lambda s: f'{s.locus.contig if reference_genome == ReferenceGenome.GRCh37 else s.locus.contig.replace("chr", "")}-{s.locus.position}-{"-".join(s.alleles)}'
         )
 
     @property
