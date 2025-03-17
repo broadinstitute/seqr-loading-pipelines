@@ -47,6 +47,26 @@ def validate_allele_type(
         raise SeqrValidationError(msg)
 
 
+def validate_allele_depth_length(
+    mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    **_: Any,
+) -> None:
+    ht = mt.select_rows(
+        found_ad_lengths=hl.agg.collect_as_set(hl.len(mt.AD)).remove(
+            hl.missing(hl.tint32),
+        ),
+    ).rows()
+    ht = ht.filter(
+        hl.len(ht.found_ad_lengths) > 1,
+    )
+    if ht.count() > 0:
+        variant_format = dataset_type.table_key_format_fn(reference_genome)
+        msg = f'Found variants with unequal Allele Depth array lengths over samples (first 10, if applicable): {({variant_format(v): v.found_ad_lengths for v in ht.take(10)})}'
+        raise SeqrValidationError(msg)
+
+
 def validate_no_duplicate_variants(
     t: hl.Table | hl.MatrixTable,
     reference_genome: ReferenceGenome,
