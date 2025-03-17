@@ -112,7 +112,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         self.assertTrue(task)
         self.assertTrue(hfs.exists(task.output().path))
 
-        expected_qc_gen_anc_results = {
+        expected_gq_gen_anc_results = {
             'pca_scores': PCA_SCORES,
             **EXPECTED_ANC_PROBABILITIES,
             **{f'pop_PC{i + 1}': PCA_SCORES[i] for i in range(20)},
@@ -129,7 +129,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 93.69000244140625,
                 'mean_coverage': 29.309999465942383,
                 'filter_flags': ['contamination', 'coverage'],
-                **expected_qc_gen_anc_results,
+                **expected_gq_gen_anc_results,
                 'sample_qc.call_rate': 0.9666666666666667,
                 'sample_qc.n_called': 29,
                 'sample_qc.n_not_called': 1,
@@ -170,7 +170,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 90.0,
                 'mean_coverage': 28.0,
                 'filter_flags': ['coverage'],
-                **expected_qc_gen_anc_results,
+                **expected_gq_gen_anc_results,
                 'sample_qc.call_rate': 0.9666666666666667,
                 'sample_qc.n_called': 29,
                 'sample_qc.n_not_called': 1,
@@ -211,7 +211,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 85.0,
                 'mean_coverage': 36.400001525878906,
                 'filter_flags': ['contamination'],
-                **expected_qc_gen_anc_results,
+                **expected_gq_gen_anc_results,
                 'sample_qc.call_rate': 1.0,
                 'sample_qc.n_called': 30,
                 'sample_qc.n_not_called': 0,
@@ -252,7 +252,7 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
                 'percent_bases_at_20x': 80.0,
                 'mean_coverage': 30.0,
                 'filter_flags': [],
-                **expected_qc_gen_anc_results,
+                **expected_gq_gen_anc_results,
                 'sample_qc.call_rate': 0.9666666666666667,
                 'sample_qc.n_called': 29,
                 'sample_qc.n_not_called': 1,
