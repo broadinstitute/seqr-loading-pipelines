@@ -48,6 +48,7 @@ class WriteMetadataForRunTask(luigi.Task):
                 'missing_samples': {},
                 'relatedness_check': {},
                 'sex_check': {},
+                'ploidy_check': {},
             },
             'relatedness_check_file_path': relatedness_check_tsv_path(
                 self.reference_genome,
@@ -62,7 +63,12 @@ class WriteMetadataForRunTask(luigi.Task):
                 **collected_globals['family_samples'],
                 **metadata_json['family_samples'],
             }
-            for key in ['missing_samples', 'relatedness_check', 'sex_check']:
+            for key in [
+                'missing_samples',
+                'relatedness_check',
+                'sex_check',
+                'ploidy_check',
+            ]:
                 metadata_json['failed_family_samples'][key] = {
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
