@@ -55,7 +55,9 @@ def validate_allele_depth_length(
     **_: Any,
 ) -> None:
     ht = mt.select_rows(
-        found_ad_lengths=hl.agg.collect_as_set(hl.len(mt.AD)).remove(hl.missing(hl.tint32)),
+        found_ad_lengths=hl.agg.collect_as_set(hl.len(mt.AD)).remove(
+            hl.missing(hl.tint32)
+        ),
     ).rows()
     ht = ht.filter(
         hl.len(ht.found_ad_lengths) > 1,
