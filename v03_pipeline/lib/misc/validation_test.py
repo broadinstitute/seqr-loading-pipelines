@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.misc.validation import (
     SeqrValidationError,
+    validate_allele_depth_length,
     validate_allele_type,
     validate_expected_contig_frequency,
     validate_imported_field_types,
@@ -119,6 +120,63 @@ class ValidationTest(unittest.TestCase):
             'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.',
             validate_allele_type,
             mt,
+            DatasetType.SNV_INDEL,
+        )
+
+    def test_validate_allele_depth_length(self) -> None:
+        mt = (
+            hl.MatrixTable.from_parts(
+                rows={
+                    'locus': [
+                        hl.Locus(
+                            contig='chr1',
+                            position=1,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=2,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=3,
+                            reference_genome='GRCh38',
+                        ),
+                        hl.Locus(
+                            contig='chr1',
+                            position=4,
+                            reference_genome='GRCh38',
+                        ),
+                    ],
+                    'alleles': [
+                        ['A', 'T'],
+                        # NB: star alleles should pass through this validation just fine,
+                        # but are eventually filtered out upstream.
+                        ['A', 'TC', 'TG'],
+                        ['A', 'TTT'],
+                        ['A', 'CCC'],
+                    ],
+                },
+                cols={'s': ['sample_1', 'sample_2']},
+                entries={
+                    'AD': [
+                        [[1, 0], [1, 0]],
+                        [[1], [1, 0, 1]],
+                        [[1, 0], [1]],
+                        [[1, 0], [1, 0]],
+                    ],
+                },
+            )
+            .key_rows_by('locus', 'alleles')
+            .key_cols_by('s')
+        )
+        self.assertRaisesRegex(
+            SeqrValidationError,
+            "Found variants with unequal Allele Depth array lengths over samples \\(first 10, if applicable\\): \\{'1-2-A-TC-TG': \\{1, 3\\}, '1-3-A-TTT': \\{1, 2\\}\\}",
+            validate_allele_depth_length,
+            mt,
+            ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
         )
 
