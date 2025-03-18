@@ -1,3 +1,4 @@
+# ruff: noqa: N806
 from typing import Any
 
 import hail as hl
@@ -186,13 +187,28 @@ def gnomad_svs(
     )[ht['info.GNOMAD_V4.1_TRUTH_VID']]
 
 
-def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
+def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
+    def _safe_gt_stats_fetch(ht: hl.Table, field: str):
+        return hl.or_else(ht.gt_stats[field], 0) if hasattr(ht, 'gt_stats') else 0
+
+    # note that "ht" here is the annotations table
+    # union-ed with new variants, subsetted to variants
+    # present in the callset. gt_stats will be "missing"
+    # on the new variants (due to union=True) or not at
+    # all present if the annotations table does not yet exist.
+    row = callset_ht[ht.key]
+    AC = row.gt_stats.AC[1] + _safe_gt_stats_fetch(ht, 'AC')
+    AN = row.gt_stats.AN + _safe_gt_stats_fetch(ht, 'AN')
+    Hom = row.gt_stats.homozygote_count[1] + _safe_gt_stats_fetch(ht, 'Hom')
+    Het = (
+        row.gt_stats.AC[1] - (row.gt_stats.homozygote_count[1] * 2)
+    ) + _safe_gt_stats_fetch(ht, 'Het')
     return hl.struct(
-        AF=hl.float32(ht['info.AF'][0]),
-        AC=ht['info.AC'][0],
-        AN=ht['info.AN'],
-        Hom=ht['info.N_HOMALT'],
-        Het=ht['info.N_HET'],
+        AC=AC,
+        AN=AN,
+        AF=hl.float32(AC / AN),
+        Hom=Hom,
+        Het=Het,
     )
 
 

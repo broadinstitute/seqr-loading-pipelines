@@ -181,7 +181,9 @@ def import_callset(
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SV:
-        mt = mt.annotate_rows(variant_id=mt.rsid)
+        mt = mt.annotate_rows(
+            variant_id=mt.rsid,
+        )
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
