@@ -181,19 +181,19 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                         ploidy_check={
                             '234_1': hl.Struct(
                                 samples=['NA19678_1'],
-                                reasons="Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA19678_1']",
+                                reasons="Found samples with misaligned ploidy with their provided imputed sex: ['NA19678_1']",
                             ),
                             '567_1': hl.Struct(
                                 samples=['NA20872_1'],
-                                reasons="Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20872_1']",
+                                reasons="Found samples with misaligned ploidy with their provided imputed sex: ['NA20872_1']",
                             ),
                             'bcd_1': hl.Struct(
                                 samples=['NA20878_1'],
-                                reasons="Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20878_1']",
+                                reasons="Found samples with misaligned ploidy with their provided imputed sex: ['NA20878_1']",
                             ),
                             'cde_1': hl.Struct(
                                 samples=['NA20881_1'],
-                                reasons="Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20881_1']",
+                                reasons="Found samples with misaligned ploidy with their provided imputed sex: ['NA20881_1']",
                             ),
                         },
                     ),
@@ -300,19 +300,19 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                         'ploidy_check': {
                             'cde_1': {
                                 'samples': ['NA20881_1'],
-                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20881_1']",
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex: ['NA20881_1']",
                             },
                             '234_1': {
                                 'samples': ['NA19678_1'],
-                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA19678_1']",
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex: ['NA19678_1']",
                             },
                             'bcd_1': {
                                 'samples': ['NA20878_1'],
-                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20878_1']",
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex: ['NA20878_1']",
                             },
                             '567_1': {
                                 'samples': ['NA20872_1'],
-                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : ['NA20872_1']",
+                                'reasons': "Found samples with misaligned ploidy with their provided imputed sex: ['NA20872_1']",
                             },
                         },
                     },

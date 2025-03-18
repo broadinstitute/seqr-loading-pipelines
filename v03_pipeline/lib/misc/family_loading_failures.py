@@ -213,5 +213,5 @@ def get_families_failed_imputed_sex_ploidy(
             sorted_discrepant_samples = sorted(discrepant_loadable_samples)
             failed_families[
                 family
-            ] = f'Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : {sorted_discrepant_samples[:10]}'
+            ] = f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples}'
     return failed_families
