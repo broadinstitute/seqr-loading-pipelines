@@ -416,7 +416,9 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertCountEqual(
             failed_families.values(),
             [
-                "Found samples with misaligned ploidy with their provided imputed sex: ['HG00731_1', 'HG00732_1', 'NA20889_1', 'NA20899_1']",
+                [
+                    "Found samples with misaligned ploidy with their provided imputed sex: ['HG00731_1', 'HG00732_1', 'NA20889_1', 'NA20899_1']",
+                ],
             ],
         )
 
@@ -435,6 +437,8 @@ class FamilyLoadingFailuresTest(unittest.TestCase):
         self.assertCountEqual(
             failed_families.values(),
             [
-                "Found samples with misaligned ploidy with their provided imputed sex: ['HG00731_1']",
+                [
+                    "Found samples with misaligned ploidy with their provided imputed sex: ['HG00731_1']",
+                ],
             ],
         )

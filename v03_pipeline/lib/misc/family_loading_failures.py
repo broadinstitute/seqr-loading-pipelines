@@ -206,12 +206,12 @@ def get_families_failed_imputed_sex_ploidy(
     discrepant_samples = mt.aggregate_cols(
         hl.agg.filter(mt.discrepant, hl.agg.collect_as_set(mt.s)),
     )
-    failed_families = {}
+    failed_families = defaultdict(list)
     for family in families:
         discrepant_loadable_samples = set(family.samples.keys()) & discrepant_samples
         if discrepant_loadable_samples:
             sorted_discrepant_samples = sorted(discrepant_loadable_samples)
-            failed_families[
-                family
-            ] = f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples}'
+            failed_families[family].append(
+                f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples}',
+            )
     return failed_families
