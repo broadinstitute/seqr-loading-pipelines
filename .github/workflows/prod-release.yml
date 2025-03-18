@@ -69,7 +69,7 @@ jobs:
           service_account: "${{ secrets.RUN_SA_EMAIL }}"
 
       - name: "setup gcloud sdk"
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Build and push images
         run: |-

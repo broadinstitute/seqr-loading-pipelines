@@ -108,6 +108,12 @@ class BaseReferenceDataset:
             )
         return version
 
+    def dataset_types(
+        self,
+        reference_genome: ReferenceGenome,
+    ) -> frozenset[DatasetType]:
+        return CONFIG[self][reference_genome][DATASET_TYPES]
+
     @property
     def enums(self) -> dict | None:
         return CONFIG[self].get(ENUMS)
@@ -147,11 +153,9 @@ class BaseReferenceDataset:
         if enum_selects:
             ht = ht.transmute(**enum_selects)
         ht = filter_contigs(ht, reference_genome)
-        # Reference Datasets are DatasetType agnostic, but these
-        # methods (in theory) support SV/GCNV.  SNV_INDEL
-        # is passed as a proxy for non-SV/GCNV.
-        validate_allele_type(ht, DatasetType.SNV_INDEL)
-        validate_no_duplicate_variants(ht, reference_genome, DatasetType.SNV_INDEL)
+        for dataset_type in self.dataset_types(reference_genome):
+            validate_allele_type(ht, dataset_type)
+            validate_no_duplicate_variants(ht, reference_genome, dataset_type)
         # NB: we do not filter with "filter" here
         # ReferenceDatasets are DatasetType agnostic and that
         # filter is only used at annotation time.
