@@ -190,8 +190,7 @@ class DatasetType(StrEnum):
         reference_genome: ReferenceGenome,
     ) -> bool:
         return (
-            self == DatasetType.SNV_INDEL
-            and reference_genome == ReferenceGenome.GRCh38
+            self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
         )
 
     @property

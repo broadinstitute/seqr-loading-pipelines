@@ -13,8 +13,8 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
-from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 from v03_pipeline.lib.tasks.write_imported_callset import WriteImportedCallsetTask
+from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
