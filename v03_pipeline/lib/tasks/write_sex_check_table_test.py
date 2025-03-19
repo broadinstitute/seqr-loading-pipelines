@@ -16,11 +16,16 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_files.gen_bq_table_names')
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_file.bq_metrics_query')
+    @patch(
+        'v03_pipeline.lib.tasks.write_sex_check_table.FeatureFlag',
+    )
     def test_snv_sex_check_table_task(
         self,
+        mock_ff: Mock,
         mock_bq_metrics_query: Mock,
         mock_gen_bq_table_names: Mock,
     ) -> None:
+        mock_ff.EXPECT_TDR_METRICS = True
         mock_gen_bq_table_names.return_value = [
             'datarepo-7242affb.datarepo_RP_3053',
             'datarepo-5a72e31b.datarepo_RP_3056',
