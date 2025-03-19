@@ -2,7 +2,7 @@ import json
 import os
 import unittest
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
 import responses
 
@@ -10,6 +10,7 @@ from v03_pipeline.lib.misc.terra_data_repository import (
     TDR_ROOT_URL,
     _get_dataset_ids,
     gen_bq_table_names,
+    bq_metrics_query,
 )
 
 TDR_DATASETS = [
@@ -300,4 +301,15 @@ class TerraDataRepositoryTest(unittest.TestCase):
                 'datarepo-5a72e31b.datarepo_RP_3056',
                 'datarepo-aada2e3b.datarepo_RP_3059',
             ],
+        )
+
+    @patch('v03_pipeline.lib.misc.terra_data_repository.bigquery.Client')
+    def test_bq_metrics_query_missing_metrics(self, mock_bq_client: Mock, _: Mock) -> None:
+        mock_bq_client.return_value.query_and_wait.return_value = iter([
+            ['predicted_sex,contamination_rate,percent_bases_at_20x']
+        ])
+        bq_metrics_query('datarepo-7242affb.datarepo_RP_3053')
+        self.assertEqual(
+            mock_bq_client.return_value.query_and_wait.mock_calls[1],
+            call('\n        SELECT predicted_sex,contamination_rate,percent_bases_at_20x,NULL AS collaborator_sample_id,NULL AS mean_coverage FROM `datarepo-7242affb.datarepo_RP_3053.sample`;\n        ')
         )
