@@ -19,11 +19,7 @@ def compute_sex_check_ht(mt: hl.MatrixTable) -> hl.Table:
     mt = mt.filter_rows(
         (hl.len(mt.alleles) == BIALLELIC) & hl.is_snp(mt.alleles[0], mt.alleles[1]),
     )
-    mt = mt.filter_cols(
-        hl.agg.all(
-            mt.GT.is_diploid() | hl.is_missing(mt.GT)
-        )
-    )
+    mt = mt.filter_cols(hl.agg.all(mt.GT.is_diploid() | hl.is_missing(mt.GT)))
 
     # Filter to PASS variants only (variants with empty or missing filter set)
     mt = mt.filter_rows(
