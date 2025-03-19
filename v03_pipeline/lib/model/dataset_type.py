@@ -188,12 +188,10 @@ class DatasetType(StrEnum):
     def expect_tdr_metrics(
         self,
         reference_genome: ReferenceGenome,
-        sample_type: SampleType,
     ) -> bool:
         return (
             self == DatasetType.SNV_INDEL
             and reference_genome == ReferenceGenome.GRCh38
-            and sample_type == SampleType.WGS
         )
 
     @property

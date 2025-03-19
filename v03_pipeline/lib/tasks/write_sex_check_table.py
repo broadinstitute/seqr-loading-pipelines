@@ -37,7 +37,6 @@ class WriteSexCheckTableTask(BaseWriteTask):
             and not self.skip_expect_tdr_metrics
             and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
-                self.sample_type,
             )
         ):
             requirements = [
@@ -58,7 +57,6 @@ class WriteSexCheckTableTask(BaseWriteTask):
             and not self.skip_expect_tdr_metrics
             and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
-                self.sample_type,
             )
         ):
             for tdr_metrics_file in hfs.ls(
