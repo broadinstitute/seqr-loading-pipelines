@@ -21,6 +21,18 @@ from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesT
 class WriteSexCheckTableTask(BaseWriteTask):
     callset_path = luigi.Parameter()
 
+    @property
+    def predicted_sex_from_tdr(self):
+        # complicated enough to need a helper :/
+        return (
+            FeatureFlag.EXPECT_TDR_METRICS
+            and not self.skip_expect_tdr_metrics
+            and self.dataset_type.expect_tdr_metrics(
+                self.reference_genome,
+            )
+            and self.sample_type.predicted_sex_from_tdr
+        )
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             sex_check_table_path(
@@ -32,13 +44,7 @@ class WriteSexCheckTableTask(BaseWriteTask):
 
     def requires(self) -> list[luigi.Task]:
         requirements = []
-        if (
-            FeatureFlag.EXPECT_TDR_METRICS
-            and not self.skip_expect_tdr_metrics
-            and self.dataset_type.expect_tdr_metrics(
-                self.reference_genome,
-            )
-        ):
+        if self.predicted_sex_from_tdr:
             requirements = [
                 *requirements,
                 self.clone(WriteTDRMetricsFilesTask),
@@ -52,14 +58,7 @@ class WriteSexCheckTableTask(BaseWriteTask):
 
     def create_table(self) -> hl.Table:
         ht = None
-        if (
-            FeatureFlag.EXPECT_TDR_METRICS
-            and not self.skip_expect_tdr_metrics
-            and self.dataset_type.expect_tdr_metrics(
-                self.reference_genome,
-            )
-            and self.sample_type.predicted_sex_from_tdr
-        ):
+        if self.predicted_sex_from_tdr:
             for tdr_metrics_file in hfs.ls(
                 tdr_metrics_dir(self.reference_genome, self.dataset_type),
             ):
