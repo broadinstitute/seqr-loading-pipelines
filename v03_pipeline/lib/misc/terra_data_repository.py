@@ -70,7 +70,7 @@ def bq_metrics_query(bq_table_name: str) -> google.cloud.bigquery.table.RowItera
             f"""
         SELECT ddl FROM `{bq_table_name}`.INFORMATION_SCHEMA.TABLES where table_name='sample';
         """,  # noqa: S608
-        )
+        ),
     )[0]
     metrics = [(m if m in table_ddl else f'NULL AS {m}') for m in BIGQUERY_METRICS]
     return client.query_and_wait(
