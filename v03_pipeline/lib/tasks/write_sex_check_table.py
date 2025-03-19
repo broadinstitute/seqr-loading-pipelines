@@ -58,6 +58,7 @@ class WriteSexCheckTableTask(BaseWriteTask):
             and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
             )
+            and self.sample_type.predicted_sex_from_tdr
         ):
             for tdr_metrics_file in hfs.ls(
                 tdr_metrics_dir(self.reference_genome, self.dataset_type),
