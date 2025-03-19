@@ -13,7 +13,7 @@ XY_FSTAT_THRESHOLD: float = (
 )
 
 
-def call_sex(mt: hl.MatrixTable) -> hl.Table:
+def compute_sex_check_ht(mt: hl.MatrixTable) -> hl.Table:
     # Filter to SNVs and biallelics
     # NB: We should already have filtered biallelics, but just in case.
     mt = mt.filter_rows(

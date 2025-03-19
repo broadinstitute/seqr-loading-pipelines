@@ -21,7 +21,6 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
-from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
 )
@@ -59,18 +58,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                         self.callset_path,
                     ),
                 ),
-            ]
-        if (
-            FeatureFlag.EXPECT_TDR_METRICS
-            and not self.skip_expect_tdr_metrics
-            and self.dataset_type.expect_tdr_metrics(
-                self.reference_genome,
-                self.sample_type,
-            )
-        ):
-            requirements = [
-                *requirements,
-                self.clone(WriteTDRMetricsFilesTask),
             ]
         return [
             *requirements,
