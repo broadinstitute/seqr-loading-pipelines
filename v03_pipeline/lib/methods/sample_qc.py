@@ -1,5 +1,12 @@
 import hail as hl
+import onnx
+from gnomad.sample_qc.ancestry import (
+    apply_onnx_classification_model,
+    assign_population_pcs,
+    pc_project,
+)
 from gnomad.sample_qc.pipeline import filter_rows_for_qc
+from gnomad_qc.v4.sample_qc.assign_ancestry import assign_pop_with_per_pop_probs
 
 from v03_pipeline.lib.model import SampleType
 
@@ -10,6 +17,26 @@ CALLRATE_LOW_THRESHOLD = 0.85
 CONTAMINATION_UPPER_THRESHOLD = 5
 WES_COVERAGE_LOW_THRESHOLD = 85
 WGS_CALLRATE_LOW_THRESHOLD = 30
+
+POP_PCA_LOADINGS_PATH = (
+    'gs://gcp-public-data--gnomad/release/4.0/pca/gnomad.v4.0.pca_loadings.ht'
+)
+ANCESTRY_RF_MODEL_PATH = (
+    'gs://seqr-reference-data/v3.1/GRCh38/SNV_INDEL/ancestry_imputation_model.onnx'
+)
+NUM_PCS = 20
+GNOMAD_POP_PROBABILITY_CUTOFFS = {
+    'afr': 0.93,
+    'ami': 0.98,
+    'amr': 0.89,
+    'asj': 0.94,
+    'eas': 0.95,
+    'fin': 0.92,
+    'mid': 0.55,
+    'nfe': 0.75,
+    'sas': 0.92,
+}
+POPULATION_MISSING_LABEL = 'oth'
 
 
 def call_sample_qc(
@@ -24,7 +51,8 @@ def call_sample_qc(
         .default(hl.missing(hl.tcall)),
     )
     mt = annotate_filtered_callrate(mt)
-    return annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
+    mt = annotate_filter_flags(mt, tdr_metrics_ht, sample_type)
+    return annotate_qc_gen_anc(mt)
 
 
 def annotate_filtered_callrate(mt: hl.MatrixTable) -> hl.MatrixTable:
@@ -64,3 +92,36 @@ def annotate_filter_flags(
             [hl.or_missing(filter_cond, name) for name, filter_cond in flags.items()],
         ).filter(hl.is_defined),
     )
+
+
+def annotate_qc_gen_anc(mt: hl.MatrixTable) -> hl.MatrixTable:
+    mt = mt.select_entries('GT')
+    scores = _get_pop_pca_scores(mt)
+    with hl.hadoop_open(ANCESTRY_RF_MODEL_PATH, 'rb') as f:
+        fit = onnx.load(f)
+
+    pop_pca_ht, _ = assign_population_pcs(
+        scores,
+        pc_cols=scores.scores,
+        output_col='qc_pop',
+        fit=fit,
+        apply_model_func=apply_onnx_classification_model,
+    )
+    pop_pca_ht = pop_pca_ht.key_by('s')
+    scores = scores.annotate(
+        **{f'pop_PC{i + 1}': scores.scores[i] for i in range(NUM_PCS)},
+    ).drop('scores', 'known_pop')
+    pop_pca_ht = pop_pca_ht.annotate(**scores[pop_pca_ht.key])
+    pop_pca_ht = assign_pop_with_per_pop_probs(
+        pop_pca_ht,
+        min_prob_cutoffs=GNOMAD_POP_PROBABILITY_CUTOFFS,
+        missing_label=POPULATION_MISSING_LABEL,
+    )
+    pop_pca_ht = pop_pca_ht.transmute(qc_gen_anc=pop_pca_ht.pop).drop('qc_pop')
+    return mt.annotate_cols(**pop_pca_ht[mt.col_key])
+
+
+def _get_pop_pca_scores(mt: hl.MatrixTable) -> hl.Table:
+    loadings = hl.read_table(POP_PCA_LOADINGS_PATH)
+    scores = pc_project(mt, loadings)
+    return scores.annotate(scores=scores.scores[:NUM_PCS], known_pop='Unknown')
