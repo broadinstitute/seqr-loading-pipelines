@@ -165,3 +165,7 @@ class ReferenceGenome(StrEnum):
 class SampleType(StrEnum):
     WES = 'WES'
     WGS = 'WGS'
+
+    @property
+    def predicted_sex_from_tdr(self):
+        return self == SampleType.WGS

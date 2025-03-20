@@ -5,22 +5,31 @@ import google.cloud.bigquery
 import hail as hl
 import luigi.worker
 
-from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import sex_check_table_path, tdr_metrics_path
 from v03_pipeline.lib.tasks.write_sex_check_table import (
     WriteSexCheckTableTask,
 )
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
+TEST_SEX_AND_RELATEDNESS_CALLSET_MT = (
+    'v03_pipeline/var/test/callsets/sex_and_relatedness_1.mt'
+)
+
 
 class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_files.gen_bq_table_names')
     @patch('v03_pipeline.lib.tasks.write_tdr_metrics_file.bq_metrics_query')
+    @patch(
+        'v03_pipeline.lib.tasks.write_sex_check_table.FeatureFlag',
+    )
     def test_snv_sex_check_table_task(
         self,
+        mock_ff: Mock,
         mock_bq_metrics_query: Mock,
         mock_gen_bq_table_names: Mock,
     ) -> None:
+        mock_ff.EXPECT_TDR_METRICS = True
         mock_gen_bq_table_names.return_value = [
             'datarepo-7242affb.datarepo_RP_3053',
             'datarepo-5a72e31b.datarepo_RP_3056',
@@ -111,7 +120,12 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
         write_sex_check_table = WriteSexCheckTableTask(
             reference_genome=ReferenceGenome.GRCh38,
             dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
             callset_path='na',
+            project_guids=['R0113_test_project'],
+            project_remap_paths=['test_remap'],
+            project_pedigree_paths=['test_pedigree'],
+            run_id='manual__2024-04-03',
         )
         worker.add(write_sex_check_table)
         worker.run()
@@ -143,3 +157,61 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             ),
         ) as f:
             self.assertTrue('collaborator_sample_id' in f.read())
+
+    @patch(
+        'v03_pipeline.lib.tasks.write_sex_check_table.FeatureFlag',
+    )
+    def test_snv_wes_sex_check_table_task(
+        self,
+        mock_ff: Mock,
+    ) -> None:
+        mock_ff.EXPECT_TDR_METRICS = True
+        worker = luigi.worker.Worker()
+        write_sex_check_table = WriteSexCheckTableTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WES,
+            callset_path=TEST_SEX_AND_RELATEDNESS_CALLSET_MT,
+            project_guids=['R0113_test_project'],
+            project_remap_paths=['test_remap'],
+            project_pedigree_paths=['test_pedigree'],
+            run_id='manual__2024-04-04',
+        )
+        worker.add(write_sex_check_table)
+        worker.run()
+        sex_check_ht = hl.read_table(
+            sex_check_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_SEX_AND_RELATEDNESS_CALLSET_MT,
+            ),
+        )
+        self.assertCountEqual(
+            sex_check_ht.collect(),
+            [
+                hl.Struct(
+                    s='ROS_006_18Y03226_D1',
+                    predicted_sex='M',
+                ),
+                hl.Struct(
+                    s='ROS_006_18Y03227_D1',
+                    predicted_sex='M',
+                ),
+                hl.Struct(
+                    s='ROS_006_18Y03228_D1',
+                    predicted_sex='M',
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05919_D1',
+                    predicted_sex='M',
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05939_D1',
+                    predicted_sex='F',
+                ),
+                hl.Struct(
+                    s='ROS_007_19Y05987_D1',
+                    predicted_sex='M',
+                ),
+            ],
+        )
