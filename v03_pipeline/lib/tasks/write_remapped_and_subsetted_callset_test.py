@@ -94,6 +94,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_pedigree_paths=[TEST_PEDIGREE_3],
             project_i=0,
             skip_validation=True,
+            skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
         worker.run()
@@ -139,6 +140,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_pedigree_paths=[TEST_PEDIGREE_4],
             project_i=0,
             skip_validation=True,
+            skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
         worker.run()
@@ -227,6 +229,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             project_pedigree_paths=[TEST_PEDIGREE_7],
             project_i=0,
             skip_validation=True,
+            skip_expect_tdr_metrics=True,
         )
         worker.add(wrsc_task)
         worker.run()

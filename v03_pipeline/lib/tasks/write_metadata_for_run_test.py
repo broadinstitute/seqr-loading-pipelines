@@ -1,20 +1,38 @@
 import json
+from unittest import mock
+from unittest.mock import Mock
 
 import luigi.worker
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.paths import relatedness_check_tsv_path
 from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTask
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_REMAP_2 = 'v03_pipeline/var/test/remaps/test_remap_2.tsv'
 TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_SAMPLE_QC_JSON = 'v03_pipeline/var/test/sample_qc_1.json'
 
 
 class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
-    def test_write_metadata_for_run_task(self) -> None:
+    @mock.patch(
+        'v03_pipeline.lib.tasks.write_metadata_for_run.sample_qc_json_path',
+        lambda *_: TEST_SAMPLE_QC_JSON,
+    )
+    @mock.patch('v03_pipeline.lib.tasks.write_metadata_for_run.FeatureFlag')
+    @mock.patch(
+        'v03_pipeline.lib.tasks.write_sex_check_table.WriteTDRMetricsFilesTask',
+    )
+    def test_write_metadata_for_run_task(
+        self,
+        write_tdr_metrics_task: Mock,
+        mock_ff: Mock,
+    ) -> None:
+        mock_ff.EXPECT_TDR_METRICS = True
+        write_tdr_metrics_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         write_metadata_for_run_task = WriteMetadataForRunTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -78,5 +96,11 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         DatasetType.SNV_INDEL,
                         TEST_VCF,
                     ),
+                    'sample_qc': {
+                        'HG00731': {'filter_flags': ['coverage', 'contamination']},
+                        'HG00732': {'filter_flags': ['coverage']},
+                        'HG00733': {'filter_flags': ['contamination']},
+                        'NA19675': {'filter_flags': []},
+                    },
                 },
             )
