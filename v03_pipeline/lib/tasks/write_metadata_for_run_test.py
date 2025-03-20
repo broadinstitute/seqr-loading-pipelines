@@ -68,6 +68,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         },
                         'relatedness_check': {},
                         'sex_check': {},
+                        'ploidy_check': {},
                     },
                     'family_samples': {
                         'abc_1': [
