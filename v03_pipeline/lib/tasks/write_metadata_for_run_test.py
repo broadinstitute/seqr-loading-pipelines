@@ -24,7 +24,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
     )
     @mock.patch('v03_pipeline.lib.tasks.write_metadata_for_run.FeatureFlag')
     @mock.patch(
-        'v03_pipeline.lib.tasks.write_imported_callset.WriteTDRMetricsFilesTask',
+        'v03_pipeline.lib.tasks.write_sex_check_table.WriteTDRMetricsFilesTask',
     )
     def test_write_metadata_for_run_task(
         self,
