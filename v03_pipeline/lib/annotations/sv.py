@@ -204,9 +204,9 @@ def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
         row.gt_stats.AC[1] - (row.gt_stats.homozygote_count[1] * 2)
     ) + _safe_gt_stats_fetch(ht, 'Het')
     return hl.struct(
+        AF=hl.float32(AC / AN),
         AC=AC,
         AN=AN,
-        AF=hl.float32(AC / AN),
         Hom=Hom,
         Het=Het,
     )
