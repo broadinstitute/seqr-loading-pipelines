@@ -32,6 +32,7 @@ class GnomadSVsTest(unittest.TestCase):
                     AN=74246,
                     N_HET=8426,
                     N_HOMREF=28673,
+                    N_HOMALT=0,
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_3fa36917',
@@ -46,6 +47,7 @@ class GnomadSVsTest(unittest.TestCase):
                     AN=110936,
                     N_HET=466,
                     N_HOMREF=55002,
+                    N_HOMALT=24,
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_7bbf34b5',
@@ -60,6 +62,7 @@ class GnomadSVsTest(unittest.TestCase):
                     AN=84332,
                     N_HET=3115,
                     N_HOMREF=39049,
+                    N_HOMALT=0,
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_BND_chr1_933a2971',
@@ -74,6 +77,7 @@ class GnomadSVsTest(unittest.TestCase):
                     AN=67200,
                     N_HET=21616,
                     N_HOMREF=11909,
+                    N_HOMALT=75,
                 ),
                 hl.Struct(
                     KEY='gnomAD-SV_v3_DUP_chr1_01c2781c',
@@ -88,6 +92,7 @@ class GnomadSVsTest(unittest.TestCase):
                     AN=69594,
                     N_HET=139,
                     N_HOMREF=34658,
+                    N_HOMALT=2,
                 ),
             ],
         )
