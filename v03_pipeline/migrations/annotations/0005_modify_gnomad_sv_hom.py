@@ -24,7 +24,7 @@ class ModifyGnomadSVHom(BaseMigration):
                 N_HET=ht.gnomad_svs.N_HET,
                 N_HOM=gnomad_svs_ht[ht.gnomad_svs.ID].N_HOM,
                 ID=ht.gnomad_svs.ID,
-            )
+            ),
         )
         return ht.annotate_globals(
             versions=ht.globals.versions.annotate(gnomad_svs='1.1'),
