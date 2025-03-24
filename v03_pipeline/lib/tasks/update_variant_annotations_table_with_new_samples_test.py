@@ -936,7 +936,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.0'),
+                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
                         gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
@@ -1434,7 +1434,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(gnomad_svs='1.0'),
+                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
                         gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,

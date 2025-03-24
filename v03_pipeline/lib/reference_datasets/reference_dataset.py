@@ -459,7 +459,7 @@ CONFIG = {
         FORMATTING_ANNOTATION: sv.gnomad_svs,
         ReferenceGenome.GRCh38: {
             DATASET_TYPES: frozenset([DatasetType.SV]),
-            VERSION: '1.0',
+            VERSION: '1.1',
             PATH: 'gs://gcp-public-data--gnomad/release/4.1/genome_sv/gnomad.v4.1.sv.sites.vcf.gz',
         },
     },

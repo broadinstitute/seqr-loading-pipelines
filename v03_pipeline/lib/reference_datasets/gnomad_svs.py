@@ -12,6 +12,6 @@ def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
         AC=ht.info.AC[0],
         AN=ht.info.AN,
         N_HET=ht.info.N_HET,
-        N_HOMREF=ht.info.N_HOMREF,
+        N_HOM=ht.info.N_HOMALT,
     )
     return ht.key_by('KEY')
