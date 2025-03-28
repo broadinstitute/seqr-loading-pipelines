@@ -254,6 +254,8 @@ def import_tdr_qc_metrics(file_path: str) -> hl.Table:
             'percent_bases_at_20x': hl.tfloat32,
             'mean_coverage': hl.tfloat32,
         },
+        delimiter='\t',
+        missing=[''],
     )
     ht = ht.select(
         s=ht.collaborator_sample_id,
