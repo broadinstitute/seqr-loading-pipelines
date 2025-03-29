@@ -172,6 +172,7 @@ def import_vcf(
                 **args,
             ),
         )
+        return mt
     except Exception as e:
         # Handle callsets provided as gz but not bgz
         if 'File does not conform to block gzip format' in str(e):
