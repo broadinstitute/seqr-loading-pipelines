@@ -153,20 +153,34 @@ def import_vcf(
     callset_path: str,
     reference_genome: ReferenceGenome,
 ) -> hl.MatrixTable:
-    # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
-    return hl.import_vcf(
-        callset_path,
-        reference_genome=reference_genome.value,
-        skip_invalid_loci=True,
-        contig_recoding=reference_genome.contig_recoding(),
-        force_bgz=True,
-        find_replace=(
+    args = {
+        'reference_genome': reference_genome.value,
+        'skip_invalid_loci': True,
+        'contig_recoding': reference_genome.contig_recoding(),
+        'force_bgz': True,
+        'find_replace': (
             'nul',
             '.',
         ),  # Required for internal exome callsets (+ some AnVIL requests)
-        array_elements_required=False,
-        call_fields=[],  # PGT is unused downstream, but is occasionally present in old VCFs!
-    )
+        'array_elements_required': False,
+        'callset_field': [],  # PGT is unused downstream, but is occasionally present in old VCFs!
+    }
+    try:
+        mt, _ = checkpoint(
+            hl.import_vcf(
+                callset_path,
+                **args,
+            ),
+        )
+    except Exception as e:
+        # Handle callsets provided as gz but not bgz
+        if 'File does not conform to block gzip format' in str(e):
+            return hl.import_vcf(
+                callset_path,
+                force=True,
+                **args,
+            )
+        raise
 
 
 def import_callset(
