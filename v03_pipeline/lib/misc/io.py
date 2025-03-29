@@ -163,7 +163,7 @@ def import_vcf(
             '.',
         ),  # Required for internal exome callsets (+ some AnVIL requests)
         'array_elements_required': False,
-        'callset_field': [],  # PGT is unused downstream, but is occasionally present in old VCFs!
+        'callset_fields': [],  # PGT is unused downstream, but is occasionally present in old VCFs!
     }
     try:
         mt, _ = checkpoint(
