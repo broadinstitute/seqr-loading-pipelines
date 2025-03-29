@@ -157,7 +157,6 @@ def import_vcf(
         'reference_genome': reference_genome.value,
         'skip_invalid_loci': True,
         'contig_recoding': reference_genome.contig_recoding(),
-        'force_bgz': True,
         'find_replace': (
             'nul',
             '.',
@@ -169,11 +168,14 @@ def import_vcf(
         mt, _ = checkpoint(
             hl.import_vcf(
                 callset_path,
+                force_bgz=True,
                 **args,
             ),
         )
     except Exception as e:  # noqa: BLE001
         # Handle callsets provided as gz but not bgz
+        # Note that this is handled separately from other VCF validation
+        # as it's an exceptional case that we can handle internally.
         if 'File does not conform to block gzip format' not in str(e):
             raise
         mt = hl.import_vcf(
