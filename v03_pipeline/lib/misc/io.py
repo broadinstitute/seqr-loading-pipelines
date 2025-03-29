@@ -172,16 +172,16 @@ def import_vcf(
                 **args,
             ),
         )
-        return mt
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         # Handle callsets provided as gz but not bgz
-        if 'File does not conform to block gzip format' in str(e):
-            return hl.import_vcf(
-                callset_path,
-                force=True,
-                **args,
-            )
-        raise
+        if 'File does not conform to block gzip format' not in str(e):
+            raise
+        mt = hl.import_vcf(
+            callset_path,
+            force=True,
+            **args,
+        )
+    return mt
 
 
 def import_callset(
