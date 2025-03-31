@@ -1,6 +1,7 @@
 import json
 
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 import luigi.util
 
@@ -83,7 +84,7 @@ class WriteMetadataForRunTask(luigi.Task):
                 self.reference_genome,
             )
         ):
-            with open(
+            with hfs.open(
                 sample_qc_json_path(
                     self.reference_genome,
                     self.dataset_type,
