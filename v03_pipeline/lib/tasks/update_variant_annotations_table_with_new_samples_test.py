@@ -55,6 +55,8 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_PEDIGREE_8 = 'v03_pipeline/var/test/pedigrees/test_pedigree_8.tsv'
+TEST_PEDIGREE_10 = 'v03_pipeline/var/test/pedigrees/test_pedigree_10.tsv'
+TEST_PEDIGREE_11 = 'v03_pipeline/var/test/pedigrees/test_pedigree_11.tsv'
 
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
@@ -903,7 +905,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
-    def test_sv_multiple_update_vat(
+    def test_sv_multiple_vcf_update_vat(
         self,
         mock_load_gencode: Mock,
     ) -> None:
@@ -1515,6 +1517,47 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_detail_id=None,
                     xpos=1000180928,
                 ),
+            ],
+        )
+
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
+    )
+    def test_sv_multiple_project_single_vcf(
+        self,
+        mock_load_gencode: Mock,
+    ) -> None:
+        mock_load_gencode.return_value = GENE_ID_MAPPING
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SV,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SV_VCF_2,
+                project_guids=['R0116_test_project3', 'R0117_test_project4'],
+                project_remap_paths=['not_a_real_file', 'not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_10, TEST_PEDIGREE_11],
+                skip_validation=True,
+                run_id='run_id',
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 2)
+        self.assertEqual(
+            len(ht.globals.updates.collect()[0]),
+            2,
+        )
+        self.assertEqual(
+            ht.gt_stats.collect(),
+            [
+                hl.Struct(AF=0.25, AC=1, AN=4, Hom=0, Het=1),
+                # Note the call stats computed
+                # from the two included samples.
+                hl.Struct(AF=0.0, AC=0, AN=4, Hom=0, Het=0),
             ],
         )
 
