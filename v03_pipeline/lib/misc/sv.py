@@ -116,7 +116,7 @@ def overwrite_male_non_par_calls(
         s.sample_id for f in families for s in f.samples.values() if s.sex == Sex.MALE
     }
     male_sample_ids = (
-        hl.set(male_sample_ids) if male_sample_ids else hl.empty_set(hl.str)
+        hl.set(male_sample_ids) if male_sample_ids else hl.empty_set(hl.tstr)
     )
     par_intervals = hl.array(
         [
