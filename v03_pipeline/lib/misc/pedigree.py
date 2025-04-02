@@ -3,8 +3,12 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import hail as hl
+import numpy as np
 
 from v03_pipeline.lib.model import Sex
+
+DEFAULT_RELATEDNESS_TOLERANCE = 0.2
+PARENT_CHILD_RELATEDNESS_TOLERANCE = 0.4
 
 
 class Relation(Enum):
@@ -23,6 +27,19 @@ class Relation(Enum):
             Relation.HALF_SIBLING: [0.5, 0.5, 0, 0.25],
             Relation.AUNT_NEPHEW: [0.5, 0.5, 0, 0.25],
         }[self]
+
+    def coefficients_equal(self, coefficients: list[float]) -> bool:
+        if self == Relation.PARENT_CHILD:
+            return coefficients[0] and np.allclose(
+                coefficients[1:],
+                self.coefficients[1:],
+                atol=DEFAULT_RELATEDNESS_TOLERANCE,
+            )
+        return np.allclose(
+            coefficients,
+            self.coefficients,
+            atol=DEFAULT_RELATEDNESS_TOLERANCE,
+        )
 
 
 @dataclass
