@@ -34,6 +34,19 @@ def get_callset_ht(
     return callset_ht.distinct()
 
 
+def union_callset_mts(callset_mts):
+    return functools.reduce(
+        (
+            lambda mt1, mt2: mt1.union_cols(
+                mt2,
+                row_join_type='outer',
+                drop_right_row_fields=True,
+            )
+        ),
+        callset_mts,
+    )
+
+
 def get_callset_mt(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -51,10 +64,7 @@ def get_callset_mt(
         )
         for project_guid in project_guids
     ]
-    callset_mt = functools.reduce(
-        (lambda mt1, mt2: mt1.union_rows(mt2)),
-        callset_mts,
-    )
+    callset_mt = union_callset_mts(callset_mts)
     return callset_mt.distinct_by_row()
 
 
