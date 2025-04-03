@@ -153,20 +153,37 @@ def import_vcf(
     callset_path: str,
     reference_genome: ReferenceGenome,
 ) -> hl.MatrixTable:
-    # Import the VCFs from inputs. Set min partitions so that local pipeline execution takes advantage of all CPUs.
-    return hl.import_vcf(
-        callset_path,
-        reference_genome=reference_genome.value,
-        skip_invalid_loci=True,
-        contig_recoding=reference_genome.contig_recoding(),
-        force_bgz=True,
-        find_replace=(
+    args = {
+        'reference_genome': reference_genome.value,
+        'skip_invalid_loci': True,
+        'contig_recoding': reference_genome.contig_recoding(),
+        'find_replace': (
             'nul',
             '.',
         ),  # Required for internal exome callsets (+ some AnVIL requests)
-        array_elements_required=False,
-        call_fields=[],  # PGT is unused downstream, but is occasionally present in old VCFs!
-    )
+        'array_elements_required': False,
+        'call_fields': [],  # PGT is unused downstream, but is occasionally present in old VCFs!
+    }
+    try:
+        mt, _ = checkpoint(
+            hl.import_vcf(
+                callset_path,
+                force_bgz=True,
+                **args,
+            ),
+        )
+    except Exception as e:  # noqa: BLE001
+        # Handle callsets provided as gz but not bgz
+        # Note that this is handled separately from other VCF validation
+        # as it's an exceptional case that we can handle internally.
+        if 'File does not conform to block gzip format' not in str(e):
+            raise
+        mt = hl.import_vcf(
+            callset_path,
+            force=True,
+            **args,
+        )
+    return mt
 
 
 def import_callset(
@@ -181,7 +198,9 @@ def import_callset(
     elif 'mt' in callset_path:
         mt = hl.read_matrix_table(callset_path)
     if dataset_type == DatasetType.SV:
-        mt = mt.annotate_rows(variant_id=mt.rsid)
+        mt = mt.annotate_rows(
+            variant_id=mt.rsid,
+        )
     return mt.key_rows_by(*dataset_type.table_key_type(reference_genome).fields)
 
 
@@ -252,6 +271,8 @@ def import_tdr_qc_metrics(file_path: str) -> hl.Table:
             'percent_bases_at_20x': hl.tfloat32,
             'mean_coverage': hl.tfloat32,
         },
+        delimiter='\t',
+        missing=[''],
     )
     ht = ht.select(
         s=ht.collaborator_sample_id,

@@ -3,11 +3,14 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.misc.callsets import get_callset_ht
+from v03_pipeline.lib.misc.callsets import get_callset_ht, get_callset_mt
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
+)
+from v03_pipeline.lib.reference_datasets.reference_dataset import (
+    BaseReferenceDataset,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -85,6 +88,17 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 # have been removed from the lookup table during modification.
                 # Ensure we don't proceed with those variants.
                 ht = ht.semi_join(lookup_ht)
+            elif self.dataset_type.gt_stats_from_hl_call_stats:
+                callset_mt = get_callset_mt(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.callset_path,
+                    self.project_guids,
+                )
+                callset_mt = callset_mt.annotate_rows(
+                    gt_stats=hl.agg.call_stats(callset_mt.GT, callset_mt.alleles),
+                )
+                callset_ht = callset_mt.rows()
 
             # new_variants_ht consists of variants present in the new callset, fully annotated,
             # but NOT present in the existing annotations table.
@@ -104,7 +118,13 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
             ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
 
         # Fix up the globals and mark the table as updated with these callset/project pairs.
-        ht = self.annotate_globals(ht)
+        ht = self.annotate_globals(
+            ht,
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
         return ht.annotate_globals(
             updates=ht.updates.union(
                 {

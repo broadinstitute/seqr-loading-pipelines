@@ -29,7 +29,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
     def complete(self) -> bool:
         reference_dataset_names = {
             rd.name
-            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
+            for rd in BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
                 self.reference_genome,
                 self.dataset_type,
             )
@@ -38,9 +38,13 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             self._datasets_to_update = reference_dataset_names
             return False
         # Find datasets with mismatched versions
-        annotation_ht_versions = dict(
-            hl.eval(hl.read_table(self.output().path).globals.versions),
-        )
+        annotation_ht_versions = {
+            dataset_name: version
+            for dataset_name, version in hl.eval(
+                hl.read_table(self.output().path).globals.versions,
+            ).items()
+            if not ReferenceDataset(dataset_name).exclude_from_annotations_updates
+        }
         self._datasets_to_update = (
             reference_dataset_names ^ annotation_ht_versions.keys()
         )
@@ -65,18 +69,11 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             reference_dataset_ht = hl.read_table(
                 valid_reference_dataset_path(self.reference_genome, reference_dataset),
             )
-            if reference_dataset.is_keyed_by_interval:
-                formatting_fn = next(
-                    x
-                    for x in self.dataset_type.formatting_annotation_fns(
-                        self.reference_genome,
-                    )
-                    if x.__name__ == reference_dataset.name
-                )
+            if reference_dataset.formatting_annotation:
                 ht = ht.annotate(
                     **get_fields(
                         ht,
-                        [formatting_fn],
+                        [reference_dataset.formatting_annotation],
                         **{f'{reference_dataset.name}_ht': reference_dataset_ht},
                         **self.param_kwargs,
                     ),
@@ -103,4 +100,10 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
                 ht = ht.join(reference_dataset_ht, 'left')
 
-        return self.annotate_globals(ht)
+        return self.annotate_globals(
+            ht,
+            BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
+                self.reference_genome,
+                self.dataset_type,
+            ),
+        )
