@@ -61,7 +61,10 @@ class SNVTest(unittest.TestCase):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **dict.fromkeys(DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns, hl.tint32),
+                            **dict.fromkeys(
+                                DatasetType.SNV_INDEL.lookup_table_fields_and_genotype_filter_fns,
+                                hl.tint32,
+                            ),
                         ),
                     ),
                 ),

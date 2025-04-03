@@ -31,7 +31,10 @@ class MigrateLookupTableTask(BaseMigrateTask):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **dict.fromkeys(self.dataset_type.lookup_table_fields_and_genotype_filter_fns, hl.tint32),
+                            **dict.fromkeys(
+                                self.dataset_type.lookup_table_fields_and_genotype_filter_fns,
+                                hl.tint32,
+                            ),
                         ),
                     ),
                 ),
