@@ -10,14 +10,14 @@ logger = get_logger(__name__)
 
 
 class AddLookupSampleType(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        (
-            (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
-            (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL),
-            (ReferenceGenome.GRCh38, DatasetType.MITO),
-        ),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            (
+                (ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),
+                (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL),
+                (ReferenceGenome.GRCh38, DatasetType.MITO),
+            ),
+        )
     )
 
     @staticmethod

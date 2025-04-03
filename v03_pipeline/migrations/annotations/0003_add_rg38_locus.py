@@ -6,10 +6,10 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 
 
 class AddRG38Locus(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        ((ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            ((ReferenceGenome.GRCh37, DatasetType.SNV_INDEL),),
+        )
     )
 
     @staticmethod

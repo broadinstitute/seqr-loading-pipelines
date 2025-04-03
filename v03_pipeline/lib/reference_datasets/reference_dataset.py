@@ -125,7 +125,7 @@ class BaseReferenceDataset:
         return hl.Struct()
 
     @property
-    def filter(  # noqa: A003
+    def filter(
         self,
     ) -> Callable[[ReferenceGenome, DatasetType, hl.Table], hl.Table] | None:
         return CONFIG[self].get(FILTER)

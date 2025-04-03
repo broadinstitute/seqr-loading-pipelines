@@ -71,8 +71,8 @@ class RsyncToSeqrAppDirsTask(luigi.Task):
                 self.dataset_type,
             ),
         )
-        subprocess.call(
-            rsync_command(src_path, dst_path),  # noqa: S603
+        subprocess.call(  # noqa: S603
+            rsync_command(src_path, dst_path),
         )
 
         # Sync RDQs
@@ -95,7 +95,7 @@ class RsyncToSeqrAppDirsTask(luigi.Task):
                     ),
                 ),
             )
-            subprocess.call(
-                rsync_command(src_path, dst_path),  # noqa: S603
+            subprocess.call(  # noqa: S603
+                rsync_command(src_path, dst_path),
             )
         self.done = True

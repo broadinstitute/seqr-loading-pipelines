@@ -161,7 +161,7 @@ def get_families_failed_sex_check(
             # samples in the predicted_sex are precluded from
             # failing the sex check.
             if (
-                sex_check_lookup[sample_id] == Sex.UNKNOWN  # noqa: PLR1714
+                sex_check_lookup[sample_id] == Sex.UNKNOWN
                 or family.samples[sample_id].sex == Sex.UNKNOWN
             ):
                 logger.info(

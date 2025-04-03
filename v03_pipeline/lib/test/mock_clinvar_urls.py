@@ -19,9 +19,12 @@ CLINVAR_SUBMISSION_SUMMARY = (
 
 @contextmanager
 def mock_clinvar_urls(reference_genome=ReferenceGenome.GRCh38):
-    with tempfile.NamedTemporaryFile(
-        suffix='.vcf.bgz',
-    ) as f1, open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2:
+    with (
+        tempfile.NamedTemporaryFile(
+            suffix='.vcf.bgz',
+        ) as f1,
+        open(CLINVAR_SUBMISSION_SUMMARY, 'rb') as f2,
+    ):
         responses.add_passthru('http://localhost')
         # pysam is being used as it was the cleanest way to
         # get a bgzip formatted file :/

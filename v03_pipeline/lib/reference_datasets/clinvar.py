@@ -104,14 +104,17 @@ def parse_clinvar_release_date(clinvar_url: str) -> str:
 
 
 def get_submission_summary_ht() -> hl.Table:
-    with tempfile.NamedTemporaryFile(
-        suffix='.txt.gz',
-        delete=False,
-    ) as tmp_file, requests.get(
-        CLINVAR_SUBMISSION_SUMMARY_URL,
-        stream=True,
-        timeout=10,
-    ) as r:
+    with (
+        tempfile.NamedTemporaryFile(
+            suffix='.txt.gz',
+            delete=False,
+        ) as tmp_file,
+        requests.get(
+            CLINVAR_SUBMISSION_SUMMARY_URL,
+            stream=True,
+            timeout=10,
+        ) as r,
+    ):
         shutil.copyfileobj(r.raw, tmp_file)
     cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = hl.import_table(
@@ -163,10 +166,13 @@ def get_ht(
     clinvar_url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    with tempfile.NamedTemporaryFile(
-        suffix='.vcf.gz',
-        delete=False,
-    ) as tmp_file, requests.get(clinvar_url, stream=True, timeout=10) as r:
+    with (
+        tempfile.NamedTemporaryFile(
+            suffix='.vcf.gz',
+            delete=False,
+        ) as tmp_file,
+        requests.get(clinvar_url, stream=True, timeout=10) as r,
+    ):
         shutil.copyfileobj(r.raw, tmp_file)
     cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = vcf_to_ht(cloud_tmp_file, reference_genome)

@@ -144,10 +144,13 @@ def copyfileobj(fsrc, fdst, decode_content, length=16 * 1024):
 def download_zip_file(url, dataset_name: str, suffix='.zip', decode_content=False):
     dir_ = f'/tmp/{generate_random_string()}/{dataset_name}'  # noqa: S108
     os.makedirs(dir_, exist_ok=True)
-    with tempfile.NamedTemporaryFile(
-        dir=dir_,
-        suffix=suffix,
-    ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
+    with (
+        tempfile.NamedTemporaryFile(
+            dir=dir_,
+            suffix=suffix,
+        ) as tmp_file,
+        requests.get(url, stream=True, timeout=10) as r,
+    ):
         copyfileobj(r.raw, tmp_file, decode_content)
         with zipfile.ZipFile(tmp_file.name, 'r') as zipf:
             zipf.extractall(dir_)

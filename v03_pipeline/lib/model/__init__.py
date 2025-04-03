@@ -14,8 +14,8 @@ __all__ = [
     'DatasetType',
     'Env',
     'FeatureFlag',
-    'Sex',
     'PipelineVersion',
     'ReferenceGenome',
     'SampleType',
+    'Sex',
 ]

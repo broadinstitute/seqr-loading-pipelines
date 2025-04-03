@@ -19,10 +19,10 @@ PHASE_4_CALLSET_WITH_GNOMAD_V4 = 'gs://seqr-loading-temp/phase4.seqr.gnomad_v4.v
 
 
 class AddGnomadSVs(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        ((ReferenceGenome.GRCh38, DatasetType.SV),),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            ((ReferenceGenome.GRCh38, DatasetType.SV),),
+        )
     )
 
     @staticmethod

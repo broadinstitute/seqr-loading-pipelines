@@ -59,11 +59,14 @@ BASE_ENUMS = {
 class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
     @responses.activate
     def test_create_empty_annotations_table(self):
-        with patch.object(
-            BaseReferenceDataset,
-            'for_reference_genome_dataset_type_annotations',
-            return_value=[ReferenceDataset.clinvar],
-        ), mock_clinvar_urls(ReferenceGenome.GRCh38):
+        with (
+            patch.object(
+                BaseReferenceDataset,
+                'for_reference_genome_dataset_type_annotations',
+                return_value=[ReferenceDataset.clinvar],
+            ),
+            mock_clinvar_urls(ReferenceGenome.GRCh38),
+        ):
             task = UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 reference_genome=ReferenceGenome.GRCh38,
                 dataset_type=DatasetType.SNV_INDEL,

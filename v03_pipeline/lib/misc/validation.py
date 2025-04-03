@@ -63,7 +63,7 @@ def validate_allele_depth_length(
     )
     if ht.count() > 0:
         variant_format = dataset_type.table_key_format_fn(reference_genome)
-        msg = f'Found variants with unequal Allele Depth array lengths over samples (first 10, if applicable): {({variant_format(v): v.found_ad_lengths for v in ht.take(10)})}'
+        msg = f'Found variants with unequal Allele Depth array lengths over samples (first 10, if applicable): { ({variant_format(v): v.found_ad_lengths for v in ht.take(10)}) }'
         raise SeqrValidationError(msg)
 
 
@@ -125,8 +125,10 @@ def validate_imported_field_types(
         if (
             (
                 dtype == hl.tstruct
-                and type(mt_schema[field])
-                == hl.expr.expressions.typed_expressions.StructExpression
+                and isinstance(
+                    mt_schema[field],
+                    hl.expr.expressions.typed_expressions.StructExpression,
+                )
             )
             or (isinstance(dtype, set) and mt_schema[field].dtype in dtype)
             or (mt_schema[field].dtype == dtype)

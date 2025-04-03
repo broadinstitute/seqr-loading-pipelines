@@ -63,21 +63,24 @@ class WriteRelatednessCheckTableTaskTest(MockedDatarootTestCase):
             ),
             '1.0',
         )
-        with patch.object(
-            ReferenceDataset,
-            'version',
-            return_value='2.0',
-        ), patch.object(
-            ReferenceDataset,
-            'get_ht',
-            lambda *_: hl.Table.parallelize(
-                [],
-                hl.tstruct(
-                    locus=hl.tlocus('GRCh38'),
-                    alleles=hl.tarray(hl.tstr),
+        with (
+            patch.object(
+                ReferenceDataset,
+                'version',
+                return_value='2.0',
+            ),
+            patch.object(
+                ReferenceDataset,
+                'get_ht',
+                lambda *_: hl.Table.parallelize(
+                    [],
+                    hl.tstruct(
+                        locus=hl.tlocus('GRCh38'),
+                        alleles=hl.tarray(hl.tstr),
+                    ),
+                    key=['locus', 'alleles'],
+                    globals=hl.Struct(version='2.0'),
                 ),
-                key=['locus', 'alleles'],
-                globals=hl.Struct(version='2.0'),
             ),
         ):
             worker = luigi.worker.Worker()

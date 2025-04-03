@@ -60,7 +60,7 @@ def globalize_ids(ht: hl.Table, project_guid: str, sample_type: SampleType) -> h
     ht = ht.annotate_globals(
         project_sample_types=[project_key],
         project_families=(
-            {project_key: [fs.family_guid for fs in ps] for ps in row.project_stats}
+            {project_key: [fs.family_guid for fs in ps] for ps in row.project_stats}  # noqa: B035
             if has_project_stats
             else hl.empty_dict(hl.tstr, hl.tarray(hl.tstr))
         ),

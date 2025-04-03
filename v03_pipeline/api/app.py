@@ -36,7 +36,7 @@ async def loading_pipeline_enqueue(request: web.Request) -> web.Response:
         raise web.HTTPBadRequest from e
 
     try:
-        async with aiofiles.open(loading_pipeline_queue_path(), 'r') as f:
+        async with aiofiles.open(loading_pipeline_queue_path()) as f:
             return web.json_response(
                 {
                     'Failed to queue due to in process request': json.loads(

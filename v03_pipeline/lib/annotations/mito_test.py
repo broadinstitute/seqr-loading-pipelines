@@ -56,10 +56,7 @@ class MITOTest(unittest.TestCase):
                 project_stats=hl.tarray(
                     hl.tarray(
                         hl.tstruct(
-                            **{
-                                field: hl.tint32
-                                for field in DatasetType.MITO.lookup_table_fields_and_genotype_filter_fns
-                            },
+                            **dict.fromkeys(DatasetType.MITO.lookup_table_fields_and_genotype_filter_fns, hl.tint32),
                         ),
                     ),
                 ),

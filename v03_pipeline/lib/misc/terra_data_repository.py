@@ -55,7 +55,7 @@ def gen_bq_table_names() -> Generator[str]:
         ]
         for future in as_completed(futures):
             result = future.result()
-            yield f"{result['accessInformation']['bigQuery']['projectId']}.{result['accessInformation']['bigQuery']['datasetName']}"
+            yield f'{result["accessInformation"]["bigQuery"]["projectId"]}.{result["accessInformation"]["bigQuery"]["datasetName"]}'
 
 
 def bq_metrics_query(bq_table_name: str) -> google.cloud.bigquery.table.RowIterator:

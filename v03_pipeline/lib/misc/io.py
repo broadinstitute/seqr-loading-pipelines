@@ -172,7 +172,7 @@ def import_vcf(
                 **args,
             ),
         )
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         # Handle callsets provided as gz but not bgz
         # Note that this is handled separately from other VCF validation
         # as it's an exceptional case that we can handle internally.

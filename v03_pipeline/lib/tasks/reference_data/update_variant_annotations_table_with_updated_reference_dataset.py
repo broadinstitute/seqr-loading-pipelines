@@ -55,7 +55,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
             ):
                 self._datasets_to_update.add(dataset_name)
         logger.info(
-            f"Datasets to update: {', '.join(d for d in self._datasets_to_update)}",
+            f'Datasets to update: {", ".join(d for d in self._datasets_to_update)}',
         )
         return not self._datasets_to_update
 

@@ -83,10 +83,13 @@ def register_alleles(
     hl.export_vcf(ht, raw_vcf_file_name)
 
     # Reformat the VCF created by hail's 'export_vcf' function to be compatible with the Allele Registry
-    with hfs.open(raw_vcf_file_name, 'r') as vcf_in, hfs.open(
-        formatted_vcf_file_name,
-        'w',
-    ) as vcf_out:
+    with (
+        hfs.open(raw_vcf_file_name, 'r') as vcf_in,
+        hfs.open(
+            formatted_vcf_file_name,
+            'w',
+        ) as vcf_out,
+    ):
         vcf_out.writelines(reference_genome.allele_registry_vcf_header)
         for line in vcf_in:
             if not line.startswith('#'):

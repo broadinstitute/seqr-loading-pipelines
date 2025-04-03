@@ -40,9 +40,12 @@ class TestPaths(unittest.TestCase):
             ),
             '/var/seqr/seqr-hail-search-data/v3.1/GRCh37/SNV_INDEL/families/WES/franklin.ht',
         )
-        with patch('v03_pipeline.lib.paths.Env') as mock_env, patch(
-            'v03_pipeline.lib.paths.FeatureFlag',
-        ) as mock_ff:
+        with (
+            patch('v03_pipeline.lib.paths.Env') as mock_env,
+            patch(
+                'v03_pipeline.lib.paths.FeatureFlag',
+            ) as mock_ff,
+        ):
             mock_env.HAIL_SEARCH_DATA_DIR = '/var/bucket/'
             self.assertEqual(
                 family_table_path(

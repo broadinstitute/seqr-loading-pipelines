@@ -7,10 +7,10 @@ GNOMAD_SVS_HT = 'gs://seqr-reference-data/v3.1/GRCh38/gnomad_svs/1.1.ht'
 
 
 class ModifyGnomadSVHom(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        ((ReferenceGenome.GRCh38, DatasetType.SV),),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            ((ReferenceGenome.GRCh38, DatasetType.SV),),
+        )
     )
 
     @staticmethod

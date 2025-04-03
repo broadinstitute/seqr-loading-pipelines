@@ -12,14 +12,17 @@ from v03_pipeline.lib.reference_datasets.misc import (
 
 
 def get_ht(path: str, reference_genome: ReferenceGenome) -> hl.Table:
-    with tempfile.NamedTemporaryFile(
-        suffix='.bed',
-        delete=False,
-    ) as tmp_file, requests.get(
-        path,
-        stream=True,
-        timeout=10,
-    ) as r:
+    with (
+        tempfile.NamedTemporaryFile(
+            suffix='.bed',
+            delete=False,
+        ) as tmp_file,
+        requests.get(
+            path,
+            stream=True,
+            timeout=10,
+        ) as r,
+    ):
         shutil.copyfileobj(r.raw, tmp_file)
     cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = hl.import_table(

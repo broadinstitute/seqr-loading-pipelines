@@ -18,10 +18,13 @@ def get_ht(
     url: str,
     reference_genome: ReferenceGenome,
 ) -> hl.Table:
-    with tempfile.NamedTemporaryFile(
-        suffix='.tsv',
-        delete=False,
-    ) as tmp_file, requests.get(url, stream=True, timeout=10) as r:
+    with (
+        tempfile.NamedTemporaryFile(
+            suffix='.tsv',
+            delete=False,
+        ) as tmp_file,
+        requests.get(url, stream=True, timeout=10) as r,
+    ):
         shutil.copyfileobj(r.raw, tmp_file)
     cloud_tmp_file = copy_to_cloud_storage(tmp_file.name)
     ht = hl.import_table(

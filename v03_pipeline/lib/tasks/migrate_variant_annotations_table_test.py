@@ -12,10 +12,10 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 
 class MockMigration(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        ((ReferenceGenome.GRCh38, DatasetType.GCNV),),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            ((ReferenceGenome.GRCh38, DatasetType.GCNV),),
+        )
     )
 
     @staticmethod
@@ -27,10 +27,10 @@ class MockMigration(BaseMigration):
 
 
 class MockMigration2(BaseMigration):
-    reference_genome_dataset_types: frozenset[
-        tuple[ReferenceGenome, DatasetType]
-    ] = frozenset(
-        ((ReferenceGenome.GRCh38, DatasetType.GCNV),),
+    reference_genome_dataset_types: frozenset[tuple[ReferenceGenome, DatasetType]] = (
+        frozenset(
+            ((ReferenceGenome.GRCh38, DatasetType.GCNV),),
+        )
     )
 
     @staticmethod
