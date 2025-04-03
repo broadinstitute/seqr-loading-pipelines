@@ -36,7 +36,7 @@ class DatasetType(StrEnum):
         if self in {DatasetType.GCNV, DatasetType.SV}:
             return lambda s: s.variant_id
         return (
-            lambda s: f'{s.locus.contig if reference_genome == ReferenceGenome.GRCh37 else s.locus.contig.replace("chr", "")}-{s.locus.position}-{s.alleles[0]}-{s.alleles[1]}'
+            lambda s: f'{s.locus.contig if reference_genome == ReferenceGenome.GRCh37 else s.locus.contig.replace("chr", "")}-{s.locus.position}-{"-".join(s.alleles)}'
         )
 
     @property
@@ -121,10 +121,9 @@ class DatasetType(StrEnum):
                 'info.CPX_TYPE': hl.tstr,
                 'info.END': hl.tint32,
                 'info.END2': hl.tint32,
-                'info.gnomAD_V2_AF': hl.tfloat64,
-                'info.gnomAD_V2_SVID': hl.tstr,
                 'info.N_HET': hl.tint32,
                 'info.N_HOMALT': hl.tint32,
+                'info.GNOMAD_V4.1_TRUTH_VID': hl.tstr,
                 'info.StrVCTVRE': hl.tstr,
                 'info.SVLEN': hl.tint32,
                 **sv.CONSEQ_PREDICTED_GENE_COLS,
@@ -171,6 +170,10 @@ class DatasetType(StrEnum):
     @property
     def has_lookup_table(self) -> bool:
         return self in {DatasetType.SNV_INDEL, DatasetType.MITO}
+
+    @property
+    def gt_stats_from_hl_call_stats(self) -> bool:
+        return self == DatasetType.SV
 
     def has_gencode_ensembl_to_refseq_id_mapping(
         self,
@@ -265,7 +268,6 @@ class DatasetType(StrEnum):
                 sv.bothsides_support,
                 sv.cpx_intervals,
                 sv.end_locus,
-                sv.gt_stats,
                 sv.gnomad_svs,
                 sv.sorted_gene_consequences,
                 sv.start_locus,
@@ -364,6 +366,9 @@ class DatasetType(StrEnum):
             DatasetType.GCNV: [
                 gcnv.gt_stats,
             ],
+            DatasetType.SV: [
+                sv.gt_stats,
+            ],
         }.get(self, [])
 
     @property
@@ -387,3 +392,11 @@ class DatasetType(StrEnum):
                 sv.info,
             ],
         }[self]
+
+    @property
+    def overwrite_male_non_par_calls(self) -> None:
+        return self == DatasetType.SV
+
+    @property
+    def re_key_by_seqr_internal_truth_vid(self) -> None:
+        return self == DatasetType.SV

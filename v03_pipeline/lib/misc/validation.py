@@ -6,7 +6,6 @@ from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
     SampleType,
-    Sex,
 )
 
 AMBIGUOUS_THRESHOLD_PERC: float = 0.01  # Fraction of samples identified as "ambiguous_sex" above which an error will be thrown.
@@ -45,6 +44,26 @@ def validate_allele_type(
             msg = 'Alleles with invalid allele <NON_REF> are present in the callset.  This appears to be a GVCF containing records for sites with no variants.'
             raise SeqrValidationError(msg)
         msg = f'Alleles with invalid AlleleType are present in the callset: {collected_alleles[:10]}'
+        raise SeqrValidationError(msg)
+
+
+def validate_allele_depth_length(
+    mt: hl.MatrixTable,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    **_: Any,
+) -> None:
+    ht = mt.select_rows(
+        found_ad_lengths=hl.agg.collect_as_set(hl.len(mt.AD)).remove(
+            hl.missing(hl.tint32),
+        ),
+    ).rows()
+    ht = ht.filter(
+        hl.len(ht.found_ad_lengths) > 1,
+    )
+    if ht.count() > 0:
+        variant_format = dataset_type.table_key_format_fn(reference_genome)
+        msg = f'Found variants with unequal Allele Depth array lengths over samples (first 10, if applicable): {({variant_format(v): v.found_ad_lengths for v in ht.take(10)})}'
         raise SeqrValidationError(msg)
 
 
@@ -126,48 +145,6 @@ def validate_imported_field_types(
     if unexpected_field_types:
         msg = f'Found unexpected field types on MatrixTable after import: {unexpected_field_types}'
         raise SeqrValidationError(msg)
-
-
-def validate_imputed_sex_ploidy(
-    mt: hl.MatrixTable,
-    # NB: sex_check_ht will be undefined if sex checking is disabled for the run
-    sex_check_ht: hl.Table | None = None,
-    **_: Any,
-) -> None:
-    if not sex_check_ht:
-        return
-    mt = mt.select_cols(
-        discrepant=(
-            (
-                # All calls are diploid or missing but the sex is Male
-                hl.agg.all(mt.GT.is_diploid() | hl.is_missing(mt.GT))
-                & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
-            )
-            | (
-                # At least one call is haploid but the sex is Female, X0, XXY, XYY, or XXX
-                hl.agg.any(~mt.GT.is_diploid())
-                & hl.literal(
-                    {
-                        Sex.FEMALE.value,
-                        Sex.X0.value,
-                        Sex.XYY.value,
-                        Sex.XXY.value,
-                        Sex.XXX.value,
-                    },
-                ).contains(sex_check_ht[mt.s].predicted_sex)
-            )
-        ),
-    )
-    discrepant_samples = mt.aggregate_cols(
-        hl.agg.filter(mt.discrepant, hl.agg.collect_as_set(mt.s)),
-    )
-    if discrepant_samples:
-        sorted_discrepant_samples = sorted(discrepant_samples)
-        msg = f'Found samples with misaligned ploidy with their provided imputed sex (first 10, if applicable) : {sorted_discrepant_samples[:10]}'
-        raise SeqrValidationError(
-            msg,
-            {'imputed_sex_ploidy_failures': sorted_discrepant_samples},
-        )
 
 
 def validate_sample_type(

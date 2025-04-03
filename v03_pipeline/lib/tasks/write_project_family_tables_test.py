@@ -137,6 +137,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
                 },
                 relatedness_check={},
                 sex_check={},
+                ploidy_check={},
             ),
         )
         # Project table still contains all family guids

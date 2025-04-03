@@ -9,6 +9,7 @@ from v03_pipeline.lib.misc.io import (
     select_relevant_fields,
     split_multi_hts,
 )
+from v03_pipeline.lib.misc.sv import deduplicate_merged_sv_concordance_calls
 from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
@@ -17,11 +18,11 @@ from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
     valid_filters_path,
+    variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.files import CallsetTask, GCSorLocalTarget
-from v03_pipeline.lib.tasks.write_tdr_metrics_files import WriteTDRMetricsFilesTask
 from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     with_persisted_validation_errors,
 )
@@ -60,17 +61,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
                     ),
                 ),
             ]
-        if (
-            FeatureFlag.EXPECT_TDR_METRICS
-            and not self.skip_expect_tdr_metrics
-            and self.dataset_type.expect_tdr_metrics(
-                self.reference_genome,
-            )
-        ):
-            requirements = [
-                *requirements,
-                self.clone(WriteTDRMetricsFilesTask),
-            ]
         return [
             *requirements,
             CallsetTask(self.callset_path),
@@ -101,6 +91,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
             mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
         additional_row_fields = get_additional_row_fields(
             mt,
+            self.reference_genome,
             self.dataset_type,
             self.skip_check_sex_and_relatedness,
         )
@@ -121,6 +112,27 @@ class WriteImportedCallsetTask(BaseWriteTask):
         if self.dataset_type.has_multi_allelic_variants:
             # NB: throws SeqrValidationError
             mt = split_multi_hts(mt, self.skip_validation)
+        if self.dataset_type.re_key_by_seqr_internal_truth_vid and hasattr(
+            mt,
+            'info.SEQR_INTERNAL_TRUTH_VID',
+        ):
+            mt = deduplicate_merged_sv_concordance_calls(
+                mt,
+                hl.read_table(
+                    variant_annotations_table_path(
+                        self.reference_genome,
+                        self.dataset_type,
+                    ),
+                ),
+            )
+            mt = mt.key_rows_by(
+                variant_id=hl.if_else(
+                    hl.is_defined(mt['info.SEQR_INTERNAL_TRUTH_VID']),
+                    mt['info.SEQR_INTERNAL_TRUTH_VID'],
+                    mt.variant_id,
+                ),
+            )
+
         # Special handling of variant-level filter annotation for VETs filters.
         # The annotations are present on the sample-level FT field but are
         # expected upstream on "filters".

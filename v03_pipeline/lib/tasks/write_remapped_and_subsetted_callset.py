@@ -3,6 +3,7 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.family_loading_failures import (
+    get_families_failed_imputed_sex_ploidy,
     get_families_failed_missing_samples,
     get_families_failed_relatedness_check,
     get_families_failed_sex_check,
@@ -15,6 +16,7 @@ from v03_pipeline.lib.misc.io import (
 )
 from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
+from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
 from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
@@ -120,6 +122,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         )
         families_failed_relatedness_check = {}
         families_failed_sex_check = {}
+        families_failed_imputed_sex_ploidy = {}
         if (
             FeatureFlag.CHECK_SEX_AND_RELATEDNESS
             and self.dataset_type.check_sex_and_relatedness
@@ -138,10 +141,18 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 relatedness_check_ht,
                 remap_lookup,
             )
-            families_failed_sex_check = get_families_failed_sex_check(
+            families_failed_imputed_sex_ploidy = get_families_failed_imputed_sex_ploidy(
                 families
                 - families_failed_missing_samples.keys()
                 - families_failed_relatedness_check.keys(),
+                callset_mt,
+                sex_check_ht,
+            )
+            families_failed_sex_check = get_families_failed_sex_check(
+                families
+                - families_failed_missing_samples.keys()
+                - families_failed_relatedness_check.keys()
+                - families_failed_imputed_sex_ploidy.keys(),
                 sex_check_ht,
                 remap_lookup,
             )
@@ -151,6 +162,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             - families_failed_missing_samples.keys()
             - families_failed_relatedness_check.keys()
             - families_failed_sex_check.keys()
+            - families_failed_imputed_sex_ploidy.keys()
         )
         if not len(loadable_families):
             msg = 'All families failed validation checks'
@@ -165,6 +177,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                             families_failed_relatedness_check,
                         ),
                         'sex_check': format_failures(families_failed_sex_check),
+                        'ploidy_check': format_failures(
+                            families_failed_imputed_sex_ploidy,
+                        ),
                     },
                 },
             )
@@ -186,6 +201,9 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         for field in mt.row_value:
             if field not in self.dataset_type.row_fields:
                 mt = mt.drop(field)
+
+        if self.dataset_type.overwrite_male_non_par_calls:
+            mt = overwrite_male_non_par_calls(mt, loadable_families)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
                 self.project_remap_paths[self.project_i],
@@ -209,6 +227,10 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
                 ),
                 sex_check=(
                     format_failures(families_failed_sex_check)
+                    or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
+                ),
+                ploidy_check=(
+                    format_failures(families_failed_imputed_sex_ploidy)
                     or hl.empty_dict(hl.tstr, hl.tdict(hl.tstr, hl.tarray(hl.tstr)))
                 ),
             ),

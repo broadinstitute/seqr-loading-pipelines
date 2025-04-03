@@ -10,10 +10,10 @@ from v03_pipeline.lib.misc.gcp import get_service_account_credentials
 from v03_pipeline.lib.misc.requests import requests_retry_session
 
 BIGQUERY_METRICS = [
-    'collaborator_sample_id',
     'predicted_sex',
     'contamination_rate',
     'percent_bases_at_20x',
+    'collaborator_sample_id',
     'mean_coverage',
 ]
 BIGQUERY_RESOURCE = 'bigquery'
@@ -63,9 +63,18 @@ def bq_metrics_query(bq_table_name: str) -> google.cloud.bigquery.table.RowItera
         msg = f'{bq_table_name} does not match expected pattern'
         raise ValueError(msg)
     client = bigquery.Client()
+
+    # not all columns are guaranteed to be present, coalesce if missing
+    table_ddl = next(
+        client.query_and_wait(
+            f"""
+        SELECT ddl FROM `{bq_table_name}`.INFORMATION_SCHEMA.TABLES where table_name='sample';
+        """,  # noqa: S608
+        ),
+    )[0]
+    metrics = [(m if m in table_ddl else f'NULL AS {m}') for m in BIGQUERY_METRICS]
     return client.query_and_wait(
         f"""
-        SELECT {','.join(BIGQUERY_METRICS)}
-        FROM `{bq_table_name}.sample`
-    """,  # noqa: S608
+        SELECT {','.join(metrics)} FROM `{bq_table_name}.sample`;
+        """,  # noqa: S608
     )

@@ -47,6 +47,7 @@ from v03_pipeline.var.test.vep.mock_vep_data import MOCK_37_VEP_DATA, MOCK_38_VE
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
+TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_GCNV_BED_FILE_2 = 'v03_pipeline/var/test/callsets/gcnv_2.tsv'
 TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
@@ -54,6 +55,8 @@ TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
 TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_PEDIGREE_8 = 'v03_pipeline/var/test/pedigrees/test_pedigree_8.tsv'
+TEST_PEDIGREE_10 = 'v03_pipeline/var/test/pedigrees/test_pedigree_10.tsv'
+TEST_PEDIGREE_11 = 'v03_pipeline/var/test/pedigrees/test_pedigree_11.tsv'
 
 GENE_ID_MAPPING = {
     'OR4F5': 'ENSG00000186092',
@@ -902,7 +905,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
     @patch(
         'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
     )
-    def test_sv_update_vat(
+    def test_sv_multiple_vcf_update_vat(
         self,
         mock_load_gencode: Mock,
     ) -> None:
@@ -930,13 +933,14 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ).exists(),
         )
         ht = hl.read_table(update_variant_annotations_task.output().path)
-        self.assertEqual(ht.count(), 11)
+        self.assertEqual(ht.count(), 13)
         self.assertCountEqual(
             ht.globals.collect(),
             [
                 hl.Struct(
-                    versions=hl.Struct(),
+                    versions=hl.Struct(gnomad_svs='1.1'),
                     enums=hl.Struct(
+                        gnomad_svs=hl.Struct(),
                         sv_type=SV_TYPES,
                         sv_type_detail=SV_TYPE_DETAILS,
                         sorted_gene_consequences=hl.Struct(
@@ -960,7 +964,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
             ],
         )
         self.assertCountEqual(
-            ht.collect(),
+            ht.collect()[:8],
             [
                 hl.Struct(
                     variant_id='BND_chr1_6',
@@ -973,11 +977,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.04775)),
+                        AF=0.125,
                         AC=1,
                         AN=8,
                         Hom=0,
-                        Het=278,
+                        Het=1,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1016,11 +1020,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.910684)),
+                        AF=0.875,
                         AC=7,
                         AN=8,
-                        Hom=2391,
-                        Het=520,
+                        Hom=3,
+                        Het=1,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1070,11 +1074,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.169873)),
+                        AF=0.25,
                         AC=2,
                         AN=8,
-                        Hom=3,
-                        Het=983,
+                        Hom=0,
+                        Het=2,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1123,11 +1127,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.251804)),
+                        AF=0.375,
                         AC=3,
                         AN=8,
-                        Hom=114,
-                        Het=1238,
+                        Hom=1,
+                        Het=1,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1179,11 +1183,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.218138)),
+                        AF=0.25,
                         AC=2,
                         AN=8,
-                        Hom=18,
-                        Het=1234,
+                        Hom=0,
+                        Het=2,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1237,11 +1241,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.499656)),
+                        AF=0.5,
                         AC=4,
                         AN=8,
-                        Hom=49,
-                        Het=2811,
+                        Hom=0,
+                        Het=4,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
@@ -1269,214 +1273,291 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     xpos=1021427498,
                 ),
                 hl.Struct(
-                    variant_id='DEL_chr1_12',
-                    algorithms='depth',
+                    variant_id='CPX_chrX_251',
+                    algorithms='manta',
                     bothsides_support=False,
-                    cpx_intervals=None,
+                    cpx_intervals=[
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=180540234,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074938,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                    ],
                     end_locus=hl.Locus(
-                        contig='chr1',
-                        position=428500,
+                        contig='chrX',
+                        position=2781000,
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.064926)),
-                        AC=1,
+                        AF=0.375,
+                        AC=3,
                         AN=8,
-                        Hom=5,
-                        Het=368,
+                        Hom=1,
+                        Het=1,
                     ),
                     gnomad_svs=None,
-                    rg37_locus=hl.Locus(
-                        contig=5,
-                        position=180831919,
-                        reference_genome='GRCh37',
-                    ),
-                    rg37_locus_end=hl.Locus(
-                        contig=5,
-                        position=180817389,
-                        reference_genome='GRCh37',
-                    ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=12),
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
                     ],
                     start_locus=hl.Locus(
-                        contig='chr1',
-                        position=413968,
+                        contig='chrX',
+                        position=3,
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
-                    sv_len=14532,
-                    sv_type_id=5,
-                    sv_type_detail_id=None,
-                    xpos=1000413968,
-                ),
-                hl.Struct(
-                    variant_id='DUP_chr1_5',
-                    algorithms='depth',
-                    bothsides_support=False,
-                    cpx_intervals=None,
-                    end_locus=hl.Locus(
-                        contig='chr1',
-                        position=263666,
-                        reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.115596)),
-                        AC=1,
-                        AN=8,
-                        Hom=110,
-                        Het=453,
-                    ),
-                    gnomad_svs=None,
+                    sv_type_id=3,
+                    sv_type_detail_id=9,
+                    sv_len=534718,
+                    xpos=23000000003,
                     rg37_locus=None,
                     rg37_locus_end=hl.Locus(
-                        contig=1,
-                        position=233417,
+                        contig='X',
+                        position=2699041,
                         reference_genome='GRCh37',
                     ),
-                    sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000284733', major_consequence_id=12),
-                    ],
-                    start_locus=hl.Locus(
-                        contig='chr1',
-                        position=257666,
-                        reference_genome='GRCh38',
-                    ),
-                    strvctvre=hl.Struct(score=None),
-                    sv_len=6000,
-                    sv_type_id=6,
-                    sv_type_detail_id=None,
-                    xpos=1000257666,
                 ),
                 hl.Struct(
-                    variant_id='INS_chr1_268',
-                    algorithms='melt',
+                    variant_id='CPX_chrX_252',
+                    algorithms='manta',
                     bothsides_support=False,
-                    cpx_intervals=None,
+                    cpx_intervals=[
+                        hl.Struct(
+                            type_id=5,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=180540234,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                        hl.Struct(
+                            type_id=8,
+                            start=hl.Locus(
+                                contig='chr1',
+                                position=181074767,
+                                reference_genome='GRCh38',
+                            ),
+                            end=hl.Locus(
+                                contig='chr1',
+                                position=181074938,
+                                reference_genome='GRCh38',
+                            ),
+                        ),
+                    ],
                     end_locus=hl.Locus(
-                        contig='chr1',
-                        position=17465723,
+                        contig='chrX',
+                        position=2781900,
                         reference_genome='GRCh38',
                     ),
                     gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.004466)),
-                        AC=1,
-                        AN=8,
+                        AF=hl.eval(hl.float32(0.4285714328289032)),
+                        AC=3,
+                        AN=7,
+                        Hom=1,
+                        Het=1,
+                    ),
+                    gnomad_svs=None,
+                    sorted_gene_consequences=[
+                        hl.Struct(gene_id='ENSG00000135835', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000153029', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000135823', major_consequence_id=0),
+                        hl.Struct(gene_id='ENSG00000143324', major_consequence_id=0),
+                    ],
+                    start_locus=hl.Locus(
+                        contig='chrX',
+                        position=2781700,
+                        reference_genome='GRCh38',
+                    ),
+                    strvctvre=hl.Struct(score=None),
+                    sv_type_id=3,
+                    sv_type_detail_id=9,
+                    sv_len=534718,
+                    xpos=23002781700,
+                    rg37_locus=hl.Locus(
+                        contig='X',
+                        position=2699741,
+                        reference_genome='GRCh37',
+                    ),
+                    rg37_locus_end=hl.Locus(
+                        contig='X',
+                        position=2699941,
+                        reference_genome='GRCh37',
+                    ),
+                ),
+            ],
+        )
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SV,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SV_VCF_2,
+                project_guids=['R0115_test_project2'],
+                project_remap_paths=['not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_5],
+                skip_validation=True,
+                run_id='second_run_id',
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 14)
+        self.assertCountEqual(
+            ht.globals.collect(),
+            [
+                hl.Struct(
+                    versions=hl.Struct(gnomad_svs='1.1'),
+                    enums=hl.Struct(
+                        gnomad_svs=hl.Struct(),
+                        sv_type=SV_TYPES,
+                        sv_type_detail=SV_TYPE_DETAILS,
+                        sorted_gene_consequences=hl.Struct(
+                            major_consequence=SV_CONSEQUENCE_RANKS,
+                        ),
+                    ),
+                    migrations=[],
+                    updates={
+                        hl.Struct(
+                            callset=TEST_SV_VCF,
+                            project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
+                        ),
+                        hl.Struct(
+                            callset=TEST_SV_VCF_2,
+                            project_guid='R0115_test_project2',
+                            remap_pedigree_hash=hl.eval(
+                                remap_pedigree_hash(
+                                    'not_a_real_file',
+                                    TEST_PEDIGREE_5,
+                                ),
+                            ),
+                        ),
+                    },
+                ),
+            ],
+        )
+        self.assertCountEqual(
+            ht.take(1),
+            [
+                hl.Struct(
+                    variant_id='BND_chr1_6',
+                    algorithms='manta',
+                    bothsides_support=False,
+                    cpx_intervals=None,
+                    end_locus=hl.Locus(
+                        contig='chr5',
+                        position=20404,
+                        reference_genome='GRCh38',
+                    ),
+                    gt_stats=hl.Struct(
+                        AF=0.125,
+                        AC=2,
+                        AN=16,
                         Hom=0,
-                        Het=26,
+                        Het=2,
                     ),
                     gnomad_svs=None,
                     rg37_locus=hl.Locus(
                         contig=1,
-                        position=17792203,
+                        position=10367,
                         reference_genome='GRCh37',
                     ),
                     rg37_locus_end=hl.Locus(
-                        contig=1,
-                        position=17792219,
+                        contig=5,
+                        position=20404,
                         reference_genome='GRCh37',
                     ),
                     sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000179051', major_consequence_id=12),
+                        hl.Struct(gene_id='ENSG00000186092', major_consequence_id=12),
+                        hl.Struct(gene_id='ENSG00000153404', major_consequence_id=12),
                     ],
                     start_locus=hl.Locus(
                         contig='chr1',
-                        position=17465707,
+                        position=180928,
                         reference_genome='GRCh38',
                     ),
                     strvctvre=hl.Struct(score=None),
-                    sv_len=955,
-                    sv_type_id=7,
-                    sv_type_detail_id=6,
-                    xpos=1017465707,
+                    sv_len=-1,
+                    sv_type_id=2,
+                    sv_type_detail_id=None,
+                    xpos=1000180928,
                 ),
-                hl.Struct(
-                    variant_id='INS_chr1_65',
-                    algorithms='manta,melt',
-                    bothsides_support=False,
-                    cpx_intervals=None,
-                    end_locus=hl.Locus(
-                        contig='chr1',
-                        position=4228448,
-                        reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.10237)),
-                        AC=1,
-                        AN=8,
-                        Hom=3,
-                        Het=590,
-                    ),
-                    gnomad_svs=hl.Struct(
-                        AF=hl.eval(hl.float32(0.06896299868822098)),
-                        ID='gnomAD-SV_v2.1_INS_chr1_65',
-                    ),
-                    rg37_locus=hl.Locus(
-                        contig=1,
-                        position=4288465,
-                        reference_genome='GRCh37',
-                    ),
-                    rg37_locus_end=hl.Locus(
-                        contig=1,
-                        position=4288508,
-                        reference_genome='GRCh37',
-                    ),
-                    sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000198912', major_consequence_id=12),
-                    ],
-                    start_locus=hl.Locus(
-                        contig='chr1',
-                        position=4228405,
-                        reference_genome='GRCh38',
-                    ),
-                    strvctvre=hl.Struct(score=hl.eval(hl.float32(0.1255))),
-                    sv_len=298,
-                    sv_type_id=7,
-                    sv_type_detail_id=4,
-                    xpos=1004228405,
-                ),
-                hl.Struct(
-                    variant_id='INS_chr1_688',
-                    algorithms='melt',
-                    bothsides_support=False,
-                    cpx_intervals=None,
-                    end_locus=hl.Locus(
-                        contig='chr1',
-                        position=48963135,
-                        reference_genome='GRCh38',
-                    ),
-                    gt_stats=hl.Struct(
-                        AF=hl.eval(hl.float32(0.06338)),
-                        AC=1,
-                        AN=8,
-                        Hom=2,
-                        Het=365,
-                    ),
-                    gnomad_svs=None,
-                    rg37_locus=hl.Locus(
-                        contig=1,
-                        position=49428756,
-                        reference_genome='GRCh37',
-                    ),
-                    rg37_locus_end=hl.Locus(
-                        contig=1,
-                        position=49428807,
-                        reference_genome='GRCh37',
-                    ),
-                    sorted_gene_consequences=[
-                        hl.Struct(gene_id='ENSG00000186094', major_consequence_id=11),
-                    ],
-                    start_locus=hl.Locus(
-                        contig='chr1',
-                        position=48963084,
-                        reference_genome='GRCh38',
-                    ),
-                    strvctvre=hl.Struct(score=None),
-                    sv_len=5520,
-                    sv_type_id=7,
-                    sv_type_detail_id=5,
-                    xpos=1048963084,
-                ),
+            ],
+        )
+
+    @patch(
+        'v03_pipeline.lib.tasks.write_new_variants_table.load_gencode_gene_symbol_to_gene_id',
+    )
+    def test_sv_multiple_project_single_vcf(
+        self,
+        mock_load_gencode: Mock,
+    ) -> None:
+        mock_load_gencode.return_value = GENE_ID_MAPPING
+        worker = luigi.worker.Worker()
+        update_variant_annotations_task = (
+            UpdateVariantAnnotationsTableWithNewSamplesTask(
+                reference_genome=ReferenceGenome.GRCh38,
+                dataset_type=DatasetType.SV,
+                sample_type=SampleType.WGS,
+                callset_path=TEST_SV_VCF_2,
+                project_guids=['R0116_test_project3', 'R0117_test_project4'],
+                project_remap_paths=['not_a_real_file', 'not_a_real_file'],
+                project_pedigree_paths=[TEST_PEDIGREE_10, TEST_PEDIGREE_11],
+                skip_validation=True,
+                run_id='run_id',
+            )
+        )
+        worker.add(update_variant_annotations_task)
+        worker.run()
+        self.assertTrue(update_variant_annotations_task.complete())
+        ht = hl.read_table(update_variant_annotations_task.output().path)
+        self.assertEqual(ht.count(), 2)
+        self.assertEqual(
+            len(ht.globals.updates.collect()[0]),
+            2,
+        )
+        self.assertEqual(
+            ht.gt_stats.collect(),
+            [
+                hl.Struct(AF=0.25, AC=1, AN=4, Hom=0, Het=1),
+                # Note the call stats computed
+                # from the two included samples.
+                hl.Struct(AF=0.0, AC=0, AN=4, Hom=0, Het=0),
             ],
         )
 

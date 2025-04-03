@@ -174,3 +174,44 @@ def get_families_failed_sex_check(
                     f'Sample {sample_id} has pedigree sex {family.samples[sample_id].sex.value} but imputed sex {sex_check_lookup[sample_id].value}',
                 )
     return dict(failed_families)
+
+
+def get_families_failed_imputed_sex_ploidy(
+    families: set[Family],
+    mt: hl.MatrixTable,
+    sex_check_ht: hl.Table,
+) -> dict[Family, str]:
+    mt = mt.select_cols(
+        discrepant=(
+            (
+                # All calls are diploid or missing but the sex is Male
+                hl.agg.all(mt.GT.is_diploid() | hl.is_missing(mt.GT))
+                & (sex_check_ht[mt.s].predicted_sex == Sex.MALE.value)
+            )
+            | (
+                # At least one call is haploid but the sex is Female, X0, XXY, XYY, or XXX
+                hl.agg.any(~mt.GT.is_diploid())
+                & hl.literal(
+                    {
+                        Sex.FEMALE.value,
+                        Sex.X0.value,
+                        Sex.XYY.value,
+                        Sex.XXY.value,
+                        Sex.XXX.value,
+                    },
+                ).contains(sex_check_ht[mt.s].predicted_sex)
+            )
+        ),
+    )
+    discrepant_samples = mt.aggregate_cols(
+        hl.agg.filter(mt.discrepant, hl.agg.collect_as_set(mt.s)),
+    )
+    failed_families = defaultdict(list)
+    for family in families:
+        discrepant_loadable_samples = set(family.samples.keys()) & discrepant_samples
+        if discrepant_loadable_samples:
+            sorted_discrepant_samples = sorted(discrepant_loadable_samples)
+            failed_families[family].append(
+                f'Found samples with misaligned ploidy with their provided imputed sex: {sorted_discrepant_samples}',
+            )
+    return failed_families

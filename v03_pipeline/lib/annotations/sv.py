@@ -1,3 +1,4 @@
+# ruff: noqa: N806
 from typing import Any
 
 import hail as hl
@@ -175,20 +176,39 @@ def end_locus(ht: hl.Table, **_: Any) -> hl.StructExpression:
     )
 
 
-def gnomad_svs(ht: hl.Table, **_: Any) -> hl.Expression:
-    return hl.or_missing(
-        hl.is_defined(ht['info.gnomAD_V2_AF']),
-        hl.struct(AF=hl.float32(ht['info.gnomAD_V2_AF']), ID=ht['info.gnomAD_V2_SVID']),
-    )
+def gnomad_svs(
+    ht: hl.Table,
+    gnomad_svs_ht: hl.Table,
+    **_: Any,
+) -> hl.Expression:
+    gnomad_svs_ht = gnomad_svs_ht.drop('locus', 'alleles')
+    return gnomad_svs_ht.annotate(
+        ID=gnomad_svs_ht.KEY,
+    )[ht['info.GNOMAD_V4.1_TRUTH_VID']]
 
 
-def gt_stats(ht: hl.Table, **_: Any) -> hl.Expression:
+def gt_stats(ht: hl.Table, callset_ht: hl.Table, **_: Any) -> hl.Expression:
+    def _safe_gt_stats_fetch(ht: hl.Table, field: str):
+        return hl.or_else(ht.gt_stats[field], 0) if hasattr(ht, 'gt_stats') else 0
+
+    # note that "ht" here is the annotations table
+    # union-ed with new variants, subsetted to variants
+    # present in the callset. gt_stats will be "missing"
+    # on the new variants (due to union=True) or not at
+    # all present if the annotations table does not yet exist.
+    row = callset_ht[ht.key]
+    AC = row.gt_stats.AC[1] + _safe_gt_stats_fetch(ht, 'AC')
+    AN = row.gt_stats.AN + _safe_gt_stats_fetch(ht, 'AN')
+    Hom = row.gt_stats.homozygote_count[1] + _safe_gt_stats_fetch(ht, 'Hom')
+    Het = (
+        row.gt_stats.AC[1] - (row.gt_stats.homozygote_count[1] * 2)
+    ) + _safe_gt_stats_fetch(ht, 'Het')
     return hl.struct(
-        AF=hl.float32(ht['info.AF'][0]),
-        AC=ht['info.AC'][0],
-        AN=ht['info.AN'],
-        Hom=ht['info.N_HOMALT'],
-        Het=ht['info.N_HET'],
+        AF=hl.float32(AC / AN),
+        AC=AC,
+        AN=AN,
+        Hom=Hom,
+        Het=Het,
     )
 
 
