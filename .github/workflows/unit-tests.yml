@@ -34,7 +34,7 @@ jobs:
       - name: Check Ruff Format
         run: ruff format --check v03_pipeline --diff
       - name: Check Ruff
-        run: ruff . --output-format github
+        run: ruff check --output-format github
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@master
         with:
