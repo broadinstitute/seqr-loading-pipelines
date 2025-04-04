@@ -8,3 +8,4 @@ ipykernel==6.22.0 # matches a pinned version in hail init_notebook.py
 notebook==6.5.6 # matches a pinned version in hail init_notebook.py
 nbconvert==7.3.1 # matches a pinned version in hail init_notebook.py
 git+https://github.com/broadinstitute/gnomad_qc.git@v4.1
+git+https://github.com/microsoft/onnxconverter-common.git@f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd

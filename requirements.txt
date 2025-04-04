@@ -325,8 +325,10 @@ onnx==1.17.0
     #   gnomad
     #   onnxconverter-common
     #   skl2onnx
-onnxconverter-common==1.14.0
-    # via skl2onnx
+onnxconverter-common @ git+https://github.com/microsoft/onnxconverter-common.git@f7a8eb699caa6f6a78d3bdfbcaf5dfbd43569ebd
+    # via
+    #   -r requirements.in
+    #   skl2onnx
 onnxruntime==1.21.0
     # via gnomad
 orjson==3.10.16
@@ -407,7 +409,6 @@ pydantic-core==2.20.1
 pygments==2.19.1
     # via
     #   ipython
-    #   ipython-pygments-lexers
     #   nbconvert
     #   rich
 pyjwt[crypto]==2.10.1
