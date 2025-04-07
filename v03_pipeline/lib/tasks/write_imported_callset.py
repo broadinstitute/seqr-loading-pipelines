@@ -5,7 +5,6 @@ import luigi.util
 from v03_pipeline.lib.misc.callsets import get_additional_row_fields
 from v03_pipeline.lib.misc.io import (
     import_callset,
-    import_vcf,
     select_relevant_fields,
     split_multi_hts,
 )
@@ -14,10 +13,8 @@ from v03_pipeline.lib.misc.validation import (
     validate_imported_field_types,
 )
 from v03_pipeline.lib.misc.vets import annotate_vets
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.paths import (
     imported_callset_path,
-    valid_filters_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import BaseLoadingRunParams
@@ -43,26 +40,7 @@ class WriteImportedCallsetTask(BaseWriteTask):
         )
 
     def requires(self) -> list[luigi.Task]:
-        requirements = []
-        if (
-            FeatureFlag.EXPECT_WES_FILTERS
-            and not self.skip_expect_filters
-            and self.dataset_type.expect_filters(
-                self.sample_type,
-            )
-        ):
-            requirements = [
-                *requirements,
-                CallsetTask(
-                    valid_filters_path(
-                        self.dataset_type,
-                        self.sample_type,
-                        self.callset_path,
-                    ),
-                ),
-            ]
         return [
-            *requirements,
             CallsetTask(self.callset_path),
         ]
 
@@ -74,21 +52,6 @@ class WriteImportedCallsetTask(BaseWriteTask):
             self.reference_genome,
             self.dataset_type,
         )
-        filters_path = None
-        if (
-            FeatureFlag.EXPECT_WES_FILTERS
-            and not self.skip_expect_filters
-            and self.dataset_type.expect_filters(
-                self.sample_type,
-            )
-        ):
-            filters_path = valid_filters_path(
-                self.dataset_type,
-                self.sample_type,
-                self.callset_path,
-            )
-            filters_ht = import_vcf(filters_path, self.reference_genome).rows()
-            mt = mt.annotate_rows(filters=filters_ht[mt.row_key].filters)
         additional_row_fields = get_additional_row_fields(
             mt,
             self.reference_genome,
@@ -139,5 +102,4 @@ class WriteImportedCallsetTask(BaseWriteTask):
         mt = annotate_vets(mt)
         return mt.select_globals(
             callset_path=self.callset_path,
-            filters_path=filters_path or hl.missing(hl.tstr),
         )

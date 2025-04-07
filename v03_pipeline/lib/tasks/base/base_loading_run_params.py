@@ -26,10 +26,6 @@ class BaseLoadingRunParams(luigi.Task):
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
     )
-    skip_expect_filters = luigi.BoolParameter(
-        default=False,
-        parsing=luigi.BoolParameter.EXPLICIT_PARSING,
-    )
     skip_expect_tdr_metrics = luigi.BoolParameter(
         default=False,
         parsing=luigi.BoolParameter.EXPLICIT_PARSING,
