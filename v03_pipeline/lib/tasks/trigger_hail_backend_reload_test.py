@@ -12,8 +12,7 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 
 
 class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
@@ -35,7 +34,7 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
                         callset=TEST_VCF,
                         project_guid='R0113_test_project',
                         remap_pedigree_hash=hl.eval(
-                            remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
+                            remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
                         ),
                     ),
                 },
@@ -71,8 +70,7 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
             run_id='manual__2024-09-20',
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
         )
         worker.add(task)
         worker.run()
@@ -100,8 +98,7 @@ class TriggerHailBackendReloadTestCase(MockedDatarootTestCase):
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
             run_id='manual__2024-09-20',
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
         )
         worker.add(task)
         self.assertFalse(task.complete())

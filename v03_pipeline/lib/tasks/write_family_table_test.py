@@ -8,8 +8,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 
 TEST_RUN_ID = 'manual__2024-04-03'
@@ -25,8 +24,7 @@ class WriteFamilyTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
             family_guid='abc_1',
             skip_validation=True,

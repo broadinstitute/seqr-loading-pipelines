@@ -50,9 +50,8 @@ TEST_SV_VCF = 'v03_pipeline/var/test/callsets/sv_1.vcf'
 TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
 TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 TEST_GCNV_BED_FILE_2 = 'v03_pipeline/var/test/callsets/gcnv_2.tsv'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
+TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_PEDIGREE_8 = 'v03_pipeline/var/test/pedigrees/test_pedigree_8.tsv'
 TEST_PEDIGREE_10 = 'v03_pipeline/var/test/pedigrees/test_pedigree_10.tsv'
@@ -99,7 +98,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_remap_paths=[TEST_REMAP],
                 project_pedigree_paths=['bad_pedigree'],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
@@ -131,8 +129,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_remap_paths=[TEST_REMAP],
-                project_pedigree_paths=[TEST_PEDIGREE_3],
+                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -293,8 +290,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_remap_paths=[TEST_REMAP],
-                project_pedigree_paths=[TEST_PEDIGREE_3],
+                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=False,
                 run_id=TEST_RUN_ID,
             )
@@ -333,7 +329,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             callset=TEST_SNV_INDEL_VCF,
                             project_guid='R0113_test_project',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
+                                remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
                             ),
                         ),
                     },
@@ -347,8 +343,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0114_project4'],
-                project_remap_paths=[TEST_REMAP],
-                project_pedigree_paths=[TEST_PEDIGREE_4],
+                project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
                 skip_validation=False,
                 run_id=TEST_RUN_ID + '-another-run',
             )
@@ -481,8 +476,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                                 project_guid='R0113_test_project',
                                 remap_pedigree_hash=hl.eval(
                                     remap_pedigree_hash(
-                                        TEST_REMAP,
-                                        TEST_PEDIGREE_3,
+                                        TEST_PEDIGREE_3_REMAP,
                                     ),
                                 ),
                             ),
@@ -491,8 +485,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                                 project_guid='R0114_project4',
                                 remap_pedigree_hash=hl.eval(
                                     remap_pedigree_hash(
-                                        TEST_REMAP,
-                                        TEST_PEDIGREE_4,
+                                        TEST_PEDIGREE_4_REMAP,
                                     ),
                                 ),
                             ),
@@ -576,8 +569,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_remap_paths=[TEST_REMAP],
-                project_pedigree_paths=[TEST_PEDIGREE_3],
+                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
@@ -749,8 +741,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SNV_INDEL_VCF,
                 project_guids=['R0113_test_project'],
-                project_remap_paths=[TEST_REMAP],
-                project_pedigree_paths=[TEST_PEDIGREE_3],
+                project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
                 skip_validation=True,
                 run_id=TEST_RUN_ID,
             )
