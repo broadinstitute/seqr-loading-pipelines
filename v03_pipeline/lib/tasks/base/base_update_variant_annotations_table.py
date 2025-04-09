@@ -1,7 +1,7 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.misc import annotate_enums
+from v03_pipeline.lib.annotations.misc import annotate_formatting_annotation_enums
 from v03_pipeline.lib.paths import (
     valid_reference_dataset_path,
     variant_annotations_table_path,
@@ -101,4 +101,4 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 updates=ht.globals.updates,
                 migrations=ht.globals.migrations,
             )
-        return annotate_enums(ht, self.reference_genome, self.dataset_type)
+        return annotate_formatting_annotation_enums(ht, self.reference_genome, self.dataset_type)
