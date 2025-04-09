@@ -17,7 +17,7 @@ from v03_pipeline.lib.model import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 
-def deannotate_formatting_annotation_enums(
+def deannotate_formatting_annotation_enum_globals(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -121,7 +121,7 @@ def deannotate_formatting_annotation_enums(
     return ht
 
 
-def annotate_formatting_annotation_enums(
+def annotate_formatting_annotation_enum_globals(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
