@@ -105,7 +105,7 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
 
         # Remap, but only if the remap file is present!
         remap_lookup = hl.empty_dict(hl.tstr, hl.tstr)
-        if 'remap_id' in pedigree_ht:
+        if 'remap_id' in pedigree_ht.row:
             project_remap_ht = parse_pedigree_ht_to_remap_ht(pedigree_ht)
             callset_mt = remap_sample_ids(
                 callset_mt,

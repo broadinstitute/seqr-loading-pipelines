@@ -285,7 +285,7 @@ def import_tdr_qc_metrics(file_path: str) -> hl.Table:
 
 def import_pedigree(pedigree_path: str) -> hl.Table:
     ht = hl.import_table(pedigree_path, missing='')
-    optional_selects = {'remap_id': ht.VCF_ID} if 'VCF_ID' in ht else {}
+    optional_selects = {'remap_id': ht.VCF_ID} if 'VCF_ID' in ht.row else {}
     return ht.select(
         sex=ht.Sex,
         family_guid=ht.Family_GUID,
