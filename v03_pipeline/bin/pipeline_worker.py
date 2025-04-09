@@ -11,7 +11,6 @@ from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
     loading_pipeline_queue_path,
     project_pedigree_path,
-    project_remap_path,
 )
 from v03_pipeline.lib.tasks.trigger_hail_backend_reload import TriggerHailBackendReload
 from v03_pipeline.lib.tasks.write_success_file import WriteSuccessFileTask
@@ -26,15 +25,6 @@ def main():
                 continue
             with open(loading_pipeline_queue_path()) as f:
                 lpr = LoadingPipelineRequest.model_validate_json(f.read())
-            project_remap_paths = [
-                project_remap_path(
-                    lpr.reference_genome,
-                    lpr.dataset_type,
-                    lpr.sample_type,
-                    project_guid,
-                )
-                for project_guid in lpr.projects_to_run
-            ]
             project_pedigree_paths = [
                 project_pedigree_path(
                     lpr.reference_genome,
@@ -49,7 +39,6 @@ def main():
             )
             loading_run_task_params = {
                 'project_guids': lpr.projects_to_run,
-                'project_remap_paths': project_remap_paths,
                 'project_pedigree_paths': project_pedigree_paths,
                 'run_id': run_id,
                 **{k: v for k, v in lpr.model_dump().items() if k != 'projects_to_run'},
