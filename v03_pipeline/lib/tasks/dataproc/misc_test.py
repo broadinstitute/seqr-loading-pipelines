@@ -19,7 +19,6 @@ class MiscTest(unittest.TestCase):
             sample_type=SampleType.WGS,
             callset_path='test_callset',
             project_guids=['R0113_test_project'],
-            project_remap_paths=['test_remap'],
             project_pedigree_paths=['test_pedigree'],
             run_id='a_misc_run',
         )
