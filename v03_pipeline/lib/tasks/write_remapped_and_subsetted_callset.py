@@ -9,12 +9,10 @@ from v03_pipeline.lib.misc.family_loading_failures import (
     get_families_failed_sex_check,
 )
 from v03_pipeline.lib.misc.io import (
-    does_file_exist,
     import_pedigree,
-    import_remap,
     remap_pedigree_hash,
 )
-from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families
+from v03_pipeline.lib.misc.pedigree import parse_pedigree_ht_to_families, parse_pedigree_ht_to_remap_ht
 from v03_pipeline.lib.misc.sample_ids import remap_sample_ids, subset_samples
 from v03_pipeline.lib.misc.sv import overwrite_male_non_par_calls
 from v03_pipeline.lib.misc.validation import SeqrValidationError
@@ -101,12 +99,12 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     @with_persisted_validation_errors
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
-        pedigree_ht = import_pedigree(self.input()[1].path)
+        pedigree_ht, has_remap = import_pedigree(self.input()[1].path)
 
         # Remap, but only if the remap file is present!
         remap_lookup = hl.empty_dict(hl.tstr, hl.tstr)
-        if does_file_exist(self.project_remap_paths[self.project_i]):
-            project_remap_ht = import_remap(self.project_remap_paths[self.project_i])
+        if has_remap:
+            project_remap_ht = parse_pedigree_ht_to_remap_ht(pedigree_ht)
             callset_mt = remap_sample_ids(
                 callset_mt,
                 project_remap_ht,
