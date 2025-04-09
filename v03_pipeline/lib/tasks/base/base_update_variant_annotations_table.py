@@ -104,5 +104,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 migrations=ht.globals.migrations,
             )
         return annotate_formatting_annotation_enum_globals(
-            ht, self.reference_genome, self.dataset_type
+            ht,
+            self.reference_genome,
+            self.dataset_type,
         )
