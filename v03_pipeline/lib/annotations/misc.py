@@ -67,7 +67,8 @@ def deannotate_formatting_annotation_enum_globals(
                             ),
                         ).drop('lof_filter_ids'),
                         'utrannotator': c.utrannotator.annotate(
-                            fiveutr_consequence=FIVEUTR_CONSEQUENCES[
+                            # NB: FIVEUTR_CONSEQUENCES_LOOKUP propagates missing
+                            fiveutr_consequence=hl.array(FIVEUTR_CONSEQUENCES)[
                                 c.utrannotator.fiveutr_consequence_id
                             ],
                         ).drop('fiveutr_consequence_id'),
@@ -97,7 +98,8 @@ def deannotate_formatting_annotation_enum_globals(
     if 'mitotip' in formatting_annotation_names:
         ht = ht.annotate(
             mitotip=hl.Struct(
-                trna_prediction=MITOTIP_PATHOGENICITIES[ht.mitotip.trna_prediction_id],
+                # MITOTIP_PATHOGENICITIES_LOOKUP propagates missing
+                trna_prediction=hl.array(MITOTIP_PATHOGENICITIES)[ht.mitotip.trna_prediction_id],
             ),
         )
         ht = ht.annotate_globals(enums=ht.enums.drop('mitotip'))
