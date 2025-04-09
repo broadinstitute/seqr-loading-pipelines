@@ -15,6 +15,74 @@ from v03_pipeline.lib.annotations.enums import (
 )
 from v03_pipeline.lib.model import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
+from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
+
+
+def unmap_reference_dataset_annotation_enums(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> hl.Table:
+    formatting_annotation_names = {
+        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
+    }
+    removed_enum_names = []
+    for annotation_name in ht.enums:
+        if annotation_name in formatting_annotation_names:
+            continue
+        for enum_name, enum_values in ht.enums[annotation_name].values():
+            if hasattr(ht[annotation_name], f'{enum_name}_ids'):
+                ht = ht.annotate(
+                    **{
+                        annotation_name: ht[annotation_name].annotate(
+                            **{
+                                f'{enum_name}s': ht[annotation_name][
+                                    f'{enum_name}_ids'
+                                ].map(lambda idx: enum_values[idx]),  # noqa: B023
+                            },
+                        ),
+                    },
+                )
+                ht = ht.annotate(
+                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_ids')},
+                )
+            else:
+                ht = ht.annotate(
+                    **{
+                        annotation_name: ht[annotation_name].annotate(
+                            **{
+                                enum_name: enum_values[
+                                    ht[annotation_name][f'{enum_name}_id']
+                                ],
+                            },
+                        ),
+                    },
+                )
+                ht = ht.annotate(
+                    **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
+                )
+        removed_enum_names.add(enum_name)
+
+    # Explicit clinvar edge case:
+    if hasattr(ht, ReferenceDataset.clinvar.value):
+        ht = ht.annotate(
+            **{
+                ReferenceDataset.clinvar.value: ht[
+                    ReferenceDataset.clinvar.value
+                ].annotate(
+                    conflictingPathogenicities=ht[
+                        ReferenceDataset.clinvar.value
+                    ].conflictingPathogenicities.map(
+                        lambda s: s.annotate(
+                            pathogenicity=ht.enums.clinvar.pathogenicity[
+                                s.pathogenicity_id
+                            ],
+                        ).drop('pathogenicity_id'),
+                    ),
+                ),
+            },
+        )
+    return ht.annotate_globals(enums=ht.globals.enums.drop(*removed_enum_names))
 
 
 def unmap_formatting_annotation_enums(
