@@ -99,7 +99,9 @@ def deannotate_formatting_annotation_enum_globals(
         ht = ht.annotate(
             mitotip=hl.Struct(
                 # MITOTIP_PATHOGENICITIES_LOOKUP propagates missing
-                trna_prediction=hl.array(MITOTIP_PATHOGENICITIES)[ht.mitotip.trna_prediction_id],
+                trna_prediction=hl.array(MITOTIP_PATHOGENICITIES)[
+                    ht.mitotip.trna_prediction_id
+                ],
             ),
         )
         ht = ht.annotate_globals(enums=ht.enums.drop('mitotip'))
