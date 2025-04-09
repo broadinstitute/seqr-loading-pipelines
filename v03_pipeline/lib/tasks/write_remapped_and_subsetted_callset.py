@@ -101,11 +101,11 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
     @with_persisted_validation_errors
     def create_table(self) -> hl.MatrixTable:
         callset_mt = hl.read_matrix_table(self.input()[0].path)
-        pedigree_ht, has_remap = import_pedigree(self.input()[1].path)
+        pedigree_ht = import_pedigree(self.input()[1].path)
 
         # Remap, but only if the remap file is present!
         remap_lookup = hl.empty_dict(hl.tstr, hl.tstr)
-        if has_remap:
+        if 'remap_id' in pedigree_ht:
             project_remap_ht = parse_pedigree_ht_to_remap_ht(pedigree_ht)
             callset_mt = remap_sample_ids(
                 callset_mt,

@@ -283,10 +283,9 @@ def import_tdr_qc_metrics(file_path: str) -> hl.Table:
     return ht.key_by(ht.s)
 
 
-def import_pedigree(pedigree_path: str) -> tuple[hl.Table, bool]:
+def import_pedigree(pedigree_path: str) -> hl.Table:
     ht = hl.import_table(pedigree_path, missing='')
-    has_remap = 'VCF_ID' in ht
-    optional_selects = {'remap_id': ht.VCF_ID} if has_remap else {}
+    optional_selects = {'remap_id': ht.VCF_ID} if 'VCF_ID' in ht else {}
     return ht.select(
         sex=ht.Sex,
         family_guid=ht.Family_GUID,
@@ -294,7 +293,7 @@ def import_pedigree(pedigree_path: str) -> tuple[hl.Table, bool]:
         maternal_s=ht.Maternal_ID,
         paternal_s=ht.Paternal_ID,
         **optional_selects,
-    ), has_remap
+    )
 
 
 def remap_pedigree_hash(pedigree_path: str) -> hl.Int32Expression:
