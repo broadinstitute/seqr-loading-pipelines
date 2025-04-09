@@ -53,7 +53,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
         return super().complete() and hl.eval(
             hl.read_matrix_table(self.output().path).globals.remap_pedigree_hash
             == remap_pedigree_hash(
-                self.project_remap_paths[self.project_i],
                 self.project_pedigree_paths[self.project_i],
             ),
         )
@@ -204,7 +203,6 @@ class WriteRemappedAndSubsettedCallsetTask(BaseWriteTask):
             mt = overwrite_male_non_par_calls(mt, loadable_families)
         return mt.select_globals(
             remap_pedigree_hash=remap_pedigree_hash(
-                self.project_remap_paths[self.project_i],
                 self.project_pedigree_paths[self.project_i],
             ),
             family_samples=(
