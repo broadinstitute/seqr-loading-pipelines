@@ -399,24 +399,6 @@ def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
     )
 
 
-def project_remap_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    sample_type: SampleType,
-    project_guid: str,
-) -> str:
-    return os.path.join(
-        pipeline_prefix(
-            Env.LOADING_DATASETS_DIR,
-            reference_genome,
-            dataset_type,
-        ),
-        'remaps',
-        sample_type.value,
-        f'{project_guid}_remap.tsv',
-    )
-
-
 def project_pedigree_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

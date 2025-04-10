@@ -283,31 +283,21 @@ def import_tdr_qc_metrics(file_path: str) -> hl.Table:
     return ht.key_by(ht.s)
 
 
-def import_remap(remap_path: str) -> hl.Table:
-    ht = hl.import_table(remap_path)
-    ht = ht.select(
-        s=ht.s,
-        seqr_id=ht.seqr_id,
-    )
-    return ht.key_by(ht.s)
-
-
 def import_pedigree(pedigree_path: str) -> hl.Table:
     ht = hl.import_table(pedigree_path, missing='')
+    optional_selects = {'remap_id': ht.VCF_ID} if 'VCF_ID' in ht.row else {}
     return ht.select(
         sex=ht.Sex,
         family_guid=ht.Family_GUID,
         s=ht.Individual_ID,
         maternal_s=ht.Maternal_ID,
         paternal_s=ht.Paternal_ID,
+        **optional_selects,
     )
 
 
-def remap_pedigree_hash(remap_path: str, pedigree_path: str) -> hl.Int32Expression:
+def remap_pedigree_hash(pedigree_path: str) -> hl.Int32Expression:
     sha256 = hashlib.sha256()
-    if hfs.exists(remap_path):
-        with hfs.open(remap_path) as f1:
-            sha256.update(f1.read().encode('utf8'))
     with hfs.open(pedigree_path) as f2:
         sha256.update(f2.read().encode('utf8'))
     # maximum 4 byte int

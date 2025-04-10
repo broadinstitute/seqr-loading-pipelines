@@ -46,7 +46,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_remap_paths[i],
                                     self.project_pedigree_paths[i],
                                 ),
                             ),
@@ -132,7 +131,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                         callset=self.callset_path,
                         project_guid=project_guid,
                         remap_pedigree_hash=remap_pedigree_hash(
-                            self.project_remap_paths[i],
                             self.project_pedigree_paths[i],
                         ),
                     )
