@@ -98,9 +98,9 @@ def unmap_formatting_annotation_enums(
             sorted_motif_feature_consequences=ht.sorted_motif_feature_consequences.map(
                 lambda c: c.annotate(
                     consequence_terms=c.consequence_term_ids.map(
-                        lambda tid: MOTIF_CONSEQUENCE_TERMS[tid],
-                    ).drop('consequence_term_ids'),
-                ),
+                        lambda tid: hl.array(MOTIF_CONSEQUENCE_TERMS)[tid],
+                    ),
+                ).drop('consequence_term_ids'),
             ),
         )
         ht = ht.annotate_globals(
@@ -110,11 +110,11 @@ def unmap_formatting_annotation_enums(
         ht = ht.annotate(
             sorted_regulatory_feature_consequences=ht.sorted_regulatory_feature_consequences.map(
                 lambda c: c.annotate(
-                    biotype=REGULATORY_BIOTYPES[c.biotype_id],
+                    biotype=hl.array(REGULATORY_BIOTYPES)[c.biotype_id],
                     consequence_terms=c.consequence_term_ids.map(
-                        lambda tid: REGULATORY_CONSEQUENCE_TERMS[tid],
-                    ).drop('biotype_id', 'consequence_term_ids'),
-                ),
+                        lambda tid: hl.array(REGULATORY_CONSEQUENCE_TERMS)[tid],
+                    ),
+                ).drop('biotype_id', 'consequence_term_ids'),
             ),
         )
         ht = ht.annotate_globals(
@@ -124,18 +124,17 @@ def unmap_formatting_annotation_enums(
         ht = ht.annotate(
             sorted_transcript_consequences=ht.sorted_transcript_consequences.map(
                 lambda c: c.annotate(
-                    biotype=BIOTYPES[c.biotype],
+                    biotype=hl.array(BIOTYPES)[c.biotype_id],
                     consequence_terms=c.consequence_term_ids.map(
-                        lambda tid: TRANSCRIPT_CONSEQUENCE_TERMS[tid],
+                        lambda tid: hl.array(TRANSCRIPT_CONSEQUENCE_TERMS)[tid],
                     ),
                     **{
                         'loftee': c.loftee.annotate(
                             lof_filters=c.loftee.lof_filter_ids.map(
-                                lambda fid: LOF_FILTERS[fid],
+                                lambda fid: hl.array(LOF_FILTERS)[fid],
                             ),
                         ).drop('lof_filter_ids'),
                         'utrannotator': c.utrannotator.annotate(
-                            # NB: FIVEUTR_CONSEQUENCES_LOOKUP propagates missing
                             fiveutr_consequence=hl.array(FIVEUTR_CONSEQUENCES)[
                                 c.utrannotator.fiveutr_consequence_id
                             ],
@@ -145,7 +144,7 @@ def unmap_formatting_annotation_enums(
                     and dataset_type == DatasetType.SNV_INDEL
                     else {
                         'lof_filters': c.lof_filter_ids.map(
-                            lambda fid: LOF_FILTERS[fid],
+                            lambda fid: hl.array(LOF_FILTERS)[fid],
                         ),
                     },
                 ).drop(
@@ -166,7 +165,6 @@ def unmap_formatting_annotation_enums(
     if 'mitotip' in formatting_annotation_names:
         ht = ht.annotate(
             mitotip=hl.Struct(
-                # MITOTIP_PATHOGENICITIES_LOOKUP propagates missing
                 trna_prediction=hl.array(MITOTIP_PATHOGENICITIES)[
                     ht.mitotip.trna_prediction_id
                 ],
@@ -174,18 +172,20 @@ def unmap_formatting_annotation_enums(
         )
         ht = ht.annotate_globals(enums=ht.enums.drop('mitotip'))
     if 'sv_type_id' in formatting_annotation_names:
-        ht = ht.annotate(sv_type=SV_TYPES[ht.sv_type_id]).drop('sv_type_id')
+        ht = ht.annotate(sv_type=hl.array(SV_TYPES)[ht.sv_type_id]).drop('sv_type_id')
         ht = ht.annotate_globals(enums=ht.enums.drop('sv_type'))
     if 'sv_type_detail_id' in formatting_annotation_names:
-        ht = ht.annotate_globals(
-            enums=ht.enums.annotate(sv_type_detail=SV_TYPE_DETAILS),
-        )
+        ht = ht.annotate(
+            sv_type_detail=hl.array(SV_TYPE_DETAILS)[ht.sv_type_detail_id],
+        ).drop('sv_type_detail_id')
         ht = ht.annotate_globals(enums=ht.enums.drop('sv_type_detail'))
     if 'sorted_gene_consequences' in formatting_annotation_names:
         ht = ht.annotate(
             sorted_gene_consequences=ht.sorted_gene_consequences.map(
                 lambda c: c.annotate(
-                    major_consequence=SV_CONSEQUENCE_RANKS[c.major_consequence_id],
+                    major_consequence=hl.array(SV_CONSEQUENCE_RANKS)[
+                        c.major_consequence_id
+                    ],
                 ).drop('major_consequence_id'),
             ),
         )
