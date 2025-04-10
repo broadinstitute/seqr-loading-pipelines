@@ -15,7 +15,6 @@ from v03_pipeline.lib.paths import (
     metadata_for_run_path,
     new_variants_table_path,
     project_pedigree_path,
-    project_remap_path,
     project_table_path,
     relatedness_check_table_path,
     remapped_and_subsetted_callset_path,

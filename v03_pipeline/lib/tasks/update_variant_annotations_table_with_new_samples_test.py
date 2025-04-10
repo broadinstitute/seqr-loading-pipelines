@@ -844,7 +844,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                                 project_guid='R0115_test_project2',
                                 remap_pedigree_hash=hl.eval(
                                     remap_pedigree_hash(
-                                        'not_a_real_file',
                                         TEST_PEDIGREE_5,
                                     ),
                                 ),
@@ -943,7 +942,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             project_guid='R0115_test_project2',
                             remap_pedigree_hash=hl.eval(
                                 remap_pedigree_hash(
-                                    'not_a_real_file',
                                     TEST_PEDIGREE_5,
                                 ),
                             ),
@@ -1440,7 +1438,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             project_guid='R0115_test_project2',
                             remap_pedigree_hash=hl.eval(
                                 remap_pedigree_hash(
-                                    'not_a_real_file',
                                     TEST_PEDIGREE_5,
                                 ),
                             ),
@@ -1450,7 +1447,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             project_guid='R0115_test_project2',
                             remap_pedigree_hash=hl.eval(
                                 remap_pedigree_hash(
-                                    'not_a_real_file',
                                     TEST_PEDIGREE_5,
                                 ),
                             ),
@@ -1592,7 +1588,6 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             project_guid='R0115_test_project2',
                             remap_pedigree_hash=hl.eval(
                                 remap_pedigree_hash(
-                                    'not_a_real_file',
                                     TEST_PEDIGREE_5,
                                 ),
                             ),

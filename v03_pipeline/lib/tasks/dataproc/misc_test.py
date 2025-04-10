@@ -37,8 +37,6 @@ class MiscTest(unittest.TestCase):
                 'test_callset',
                 '--project-guids',
                 '["R0113_test_project"]',
-                '--project-remap-paths',
-                '["test_remap"]',
                 '--project-pedigree-paths',
                 '["test_pedigree"]',
                 '--skip-check-sex-and-relatedness',

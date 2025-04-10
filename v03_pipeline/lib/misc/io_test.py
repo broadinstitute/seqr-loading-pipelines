@@ -63,7 +63,7 @@ class IOTest(unittest.TestCase):
                     TEST_PEDIGREE_3_REMAP,
                 ),
             ),
-            -560434714,
+            573002191,
         )
 
     def test_import_vcf(self) -> None:
