@@ -23,14 +23,15 @@ def unmap_reference_dataset_annotation_enums(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ) -> hl.Table:
-    formatting_annotation_names = {
-        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
-    }
-    removed_enum_names = []
+    reference_datasets = ReferenceDataset.for_reference_genome_dataset_type_annotations(
+        reference_genome,
+        dataset_type,
+    )
+    unmapped_annotation_name = []
     for annotation_name in ht.enums:
-        if annotation_name in formatting_annotation_names:
+        if annotation_name not in reference_datasets:
             continue
-        for enum_name, enum_values in ht.enums[annotation_name].values():
+        for enum_name in ht.enums[annotation_name]:
             if hasattr(ht[annotation_name], f'{enum_name}_ids'):
                 ht = ht.annotate(
                     **{
@@ -38,7 +39,11 @@ def unmap_reference_dataset_annotation_enums(
                             **{
                                 f'{enum_name}s': ht[annotation_name][
                                     f'{enum_name}_ids'
-                                ].map(lambda idx: enum_values[idx]),  # noqa: B023
+                                ].map(
+                                    lambda idx: ht.enums[annotation_name][enum_name][
+                                        idx
+                                    ]
+                                ),  # noqa: B023
                             },
                         ),
                     },
@@ -51,7 +56,7 @@ def unmap_reference_dataset_annotation_enums(
                     **{
                         annotation_name: ht[annotation_name].annotate(
                             **{
-                                enum_name: enum_values[
+                                enum_name: ht.enums[annotation_name][enum_name][
                                     ht[annotation_name][f'{enum_name}_id']
                                 ],
                             },
@@ -61,7 +66,7 @@ def unmap_reference_dataset_annotation_enums(
                 ht = ht.annotate(
                     **{annotation_name: ht[annotation_name].drop(f'{enum_name}_id')},
                 )
-        removed_enum_names.add(enum_name)
+        unmapped_annotation_name.append(annotation_name)
 
     # Explicit clinvar edge case:
     if hasattr(ht, ReferenceDataset.clinvar.value):
@@ -82,7 +87,7 @@ def unmap_reference_dataset_annotation_enums(
                 ),
             },
         )
-    return ht.annotate_globals(enums=ht.globals.enums.drop(*removed_enum_names))
+    return ht.annotate_globals(enums=ht.globals.enums.drop(*unmapped_annotation_name))
 
 
 def unmap_formatting_annotation_enums(
@@ -150,7 +155,7 @@ def unmap_formatting_annotation_enums(
                 ).drop(
                     'biotype_id',
                     'consequence_term_ids',
-                    **(
+                    *(
                         []
                         if reference_genome == ReferenceGenome.GRCh38
                         and dataset_type == DatasetType.SNV_INDEL

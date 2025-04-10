@@ -4,6 +4,7 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.misc import (
     unmap_formatting_annotation_enums,
+    unmap_reference_dataset_annotation_enums,
 )
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -16,8 +17,457 @@ TEST_SNV_INDEL_ANNOTATIONS = (
 
 
 class MiscTest(unittest.TestCase):
-    def unmap_formatting_annotation_enums(self) -> None:
+    def test_unmap_formatting_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
         ht = unmap_formatting_annotation_enums(
-            ht, ReferenceGenome.GRCh38, DatasetType.SNV_INDEL,
+            ht,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
+        self.assertListEqual(
+            list(ht.globals.enums.collect()[0].keys()),
+            [
+                'screen',
+                'dbnsfp',
+                'clinvar',
+                'gnomad_exomes',
+                'gnomad_non_coding_constraint',
+                'splice_ai',
+                'exac',
+                'topmed',
+                'hgmd',
+                'gnomad_genomes',
+                'eigen',
+            ],
+        )
+        self.assertEqual(
+            ht.collect()[0],
+            hl.Struct(
+                locus=hl.Locus(
+                    contig='chr1', position=939121, reference_genome='GRCh38'
+                ),
+                alleles=['C', 'T'],
+                rg37_locus=hl.Locus(
+                    contig=1, position=874501, reference_genome='GRCh37'
+                ),
+                rsid=None,
+                sorted_transcript_consequences=[
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=1,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000616016.5:c.1049C>T',
+                        hgvsp='ENSP00000478421.2:p.Ser350Leu',
+                        transcript_id='ENST00000616016',
+                        mane_select='NM_001385641.1',
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=6, total=14),
+                        intron=None,
+                        refseq_transcript_id='NM_001385641.1',
+                        alphamissense=hl.Struct(pathogenicity=None),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000341065.8:c.284C>T',
+                        hgvsp='ENSP00000349216.4:p.Ser95Leu',
+                        transcript_id='ENST00000341065',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=4, total=12),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=None),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000342066.8:c.512C>T',
+                        hgvsp='ENSP00000342313.3:p.Ser171Leu',
+                        transcript_id='ENST00000342066',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=6, total=14),
+                        intron=None,
+                        refseq_transcript_id='NM_152486.4',
+                        alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000616125.5:c.512C>T',
+                        hgvsp='ENSP00000484643.1:p.Ser171Leu',
+                        transcript_id='ENST00000616125',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=5, total=11),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000617307.5:c.512C>T',
+                        hgvsp='ENSP00000482090.2:p.Ser171Leu',
+                        transcript_id='ENST00000617307',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=5, total=13),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000618181.5:c.461C>T',
+                        hgvsp='ENSP00000480870.1:p.Ser154Leu',
+                        transcript_id='ENST00000618181',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=4, total=10),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=None),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000618323.5:c.1049C>T',
+                        hgvsp='ENSP00000480678.2:p.Ser350Leu',
+                        transcript_id='ENST00000618323',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=6, total=14),
+                        intron=None,
+                        refseq_transcript_id='NM_001385640.1',
+                        alphamissense=hl.Struct(pathogenicity=None),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000618779.5:c.512C>T',
+                        hgvsp='ENSP00000484256.1:p.Ser171Leu',
+                        transcript_id='ENST00000618779',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=5, total=12),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                    hl.Struct(
+                        amino_acids='S/L',
+                        canonical=None,
+                        codons='tCg/tTg',
+                        gene_id='ENSG00000187634',
+                        hgvsc='ENST00000622503.5:c.512C>T',
+                        hgvsp='ENSP00000482138.1:p.Ser171Leu',
+                        transcript_id='ENST00000622503',
+                        mane_select=None,
+                        mane_plus_clinical=None,
+                        exon=hl.Struct(index=5, total=13),
+                        intron=None,
+                        refseq_transcript_id=None,
+                        alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
+                        loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
+                        spliceregion=hl.Struct(
+                            extended_intronic_splice_region_variant=False
+                        ),
+                        utrannotator=hl.Struct(
+                            existing_inframe_oorfs=None,
+                            existing_outofframe_oorfs=None,
+                            existing_uorfs=None,
+                            fiveutr_annotation=None,
+                            fiveutr_consequence=None,
+                        ),
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                    ),
+                ],
+                variant_id='1-939121-C-T',
+                xpos=1000939121,
+                gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
+                CAID='CA502654',
+                check_ref=False,
+                sorted_regulatory_feature_consequences=[
+                    hl.Struct(
+                        regulatory_feature_id='ENSR00000344437',
+                        biotype='CTCF_binding_site',
+                        consequence_terms=['regulatory_region_variant'],
+                    )
+                ],
+                sorted_motif_feature_consequences=[
+                    hl.Struct(
+                        motif_feature_id='ENSM00493959715',
+                        consequence_terms=['TF_binding_site_variant'],
+                    )
+                ],
+                gnomad_non_coding_constraint=hl.Struct(z_score=None),
+                hgmd=None,
+                gnomad_exomes=hl.Struct(
+                    AF=0.0006690866430290043,
+                    AN=1440770,
+                    AC=964,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0008023773552849889,
+                    FAF_AF=0.000633420015219599,
+                    Hemi=0,
+                ),
+                gnomad_genomes=hl.Struct(
+                    AF=0.0002759889466688037,
+                    AN=152180,
+                    AC=42,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0005293028079904616,
+                    FAF_AF=0.0002092500071739778,
+                    Hemi=0,
+                ),
+                screen=hl.Struct(region_type_ids=[]),
+                dbnsfp=hl.Struct(
+                    PrimateAI_score=0.5918066501617432,
+                    fathmm_MKL_coding_score=0.7174800038337708,
+                    CADD_phred=23.5,
+                    SIFT_score=0.0010000000474974513,
+                    REVEL_score=0.3109999895095825,
+                    Polyphen2_HVAR_score=0.164000004529953,
+                    VEST4_score=0.39500001072883606,
+                    MPC_score=0.01291007362306118,
+                    MutPred_score=None,
+                    MutationTaster_pred_id=0,
+                ),
+                topmed=hl.Struct(
+                    AC=41, AF=0.00032651599030941725, AN=125568, Hom=0, Het=41
+                ),
+                exac=hl.Struct(
+                    AF_POPMAX=0.0007150234305299819,
+                    AF=0.00019039999460801482,
+                    AC_Adj=20,
+                    AC_Het=20,
+                    AC_Hom=0,
+                    AC_Hemi=None,
+                    AN_Adj=47974,
+                ),
+                splice_ai=hl.Struct(delta_score=0.0, splice_consequence_id=4),
+                eigen=hl.Struct(Eigen_phred=2.628000020980835),
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertion_ids=[],
+                    pathogenicity_id=12,
+                ),
+            ),
+        )
+
+    def test_unmap_reference_dataset_annotation_enums(self) -> None:
+        ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
+        ht = unmap_reference_dataset_annotation_enums(
+            ht,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
+        self.assertListEqual(
+            list(ht.globals.enums.collect()[0].keys()),
+            [
+                'sorted_motif_feature_consequences',
+                'sorted_regulatory_feature_consequences',
+                'sorted_transcript_consequences',
+            ],
+        )
+        self.assertEqual(
+            ht.drop(
+                'sorted_transcript_consequences',
+                'sorted_regulatory_feature_consequences',
+                'sorted_motif_feature_consequences',
+            ).collect()[0],
+            hl.Struct(
+                locus=hl.Locus(contig='chr1', position=939121, reference_genome='GRCh38'),
+                alleles=['C', 'T'],
+                rg37_locus=hl.Locus(contig=1, position=874501, reference_genome='GRCh37'),
+                rsid=None,
+                variant_id='1-939121-C-T',
+                xpos=1000939121,
+                gt_stats=hl.Struct(AC=47, AN=81784, AF=0.0005746845272369683, hom=1),
+                CAID='CA502654',
+                check_ref=False,
+                gnomad_non_coding_constraint=hl.Struct(z_score=None),
+                hgmd=None,
+                gnomad_exomes=hl.Struct(
+                    AF=0.0006690866430290043,
+                    AN=1440770,
+                    AC=964,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0008023773552849889,
+                    FAF_AF=0.000633420015219599,
+                    Hemi=0,
+                ),
+                gnomad_genomes=hl.Struct(
+                    AF=0.0002759889466688037,
+                    AN=152180,
+                    AC=42,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0005293028079904616,
+                    FAF_AF=0.0002092500071739778,
+                    Hemi=0,
+                ),
+                screen=hl.Struct(region_types=[]),
+                dbnsfp=hl.Struct(
+                    PrimateAI_score=0.5918066501617432,
+                    fathmm_MKL_coding_score=0.7174800038337708,
+                    CADD_phred=23.5,
+                    SIFT_score=0.0010000000474974513,
+                    REVEL_score=0.3109999895095825,
+                    Polyphen2_HVAR_score=0.164000004529953,
+                    VEST4_score=0.39500001072883606,
+                    MPC_score=0.01291007362306118,
+                    MutPred_score=None,
+                    MutationTaster_pred='D',
+                ),
+                topmed=hl.Struct(
+                    AC=41, AF=0.00032651599030941725, AN=125568, Hom=0, Het=41
+                ),
+                exac=hl.Struct(
+                    AF_POPMAX=0.0007150234305299819,
+                    AF=0.00019039999460801482,
+                    AC_Adj=20,
+                    AC_Het=20,
+                    AC_Hom=0,
+                    AC_Hemi=None,
+                    AN_Adj=47974,
+                ),
+                splice_ai=hl.Struct(delta_score=0.0, splice_consequence='No consequence'),
+                eigen=hl.Struct(Eigen_phred=2.628000020980835),
+                clinvar=hl.Struct(
+                    alleleId=929885,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Labcorp Genetics (formerly Invitae), Labcorp'],
+                    conditions=['not provided'],
+                    assertions=[],
+                    pathogenicity='Uncertain_significance',
+                ),
+            ),
         )
