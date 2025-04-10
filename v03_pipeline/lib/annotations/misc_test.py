@@ -44,11 +44,15 @@ class MiscTest(unittest.TestCase):
             ht.collect()[0],
             hl.Struct(
                 locus=hl.Locus(
-                    contig='chr1', position=939121, reference_genome='GRCh38'
+                    contig='chr1',
+                    position=939121,
+                    reference_genome='GRCh38',
                 ),
                 alleles=['C', 'T'],
                 rg37_locus=hl.Locus(
-                    contig=1, position=874501, reference_genome='GRCh37'
+                    contig=1,
+                    position=874501,
+                    reference_genome='GRCh37',
                 ),
                 rsid=None,
                 sorted_transcript_consequences=[
@@ -68,7 +72,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=None),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -96,7 +100,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=None),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -124,7 +128,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -152,7 +156,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -180,7 +184,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -208,7 +212,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=None),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -236,7 +240,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=None),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -264,7 +268,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -292,7 +296,7 @@ class MiscTest(unittest.TestCase):
                         alphamissense=hl.Struct(pathogenicity=0.1467999964952469),
                         loftee=hl.Struct(is_lof_nagnag=None, lof_filters=None),
                         spliceregion=hl.Struct(
-                            extended_intronic_splice_region_variant=False
+                            extended_intronic_splice_region_variant=False,
                         ),
                         utrannotator=hl.Struct(
                             existing_inframe_oorfs=None,
@@ -315,13 +319,13 @@ class MiscTest(unittest.TestCase):
                         regulatory_feature_id='ENSR00000344437',
                         biotype='CTCF_binding_site',
                         consequence_terms=['regulatory_region_variant'],
-                    )
+                    ),
                 ],
                 sorted_motif_feature_consequences=[
                     hl.Struct(
                         motif_feature_id='ENSM00493959715',
                         consequence_terms=['TF_binding_site_variant'],
-                    )
+                    ),
                 ],
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
                 hgmd=None,
@@ -357,7 +361,11 @@ class MiscTest(unittest.TestCase):
                     MutationTaster_pred_id=0,
                 ),
                 topmed=hl.Struct(
-                    AC=41, AF=0.00032651599030941725, AN=125568, Hom=0, Het=41
+                    AC=41,
+                    AF=0.00032651599030941725,
+                    AN=125568,
+                    Hom=0,
+                    Het=41,
                 ),
                 exac=hl.Struct(
                     AF_POPMAX=0.0007150234305299819,
@@ -404,9 +412,17 @@ class MiscTest(unittest.TestCase):
                 'sorted_motif_feature_consequences',
             ).collect()[0],
             hl.Struct(
-                locus=hl.Locus(contig='chr1', position=939121, reference_genome='GRCh38'),
+                locus=hl.Locus(
+                    contig='chr1',
+                    position=939121,
+                    reference_genome='GRCh38',
+                ),
                 alleles=['C', 'T'],
-                rg37_locus=hl.Locus(contig=1, position=874501, reference_genome='GRCh37'),
+                rg37_locus=hl.Locus(
+                    contig=1,
+                    position=874501,
+                    reference_genome='GRCh37',
+                ),
                 rsid=None,
                 variant_id='1-939121-C-T',
                 xpos=1000939121,
@@ -447,7 +463,11 @@ class MiscTest(unittest.TestCase):
                     MutationTaster_pred='D',
                 ),
                 topmed=hl.Struct(
-                    AC=41, AF=0.00032651599030941725, AN=125568, Hom=0, Het=41
+                    AC=41,
+                    AF=0.00032651599030941725,
+                    AN=125568,
+                    Hom=0,
+                    Het=41,
                 ),
                 exac=hl.Struct(
                     AF_POPMAX=0.0007150234305299819,
@@ -458,7 +478,10 @@ class MiscTest(unittest.TestCase):
                     AC_Hemi=None,
                     AN_Adj=47974,
                 ),
-                splice_ai=hl.Struct(delta_score=0.0, splice_consequence='No consequence'),
+                splice_ai=hl.Struct(
+                    delta_score=0.0,
+                    splice_consequence='No consequence',
+                ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
                 clinvar=hl.Struct(
                     alleleId=929885,

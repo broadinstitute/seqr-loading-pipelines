@@ -40,10 +40,10 @@ def unmap_reference_dataset_annotation_enums(
                                 f'{enum_name}s': ht[annotation_name][
                                     f'{enum_name}_ids'
                                 ].map(
-                                    lambda idx: ht.enums[annotation_name][enum_name][
+                                    lambda idx: ht.enums[annotation_name][enum_name][  # noqa: B023
                                         idx
-                                    ]
-                                ),  # noqa: B023
+                                    ],
+                                ),
                             },
                         ),
                     },
