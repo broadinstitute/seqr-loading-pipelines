@@ -1,6 +1,5 @@
 import hashlib
 import os
-import re
 
 import hailtop.fs as hfs
 
@@ -294,24 +293,6 @@ def sex_check_table_path(
         ),
         'sex_check',
         f'{_callset_path_hash(callset_path)}.ht',
-    )
-
-
-def valid_filters_path(
-    dataset_type: DatasetType,
-    sample_type: SampleType,
-    callset_path: str,
-) -> str | None:
-    if (
-        not FeatureFlag.EXPECT_WES_FILTERS
-        or not dataset_type.expect_filters(sample_type)
-        or 'part_one_outputs' not in callset_path
-    ):
-        return None
-    return re.sub(
-        'part_one_outputs/.*$',
-        'part_two_outputs/*.filtered.*.vcf.gz',
-        callset_path,
     )
 
 

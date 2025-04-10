@@ -41,8 +41,6 @@ class MiscTest(unittest.TestCase):
                 '["test_pedigree"]',
                 '--skip-check-sex-and-relatedness',
                 'False',
-                '--skip-expect-filters',
-                'False',
                 '--skip-expect-tdr-metrics',
                 'False',
                 '--skip-validation',
