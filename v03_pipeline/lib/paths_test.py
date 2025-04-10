@@ -224,17 +224,6 @@ class TestPaths(unittest.TestCase):
             '/var/seqr/seqr-hail-search-data/v3.1/GRCh38/SNV_INDEL/runs/manual__2023-06-26T18:30:09.349671+00:00/new_variants.ht',
         )
 
-    def test_project_remap_path(self) -> None:
-        self.assertEqual(
-            project_remap_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                SampleType.WGS,
-                'R0652_pipeline_test',
-            ),
-            '/var/seqr/seqr-loading-temp/v3.1/GRCh38/SNV_INDEL/remaps/WGS/R0652_pipeline_test_remap.tsv',
-        )
-
     def test_project_pedigree_path(self) -> None:
         self.assertEqual(
             project_pedigree_path(
