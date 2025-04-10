@@ -227,6 +227,6 @@ class TestSeqrModel(unittest.TestCase):
             self.assertEqual(row[name], samples)
 
         for i in range(start, end, step):
-            name = 'samples_ab.%i_to_%i' % (i, i + step) # noqa: UP031
+            name = 'samples_ab.%i_to_%i' % (i, i + step)  # noqa: UP031
             if name not in non_empty:
                 self.assertEqual(row[name], set())
