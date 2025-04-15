@@ -20,7 +20,6 @@ from v03_pipeline.lib.paths import (
     remapped_and_subsetted_callset_path,
     sex_check_table_path,
     tdr_metrics_path,
-    valid_filters_path,
     validation_errors_for_run_path,
     variant_annotations_table_path,
 )
@@ -64,26 +63,6 @@ class TestPaths(unittest.TestCase):
                     'franklin',
                 ),
                 '/var/bucket/GRCh37/SNV_INDEL/families/WES/franklin.ht',
-            )
-
-    def test_valid_filters_path(self) -> None:
-        self.assertEqual(
-            valid_filters_path(
-                DatasetType.MITO,
-                SampleType.WES,
-                '/var/bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
-            ),
-            None,
-        )
-        with patch('v03_pipeline.lib.paths.FeatureFlag') as mock_ff:
-            mock_ff.EXPECT_WES_FILTERS = True
-            self.assertEqual(
-                valid_filters_path(
-                    DatasetType.SNV_INDEL,
-                    SampleType.WES,
-                    '/var/bucket/RDG_Broad_WES_Internal_Oct2023/part_one_outputs/chr*/*.vcf.gz',
-                ),
-                '/var/bucket/RDG_Broad_WES_Internal_Oct2023/part_two_outputs/*.filtered.*.vcf.gz',
             )
 
     def test_project_table_path(self) -> None:
