@@ -79,7 +79,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                     # Rather than throwing an error, we silently remove invalid contigs.
                     # This happens fairly often for AnVIL requests.
                     hl.set(self.reference_genome.standard_contigs).contains(
-                        mt.locus.contig
+                        mt.locus.contig,
                     )
                     # DRAGEN callsets produce long alternate alleles
                     # that aren't particularly analyzable as INDELs.
