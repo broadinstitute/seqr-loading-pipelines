@@ -374,6 +374,10 @@ class DatasetType(StrEnum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def filter_invalid_sites(self):
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def should_export_to_vcf(self):
         return self == DatasetType.SV
 

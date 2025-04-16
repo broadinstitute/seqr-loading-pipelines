@@ -26,6 +26,8 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
     WriteValidationErrorsForRunTask,
 )
 
+MAX_SNV_INDEL_ALLELE_LENGTH = 500
+
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class ValidateCallsetTask(BaseUpdateTask):
@@ -71,14 +73,20 @@ class ValidateCallsetTask(BaseUpdateTask):
                 self.callset_path,
             ),
         )
-        if self.dataset_type.can_run_validation:
-            # Rather than throwing an error, we silently remove invalid contigs.
-            # This happens fairly often for AnVIL requests.
+        if self.dataset_type.filter_invalid_sites:
             mt = mt.filter_rows(
-                hl.set(self.reference_genome.standard_contigs).contains(
-                    mt.locus.contig,
+                (
+                    # Rather than throwing an error, we silently remove invalid contigs.
+                    # This happens fairly often for AnVIL requests.
+                    hl.set(self.reference_genome.standard_contigs).contains(
+                        mt.locus.contig
+                    )
+                    # DRAGEN callsets produce long alternate alleles
+                    # that aren't particularly analyzable as INDELs.
+                    & (mt.alleles[1] < MAX_SNV_INDEL_ALLELE_LENGTH)
                 ),
             )
+
         validation_exceptions = []
         if self.skip_validation or not self.dataset_type.can_run_validation:
             return mt.select_globals(
