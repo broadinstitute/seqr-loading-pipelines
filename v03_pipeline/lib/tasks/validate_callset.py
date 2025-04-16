@@ -83,7 +83,7 @@ class ValidateCallsetTask(BaseUpdateTask):
                     )
                     # DRAGEN callsets produce long alternate alleles
                     # that aren't particularly analyzable as INDELs.
-                    & (mt.alleles[1] < MAX_SNV_INDEL_ALLELE_LENGTH)
+                    & (hl.len(mt.alleles[1]) < MAX_SNV_INDEL_ALLELE_LENGTH)
                 ),
             )
 
