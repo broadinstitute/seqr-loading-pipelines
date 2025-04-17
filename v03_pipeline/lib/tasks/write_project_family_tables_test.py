@@ -12,8 +12,7 @@ from v03_pipeline.lib.tasks.write_project_family_tables import (
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_PEDIGREE_4_SUBSET = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_subset.tsv'
 
 TEST_RUN_ID = 'manual__2024-04-03'
@@ -29,8 +28,7 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_4],
+            project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
             project_i=0,
             skip_validation=True,
             skip_check_sex_and_relatedness=True,
@@ -95,7 +93,6 @@ class WriteProjectFamilyTablesTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_SNV_INDEL_VCF,
             project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_4_SUBSET],
             project_i=0,
             skip_validation=True,

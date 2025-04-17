@@ -102,7 +102,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_remap_paths[i],
                                     self.project_pedigree_paths[i],
                                 ),
                             ),
@@ -173,6 +172,18 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             reference_dataset_ht = self.annotation_dependencies[
                 f'{reference_dataset.value}_ht'
             ]
+            if reference_dataset.select:
+                reference_dataset_ht = reference_dataset.select(
+                    self.reference_genome,
+                    self.dataset_type,
+                    reference_dataset_ht,
+                )
+            if reference_dataset.filter:
+                reference_dataset_ht = reference_dataset.filter(
+                    self.reference_genome,
+                    self.dataset_type,
+                    reference_dataset_ht,
+                )
             reference_dataset_ht = reference_dataset_ht.select(
                 **{
                     f'{reference_dataset.name}': hl.Struct(
@@ -187,7 +198,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                     callset=self.callset_path,
                     project_guid=project_guid,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[i],
                         self.project_pedigree_paths[i],
                     ),
                 )

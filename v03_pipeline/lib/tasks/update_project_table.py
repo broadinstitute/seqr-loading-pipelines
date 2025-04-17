@@ -40,7 +40,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[self.project_i],
                         self.project_pedigree_paths[self.project_i],
                     ),
                 ),
@@ -100,7 +99,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[self.project_i],
                         self.project_pedigree_paths[self.project_i],
                     ),
                 ),

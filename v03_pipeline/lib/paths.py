@@ -1,6 +1,5 @@
 import hashlib
 import os
-import re
 
 import hailtop.fs as hfs
 
@@ -72,7 +71,12 @@ def _callset_path_hash(callset_path: str) -> str:
         if not shards:
             key = callset_path
         else:
-            key = callset_path + str(max(f.modification_time for f in shards))
+            # f.modification_time is None for directories
+            key = callset_path + str(
+                max(
+                    (f.modification_time if f.modification_time else 0) for f in shards
+                ),
+            )
     except FileNotFoundError:
         key = callset_path
     return hashlib.sha256(
@@ -297,24 +301,6 @@ def sex_check_table_path(
     )
 
 
-def valid_filters_path(
-    dataset_type: DatasetType,
-    sample_type: SampleType,
-    callset_path: str,
-) -> str | None:
-    if (
-        not FeatureFlag.EXPECT_WES_FILTERS
-        or not dataset_type.expect_filters(sample_type)
-        or 'part_one_outputs' not in callset_path
-    ):
-        return None
-    return re.sub(
-        'part_one_outputs/.*$',
-        'part_two_outputs/*.filtered.*.vcf.gz',
-        callset_path,
-    )
-
-
 def valid_reference_dataset_path(
     reference_genome: ReferenceGenome,
     reference_dataset: ReferenceDataset,
@@ -396,24 +382,6 @@ def clinvar_dataset_path(reference_genome: ReferenceGenome, etag: str) -> str:
     return os.path.join(
         Env.HAIL_TMP_DIR,
         f'clinvar-{reference_genome.value}-{etag}.ht',
-    )
-
-
-def project_remap_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    sample_type: SampleType,
-    project_guid: str,
-) -> str:
-    return os.path.join(
-        pipeline_prefix(
-            Env.LOADING_DATASETS_DIR,
-            reference_genome,
-            dataset_type,
-        ),
-        'remaps',
-        sample_type.value,
-        f'{project_guid}_remap.tsv',
     )
 
 

@@ -154,10 +154,13 @@ def select_fields(ht):
         conflictingPathogenicities=parsed_and_mapped_clnsigconf(ht),
         goldStars=CLINVAR_GOLD_STARS_LOOKUP.get(hl.delimit(ht.info.CLNREVSTAT)),
         submitters=ht.submitters,
-        # assumes the format 'MedGen#:condition', e.g.'C0023264:Leigh syndrome'
-        conditions=hl.map(
-            lambda p: p.split(r':')[1],
-            ht.conditions,
+        # assumes the format 'MedGen#:condition;MedGen#:condition', e.g.'C0023264:Leigh syndrome'
+        conditions=hl.filter(
+            hl.is_defined,
+            hl.flatmap(
+                lambda p: p.split(';'),
+                ht.conditions,
+            ).map(lambda p: p.split(':')[1]),
         ),
     )
 

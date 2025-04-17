@@ -123,7 +123,6 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path='na',
             project_guids=['R0113_test_project'],
-            project_remap_paths=['test_remap'],
             project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
         )
@@ -173,7 +172,6 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WES,
             callset_path=TEST_SEX_AND_RELATEDNESS_CALLSET_MT,
             project_guids=['R0113_test_project'],
-            project_remap_paths=['test_remap'],
             project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-04',
         )

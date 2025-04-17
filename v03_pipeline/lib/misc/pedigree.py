@@ -170,3 +170,10 @@ def parse_pedigree_ht_to_families(
     ):
         families.add(Family.parse(family_guid, list(rows)))
     return families
+
+
+def parse_pedigree_ht_to_remap_ht(pedigree_ht: hl.Table) -> hl.Table:
+    ht = pedigree_ht.filter(hl.is_defined(pedigree_ht.remap_id))
+    ht = ht.annotate(seqr_id=ht.s)
+    ht = ht.key_by(s=ht.remap_id)
+    return ht.select('seqr_id')

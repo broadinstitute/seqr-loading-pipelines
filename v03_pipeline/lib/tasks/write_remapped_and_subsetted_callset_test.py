@@ -17,9 +17,8 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
+TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_PEDIGREE_7 = 'v03_pipeline/var/test/pedigrees/test_pedigree_7.tsv'
 TEST_SEX_CHECK_1 = 'v03_pipeline/var/test/sex_check/test_sex_check_1.ht'
 TEST_RELATEDNESS_CHECK_1 = (
@@ -90,8 +89,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             project_i=0,
             skip_validation=True,
             skip_expect_tdr_metrics=True,
@@ -107,8 +105,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                 hl.Struct(
                     remap_pedigree_hash=hl.eval(
                         remap_pedigree_hash(
-                            TEST_REMAP,
-                            TEST_PEDIGREE_3,
+                            TEST_PEDIGREE_3_REMAP,
                         ),
                     ),
                     failed_family_samples=hl.Struct(
@@ -136,8 +133,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_4],
+            project_pedigree_paths=[TEST_PEDIGREE_4_REMAP],
             project_i=0,
             skip_validation=True,
             skip_expect_tdr_metrics=True,
@@ -155,8 +151,7 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
                 hl.Struct(
                     remap_pedigree_hash=hl.eval(
                         remap_pedigree_hash(
-                            TEST_REMAP,
-                            TEST_PEDIGREE_4,
+                            TEST_PEDIGREE_4_REMAP,
                         ),
                     ),
                     family_samples={
@@ -225,7 +220,6 @@ class WriteRemappedAndSubsettedCallsetTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0114_project4'],
-            project_remap_paths=[TEST_REMAP],
             project_pedigree_paths=[TEST_PEDIGREE_7],
             project_i=0,
             skip_validation=True,

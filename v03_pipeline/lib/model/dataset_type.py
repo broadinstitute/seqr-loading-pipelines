@@ -4,7 +4,7 @@ from enum import StrEnum
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleType
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -182,12 +182,6 @@ class DatasetType(StrEnum):
         return (
             self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
         )
-
-    def expect_filters(
-        self,
-        sample_type: SampleType,
-    ) -> bool:
-        return self == DatasetType.SNV_INDEL and sample_type == SampleType.WES
 
     def expect_tdr_metrics(
         self,
@@ -377,6 +371,10 @@ class DatasetType(StrEnum):
 
     @property
     def requires_dataproc(self):
+        return self == DatasetType.SNV_INDEL
+
+    @property
+    def filter_invalid_sites(self):
         return self == DatasetType.SNV_INDEL
 
     @property
