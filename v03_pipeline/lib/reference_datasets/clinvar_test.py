@@ -172,7 +172,7 @@ class ClinvarTest(unittest.TestCase):
 
             # VariationID 9 tests Conditions parsing
             self.assertListEqual(
-                ht.collect()[8].submitters,
+                ht.collect()[8].conditions,
                 [
                     'Hemochromatosis type 1',
                     'Hereditary cancer-predisposing syndrome',
