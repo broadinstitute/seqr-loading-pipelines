@@ -35,10 +35,16 @@ class MiscTest(unittest.TestCase):
             ht.collect()[0],
             hl.Struct(
                 locus=hl.Locus(
-                    contig='chr1', position=939121, reference_genome='GRCh38'
+                    contig='chr1',
+                    position=939121,
+                    reference_genome='GRCh38',
                 ),
                 alleles=['C', 'T'],
-                rg37_locus=hl.Locus(contig=1, position=874501, reference_genome='GRCh37'),
+                rg37_locus=hl.Locus(
+                    contig=1,
+                    position=874501,
+                    reference_genome='GRCh37',
+                ),
                 rsid=None,
                 variant_id='1-939121-C-T',
                 xpos=1000939121,
@@ -95,7 +101,8 @@ class MiscTest(unittest.TestCase):
                     AN_Adj=47974,
                 ),
                 splice_ai=hl.Struct(
-                    delta_score=0.0, splice_consequence='No consequence'
+                    delta_score=0.0,
+                    splice_consequence='No consequence',
                 ),
                 eigen=hl.Struct(Eigen_phred=2.628000020980835),
                 clinvar=hl.Struct(

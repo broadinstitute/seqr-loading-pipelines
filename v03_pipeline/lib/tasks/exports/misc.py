@@ -9,7 +9,7 @@ def snake_to_camelcase(snake_string: str):
 
 
 def camelcase_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
-    return s.rename({f: snake_to_camelcase(f) for f in s.keys()})
+    return s.rename({f: snake_to_camelcase(f) for f in s})
 
 
 def camelcase_array_structexpression_fields(
