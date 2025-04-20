@@ -1,0 +1,15 @@
+from v03_pipeline.lib.misc.io import checkpoint
+
+
+class BaseWriteParquetTask(BaseHailTableTask):
+    def complete(self) -> luigi.Target:
+        return GCSorLocalFolderTarget(self.output().path).exists()
+
+    def run(self) -> None:
+        ht = self.create_table()
+        ht, _ = checkpoint(ht)
+        df = ht.to_spark()
+        df.write.parquet(
+            self.output().path,
+            mode='overwrite',
+        )

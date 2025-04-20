@@ -13,7 +13,8 @@ from v03_pipeline.lib.annotations.enums import (
     SV_TYPES,
     TRANSCRIPT_CONSEQUENCE_TERMS,
 )
-from v03_pipeline.lib.model.definitions import DatasetType, ReferenceGenome
+from v03_pipeline.lib.misc.nested_field import parse_nested_field
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 
 
@@ -26,16 +27,59 @@ def camelcase_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
     return s.rename({f: snake_to_camelcase(f) for f in s})
 
 
+def array_structexpression_fields(ht: hl.Table):
+    return [
+        field
+        for field in ht.row
+        if isinstance(
+            ht[field],
+            hl.expr.expressions.typed_expressions.ArrayStructExpression,
+        )
+    ]
+
+
+def transcripts_field_name(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> str:
+    formatting_annotation_names = {
+        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
+    }
+    if 'sorted_gene_consequences' in formatting_annotation_names:
+        return snake_to_camelcase('sorted_gene_consequences')
+    return snake_to_camelcase('sorted_transcript_consequences')
+
+
+def subset_filterable_transcripts_fields(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+) -> hl.Table:
+    field_name = transcripts_field_name(reference_genome, dataset_type)
+    return ht.annotate(
+        **{
+            field_name: ht[field_name].map(
+                lambda c: c.select(
+                    **{
+                        new_nested_field_name: parse_nested_field(
+                            ht[field_name],
+                            existing_nested_field_name,
+                        )
+                        for new_nested_field_name, existing_nested_field_name in dataset_type.export_parquet_filterable_transcripts_fields(
+                            reference_genome,
+                        ).items()
+                    },
+                ),
+            ),
+        },
+    )
+
+
 def camelcase_array_structexpression_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
 ):
-    for field in ht.row:
-        if not isinstance(
-            ht[field],
-            hl.expr.expressions.typed_expressions.ArrayStructExpression,
-        ):
-            continue
+    for field in array_structexpression_fields(ht):
         ht = ht.transmute(
             **{
                 snake_to_camelcase(field): ht[field].map(

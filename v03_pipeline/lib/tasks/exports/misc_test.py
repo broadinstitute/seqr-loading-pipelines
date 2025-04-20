@@ -16,6 +16,7 @@ TEST_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
 )
 
+
 class MiscTest(unittest.TestCase):
     def test_unmap_formatting_annotation_enums(self) -> None:
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
