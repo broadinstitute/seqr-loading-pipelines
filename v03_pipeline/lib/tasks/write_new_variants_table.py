@@ -192,6 +192,12 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 },
             )
             new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
+
+        # Add serial integer index
+        new_variants_ht = new_variants_ht.add_index(name='key_')
+        new_variants_ht = new_variants_ht.transmute(
+            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_seen_id,
+        )
         return new_variants_ht.select_globals(
             updates={
                 hl.Struct(
