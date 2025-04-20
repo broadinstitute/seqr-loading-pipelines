@@ -69,6 +69,7 @@ class MigrateVariantAnnotationsTableTaskTest(MockedDatarootTestCase):
                     enums=hl.Struct(),
                     updates=set(),
                     migrations=['0012_mock_migration'],
+                    max_key_=0,
                     mock_migration='a mock migration',
                 ),
             ],

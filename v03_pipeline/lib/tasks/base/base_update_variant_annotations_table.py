@@ -69,7 +69,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                     ),
                 ),
                 migrations=hl.empty_array(hl.tstr),
-                max_seen_id=hl.tint64,
+                max_key_=hl.int64(0),
             ),
         )
 
