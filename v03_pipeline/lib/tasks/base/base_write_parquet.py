@@ -1,7 +1,10 @@
+import luigi
+
 from v03_pipeline.lib.misc.io import checkpoint
+from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget
 
 
-class BaseWriteParquetTask(BaseHailTableTask):
+class BaseWriteParquetTask(luigi.task):
     def complete(self) -> luigi.Target:
         return GCSorLocalFolderTarget(self.output().path).exists()
 
