@@ -134,7 +134,10 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                 ),
             ),
             **{f: ht[f] for f in array_structexpression_fields(ht)},
-            **{'hgmd': ht.hgmd}
-            if FeatureFlag.ACCESS_PRIVATE_REFERENCE_DATASETS
-            else {},
+            **{
+                rd: ht[rd]
+                for rd in BaseReferenceDataset.for_reference_genome_dataset_type(
+                    self.reference_genome, self.dataset_type
+                )
+            },
         )

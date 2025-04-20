@@ -28,14 +28,16 @@ def camelcase_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
 
 
 def array_structexpression_fields(ht: hl.Table):
-    return [
-        field
-        for field in ht.row
-        if isinstance(
-            ht[field],
-            hl.expr.expressions.typed_expressions.ArrayStructExpression,
-        )
-    ]
+    return sorted(
+        [
+            field
+            for field in ht.row
+            if isinstance(
+                ht[field],
+                hl.expr.expressions.typed_expressions.ArrayStructExpression,
+            )
+        ]
+    )
 
 
 def transcripts_field_name(
