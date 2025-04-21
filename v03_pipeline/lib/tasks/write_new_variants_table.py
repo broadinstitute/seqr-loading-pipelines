@@ -196,7 +196,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
         new_variants_ht = new_variants_ht.transmute(
-            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_seen_id,
+            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_key_ + 1,
         )
         return new_variants_ht.select_globals(
             updates={

@@ -20,4 +20,4 @@ class AddKeyField(BaseMigration):
     @staticmethod
     def migrate(ht: hl.Table, **_) -> hl.Table:
         ht = ht.add_index(name='key_')
-        return ht.annotate_globals(max_seen_id=(ht.count() - 1))
+        return ht.annotate_globals(max_key_=(ht.count() - 1))

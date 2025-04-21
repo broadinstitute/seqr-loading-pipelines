@@ -335,6 +335,10 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     },
                 ],
             )
+            self.assertEqual(
+                hl.eval(ht.globals.max_key_),
+                29,
+            )
 
             # Ensure that new variants are added correctly to the table.
             uvatwns_task_4 = UpdateVariantAnnotationsTableWithNewSamplesTask(
@@ -504,6 +508,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             hgmd='1.0',
                         ),
                         migrations=[],
+                        max_key_=29,
                         enums=hl.Struct(
                             clinvar=ReferenceDataset.clinvar.enum_globals,
                             dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
@@ -691,6 +696,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     hgmd=None,
                     gt_stats=hl.Struct(AC=0, AN=6, AF=0.0, hom=0),
                     CAID=None,
+                    key_=0,
                 ),
             )
 
@@ -838,6 +844,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                             mitotip=hl.Struct(trna_prediction=MITOTIP_PATHOGENICITIES),
                         ),
                         migrations=[],
+                        max_key_=4,
                         updates={
                             hl.Struct(
                                 callset='v03_pipeline/var/test/callsets/mito_1.mt',
@@ -888,6 +895,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         AN=4,
                     ),
                     local_constraint_mito=None,
+                    key_=0,
                 ),
             )
 
@@ -936,6 +944,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     ),
                     migrations=[],
+                    max_key_=12,
                     updates={
                         hl.Struct(
                             callset=TEST_SV_VCF,
@@ -995,6 +1004,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000180928,
+                    key_=0,
                 ),
                 hl.Struct(
                     variant_id='BND_chr1_9',
@@ -1038,6 +1048,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000789481,
+                    key_=1,
                 ),
                 hl.Struct(
                     variant_id='CPX_chr1_22',
@@ -1091,6 +1102,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=3,
                     sv_type_detail_id=2,
                     xpos=1006558902,
+                    key_=2,
                 ),
                 hl.Struct(
                     variant_id='CPX_chr1_251',
@@ -1147,6 +1159,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=3,
                     sv_type_detail_id=9,
                     xpos=1180540234,
+                    key_=3,
                 ),
                 hl.Struct(
                     variant_id='CPX_chr1_41',
@@ -1200,6 +1213,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=3,
                     sv_type_detail_id=12,
                     xpos=1016088760,
+                    key_=4,
                 ),
                 hl.Struct(
                     variant_id='CPX_chr1_54',
@@ -1258,6 +1272,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=3,
                     sv_type_detail_id=13,
                     xpos=1021427498,
+                    key_=5,
                 ),
                 hl.Struct(
                     variant_id='CPX_chrX_251',
@@ -1326,6 +1341,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=2699041,
                         reference_genome='GRCh37',
                     ),
+                    key_=6,
                 ),
                 hl.Struct(
                     variant_id='CPX_chrX_252',
@@ -1398,6 +1414,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         position=2699941,
                         reference_genome='GRCh37',
                     ),
+                    key_=7,
                 ),
             ],
         )
@@ -1432,6 +1449,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     ),
                     migrations=[],
+                    max_key_=13,
                     updates={
                         hl.Struct(
                             callset=TEST_SV_VCF,
@@ -1500,6 +1518,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     sv_type_id=2,
                     sv_type_detail_id=None,
                     xpos=1000180928,
+                    key_=0,
                 ),
             ],
         )
@@ -1582,6 +1601,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                         ),
                     ),
                     migrations=[],
+                    max_key_=1,
                     updates={
                         hl.Struct(
                             callset=TEST_GCNV_BED_FILE,
@@ -1637,6 +1657,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     strvctvre=hl.Struct(score=hl.eval(hl.float32(0.583))),
                     sv_type_id=5,
                     xpos=1100006937,
+                    key_=0,
                 ),
                 hl.Struct(
                     variant_id='suffix_16457_DEL',
@@ -1675,6 +1696,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTaskTest(
                     strvctvre=hl.Struct(score=0.5070000290870667),
                     sv_type_id=5,
                     xpos=1100017586,
+                    key_=1,
                 ),
             ],
         )

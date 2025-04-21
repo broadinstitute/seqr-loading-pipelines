@@ -69,7 +69,7 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                     ),
                 ),
                 migrations=hl.empty_array(hl.tstr),
-                max_key_=hl.int64(0),
+                max_key_=hl.int64(-1),
             ),
         )
 
@@ -101,5 +101,6 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
                 ),
                 updates=ht.globals.updates,
                 migrations=ht.globals.migrations,
+                max_key_=ht.globals.max_key_,
             )
         return annotate_enums(ht, self.reference_genome, self.dataset_type)
