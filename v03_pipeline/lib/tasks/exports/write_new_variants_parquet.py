@@ -72,6 +72,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
         )
         ht = ht.key_by()
         return ht.select(
+            key_=ht.key_,
             xpos=ht.xpos,
             chrom=ht.locus.contig,
             pos=ht.locus.position,
