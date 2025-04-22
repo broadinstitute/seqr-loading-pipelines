@@ -40,5 +40,6 @@ class MigrateVariantAnnotationsTableTask(BaseMigrateTask):
                     ),
                 ),
                 migrations=hl.empty_array(hl.tstr),
+                max_key_=hl.int64(-1),
             ),
         )
