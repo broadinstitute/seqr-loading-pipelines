@@ -60,13 +60,13 @@ def subset_filterable_transcripts_fields(
     field_name = transcripts_field_name(reference_genome, dataset_type)
     return ht.annotate(
         **{
-            field_name: ht[field_name].map(
-                lambda c: c.select(
+            field_name: hl.enumerate(ht[field_name]).starmap(
+                lambda idx, c: c.select(
                     **{
                         new_nested_field_name: parse_nested_field(
                             ht[field_name],
                             existing_nested_field_name,
-                        )
+                        )[idx]
                         for new_nested_field_name, existing_nested_field_name in dataset_type.export_parquet_filterable_transcripts_fields(
                             reference_genome,
                         ).items()
