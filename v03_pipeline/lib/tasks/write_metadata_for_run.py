@@ -84,6 +84,11 @@ class WriteMetadataForRunTask(luigi.Task):
                 self.reference_genome,
             )
         ):
+            loadable_samples = {
+                sample
+                for family_samples in metadata_json['family_samples'].values()
+                for sample in family_samples
+            }
             with hfs.open(
                 sample_qc_json_path(
                     self.reference_genome,
@@ -91,6 +96,8 @@ class WriteMetadataForRunTask(luigi.Task):
                     self.callset_path,
                 ),
             ) as f:
-                metadata_json['sample_qc'] = json.load(f)
+                metadata_json['sample_qc'] = {
+                    k: v for k, v in json.load(f).items() if k in loadable_samples
+                }
         with self.output().open('w') as f:
             json.dump(metadata_json, f)
