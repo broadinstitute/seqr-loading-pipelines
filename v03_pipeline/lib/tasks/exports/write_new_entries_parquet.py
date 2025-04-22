@@ -16,10 +16,8 @@ from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query impor
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
+from v03_pipeline.lib.tasks.update_project_table import UpdateProjectTableTask
 from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
-from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
-    WriteRemappedAndSubsettedCallsetTask,
-)
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -44,9 +42,9 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 UpdatedReferenceDatasetQueryTask,
                 reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
             ),
-            'remapped_and_subsetted_callsets': [
+            'project_tables': [
                 self.clone(
-                    WriteRemappedAndSubsettedCallsetTask,
+                    UpdateProjectTableTask,
                     project_i=i,
                 )
                 for i in range(len(self.project_guids))
