@@ -91,6 +91,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                             **BASE_ENUMS,
                         ),
                         migrations=[],
+                        max_key_=-1,
                         updates=set(),
                     ),
                 ],
@@ -125,6 +126,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
                 migrations=hl.empty_array(hl.tstr),
+                max_key_=0,
             ),
         )
 
@@ -173,6 +175,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                         ),
                         migrations=[],
                         updates=set(),
+                        max_key_=0,
                     ),
                 ],
             )
@@ -276,6 +279,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
                 migrations=hl.empty_array(hl.tstr),
+                max_key_=0,
             ),
         )
 
@@ -325,6 +329,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                         ),
                         migrations=[],
                         updates=set(),
+                        max_key_=0,
                     ),
                 ],
             )
@@ -404,6 +409,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                 enums=hl.Struct(),
                 updates=hl.empty_set(hl.tstruct(callset=hl.tstr, project_guid=hl.tstr)),
                 migrations=hl.empty_array(hl.tstr),
+                max_key_=0,
             ),
         )
 
@@ -452,6 +458,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                         ),
                         migrations=[],
                         updates=set(),
+                        max_key_=0,
                     ),
                 ],
             )
