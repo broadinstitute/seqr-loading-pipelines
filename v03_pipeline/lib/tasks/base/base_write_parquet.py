@@ -12,6 +12,7 @@ class BaseWriteParquetTask(luigi.Task):
         ht = self.create_table()
         ht, _ = checkpoint(ht)
         df = ht.to_spark(flatten=False)
+        df = df.withColumnRenamed('key_', 'key')
         df.write.parquet(
             self.output().path,
             mode='overwrite',

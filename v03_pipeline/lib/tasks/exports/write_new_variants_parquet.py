@@ -2,11 +2,11 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.model import FeatureFlag
 from v03_pipeline.lib.paths import (
     new_variants_parquet_path,
     new_variants_table_path,
 )
+from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -46,7 +46,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             else self.clone(WriteNewVariantsTableTask),
         ]
 
-    def run(self) -> None:
+    def create_table(self) -> None:
         ht = hl.read_table(
             new_variants_table_path(
                 self.reference_genome,
@@ -137,8 +137,9 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             **{f: ht[f] for f in array_structexpression_fields(ht)},
             **{
                 rd: ht[rd]
-                for rd in BaseReferenceDataset.for_reference_genome_dataset_type(
-                    self.reference_genome, self.dataset_type
+                for rd in BaseReferenceDataset.for_reference_genome_dataset_type_private(
+                    self.reference_genome,
+                    self.dataset_type,
                 )
             },
         )

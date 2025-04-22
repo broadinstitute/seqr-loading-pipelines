@@ -43,7 +43,7 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
             else self.clone(WriteNewVariantsTableTask),
         ]
 
-    def run(self) -> None:
+    def create_table(self) -> None:
         ht = hl.read_table(
             new_variants_table_path(
                 self.reference_genome,

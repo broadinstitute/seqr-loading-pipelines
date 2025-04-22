@@ -68,7 +68,7 @@ class BaseReferenceDataset:
                 reference_genome,
                 dataset_type,
             )
-            if self.access_control == AccessControl.PRIVATE
+            if dataset.access_control == AccessControl.PRIVATE
         }
 
     @classmethod

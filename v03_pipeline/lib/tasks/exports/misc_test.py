@@ -47,6 +47,7 @@ class MiscTest(unittest.TestCase):
         self.assertEqual(
             ht.collect()[0],
             hl.Struct(
+                key_=0,
                 locus=hl.Locus(
                     contig='chr1',
                     position=939121,
@@ -192,6 +193,7 @@ class MiscTest(unittest.TestCase):
                 'sorted_motif_feature_consequences',
             ).collect()[0],
             hl.Struct(
+                key_=0,
                 locus=hl.Locus(
                     contig='chr1',
                     position=939121,
@@ -294,6 +296,7 @@ class MiscTest(unittest.TestCase):
         self.assertEqual(
             ht.collect()[0],
             hl.Struct(
+                key_=0,
                 locus=hl.Locus(
                     contig='chr1',
                     position=939121,

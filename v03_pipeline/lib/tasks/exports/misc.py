@@ -36,7 +36,7 @@ def array_structexpression_fields(ht: hl.Table):
                 ht[field],
                 hl.expr.expressions.typed_expressions.ArrayStructExpression,
             )
-        ]
+        ],
     )
 
 

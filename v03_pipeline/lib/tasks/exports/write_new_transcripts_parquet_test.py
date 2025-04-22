@@ -13,6 +13,7 @@ from v03_pipeline.lib.paths import new_transcripts_parquet_path, new_variants_ta
 from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
+from v03_pipeline.lib.test.misc import convert_ndarray_to_list
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -78,6 +79,56 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         worker.run()
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
-
-
-pd.read_parquet('example_pa.parquet', engine='pyarrow')
+        df = pd.read_parquet(
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        self.assertListEqual(
+            list(export_json[0].keys()),
+            ['key', 'transcripts']
+        )
+        self.assertEqual(
+            export_json[0]['key'],
+            0,
+        )
+        self.assertEqual(
+            export_json[0]['transcripts'][0]['_0'],
+            'ENSG00000187634',
+        )
+        self.assertEqual(
+            export_json[0]['transcripts'][0]['_1'][0],
+            {
+                'aminoAcids': 'S/L',
+                'canonical': 1.0,
+                'codons': 'tCg/tTg',
+                'geneId': 'ENSG00000187634',
+                'hgvsc': 'ENST00000616016.5:c.1049C>T',
+                'hgvsp': 'ENSP00000478421.2:p.Ser350Leu',
+                'transcriptId': 'ENST00000616016',
+                'maneSelect': 'NM_001385641.1',
+                'manePlusClinical': None,
+                'exon': {'index': 6, 'total': 14},
+                'intron': None,
+                'refseqTranscriptId': 'NM_001385641.1',
+                'alphamissense': {'pathogenicity': None},
+                'loftee': {'isLofNagnag': None, 'lofFilters': None},
+                'spliceregion': {
+                    'extended_intronic_splice_region_variant': False,
+                },
+                'utrannotator': {
+                    'existingInframeOorfs': None,
+                    'existingOutofframeOorfs': None,
+                    'existingUorfs': None,
+                    'fiveutrAnnotation': None,
+                    'fiveutrConsequence': None,
+                },
+                'biotype': 'protein_coding',
+                'consequenceTerms': ['missense_variant'],
+            },
+        )
