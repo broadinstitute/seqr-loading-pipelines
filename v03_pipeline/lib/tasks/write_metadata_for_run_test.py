@@ -99,6 +99,8 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         'HG00732_1': {'filter_flags': ['coverage']},
                         'HG00733_1': {'filter_flags': ['contamination']},
                         'NA19675_1': {'filter_flags': []},
+                        'NA19675_1': {'filter_flags': []},
+                        'NA20888_1': {'filter_flags': ['sample_failed']},
                     },
                 },
             )
