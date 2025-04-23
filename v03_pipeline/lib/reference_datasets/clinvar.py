@@ -161,7 +161,8 @@ def select_fields(ht):
                 lambda p: p.split(';'),
                 ht.conditions,
             )
-            .filter(lambda x: x != '')
+            .filter(lambda p: p != '')
+            .filter(lambda p: hl.len(p.split(':')) > 1)
             .map(lambda p: p.split(':')[1]),
         ),
     )

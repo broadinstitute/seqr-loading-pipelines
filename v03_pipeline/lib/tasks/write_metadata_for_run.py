@@ -60,12 +60,21 @@ class WriteMetadataForRunTask(luigi.Task):
             ),
             'sample_qc': {},
         }
+        sample_qc_loadable_samples = {}
         for remapped_and_subsetted_callset in self.input():
             callset_mt = hl.read_matrix_table(remapped_and_subsetted_callset.path)
             collected_globals = callset_mt.globals.collect()[0]
             metadata_json['family_samples'] = {
                 **collected_globals['family_samples'],
                 **metadata_json['family_samples'],
+            }
+            sample_qc_loadable_samples = {
+                *{
+                    sample
+                    for family_samples in collected_globals['family_samples'].values()
+                    for sample in family_samples
+                },
+                *sample_qc_loadable_samples,
             }
             for key in [
                 'missing_samples',
@@ -76,6 +85,16 @@ class WriteMetadataForRunTask(luigi.Task):
                 metadata_json['failed_family_samples'][key] = {
                     **collected_globals['failed_family_samples'][key],
                     **metadata_json['failed_family_samples'][key],
+                }
+                sample_qc_loadable_samples = {
+                    *{
+                        sample
+                        for meta in collected_globals['failed_family_samples'][
+                            key
+                        ].values()
+                        for sample in meta['samples']
+                    },
+                    *sample_qc_loadable_samples,
                 }
         if (
             FeatureFlag.EXPECT_TDR_METRICS
@@ -91,6 +110,10 @@ class WriteMetadataForRunTask(luigi.Task):
                     self.callset_path,
                 ),
             ) as f:
-                metadata_json['sample_qc'] = json.load(f)
+                metadata_json['sample_qc'] = {
+                    k: v
+                    for k, v in json.load(f).items()
+                    if k in sample_qc_loadable_samples
+                }
         with self.output().open('w') as f:
             json.dump(metadata_json, f)

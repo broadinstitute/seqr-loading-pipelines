@@ -30,7 +30,6 @@ class WriteSexCheckTableTask(BaseWriteTask):
             and self.dataset_type.expect_tdr_metrics(
                 self.reference_genome,
             )
-            and self.sample_type.predicted_sex_from_tdr
         )
 
     def output(self) -> luigi.Target:

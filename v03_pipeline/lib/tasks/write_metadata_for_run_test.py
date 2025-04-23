@@ -95,10 +95,11 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         TEST_VCF,
                     ),
                     'sample_qc': {
-                        'HG00731': {'filter_flags': ['coverage', 'contamination']},
-                        'HG00732': {'filter_flags': ['coverage']},
-                        'HG00733': {'filter_flags': ['contamination']},
-                        'NA19675': {'filter_flags': []},
+                        'HG00731_1': {'filter_flags': ['coverage', 'contamination']},
+                        'HG00732_1': {'filter_flags': ['coverage']},
+                        'HG00733_1': {'filter_flags': ['contamination']},
+                        'NA19675_1': {'filter_flags': []},
+                        'NA20888_1': {'filter_flags': ['sample_failed']},
                     },
                 },
             )
