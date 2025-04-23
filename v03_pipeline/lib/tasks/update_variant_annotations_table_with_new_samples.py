@@ -137,4 +137,5 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                     for i, project_guid in enumerate(self.project_guids)
                 },
             ),
+            max_key_=ht.aggregate(hl.agg.max(ht.key_)),
         )
