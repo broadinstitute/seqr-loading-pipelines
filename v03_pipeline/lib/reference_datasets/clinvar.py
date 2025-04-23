@@ -160,7 +160,10 @@ def select_fields(ht):
             hl.flatmap(
                 lambda p: p.split(';'),
                 ht.conditions,
-            ).map(lambda p: p.split(':')[1]),
+            )
+            .filter(lambda p: p != '')
+            .filter(lambda p: hl.len(p.split(':')) > 1)
+            .map(lambda p: p.split(':')[1]),
         ),
     )
 
