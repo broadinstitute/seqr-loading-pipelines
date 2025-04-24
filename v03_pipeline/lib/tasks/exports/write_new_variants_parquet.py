@@ -6,7 +6,6 @@ from v03_pipeline.lib.paths import (
     new_variants_parquet_path,
     new_variants_table_path,
 )
-from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -83,6 +82,11 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             CAID=ht.CAID,
             liftedOverChrom=ht.rg37_locus.contig,
             liftedOverPos=ht.rg37_locus.position,
+            hgmd=(
+                ht.hgmd
+                if hasattr(ht, 'hgmd')
+                else hl.missing(hl.tstruct(accession=hl.tstr, class_=hl.tstr))
+            ),
             screenRegionType=ht.screen.region_types.first(),
             predictions=hl.Struct(
                 cadd=ht.dbnsfp.CADD_phred,
@@ -135,11 +139,4 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                 ),
             ),
             **{f: ht[f] for f in array_structexpression_fields(ht)},
-            **{
-                rd: ht[rd]
-                for rd in BaseReferenceDataset.for_reference_genome_dataset_type_private(
-                    self.reference_genome,
-                    self.dataset_type,
-                )
-            },
         )

@@ -176,8 +176,10 @@ def unmap_reference_dataset_annotation_enums(
             },
         )
 
-    # Explicit hgmd "class" edge case:
-    if hasattr(ht, ReferenceDataset.hgmd.value) and ReferenceDataset.hgmd in reference_datasets:
+    # Explicit hgmd edge case:
+    if (ReferenceDataset.hgmd in reference_datasets) and hasattr(
+        ht, ReferenceDataset.hgmd.value,
+    ):
         ht = ht.annotate(
             **{
                 ReferenceDataset.hgmd.value: ht[

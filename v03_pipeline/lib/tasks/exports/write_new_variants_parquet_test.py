@@ -85,6 +85,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'CAID': 'CA502654',
                     'liftedOverChrom': '1',
                     'liftedOverPos': 874501,
+                    'hgmd': {'accession': 'abcdefg', 'class_': 'DFP'},
                     'screenRegionType': None,
                     'predictions': {
                         'cadd': 23.5,
@@ -159,7 +160,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'geneId': 'ENSG00000187634',
                         },
                     ],
-                    'hgmd': None,
                 },
             ],
         )
