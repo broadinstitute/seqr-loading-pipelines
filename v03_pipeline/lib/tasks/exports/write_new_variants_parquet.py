@@ -74,7 +74,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
         return ht.select(
             key_=ht.key_,
             xpos=ht.xpos,
-            chrom=ht.locus.contig,
+            chrom=ht.locus.contig.replace('^chr', ''),
             pos=ht.locus.position,
             ref=ht.alleles[0],
             alt=ht.alleles[1],

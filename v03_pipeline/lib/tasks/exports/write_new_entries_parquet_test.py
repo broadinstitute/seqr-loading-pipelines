@@ -20,22 +20,34 @@ from v03_pipeline.lib.test.misc import convert_ndarray_to_list
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
+from v03_pipeline.lib.misc.io import import_vcf, remap_pedigree_hash
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
-TEST_SNV_INDEL_ANNOTATIONS = (
-    'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
-)
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 
 
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
     def setUp(self) -> None:
         super().setUp()
-        ht = hl.read_table(
-            TEST_SNV_INDEL_ANNOTATIONS,
+        mt = import_vcf(TEST_SNV_INDEL_VCF, ReferenceGenome.GRCh38)
+        ht = mt.rows()
+        ht = ht.add_index(name='key_')
+        ht = ht.annotate_globals(
+            updates={
+                hl.Struct(
+                    callset=TEST_SNV_INDEL_VCF,
+                    project_guid='R0113_test_project',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
+                ),
+                hl.Struct(
+                    callset=TEST_SNV_INDEL_VCF,
+                    project_guid='R0114_project4',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_4_REMAP),
+                ),
+            }
         )
         ht.write(
             variant_annotations_table_path(

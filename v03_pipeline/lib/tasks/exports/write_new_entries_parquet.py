@@ -113,23 +113,25 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
 
             ht = ht.key_by()
             ht = ht.select(
+                key=ht.key_,
                 project_guid=project_guid,
                 family_guid=ht.family_entries.family_guid[0],
-                is_gnomad_gt_5_percent=ht.is_gt_5_percent,
-                key=ht.key_,
-                sample_ids=ht.family_samples[ht.family_entries.family_guid[0]],
-                xpos=get_expr_for_xpos(ht.locus),
-                filters=ht.filters,
                 sample_type=self.sample_type.value,
-                GQ=ht.family_entries.GQ,
-                AB=ht.family_entries.AB,
-                DP=ht.family_entries.DP,
-                GT=ht.family_entries.GT.map(
-                    lambda x: hl.case()
-                    .when(x.is_hom_ref(), 0)
-                    .when(x.is_het(), 1)
-                    .when(x.is_hom_var(), 2)
-                    .default(hl.missing(hl.tint32)),
+                xpos=get_expr_for_xpos(ht.locus),
+                is_gnomad_gt_5_percent=ht.is_gt_5_percent,
+                filters=ht.filters,
+                calls=hl.Struct(
+                    sampleId=ht.family_samples[ht.family_entries.family_guid[0]],
+                    gt=ht.family_entries.GQ,
+                    gq=ht.family_entries.AB,
+                    ab=ht.family_entries.DP,
+                    dp=ht.family_entries.GT.map(
+                        lambda x: hl.case()
+                        .when(x.is_hom_ref(), 0)
+                        .when(x.is_het(), 1)
+                        .when(x.is_hom_var(), 2)
+                        .default(hl.missing(hl.tint32)),
+                    ),
                 ),
             )
             if not unioned_ht:
@@ -137,4 +139,3 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             else:
                 unioned_ht = unioned_ht.union(ht)
         return unioned_ht
-

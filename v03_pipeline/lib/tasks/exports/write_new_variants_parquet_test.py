@@ -76,7 +76,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                 {
                     'key': 0,
                     'xpos': 1000939121,
-                    'chrom': 'chr1',
+                    'chrom': '1',
                     'pos': 939121,
                     'ref': 'C',
                     'alt': 'T',
