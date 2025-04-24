@@ -67,5 +67,5 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
             .group_by(
                 lambda c: c.geneId,
             )
-            .items()
+            .items(),
         )

@@ -101,19 +101,21 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertEqual(
             export_json[0]['transcripts'][0]['_1'][0],
             {
+                'alphamissense': {'pathogenicity': None},
                 'aminoAcids': 'S/L',
+                'biotype': 'protein_coding',
                 'canonical': 1.0,
                 'codons': 'tCg/tTg',
+                'consequenceTerms': ['missense_variant'],
+                'exon': {'index': 6, 'total': 14},
                 'geneId': 'ENSG00000187634',
                 'hgvsc': 'ENST00000616016.5:c.1049C>T',
                 'hgvsp': 'ENSP00000478421.2:p.Ser350Leu',
+                'intron': None,
                 'transcriptId': 'ENST00000616016',
                 'maneSelect': 'NM_001385641.1',
                 'manePlusClinical': None,
-                'exon': {'index': 6, 'total': 14},
-                'intron': None,
                 'refseqTranscriptId': 'NM_001385641.1',
-                'alphamissense': {'pathogenicity': None},
                 'loftee': {'isLofNagnag': None, 'lofFilters': None},
                 'spliceregion': {
                     'extended_intronic_splice_region_variant': False,
@@ -125,8 +127,6 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                     'fiveutrAnnotation': None,
                     'fiveutrConsequence': None,
                 },
-                'biotype': 'protein_coding',
-                'consequenceTerms': ['missense_variant'],
             },
         )
         self.assertEqual(
