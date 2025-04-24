@@ -60,7 +60,7 @@ class UpdateProjectTableWithDeletedFamiliesTaskTest(MockedDatarootTestCase):
                         reference_genome='GRCh38',
                     ),
                     'alleles': ['G', 'C'],
-                    'filters': set(),
+                    'filters': set(['VQSRTrancheSNP99.00to99.90']),
                     'family_entries': [
                         [
                             hl.Struct(
