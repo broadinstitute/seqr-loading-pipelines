@@ -138,5 +138,5 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                     hom=ht.topmed.Hom,
                 ),
             ),
-            **{f: ht[f] for f in array_structexpression_fields(ht)},
+            **{f: ht[f] for f in sorted(array_structexpression_fields(ht))},
         )

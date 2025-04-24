@@ -129,3 +129,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                 'consequenceTerms': ['missense_variant'],
             },
         )
+        self.assertEqual(
+            list(export_json[0]['transcripts'][0]['_1'][0].keys()),
+            sorted(export_json[0]['transcripts'][0]['_1'][0].keys()),
+        )

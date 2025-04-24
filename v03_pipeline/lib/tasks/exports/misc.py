@@ -28,16 +28,14 @@ def camelcase_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
 
 
 def array_structexpression_fields(ht: hl.Table):
-    return sorted(
-        [
-            field
-            for field in ht.row
-            if isinstance(
-                ht[field],
-                hl.expr.expressions.typed_expressions.ArrayStructExpression,
-            )
-        ],
-    )
+    return [
+        field
+        for field in ht.row
+        if isinstance(
+            ht[field],
+            hl.expr.expressions.typed_expressions.ArrayStructExpression,
+        )
+    ]
 
 
 def transcripts_field_name(
@@ -178,16 +176,15 @@ def unmap_reference_dataset_annotation_enums(
 
     # Explicit hgmd edge case:
     if (ReferenceDataset.hgmd in reference_datasets) and hasattr(
-        ht, ReferenceDataset.hgmd.value,
+        ht,
+        ReferenceDataset.hgmd.value,
     ):
         ht = ht.annotate(
             **{
-                ReferenceDataset.hgmd.value: ht[
-                    ReferenceDataset.hgmd.value
-                ].annotate(
-                    class_=ht[ReferenceDataset.hgmd.value]['class']
-                ).drop('class')
-            }
+                ReferenceDataset.hgmd.value: ht[ReferenceDataset.hgmd.value]
+                .annotate(class_=ht[ReferenceDataset.hgmd.value]['class'])
+                .drop('class'),
+            },
         )
     return ht.annotate_globals(enums=ht.globals.enums.drop(*unmapped_annotation_name))
 
