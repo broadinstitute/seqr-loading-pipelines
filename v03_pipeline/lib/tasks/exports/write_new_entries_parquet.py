@@ -114,7 +114,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
 
             ht = ht.key_by()
             ht = ht.select(
-                key=ht.key_,
+                key_=ht.key_,
                 project_guid=project_guid,
                 family_guid=ht.family_entries.family_guid[0],
                 sample_type=self.sample_type.value,
