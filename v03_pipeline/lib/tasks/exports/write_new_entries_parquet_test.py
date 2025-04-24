@@ -22,11 +22,11 @@ from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
 )
 from v03_pipeline.lib.misc.io import import_vcf, remap_pedigree_hash
 
-TEST_RUN_ID = 'manual__2024-04-03'
-
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+
+TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
@@ -81,9 +81,41 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 ),
             ),
         )
-        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
-        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        export_json = convert_ndarray_to_list(df.to_dict('records'))
         self.assertEqual(
-            export_json[0]['key'],
-            0,
+            export_json[:2],
+            [
+                {
+                    'key': 2,
+                    'project_guid': 'R0113_test_project',
+                    'family_guid': 'abc_1',
+                    'sample_type': 'WGS',
+                    'xpos': 1000876499,
+                    'is_gnomad_gt_5_percent': False,
+                    'filters': [],
+                    'calls': {
+                        'sampleId': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                        'gt': [2, 2, 2],
+                        'gq': [21, 24, 12],
+                        'ab': [1.0, 1.0, 1.0],
+                        'dp': [7, 8, 4],
+                    },
+                },
+                {
+                    'key': 3,
+                    'project_guid': 'R0113_test_project',
+                    'family_guid': 'abc_1',
+                    'sample_type': 'WGS',
+                    'xpos': 1000878314,
+                    'is_gnomad_gt_5_percent': False,
+                    'filters': ['VQSRTrancheSNP99.00to99.90'],
+                    'calls': {
+                        'sampleId': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
+                        'gt': [1, 0, 1],
+                        'gq': [30, 6, 61],
+                        'ab': [0.3333333432674408, 0.0, 0.6000000238418579],
+                        'dp': [3, 2, 5],
+                    },
+                },
+            ],
         )
