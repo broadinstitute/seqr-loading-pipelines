@@ -4,6 +4,7 @@ import hail as hl
 import luigi.worker
 import pandas as pd
 
+from v03_pipeline.lib.misc.io import import_vcf, remap_pedigree_hash
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -20,7 +21,6 @@ from v03_pipeline.lib.test.misc import convert_ndarray_to_list
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
-from v03_pipeline.lib.misc.io import import_vcf, remap_pedigree_hash
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
@@ -47,7 +47,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     project_guid='R0114_project4',
                     remap_pedigree_hash=remap_pedigree_hash(TEST_PEDIGREE_4_REMAP),
                 ),
-            }
+            },
         )
         ht.write(
             variant_annotations_table_path(

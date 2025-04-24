@@ -135,8 +135,5 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                     dp=ht.family_entries.DP,
                 ),
             )
-            if not unioned_ht:
-                unioned_ht = ht
-            else:
-                unioned_ht = unioned_ht.union(ht)
+            unioned_ht = unioned_ht.union(ht) if unioned_ht else ht
         return unioned_ht
