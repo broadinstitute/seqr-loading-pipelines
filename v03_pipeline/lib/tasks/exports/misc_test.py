@@ -109,7 +109,7 @@ class MiscTest(unittest.TestCase):
                     ),
                 ],
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=None,
+                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -212,7 +212,7 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=None,
+                hgmd=hl.Struct(accession='abcdefg', class_='DFP'),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
@@ -315,7 +315,7 @@ class MiscTest(unittest.TestCase):
                 CAID='CA502654',
                 check_ref=False,
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=None,
+                hgmd=hl.Struct(accession='abcdefg', class_='DFP'),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,

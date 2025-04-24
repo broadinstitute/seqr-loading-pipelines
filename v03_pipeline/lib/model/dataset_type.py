@@ -416,8 +416,8 @@ class DatasetType(StrEnum):
         if self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38:
             fields = {
                 **fields,
-                'alphamissense': 'alphamissense.pathogenicity',
-                'extended_intronic_splice_region_variant': 'spliceregion.extended_intronic_splice_region_variant',
+                'alphamissensePathogenicity': 'alphamissense.pathogenicity',
+                'extendedIntronicSpliceRegionVariant': 'spliceregion.extended_intronic_splice_region_variant',
                 'fiveutrConsequence': 'utrannotator.fiveutrConsequence',
             }
         # Parquet export expects all fields sorted alphabetically

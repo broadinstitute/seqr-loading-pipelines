@@ -151,10 +151,10 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     ],
                     'sortedTranscriptConsequences': [
                         {
-                            'alphamissense': None,
+                            'alphamissensePathogenicity': None,
                             'canonical': 1.0,
                             'consequenceTerms': ['missense_variant'],
-                            'extended_intronic_splice_region_variant': False,
+                            'extendedIntronicSpliceRegionVariant': False,
                             'fiveutrConsequence': None,
                             'geneId': 'ENSG00000187634',
                         },
