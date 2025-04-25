@@ -91,7 +91,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                     lambda i, fs: hl.enumerate(fs).starmap(
                         lambda j, e: e.annotate(
                             family_guid=ht.family_guids[i],  # noqa: B023
-                            sampleId=ht.family_samples[ht.family_guids[i]][j],
+                            sampleId=ht.family_samples[ht.family_guids[i]][j], # noqa: B023
                         ),
                     ),
                 ),

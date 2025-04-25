@@ -147,7 +147,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 },
             ],
         )
-        print(export_json[-1])
         self.assertEqual(
             export_json[-1],
             {
@@ -158,7 +157,15 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 'project_guid': 'R0114_project4',
                 'sample_type': 'WGS',
                 'xpos': 1000902024,
-                'calls': [{'sampleId': 'NA20885_1', 'gt': 1, 'gq': 4, 'ab': 0.10000000149011612, 'dp': 10}],
+                'calls': [
+                    {
+                        'sampleId': 'NA20885_1',
+                        'gt': 1,
+                        'gq': 4,
+                        'ab': 0.10000000149011612,
+                        'dp': 10,
+                    },
+                ],
                 'sign': 1,
             },
         )
