@@ -3,17 +3,11 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
-from v03_pipeline.lib.annotations.misc import (
-    annotate_formatting_annotation_enum_globals,
-)
 from v03_pipeline.lib.misc.callsets import get_callset_ht, get_callset_mt
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
     lookup_table_path,
     new_variants_table_path,
-)
-from v03_pipeline.lib.reference_datasets.reference_dataset import (
-    BaseReferenceDataset,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -118,32 +112,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 ),
             )
             ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
-
-        # Fix up the globals and mark the table as updated with these callset/project pairs.
-        ht = self.annotate_globals(
-            ht,
-            BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
-                self.reference_genome,
-                self.dataset_type,
-            ),
-        )
-        ht = annotate_formatting_annotation_enum_globals(
-            ht,
-            self.reference_dataset_ht,
-            self.dataset_type,
-        )
-        return ht.annotate_globals(
-            updates=ht.updates.union(
-                {
-                    hl.Struct(
-                        callset=self.callset_path,
-                        project_guid=project_guid,
-                        remap_pedigree_hash=remap_pedigree_hash(
-                            self.project_pedigree_paths[i],
-                        ),
-                    )
-                    for i, project_guid in enumerate(self.project_guids)
-                },
-            ),
+        new_variants_ht_globals = new_variants_ht.index_globals()
+        return ht.select_globals(
+            versions=new_variants_ht_globals.versions,
+            enums=new_variants_ht_globals.enums,
+            updates=ht.updates.union(new_variants_ht_globals.updates),
+            migrations=ht.migrations,
             max_key_=ht.aggregate(hl.agg.max(ht.key_)),
         )

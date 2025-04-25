@@ -7,6 +7,9 @@ from v03_pipeline.lib.annotations.misc import (
 )
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import valid_reference_dataset_path
+from v03_pipeline.lib.reference_datasets.misc import (
+    annotate_reference_dataset_globals,
+)
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
@@ -103,15 +106,20 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
                 ht = ht.join(reference_dataset_ht, 'left')
 
+        ht = ht.select_globals(
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+            updates=ht.updates,
+            migrations=ht.migrations,
+            max_key_=ht.max_key_,
+        )
         ht = annotate_formatting_annotation_enum_globals(
             ht,
             self.reference_dataset_ht,
             self.dataset_type,
         )
-        return self.annotate_globals(
+        return annotate_reference_dataset_globals(
             ht,
-            BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
-                self.reference_genome,
-                self.dataset_type,
-            ),
+            self.reference_genome,
+            self.dataset_type,
         )

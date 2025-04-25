@@ -5,6 +5,9 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.annotations.misc import (
+    annotate_formatting_annotation_enum_globals,
+)
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
@@ -16,6 +19,9 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
+)
+from v03_pipeline.lib.reference_datasets.misc import (
+    annotate_reference_dataset_globals,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
@@ -192,13 +198,24 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 },
             )
             new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
+        new_variants_ht = new_variants_ht.select_globals()
 
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
         new_variants_ht = new_variants_ht.transmute(
             key_=new_variants_ht.key_ + annotations_ht.index_globals().max_key_ + 1,
         )
-        return new_variants_ht.select_globals(
+        new_variants_ht = annotate_formatting_annotation_enum_globals(
+            new_variants_ht,
+            self.reference_dataset_ht,
+            self.dataset_type,
+        )
+        new_variants_ht = annotate_reference_dataset_globals(
+            new_variants_ht,
+            self.reference_dataset_ht,
+            self.dataset_type,
+        )
+        return new_variants_ht.annotate_globals(
             updates={
                 hl.Struct(
                     callset=self.callset_path,

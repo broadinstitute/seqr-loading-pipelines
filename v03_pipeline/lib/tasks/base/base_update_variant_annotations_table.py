@@ -2,12 +2,10 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.paths import (
-    valid_reference_dataset_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
-    ReferenceDataset,
     ReferenceDatasetQuery,
 )
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
@@ -73,33 +71,4 @@ class BaseUpdateVariantAnnotationsTableTask(BaseUpdateTask):
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
-        return ht
-
-    def annotate_globals(
-        self,
-        ht: hl.Table,
-        reference_datasets: set[ReferenceDataset],
-    ) -> hl.Table:
-        ht = ht.annotate_globals(
-            versions=hl.Struct(),
-            enums=hl.Struct(),
-        )
-        for reference_dataset in reference_datasets:
-            rd_ht = hl.read_table(
-                valid_reference_dataset_path(self.reference_genome, reference_dataset),
-            )
-            rd_ht_globals = rd_ht.index_globals()
-            ht = ht.select_globals(
-                versions=hl.Struct(
-                    **ht.globals.versions,
-                    **{reference_dataset.name: rd_ht_globals.version},
-                ),
-                enums=hl.Struct(
-                    **ht.globals.enums,
-                    **{reference_dataset.name: rd_ht_globals.enums},
-                ),
-                updates=ht.globals.updates,
-                migrations=ht.globals.migrations,
-                max_key_=ht.globals.max_key_,
-            )
         return ht
