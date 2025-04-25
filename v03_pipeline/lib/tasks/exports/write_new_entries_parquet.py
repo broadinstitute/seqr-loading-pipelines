@@ -89,8 +89,9 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             ht = ht.annotate(
                 family_entries=hl.enumerate(ht.family_entries).starmap(
                     lambda i, fs: hl.enumerate(fs).starmap(
-                        lambda _, e: e.annotate(
+                        lambda j, e: e.annotate(
                             family_guid=ht.family_guids[i],  # noqa: B023
+                            sampleId=ht.family_samples[ht.family_guids[i]][j],
                         ),
                     ),
                 ),
@@ -108,7 +109,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
 
             # the family entries ht will contain rows
             # where at least one family is defined... after explosion,
-            # those rows should be removed.
+            # rows where a family is not defined should be removed.
             ht = ht.explode(ht.family_entries)
             ht = ht.filter(hl.is_defined(ht.family_entries))
 
@@ -121,19 +122,20 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 xpos=get_expr_for_xpos(ht.locus),
                 is_gnomad_gt_5_percent=hl.is_defined(ht.is_gt_5_percent),
                 filters=ht.filters,
-                calls=hl.Struct(
-                    sampleId=ht.family_samples[ht.family_entries.family_guid[0]],
-                    gt=ht.family_entries.GT.map(
-                        lambda x: hl.case()
-                        .when(x.is_hom_ref(), 0)
-                        .when(x.is_het(), 1)
-                        .when(x.is_hom_var(), 2)
+                calls=ht.family_entries.map(
+                    lambda fe: hl.Struct(
+                        sampleId=fe.sampleId,
+                        gt=hl.case()
+                        .when(fe.GT.is_hom_ref(), 0)
+                        .when(fe.GT.is_het(), 1)
+                        .when(fe.GT.is_hom_var(), 2)
                         .default(hl.missing(hl.tint32)),
+                        gq=fe.GQ,
+                        ab=fe.AB,
+                        dp=fe.DP,
                     ),
-                    gq=ht.family_entries.GQ,
-                    ab=ht.family_entries.AB,
-                    dp=ht.family_entries.DP,
                 ),
+                sign=1,
             )
             unioned_ht = unioned_ht.union(ht) if unioned_ht else ht
         return unioned_ht

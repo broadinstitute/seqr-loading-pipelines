@@ -93,13 +93,30 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'xpos': 1000876499,
                     'is_gnomad_gt_5_percent': False,
                     'filters': [],
-                    'calls': {
-                        'sampleId': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
-                        'gt': [2, 2, 2],
-                        'gq': [21, 24, 12],
-                        'ab': [1.0, 1.0, 1.0],
-                        'dp': [7, 8, 4],
-                    },
+                    'calls': [
+                        {
+                            'sampleId': 'HG00731_1',
+                            'gt': 2,
+                            'gq': 21,
+                            'ab': 1.0,
+                            'dp': 7,
+                        },
+                        {
+                            'sampleId': 'HG00732_1',
+                            'gt': 2,
+                            'gq': 24,
+                            'ab': 1.0,
+                            'dp': 8,
+                        },
+                        {
+                            'sampleId': 'HG00733_1',
+                            'gt': 2,
+                            'gq': 12,
+                            'ab': 1.0,
+                            'dp': 4,
+                        },
+                    ],
+                    'sign': 1,
                 },
                 {
                     'key': 3,
@@ -109,16 +126,28 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'xpos': 1000878314,
                     'is_gnomad_gt_5_percent': False,
                     'filters': ['VQSRTrancheSNP99.00to99.90'],
-                    'calls': {
-                        'sampleId': ['HG00731_1', 'HG00732_1', 'HG00733_1'],
-                        'gt': [1, 0, 1],
-                        'gq': [30, 6, 61],
-                        'ab': [0.3333333432674408, 0.0, 0.6000000238418579],
-                        'dp': [3, 2, 5],
-                    },
+                    'calls': [
+                        {
+                            'sampleId': 'HG00731_1',
+                            'gt': 1,
+                            'gq': 30,
+                            'ab': 0.3333333432674408,
+                            'dp': 3,
+                        },
+                        {'sampleId': 'HG00732_1', 'gt': 0, 'gq': 6, 'ab': 0.0, 'dp': 2},
+                        {
+                            'sampleId': 'HG00733_1',
+                            'gt': 1,
+                            'gq': 61,
+                            'ab': 0.6000000238418579,
+                            'dp': 5,
+                        },
+                    ],
+                    'sign': 1,
                 },
             ],
         )
+        print(export_json[-1])
         self.assertEqual(
             export_json[-1],
             {
@@ -129,12 +158,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 'project_guid': 'R0114_project4',
                 'sample_type': 'WGS',
                 'xpos': 1000902024,
-                'calls': {
-                    'sampleId': ['NA20885_1'],
-                    'gt': [1],
-                    'gq': [4],
-                    'ab': [0.10000000149011612],
-                    'dp': [10],
-                },
+                'calls': [{'sampleId': 'NA20885_1', 'gt': 1, 'gq': 4, 'ab': 0.10000000149011612, 'dp': 10}],
+                'sign': 1,
             },
         )
