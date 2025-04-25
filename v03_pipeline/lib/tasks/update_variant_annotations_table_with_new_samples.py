@@ -3,6 +3,9 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.annotations.misc import (
+    annotate_formatting_annotation_enum_globals,
+)
 from v03_pipeline.lib.misc.callsets import get_callset_ht, get_callset_mt
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.paths import (
@@ -123,6 +126,11 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
                 self.reference_genome,
                 self.dataset_type,
             ),
+        )
+        ht = annotate_formatting_annotation_enum_globals(
+            ht,
+            self.reference_dataset_ht,
+            self.dataset_type,
         )
         return ht.annotate_globals(
             updates=ht.updates.union(
