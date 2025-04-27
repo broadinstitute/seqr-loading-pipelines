@@ -7,6 +7,7 @@ import luigi.util
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.misc import (
     annotate_formatting_annotation_enum_globals,
+    annotate_reference_dataset_globals,
 )
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
@@ -19,9 +20,6 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.reference_datasets.gencode.mapping_gene_ids import (
     load_gencode_ensembl_to_refseq_id,
     load_gencode_gene_symbol_to_gene_id,
-)
-from v03_pipeline.lib.reference_datasets.misc import (
-    annotate_reference_dataset_globals,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import BaseReferenceDataset
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (

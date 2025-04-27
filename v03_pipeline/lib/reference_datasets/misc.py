@@ -13,8 +13,6 @@ from v03_pipeline.lib.misc.io import split_multi_hts
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.model.definitions import ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
-from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets import BaseReferenceDataset
 
 BIALLELIC = 2
 
@@ -189,31 +187,3 @@ def copy_to_cloud_storage(file_name: str) -> str:
         cloud_storage_path = os.path.join(Env.HAIL_TMP_DIR, os.path.basename(file_name))
     hfs.copy(file_name, cloud_storage_path)
     return cloud_storage_path
-
-
-def annotate_reference_dataset_globals(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> hl.Table:
-    for (
-        reference_dataset
-    ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
-        reference_genome,
-        dataset_type,
-    ):
-        rd_ht = hl.read_table(
-            valid_reference_dataset_path(reference_genome, reference_dataset),
-        )
-        rd_ht_globals = rd_ht.index_globals()
-        ht = ht.annotate_globals(
-            versions=hl.Struct(
-                **ht.globals.versions,
-                **{reference_dataset.name: rd_ht_globals.version},
-            ),
-            enums=hl.Struct(
-                **ht.globals.enums,
-                **{reference_dataset.name: rd_ht_globals.enums},
-            ),
-        )
-    return ht

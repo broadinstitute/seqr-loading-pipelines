@@ -4,12 +4,10 @@ import luigi
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.annotations.misc import (
     annotate_formatting_annotation_enum_globals,
+    annotate_reference_dataset_globals,
 )
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import valid_reference_dataset_path
-from v03_pipeline.lib.reference_datasets.misc import (
-    annotate_reference_dataset_globals,
-)
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
