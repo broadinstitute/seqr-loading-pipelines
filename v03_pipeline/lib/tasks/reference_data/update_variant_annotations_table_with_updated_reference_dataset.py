@@ -2,6 +2,10 @@ import hail as hl
 import luigi
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.annotations.misc import (
+    annotate_formatting_annotation_enum_globals,
+    annotate_reference_dataset_globals,
+)
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.paths import valid_reference_dataset_path
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
@@ -100,10 +104,20 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
                 )
                 ht = ht.join(reference_dataset_ht, 'left')
 
-        return self.annotate_globals(
+        ht = ht.select_globals(
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+            updates=ht.updates,
+            migrations=ht.migrations,
+            max_key_=ht.max_key_,
+        )
+        ht = annotate_formatting_annotation_enum_globals(
             ht,
-            BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
-                self.reference_genome,
-                self.dataset_type,
-            ),
+            self.reference_dataset_ht,
+            self.dataset_type,
+        )
+        return annotate_reference_dataset_globals(
+            ht,
+            self.reference_genome,
+            self.dataset_type,
         )
