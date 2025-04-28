@@ -113,7 +113,7 @@ class UpdateVariantAnnotationsTableWithUpdatedReferenceDataset(
         )
         ht = annotate_formatting_annotation_enum_globals(
             ht,
-            self.reference_dataset_ht,
+            self.reference_genome,
             self.dataset_type,
         )
         return annotate_reference_dataset_globals(

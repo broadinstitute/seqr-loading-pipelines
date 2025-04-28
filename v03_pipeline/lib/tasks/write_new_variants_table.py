@@ -196,7 +196,10 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 },
             )
             new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
-        new_variants_ht = new_variants_ht.select_globals()
+        new_variants_ht = new_variants_ht.select_globals(
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        )
 
         # Add serial integer index
         new_variants_ht = new_variants_ht.add_index(name='key_')
