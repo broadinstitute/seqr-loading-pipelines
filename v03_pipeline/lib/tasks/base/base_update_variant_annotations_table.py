@@ -1,9 +1,6 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.annotations.misc import (
-    annotate_formatting_annotation_enum_globals,
-)
 from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )

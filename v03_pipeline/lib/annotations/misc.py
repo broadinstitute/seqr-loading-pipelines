@@ -46,6 +46,7 @@ def annotate_reference_dataset_globals(
         )
     return ht
 
+
 def annotate_formatting_annotation_enum_globals(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
