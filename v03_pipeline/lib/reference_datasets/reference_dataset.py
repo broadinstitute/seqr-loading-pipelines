@@ -57,21 +57,6 @@ class BaseReferenceDataset:
         return set(reference_datasets)
 
     @classmethod
-    def for_reference_genome_dataset_type_private(
-        cls,
-        reference_genome: ReferenceGenome,
-        dataset_type: DatasetType,
-    ) -> set[Union['ReferenceDataset']]:
-        return {
-            dataset
-            for dataset in cls.for_reference_genome_dataset_type(
-                reference_genome,
-                dataset_type,
-            )
-            if dataset.access_control == AccessControl.PRIVATE
-        }
-
-    @classmethod
     def for_reference_genome_dataset_type_annotations(
         cls,
         reference_genome: ReferenceGenome,
