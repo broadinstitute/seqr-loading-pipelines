@@ -26,7 +26,7 @@ def annotate_reference_dataset_globals(
 ) -> hl.Table:
     for (
         reference_dataset
-    ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations_updates(
+    ) in BaseReferenceDataset.for_reference_genome_dataset_type_annotations(
         reference_genome,
         dataset_type,
     ):
