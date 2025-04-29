@@ -95,11 +95,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             0,
         )
         self.assertEqual(
-            export_json[0]['transcripts'][0]['_0'],
-            'ENSG00000187634',
-        )
-        self.assertEqual(
-            export_json[0]['transcripts'][0]['_1'][0],
+            export_json[0]['transcripts'][0],
             {
                 'alphamissense': {'pathogenicity': None},
                 'aminoAcids': 'S/L',
@@ -130,6 +126,6 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             },
         )
         self.assertEqual(
-            list(export_json[0]['transcripts'][0]['_1'][0].keys()),
-            sorted(export_json[0]['transcripts'][0]['_1'][0].keys()),
+            list(export_json[0]['transcripts'][0].keys()),
+            sorted(export_json[0]['transcripts'][0].keys()),
         )

@@ -64,8 +64,4 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
                 transcripts_field_name(self.reference_genome, self.dataset_type)
             ]
             .map(lambda s: hl.struct(**{k: s[k] for k in sorted(s)}))
-            .group_by(
-                lambda c: c.geneId,
-            )
-            .items(),
         )
