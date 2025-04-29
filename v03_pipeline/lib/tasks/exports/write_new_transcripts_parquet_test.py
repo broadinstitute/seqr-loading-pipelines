@@ -94,7 +94,6 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             export_json[0]['key'],
             0,
         )
-        print(export_json[0]['transcripts'][0])
         self.assertEqual(
             export_json[0]['transcripts'][0],
             {
