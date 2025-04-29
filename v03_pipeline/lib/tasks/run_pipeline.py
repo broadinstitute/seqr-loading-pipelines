@@ -1,6 +1,7 @@
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.model.feature_flag import FeatureFlag
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
@@ -20,7 +21,6 @@ from v03_pipeline.lib.tasks.write_metadata_for_run import WriteMetadataForRunTas
 from v03_pipeline.lib.tasks.write_project_family_tables import (
     WriteProjectFamilyTablesTask,
 )
-from v03_pipeline.lib.model.feature_flag import FeatureFlag
 
 
 @luigi.util.inherits(BaseLoadingRunParams)

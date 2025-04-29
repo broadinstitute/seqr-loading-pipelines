@@ -17,7 +17,7 @@ from v03_pipeline.lib.tasks.exports.misc import (
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
 )
-from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
+from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
@@ -34,9 +34,6 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
                 self.run_id,
             ),
         )
-
-    def complete(self) -> luigi.Target:
-        return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> list[luigi.Task]:
         return [

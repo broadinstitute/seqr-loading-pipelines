@@ -29,6 +29,10 @@ from v03_pipeline.lib.tasks.write_remapped_and_subsetted_callset import (
     WriteRemappedAndSubsettedCallsetTask,
 )
 
+ANNOTATIONS_TABLE_TASK = 'annotations_table_task'
+HIGH_AF_VARIANTS_TABLE_TASK = 'high_af_variants_table_task'
+REMAPPED_AND_SUBSETTED_CALLSET_TASKS = 'remapped_and_subsetted_callset_tasks'
+
 
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteNewEntriesParquetTask(BaseWriteParquetTask):
@@ -43,10 +47,10 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
 
     def requires(self) -> list[luigi.Task]:
         return {
-            'annotations_table_task': (
+            ANNOTATIONS_TABLE_TASK: (
                 self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
             ),
-            'remapped_and_subsetted_callset_tasks': [
+            REMAPPED_AND_SUBSETTED_CALLSET_TASKS: [
                 self.clone(
                     WriteRemappedAndSubsettedCallsetTask,
                     project_i=i,
@@ -55,7 +59,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             ],
             **(
                 {
-                    'high_af_variants_table_task': self.clone(
+                    HIGH_AF_VARIANTS_TABLE_TASK: self.clone(
                         UpdatedReferenceDatasetQueryTask,
                         reference_dataset_query=ReferenceDatasetQuery.high_af_variants,
                     ),
@@ -73,7 +77,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
         unioned_ht = None
         for project_guid, remapped_and_subsetted_callset_task in zip(
             self.project_guids,
-            self.input()['remapped_and_subsetted_callset_tasks'],
+            self.input()[REMAPPED_AND_SUBSETTED_CALLSET_TASKS],
             strict=True,
         ):
             mt = hl.read_matrix_table(remapped_and_subsetted_callset_task.path)
@@ -97,13 +101,13 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 ),
             )
             annotations_ht = hl.read_table(
-                self.input()['annotations_table_task'].path,
+                self.input()[ANNOTATIONS_TABLE_TASK].path,
             )
             ht = ht.join(annotations_ht)
 
-            if self.input().get('high_af_variants_table_task'):
+            if self.input().get(HIGH_AF_VARIANTS_TABLE_TASK):
                 gnomad_high_af_ht = hl.read_table(
-                    self.input()['high_af_variants_table_task'].path,
+                    self.input()[HIGH_AF_VARIANTS_TABLE_TASK].path,
                 )
                 ht = ht.join(gnomad_high_af_ht, 'left')
 
