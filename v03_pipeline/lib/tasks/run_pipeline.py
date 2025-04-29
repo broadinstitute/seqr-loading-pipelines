@@ -43,6 +43,7 @@ class RunPipelineTask(luigi.WrapperTask):
                     self.clone(WriteNewVariantsParquetTask),
                 ]
                 if FeatureFlag.EXPORT_TO_PARQUET
+                and self.dataset_type.should_export_to_parquet(self.reference_genome)
                 else []
             ),
         ]
