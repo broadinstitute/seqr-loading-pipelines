@@ -1,6 +1,30 @@
 import hail as hl
 
-from v03_pipeline.lib.model import DatasetType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
+
+
+def initialize_project_table(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    key_type = dataset_type.table_key_type(reference_genome)
+    return hl.Table.parallelize(
+        [],
+        hl.tstruct(
+            **key_type,
+            filters=hl.tset(hl.tstr),
+            # NB: entries is missing here because it is untyped
+            # until we read the type off of the first callset aggregation.
+        ),
+        key=key_type.fields,
+        globals=hl.Struct(
+            family_guids=hl.empty_array(hl.tstr),
+            family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
+            updates=hl.empty_set(
+                hl.tstruct(callset=hl.tstr, remap_pedigree_hash=hl.tint32),
+            ),
+        ),
+    )
 
 
 def compute_callset_family_entries_ht(

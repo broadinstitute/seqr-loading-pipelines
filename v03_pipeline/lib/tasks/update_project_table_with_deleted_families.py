@@ -1,7 +1,10 @@
 import hail as hl
 import luigi
 
-from v03_pipeline.lib.misc.family_entries import remove_family_guids
+from v03_pipeline.lib.misc.family_entries import (
+    initialize_project_table,
+    remove_family_guids,
+)
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import project_table_path
 from v03_pipeline.lib.tasks.base.base_update import BaseUpdateTask
@@ -40,23 +43,9 @@ class UpdateProjectTableWithDeletedFamiliesTask(BaseUpdateTask):
         )
 
     def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                **key_type,
-                filters=hl.tset(hl.tstr),
-                # NB: entries is missing here because it is untyped
-                # until we read the type off of the first callset aggregation.
-            ),
-            key=key_type.fields,
-            globals=hl.Struct(
-                family_guids=hl.empty_array(hl.tstr),
-                family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(
-                    hl.tstruct(callset=hl.tstr, remap_pedigree_hash=hl.tint32),
-                ),
-            ),
+        return initialize_project_table(
+            self.reference_genome,
+            self.dataset_type,
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
