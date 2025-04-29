@@ -60,7 +60,14 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
         ht = ht.key_by()
         return ht.select(
             key_=ht.key_,
-            transcripts=ht[
-                transcripts_field_name(self.reference_genome, self.dataset_type)
-            ].map(lambda s: hl.struct(**{k: s[k] for k in sorted(s)})),
+            transcripts=hl.enumerate(
+                ht[transcripts_field_name(self.reference_genome, self.dataset_type)]
+            )
+            .starmap(
+                lambda i, s: s.annotate(
+                    majorConsequence=s.consequenceTerms.first(),
+                    transcriptRank=i,
+                )
+            )
+            .map(lambda s: s.select(**{k: s[k] for k in sorted(s)})),
         )

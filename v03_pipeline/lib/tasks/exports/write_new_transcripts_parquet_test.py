@@ -94,6 +94,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             export_json[0]['key'],
             0,
         )
+        print(export_json[0]['transcripts'][0])
         self.assertEqual(
             export_json[0]['transcripts'][0],
             {
@@ -109,6 +110,8 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                 'hgvsp': 'ENSP00000478421.2:p.Ser350Leu',
                 'intron': None,
                 'transcriptId': 'ENST00000616016',
+                'transcriptRank': 0,
+                'majorConsequence': 'missense_variant',
                 'maneSelect': 'NM_001385641.1',
                 'manePlusClinical': None,
                 'refseqTranscriptId': 'NM_001385641.1',
