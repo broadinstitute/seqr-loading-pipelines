@@ -48,7 +48,8 @@ def main():
         try:
             client = get_clickhouse_client()
             result = client.query('SELECT now(), version()')
-            logger.info(f'Now: {result[0]}, {result[1]}')
+            rows = result.result_rows
+            logger.info(f'Now: {rows[0][0]}, {rows[0][1]}')
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
