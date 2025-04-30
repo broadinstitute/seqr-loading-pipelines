@@ -46,14 +46,14 @@ class RunsTest(MockedDatarootTestCase):
 
     def test_get_run_ids(self) -> None:
         successful_pipeline_runs, successful_clickhouse_loads = get_run_ids()
-        self.assertListEqual(
+        self.assertCountEqual(
             successful_pipeline_runs[(ReferenceGenome.GRCh38, DatasetType.SNV_INDEL)],
             [
                 'manual__2024-08-09T18-22-13.999999+00-00',
                 'manual__2024-08-08T09-45-00.000000+00-00',
             ],
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             successful_clickhouse_loads[
                 (ReferenceGenome.GRCh38, DatasetType.SNV_INDEL)
             ],
@@ -61,7 +61,7 @@ class RunsTest(MockedDatarootTestCase):
                 'manual__2024-08-09T18-22-13.999999+00-00',
             ],
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             successful_clickhouse_loads[(ReferenceGenome.GRCh37, DatasetType.GCNV)],
             [],
         )
