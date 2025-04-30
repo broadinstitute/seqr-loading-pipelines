@@ -24,13 +24,13 @@ VEP_REFERENCE_DATASETS_DIR = os.environ.get(
     'VEP_REFERENCE_DATASETS_DIR',
     '/var/seqr/vep-reference-data',
 )
-CLICKHOUSE_PASSWORD = (os.environ.get('CLICKHOUSE_PASSWORD', ''),)
+CLICKHOUSE_PASSWORD = os.environ.get('CLICKHOUSE_PASSWORD', '')
 CLICKHOUSE_SERVICE_HOSTNAME = os.environ.get(
     'CLICKHOUSE_SERVICE_HOSTNAME',
     'seqr-clickhouse',
 )
 CLICKHOUSE_SERVICE_PORT = int(os.environ.get('CLICKHOUSE_SERVICE_PORT', '9000'))
-CLICKHOUSE_USER = (os.environ.get('CLICKHOUSE_USER', 'clickhouse'),)
+CLICKHOUSE_USER = os.environ.get('CLICKHOUSE_USER', 'clickhouse')
 HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get(
     'HAIL_BACKEND_SERVICE_HOSTNAME',
     'hail-search',
