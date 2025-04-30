@@ -1,5 +1,4 @@
 import os
-import unittest
 
 from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
@@ -8,10 +7,12 @@ from v03_pipeline.lib.paths import (
     pipeline_run_success_file_path,
     runs_path,
 )
+from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 
-class RunsTest(unittest.TestCase):
+class RunsTest(MockedDatarootTestCase):
     def setUp(self):
+        super().setUp()
         run_ids = [
             'manual__2024-08-05T16-07-58.365146+00-00',
             'manual__2024-08-06T10-15-23.123456+00-00',
