@@ -15,7 +15,7 @@ def retry(tries=3, delay=1, backoff=2):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:  # noqa: BLE001
-                    msg = f'{func.__name__} failed with {e}, retrying in {delay} seconds...'
+                    msg = f'{func.__name__} failed with {e}, retrying in {delay} seconds.'
                     logger.info(msg)
                     time.sleep(delay)
                     tries -= 1
