@@ -51,7 +51,7 @@ class TestRetryDecorator(unittest.TestCase):
         self.assertEqual(mock_sleep.call_count, 2)
 
     @patch('time.sleep', return_value=None)
-    @patch('logging.Logger.info')
+    @patch('v03_pipeline.lib.misc.retry.logger.info')
     def test_logs_retry_message(self, mock_log, mock_sleep):
         mock_func = MagicMock(side_effect=[Exception('fail'), 'success'])
 
