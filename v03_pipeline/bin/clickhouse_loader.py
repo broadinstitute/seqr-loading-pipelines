@@ -15,6 +15,10 @@ logger = get_logger(__name__)
 LIVE_CLICKHOUSE_DATABASE = 'seqr'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 
+SUCCESS_FILE_NAME = '_SUCCESS'
+CLICKHOUSE_LOAD_FAILURE_FILE_NAME = '_CLICKHOUSE_LOAD_FAILURE'
+CLICKHOUSE_LOAD_SUCCESS_FILE_NAME = '_CLICKHOUSE_LOAD_SUCCESS'
+
 
 def signal_handler(*_):
     client = get_clickhouse_client()
