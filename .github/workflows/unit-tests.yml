@@ -13,9 +13,25 @@ on:
 jobs:
   unit_tests:
     runs-on: ubuntu-latest
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        ports:
+          - 9000:9000   # Native client interface
+        options: >-
+          --health-cmd "clickhouse-client --query 'SELECT 1'" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+    env:
+      CLICKHOUSE_SERVICE_HOSTNAME: localhost
+      CLICKHOUSE_SERVICE_PORT: 8123
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD:
     strategy:
       matrix:
         python-version: ['3.11']
+
 
     steps:
       - uses: actions/checkout@v3

@@ -3,13 +3,10 @@ import signal
 import sys
 import time
 
-import clickhouse_connect
-from clickhouse_connect import common
-
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.clickhouse import get_clickhouse_client
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
-from v03_pipeline.lib.model.environment import Env
 
 logger = get_logger(__name__)
 
@@ -25,17 +22,6 @@ def signal_handler(*_):
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-
-
-def get_clickhouse_client() -> clickhouse_connect.driver.client.Client:
-    # per the docs, require a new session id for every query
-    common.set_setting('autogenerate_session_id', False)
-    return clickhouse_connect.get_client(
-        host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
-        port=Env.CLICKHOUSE_SERVICE_PORT,
-        username=Env.CLICKHOUSE_USER,
-        password=Env.CLICKHOUSE_PASSWORD,
-    )
 
 
 @retry(tries=3, delay=5)
