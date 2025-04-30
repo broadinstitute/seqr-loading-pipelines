@@ -424,3 +424,18 @@ def pipeline_run_success_file_path(
         run_id,
         '_SUCCESS',
     )
+
+
+def clickhouse_load_success_file_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        '_CLICKHOUSE_LOAD_SUCCESS',
+    )

@@ -8,16 +8,13 @@ from clickhouse_connect import common
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.retry import retry
+from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.model.environment import Env
 
 logger = get_logger(__name__)
 
 LIVE_CLICKHOUSE_DATABASE = 'seqr'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
-
-SUCCESS_FILE_NAME = '_SUCCESS'
-CLICKHOUSE_LOAD_FAILURE_FILE_NAME = '_CLICKHOUSE_LOAD_FAILURE'
-CLICKHOUSE_LOAD_SUCCESS_FILE_NAME = '_CLICKHOUSE_LOAD_SUCCESS'
 
 
 def signal_handler(*_):
@@ -50,10 +47,20 @@ def drop_staging_tables(client):
 def main():
     while True:
         try:
+            successful_pipeline_runs, _ = get_run_ids()
+            for reference_genome, dataset_type in successful_pipeline_runs:
+                num_successful_runs = len(
+                    successful_pipeline_runs[(reference_genome, dataset_type)],
+                )
+                logger.info(
+                    f'{reference_genome.value}/{dataset_type.value} has {num_successful_runs} successful runs',
+                )
             client = get_clickhouse_client()
             result = client.query('SELECT now(), version()')
             rows = result.result_rows
-            logger.info(f'Now: {rows[0][0]}, {rows[0][1]}')
+            logger.info(
+                f'Successfully connected to Clickhouse: {rows[0][0]}, {rows[0][1]}',
+            )
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
