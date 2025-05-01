@@ -16,6 +16,15 @@ class DatasetType(StrEnum):
     SNV_INDEL = 'SNV_INDEL'
     SV = 'SV'
 
+    @property
+    def reference_genomes(self) -> list[ReferenceGenome]:
+        return {
+            DatasetType.SNV_INDEL: [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38],
+            DatasetType.MITO: [ReferenceGenome.GRCh38],
+            DatasetType.GCNV: [ReferenceGenome.GRCh38],
+            DatasetType.SV: [ReferenceGenome.GRCh38],
+        }[self]
+
     def table_key_type(
         self,
         reference_genome: ReferenceGenome,
