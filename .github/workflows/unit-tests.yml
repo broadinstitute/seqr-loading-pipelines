@@ -23,6 +23,9 @@ jobs:
           --health-interval 10s 
           --health-timeout 5s 
           --health-retries 5
+        env:
+          CLICKHOUSE_USER: default
+          CLICKHOUSE_PASSWORD: testpassword
     strategy:
       matrix:
         python-version: ['3.11']
@@ -60,5 +63,6 @@ jobs:
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_SERVICE_HOSTNAME=localhost
           export CLICKHOUSE_USER=default
+          export CLICKHOUSE_PASSWORD=testpassword
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
