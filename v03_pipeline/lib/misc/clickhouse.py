@@ -8,5 +8,5 @@ def get_clickhouse_client() -> Client:
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
-        password=Env.CLICKHOUSE_PASSWORD,
+        **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
     )
