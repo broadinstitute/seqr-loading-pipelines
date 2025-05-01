@@ -23,11 +23,6 @@ jobs:
           --health-interval 10s 
           --health-timeout 5s 
           --health-retries 5
-    env:
-      CLICKHOUSE_SERVICE_HOSTNAME: localhost
-      CLICKHOUSE_SERVICE_PORT: 9000
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_PASSWORD:
     strategy:
       matrix:
         python-version: ['3.11']
@@ -63,5 +58,7 @@ jobs:
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export INCLUDE_PIPELINE_VERSION_IN_PREFIX=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
+          export CLICKHOUSE_SERVICE_HOSTNAME=localhost
+          export CLICKHOUSE_USER=default
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
