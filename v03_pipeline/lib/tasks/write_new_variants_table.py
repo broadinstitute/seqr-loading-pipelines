@@ -84,17 +84,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
         ]
         if self.dataset_type.has_lookup_table:
-            # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             requirements = [
                 *requirements,
                 self.clone(UpdateLookupTableTask),
             ]
-        else:
-            requirements = [
-                *requirements,
-                self.clone(WriteMetadataForRunTask),
-            ]
-        return requirements
+        return [
+            *requirements,
+            self.clone(WriteMetadataForRunTask),
+        ]
 
     def complete(self) -> bool:
         return super().complete() and hl.eval(
