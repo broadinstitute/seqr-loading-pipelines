@@ -82,7 +82,6 @@ canonicaljson==2.0.0
     # via ga4gh-vrs
 certifi==2025.1.31
     # via
-    #   clickhouse-connect
     #   msrest
     #   requests
 cffi==1.17.1
@@ -96,7 +95,7 @@ click==8.1.8
     # via
     #   ga4gh-vrs
     #   typer
-clickhouse-connect==0.8.17
+clickhouse-driver==0.2.9
     # via -r requirements.in
 coloredlogs==15.0.1
     # via
@@ -252,8 +251,6 @@ lockfile==0.12.2
     # via python-daemon
 luigi==3.5.2
     # via -r requirements.in
-lz4==4.4.4
-    # via clickhouse-connect
 markdown==3.7
     # via python-jsonschema-objects
 markupsafe==3.0.2
@@ -438,7 +435,7 @@ python-jsonschema-objects==0.4.6
     # via ga4gh-vrs
 pytz==2025.2
     # via
-    #   clickhouse-connect
+    #   clickhouse-driver
     #   pandas
 pyyaml==6.0.2
     # via
@@ -586,10 +583,11 @@ typing-extensions==4.13.1
     #   typer
 tzdata==2025.2
     # via pandas
+tzlocal==5.3.1
+    # via clickhouse-driver
 urllib3==2.3.0
     # via
     #   botocore
-    #   clickhouse-connect
     #   requests
 uvloop==0.21.0
     # via hail
@@ -613,8 +611,6 @@ yoyo-migrations==9.0.0
     # via biocommons-seqrepo
 zipp==3.21.0
     # via importlib-metadata
-zstandard==0.23.0
-    # via clickhouse-connect
 
 # The following packages are considered to be unsafe in a requirements file:
 # annoy

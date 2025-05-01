@@ -1,15 +1,12 @@
-import clickhouse_connect
-from clickhouse_connect import common
+from clickhouse_driver import Client
 
 from v03_pipeline.lib.model.environment import Env
 
 
-def get_clickhouse_client() -> clickhouse_connect.driver.client.Client:
-    # per the docs, require a new session id for every query
-    common.set_setting('autogenerate_session_id', False)
-    return clickhouse_connect.get_client(
+def get_clickhouse_client() -> Client:
+    return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
-        username=Env.CLICKHOUSE_USER,
+        user=Env.CLICKHOUSE_USER,
         password=Env.CLICKHOUSE_PASSWORD,
     )

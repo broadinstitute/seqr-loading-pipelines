@@ -12,6 +12,7 @@ logger = get_logger(__name__)
 
 LIVE_CLICKHOUSE_DATABASE = 'seqr'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
+SLEEP_S = 10
 
 
 def signal_handler(*_):
@@ -42,15 +43,14 @@ def main():
                     f'{reference_genome.value}/{dataset_type.value} has {num_successful_runs} successful runs',
                 )
             client = get_clickhouse_client()
-            result = client.query('SELECT now(), version()')
-            rows = result.result_rows
+            result = client.execute('SELECT now(), version()')
             logger.info(
-                f'Successfully connected to Clickhouse: {rows[0][0]}, {rows[0][1]}',
+                f'Successfully connected to Clickhouse: {result[0][0]}, {result[0][1]}',
             )
         except Exception:
             logger.exception('Unhandled Exception')
         finally:
-            time.sleep(5)
+            time.sleep(SLEEP_S)
 
 
 if __name__ == '__main__':
