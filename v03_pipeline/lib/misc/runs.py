@@ -11,12 +11,12 @@ from v03_pipeline.lib.paths import (
 
 def get_run_ids() -> tuple[defaultdict, defaultdict]:
     successful_pipeline_runs, successful_clickhouse_loads = (
-        defaultdict(list),
-        defaultdict(list),
+        defaultdict(set),
+        defaultdict(set),
     )
     for dataset_type in DatasetType:
         for reference_genome in dataset_type.reference_genomes:
-            successful_pipeline_runs[(reference_genome, dataset_type)] = [
+            successful_pipeline_runs[(reference_genome, dataset_type)] = {
                 p.path.split('/')[-2]
                 for p in hfs.ls(
                     pipeline_run_success_file_path(
@@ -25,8 +25,8 @@ def get_run_ids() -> tuple[defaultdict, defaultdict]:
                         '*',
                     ),
                 )
-            ]
-            successful_clickhouse_loads[(reference_genome, dataset_type)] = [
+            }
+            successful_clickhouse_loads[(reference_genome, dataset_type)] = {
                 p.path.split('/')[-2]
                 for p in hfs.ls(
                     clickhouse_load_success_file_path(
@@ -35,5 +35,5 @@ def get_run_ids() -> tuple[defaultdict, defaultdict]:
                         '*',
                     ),
                 )
-            ]
+            }
     return successful_pipeline_runs, successful_clickhouse_loads

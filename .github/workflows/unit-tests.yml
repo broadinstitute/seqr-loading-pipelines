@@ -61,7 +61,6 @@ jobs:
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export INCLUDE_PIPELINE_VERSION_IN_PREFIX=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
-          export CLICKHOUSE_SERVICE_HOSTNAME=localhost
           export CLICKHOUSE_USER=default
           export CLICKHOUSE_PASSWORD=testpassword
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
