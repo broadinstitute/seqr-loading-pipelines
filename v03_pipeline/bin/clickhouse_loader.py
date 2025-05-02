@@ -4,7 +4,11 @@ import sys
 import time
 
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.misc.clickhouse import ClickhouseTable, get_clickhouse_client, direct_insert
+from v03_pipeline.lib.misc.clickhouse import (
+    ClickhouseTable,
+    direct_insert,
+    get_clickhouse_client,
+)
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
 
@@ -49,8 +53,13 @@ def main():
                 for clickhouse_table in ClickhouseTable:
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
+                    msg = f'Attempting direct insert of `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`'
+                    logger.info(msg)
                     direct_insert(
-                        reference_genome, dataset_type, run_id, clickhouse_table
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                        clickhouse_table,
                     )
 
         except Exception:

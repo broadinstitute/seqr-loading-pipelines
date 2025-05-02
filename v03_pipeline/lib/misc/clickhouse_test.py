@@ -177,5 +177,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
         )
         self.assertEqual(
-            ret, [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')]
+            ret,
+            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
         )

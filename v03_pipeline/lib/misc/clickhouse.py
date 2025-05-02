@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from clickhouse_driver import Client
 
+from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
@@ -14,6 +15,8 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
+
+logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 
@@ -91,21 +94,24 @@ def direct_insert(
         run_id,
         clickhouse_table,
     )
-    if not dst_key_exists(
+    if dst_key_exists(
         reference_genome,
         dataset_type,
         clickhouse_table,
         key,
     ):
-        path = clickhouse_insert_table_fn(
-            clickhouse_table.src_path_fn(reference_genome, dataset_type, run_id),
-        )
-        client.execute(
-            f"""
-            INSERT INTO {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
-            SELECT * FROM {path}
-            """,
-        )
+        msg = f'Skipping direct insert of `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}` as key={key} already exists'
+        logger.info(msg)
+        return
+    path = clickhouse_insert_table_fn(
+        clickhouse_table.src_path_fn(reference_genome, dataset_type, run_id),
+    )
+    client.execute(
+        f"""
+        INSERT INTO {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+        SELECT * FROM {path}
+        """,
+    )
 
 
 def clickhouse_insert_table_fn(path: str):
