@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
@@ -122,6 +123,13 @@ class ClickhouseTest(MockedDatarootTestCase):
                 TEST_RUN_ID,
             ),
         )
+        base_path = runs_path(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
+        directory = Path(os.path.join(base_path, TEST_RUN_ID))
+        files = [f.name for f in directory.iterdir() if f.is_file()]
+        print(files)  # noqa: T201
         self.assertEqual(
             max_src_key(
                 ReferenceGenome.GRCh38,
