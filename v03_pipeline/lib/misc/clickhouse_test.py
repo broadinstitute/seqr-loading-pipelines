@@ -130,6 +130,14 @@ class ClickhouseTest(MockedDatarootTestCase):
         directory = Path(os.path.join(base_path, TEST_RUN_ID))
         files = [f.name for f in directory.iterdir() if f.is_file()]
         print(files)  # noqa: T201
+        df = pd.read_parquet(
+            new_transcripts_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            )
+        )
+        print(df.head())
         self.assertEqual(
             max_src_key(
                 ReferenceGenome.GRCh38,
