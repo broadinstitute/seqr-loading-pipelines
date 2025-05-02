@@ -317,6 +317,7 @@ numpy==1.26.4
     #   onnxruntime
     #   pandas
     #   patsy
+    #   pyarrow
     #   scikit-learn
     #   scipy
     #   statsmodels
@@ -392,6 +393,8 @@ pure-eval==0.2.3
     # via stack-data
 py4j==0.10.9.7
     # via pyspark
+pyarrow==14.0.2
+    # via -r requirements.in
 pyasn1==0.6.1
     # via
     #   pyasn1-modules
