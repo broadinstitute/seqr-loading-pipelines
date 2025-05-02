@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from enum import StrEnum
-from types import Callable
 
 from clickhouse_driver import Client
 
@@ -43,10 +43,45 @@ class ClickhouseTable(StrEnum):
         )
 
 
-def google_xml_native_path(path: str):
+def dst_key_exists(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    clickhouse_table: ClickhouseTable,
+    key: int,
+) -> int:
+    client = get_clickhouse_client()
+    return client.execute(
+        f"""
+        SELECT EXISTS (
+            SELECT 1
+            FROM {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+            WHERE key = {key}
+        )
+        """,
+    )[0][0]
+
+
+def max_src_key(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickhouseTable,
+) -> int:
+    client = get_clickhouse_client()
+    path = clickhouse_insert_table_fn(
+        clickhouse_table.src_path_fn(reference_genome, dataset_type, run_id),
+    )
+    return client.execute(
+        f"""
+        SELECT max(key) FROM {path}
+        """,
+    )[0][0]
+
+
+def clickhouse_insert_table_fn(path: str):
     if path.startswith('gcs://'):
-        return path.replace('gcs://', GOOGLE_XML_API_PATH)
-    return path
+        return f"gcs('{path.replace('gcs://', GOOGLE_XML_API_PATH)}', '{Env.CLICKHOUSE_GCS_HMAC_KEY}', '{Env.CLICKHOUSE_GCS_HMAC_SECRET}', 'Parquet')"
+    return f"file('{path}', 'Parquet')"
 
 
 def get_clickhouse_client() -> Client:
