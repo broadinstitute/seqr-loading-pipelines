@@ -27,12 +27,23 @@ jobs:
             -e CLICKHOUSE_USER=default \
             -e CLICKHOUSE_PASSWORD=testpassword \
             clickhouse/clickhouse-server:latest
-      - name: Wait for ClickHouse
+      - name: Wait and capture logs if ClickHouse fails
         run: |
-          until docker exec clickhouse clickhouse-client --query "SELECT 1"; do
-            echo "Waiting for ClickHouse to start..."
-            sleep 2
+          echo "Waiting for ClickHouse to become healthy..."
+          for i in {1..20}; do
+            if docker exec clickhouse clickhouse-client --query "SELECT 1" &> /dev/null; then
+              echo "ClickHouse is ready"
+              exit 0
+            fi
+            sleep 1
           done
+
+          echo "::error::ClickHouse did not start successfully"
+          echo "Container exit status:"
+          docker inspect clickhouse --format='Exit code: {{.State.ExitCode}}'
+          echo "Container logs:"
+          docker logs clickhouse
+          exit 1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
