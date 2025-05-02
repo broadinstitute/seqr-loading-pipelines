@@ -50,7 +50,6 @@ def main():
                 for clickhouse_table in ClickhouseTable:
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
-                    pass
 
         except Exception:
             logger.exception('Unhandled Exception')
