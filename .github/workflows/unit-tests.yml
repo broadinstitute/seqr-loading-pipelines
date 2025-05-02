@@ -17,13 +17,11 @@ jobs:
       matrix:
         python-version: ['3.11']
 
-
     steps:
       - uses: actions/checkout@v3
       - name: Start ClickHouse with mounted config
         run: |
           docker run -d --name clickhouse \
-            -v ${{ github.workspace }}/v03_pipeline/var/test-clickhouse.xml:/etc/clickhouse-server/config.xml \
             -p 9000:9000 \
             -e CLICKHOUSE_USER=default \
             -e CLICKHOUSE_PASSWORD=testpassword \
