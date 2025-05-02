@@ -13,21 +13,6 @@ on:
 jobs:
   unit_tests:
     runs-on: ubuntu-latest
-    services:
-      clickhouse:
-        image: clickhouse/clickhouse-server:latest
-        ports:
-          - 9000:9000   # Native client interface
-        options: >-
-          --health-cmd "clickhouse-client --query 'SELECT 1'" 
-          --health-interval 10s 
-          --health-timeout 5s 
-          --health-retries 5
-        volumes:
-          - ${{ github.workspace }}/v03_pipeline/var/test-clickhouse.xml:/etc/clickhouse-server/config.xml
-        env:
-          CLICKHOUSE_USER: default
-          CLICKHOUSE_PASSWORD: testpassword
     strategy:
       matrix:
         python-version: ['3.11']
@@ -35,17 +20,26 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Start ClickHouse with mounted config
+        run: |
+          docker run -d --name clickhouse \
+            -v ${{ github.workspace }}/v03_pipeline/var/test-clickhouse.xml:/etc/clickhouse-server/config.xml \
+            -p 9000:9000 \
+            -e CLICKHOUSE_USER=default \
+            -e CLICKHOUSE_PASSWORD=testpassword \
+            clickhouse/clickhouse-server:latest
+      - name: Wait for ClickHouse
+        run: |
+          until docker exec clickhouse clickhouse-client --query "SELECT 1"; do
+            echo "Waiting for ClickHouse to start..."
+            sleep 2
+          done
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
           cache-dependency-path: 'requirements**.txt'
-      - name: restart clickhouse
-        # Restart clickhouse after volumes have been checked out
-        uses: docker://docker
-        with:
-          args: docker restart clickhouse
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
