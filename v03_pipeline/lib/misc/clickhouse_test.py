@@ -135,9 +135,9 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            )
+            ),
         )
-        print(df.head())
+        print(df.head()) # noqa: T201
         self.assertEqual(
             max_src_key(
                 ReferenceGenome.GRCh38,
