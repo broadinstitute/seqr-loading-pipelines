@@ -22,10 +22,10 @@ jobs:
       - name: Create ClickHouse Config
         run: |
           cat <<EOF > test_config.xml
-<clickhouse>
-  <user_files_path>/tmp</user_files_path>
-</clickhouse>
-EOF
+          <clickhouse>
+            <user_files_path>/tmp</user_files_path>
+          </clickhouse>
+          EOF
       - name: Start ClickHouse with mounted config
         run: |
           docker run -d --name clickhouse \
