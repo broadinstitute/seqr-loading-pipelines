@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
@@ -8,6 +7,7 @@ import pyarrow.parquet as pq
 from v03_pipeline.lib.misc.clickhouse import (
     ClickhouseTable,
     clickhouse_insert_table_fn,
+    direct_insert,
     dst_key_exists,
     get_clickhouse_client,
     max_src_key,
@@ -63,21 +63,16 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_dst_key_exists(self):
         client = get_clickhouse_client()
-
-        # Create table
-        client.execute("""
-            CREATE TABLE IF NOT EXISTS test.`GRCh38/SNV_INDEL/clinvar` (
+        client.execute(f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
                 key UInt32
             ) ENGINE = MergeTree()
             ORDER BY key
         """)
-
-        # Insert test rows
         client.execute(
-            'INSERT INTO test.`GRCh38/SNV_INDEL/clinvar` (key) VALUES',
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (key) VALUES',
             [(1,), (10,), (7,)],
         )
-
         self.assertEqual(
             dst_key_exists(
                 ReferenceGenome.GRCh38,
@@ -87,7 +82,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
             True,
         )
-
         self.assertEqual(
             dst_key_exists(
                 ReferenceGenome.GRCh38,
@@ -123,13 +117,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 TEST_RUN_ID,
             ),
         )
-        base_path = runs_path(
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-        )
-        directory = Path(os.path.join(base_path, TEST_RUN_ID))
-        files = [f.name for f in directory.iterdir() if f.is_file()]
-        print(files)  # noqa: T201
         df = pd.read_parquet(
             new_transcripts_parquet_path(
                 ReferenceGenome.GRCh38,
@@ -137,7 +124,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 TEST_RUN_ID,
             ),
         )
-        print(df.head())  # noqa: T201
         self.assertEqual(
             max_src_key(
                 ReferenceGenome.GRCh38,
@@ -155,4 +141,41 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ClickhouseTable.ANNOTATIONS_DISK,
             ),
             None,
+        )
+
+    def test_direct_insert(self):
+        client = get_clickhouse_client()
+        df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
+        table = pa.Table.from_pandas(df)
+        pq.write_table(
+            table,
+            new_transcripts_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        client.execute(f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
+                key UInt32,
+                transcripts String
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+            ORDER BY key
+        """)
+        client.execute(
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
+            [(1, 'a'), (10, 'b'), (7, 'c')],
+        )
+        direct_insert(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ClickhouseTable.TRANSCRIPTS,
+        )
+        ret = client.execute(
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+        )
+        self.assertEqual(
+            ret, [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')]
         )
