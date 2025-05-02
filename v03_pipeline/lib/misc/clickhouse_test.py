@@ -22,6 +22,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
+
 class ClickhouseTest(MockedDatarootTestCase):
     def setUp(self):
         super().setUp()

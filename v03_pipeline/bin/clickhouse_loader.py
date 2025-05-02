@@ -32,11 +32,6 @@ def drop_staging_tables(client):
     client.command(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
 
-@retry(tries=3, delay=5)
-def load_directly(clickhouse_table: ClickhouseTable):
-    client = get_clickhouse_client()
-
-
 def main():
     while True:
         try:
@@ -55,7 +50,7 @@ def main():
                 for clickhouse_table in ClickhouseTable:
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
-                    load_directly(clickhouse_table)
+                    pass
 
         except Exception:
             logger.exception('Unhandled Exception')
