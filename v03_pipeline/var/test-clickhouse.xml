@@ -1,4 +1,5 @@
 <clickhouse>
+    <user_files_path from_env="TMPDIR"/>
 
     <!-- Config that is used when server is run without config file. -->
     <logger>
