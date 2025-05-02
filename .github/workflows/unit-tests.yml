@@ -19,31 +19,28 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Create Clickhouse Config
+        run: |
+          mkdir -p config
+          cat <<EOF > test_config.xml
+<clickhouse>
+  <user_files_path>/tmp</user_files_path>
+</clickhouse>
+EOF
       - name: Start ClickHouse with mounted config
         run: |
           docker run -d --name clickhouse \
-            -v "${{ github.workspace }}/v03_pipeline/var/test-clickhouse.xml:/etc/clickhouse-server/config.d/config.xml" \
+            -v ${{ github.workspace }}/test_config.xml:/etc/clickhouse-server/config.d/config.xml \
             -p 9000:9000 \
             -e CLICKHOUSE_USER=default \
             -e CLICKHOUSE_PASSWORD=testpassword \
             clickhouse/clickhouse-server:latest
-      - name: Wait and capture logs if ClickHouse fails
+      - name: Wait for ClickHouse
         run: |
-          echo "Waiting for ClickHouse to become healthy..."
-          for i in {1..20}; do
-            if docker exec clickhouse clickhouse-client --query "SELECT 1" &> /dev/null; then
-              echo "ClickHouse is ready"
-              exit 0
-            fi
-            sleep 1
+          until docker exec clickhouse clickhouse-client --query "SELECT 1"; do
+            echo "Waiting for ClickHouse to start..."
+            sleep 2
           done
-
-          echo "::error::ClickHouse did not start successfully"
-          echo "Container exit status:"
-          docker inspect clickhouse --format='Exit code: {{.State.ExitCode}}'
-          echo "Container logs:"
-          docker logs clickhouse
-          exit 1
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -74,6 +71,5 @@ jobs:
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
           export CLICKHOUSE_USER=default
           export CLICKHOUSE_PASSWORD=testpassword
-          export CLICKHOUSE_DATABASE=test
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
