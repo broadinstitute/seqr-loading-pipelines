@@ -14,7 +14,6 @@ from v03_pipeline.lib.misc.runs import get_run_ids
 
 logger = get_logger(__name__)
 
-LIVE_CLICKHOUSE_DATABASE = 'seqr'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 SLEEP_S = 10
 
