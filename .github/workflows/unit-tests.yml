@@ -19,9 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Create Clickhouse Config
+      - name: Create ClickHouse Config
         run: |
-          mkdir -p config
           cat <<EOF > test_config.xml
 <clickhouse>
   <user_files_path>/tmp</user_files_path>
