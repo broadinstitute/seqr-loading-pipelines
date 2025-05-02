@@ -180,3 +180,18 @@ class ClickhouseTest(MockedDatarootTestCase):
             ret,
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
         )
+
+        # ensure multiple calls are idempotent
+        direct_insert(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ClickhouseTable.TRANSCRIPTS,
+        )
+        ret = client.execute(
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
+        )
+        self.assertEqual(
+            ret,
+            [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
+        )
