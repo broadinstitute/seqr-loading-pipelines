@@ -30,7 +30,7 @@ jobs:
         run: |
           docker run -d --name clickhouse \
             -v ${{ github.workspace }}/test_config.xml:/etc/clickhouse-server/config.d/config.xml \
-            -v ${{ github.workspace }}/tmp:/tmp
+            -v /tmp:/tmp
             -p 9000:9000 \
             -e CLICKHOUSE_USER=default \
             -e CLICKHOUSE_PASSWORD=testpassword \
