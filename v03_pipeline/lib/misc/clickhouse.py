@@ -110,6 +110,7 @@ def direct_insert(
         f"""
         INSERT INTO {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
         SELECT * FROM {path}
+        ORDER BY key ASC
         """,
     )
 
