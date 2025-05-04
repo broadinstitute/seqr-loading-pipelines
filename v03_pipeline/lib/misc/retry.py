@@ -14,7 +14,7 @@ def retry(tries=3, delay=1, backoff=2):
             current_delay = delay
             total_start_time = time.time()
             args_str = ', '.join(str(a) for a in args)
-            kwargs_str = ', '.join(f'{k}={str(v)}' for k, v in kwargs.items())
+            kwargs_str = ', '.join(f'{k}={v!s}' for k, v in kwargs.items())
 
             for attempt in range(1, max_tries):
                 start_time = time.time()

@@ -60,7 +60,7 @@ class TestRetryDecorator(unittest.TestCase):
 
         @retry(tries=2, delay=1, backoff=2)
         def func(d: DatasetType):
-            return mock_func()
+            return mock_func(d)
 
         func(d=DatasetType.SNV_INDEL)
         self.assertIn(
