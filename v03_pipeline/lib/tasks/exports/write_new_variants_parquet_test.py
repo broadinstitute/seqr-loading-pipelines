@@ -19,6 +19,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
 )
+TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
+    'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
+)
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -32,6 +35,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         ht.write(
             new_variants_table_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_GRCH37_SNV_INDEL_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
             ),
@@ -153,11 +166,120 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'sortedTranscriptConsequences': [
                         {
                             'alphamissensePathogenicity': None,
-                            'canonical': 1.0,
+                            'canonical': 1,
                             'consequenceTerms': ['missense_variant'],
                             'extendedIntronicSpliceRegionVariant': False,
                             'fiveutrConsequence': None,
                             'geneId': 'ENSG00000187634',
+                        },
+                    ],
+                },
+            ],
+        )
+
+    def test_grch37_write_new_variants_parquet_test(
+        self,
+    ) -> None:
+        worker = luigi.worker.Worker()
+        task = WriteNewVariantsParquetTask(
+            reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            os.path.join(
+                new_variants_parquet_path(
+                    ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        export_json[0]['sortedTranscriptConsequences'] = [
+            export_json[0]['sortedTranscriptConsequences'][0],
+        ]
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 1424,
+                    'xpos': 1000069134,
+                    'chrom': '1',
+                    'pos': 69134,
+                    'ref': 'A',
+                    'alt': 'G',
+                    'variantId': '1-69134-A-G',
+                    'rsid': None,
+                    'CAID': 'CA502008',
+                    'liftedOverChrom': '1',
+                    'liftedOverPos': 69134,
+                    'hgmd': None,
+                    'predictions': {
+                        'cadd': 15.880000114440918,
+                        'eigen': 1.0019999742507935,
+                        'fathmm': 0.056940000504255295,
+                        'mpc': 1.8921889066696167,
+                        'mut_pred': 0.3779999911785126,
+                        'mut_tester': 'N',
+                        'polyphen': 0.0010000000474974513,
+                        'primate_ai': 0.37232041358947754,
+                        'revel': 0.07500000298023224,
+                        'sift': 0.1289999932050705,
+                        'splice_ai': 0.019999999552965164,
+                        'splice_ai_consequence': 'Donor gain',
+                        'vest': 0.10700000077486038,
+                    },
+                    'populations': {
+                        'exac': {
+                            'ac': 0,
+                            'af': 0.0016550000291317701,
+                            'an': 66,
+                            'filter_af': None,
+                            'hemi': None,
+                            'het': 0,
+                            'hom': 0,
+                        },
+                        'gnomad_exomes': {
+                            'ac': 505,
+                            'af': 0.026665963232517242,
+                            'an': 18938,
+                            'filter_af': 0.08191808313131332,
+                            'hemi': 0,
+                            'hom': 127,
+                        },
+                        'gnomad_genomes': {
+                            'ac': 1,
+                            'af': 0.0001722949673421681,
+                            'an': 5804,
+                            'filter_af': 0.0005662514013238251,
+                            'hemi': 0,
+                            'hom': 0,
+                        },
+                        'topmed': {
+                            'ac': 95,
+                            'af': 0.0007565619889646769,
+                            'an': 125568,
+                            'het': 95,
+                            'hom': 0,
+                        },
+                    },
+                    'sortedTranscriptConsequences': [
+                        {
+                            'canonical': 1,
+                            'consequenceTerms': ['missense_variant'],
+                            'geneId': 'ENSG00000186092',
                         },
                     ],
                 },

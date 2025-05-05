@@ -89,6 +89,8 @@ def camelcase_array_structexpression_fields(
         )
 
     # Custom handling of nested sorted_transcript_consequences fields for GRCh38
+    # Note that spliceregion (extended_intronic_splice_region_variant) prevents
+    # a more procedural approach here.
     if (
         reference_genome == ReferenceGenome.GRCh38
         and 'sortedTranscriptConsequences' in ht.row
