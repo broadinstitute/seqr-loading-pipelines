@@ -45,7 +45,7 @@ class RunsTest(MockedDatarootTestCase):
                     open(success_file, 'w').close()
 
     def test_get_run_ids(self) -> None:
-        successful_pipeline_runs, successful_clickhouse_loads = get_run_ids()
+        successful_pipeline_runs, successful_clickhouse_loads, _ = get_run_ids()
         self.assertCountEqual(
             successful_pipeline_runs[(ReferenceGenome.GRCh38, DatasetType.SNV_INDEL)],
             {

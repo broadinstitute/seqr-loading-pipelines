@@ -37,7 +37,11 @@ def drop_staging_tables():
 def main():
     while True:
         try:
-            successful_pipeline_runs, successful_clickhouse_loads = get_run_ids()
+            (
+                successful_pipeline_runs,
+                successful_clickhouse_loads,
+                failed_clickhouse_loads,
+            ) = get_run_ids()
             for (
                 reference_genome,
                 dataset_type,
@@ -46,6 +50,9 @@ def main():
                     if (
                         run_id
                         in successful_clickhouse_loads[reference_genome, dataset_type]
+                    ) or (
+                        run_id
+                        in failed_clickhouse_loads[reference_genome, dataset_type]
                     ):
                         continue
 

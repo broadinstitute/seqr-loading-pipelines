@@ -3,8 +3,8 @@ from enum import StrEnum
 
 from clickhouse_driver import Client
 
-from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.logger import get_logger
+from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
