@@ -6,7 +6,7 @@ from v03_pipeline.lib.logger import get_logger
 logger = get_logger(__name__)
 
 
-def retry(tries=3, delay=1, backoff=2):
+def retry(tries=3, delay=5, backoff=2):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

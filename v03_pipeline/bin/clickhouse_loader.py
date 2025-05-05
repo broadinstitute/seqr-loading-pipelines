@@ -27,7 +27,7 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-@retry(tries=3, delay=5)
+@retry()
 def drop_staging_tables():
     logger.info('Dropping all staging tables')
     client = get_clickhouse_client()

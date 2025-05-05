@@ -3,6 +3,7 @@ from enum import StrEnum
 
 from clickhouse_driver import Client
 
+from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
@@ -81,6 +82,7 @@ def max_src_key(
     )[0][0]
 
 
+@retry()
 def direct_insert(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
