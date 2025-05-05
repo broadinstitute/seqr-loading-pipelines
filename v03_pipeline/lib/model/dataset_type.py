@@ -391,10 +391,9 @@ class DatasetType(StrEnum):
     def should_export_to_vcf(self):
         return self == DatasetType.SV
 
-    def should_export_to_parquet(self, reference_genome: ReferenceGenome):
-        return (
-            self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
-        )
+    @property
+    def should_export_to_parquet(self):
+        return self == DatasetType.SNV_INDEL
 
     @property
     def export_vcf_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
