@@ -153,7 +153,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'sortedTranscriptConsequences': [
                         {
                             'alphamissensePathogenicity': None,
-                            'canonical': 1.0,
+                            'canonical': 1,
                             'consequenceTerms': ['missense_variant'],
                             'extendedIntronicSpliceRegionVariant': False,
                             'fiveutrConsequence': None,

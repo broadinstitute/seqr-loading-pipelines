@@ -100,7 +100,7 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                 'alphamissense': {'pathogenicity': None},
                 'aminoAcids': 'S/L',
                 'biotype': 'protein_coding',
-                'canonical': 1.0,
+                'canonical': 1,
                 'codons': 'tCg/tTg',
                 'consequenceTerms': ['missense_variant'],
                 'exon': {'index': 6, 'total': 14},
