@@ -3,8 +3,8 @@ import os
 from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import (
-    clickhouse_load_success_file_path,
     clickhouse_load_fail_file_path,
+    clickhouse_load_success_file_path,
     pipeline_run_success_file_path,
     runs_path,
 )
