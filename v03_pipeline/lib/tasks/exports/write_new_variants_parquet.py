@@ -77,19 +77,39 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             variantId=ht.variant_id,
             rsid=ht.rsid,
             CAID=ht.CAID,
-            liftedOverChrom=ht.rg37_locus.contig,
-            liftedOverPos=ht.rg37_locus.position,
+            liftedOverChrom=(
+                ht.rg37_locus.contig.replace('^chr', '')
+                if hasattr(ht, 'rg37_locus')
+                else ht.rg38_locus.contig.replace('^chr', '')
+            ),
+            liftedOverPos=(
+                ht.rg37_locus.position
+                if hasattr(ht, 'rg37_locus')
+                else ht.rg38_locus.position
+            ),
             hgmd=(
                 ht.hgmd
                 if hasattr(ht, 'hgmd')
                 else hl.missing(hl.tstruct(accession=hl.tstr, class_=hl.tstr))
             ),
-            screenRegionType=ht.screen.region_types.first(),
+            **(
+                {
+                    'screenRegionType': ht.screen.region_types.first(),
+                }
+                if hasattr(ht, 'screen')
+                else {}
+            ),
             predictions=hl.Struct(
                 cadd=ht.dbnsfp.CADD_phred,
                 eigen=ht.eigen.Eigen_phred,
                 fathmm=ht.dbnsfp.fathmm_MKL_coding_score,
-                gnomad_noncoding=ht.gnomad_non_coding_constraint.z_score,
+                **(
+                    {
+                        'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
+                    }
+                    if hasattr(ht, 'gnomad_non_coding_constraint')
+                    else {}
+                ),
                 mpc=ht.dbnsfp.MPC_score,
                 mut_pred=ht.dbnsfp.MutPred_score,
                 mut_tester=ht.dbnsfp.MutationTaster_pred,

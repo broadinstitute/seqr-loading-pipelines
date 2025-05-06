@@ -15,6 +15,9 @@ from v03_pipeline.lib.tasks.exports.misc import (
 TEST_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
 )
+TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
+    'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
+)
 
 
 class MiscTest(unittest.TestCase):
@@ -25,7 +28,7 @@ class MiscTest(unittest.TestCase):
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             list(ht.globals.enums.collect()[0].keys()),
             [
                 'screen',
@@ -167,6 +170,123 @@ class MiscTest(unittest.TestCase):
                     conditions=['not provided'],
                     assertion_ids=[],
                     pathogenicity_id=12,
+                ),
+            ),
+        )
+        ht = hl.read_table(TEST_GRCH37_SNV_INDEL_ANNOTATIONS)
+        ht = unmap_formatting_annotation_enums(
+            ht,
+            ReferenceGenome.GRCh37,
+            DatasetType.SNV_INDEL,
+        )
+        self.assertCountEqual(
+            list(ht.globals.enums.collect()[0].keys()),
+            [
+                'dbnsfp',
+                'clinvar',
+                'gnomad_exomes',
+                'splice_ai',
+                'exac',
+                'topmed',
+                'hgmd',
+                'gnomad_genomes',
+                'eigen',
+            ],
+        )
+        ht = ht.annotate(
+            sorted_transcript_consequences=[ht.sorted_transcript_consequences[0]],
+        )
+        self.assertEqual(
+            ht.collect()[0],
+            hl.Struct(
+                locus=hl.Locus(contig=1, position=69134, reference_genome='GRCh37'),
+                alleles=['A', 'G'],
+                rsid=None,
+                sorted_transcript_consequences=[
+                    hl.Struct(
+                        amino_acids='E/G',
+                        canonical=1,
+                        codons='gAa/gGa',
+                        gene_id='ENSG00000186092',
+                        hgvsc='ENST00000335137.3:c.44A>G',
+                        hgvsp='ENSP00000334393.3:p.Glu15Gly',
+                        transcript_id='ENST00000335137',
+                        is_lof_nagnag=None,
+                        biotype='protein_coding',
+                        consequence_terms=['missense_variant'],
+                        lof_filters=None,
+                    ),
+                ],
+                variant_id='1-69134-A-G',
+                xpos=1000069134,
+                gt_stats=hl.Struct(AC=25, AN=1246, AF=0.020064204931259155, hom=10),
+                CAID='CA502008',
+                rg38_locus=hl.Locus(
+                    contig='chr1',
+                    position=69134,
+                    reference_genome='GRCh38',
+                ),
+                gnomad_exomes=hl.Struct(
+                    AF=0.026665963232517242,
+                    AN=18938,
+                    AC=505,
+                    Hom=127,
+                    AF_POPMAX_OR_GLOBAL=0.08191808313131332,
+                    FAF_AF=0.02474386990070343,
+                    Hemi=0,
+                ),
+                hgmd=None,
+                gnomad_genomes=hl.Struct(
+                    AF=0.0001722949673421681,
+                    AN=5804,
+                    AC=1,
+                    Hom=0,
+                    AF_POPMAX_OR_GLOBAL=0.0005662514013238251,
+                    FAF_AF=0.0,
+                    Hemi=0,
+                ),
+                dbnsfp=hl.Struct(
+                    PrimateAI_score=0.37232041358947754,
+                    fathmm_MKL_coding_score=0.056940000504255295,
+                    CADD_phred=15.880000114440918,
+                    SIFT_score=0.1289999932050705,
+                    REVEL_score=0.07500000298023224,
+                    Polyphen2_HVAR_score=0.0010000000474974513,
+                    VEST4_score=0.10700000077486038,
+                    MPC_score=1.8921889066696167,
+                    MutPred_score=0.3779999911785126,
+                    MutationTaster_pred_id=2,
+                ),
+                topmed=hl.Struct(
+                    AC=95,
+                    AF=0.0007565619889646769,
+                    AN=125568,
+                    Hom=0,
+                    Het=95,
+                ),
+                exac=hl.Struct(
+                    AF_POPMAX=None,
+                    AF=0.0016550000291317701,
+                    AC_Adj=0,
+                    AC_Het=0,
+                    AC_Hom=0,
+                    AC_Hemi=None,
+                    AN_Adj=66,
+                ),
+                eigen=hl.Struct(Eigen_phred=1.0019999742507935),
+                splice_ai=hl.Struct(
+                    delta_score=0.019999999552965164,
+                    splice_consequence_id=2,
+                ),
+                key_=1424,
+                clinvar=hl.Struct(
+                    alleleId=2193183,
+                    conflictingPathogenicities=None,
+                    goldStars=1,
+                    submitters=['Ambry Genetics'],
+                    conditions=['not specified'],
+                    assertion_ids=[],
+                    pathogenicity_id=14,
                 ),
             ),
         )

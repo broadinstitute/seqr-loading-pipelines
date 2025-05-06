@@ -19,6 +19,9 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh38/SNV_INDEL/annotations.ht'
 )
+TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
+    'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
+)
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -32,6 +35,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         ht.write(
             new_variants_table_path(
                 ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_GRCH37_SNV_INDEL_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
             ),
@@ -125,6 +138,64 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                     'fiveutrAnnotation': None,
                     'fiveutrConsequence': None,
                 },
+            },
+        )
+        self.assertEqual(
+            list(export_json[0]['transcripts'][0].keys()),
+            sorted(export_json[0]['transcripts'][0].keys()),
+        )
+
+    def test_grch37_write_new_transcripts_parquet_test(
+        self,
+    ) -> None:
+        worker = luigi.worker.Worker()
+        task = WriteNewTranscriptsParquetTask(
+            reference_genome=ReferenceGenome.GRCh37,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh37,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertEqual(
+            export_json[0]['key'],
+            1424,
+        )
+        self.assertEqual(
+            export_json[0]['transcripts'][0],
+            {
+                'aminoAcids': 'E/G',
+                'biotype': 'protein_coding',
+                'canonical': 1,
+                'codons': 'gAa/gGa',
+                'consequenceTerms': ['missense_variant'],
+                'geneId': 'ENSG00000186092',
+                'hgvsc': 'ENST00000335137.3:c.44A>G',
+                'hgvsp': 'ENSP00000334393.3:p.Glu15Gly',
+                'isLofNagnag': None,
+                'lofFilters': None,
+                'majorConsequence': 'missense_variant',
+                'transcriptId': 'ENST00000335137',
+                'transcriptRank': 0,
             },
         )
         self.assertEqual(
