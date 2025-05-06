@@ -27,6 +27,12 @@ def camelcase_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
     return s.rename({f: snake_to_camelcase(f) for f in s})
 
 
+def sorted_hl_struct(s: hl.StructExpression) -> hl.StructExpression:
+    if not isinstance(s, hl.StructExpression):
+        return s
+    return s.select(**{k: sorted_hl_struct(s[k]) for k in sorted(s)})
+
+
 def array_structexpression_fields(ht: hl.Table):
     return [
         field

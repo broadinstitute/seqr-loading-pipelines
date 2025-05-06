@@ -135,7 +135,25 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
                     'existingInframeOorfs': None,
                     'existingOutofframeOorfs': None,
                     'existingUorfs': None,
-                    'fiveutrAnnotation': None,
+                    'fiveutrAnnotation': {
+                        'AltStop': None,
+                        'AltStopDistanceToCDS': None,
+                        'CapDistanceToStart': None,
+                        'DistanceToCDS': 41,
+                        'DistanceToStop': None,
+                        'Evidence': None,
+                        'FrameWithCDS': None,
+                        'KozakContext': 'CGCATGC',
+                        'KozakStrength': 'Weak',
+                        'StartDistanceToCDS': None,
+                        'alt_type': None,
+                        'alt_type_length': None,
+                        'newSTOPDistanceToCDS': None,
+                        'ref_StartDistanceToCDS': None,
+                        'ref_type': None,
+                        'ref_type_length': None,
+                        'type': 'OutOfFrame_oORF',
+                    },
                     'fiveutrConsequence': None,
                 },
             },
@@ -143,6 +161,18 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertEqual(
             list(export_json[0]['transcripts'][0].keys()),
             sorted(export_json[0]['transcripts'][0].keys()),
+        )
+        self.assertEqual(
+            list(
+                export_json[0]['transcripts'][0]['utrannotator'][
+                    'fiveutrAnnotation'
+                ].keys(),
+            ),
+            sorted(
+                export_json[0]['transcripts'][0]['utrannotator'][
+                    'fiveutrAnnotation'
+                ].keys(),
+            ),
         )
 
     def test_grch37_write_new_transcripts_parquet_test(
