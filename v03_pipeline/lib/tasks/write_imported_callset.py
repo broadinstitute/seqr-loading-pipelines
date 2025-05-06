@@ -28,7 +28,17 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 @luigi.util.inherits(BaseLoadingRunParams)
 class WriteImportedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
-        return super().complete()
+        # Handle case where callset was previously imported
+        # with a different sex/relatedness flag.
+        additional_row_fields = get_additional_row_fields(
+            mt,
+            self.reference_genome,
+            self.dataset_type,
+            self.skip_check_sex_and_relatedness,
+        )
+        return super().complete() and all(
+            hasattr(ht, field) for field in additional_row_fields
+        )
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
