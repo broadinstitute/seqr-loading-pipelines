@@ -69,5 +69,16 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
                     transcriptRank=i,
                 ),
             )
-            .map(lambda s: s.select(**{k: s[k] for k in sorted(s)})),
+            .map(
+                lambda s: s.select(
+                    **{
+                        k: (
+                            s[k].select(**{l: s[k][l] for l in sorted(s[k])})
+                            if isinstance(s[k], hl.StructExpression)
+                            else s[k]
+                        )
+                        for k in sorted(s)
+                    }
+                )
+            ),
         )
