@@ -48,7 +48,6 @@ class MiscTest(unittest.TestCase):
         ht = ht.annotate(
             sorted_transcript_consequences=[ht.sorted_transcript_consequences[0]],
         )
-        print(ht.collect()[0])
         self.assertEqual(
             ht.collect()[0],
             hl.Struct(
