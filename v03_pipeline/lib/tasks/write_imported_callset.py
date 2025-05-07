@@ -29,11 +29,7 @@ from v03_pipeline.lib.tasks.write_validation_errors_for_run import (
 class WriteImportedCallsetTask(BaseWriteTask):
     def complete(self) -> luigi.Target:
         if super().complete():
-            mt = import_callset(
-                self.callset_path,
-                self.reference_genome,
-                self.dataset_type,
-            )
+            mt = hl.read_matrix_table(self.output().path)
             # Handle case where callset was previously imported
             # with a different sex/relatedness flag.
             additional_row_fields = get_additional_row_fields(
