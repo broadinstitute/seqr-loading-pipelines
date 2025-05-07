@@ -100,7 +100,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            )
+            ),
         )
         pq.write_table(
             table,
@@ -124,7 +124,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            )
+            ),
         )
         pq.write_table(
             table,
@@ -172,7 +172,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-            )
+            ),
         )
         pq.write_table(
             table,
