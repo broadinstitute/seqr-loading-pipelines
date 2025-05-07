@@ -5,7 +5,7 @@ import time
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
-    ClickhouseTable,
+    ClickHouseTable,
     direct_insert,
     get_clickhouse_client,
 )
@@ -56,7 +56,7 @@ def main():
                     ):
                         continue
 
-                for clickhouse_table in ClickhouseTable:
+                for clickhouse_table in ClickHouseTable:
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
                     direct_insert(

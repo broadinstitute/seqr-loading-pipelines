@@ -5,7 +5,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from v03_pipeline.lib.misc.clickhouse import (
-    ClickhouseTable,
+    ClickHouseTable,
     clickhouse_insert_table_fn,
     direct_insert,
     dst_key_exists,
@@ -77,7 +77,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             dst_key_exists(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                ClickhouseTable.CLINVAR,
+                ClickHouseTable.CLINVAR,
                 1,
             ),
             True,
@@ -86,7 +86,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             dst_key_exists(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                ClickhouseTable.CLINVAR,
+                ClickHouseTable.CLINVAR,
                 2,
             ),
             False,
@@ -129,7 +129,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-                ClickhouseTable.TRANSCRIPTS,
+                ClickHouseTable.TRANSCRIPTS,
             ),
             4,
         )
@@ -138,7 +138,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-                ClickhouseTable.ANNOTATIONS_DISK,
+                ClickHouseTable.ANNOTATIONS_DISK,
             ),
             None,
         )
@@ -161,7 +161,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 transcripts String
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `key`
-            ORDER BY key
         """)
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
@@ -171,7 +170,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-            ClickhouseTable.TRANSCRIPTS,
+            ClickHouseTable.TRANSCRIPTS,
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -186,7 +185,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-            ClickhouseTable.TRANSCRIPTS,
+            ClickHouseTable.TRANSCRIPTS,
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -194,4 +193,57 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertEqual(
             ret,
             [(1, 'a'), (2, 'b'), (3, 'c'), (4, 'd'), (7, 'c'), (10, 'b')],
+        )
+
+    def test_direct_insert_key_lookup(self):
+        client = get_clickhouse_client()
+        df = pd.DataFrame(
+            {
+                'key': [10, 11, 12, 13],
+                'chrom': ['1', '2', 'Y', 'M'],
+                'pos': [3, 4, 9, 2],
+                'ref': ['A', 'A', 'A', 'C'],
+                'alt': ['C', 'T', 'C', 'G'],
+            },
+        )
+        table = pa.Table.from_pandas(df)
+        pq.write_table(
+            table,
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        client.execute(f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
+                variant_id String,
+                key UInt32,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `variant_id`
+        """)
+        client.execute(
+            f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
+            [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
+        )
+        direct_insert(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ClickHouseTable.KEY_LOOKUP,
+        )
+        ret = client.execute(
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variant_id ASC',
+        )
+        self.assertEqual(
+            ret,
+            [
+                ('1-123-A-C', 1),
+                ('1-3-A-C', 10),
+                ('2-234-C-T', 2),
+                ('2-4-A-T', 11),
+                ('M-2-C-G', 13),
+                ('M-345-C-G', 3),
+                ('Y-9-A-C', 12),
+            ],
         )
