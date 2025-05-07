@@ -582,7 +582,9 @@ class MiscTest(unittest.TestCase):
 
     def test_sorted_hl_struct(self) -> None:
         struct = hl.Struct(
-            z=5, y=hl.Struct(b=2, a=hl.Struct(d=4, c=3)), x=hl.Struct(k=9),
+            z=5,
+            y=hl.Struct(b=2, a=hl.Struct(d=4, c=3)),
+            x=hl.Struct(k=9),
         )
         self.assertEqual(
             sorted_hl_struct(struct),
