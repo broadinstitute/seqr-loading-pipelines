@@ -255,7 +255,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                     TEST_RUN_ID,
                 ),
                 'test.parquet',
-            )
+            ),
         )
         client.execute(f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
