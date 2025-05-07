@@ -50,15 +50,15 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertEqual(result[0][0], 1)
 
     def test_clickhouse_insert_table_fn(self):
-        path = 'gcs://my-bucket/my-file.txt'
+        path = 'gcs://my-bucket/my-file.parquet'
         self.assertEqual(
             clickhouse_insert_table_fn(path),
-            "gcs('https://storage.googleapis.com/my-bucket/my-file.txt', '', '', 'Parquet')",
+            "gcs('https://storage.googleapis.com/my-bucket/my-file.parquet/*.parquet', '', '', 'Parquet')",
         )
-        path = '/var/seqr/my-bucket/my-file.txt'
+        path = '/var/seqr/my-bucket/my-file.parquet'
         self.assertEqual(
             clickhouse_insert_table_fn(path),
-            "file('/var/seqr/my-bucket/my-file.txt', 'Parquet')",
+            "file('/var/seqr/my-bucket/my-file.parquet/*.parquet', 'Parquet')",
         )
 
     def test_dst_key_exists(self):
@@ -95,12 +95,22 @@ class ClickhouseTest(MockedDatarootTestCase):
     def test_max_src_key(self):
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'value': ['a', 'b', 'c', 'd']})
         table = pa.Table.from_pandas(df)
-        pq.write_table(
-            table,
+        os.makedirs(
             new_transcripts_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
+            )
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
             ),
         )
         schema = pa.schema([('key', pa.int32()), ('value', pa.int64())])
@@ -109,12 +119,22 @@ class ClickhouseTest(MockedDatarootTestCase):
             'value': pa.array([], type=pa.int64()),
         }
         table = pa.Table.from_pydict(empty_data, schema=schema)
-        pq.write_table(
-            table,
+        os.makedirs(
             new_variants_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
+            )
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_variants_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
             ),
         )
         df = pd.read_parquet(
@@ -147,12 +167,22 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         df = pd.DataFrame({'key': [1, 2, 3, 4], 'transcripts': ['a', 'b', 'c', 'd']})
         table = pa.Table.from_pandas(df)
-        pq.write_table(
-            table,
+        os.makedirs(
             new_transcripts_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
+            )
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
             ),
         )
         client.execute(f"""
@@ -209,13 +239,23 @@ class ClickhouseTest(MockedDatarootTestCase):
             },
         )
         table = pa.Table.from_pandas(df)
-        pq.write_table(
-            table,
+        os.makedirs(
             new_variants_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
             ),
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_variants_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
+            )
         )
         client.execute(f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (

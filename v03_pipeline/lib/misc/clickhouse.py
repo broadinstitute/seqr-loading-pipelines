@@ -1,3 +1,4 @@
+import os
 from collections.abc import Callable
 from enum import StrEnum
 
@@ -131,6 +132,7 @@ def direct_insert(
 
 
 def clickhouse_insert_table_fn(path: str):
+    path = os.path.join(path, '*.parquet')
     if path.startswith('gcs://'):
         return f"gcs('{path.replace('gcs://', GOOGLE_XML_API_PATH)}', '{Env.CLICKHOUSE_GCS_HMAC_KEY}', '{Env.CLICKHOUSE_GCS_HMAC_SECRET}', 'Parquet')"
     return f"file('{path}', 'Parquet')"
