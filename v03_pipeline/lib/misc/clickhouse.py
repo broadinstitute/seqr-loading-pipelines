@@ -20,6 +20,8 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
+KEY = 'key'
+VARIANT_ID = 'variantId'
 
 
 class ClickHouseTable(StrEnum):
@@ -50,20 +52,12 @@ class ClickHouseTable(StrEnum):
         )
 
     @property
-    def dst_key_field(self):
-        return 'variant_id' if self == ClickHouseTable.KEY_LOOKUP else 'key'
+    def key_field(self):
+        return VARIANT_ID if self == ClickHouseTable.KEY_LOOKUP else KEY
 
-    def src_key_field(self, dataset_type):
-        if self == ClickHouseTable.KEY_LOOKUP:
-            if dataset_type in {DatasetType.GCNV, DatasetType.SV}:
-                return 'variant_id'
-            return "concat(chrom, '-', toString(pos), '-', ref, '-', alt)"
-        return 'key'
-
-    def select_fields(self, dataset_type):
-        if self == ClickHouseTable.KEY_LOOKUP:
-            return f'{self.src_key_field(dataset_type)}, key'
-        return '*'
+    @property
+    def select_fields(self):
+        return f'{VARIANT_ID}, {KEY}' if self == ClickHouseTable.KEY_LOOKUP else '*'
 
 
 def dst_key_exists(
@@ -77,7 +71,7 @@ def dst_key_exists(
         SELECT EXISTS (
             SELECT 1
             FROM {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
-            WHERE {clickhouse_table.dst_key_field} = %(key)s
+            WHERE {clickhouse_table.key_field} = %(key)s
         )
         """
     return client.execute(query, {'key': key})[0][0]
@@ -93,10 +87,9 @@ def max_src_key(
     path = clickhouse_insert_table_fn(
         clickhouse_table.src_path_fn(reference_genome, dataset_type, run_id),
     )
-    key_field = clickhouse_table.src_key_field(dataset_type)
     return client.execute(
         f"""
-        SELECT max({key_field}) FROM {path}
+        SELECT max({clickhouse_table.key_field}) FROM {path}
         """,
     )[0][0]
 
@@ -121,7 +114,7 @@ def direct_insert(
         clickhouse_table,
         key,
     ):
-        msg = f'Skipping direct insert of `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}` as {clickhouse_table.dst_key_field}={key} already exists'
+        msg = f'Skipping direct insert of `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}` as {clickhouse_table.key_field}={key} already exists'
         logger.info(msg)
         return
     path = clickhouse_insert_table_fn(
@@ -130,9 +123,9 @@ def direct_insert(
     client.execute(
         f"""
         INSERT INTO {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
-        SELECT {clickhouse_table.select_fields(dataset_type)}
+        SELECT {clickhouse_table.select_fields}
         FROM {path}
-        ORDER BY {clickhouse_table.src_key_field(dataset_type)} ASC
+        ORDER BY {clickhouse_table.key_field} ASC
         """,
     )
 

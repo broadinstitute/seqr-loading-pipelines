@@ -200,10 +200,12 @@ class ClickhouseTest(MockedDatarootTestCase):
         df = pd.DataFrame(
             {
                 'key': [10, 11, 12, 13],
-                'chrom': ['1', '2', 'Y', 'M'],
-                'pos': [3, 4, 9, 2],
-                'ref': ['A', 'A', 'A', 'C'],
-                'alt': ['C', 'T', 'C', 'G'],
+                'variantId': [
+                    '1-3-A-C',
+                    '2-4-A-T',
+                    'Y-9-A-C',
+                    'M-2-C-G',
+                ],
             },
         )
         table = pa.Table.from_pandas(df)
@@ -217,10 +219,10 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
-                variant_id String,
+                variantId String,
                 key UInt32,
             ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `variant_id`
+            PRIMARY KEY `variantId`
         """)
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
@@ -233,7 +235,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             ClickHouseTable.KEY_LOOKUP,
         )
         ret = client.execute(
-            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variant_id ASC',
+            f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
         )
         self.assertEqual(
             ret,
