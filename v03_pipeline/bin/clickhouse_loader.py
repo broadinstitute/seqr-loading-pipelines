@@ -3,6 +3,8 @@ import signal
 import sys
 import time
 
+import hailtop.fs as hfs
+
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseTable,
@@ -11,6 +13,7 @@ from v03_pipeline.lib.misc.clickhouse import (
 )
 from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
+from v03_pipeline.lib.paths import clickhouse_load_fail_file_path
 
 logger = get_logger(__name__)
 
@@ -35,6 +38,7 @@ def drop_staging_tables():
 
 
 def main():
+    reference_genome, dataset_type, run_id = None, None, None
     while True:
         try:
             (
@@ -68,6 +72,16 @@ def main():
 
         except Exception:
             logger.exception('Unhandled Exception')
+            if reference_genome and dataset_type and run_id:
+                with hfs.open(
+                    clickhouse_load_fail_file_path(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    ),
+                    'w',
+                ) as f:
+                    f.write('')
         finally:
             time.sleep(SLEEP_S)
 
