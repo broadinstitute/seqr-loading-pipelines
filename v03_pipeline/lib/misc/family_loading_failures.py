@@ -1,13 +1,10 @@
 from collections import defaultdict
 
 import hail as hl
-import numpy as np
 
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.pedigree import Family, Relation, Sample
 from v03_pipeline.lib.model import Sex
-
-RELATEDNESS_TOLERANCE = 0.2
 
 logger = get_logger(__name__)
 
@@ -26,11 +23,7 @@ def passes_relatedness_check(
         (min(sample_id, other_id), max(sample_id, other_id)),
     )
     if not coefficients or not any(
-        np.allclose(
-            coefficients,
-            relation.coefficients,
-            atol=RELATEDNESS_TOLERANCE,
-        )
+        relation.coefficients_equal(coefficients)
         for relation in (
             [expected_relation, additional_allowed_relation]
             if additional_allowed_relation
