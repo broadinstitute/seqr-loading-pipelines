@@ -12,6 +12,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
+    sorted_hl_struct,
     transcripts_field_name,
     unmap_formatting_annotation_enums,
 )
@@ -69,5 +70,5 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
                     transcriptRank=i,
                 ),
             )
-            .map(lambda s: s.select(**{k: s[k] for k in sorted(s)})),
+            .map(sorted_hl_struct),
         )

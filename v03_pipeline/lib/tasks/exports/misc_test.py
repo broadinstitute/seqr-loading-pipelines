@@ -8,6 +8,7 @@ from v03_pipeline.lib.model import (
 )
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
+    sorted_hl_struct,
     unmap_formatting_annotation_enums,
     unmap_reference_dataset_annotation_enums,
 )
@@ -86,7 +87,25 @@ class MiscTest(unittest.TestCase):
                             existing_inframe_oorfs=None,
                             existing_outofframe_oorfs=None,
                             existing_uorfs=None,
-                            fiveutr_annotation=None,
+                            fiveutr_annotation=hl.Struct(
+                                type='OutOfFrame_oORF',
+                                KozakContext='CGCATGC',
+                                KozakStrength='Weak',
+                                DistanceToCDS=41,
+                                CapDistanceToStart=None,
+                                DistanceToStop=None,
+                                Evidence=None,
+                                AltStop=None,
+                                AltStopDistanceToCDS=None,
+                                FrameWithCDS=None,
+                                StartDistanceToCDS=None,
+                                newSTOPDistanceToCDS=None,
+                                alt_type=None,
+                                alt_type_length=None,
+                                ref_StartDistanceToCDS=None,
+                                ref_type=None,
+                                ref_type_length=None,
+                            ),
                             fiveutr_consequence=None,
                         ),
                         biotype='protein_coding',
@@ -520,7 +539,25 @@ class MiscTest(unittest.TestCase):
                             existingInframeOorfs=None,
                             existingOutofframeOorfs=None,
                             existingUorfs=None,
-                            fiveutrAnnotation=None,
+                            fiveutrAnnotation=hl.Struct(
+                                type='OutOfFrame_oORF',
+                                KozakContext='CGCATGC',
+                                KozakStrength='Weak',
+                                DistanceToCDS=41,
+                                CapDistanceToStart=None,
+                                DistanceToStop=None,
+                                Evidence=None,
+                                AltStop=None,
+                                AltStopDistanceToCDS=None,
+                                FrameWithCDS=None,
+                                StartDistanceToCDS=None,
+                                newSTOPDistanceToCDS=None,
+                                alt_type=None,
+                                alt_type_length=None,
+                                ref_StartDistanceToCDS=None,
+                                ref_type=None,
+                                ref_type_length=None,
+                            ),
                             fiveutrConsequence=None,
                         ),
                         biotype='protein_coding',
@@ -541,4 +578,15 @@ class MiscTest(unittest.TestCase):
                     ),
                 ],
             ),
+        )
+
+    def test_sorted_hl_struct(self) -> None:
+        struct = hl.Struct(
+            z=5,
+            y=hl.Struct(b=2, a=hl.Struct(d=4, c=3)),
+            x=hl.Struct(k=9),
+        )
+        self.assertEqual(
+            sorted_hl_struct(struct),
+            hl.Struct(x=hl.Struct(k=9), y=hl.Struct(a=hl.Struct(c=3, d=4), b=2), z=5),
         )
