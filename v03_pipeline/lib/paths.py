@@ -363,6 +363,51 @@ def variant_annotations_vcf_path(
     )
 
 
+def new_clinvar_variants_parquet_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'new_clinvar_variants.parquet',
+    )
+
+
+def new_transcripts_parquet_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'new_transcripts.parquet',
+    )
+
+
+def new_variants_parquet_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'new_variants.parquet',
+    )
+
+
 def new_variants_table_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -438,4 +483,19 @@ def clickhouse_load_success_file_path(
         ),
         run_id,
         '_CLICKHOUSE_LOAD_SUCCESS',
+    )
+
+
+def clickhouse_load_fail_file_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        '_CLICKHOUSE_LOAD_FAIL',
     )

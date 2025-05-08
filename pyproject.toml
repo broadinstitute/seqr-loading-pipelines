@@ -69,6 +69,9 @@ inline-quotes = "single"
 '*migration*' = [
     'N999', # allow invalid module names
 ]
+'*clickhouse*' = [
+    'S608' # unsafe sql
+]
 
 [tool.ruff.pylint]
 max-args = 6
