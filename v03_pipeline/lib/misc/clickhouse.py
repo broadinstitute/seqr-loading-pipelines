@@ -155,16 +155,66 @@ def copy_existing_project_partitions(
     project_guids: list[str],
 ):
     client = get_clickhouse_client()
-    loaded_projects = client.execute(
-        f"""
+    existing_project_guids = {
+        r[0]
+        for r in client.execute(
+            f"""
         SELECT partition
         FROM system.parts
         WHERE table = `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
         AND database = `{Env.CLICKHOUSE_DATABASE}`
         AND partition IN %(project_guids)s;
         """,
-        {'project_guids': project_guids},
-    )[0]
+            {'project_guids': project_guids},
+        )
+    }
+    run_id_hash = hashlib.sha256(
+        run_id.encode('utf8'),
+    ).hexdigest()
+    for project_guid in existing_project_guids:
+        client.execute(
+            f"""
+            ALTER TABLE {STAGING_CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+            ATTACH PARTITION %s(project_guid) FROM {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+            """,
+            {'project_guid': project_guid},
+        )
+        client.execute(
+            f"""
+            ALTER TABLE {STAGING_CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{ClickHouseTable.GT_STATS.value}`
+            ATTACH PARTITION %s(project_guid) FROM {Env.CLICKHOUSE_DATABASE}.`{reference_genome.value}/{dataset_type.value}/{ClickHouseTable.GT_STATS.value}`
+            """,
+            {'project_guid': project_guid},
+        )
+
+
+def delete_existing_families(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+    family_guids: list[str],
+) -> None:
+    pass
+
+
+def insert_new_entries(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+) -> None:
+    pass
+
+
+def copy_new_project_partitions(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+    project_guids: list[str],
+) -> None:
+    pass
 
 
 def direct_insert(
