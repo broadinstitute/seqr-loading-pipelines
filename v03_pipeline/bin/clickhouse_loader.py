@@ -8,33 +8,24 @@ import hailtop.fs as hfs
 from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseTable,
-    direct_insert,
-    get_clickhouse_client,
+    drop_staging_db,
+    insert,
 )
-from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
 from v03_pipeline.lib.paths import clickhouse_load_fail_file_path
 
 logger = get_logger(__name__)
 
-STAGING_CLICKHOUSE_DATABASE = 'staging'
 SLEEP_S = 10
 
 
 def signal_handler(*_):
-    drop_staging_tables()
+    drop_staging_db()
     sys.exit(0)
 
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
-
-
-@retry()
-def drop_staging_tables():
-    logger.info('Dropping all staging tables')
-    client = get_clickhouse_client()
-    client.command(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
 
 def main():
@@ -63,7 +54,7 @@ def main():
                 for clickhouse_table in ClickHouseTable:
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
-                    direct_insert(
+                    insert(
                         reference_genome,
                         dataset_type,
                         run_id,

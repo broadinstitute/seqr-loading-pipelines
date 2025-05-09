@@ -28,9 +28,11 @@ class ClickhouseTest(MockedDatarootTestCase):
     def setUp(self):
         super().setUp()
         client = get_clickhouse_client()
-        client.execute(f"""
+        client.execute(
+            f"""
             CREATE DATABASE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE};
-        """)
+        """,
+        )
         base_path = runs_path(
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
@@ -40,9 +42,11 @@ class ClickhouseTest(MockedDatarootTestCase):
     def tearDown(self):
         super().tearDown()
         client = get_clickhouse_client()
-        client.execute(f"""
+        client.execute(
+            f"""
             DROP DATABASE {Env.CLICKHOUSE_DATABASE};
-        """)
+        """,
+        )
 
     def test_get_clickhouse_client(self):
         client = get_clickhouse_client()
@@ -63,12 +67,14 @@ class ClickhouseTest(MockedDatarootTestCase):
 
     def test_dst_key_exists(self):
         client = get_clickhouse_client()
-        client.execute(f"""
+        client.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
                 key UInt32
             ) ENGINE = MergeTree()
             ORDER BY key
-        """)
+        """,
+        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (key) VALUES',
             [(1,), (10,), (7,)],
@@ -185,13 +191,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'test.parquet',
             ),
         )
-        client.execute(f"""
+        client.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
                 key UInt32,
                 transcripts String
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `key`
-        """)
+        """,
+        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
@@ -257,13 +265,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'test.parquet',
             ),
         )
-        client.execute(f"""
+        client.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
                 variantId String,
                 key UInt32,
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `variantId`
-        """)
+        """,
+        )
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
             [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],

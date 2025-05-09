@@ -1,7 +1,10 @@
+import hashlib
+import json
 import os
 from collections.abc import Callable
 from enum import StrEnum
 
+import hailtop.fs as hfs
 from clickhouse_driver import Client
 
 from v03_pipeline.lib.logger import get_logger
@@ -9,7 +12,9 @@ from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
 from v03_pipeline.lib.paths import (
+    metadata_for_run_path,
     new_clinvar_variants_parquet_path,
+    new_entries_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
 )
@@ -22,6 +27,7 @@ logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 KEY = 'key'
+STAGING_CLICKHOUSE_DATABASE = 'staging'
 VARIANT_ID = 'variantId'
 
 
@@ -31,6 +37,8 @@ class ClickHouseTable(StrEnum):
     CLINVAR = 'clinvar'
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
+    ENTRIES = 'entries'
+    GT_STATS = 'gt_stats'
 
     @property
     def src_path_fn(self) -> Callable:
@@ -40,17 +48,21 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.CLINVAR: new_clinvar_variants_parquet_path,
             ClickHouseTable.KEY_LOOKUP: new_variants_parquet_path,
             ClickHouseTable.TRANSCRIPTS: new_transcripts_parquet_path,
+            ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
     def should_load(self, reference_genome: ReferenceGenome, dataset_type: DatasetType):
-        return (
-            self != ClickHouseTable.CLINVAR
-            or ReferenceDataset.clinvar
-            in BaseReferenceDataset.for_reference_genome_dataset_type(
-                reference_genome,
-                dataset_type,
+        if self == ClickHouseTable.GT_STATS:
+            return False
+        if self == ClickHouseTable.CLINVAR:
+            return (
+                ReferenceDataset.clinvar
+                in BaseReferenceDataset.for_reference_genome_dataset_type(
+                    reference_genome,
+                    dataset_type,
+                )
             )
-        )
+        return True
 
     @property
     def key_field(self):
@@ -59,6 +71,13 @@ class ClickHouseTable(StrEnum):
     @property
     def select_fields(self):
         return f'{VARIANT_ID}, {KEY}' if self == ClickHouseTable.KEY_LOOKUP else '*'
+
+
+@retry()
+def drop_staging_db():
+    logger.info('Dropping all staging tables')
+    client = get_clickhouse_client()
+    client.command(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
 
 def dst_key_exists(
@@ -95,7 +114,59 @@ def max_src_key(
     )[0][0]
 
 
-@retry()
+def create_staging_entries(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+) -> None:
+    client = get_clickhouse_client()
+    run_id_hash = hashlib.sha256(
+        run_id.encode('utf8'),
+    ).hexdigest()
+    client.execute(
+        f"""
+        CREATE
+        TABLE {STAGING_CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+        AS {Env.CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+        """,
+    )
+    client.execute(
+        f"""
+        CREATE
+        TABLE {STAGING_CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{ClickHouseTable.GT_STATS.value}`
+        AS {Env.CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{ClickHouseTable.GT_STATS.value}`
+        """,
+    )
+    client.execute(
+        f"""
+        CREATE
+        VIEW {STAGING_CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}_to_{ClickHouseTable.GT_STATS.value}`
+        AS {Env.CLICKHOUSE_DATABASE}.`{run_id_hash}`/`{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}_to_{ClickHouseTable.GT_STATS.value}`
+        """,
+    )
+
+
+def copy_existing_project_partitions(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+    project_guids: list[str],
+):
+    client = get_clickhouse_client()
+    loaded_projects = client.execute(
+        f"""
+        SELECT partition
+        FROM system.parts
+        WHERE table = `{reference_genome.value}/{dataset_type.value}/{clickhouse_table.value}`
+        AND database = `{Env.CLICKHOUSE_DATABASE}`
+        AND partition IN %(project_guids)s;
+        """,
+        {'project_guids': project_guids},
+    )[0]
+
+
 def direct_insert(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
@@ -129,6 +200,82 @@ def direct_insert(
         ORDER BY {clickhouse_table.key_field} ASC
         """,
     )
+
+
+def atomic_entries_insert(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable.ENTRIES,
+) -> None:
+    drop_staging_db()
+    create_staging_entries(
+        reference_genome,
+        dataset_type,
+        run_id,
+        clickhouse_table,
+    )
+    with hfs.open(
+        metadata_for_run_path(
+            reference_genome,
+            dataset_type,
+            run_id,
+        ),
+        'r',
+    ) as f:
+        metadata_json = json.load(f.read())
+        project_guids = metadata_json['project_guids']
+        family_guids = metadata_json['family_samples'].keys()
+    copy_existing_project_partitions(
+        reference_genome,
+        dataset_type,
+        run_id,
+        clickhouse_table,
+        project_guids,
+    )
+    delete_existing_families(
+        reference_genome,
+        dataset_type,
+        run_id,
+        clickhouse_table,
+        family_guids,
+    )
+    insert_new_entries(
+        reference_genome,
+        dataset_type,
+        run_id,
+        clickhouse_table,
+    )
+    copy_new_project_partitions(
+        reference_genome,
+        dataset_type,
+        run_id,
+        clickhouse_table,
+        project_guids,
+    )
+
+
+@retry()
+def insert(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+    clickhouse_table: ClickHouseTable,
+) -> None:
+    if clickhouse_table == ClickHouseTable.ENTRIES:
+        atomic_entries_insert(
+            reference_genome,
+            dataset_type,
+            run_id,
+            clickhouse_table,
+        )
+    else:
+        direct_insert(
+            reference_genome,
+            dataset_type,
+            run_id,
+            clickhouse_table,
+        )
 
 
 def clickhouse_insert_table_fn(path: str):
