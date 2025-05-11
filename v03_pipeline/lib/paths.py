@@ -378,6 +378,21 @@ def new_clinvar_variants_parquet_path(
     )
 
 
+def new_entries_parquet_path(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> str:
+    return os.path.join(
+        runs_path(
+            reference_genome,
+            dataset_type,
+        ),
+        run_id,
+        'new_entries.parquet',
+    )
+
+
 def new_transcripts_parquet_path(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,

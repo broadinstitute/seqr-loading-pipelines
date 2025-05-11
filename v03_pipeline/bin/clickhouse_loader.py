@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 import signal
 import sys
 import time
@@ -9,10 +10,9 @@ from v03_pipeline.lib.logger import get_logger
 from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseTable,
     drop_staging_db,
-    insert,
 )
 from v03_pipeline.lib.misc.runs import get_run_ids
-from v03_pipeline.lib.paths import clickhouse_load_fail_file_path
+from v03_pipeline.lib.paths import clickhouse_load_fail_file_path, metadata_for_run_path
 
 logger = get_logger(__name__)
 
@@ -51,14 +51,28 @@ def main():
                     ):
                         continue
 
-                for clickhouse_table in ClickHouseTable:
-                    if not clickhouse_table.should_load(reference_genome, dataset_type):
-                        continue
-                    insert(
+                # Run metadata
+                with hfs.open(
+                    metadata_for_run_path(
                         reference_genome,
                         dataset_type,
                         run_id,
-                        clickhouse_table,
+                    ),
+                    'r',
+                ) as f:
+                    metadata_json = json.load(f.read())
+                    project_guids = metadata_json['project_guids']
+                    family_guids = metadata_json['family_samples'].keys()
+
+                for clickhouse_table in ClickHouseTable:
+                    if not clickhouse_table.should_load(reference_genome, dataset_type):
+                        continue
+                    clickhouse_table.insert(
+                        refernce_genome=reference_genome,
+                        dataset_type=dataset_type,
+                        run_id=run_id,
+                        project_guids=project_guids,
+                        family_guids=family_guids,
                     )
 
         except Exception:
