@@ -10,6 +10,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseDictionary,
     ClickHouseTable,
     TableNameBuilder,
+    atomic_entries_insert,
     create_staging_entries,
     delete_existing_families,
     direct_insert,
@@ -20,7 +21,6 @@ from v03_pipeline.lib.misc.clickhouse import (
     refresh_dictionary,
     replace_project_partitions,
     stage_existing_project_partitions,
-    atomic_entries_insert,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
