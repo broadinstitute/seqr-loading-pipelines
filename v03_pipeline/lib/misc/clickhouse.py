@@ -301,7 +301,7 @@ def direct_insert(
     client = get_clickhouse_client()
     client.execute(
         f"""
-        INSERT INTO {table_name_builder.dst_table(clickhouse_table)}`
+        INSERT INTO {table_name_builder.dst_table(clickhouse_table)}
         SELECT {clickhouse_table.select_fields}
         FROM {table_name_builder.src_table(clickhouse_table)}
         ORDER BY {clickhouse_table.key_field} ASC

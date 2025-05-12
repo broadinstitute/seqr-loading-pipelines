@@ -31,7 +31,7 @@ from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCas
 TEST_RUN_ID = 'manual__2025-05-07T17-20-59.702114+00-00'
 
 
-class ClickhouseDirectInsertTest(MockedDatarootTestCase):
+class ClickhouseTest(MockedDatarootTestCase):
     def setUp(self):
         super().setUp()
         client = get_clickhouse_client()
@@ -43,6 +43,84 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
         client.execute(
             f"""
             CREATE DATABASE {Env.CLICKHOUSE_DATABASE};
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
+                `key` UInt32,
+                `project_guid` LowCardinality(String),
+                `family_guid` String,
+                `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
+                `calls` Array(
+                    Tuple(
+                        sampleId String,
+                        gt Nullable(Enum8('REF' = 0, 'HET' = 1, 'HOM' = 2)),
+                    )
+                ),
+                `sign` Int8,
+                PROJECTION xpos_projection
+                (
+                    SELECT *
+                    ORDER BY xpos
+                )
+            )
+            ENGINE = CollapsingMergeTree(sign)
+            PARTITION BY project_guid
+            ORDER BY (project_guid, family_guid)
+            SETTINGS deduplicate_merge_projection_mode = 'rebuild';
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            (
+                `project_guid` String,
+                `key` UInt32,
+                `ref_samples` AggregateFunction(sum, Int32),
+            )
+            ENGINE = AggregatingMergeTree
+            PARTITION BY project_guid
+            ORDER BY (project_guid, key)
+            SETTINGS index_granularity = 8192
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_gt_stats`
+            TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            AS SELECT
+                project_guid,
+                key,
+                sumState(toInt32(arrayCount(s -> (s.gt = 'REF'), calls) * sign)) AS ref_samples
+            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+            GROUP BY project_guid, key
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
+                key UInt32
+            ) ENGINE = MergeTree()
+            ORDER BY key
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
+                key UInt32,
+                transcripts String
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `key`
+        """,
+        )
+        client.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
+                variantId String,
+                key UInt32,
+            ) ENGINE = EmbeddedRocksDB()
+            PRIMARY KEY `variantId`
         """,
         )
         base_path = runs_path(
@@ -95,21 +173,16 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
     def test_dst_key_exists(self):
         client = get_clickhouse_client()
         client.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
-                key UInt32
-            ) ENGINE = MergeTree()
-            ORDER BY key
-        """,
-        )
-        client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (key) VALUES',
             [(1,), (10,), (7,)],
         )
         self.assertEqual(
             dst_key_exists(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
+                TableNameBuilder(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
                 ClickHouseTable.CLINVAR,
                 1,
             ),
@@ -117,8 +190,11 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             dst_key_exists(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
+                TableNameBuilder(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
                 ClickHouseTable.CLINVAR,
                 2,
             ),
@@ -179,18 +255,22 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
         )
         self.assertEqual(
             max_src_key(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
+                TableNameBuilder(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
                 ClickHouseTable.TRANSCRIPTS,
             ),
             4,
         )
         self.assertEqual(
             max_src_key(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
+                TableNameBuilder(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
                 ClickHouseTable.ANNOTATIONS_DISK,
             ),
             None,
@@ -219,23 +299,14 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
             ),
         )
         client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` (
-                key UInt32,
-                transcripts String
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `key`
-        """,
-        )
-        client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts` VALUES',
             [(1, 'a'), (10, 'b'), (7, 'c')],
         )
         direct_insert(
+            ClickHouseTable.TRANSCRIPTS,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-            ClickHouseTable.TRANSCRIPTS,
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -247,10 +318,10 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
 
         # ensure multiple calls are idempotent
         direct_insert(
+            ClickHouseTable.TRANSCRIPTS,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-            ClickHouseTable.TRANSCRIPTS,
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/transcripts`',
@@ -293,23 +364,14 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
             ),
         )
         client.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
-                variantId String,
-                key UInt32,
-            ) ENGINE = EmbeddedRocksDB()
-            PRIMARY KEY `variantId`
-        """,
-        )
-        client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` VALUES',
             [('1-123-A-C', 1), ('2-234-C-T', 2), ('M-345-C-G', 3)],
         )
         direct_insert(
+            ClickHouseTable.KEY_LOOKUP,
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
-            ClickHouseTable.KEY_LOOKUP,
         )
         ret = client.execute(
             f'SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` ORDER BY variantId ASC',
@@ -325,83 +387,6 @@ class ClickhouseDirectInsertTest(MockedDatarootTestCase):
                 ('M-345-C-G', 3),
                 ('Y-9-A-C', 12),
             ],
-        )
-
-
-class ClickhouseEntriesInsertTest(MockedDatarootTestCase):
-    def setUp(self):
-        super().setUp()
-        client = get_clickhouse_client()
-        client.execute(
-            f"""
-            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE DATABASE {Env.CLICKHOUSE_DATABASE};
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
-                `key` UInt32,
-                `project_guid` LowCardinality(String),
-                `family_guid` String,
-                `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
-                `calls` Array(
-                    Tuple(
-                        sampleId String,
-                        gt Nullable(Enum8('REF' = 0, 'HET' = 1, 'HOM' = 2)),
-                    )
-                ),
-                `sign` Int8,
-                PROJECTION xpos_projection
-                (
-                    SELECT *
-                    ORDER BY xpos
-                )
-            )
-            ENGINE = CollapsingMergeTree(sign)
-            PARTITION BY project_guid
-            ORDER BY (project_guid, family_guid)
-            SETTINGS deduplicate_merge_projection_mode = 'rebuild';
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
-            (
-                `project_guid` String,
-                `key` UInt32,
-                `ref_samples` AggregateFunction(sum, Int32),
-            )
-            ENGINE = AggregatingMergeTree
-            PARTITION BY project_guid
-            ORDER BY (project_guid, key)
-            SETTINGS index_granularity = 8192
-            """,
-        )
-        client.execute(
-            f"""
-            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_gt_stats`
-            TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
-            AS SELECT
-                project_guid,
-                key,
-                sumState(toInt32(arrayCount(s -> (s.gt = 'REF'), calls) * sign)) AS ref_samples
-            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
-            GROUP BY project_guid, key
-            """,
-        )
-
-    def tearDown(self):
-        super().tearDown()
-        client = get_clickhouse_client()
-        client.execute(
-            f"""
-          DROP DATABASE {Env.CLICKHOUSE_DATABASE};
-          """,
         )
 
     def test_entries_insert_flow(self):
@@ -454,7 +439,10 @@ class ClickhouseEntriesInsertTest(MockedDatarootTestCase):
             GROUP BY key
             """,
         )
-        self.assertListEqual(ref_sample_count, [(0, 2), (4, 3), (3, 1), (2, 0), (1, 0)])
+        self.assertCountEqual(
+            ref_sample_count,
+            [(0, 2), (4, 3), (3, 1), (2, 0), (1, 0)],
+        )
         delete_existing_families(
             table_name_builder,
             ['project_a'],
@@ -468,7 +456,10 @@ class ClickhouseEntriesInsertTest(MockedDatarootTestCase):
             GROUP BY key
             """,
         )
-        self.assertListEqual(ref_sample_count, [(0, 1), (4, 0), (3, 1), (2, 0), (1, 0)])
+        self.assertCountEqual(
+            ref_sample_count,
+            [(0, 1), (4, 0), (3, 1), (2, 0), (1, 0)],
+        )
         df = pd.DataFrame(
             {
                 'key': [0, 3, 4],
@@ -542,7 +533,10 @@ class ClickhouseEntriesInsertTest(MockedDatarootTestCase):
             GROUP BY key
             """,
         )
-        self.assertListEqual(ref_sample_count, [(0, 3), (4, 0), (3, 2), (2, 0), (1, 0)])
+        self.assertCountEqual(
+            ref_sample_count,
+            [(0, 3), (4, 0), (3, 2), (2, 0), (1, 0)],
+        )
         replace_project_partitions(
             table_name_builder,
             ['project_d'],
@@ -554,7 +548,7 @@ class ClickhouseEntriesInsertTest(MockedDatarootTestCase):
             {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
             """,
         )
-        self.assertListEqual(
+        self.assertCountEqual(
             new_entries,
             [
                 (0, 'project_a', 'family_a1', 123456789, [('sample_a1', 'REF')], 1),
