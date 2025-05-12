@@ -248,16 +248,15 @@ def insert_new_entries(
     # ClickHouse docs generally recommend against running OPTIMIZE TABLE FINAL.
     # However, forcing the merge to happen at load time should make the
     # application layer free of eventual consistency bugs.
-    client.execute(
-        f"""
-        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)} FINAL
-        """,
-    )
-    client.execute(
-        f"""
-        OPTIMIZE TABLE {table_name_builder.staging_dst_table(ClickHouseTable.GT_STATS)} FINAL
-        """,
-    )
+    for clickhouse_table in [
+        ClickHouseTable.ENTRIES,
+        ClickHouseTable.GT_STATS,
+    ]:
+        client.execute(
+            f"""
+            OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)} FINAL
+            """,
+        )
 
 
 def replace_project_partitions(
