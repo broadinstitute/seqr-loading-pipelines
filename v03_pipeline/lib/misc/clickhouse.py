@@ -77,14 +77,21 @@ class ClickHouseTable(StrEnum):
         )
 
 
+class ClickHouseDictionary(StrEnum):
+    GT_STATS_DICT = 'gt_stats_dict'
+
+
+ClickHouseEntity = ClickHouseDictionary | ClickHouseTable
+
+
 @dataclass
 class TableNameBuilder:
     reference_genome: ReferenceGenome
     dataset_type: DatasetType
     run_id: str
 
-    def dst_table(self, clickhouse_table: ClickHouseTable):
-        return f'{Env.CLICKHOUSE_DATABASE}.`{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_table.value}`'
+    def dst_table(self, clickhouse_entity: ClickHouseEntity):
+        return f'{Env.CLICKHOUSE_DATABASE}.`{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_entity.value}`'
 
     def staging_dst_table(self, clickhouse_table: ClickHouseTable):
         return f'{STAGING_CLICKHOUSE_DATABASE}.`{self.run_id}/{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_table.value}`'
@@ -141,7 +148,6 @@ def max_src_key(
 def create_staging_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
-    drop_staging_db()
     client = get_clickhouse_client()
     client.execute(
         f"""
@@ -273,6 +279,18 @@ def replace_project_partitions(
             )
 
 
+def refresh_dictionary(
+    table_name_builder: TableNameBuilder,
+    clickhouse_dictionary: ClickHouseDictionary,
+) -> None:
+    client = get_clickhouse_client()
+    client.execute(
+        f"""
+        SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(clickhouse_dictionary)}
+        """,
+    )
+
+
 @retry()
 def direct_insert(
     clickhouse_table: ClickHouseTable,
@@ -311,6 +329,7 @@ def direct_insert(
 
 @retry()
 def atomic_entries_insert(
+    _clickhouse_table: ClickHouseTable,
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
@@ -323,6 +342,7 @@ def atomic_entries_insert(
         dataset_type,
         run_id,
     )
+    drop_staging_db()
     create_staging_entries(table_name_builder)
     stage_existing_project_partitions(
         table_name_builder,
@@ -338,6 +358,10 @@ def atomic_entries_insert(
     replace_project_partitions(
         table_name_builder,
         project_guids,
+    )
+    refresh_dictionary(
+        table_name_builder,
+        ClickHouseDictionary.GT_STATS_DICT,
     )
     drop_staging_db()
 

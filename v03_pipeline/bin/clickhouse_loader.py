@@ -72,12 +72,13 @@ def main():
                     if not clickhouse_table.should_load(reference_genome, dataset_type):
                         continue
                     clickhouse_table.insert(
-                        refernce_genome=reference_genome,
+                        reference_genome=reference_genome,
                         dataset_type=dataset_type,
                         run_id=run_id,
                         project_guids=project_guids,
                         family_guids=family_guids,
                     )
+
             with hfs.open(
                 clickhouse_load_success_file_path(
                     reference_genome,

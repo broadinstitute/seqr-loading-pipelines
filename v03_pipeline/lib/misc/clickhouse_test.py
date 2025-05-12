@@ -6,6 +6,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from v03_pipeline.lib.misc.clickhouse import (
+    STAGING_CLICKHOUSE_DATABASE,
+    ClickHouseDictionary,
     ClickHouseTable,
     TableNameBuilder,
     create_staging_entries,
@@ -15,6 +17,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     max_src_key,
+    refresh_dictionary,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -42,12 +45,17 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
+            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+            """,
+        )
+        client.execute(
+            f"""
             CREATE DATABASE {Env.CLICKHOUSE_DATABASE};
         """,
         )
         client.execute(
             f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` (
                 `key` UInt32,
                 `project_guid` LowCardinality(String),
                 `family_guid` String,
@@ -99,7 +107,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/clinvar` (
                 key UInt32
             ) ENGINE = MergeTree()
             ORDER BY key
@@ -116,12 +124,30 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/key_lookup` (
                 variantId String,
                 key UInt32,
             ) ENGINE = EmbeddedRocksDB()
             PRIMARY KEY `variantId`
         """,
+        )
+        client.execute(
+            f"""
+            CREATE DICTIONARY IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            (
+                key UInt32,
+                AC UInt32,
+            )
+            PRIMARY KEY key
+            SOURCE(
+                CLICKHOUSE(
+                    USER {Env.CLICKHOUSE_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
+                    QUERY "SELECT key, sumMerge(ref_samples) FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats` GROUP BY key"
+                )
+            )
+            LIFETIME(0)
+            LAYOUT(FLAT(MAX_ARRAY_SIZE 500000000));
+            """,
         )
         base_path = runs_path(
             ReferenceGenome.GRCh38,
@@ -469,9 +495,9 @@ class ClickhouseTest(MockedDatarootTestCase):
                     'project_d',
                 ],
                 'family_guid': [
-                    'project_d1',
-                    'project_d2',
-                    'project_d3',
+                    'family_d1',
+                    'family_d2',
+                    'family_d3',
                 ],
                 'xpos': [
                     123456789,
@@ -569,16 +595,38 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (
                     0,
                     'project_d',
-                    'project_d1',
+                    'family_d1',
                     123456789,
                     [('sample_d1', 'REF'), ('sample_d11', 'REF')],
                     1,
                 ),
-                (3, 'project_d', 'project_d2', 123456789, [('sample_d2', 'REF')], 1),
-                (4, 'project_d', 'project_d3', 123456789, [('sample_d3', 'HET')], 1),
+                (3, 'project_d', 'family_d2', 123456789, [('sample_d2', 'REF')], 1),
+                (4, 'project_d', 'family_d3', 123456789, [('sample_d3', 'HET')], 1),
                 (0, 'project_c', 'family_c1', 123456789, [('sample_c7', 'REF')], 1),
                 (3, 'project_c', 'family_c2', 123456789, [('sample_c8', 'REF')], 1),
                 (4, 'project_c', 'family_c3', 133456789, [('sample_c9', 'HOM')], 1),
                 (5, 'project_c', 'family_c4', 133456789, [('sample_c9', 'HOM')], 1),
+            ],
+        )
+        refresh_dictionary(
+            table_name_builder,
+            ClickHouseDictionary.GT_STATS_DICT,
+        )
+        gt_stats_dict = client.execute(
+            f"""
+            SELECT *
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            """,
+        )
+        self.assertCountEqual(
+            gt_stats_dict,
+            [
+                (0, 5),
+                (1, 0),
+                (2, 0),
+                (3, 3),
+                (4, 3),
+                (5, 0),
             ],
         )
