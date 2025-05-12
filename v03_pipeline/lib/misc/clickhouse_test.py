@@ -167,7 +167,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 table_name_builder.src_table(
                     ClickHouseTable.ENTRIES,
                 ),
-                "gcs('https://storage.googleapis.com/mock_bucket/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', '', '', 'Parquet')",
+                "gcs('https://storage.googleapis.com/mock_bucket/v3.1/GRCh38/SNV_INDEL/runs/manual__2025-05-07T17-20-59.702114+00-00/new_entries.parquet/*.parquet', '', '', 'Parquet')",
             )
 
     def test_dst_key_exists(self):

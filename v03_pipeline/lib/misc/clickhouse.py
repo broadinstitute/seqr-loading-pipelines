@@ -50,7 +50,7 @@ class ClickHouseTable(StrEnum):
         }[self]
 
     def should_load(self, reference_genome: ReferenceGenome, dataset_type: DatasetType):
-        if self in {ClickHouseTable.GT_STATS, ClickHouseTable.ENTRIES}:
+        if self in {ClickHouseTable.GT_STATS, ClickHouseTable.ENTRIES_TO_GT_STATS}:
             return False
         if self == ClickHouseTable.CLINVAR:
             return (
