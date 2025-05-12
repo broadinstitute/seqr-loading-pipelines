@@ -218,7 +218,6 @@ def stage_existing_project_partitions(
 
 def delete_existing_families(
     table_name_builder: TableNameBuilder,
-    project_guids: list[str],
     family_guids: list[str],
 ) -> None:
     client = get_clickhouse_client()
@@ -227,10 +226,9 @@ def delete_existing_families(
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
         SELECT COLUMNS('.*') EXCEPT(sign), -1 as sign
         FROM {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
-        WHERE project_guid in %(project_guids)s
-        AND family_guid in %(family_guids)s
+        WHERE family_guid in %(family_guids)s
         """,
-        {'project_guids': project_guids, 'family_guids': family_guids},
+        {'family_guids': family_guids},
     )
 
 

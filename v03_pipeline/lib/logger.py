@@ -31,9 +31,7 @@ LOG_CONFIG = {
         'asyncio': {
             'level': 'CRITICAL',
         },
-        'clickhouse_driver': {
-            'level': 'CRITICAL'
-        },
+        'clickhouse_driver': {'level': 'CRITICAL'},
     },
 }
 

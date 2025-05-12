@@ -20,6 +20,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     refresh_dictionary,
     replace_project_partitions,
     stage_existing_project_partitions,
+    atomic_entries_insert,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
@@ -416,8 +417,8 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
     def test_entries_insert_flow(self):
-        # Integration-style test that validates the first
-        # few steps of the atomic entries insertion flow.
+        # Tests individual components of the atomic_entries_insert
+        # to validate the state after each step.
         client = get_clickhouse_client()
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` VALUES',
@@ -471,7 +472,6 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         delete_existing_families(
             table_name_builder,
-            ['project_a'],
             ['family_a1', 'family_a5'],
         )
         ref_sample_count = client.execute(
@@ -628,5 +628,95 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (3, 3),
                 (4, 3),
                 (5, 0),
+            ],
+        )
+
+    def test_atomic_entries_insert(self):
+        df = pd.DataFrame(
+            {
+                'key': [0, 3, 4],
+                'project_guid': [
+                    'project_d',
+                    'project_d',
+                    'project_d',
+                ],
+                'family_guid': [
+                    'family_d1',
+                    'family_d2',
+                    'family_d3',
+                ],
+                'xpos': [
+                    123456789,
+                    123456789,
+                    123456789,
+                ],
+                'calls': [
+                    [('sample_d1', 0), ('sample_d11', 0)],
+                    [('sample_d2', 0)],
+                    [('sample_d3', 1)],
+                ],
+                'sign': [
+                    1,
+                    1,
+                    1,
+                ],
+            },
+        )
+        schema = pa.schema(
+            [
+                ('key', pa.int64()),
+                ('project_guid', pa.string()),
+                ('family_guid', pa.string()),
+                ('xpos', pa.int64()),
+                (
+                    'calls',
+                    pa.list_(
+                        pa.struct([('sampleId', pa.string()), ('gt', pa.int64())]),
+                    ),
+                ),
+                ('sign', pa.int64()),
+            ],
+        )
+        table = pa.Table.from_pandas(df, schema=schema)
+        os.makedirs(
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        pq.write_table(
+            table,
+            os.path.join(
+                new_entries_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.SNV_INDEL,
+                    TEST_RUN_ID,
+                ),
+                'test.parquet',
+            ),
+        )
+        atomic_entries_insert(
+            ClickHouseTable.ENTRIES,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+            ['project_d'],
+            ['family_d1', 'family_d2'],
+        )
+        client = get_clickhouse_client()
+        gt_stats_dict = client.execute(
+            f"""
+            SELECT *
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            """,
+        )
+        self.assertCountEqual(
+            gt_stats_dict,
+            [
+                (0, 2),
+                (3, 1),
+                (4, 0),
             ],
         )
