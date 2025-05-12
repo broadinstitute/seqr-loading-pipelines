@@ -59,6 +59,8 @@ packaging==24.2
     #   sphinx
 pip-tools==7.4.1
     # via -r requirements-dev.in
+pyarrow==19.0.1
+    # via -r requirements-dev.in
 pygments==2.19.1
     # via
     #   -c requirements.txt
