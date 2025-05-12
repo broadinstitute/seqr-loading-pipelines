@@ -12,7 +12,11 @@ from v03_pipeline.lib.misc.clickhouse import (
     drop_staging_db,
 )
 from v03_pipeline.lib.misc.runs import get_run_ids
-from v03_pipeline.lib.paths import clickhouse_load_fail_file_path, metadata_for_run_path
+from v03_pipeline.lib.paths import (
+    clickhouse_load_fail_file_path,
+    clickhouse_load_success_file_path,
+    metadata_for_run_path,
+)
 
 logger = get_logger(__name__)
 
@@ -74,7 +78,15 @@ def main():
                         project_guids=project_guids,
                         family_guids=family_guids,
                     )
-
+            with hfs.open(
+                clickhouse_load_success_file_path(
+                    reference_genome,
+                    dataset_type,
+                    run_id,
+                ),
+                'w',
+            ) as f:
+                f.write('')
         except Exception:
             logger.exception('Unhandled Exception')
             if reference_genome and dataset_type and run_id:
@@ -88,6 +100,7 @@ def main():
                 ) as f:
                     f.write('')
         finally:
+            reference_genome, dataset_type, run_id = None, None, None
             time.sleep(SLEEP_S)
 
 
