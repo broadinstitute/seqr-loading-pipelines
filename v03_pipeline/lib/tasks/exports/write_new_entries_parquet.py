@@ -120,7 +120,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                     {
                         'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
                     }
-                    if hasattr(ht, 'is_gnomad_gt_5_percent')
+                    if hasattr(ht, 'is_gt_5_percent')
                     else {}
                 ),
                 filters=ht.filters,
