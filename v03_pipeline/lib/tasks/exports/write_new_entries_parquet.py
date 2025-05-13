@@ -6,6 +6,7 @@ from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
+    deglobalize_ids,
 )
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
@@ -90,16 +91,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                     **self.param_kwargs,
                 ),
             )
-            ht = ht.annotate(
-                family_entries=hl.enumerate(ht.family_entries).starmap(
-                    lambda i, fs: hl.enumerate(fs).starmap(
-                        lambda j, e: e.annotate(
-                            family_guid=ht.family_guids[i],  # noqa: B023
-                            sampleId=ht.family_samples[ht.family_guids[i]][j],  # noqa: B023
-                        ),
-                    ),
-                ),
-            )
+            ht = deglobalize_ids(ht)
             annotations_ht = hl.read_table(
                 self.input()[ANNOTATIONS_TABLE_TASK].path,
             )
@@ -124,20 +116,16 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
                 family_guid=ht.family_entries.family_guid[0],
                 sample_type=self.sample_type.value,
                 xpos=get_expr_for_xpos(ht.locus),
-                is_gnomad_gt_5_percent=hl.is_defined(ht.is_gt_5_percent),
+                **(
+                    {
+                        'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
+                    }
+                    if hasattr(ht, 'is_gnomad_gt_5_percent')
+                    else {}
+                ),
                 filters=ht.filters,
                 calls=ht.family_entries.map(
-                    lambda fe: hl.Struct(
-                        sampleId=fe.sampleId,
-                        gt=hl.case()
-                        .when(fe.GT.is_hom_ref(), 0)
-                        .when(fe.GT.is_het(), 1)
-                        .when(fe.GT.is_hom_var(), 2)
-                        .default(hl.missing(hl.tint32)),
-                        gq=fe.GQ,
-                        ab=fe.AB,
-                        dp=fe.DP,
-                    ),
+                    lambda fe: self.dataset_type.entries_export_fields(fe),
                 ),
                 sign=1,
             )

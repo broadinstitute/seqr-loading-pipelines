@@ -102,6 +102,24 @@ class DatasetType(StrEnum):
         }[self]
 
     @property
+    def entries_export_fields(
+        self,
+    ) -> Callable[hl.StructExpression, hl.StructExpression]:
+        return {
+            DatasetType.SNV_INDEL: lambda fe: hl.Struct(
+                sampleId=fe.sampleId,
+                gt=hl.case()
+                .when(fe.GT.is_hom_ref(), 0)
+                .when(fe.GT.is_het(), 1)
+                .when(fe.GT.is_hom_var(), 2)
+                .default(hl.missing(hl.tint32)),
+                gq=fe.GQ,
+                ab=fe.AB,
+                dp=fe.DP,
+            ),
+        }[self]
+
+    @property
     def row_fields(
         self,
     ) -> list[str]:
