@@ -104,10 +104,10 @@ class DatasetType(StrEnum):
     @property
     def entries_export_fields(
         self,
-    ) -> Callable[hl.StructExpression, hl.StructExpression]:
+    ) -> Callable[[hl.StructExpression], hl.StructExpression]:
         return {
             DatasetType.SNV_INDEL: lambda fe: hl.Struct(
-                sampleId=fe.sampleId,
+                sampleId=fe.s,
                 gt=hl.case()
                 .when(fe.GT.is_hom_ref(), 0)
                 .when(fe.GT.is_het(), 1)

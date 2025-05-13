@@ -100,17 +100,15 @@ def globalize_ids(ht: hl.Table) -> hl.Table:
     )
 
 
-def deglobalize_ids(ht: hl.Table, sample_id_field: str = 's') -> hl.Table:
+def deglobalize_ids(ht: hl.Table) -> hl.Table:
     ht = ht.annotate(
         family_entries=(
             hl.enumerate(ht.family_entries).starmap(
                 lambda i, fe: hl.enumerate(fe).starmap(
                     lambda j, e: hl.Struct(
                         **e,
-                        **{
-                            sample_id_field: ht.family_samples[ht.family_guids[i]][j],
-                            'family_guid': ht.family_guids[i],
-                        },
+                        s=ht.family_samples[ht.family_guids[i]][j],
+                        family_guid=ht.family_guids[i],
                     ),
                 ),
             )
