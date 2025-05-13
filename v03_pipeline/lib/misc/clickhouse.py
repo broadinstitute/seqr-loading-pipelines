@@ -305,12 +305,16 @@ def direct_insert(
         table_name_builder,
         clickhouse_table,
     )
+    if not key:
+        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since src table is empty'
+        logger.info(msg)
+        return
     if dst_key_exists(
         table_name_builder,
         clickhouse_table,
         key,
     ):
-        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} as {clickhouse_table.key_field}={key} already exists'
+        msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since {clickhouse_table.key_field}={key} already exists'
         logger.info(msg)
         return
     client = get_clickhouse_client()
