@@ -9,7 +9,7 @@ def get_entries_export_fields(
     dataset_type: DatasetType,
     sample_type: SampleType,
     project_guid: str,
-):
+) -> dict[str, hl.Expression]:
     return {
         'key_': ht.key_,
         'project_guid': project_guid,

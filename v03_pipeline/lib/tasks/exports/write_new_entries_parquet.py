@@ -111,7 +111,7 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
 
             ht = ht.key_by()
             ht = ht.select(
-                get_entries_export_fields(
+                **get_entries_export_fields(
                     ht,
                     self.dataset_type,
                     self.sample_type,
