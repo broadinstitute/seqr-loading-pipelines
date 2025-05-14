@@ -93,12 +93,10 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
         df = pd.read_parquet(
-            os.path.join(
-                new_transcripts_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
+            new_transcripts_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))

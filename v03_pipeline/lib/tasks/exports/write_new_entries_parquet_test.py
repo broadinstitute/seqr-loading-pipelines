@@ -1,5 +1,3 @@
-import os
-
 import hail as hl
 import luigi.worker
 import pandas as pd
@@ -73,12 +71,10 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
         df = pd.read_parquet(
-            os.path.join(
-                new_entries_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.to_dict('records'))

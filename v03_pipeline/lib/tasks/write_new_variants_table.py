@@ -129,6 +129,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 self.dataset_type,
             ),
         )
+        # Gracefully handle case for on-premises uses
+        # where key_ field is not present and migration was not run.
+        if not hasattr('key_', annotations_ht):
+            annotations_ht = annotations_ht.add_index(name='key_')
+            annotations_ht = annotations_ht.annotate_globals(
+                max_key_=(annotations_ht.count() - 1),
+            )
+
         new_variants_ht = callset_ht.anti_join(annotations_ht)
 
         # Annotate new variants with VEP.

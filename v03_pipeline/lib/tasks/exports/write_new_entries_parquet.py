@@ -2,7 +2,6 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
@@ -19,6 +18,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
+from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
     UpdatedReferenceDatasetQueryTask,
@@ -108,26 +108,15 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             # rows where a family is not defined should be removed.
             ht = ht.explode(ht.family_entries)
             ht = ht.filter(hl.is_defined(ht.family_entries))
-
             ht = ht.key_by()
+            ht = ht.select_globals()
             ht = ht.select(
-                key_=ht.key_,
-                project_guid=project_guid,
-                family_guid=ht.family_entries.family_guid[0],
-                sample_type=self.sample_type.value,
-                xpos=get_expr_for_xpos(ht.locus),
-                **(
-                    {
-                        'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
-                    }
-                    if hasattr(ht, 'is_gnomad_gt_5_percent')
-                    else {}
+                **get_entries_export_fields(
+                    ht,
+                    self.dataset_type,
+                    self.sample_type,
+                    project_guid,
                 ),
-                filters=ht.filters,
-                calls=ht.family_entries.map(
-                    lambda fe: self.dataset_type.entries_export_fields(fe),
-                ),
-                sign=1,
             )
             unioned_ht = unioned_ht.union(ht) if unioned_ht else ht
         return unioned_ht
