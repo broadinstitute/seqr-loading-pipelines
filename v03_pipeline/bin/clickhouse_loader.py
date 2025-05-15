@@ -55,39 +55,46 @@ def main():
                     ):
                         continue
 
-                # Run metadata
-                with hfs.open(
-                    metadata_for_run_path(
-                        reference_genome,
-                        dataset_type,
-                        run_id,
-                    ),
-                    'r',
-                ) as f:
-                    metadata_json = json.load(f.read())
-                    project_guids = metadata_json['project_guids']
-                    family_guids = metadata_json['family_samples'].keys()
+                    msg = f'Attempting load of {reference_genome.value}/{dataset_type.value}/{run_id}'
+                    logger.info(msg)
 
-                for clickhouse_table in ClickHouseTable:
-                    if not clickhouse_table.should_load(reference_genome, dataset_type):
-                        continue
-                    clickhouse_table.insert(
-                        reference_genome=reference_genome,
-                        dataset_type=dataset_type,
-                        run_id=run_id,
-                        project_guids=project_guids,
-                        family_guids=family_guids,
-                    )
+                    # Run metadata
+                    with hfs.open(
+                        metadata_for_run_path(
+                            reference_genome,
+                            dataset_type,
+                            run_id,
+                        ),
+                        'r',
+                    ) as f:
+                        metadata_json = json.load(f.read())
+                        project_guids = metadata_json['project_guids']
+                        family_guids = metadata_json['family_samples'].keys()
 
-            with hfs.open(
-                clickhouse_load_success_file_path(
-                    reference_genome,
-                    dataset_type,
-                    run_id,
-                ),
-                'w',
-            ) as f:
-                f.write('')
+                    for clickhouse_table in ClickHouseTable:
+                        if not clickhouse_table.should_load(
+                            reference_genome,
+                            dataset_type,
+                        ):
+                            continue
+                        clickhouse_table.insert(
+                            reference_genome=reference_genome,
+                            dataset_type=dataset_type,
+                            run_id=run_id,
+                            project_guids=project_guids,
+                            family_guids=family_guids,
+                        )
+                    with hfs.open(
+                        clickhouse_load_success_file_path(
+                            reference_genome,
+                            dataset_type,
+                            run_id,
+                        ),
+                        'w',
+                    ) as f:
+                        f.write('')
+                    msg = f'Successfully loaded {reference_genome.value}/{dataset_type.value}/{run_id}'
+                    logger.info(msg)
         except Exception:
             logger.exception('Unhandled Exception')
             if reference_genome and dataset_type and run_id:
@@ -102,6 +109,7 @@ def main():
                     f.write('')
         finally:
             reference_genome, dataset_type, run_id = None, None, None
+            logger.info('Waiting for work...')
             time.sleep(SLEEP_S)
 
 
