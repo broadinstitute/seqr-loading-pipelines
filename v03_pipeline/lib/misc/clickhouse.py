@@ -19,6 +19,9 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
+from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
+    ClickHouseMigrationType,
+)
 
 logger = get_logger(__name__)
 
@@ -49,7 +52,34 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
-    def should_load(self, reference_genome: ReferenceGenome, dataset_type: DatasetType):
+    def should_load(
+        self,
+        reference_genome: ReferenceGenome,
+        dataset_type: DatasetType,
+        migration_type: ClickHouseMigrationType | None,
+    ):
+        if migration_type:
+            if migration_type == ClickHouseMigrationType.PROJECT_ENTRIES:
+                return self == ClickHouseTable.ENTRIES
+            if migration_type == ClickHouseMigrationType.VARIANTS:
+                if self == ClickHouseTable.CLINVAR:
+                    return (
+                        ReferenceDataset.clinvar
+                        in BaseReferenceDataset.for_reference_genome_dataset_type(
+                            reference_genome,
+                            dataset_type,
+                        )
+                    )
+                return self in {
+                    ClickHouseTable.ANNOTATIONS_DISK,
+                    ClickHouseTable.ANNOTATIONS_MEMORY,
+                    ClickHouseTable.KEY_LOOKUP,
+                    ClickHouseTable.TRANSCRIPTS,
+                }
+            msg = f'Unhandled ClickHouseMigrationType: {migration_type.value}'
+            raise ValueError(
+                msg,
+            )
         if self in {ClickHouseTable.GT_STATS, ClickHouseTable.ENTRIES_TO_GT_STATS}:
             return False
         if self == ClickHouseTable.CLINVAR:
