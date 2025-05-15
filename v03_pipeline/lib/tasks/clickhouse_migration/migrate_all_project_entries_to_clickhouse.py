@@ -1,13 +1,9 @@
-import json
-
 import hailtop.fs as hfs
 import luigi
 import luigi.util
 
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
-    metadata_for_run_path,
-    pipeline_run_success_file_path,
     project_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
@@ -53,34 +49,3 @@ class MigrateAllProjectEntriesToClickHouseTask(luigi.WrapperTask):
                     ),
                 )
         yield self.dynamic_parquet_tasks
-        for task in self.dynamic_parquet_tasks:
-            metadata_json = {
-                'migration_type': ClickHouseMigrationType.PROJECT_ENTRIES.value,
-                'callsets': [],
-                'run_id': f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
-                'sample_type': task.sample_type.value,
-                'project_guids': [task.project_guid],
-                'family_samples': {},
-                'failed_family_samples': {
-                    'missing_samples': {},
-                    'relatedness_check': {},
-                    'sex_check': {},
-                    'ploidy_check': {},
-                },
-                'relatedness_check_file_path': '',
-                'sample_qc': {},
-            }
-            path = metadata_for_run_path(
-                self.reference_genome,
-                self.dataset_type,
-                f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
-            )
-            with hfs.open(path, mode='w') as f:
-                json.dump(metadata_json, f)
-            path = pipeline_run_success_file_path(
-                self.reference_genome,
-                self.dataset_type,
-                f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
-            )
-            with hfs.open(path, mode='w') as f:
-                f.write('')

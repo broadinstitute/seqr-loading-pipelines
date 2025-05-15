@@ -1,7 +1,6 @@
 import json
 
 import hail as hl
-import hailtop.fs as hfs
 import luigi
 import luigi.util
 
@@ -38,6 +37,38 @@ MAX_SNV_INDEL_ALLELE_LENGTH = 500
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
+class WriteVariantsMetadataJsonTask(luigi.Task):
+    def output(self) -> luigi.Target:
+        return GCSorLocalTarget(
+            metadata_for_run_path(
+                self.reference_genome,
+                self.dataset_type,
+                ClickHouseMigrationType.VARIANTS.run_id,
+            ),
+        )
+
+    def run(self):
+        metadata_json = {
+            'migration_type': ClickHouseMigrationType.VARIANTS.value,
+            'callsets': [],
+            'run_id': ClickHouseMigrationType.VARIANTS.run_id,
+            'sample_type': '',
+            'project_guids': [],
+            'family_samples': {},
+            'failed_family_samples': {
+                'missing_samples': {},
+                'relatedness_check': {},
+                'sex_check': {},
+                'ploidy_check': {},
+            },
+            'relatedness_check_file_path': '',
+            'sample_qc': {},
+        }
+        with self.output().open('w') as f:
+            json.dump(metadata_json, f)
+
+
+@luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateVariantsToClickHouseTask(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,24 +84,31 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
         )
 
     def requires(self) -> list[luigi.Task]:
-        return HailTableTask(
-            variant_annotations_table_path(
-                self.reference_genome,
-                self.dataset_type,
+        return [
+            HailTableTask(
+                variant_annotations_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
             ),
-        )
+            self.clone(WriteVariantsMetadataJsonTask),
+        ]
 
     def complete(self):
-        return len(self.dynamic_parquet_tasks) >= 1 and all(
-            dynamic_parquet_tasks.complete()
-            for dynamic_parquet_tasks in self.dynamic_parquet_tasks
+        return (
+            super().complete()
+            and len(self.dynamic_parquet_tasks) >= 1
+            and all(
+                dynamic_parquet_tasks.complete()
+                for dynamic_parquet_tasks in self.dynamic_parquet_tasks
+            )
         )
 
     def run(self):
         # First, move the existing annotations table to
         # the new_variants location.
         ht = hl.read_table(
-            self.input().path,
+            self.input()[0].path,
         )
         if not hasattr(ht, 'key_'):
             ht = ht.add_index(name='key_')
@@ -132,30 +170,5 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             ],
         )
         yield self.dynamic_parquet_tasks
-
-        metadata_json = {
-            'migration_type': ClickHouseMigrationType.VARIANTS.value,
-            'callsets': [],
-            'run_id': ClickHouseMigrationType.VARIANTS.run_id,
-            'sample_type': '',
-            'project_guids': [],
-            'family_samples': {},
-            'failed_family_samples': {
-                'missing_samples': {},
-                'relatedness_check': {},
-                'sex_check': {},
-                'ploidy_check': {},
-            },
-            'relatedness_check_file_path': '',
-            'sample_qc': {},
-        }
-        path = metadata_for_run_path(
-            self.reference_genome,
-            self.dataset_type,
-            ClickHouseMigrationType.VARIANTS.run_id,
-        )
-        with hfs.open(path, mode='w') as f:
-            json.dump(metadata_json, f)
-
         with self.output().open('w') as f:
             f.write('')
