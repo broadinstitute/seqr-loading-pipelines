@@ -1,10 +1,12 @@
+import json
+
 import hailtop.fs as hfs
 import luigi
 import luigi.util
 
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
-    clickhouse_migration_flag_file_path,
+    metadata_for_run_path,
     pipeline_run_success_file_path,
     project_table_path,
 )
@@ -12,7 +14,6 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    MIGRATION_RUN_ID,
     ClickHouseMigrationType,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_entries_to_clickhouse import (
@@ -46,25 +47,40 @@ class MigrateAllProjectEntriesToClickHouseTask(luigi.WrapperTask):
                 self.dynamic_parquet_tasks.add(
                     self.clone(
                         MigrateProjectEntriesToClickHouseTask,
-                        run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
+                        run_id=f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
                         sample_type=sample_type,
                         project_guid=project_guid,
                     ),
                 )
         yield self.dynamic_parquet_tasks
         for task in self.dynamic_parquet_tasks:
-            path = clickhouse_migration_flag_file_path(
+            metadata_json = {
+                'migration_type': ClickHouseMigrationType.PROJECT_ENTRIES.value,
+                'callsets': [],
+                'run_id': f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
+                'sample_type': task.sample_type.value,
+                'project_guids': [task.project_guid],
+                'family_samples': {},
+                'failed_family_samples': {
+                    'missing_samples': {},
+                    'relatedness_check': {},
+                    'sex_check': {},
+                    'ploidy_check': {},
+                },
+                'relatedness_check_file_path': '',
+                'sample_qc': {},
+            }
+            path = metadata_for_run_path(
                 self.reference_genome,
                 self.dataset_type,
-                f'{MIGRATION_RUN_ID}_{task.sample_type.value}_{task.project_guid}',
-                ClickHouseMigrationType.PROJECT_ENTRIES,
+                f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
             )
             with hfs.open(path, mode='w') as f:
-                f.write('')
+                json.dump(metadata_json, f)
             path = pipeline_run_success_file_path(
                 self.reference_genome,
                 self.dataset_type,
-                f'{MIGRATION_RUN_ID}_{task.sample_type.value}_{task.project_guid}',
+                f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{task.sample_type.value}_{task.project_guid}',
             )
             with hfs.open(path, mode='w') as f:
                 f.write('')

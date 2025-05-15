@@ -1,3 +1,5 @@
+import json
+
 import hail as hl
 import hailtop.fs as hfs
 import luigi
@@ -6,7 +8,7 @@ import luigi.util
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
-    clickhouse_migration_flag_file_path,
+    metadata_for_run_path,
     new_variants_table_path,
     pipeline_run_success_file_path,
     variant_annotations_table_path,
@@ -19,7 +21,6 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    MIGRATION_RUN_ID,
     ClickHouseMigrationType,
 )
 from v03_pipeline.lib.tasks.exports.write_new_clinvar_variants_parquet import (
@@ -47,7 +48,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             pipeline_run_success_file_path(
                 self.reference_genome,
                 self.dataset_type,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         )
 
@@ -82,7 +83,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             new_variants_table_path(
                 self.reference_genome,
                 self.dataset_type,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         )
 
@@ -100,13 +101,13 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     # we could inherit the functionality of these
                     # tasks without calling them directly, but
                     # that was also more code.
-                    run_id=MIGRATION_RUN_ID,
+                    run_id=ClickHouseMigrationType.VARIANTS.run_id,
                     sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
                 self.clone(
                     WriteNewVariantsParquetTask,
-                    run_id=MIGRATION_RUN_ID,
+                    run_id=ClickHouseMigrationType.VARIANTS.run_id,
                     sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
@@ -114,7 +115,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     [
                         self.clone(
                             WriteNewClinvarVariantsParquetTask,
-                            run_id=MIGRATION_RUN_ID,
+                            run_id=ClickHouseMigrationType.VARIANTS.run_id,
                             sample_type=SampleType.WGS,
                             callset_path=None,
                         ),
@@ -132,14 +133,29 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
         )
         yield self.dynamic_parquet_tasks
 
-        path = clickhouse_migration_flag_file_path(
+        metadata_json = {
+            'migration_type': ClickHouseMigrationType.VARIANTS.value,
+            'callsets': [],
+            'run_id': ClickHouseMigrationType.VARIANTS.run_id,
+            'sample_type': '',
+            'project_guids': [],
+            'family_samples': {},
+            'failed_family_samples': {
+                'missing_samples': {},
+                'relatedness_check': {},
+                'sex_check': {},
+                'ploidy_check': {},
+            },
+            'relatedness_check_file_path': '',
+            'sample_qc': {},
+        }
+        path = metadata_for_run_path(
             self.reference_genome,
             self.dataset_type,
-            MIGRATION_RUN_ID,
-            ClickHouseMigrationType.VARIANTS,
+            ClickHouseMigrationType.VARIANTS.run_id,
         )
         with hfs.open(path, mode='w') as f:
-            f.write('')
+            json.dump(metadata_json, f)
 
         with self.output().open('w') as f:
             f.write('')

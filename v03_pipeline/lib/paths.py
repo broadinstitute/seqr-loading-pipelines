@@ -17,9 +17,6 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
     ReferenceDatasetQuery,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    ClickHouseMigrationType,
-)
 
 
 def pipeline_prefix(
@@ -516,20 +513,4 @@ def clickhouse_load_fail_file_path(
         ),
         run_id,
         '_CLICKHOUSE_LOAD_FAIL',
-    )
-
-
-def clickhouse_migration_flag_file_path(
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-    run_id: str,
-    clickhouse_migration_type: ClickHouseMigrationType,
-) -> str:
-    return os.path.join(
-        runs_path(
-            reference_genome,
-            dataset_type,
-        ),
-        run_id,
-        f'_CLICKHOUSE_MIGRATION_{clickhouse_migration_type.value}',
     )

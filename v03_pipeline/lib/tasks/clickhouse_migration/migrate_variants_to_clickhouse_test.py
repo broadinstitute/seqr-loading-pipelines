@@ -1,3 +1,5 @@
+import json
+
 import hail as hl
 import hailtop.fs as hfs
 import luigi.worker
@@ -8,7 +10,7 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
 )
 from v03_pipeline.lib.paths import (
-    clickhouse_migration_flag_file_path,
+    metadata_for_run_path,
     new_clinvar_variants_parquet_path,
     new_transcripts_parquet_path,
     new_variants_parquet_path,
@@ -16,7 +18,6 @@ from v03_pipeline.lib.paths import (
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    MIGRATION_RUN_ID,
     ClickHouseMigrationType,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_variants_to_clickhouse import (
@@ -58,7 +59,7 @@ class WriteVariantsToClickHouseTest(MockedDatarootTestCase):
             new_clinvar_variants_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         )
         self.assertEqual(df.shape[0], 2)
@@ -66,7 +67,7 @@ class WriteVariantsToClickHouseTest(MockedDatarootTestCase):
             new_variants_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         )
         self.assertEqual(df.shape[0], 2)
@@ -74,25 +75,32 @@ class WriteVariantsToClickHouseTest(MockedDatarootTestCase):
             new_transcripts_parquet_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         )
         self.assertEqual(df.shape[0], 2)
         with hfs.open(
-            clickhouse_migration_flag_file_path(
+            metadata_for_run_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                MIGRATION_RUN_ID,
-                ClickHouseMigrationType.VARIANTS,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         ) as f:
-            self.assertEqual(f.read(), '')
+            metadata_json = json.load(f)
+            self.assertEqual(
+                metadata_json['run_id'],
+                ClickHouseMigrationType.VARIANTS.run_id,
+            )
+            self.assertEqual(
+                metadata_json['migration_type'],
+                ClickHouseMigrationType.VARIANTS.value,
+            )
 
         with hfs.open(
             pipeline_run_success_file_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
-                MIGRATION_RUN_ID,
+                ClickHouseMigrationType.VARIANTS.run_id,
             ),
         ) as f:
             self.assertEqual(f.read(), '')
