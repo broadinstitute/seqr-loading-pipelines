@@ -108,11 +108,7 @@ class DatasetType(StrEnum):
         return {
             DatasetType.SNV_INDEL: lambda fe: hl.Struct(
                 sampleId=fe.s,
-                gt=hl.case()
-                .when(fe.GT.is_hom_ref(), 0)
-                .when(fe.GT.is_het(), 1)
-                .when(fe.GT.is_hom_var(), 2)
-                .default(hl.missing(hl.tint32)),
+                gt=fe.GT.n_alt_alleles(),
                 gq=fe.GQ,
                 ab=fe.AB,
                 dp=fe.DP,
