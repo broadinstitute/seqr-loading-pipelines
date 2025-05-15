@@ -33,6 +33,8 @@ from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
+MAX_SNV_INDEL_ALLELE_LENGTH = 500
+
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateVariantsToClickHouseTask(luigi.Task):
@@ -71,6 +73,10 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
         )
         if not hasattr(ht, 'key_'):
             ht = ht.add_index(name='key_')
+
+        if self.dataset_type.filter_invalid_sites:
+            ht = ht.filter(hl.len(ht.alleles[1]) < MAX_SNV_INDEL_ALLELE_LENGTH)
+
         write(
             ht,
             new_variants_table_path(
