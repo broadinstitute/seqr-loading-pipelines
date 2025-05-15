@@ -1,23 +1,30 @@
 #!/usr/bin/env python3
+import json
 import signal
 import sys
 import time
 
+import hailtop.fs as hfs
+
 from v03_pipeline.lib.logger import get_logger
-from v03_pipeline.lib.misc.clickhouse import get_clickhouse_client
-from v03_pipeline.lib.misc.retry import retry
+from v03_pipeline.lib.misc.clickhouse import (
+    ClickHouseTable,
+    drop_staging_db,
+)
 from v03_pipeline.lib.misc.runs import get_run_ids
+from v03_pipeline.lib.paths import (
+    clickhouse_load_fail_file_path,
+    clickhouse_load_success_file_path,
+    metadata_for_run_path,
+)
 
 logger = get_logger(__name__)
 
-LIVE_CLICKHOUSE_DATABASE = 'seqr'
-STAGING_CLICKHOUSE_DATABASE = 'staging'
 SLEEP_S = 10
 
 
 def signal_handler(*_):
-    client = get_clickhouse_client()
-    drop_staging_tables(client)
+    drop_staging_db()
     sys.exit(0)
 
 
@@ -25,31 +32,76 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 
-@retry(tries=3, delay=5)
-def drop_staging_tables(client):
-    logger.info('Dropping all staging tables')
-    client.command(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
-
-
 def main():
+    reference_genome, dataset_type, run_id = None, None, None
     while True:
         try:
-            successful_pipeline_runs, _ = get_run_ids()
-            for reference_genome, dataset_type in successful_pipeline_runs:
-                num_successful_runs = len(
-                    successful_pipeline_runs[(reference_genome, dataset_type)],
-                )
-                logger.info(
-                    f'{reference_genome.value}/{dataset_type.value} has {num_successful_runs} successful runs',
-                )
-            client = get_clickhouse_client()
-            result = client.execute('SELECT now(), version()')
-            logger.info(
-                f'Successfully connected to Clickhouse: {result[0][0]}, {result[0][1]}',
-            )
+            (
+                successful_pipeline_runs,
+                successful_clickhouse_loads,
+                failed_clickhouse_loads,
+            ) = get_run_ids()
+            for (
+                reference_genome,
+                dataset_type,
+            ), run_ids in successful_pipeline_runs.items():
+                for run_id in run_ids:
+                    if (
+                        run_id
+                        in successful_clickhouse_loads[reference_genome, dataset_type]
+                    ) or (
+                        run_id
+                        in failed_clickhouse_loads[reference_genome, dataset_type]
+                    ):
+                        continue
+
+                # Run metadata
+                with hfs.open(
+                    metadata_for_run_path(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    ),
+                    'r',
+                ) as f:
+                    metadata_json = json.load(f.read())
+                    project_guids = metadata_json['project_guids']
+                    family_guids = metadata_json['family_samples'].keys()
+
+                for clickhouse_table in ClickHouseTable:
+                    if not clickhouse_table.should_load(reference_genome, dataset_type):
+                        continue
+                    clickhouse_table.insert(
+                        reference_genome=reference_genome,
+                        dataset_type=dataset_type,
+                        run_id=run_id,
+                        project_guids=project_guids,
+                        family_guids=family_guids,
+                    )
+
+            with hfs.open(
+                clickhouse_load_success_file_path(
+                    reference_genome,
+                    dataset_type,
+                    run_id,
+                ),
+                'w',
+            ) as f:
+                f.write('')
         except Exception:
             logger.exception('Unhandled Exception')
+            if reference_genome and dataset_type and run_id:
+                with hfs.open(
+                    clickhouse_load_fail_file_path(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    ),
+                    'w',
+                ) as f:
+                    f.write('')
         finally:
+            reference_genome, dataset_type, run_id = None, None, None
             time.sleep(SLEEP_S)
 
 

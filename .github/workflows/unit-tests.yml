@@ -13,26 +13,34 @@ on:
 jobs:
   unit_tests:
     runs-on: ubuntu-latest
-    services:
-      clickhouse:
-        image: clickhouse/clickhouse-server:latest
-        ports:
-          - 9000:9000   # Native client interface
-        options: >-
-          --health-cmd "clickhouse-client --query 'SELECT 1'" 
-          --health-interval 10s 
-          --health-timeout 5s 
-          --health-retries 5
-        env:
-          CLICKHOUSE_USER: default
-          CLICKHOUSE_PASSWORD: testpassword
     strategy:
       matrix:
         python-version: ['3.11']
 
-
     steps:
       - uses: actions/checkout@v3
+      - name: Create ClickHouse Config
+        run: |
+          cat <<EOF > test_config.xml
+          <clickhouse>
+            <user_files_path>/tmp</user_files_path>
+          </clickhouse>
+          EOF
+      - name: Start ClickHouse with mounted config
+        run: |
+          docker run -d --name clickhouse \
+            -v ${{ github.workspace }}/test_config.xml:/etc/clickhouse-server/config.d/config.xml \
+            -v /tmp:/tmp \
+            -p 9000:9000 \
+            -e CLICKHOUSE_USER=clickhouse_test \
+            -e CLICKHOUSE_PASSWORD=clickhouse_test \
+            bitnami/clickhouse:latest
+      - name: Wait for ClickHouse
+        run: |
+          until docker exec clickhouse clickhouse-client --query "SELECT 1"; do
+            echo "Waiting for ClickHouse to start..."
+            sleep 2
+          done
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
@@ -61,8 +69,8 @@ jobs:
           export ACCESS_PRIVATE_REFERENCE_DATASETS=1
           export INCLUDE_PIPELINE_VERSION_IN_PREFIX=1
           export PYSPARK_SUBMIT_ARGS='--driver-memory 8G pyspark-shell'
-          export CLICKHOUSE_SERVICE_HOSTNAME=localhost
-          export CLICKHOUSE_USER=default
-          export CLICKHOUSE_PASSWORD=testpassword
+          export CLICKHOUSE_USER=clickhouse_test
+          export CLICKHOUSE_PASSWORD=clickhouse_test
+          export CLICKHOUSE_DATABASE=test
           nosetests --with-coverage --cover-package v03_pipeline/lib v03_pipeline/lib
           coverage report --omit '*test*' --fail-under=75
