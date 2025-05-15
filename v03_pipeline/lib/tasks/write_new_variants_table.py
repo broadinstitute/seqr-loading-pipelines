@@ -131,7 +131,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
         )
         # Gracefully handle case for on-premises uses
         # where key_ field is not present and migration was not run.
-        if not hasattr('key_', annotations_ht):
+        if not hasattr(annotations_ht, 'key_'):
             annotations_ht = annotations_ht.add_index(name='key_')
             annotations_ht = annotations_ht.annotate_globals(
                 max_key_=(annotations_ht.count() - 1),
