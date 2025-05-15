@@ -1,4 +1,5 @@
 import hail as hl
+import hailtop.fs as hfs
 import luigi.worker
 import pandas as pd
 
@@ -8,10 +9,15 @@ from v03_pipeline.lib.model import (
     SampleType,
 )
 from v03_pipeline.lib.paths import (
+    clickhouse_migration_flag_file_path,
     new_entries_parquet_path,
     pipeline_run_success_file_path,
     project_table_path,
     variant_annotations_table_path,
+)
+from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
+    MIGRATION_RUN_ID,
+    ClickHouseMigrationType,
 )
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_project_entries_to_clickhouse import (
     MigrateAllProjectEntriesToClickHouseTask,
@@ -40,8 +46,6 @@ TEST_PROJECT_TABLES = [
         'R0114_project4',
     ),
 ]
-
-TEST_RUN_ID = 'manual__migration_2024-04-03'
 
 
 class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
@@ -72,7 +76,6 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
         task = MigrateAllProjectEntriesToClickHouseTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
-            run_id=TEST_RUN_ID,
         )
         worker.add(task)
         worker.run()
@@ -82,7 +85,7 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                 new_entries_parquet_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
-                    f'{TEST_RUN_ID}_{sample_type.value}_{project_guid}',
+                    f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                 ),
             )
             export_json = df.to_dict('records')
@@ -90,11 +93,22 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                 export_json[0]['key'],
                 1424,
             )
-        with open(
+
+        with hfs.open(
+            clickhouse_migration_flag_file_path(
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
+                f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
+                ClickHouseMigrationType.PROJECT_ENTRIES,
+            ),
+        ) as f:
+            self.assertEqual(f.read(), '')
+
+        with hfs.open(
             pipeline_run_success_file_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
-                f'{TEST_RUN_ID}_{sample_type.value}_{project_guid}',
+                f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
             ),
         ) as f:
-            self.assertEqual(f.read(), '_ENTRIES_MIGRATION')
+            self.assertEqual(f.read(), '')

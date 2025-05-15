@@ -1,10 +1,12 @@
 import hail as hl
+import hailtop.fs as hfs
 import luigi
 import luigi.util
 
 from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
+    clickhouse_migration_flag_file_path,
     new_variants_table_path,
     pipeline_run_success_file_path,
     variant_annotations_table_path,
@@ -15,6 +17,10 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 )
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
+)
+from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
+    MIGRATION_RUN_ID,
+    ClickHouseMigrationType,
 )
 from v03_pipeline.lib.tasks.exports.write_new_clinvar_variants_parquet import (
     WriteNewClinvarVariantsParquetTask,
@@ -30,8 +36,6 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
 class MigrateVariantsToClickHouseTask(luigi.Task):
-    run_id = luigi.Parameter()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
@@ -41,7 +45,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             pipeline_run_success_file_path(
                 self.reference_genome,
                 self.dataset_type,
-                self.run_id,
+                MIGRATION_RUN_ID,
             ),
         )
 
@@ -72,7 +76,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             new_variants_table_path(
                 self.reference_genome,
                 self.dataset_type,
-                self.run_id,
+                MIGRATION_RUN_ID,
             ),
         )
 
@@ -90,11 +94,13 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     # we could inherit the functionality of these
                     # tasks without calling them directly, but
                     # that was also more code.
+                    run_id=MIGRATION_RUN_ID,
                     sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
                 self.clone(
                     WriteNewVariantsParquetTask,
+                    run_id=MIGRATION_RUN_ID,
                     sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
@@ -102,6 +108,7 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     [
                         self.clone(
                             WriteNewClinvarVariantsParquetTask,
+                            run_id=MIGRATION_RUN_ID,
                             sample_type=SampleType.WGS,
                             callset_path=None,
                         ),
@@ -119,7 +126,14 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
         )
         yield self.dynamic_parquet_tasks
 
-        # Lastly, write the success file with a special note that this
-        # was a migration.
+        path = clickhouse_migration_flag_file_path(
+            self.reference_genome,
+            self.dataset_type,
+            MIGRATION_RUN_ID,
+            ClickHouseMigrationType.VARIANTS,
+        )
+        with hfs.open(path, mode='w') as f:
+            f.write('')
+
         with self.output().open('w') as f:
-            f.write('_VARIANTS_MIGRATION')
+            f.write('')
