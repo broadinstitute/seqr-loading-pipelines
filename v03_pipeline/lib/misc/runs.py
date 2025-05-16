@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import hailtop.fs as hfs
 
+from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.model.dataset_type import DatasetType
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
@@ -10,6 +11,7 @@ from v03_pipeline.lib.paths import (
 )
 
 
+@retry()
 def get_run_ids() -> tuple[defaultdict, defaultdict, defaultdict]:
     successful_pipeline_runs, successful_clickhouse_loads, failed_clickhouse_loads = (
         defaultdict(set),

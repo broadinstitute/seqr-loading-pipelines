@@ -55,6 +55,12 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
+        # Gracefully handle case for on-premises uses
+        # where key_ field is not present and migration was not run.
+        if not hasattr(ht, 'key_'):
+            ht = ht.add_index(name='key_')
+            ht = ht.annotate_globals(max_key_=(ht.count() - 1))
+
         new_variants_ht = hl.read_table(
             new_variants_table_path(
                 self.reference_genome,

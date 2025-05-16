@@ -1,5 +1,3 @@
-import os
-
 import hail as hl
 import luigi.worker
 import pandas as pd
@@ -71,12 +69,10 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
         df = pd.read_parquet(
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh38,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
@@ -198,12 +194,10 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         self.assertTrue(task.output().exists())
         self.assertTrue(task.complete())
         df = pd.read_parquet(
-            os.path.join(
-                new_variants_parquet_path(
-                    ReferenceGenome.GRCh37,
-                    DatasetType.SNV_INDEL,
-                    TEST_RUN_ID,
-                ),
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))

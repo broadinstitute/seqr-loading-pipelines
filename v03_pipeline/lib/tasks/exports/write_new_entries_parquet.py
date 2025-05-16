@@ -18,7 +18,7 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
-from v03_pipeline.lib.tasks.exports.selects import get_entries_export_fields
+from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.updated_reference_dataset_query import (
     UpdatedReferenceDatasetQueryTask,
@@ -108,8 +108,8 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             # rows where a family is not defined should be removed.
             ht = ht.explode(ht.family_entries)
             ht = ht.filter(hl.is_defined(ht.family_entries))
-
             ht = ht.key_by()
+            ht = ht.select_globals()
             ht = ht.select(
                 **get_entries_export_fields(
                     ht,
