@@ -146,13 +146,17 @@ class TableNameBuilder:
 
 def logged_query(query, params=None):
     client = get_clickhouse_client()
-    sanitized_query = query.replace(
-        Env.CLICKHOUSE_GCS_HMAC_KEY,
-        REDACTED,
-    ).replace(
-        Env.CLICKHOUSE_GCS_HMAC_SECRET,
-        REDACTED,
-    )
+    sanitized_query = query
+    if Env.CLICKHOUSE_GCS_HMAC_KEY:
+        sanitized_query = query.replace(
+            Env.CLICKHOUSE_GCS_HMAC_KEY,
+            REDACTED,
+        )
+    if Env.CLICKHOUSE_GCS_HMAC_SECRET:
+        sanitized_query = query.replace(
+            Env.CLICKHOUSE_GCS_HMAC_SECRET,
+            REDACTED,
+        )
     logger.info(f'Executing query: {sanitized_query} | Params: {params}')
     return client.execute(query, params)
 
