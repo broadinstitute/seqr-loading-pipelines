@@ -143,11 +143,15 @@ class TableNameBuilder:
         return f"file('{path}', 'Parquet')"
 
 
+def logged_query(query, params=None):
+    client = get_clickhouse_client()
+    logger.info(f'Executing query: {query} | Params: {params}')
+    return client.execute(query, params)
+
+
 @retry()
 def drop_staging_db():
-    logger.info('Dropping all staging tables')
-    client = get_clickhouse_client()
-    client.execute(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
+    logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
 
 def dst_key_exists(
@@ -155,7 +159,6 @@ def dst_key_exists(
     clickhouse_table: ClickHouseTable,
     key: int | str,
 ) -> int:
-    client = get_clickhouse_client()
     query = f"""
         SELECT EXISTS (
             SELECT 1
@@ -163,15 +166,14 @@ def dst_key_exists(
             WHERE {clickhouse_table.key_field} = %(key)s
         )
         """
-    return client.execute(query, {'key': key})[0][0]
+    return logged_query(query, {'key': key})[0][0]
 
 
 def max_src_key(
     table_name_builder: TableNameBuilder,
     clickhouse_table: ClickHouseTable,
 ) -> int:
-    client = get_clickhouse_client()
-    return client.execute(
+    return logged_query(
         f"""
         SELECT max({clickhouse_table.key_field}) FROM {table_name_builder.src_table(clickhouse_table)}
         """,
@@ -181,8 +183,7 @@ def max_src_key(
 def create_staging_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
-    client = get_clickhouse_client()
-    client.execute(
+    logged_query(
         f"""
         CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
         """,
@@ -191,7 +192,7 @@ def create_staging_entries(
         ClickHouseTable.ENTRIES,
         ClickHouseTable.GT_STATS,
     ]:
-        client.execute(
+        logged_query(
             f"""
             CREATE
             TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
@@ -203,7 +204,7 @@ def create_staging_entries(
     # the reference script: https://github.com/ClickHouse/examples/blob/cc4287fe759e67fd7af0ab3a5a79b42ac0c5a969/large_data_loads/src/worker.py#L523
     # CREATE MATERIALIZED VIEW AS does not work for the incremental view, and requires manipulating
     # the source view's create statement.
-    create_view_statement = client.execute(
+    create_view_statement = logged_query(
         """
         SELECT create_table_query FROM system.tables
         WHERE
@@ -217,7 +218,7 @@ def create_staging_entries(
             .replace('`', ''),
         },
     )[0][0]
-    client.execute(
+    logged_query(
         create_view_statement.replace(
             Env.CLICKHOUSE_DATABASE,
             STAGING_CLICKHOUSE_DATABASE,
@@ -232,7 +233,6 @@ def stage_existing_project_partitions(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
 ):
-    client = get_clickhouse_client()
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
         ClickHouseTable.GT_STATS,
@@ -240,7 +240,7 @@ def stage_existing_project_partitions(
         for project_guid in project_guids:
             # Note that ClickHouse successfully handles the case where the project
             # does not already exist in the dst table.  We simply attach an empty partition!
-            client.execute(
+            logged_query(
                 f"""
                 ALTER TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
                 ATTACH PARTITION %(project_guid)s FROM {table_name_builder.dst_table(clickhouse_table)}
@@ -253,8 +253,7 @@ def delete_existing_families(
     table_name_builder: TableNameBuilder,
     family_guids: list[str],
 ) -> None:
-    client = get_clickhouse_client()
-    client.execute(
+    logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
         SELECT COLUMNS('.*') EXCEPT(sign), -1 as sign
@@ -268,8 +267,7 @@ def delete_existing_families(
 def insert_new_entries(
     table_name_builder: TableNameBuilder,
 ) -> None:
-    client = get_clickhouse_client()
-    client.execute(
+    logged_query(
         f"""
         INSERT INTO {table_name_builder.staging_dst_table(ClickHouseTable.ENTRIES)}
         SELECT *
@@ -283,7 +281,7 @@ def insert_new_entries(
         ClickHouseTable.ENTRIES,
         ClickHouseTable.GT_STATS,
     ]:
-        client.execute(
+        logged_query(
             f"""
             OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)} FINAL
             """,
@@ -294,13 +292,12 @@ def replace_project_partitions(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
 ) -> None:
-    client = get_clickhouse_client()
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
         ClickHouseTable.GT_STATS,
     ]:
         for project_guid in project_guids:
-            client.execute(
+            logged_query(
                 f"""
                 ALTER TABLE {table_name_builder.dst_table(clickhouse_table)}
                 REPLACE PARTITION %(project_guid)s FROM {table_name_builder.staging_dst_table(clickhouse_table)}
@@ -313,8 +310,7 @@ def refresh_dictionary(
     table_name_builder: TableNameBuilder,
     clickhouse_dictionary: ClickHouseDictionary,
 ) -> None:
-    client = get_clickhouse_client()
-    client.execute(
+    logged_query(
         f"""
         SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(clickhouse_dictionary)}
         """,
@@ -350,8 +346,7 @@ def direct_insert(
         msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since {clickhouse_table.key_field}={key} already exists'
         logger.info(msg)
         return
-    client = get_clickhouse_client()
-    client.execute(
+    logged_query(
         f"""
         INSERT INTO {table_name_builder.dst_table(clickhouse_table)}
         SELECT {clickhouse_table.select_fields}
