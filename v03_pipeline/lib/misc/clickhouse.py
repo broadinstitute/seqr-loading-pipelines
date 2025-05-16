@@ -28,6 +28,7 @@ logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
 KEY = 'key'
+REDACTED = 'REDACTED'
 STAGING_CLICKHOUSE_DATABASE = 'staging'
 VARIANT_ID = 'variantId'
 
@@ -147,10 +148,10 @@ def logged_query(query, params=None):
     client = get_clickhouse_client()
     sanitized_query = query.replace(
         Env.CLICKHOUSE_GCS_HMAC_KEY,
-        'REDACTED',
+        REDACTED,
     ).replace(
         Env.CLICKHOUSE_GCS_HMAC_SECRET,
-        'REDACTED',
+        REDACTED,
     )
     logger.info(f'Executing query: {sanitized_query} | Params: {params}')
     return client.execute(query, params)
