@@ -294,7 +294,7 @@ def direct_insert(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
-    *_,
+    **_,
 ) -> None:
     table_name_builder = TableNameBuilder(
         reference_genome,
@@ -336,7 +336,7 @@ def atomic_entries_insert(
     run_id: str,
     project_guids: list[str],
     family_guids: list[str],
-    *_,
+    **_,
 ) -> None:
     table_name_builder = TableNameBuilder(
         reference_genome,
