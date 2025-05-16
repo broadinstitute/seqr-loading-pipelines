@@ -67,7 +67,7 @@ def main():
                         ),
                         'r',
                     ) as f:
-                        metadata_json = json.load(f.read())
+                        metadata_json = json.load(f)
                         project_guids = metadata_json['project_guids']
                         family_guids = metadata_json['family_samples'].keys()
 
