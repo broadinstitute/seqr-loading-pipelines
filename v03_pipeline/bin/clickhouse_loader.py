@@ -69,7 +69,7 @@ def main():
                     ) as f:
                         metadata_json = json.load(f)
                         project_guids = metadata_json['project_guids']
-                        family_guids = metadata_json['family_samples'].keys()
+                        family_guids = list(metadata_json['family_samples'].keys())
 
                     for clickhouse_table in ClickHouseTable:
                         if not clickhouse_table.should_load(
