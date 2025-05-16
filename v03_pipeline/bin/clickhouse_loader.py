@@ -72,7 +72,7 @@ def main():
                     ) as f:
                         metadata_json = json.load(f.read())
                         project_guids = metadata_json['project_guids']
-                        family_guids = metadata_json['family_samples'].keys()
+                        family_guids = list(metadata_json['family_samples'].keys())
                         migration_type = (
                             ClickHouseMigrationType(metadata_json['migration_type'])
                             if 'migration_type' in metadata_json

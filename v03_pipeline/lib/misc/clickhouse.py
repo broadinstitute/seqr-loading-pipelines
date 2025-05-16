@@ -1,3 +1,4 @@
+import functools
 import os
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -103,7 +104,9 @@ class ClickHouseTable(StrEnum):
     @property
     def insert(self) -> Callable:
         return (
-            direct_insert if self != ClickHouseTable.ENTRIES else atomic_entries_insert
+            functools.partial(direct_insert, clickhouse_table=self)
+            if self != ClickHouseTable.ENTRIES
+            else functools.partial(atomic_entries_insert, _clickhouse_table=self)
         )
 
 
@@ -324,7 +327,7 @@ def direct_insert(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
     run_id: str,
-    *_,
+    **_,
 ) -> None:
     table_name_builder = TableNameBuilder(
         reference_genome,
@@ -366,7 +369,7 @@ def atomic_entries_insert(
     run_id: str,
     project_guids: list[str],
     family_guids: list[str],
-    *_,
+    **_,
 ) -> None:
     table_name_builder = TableNameBuilder(
         reference_genome,
