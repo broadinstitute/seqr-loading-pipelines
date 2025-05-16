@@ -65,7 +65,9 @@ def fetch_run_metadata(
 
 @retry()
 def write_success_file(
-    reference_genome: ReferenceGenome, dataset_type: DatasetType, run_id: str,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
 ):
     with hfs.open(
         clickhouse_load_success_file_path(
