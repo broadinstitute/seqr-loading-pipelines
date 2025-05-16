@@ -11,7 +11,9 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseTable,
     drop_staging_db,
 )
+from v03_pipeline.lib.misc.retry import retry
 from v03_pipeline.lib.misc.runs import get_run_ids
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.paths import (
     clickhouse_load_fail_file_path,
     clickhouse_load_success_file_path,
@@ -33,6 +35,49 @@ def signal_handler(*_):
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
+
+
+@retry()
+def fetch_run_metadata(
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+    run_id: str,
+) -> tuple[ClickHouseMigrationType, list[str], list[str]]:
+    # Run metadata
+    with hfs.open(
+        metadata_for_run_path(
+            reference_genome,
+            dataset_type,
+            run_id,
+        ),
+        'r',
+    ) as f:
+        metadata_json = json.load(f.read())
+        migration_type = (
+            ClickHouseMigrationType(metadata_json['migration_type'])
+            if 'migration_type' in metadata_json
+            else None
+        )
+        project_guids = metadata_json['project_guids']
+        family_guids = list(metadata_json['family_samples'].keys())
+    return migration_type, project_guids, family_guids
+
+
+@retry()
+def write_success_file(
+    reference_genome: ReferenceGenome, dataset_type: DatasetType, run_id: str,
+):
+    with hfs.open(
+        clickhouse_load_success_file_path(
+            reference_genome,
+            dataset_type,
+            run_id,
+        ),
+        'w',
+    ) as f:
+        f.write('')
+    msg = f'Successfully loaded {reference_genome.value}/{dataset_type.value}/{run_id}'
+    logger.info(msg)
 
 
 def main():
@@ -60,25 +105,11 @@ def main():
 
                     msg = f'Attempting load of run: {reference_genome.value}/{dataset_type.value}/{run_id}'
                     logger.info(msg)
-
-                    # Run metadata
-                    with hfs.open(
-                        metadata_for_run_path(
-                            reference_genome,
-                            dataset_type,
-                            run_id,
-                        ),
-                        'r',
-                    ) as f:
-                        metadata_json = json.load(f.read())
-                        project_guids = metadata_json['project_guids']
-                        family_guids = list(metadata_json['family_samples'].keys())
-                        migration_type = (
-                            ClickHouseMigrationType(metadata_json['migration_type'])
-                            if 'migration_type' in metadata_json
-                            else None
-                        )
-
+                    migration_type, project_guids, family_guids = fetch_run_metadata(
+                        reference_genome,
+                        dataset_type,
+                        run_id,
+                    )
                     for clickhouse_table in ClickHouseTable:
                         if not clickhouse_table.should_load(
                             reference_genome,
@@ -93,17 +124,7 @@ def main():
                             project_guids=project_guids,
                             family_guids=family_guids,
                         )
-                    with hfs.open(
-                        clickhouse_load_success_file_path(
-                            reference_genome,
-                            dataset_type,
-                            run_id,
-                        ),
-                        'w',
-                    ) as f:
-                        f.write('')
-                    msg = f'Successfully loaded {reference_genome.value}/{dataset_type.value}/{run_id}'
-                    logger.info(msg)
+                    write_success_file(reference_genome, dataset_type, run_id)
         except Exception:
             logger.exception('Unhandled Exception')
             if reference_genome and dataset_type and run_id:
