@@ -52,7 +52,7 @@ def fetch_run_metadata(
         ),
         'r',
     ) as f:
-        metadata_json = json.load(f.read())
+        metadata_json = json.load(f)
         migration_type = (
             ClickHouseMigrationType(metadata_json['migration_type'])
             if 'migration_type' in metadata_json
