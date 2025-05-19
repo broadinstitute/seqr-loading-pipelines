@@ -144,8 +144,8 @@ class TableNameBuilder:
         return f"file('{path}', 'Parquet')"
 
 
-def logged_query(query, params=None):
-    client = get_clickhouse_client()
+def logged_query(query, params=None, increased_timeout: bool = False):
+    client = get_clickhouse_client(increased_timeout)
     sanitized_query = query
     if Env.CLICKHOUSE_GCS_HMAC_KEY:
         sanitized_query = sanitized_query.replace(
@@ -297,6 +297,9 @@ def insert_new_entries(
             f"""
             OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)} FINAL
             """,
+            # For OPTIMIZE TABLE queries, server is known to not respond with output
+            # or progress to the client.
+            increased_timeout=True,
         )
 
 
@@ -407,10 +410,11 @@ def atomic_entries_insert(
     drop_staging_db()
 
 
-def get_clickhouse_client() -> Client:
+def get_clickhouse_client(increased_timeout: bool = False) -> Client:
     return Client(
         host=Env.CLICKHOUSE_SERVICE_HOSTNAME,
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
+        **{'send_receive_timeout': 3600} if increased_timeout else {},
     )
