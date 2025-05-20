@@ -40,8 +40,8 @@ class ClickHouseTable(StrEnum):
     KEY_LOOKUP = 'key_lookup'
     TRANSCRIPTS = 'transcripts'
     ENTRIES = 'entries'
+    PROJECT_GT_STATS = 'project_gt_stats'
     GT_STATS = 'gt_stats'
-    ENTRIES_TO_GT_STATS = 'entries_to_gt_stats'
 
     @property
     def src_path_fn(self) -> Callable:
@@ -82,8 +82,6 @@ class ClickHouseTable(StrEnum):
             raise ValueError(
                 msg,
             )
-        if self in {ClickHouseTable.GT_STATS, ClickHouseTable.ENTRIES_TO_GT_STATS}:
-            return False
         if self == ClickHouseTable.CLINVAR:
             return (
                 ReferenceDataset.clinvar
@@ -92,7 +90,13 @@ class ClickHouseTable(StrEnum):
                     dataset_type,
                 )
             )
-        return True
+        return self in {
+            ClickHouseTable.ANNOTATIONS_DISK,
+            ClickHouseTable.ANNOTATIONS_MEMORY,
+            ClickHouseTable.KEY_LOOKUP,
+            ClickHouseTable.TRANSCRIPTS,
+            ClickHouseTable.ENTRIES,
+        }
 
     @property
     def key_field(self):
@@ -115,7 +119,12 @@ class ClickHouseDictionary(StrEnum):
     GT_STATS_DICT = 'gt_stats_dict'
 
 
-ClickHouseEntity = ClickHouseDictionary | ClickHouseTable
+class ClickHouseMaterializedView(StrEnum):
+    ENTRIES_TO_PROJECT_GT_STATS = 'entries_to_project_gt_stats'
+    PROJECT_GT_STATS_TO_GT_STATS = 'project_gt_stats_to_gt_stats'
+
+
+ClickHouseEntity = ClickHouseDictionary | ClickHouseTable | ClickHouseMaterializedView
 
 
 @dataclass
@@ -202,7 +211,7 @@ def create_staging_entries(
     )
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
-        ClickHouseTable.GT_STATS,
+        ClickHouseTable.PROJECT_GT_STATS,
     ]:
         logged_query(
             f"""
@@ -225,7 +234,9 @@ def create_staging_entries(
         """,
         {
             'database': Env.CLICKHOUSE_DATABASE,
-            'name': table_name_builder.dst_table(ClickHouseTable.ENTRIES_TO_GT_STATS)
+            'name': table_name_builder.dst_table(
+                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS
+            )
             .split('.')[1]
             .replace('`', ''),
         },
@@ -247,7 +258,7 @@ def stage_existing_project_partitions(
 ):
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
-        ClickHouseTable.GT_STATS,
+        ClickHouseTable.PROJECT_GT_STATS,
     ]:
         for project_guid in project_guids:
             # Note that ClickHouse successfully handles the case where the project
@@ -291,7 +302,7 @@ def insert_new_entries(
     # application layer free of eventual consistency bugs.
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
-        ClickHouseTable.GT_STATS,
+        ClickHouseTable.PROJECT_GT_STATS,
     ]:
         logged_query(
             f"""
@@ -309,7 +320,7 @@ def replace_project_partitions(
 ) -> None:
     for clickhouse_table in [
         ClickHouseTable.ENTRIES,
-        ClickHouseTable.GT_STATS,
+        ClickHouseTable.PROJECT_GT_STATS,
     ]:
         for project_guid in project_guids:
             logged_query(
@@ -321,14 +332,20 @@ def replace_project_partitions(
             )
 
 
-def refresh_dictionary(
+def refresh_materialized_view(
     table_name_builder: TableNameBuilder,
-    clickhouse_dictionary: ClickHouseDictionary,
+    clickhouse_materialized_view: ClickHouseMaterializedView,
 ) -> None:
     logged_query(
         f"""
-        SYSTEM RELOAD DICTIONARY {table_name_builder.dst_table(clickhouse_dictionary)}
+        SYSTEM REFRESH VIEW {table_name_builder.dst_table(clickhouse_materialized_view)}
         """,
+    )
+    logged_query(
+        # REFRESH VIEW returns immediately, requiring a WAIT.
+        f"""
+        SYSTEM WAIT VIEW {table_name_builder.dst_table(clickhouse_materialized_view)}
+        """
     )
 
 
@@ -403,9 +420,9 @@ def atomic_entries_insert(
         table_name_builder,
         project_guids,
     )
-    refresh_dictionary(
+    refresh_materialized_view(
         table_name_builder,
-        ClickHouseDictionary.GT_STATS_DICT,
+        ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS,
     )
     drop_staging_db()
 

@@ -8,6 +8,7 @@ import pyarrow.parquet as pq
 from v03_pipeline.lib.misc.clickhouse import (
     STAGING_CLICKHOUSE_DATABASE,
     ClickHouseDictionary,
+    ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
     atomic_entries_insert,
@@ -18,7 +19,7 @@ from v03_pipeline.lib.misc.clickhouse import (
     get_clickhouse_client,
     insert_new_entries,
     max_src_key,
-    refresh_dictionary,
+    refresh_materialized_view,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -82,7 +83,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
             (
                 `project_guid` String,
                 `key` UInt32,
@@ -96,13 +97,36 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_gt_stats`
-            TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            (
+                `key` UInt32,
+                `ref_samples` AggregateFunction(sum, Int32),
+            )
+            ENGINE = MergeTree
+            ORDER BY (key)
+            SETTINGS index_granularity = 8192
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_project_gt_stats`
+            TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
             AS SELECT
                 project_guid,
                 key,
                 sumState(toInt32(arrayCount(s -> (s.gt = 'REF'), calls) * sign)) AS ref_samples
             FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
+            GROUP BY project_guid, key
+            """,
+        )
+        client.execute(
+            f"""
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats_to_gt_stats`
+            REFRESH EVERY 1 YEAR TO TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            AS SELECT
+                key,
+                sumMerge(ref_samples),
+            FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY project_guid, key
             """,
         )
@@ -143,11 +167,11 @@ class ClickhouseTest(MockedDatarootTestCase):
             SOURCE(
                 CLICKHOUSE(
                     USER {Env.CLICKHOUSE_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
-                    QUERY "SELECT key, sumMerge(ref_samples) FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats` GROUP BY key"
+                    SOURCE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`"
                 )
             )
             LIFETIME(0)
-            LAYOUT(FLAT(MAX_ARRAY_SIZE 500000000));
+            LAYOUT(FLAT(MAX_ARRAY_SIZE 10000));
             """,
         )
         base_path = runs_path(
@@ -462,7 +486,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT key, sumMerge(ref_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/gt_stats`
+            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY key
             """,
         )
@@ -478,7 +502,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT key, sumMerge(ref_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/gt_stats`
+            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY key
             """,
         )
@@ -555,7 +579,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT key, sumMerge(ref_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/gt_stats`
+            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY key
             """,
         )
@@ -608,19 +632,19 @@ class ClickhouseTest(MockedDatarootTestCase):
                 (5, 'project_c', 'family_c4', 133456789, [('sample_c9', 'HOM')], 1),
             ],
         )
-        refresh_dictionary(
+        refresh_materialized_view(
             table_name_builder,
-            ClickHouseDictionary.GT_STATS_DICT,
+            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS,
         )
-        gt_stats_dict = client.execute(
+        gt_stats = client.execute(
             f"""
             SELECT *
             FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             """,
         )
         self.assertCountEqual(
-            gt_stats_dict,
+            gt_stats,
             [
                 (0, 5),
                 (1, 0),
@@ -705,15 +729,15 @@ class ClickhouseTest(MockedDatarootTestCase):
             ['family_d1', 'family_d2'],
         )
         client = get_clickhouse_client()
-        gt_stats_dict = client.execute(
+        gt_stats = client.execute(
             f"""
             SELECT *
             FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             """,
         )
         self.assertCountEqual(
-            gt_stats_dict,
+            gt_stats,
             [
                 (0, 2),
                 (3, 1),
