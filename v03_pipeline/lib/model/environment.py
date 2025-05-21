@@ -33,7 +33,7 @@ CLICKHOUSE_SERVICE_HOSTNAME = os.environ.get(
     'localhost',
 )
 CLICKHOUSE_SERVICE_PORT = int(os.environ.get('CLICKHOUSE_SERVICE_PORT', '9000'))
-CLICKHOUSE_USER = os.environ.get('CLICKHOUSE_USER', 'clickhouse')
+CLICKHOUSE_USER = os.environ.get('CLICKHOUSE_USER', 'default')
 HAIL_BACKEND_SERVICE_HOSTNAME = os.environ.get(
     'HAIL_BACKEND_SERVICE_HOSTNAME',
     'hail-search',

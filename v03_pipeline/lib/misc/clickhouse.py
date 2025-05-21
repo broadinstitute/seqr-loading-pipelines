@@ -1,8 +1,10 @@
 import functools
 import os
+import hashlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+
 
 from clickhouse_driver import Client
 
@@ -120,8 +122,8 @@ class ClickHouseDictionary(StrEnum):
 
 
 class ClickHouseMaterializedView(StrEnum):
-    ENTRIES_TO_PROJECT_GT_STATS = 'entries_to_project_gt_stats'
-    PROJECT_GT_STATS_TO_GT_STATS = 'project_gt_stats_to_gt_stats'
+    ENTRIES_TO_PROJECT_GT_STATS_MV = 'entries_to_project_gt_stats_mv'
+    PROJECT_GT_STATS_TO_GT_STATS_MV = 'project_gt_stats_to_gt_stats_mv'
 
 
 ClickHouseEntity = ClickHouseDictionary | ClickHouseTable | ClickHouseMaterializedView
@@ -133,11 +135,17 @@ class TableNameBuilder:
     dataset_type: DatasetType
     run_id: str
 
+    @property
+    def run_id_hash(self):
+        sha256 = hashlib.sha256()
+        sha256.update(self.run_id.encode())
+        return sha256.hexdigest()[:8]
+
     def dst_table(self, clickhouse_entity: ClickHouseEntity):
         return f'{Env.CLICKHOUSE_DATABASE}.`{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_entity.value}`'
 
     def staging_dst_table(self, clickhouse_table: ClickHouseTable):
-        return f'{STAGING_CLICKHOUSE_DATABASE}.`{self.run_id}/{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_table.value}`'
+        return f'{STAGING_CLICKHOUSE_DATABASE}.`{self.run_id_hash}/{self.reference_genome.value}/{self.dataset_type.value}/{clickhouse_table.value}`'
 
     def src_table(self, clickhouse_table: ClickHouseTable):
         path = os.path.join(
@@ -201,7 +209,7 @@ def max_src_key(
     )[0][0]
 
 
-def create_staging_entries(
+def create_staging_entities(
     table_name_builder: TableNameBuilder,
 ) -> None:
     logged_query(
@@ -221,35 +229,44 @@ def create_staging_entries(
             """,
         )
 
-    # Special system logic for the materialized view sourced from
+    # Special system logic for the materialized view & dictionary sourced from
     # the reference script: https://github.com/ClickHouse/examples/blob/cc4287fe759e67fd7af0ab3a5a79b42ac0c5a969/large_data_loads/src/worker.py#L523
     # CREATE MATERIALIZED VIEW AS does not work for the incremental view, and requires manipulating
     # the source view's create statement.
-    create_view_statement = logged_query(
-        """
-        SELECT create_table_query FROM system.tables
-        WHERE
-        database = %(database)s
-        AND name = %(name)s
-        """,
-        {
-            'database': Env.CLICKHOUSE_DATABASE,
-            'name': table_name_builder.dst_table(
-                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS
+    for entity, replace_count in [
+        # NOTE: the staging materialized view source is a staging table.
+        # e.g CREATE t_mv TO t_a as SELECT * FROM t_b
+        # However, the dictionary table source is a production table.
+        (ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV, 3),
+        (ClickHouseDictionary.GT_STATS_DICT, 1),
+    ]:
+        create_view_statement = logged_query(
+            """
+            SELECT create_table_query FROM system.tables
+            WHERE
+            database = %(database)s
+            AND name = %(name)s
+            """,
+            {
+                'database': Env.CLICKHOUSE_DATABASE,
+                'name': table_name_builder.dst_table(entity)
+                .split('.')[1]
+                .replace('`', ''),
+            },
+        )[0][0]
+        logged_query(
+            create_view_statement.replace(
+                Env.CLICKHOUSE_DATABASE,
+                STAGING_CLICKHOUSE_DATABASE,
+                replace_count,
             )
-            .split('.')[1]
-            .replace('`', ''),
-        },
-    )[0][0]
-    logged_query(
-        create_view_statement.replace(
-            Env.CLICKHOUSE_DATABASE,
-            STAGING_CLICKHOUSE_DATABASE,
-        ).replace(
-            table_name_builder.reference_genome,
-            f'{table_name_builder.run_id}/{table_name_builder.reference_genome.value}',
-        ),
-    )
+            .replace(
+                table_name_builder.reference_genome,
+                f'{table_name_builder.run_id_hash}/{table_name_builder.reference_genome.value}',
+                replace_count,
+            )
+            .replace("'[HIDDEN]'", Env.CLICKHOUSE_PASSWORD or "''"),
+        )
 
 
 def stage_existing_project_partitions(
@@ -345,7 +362,29 @@ def refresh_materialized_view(
         # REFRESH VIEW returns immediately, requiring a WAIT.
         f"""
         SYSTEM WAIT VIEW {table_name_builder.dst_table(clickhouse_materialized_view)}
-        """
+        """,
+    )
+
+
+def reload_staging_dictionary(
+    table_name_builder: TableNameBuilder,
+    clickhouse_dictionary: ClickHouseDictionary,
+) -> None:
+    logged_query(
+        f"""
+        SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(clickhouse_dictionary)}
+        """,
+    )
+
+
+def exchange_staging_production_dictionaries(
+    table_name_builder: TableNameBuilder,
+    clickhouse_dictionary: ClickHouseDictionary,
+) -> None:
+    logged_query(
+        f"""
+        EXCHANGE DICTIONARIES {table_name_builder.staging_dst_table(clickhouse_dictionary)} AND {table_name_builder.dst_table(clickhouse_dictionary)}
+        """,
     )
 
 
@@ -404,7 +443,7 @@ def atomic_entries_insert(
         run_id,
     )
     drop_staging_db()
-    create_staging_entries(table_name_builder)
+    create_staging_entities(table_name_builder)
     stage_existing_project_partitions(
         table_name_builder,
         project_guids,
@@ -422,7 +461,15 @@ def atomic_entries_insert(
     )
     refresh_materialized_view(
         table_name_builder,
-        ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS,
+        ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
+    )
+    reload_staging_dictionary(
+        table_name_builder,
+        ClickHouseDictionary.GT_STATS_DICT,
+    )
+    exchange_staging_production_dictionaries(
+        table_name_builder,
+        ClickHouseDictionary.GT_STATS_DICT,
     )
     drop_staging_db()
 

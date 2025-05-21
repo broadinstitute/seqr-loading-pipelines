@@ -7,12 +7,11 @@ import pyarrow.parquet as pq
 
 from v03_pipeline.lib.misc.clickhouse import (
     STAGING_CLICKHOUSE_DATABASE,
-    ClickHouseDictionary,
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
     atomic_entries_insert,
-    create_staging_entries,
+    create_staging_entities,
     delete_existing_families,
     direct_insert,
     dst_key_exists,
@@ -42,12 +41,12 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         client.execute(
             f"""
-            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
             """,
         )
         client.execute(
             f"""
-            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
             """,
         )
         client.execute(
@@ -62,6 +61,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 `project_guid` LowCardinality(String),
                 `family_guid` String,
                 `xpos` UInt64 CODEC(Delta(8), ZSTD(1)),
+                `sample_type` Enum8('WES' = 0, 'WGS' = 1),
                 `calls` Array(
                     Tuple(
                         sampleId String,
@@ -87,12 +87,13 @@ class ClickhouseTest(MockedDatarootTestCase):
             (
                 `project_guid` String,
                 `key` UInt32,
-                `ref_samples` AggregateFunction(sum, Int32),
+                `sample_type` Enum8('WES' = 0, 'WGS' = 1),
+                `het_samples` Int32,
+                `hom_samples` Int32,
             )
-            ENGINE = AggregatingMergeTree
+            ENGINE = SummingMergeTree
             PARTITION BY project_guid
-            ORDER BY (project_guid, key)
-            SETTINGS index_granularity = 8192
+            ORDER BY (project_guid, key, sample_type)
             """,
         )
         client.execute(
@@ -100,34 +101,37 @@ class ClickhouseTest(MockedDatarootTestCase):
             CREATE TABLE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             (
                 `key` UInt32,
-                `ref_samples` AggregateFunction(sum, Int32),
+                `ac_wes` UInt32,
+                `ac_wgs` UInt32,
             )
-            ENGINE = MergeTree
+            ENGINE = SummingMergeTree
             ORDER BY (key)
-            SETTINGS index_granularity = 8192
             """,
         )
         client.execute(
             f"""
-            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_project_gt_stats`
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries_to_project_gt_stats_mv`
             TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
             AS SELECT
                 project_guid,
                 key,
-                sumState(toInt32(arrayCount(s -> (s.gt = 'REF'), calls) * sign)) AS ref_samples
+                sample_type,
+                sum(toInt32(arrayCount(s -> (s.gt = 'HET'), calls) * sign)) AS het_samples,
+                sum(toInt32(arrayCount(s -> (s.gt = 'HOM'), calls) * sign)) AS hom_samples
             FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`
-            GROUP BY project_guid, key
+            GROUP BY project_guid, key, sample_type
             """,
         )
         client.execute(
             f"""
-            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats_to_gt_stats`
-            REFRESH EVERY 1 YEAR TO TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats_to_gt_stats_mv`
+            REFRESH EVERY 1 YEAR TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             AS SELECT
                 key,
-                sumMerge(ref_samples),
+                sumIf(het_samples * 1 + hom_samples * 2, sample_type = 'WES') AS ac_wes,
+                sumIf(het_samples * 1 + hom_samples * 2, sample_type = 'WGS') AS ac_wgs
             FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY project_guid, key
+            GROUP BY key
             """,
         )
         client.execute(
@@ -158,20 +162,21 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
         client.execute(
             f"""
-            CREATE DICTIONARY IF NOT EXISTS {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
             (
-                key UInt32,
-                AC UInt32,
+                `key` UInt32,
+                `ac_het` UInt16,
+                `ac_hom` UInt16
             )
             PRIMARY KEY key
             SOURCE(
                 CLICKHOUSE(
                     USER {Env.CLICKHOUSE_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
-                    SOURCE {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`"
+                    QUERY "SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`"
                 )
             )
             LIFETIME(0)
-            LAYOUT(FLAT(MAX_ARRAY_SIZE 10000));
+            LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
             """,
         )
         base_path = runs_path(
@@ -185,8 +190,13 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         client.execute(
             f"""
-            DROP DATABASE {Env.CLICKHOUSE_DATABASE};
-        """,
+            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+            """,
+        )
+        client.execute(
+            f"""
+            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+            """,
         )
 
     def test_get_clickhouse_client(self):
@@ -447,25 +457,132 @@ class ClickhouseTest(MockedDatarootTestCase):
         client.execute(
             f'INSERT INTO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries` VALUES',
             [
-                (0, 'project_a', 'family_a1', 123456789, [('sample_a1', 'REF')], 1),
-                (1, 'project_a', 'family_a2', 123456789, [('sample_a2', 'HET')], 1),
-                (2, 'project_a', 'family_a3', 133456789, [('sample_a3', 'HOM')], 1),
-                (3, 'project_a', 'family_a4', 133456789, [('sample_a4', 'REF')], 1),
+                (
+                    0,
+                    'project_a',
+                    'family_a1',
+                    123456789,
+                    'WES',
+                    [('sample_a1', 'HOM')],
+                    1,
+                ),
+                (
+                    1,
+                    'project_a',
+                    'family_a2',
+                    123456789,
+                    'WGS',
+                    [('sample_a2', 'HET')],
+                    1,
+                ),
+                (
+                    2,
+                    'project_a',
+                    'family_a3',
+                    133456789,
+                    'WGS',
+                    [('sample_a3', 'HOM')],
+                    1,
+                ),
+                (
+                    3,
+                    'project_a',
+                    'family_a4',
+                    133456789,
+                    'WES',
+                    [('sample_a4', 'REF')],
+                    1,
+                ),
                 (
                     4,
                     'project_a',
                     'family_a5',
                     133456789,
-                    [('sample_a5', 'REF'), ('sample_a6', 'REF'), ('sample_a7', 'REF')],
+                    'WES',
+                    [('sample_a5', 'REF'), ('sample_a6', 'HET'), ('sample_a7', 'REF')],
                     1,
                 ),
-                (0, 'project_b', 'family_b1', 123456789, [('sample_b4', 'REF')], 1),
-                (1, 'project_b', 'family_b2', 123456789, [('sample_b5', 'HET')], 1),
-                (3, 'project_b', 'family_b3', 133456789, [('sample_b6', 'HOM')], 1),
-                (0, 'project_c', 'family_c1', 123456789, [('sample_c7', 'REF')], 1),
-                (3, 'project_c', 'family_c2', 123456789, [('sample_c8', 'REF')], 1),
-                (4, 'project_c', 'family_c3', 133456789, [('sample_c9', 'HOM')], 1),
-                (5, 'project_c', 'family_c4', 133456789, [('sample_c9', 'HOM')], 1),
+                (
+                    4,
+                    'project_a',
+                    'family_a6',
+                    133456789,
+                    'WGS',
+                    [('sample_a8', 'HOM')],
+                    1,
+                ),
+                (
+                    0,
+                    'project_b',
+                    'family_b1',
+                    123456789,
+                    'WES',
+                    [('sample_b4', 'REF')],
+                    1,
+                ),
+                (
+                    1,
+                    'project_b',
+                    'family_b2',
+                    123456789,
+                    'WES',
+                    [('sample_b5', 'HET')],
+                    1,
+                ),
+                (
+                    3,
+                    'project_b',
+                    'family_b3',
+                    133456789,
+                    'WES',
+                    [('sample_b6', 'HOM')],
+                    1,
+                ),
+                (
+                    4,
+                    'project_b',
+                    'family_b3',
+                    133456789,
+                    'WES',
+                    [('sample_b6', 'HOM')],
+                    1,
+                ),
+                (
+                    0,
+                    'project_c',
+                    'family_c1',
+                    123456789,
+                    'WES',
+                    [('sample_c7', 'REF')],
+                    1,
+                ),
+                (
+                    3,
+                    'project_c',
+                    'family_c2',
+                    123456789,
+                    'WES',
+                    [('sample_c8', 'REF')],
+                    1,
+                ),
+                (
+                    4,
+                    'project_c',
+                    'family_c3',
+                    133456789,
+                    'WES',
+                    [('sample_c9', 'HOM')],
+                    1,
+                ),
+                (
+                    5,
+                    'project_c',
+                    'family_c4',
+                    133456789,
+                    'WES',
+                    [('sample_c9', 'HOM')],
+                    1,
+                ),
             ],
         )
         table_name_builder = TableNameBuilder(
@@ -473,7 +590,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
         )
-        create_staging_entries(table_name_builder)
+        create_staging_entities(table_name_builder)
         stage_existing_project_partitions(
             table_name_builder,
             [
@@ -482,33 +599,50 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_d',  # Partition does not exist already.
             ],
         )
-        ref_sample_count = client.execute(
+        sample_counts = client.execute(
             f"""
-            SELECT key, sumMerge(ref_samples)
+            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY key
+            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY project_guid, key, sample_type
             """,
         )
         self.assertCountEqual(
-            ref_sample_count,
-            [(0, 2), (4, 3), (3, 1), (2, 0), (1, 0)],
+            sample_counts,
+            [
+                ('project_a', 0, 'WES', 0, 1),
+                ('project_a', 1, 'WGS', 1, 0),
+                ('project_a', 2, 'WGS', 0, 1),
+                ('project_a', 4, 'WES', 1, 0),
+                ('project_a', 4, 'WGS', 0, 1),
+                ('project_b', 1, 'WES', 1, 0),
+                ('project_b', 3, 'WES', 0, 1),
+                ('project_b', 4, 'WES', 0, 1),
+            ],
         )
         delete_existing_families(
             table_name_builder,
-            ['family_a1', 'family_a5'],
+            ['family_a1', 'family_a5', 'family_a6'],
         )
-        ref_sample_count = client.execute(
+        sample_counts = client.execute(
             f"""
-            SELECT key, sumMerge(ref_samples)
+            SELECT key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY key
+            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY key, sample_type
             """,
         )
         self.assertCountEqual(
-            ref_sample_count,
-            [(0, 1), (4, 0), (3, 1), (2, 0), (1, 0)],
+            sample_counts,
+            [
+                (0, 'WES', 0, 0),
+                (1, 'WES', 1, 0),
+                (1, 'WGS', 1, 0),
+                (2, 'WGS', 0, 1),
+                (3, 'WES', 0, 1),
+                (4, 'WES', 0, 1),
+                (4, 'WGS', 0, 0),
+            ],
         )
         df = pd.DataFrame(
             {
@@ -528,8 +662,13 @@ class ClickhouseTest(MockedDatarootTestCase):
                     123456789,
                     123456789,
                 ],
+                'sample_type': [
+                    'WES',
+                    'WES',
+                    'WES',
+                ],
                 'calls': [
-                    [('sample_d1', 0), ('sample_d11', 0)],
+                    [('sample_d1', 0), ('sample_d11', 2)],
                     [('sample_d2', 0)],
                     [('sample_d3', 1)],
                 ],
@@ -546,6 +685,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_guid', pa.string()),
                 ('family_guid', pa.string()),
                 ('xpos', pa.int64()),
+                ('sample_type', pa.string()),
                 (
                     'calls',
                     pa.list_(
@@ -575,21 +715,28 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         insert_new_entries(table_name_builder)
-        ref_sample_count = client.execute(
+        sample_counts = client.execute(
             f"""
-            SELECT key, sumMerge(ref_samples)
+            SELECT key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{TEST_RUN_ID}/GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY key
+            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY key, sample_type
             """,
         )
         self.assertCountEqual(
-            ref_sample_count,
-            [(0, 3), (4, 0), (3, 2), (2, 0), (1, 0)],
+            sample_counts,
+            [
+                (0, 'WES', 0, 1),
+                (4, 'WES', 1, 1),
+                (3, 'WES', 0, 1),
+                (2, 'WGS', 0, 1),
+                (1, 'WES', 1, 0),
+                (1, 'WGS', 1, 0),
+            ],
         )
         replace_project_partitions(
             table_name_builder,
-            ['project_d'],
+            ['project_a', 'project_d'],
         )
         new_entries = client.execute(
             f"""
@@ -601,40 +748,128 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(
             new_entries,
             [
-                (0, 'project_a', 'family_a1', 123456789, [('sample_a1', 'REF')], 1),
-                (1, 'project_a', 'family_a2', 123456789, [('sample_a2', 'HET')], 1),
-                (2, 'project_a', 'family_a3', 133456789, [('sample_a3', 'HOM')], 1),
-                (3, 'project_a', 'family_a4', 133456789, [('sample_a4', 'REF')], 1),
                 (
-                    4,
-                    'project_a',
-                    'family_a5',
-                    133456789,
-                    [('sample_a5', 'REF'), ('sample_a6', 'REF'), ('sample_a7', 'REF')],
+                    0,
+                    'project_b',
+                    'family_b1',
+                    123456789,
+                    'WES',
+                    [('sample_b4', 'REF')],
                     1,
                 ),
-                (0, 'project_b', 'family_b1', 123456789, [('sample_b4', 'REF')], 1),
-                (1, 'project_b', 'family_b2', 123456789, [('sample_b5', 'HET')], 1),
-                (3, 'project_b', 'family_b3', 133456789, [('sample_b6', 'HOM')], 1),
+                (
+                    1,
+                    'project_b',
+                    'family_b2',
+                    123456789,
+                    'WES',
+                    [('sample_b5', 'HET')],
+                    1,
+                ),
+                (
+                    4,
+                    'project_b',
+                    'family_b3',
+                    133456789,
+                    'WES',
+                    [('sample_b6', 'HOM')],
+                    1,
+                ),
+                (
+                    1,
+                    'project_a',
+                    'family_a2',
+                    123456789,
+                    'WGS',
+                    [('sample_a2', 'HET')],
+                    1,
+                ),
+                (
+                    2,
+                    'project_a',
+                    'family_a3',
+                    133456789,
+                    'WGS',
+                    [('sample_a3', 'HOM')],
+                    1,
+                ),
+                (
+                    3,
+                    'project_a',
+                    'family_a4',
+                    133456789,
+                    'WES',
+                    [('sample_a4', 'REF')],
+                    1,
+                ),
                 (
                     0,
                     'project_d',
                     'family_d1',
                     123456789,
-                    [('sample_d1', 'REF'), ('sample_d11', 'REF')],
+                    'WES',
+                    [('sample_d1', 'REF'), ('sample_d11', 'HOM')],
                     1,
                 ),
-                (3, 'project_d', 'family_d2', 123456789, [('sample_d2', 'REF')], 1),
-                (4, 'project_d', 'family_d3', 123456789, [('sample_d3', 'HET')], 1),
-                (0, 'project_c', 'family_c1', 123456789, [('sample_c7', 'REF')], 1),
-                (3, 'project_c', 'family_c2', 123456789, [('sample_c8', 'REF')], 1),
-                (4, 'project_c', 'family_c3', 133456789, [('sample_c9', 'HOM')], 1),
-                (5, 'project_c', 'family_c4', 133456789, [('sample_c9', 'HOM')], 1),
+                (
+                    3,
+                    'project_d',
+                    'family_d2',
+                    123456789,
+                    'WES',
+                    [('sample_d2', 'REF')],
+                    1,
+                ),
+                (
+                    4,
+                    'project_d',
+                    'family_d3',
+                    123456789,
+                    'WES',
+                    [('sample_d3', 'HET')],
+                    1,
+                ),
+                (
+                    0,
+                    'project_c',
+                    'family_c1',
+                    123456789,
+                    'WES',
+                    [('sample_c7', 'REF')],
+                    1,
+                ),
+                (
+                    3,
+                    'project_c',
+                    'family_c2',
+                    123456789,
+                    'WES',
+                    [('sample_c8', 'REF')],
+                    1,
+                ),
+                (
+                    4,
+                    'project_c',
+                    'family_c3',
+                    133456789,
+                    'WES',
+                    [('sample_c9', 'HOM')],
+                    1,
+                ),
+                (
+                    5,
+                    'project_c',
+                    'family_c4',
+                    133456789,
+                    'WES',
+                    [('sample_c9', 'HOM')],
+                    1,
+                ),
             ],
         )
         refresh_materialized_view(
             table_name_builder,
-            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS,
+            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
         )
         gt_stats = client.execute(
             f"""
@@ -646,12 +881,12 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(
             gt_stats,
             [
-                (0, 5),
-                (1, 0),
-                (2, 0),
-                (3, 3),
-                (4, 3),
-                (5, 0),
+                (0, 2, 0),
+                (1, 1, 1),
+                (2, 0, 2),
+                (3, 2, 0),
+                (4, 5, 0),
+                (5, 2, 0),
             ],
         )
 
@@ -674,10 +909,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                     123456789,
                     123456789,
                 ],
+                'sample_type': [
+                    'WES',
+                    'WES',
+                    'WES',
+                ],
                 'calls': [
-                    [('sample_d1', 0), ('sample_d11', 0)],
+                    [('sample_d1', 0), ('sample_d11', 1)],
                     [('sample_d2', 0)],
-                    [('sample_d3', 1)],
+                    [('sample_d3', 2)],
                 ],
                 'sign': [
                     1,
@@ -692,6 +932,7 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_guid', pa.string()),
                 ('family_guid', pa.string()),
                 ('xpos', pa.int64()),
+                ('sample_type', pa.string()),
                 (
                     'calls',
                     pa.list_(
@@ -729,6 +970,22 @@ class ClickhouseTest(MockedDatarootTestCase):
             ['family_d1', 'family_d2'],
         )
         client = get_clickhouse_client()
+        project_gt_stats = client.execute(
+            f"""
+            SELECT project_guid, key, sample_type, het_samples, hom_samples
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
+            GROUP BY project_guid, key
+            """,
+        )
+        self.assertCountEqual(
+            project_gt_stats,
+            [
+                ('project_d', 0, 'WES', 1, 0),
+                ('project_d', 3, 'WES', 0, 0),
+                ('project_d', 4, 'WES', 0, 1),
+            ],
+        )
         gt_stats = client.execute(
             f"""
             SELECT *
@@ -739,8 +996,23 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(
             gt_stats,
             [
-                (0, 2),
-                (3, 1),
-                (4, 0),
+                (0, 1, 0),
+                (3, 0, 0),
+                (4, 2, 0),
+            ],
+        )
+        gt_stats_dict = client.execute(
+            f"""
+            SELECT *
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            """,
+        )
+        self.assertCountEqual(
+            gt_stats_dict,
+            [
+                (0, 1),
+                (3, 0),
+                (4, 2),
             ],
         )
