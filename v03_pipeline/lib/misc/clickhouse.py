@@ -1,10 +1,9 @@
 import functools
-import os
 import hashlib
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-
 
 from clickhouse_driver import Client
 

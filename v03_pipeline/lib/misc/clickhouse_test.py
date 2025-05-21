@@ -77,7 +77,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             )
             ENGINE = CollapsingMergeTree(sign)
             PARTITION BY project_guid
-            ORDER BY (project_guid, family_guid)
+            ORDER BY (project_guid, family_guid, key)
             SETTINGS deduplicate_merge_projection_mode = 'rebuild';
             """,
         )
@@ -125,7 +125,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         client.execute(
             f"""
             CREATE MATERIALIZED VIEW {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats_to_gt_stats_mv`
-            REFRESH EVERY 1 YEAR TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            REFRESH EVERY 10 YEAR TO {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
             AS SELECT
                 key,
                 sumIf(het_samples * 1 + hom_samples * 2, sample_type = 'WES') AS ac_wes,
@@ -188,16 +188,16 @@ class ClickhouseTest(MockedDatarootTestCase):
     def tearDown(self):
         super().tearDown()
         client = get_clickhouse_client()
-        client.execute(
-            f"""
-            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
-            """,
-        )
-        client.execute(
-            f"""
-            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
-            """,
-        )
+        #client.execute(
+        #    f"""
+        #    DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
+        #    """,
+        #)
+        #client.execute(
+        #    f"""
+        #    DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
+        #    """,
+        #)
 
     def test_get_clickhouse_client(self):
         client = get_clickhouse_client()
@@ -530,6 +530,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                     1,
                 ),
                 (
+                    2,
+                    'project_b',
+                    'family_b2',
+                    123456789,
+                    'WES',
+                    [('sample_b5', 'REF')],
+                    1,
+                ),
+                (
                     3,
                     'project_b',
                     'family_b3',
@@ -766,6 +775,16 @@ class ClickhouseTest(MockedDatarootTestCase):
                     [('sample_b5', 'HET')],
                     1,
                 ),
+                (2, 'project_b', 'family_b2', 123456789, 'WES', [('sample_b5', 'REF')], 1),
+                (
+                    3,
+                    'project_b',
+                    'family_b3',
+                    133456789,
+                    'WES',
+                    [('sample_b6', 'HOM')],
+                    1,
+                ),
                 (
                     4,
                     'project_b',
@@ -972,17 +991,16 @@ class ClickhouseTest(MockedDatarootTestCase):
         client = get_clickhouse_client()
         project_gt_stats = client.execute(
             f"""
-            SELECT project_guid, key, sample_type, het_samples, hom_samples
+            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
             {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY project_guid, key
+            GROUP BY project_guid, key, sample_type
             """,
         )
         self.assertCountEqual(
             project_gt_stats,
             [
                 ('project_d', 0, 'WES', 1, 0),
-                ('project_d', 3, 'WES', 0, 0),
                 ('project_d', 4, 'WES', 0, 1),
             ],
         )
@@ -997,7 +1015,6 @@ class ClickhouseTest(MockedDatarootTestCase):
             gt_stats,
             [
                 (0, 1, 0),
-                (3, 0, 0),
                 (4, 2, 0),
             ],
         )
@@ -1011,8 +1028,10 @@ class ClickhouseTest(MockedDatarootTestCase):
         self.assertCountEqual(
             gt_stats_dict,
             [
-                (0, 1),
-                (3, 0),
-                (4, 2),
+                (0, 1, 0),
+                (4, 2, 0),
             ],
         )
+
+
+
