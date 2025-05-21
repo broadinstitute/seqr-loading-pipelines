@@ -189,12 +189,12 @@ class ClickhouseTest(MockedDatarootTestCase):
         super().tearDown()
         client = get_clickhouse_client()
         client.execute(
-           f"""
+            f"""
            DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};
            """,
         )
         client.execute(
-           f"""
+            f"""
            DROP DATABASE IF EXISTS {Env.CLICKHOUSE_DATABASE};
            """,
         )
