@@ -174,7 +174,7 @@ def logged_query(query, params=None, increased_timeout: bool = False):
             REDACTED,
         )
     if Env.CLICKHOUSE_PASSWORD:
-        sanitized_query = sanitized_query.replace(replace
+        sanitized_query = sanitized_query.replace(
             Env.CLICKHOUSE_PASSWORD,
             REDACTED,
         )
