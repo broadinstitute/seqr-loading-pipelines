@@ -173,6 +173,11 @@ def logged_query(query, params=None, increased_timeout: bool = False):
             Env.CLICKHOUSE_GCS_HMAC_SECRET,
             REDACTED,
         )
+    if Env.CLICKHOUSE_PASSWORD:
+        sanitized_query = sanitized_query.replace(replace
+            Env.CLICKHOUSE_PASSWORD,
+            REDACTED,
+        )
     logger.info(f'Executing query: {sanitized_query} | Params: {params}')
     return client.execute(query, params)
 
