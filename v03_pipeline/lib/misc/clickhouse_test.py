@@ -11,14 +11,15 @@ from v03_pipeline.lib.misc.clickhouse import (
     ClickHouseTable,
     TableNameBuilder,
     atomic_entries_insert,
-    create_staging_entities,
+    create_staging_non_table_entity,
+    create_staging_tables,
     delete_existing_families,
     direct_insert,
     dst_key_exists,
     get_clickhouse_client,
     insert_new_entries,
     max_src_key,
-    refresh_materialized_view,
+    reload_gt_stats,
     replace_project_partitions,
     stage_existing_project_partitions,
 )
@@ -214,7 +215,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             table_name_builder.dst_table(
                 ClickHouseTable.ENTRIES,
             ),
-            'test.`GRCh38/SNV_INDEL/entries`',
+            f'{Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/entries`',
         )
         self.assertEqual(
             table_name_builder.src_table(
@@ -599,7 +600,12 @@ class ClickhouseTest(MockedDatarootTestCase):
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
         )
-        create_staging_entities(table_name_builder)
+        create_staging_tables(table_name_builder)
+        create_staging_non_table_entity(
+            table_name_builder,
+            ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+            replace_count=3,
+        )
         stage_existing_project_partitions(
             table_name_builder,
             [
@@ -612,7 +618,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY project_guid, key, sample_type
             """,
         )
@@ -637,7 +643,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY key, sample_type
             """,
         )
@@ -728,7 +734,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             f"""
             SELECT key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
-            staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
+            {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
             GROUP BY key, sample_type
             """,
         )
@@ -894,27 +900,26 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ),
             ],
         )
-        refresh_materialized_view(
-            table_name_builder,
-            ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
-        )
-        gt_stats = client.execute(
+
+        existing_gt_stats = client.execute(
             f"""
             SELECT *
             FROM
-            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
             """,
         )
         self.assertCountEqual(
-            gt_stats,
-            [
-                (0, 2, 0),
-                (1, 1, 1),
-                (2, 0, 2),
-                (3, 2, 0),
-                (4, 5, 0),
-                (5, 2, 0),
-            ],
+            existing_gt_stats,
+            [],
+        )
+        reload_gt_stats(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
+        )
+        self.assertCountEqual(
+            existing_gt_stats,
+            [],
         )
 
     def test_atomic_entries_insert(self):
@@ -1011,6 +1016,11 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_d', 0, 'WES', 1, 0),
                 ('project_d', 4, 'WES', 0, 1),
             ],
+        )
+        reload_gt_stats(
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+            TEST_RUN_ID,
         )
         gt_stats = client.execute(
             f"""
