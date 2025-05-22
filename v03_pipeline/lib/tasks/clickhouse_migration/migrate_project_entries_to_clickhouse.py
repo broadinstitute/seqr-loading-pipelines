@@ -128,7 +128,7 @@ class WriteProjectEntriesMetadataJsonTask(luigi.Task):
                 self.dataset_type,
                 self.sample_type,
                 self.project_guid,
-            )
+            ),
         )
 
     def output(self) -> luigi.Target:
