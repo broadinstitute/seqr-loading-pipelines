@@ -112,6 +112,10 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                     metadata_json['migration_type'],
                     ClickHouseMigrationType.PROJECT_ENTRIES.value,
                 )
+                self.assertCEqual(
+                    metadata_json['family_samples']['F079280_bh10261'],
+                    ['BH10261-1', 'BH10261-2', 'BH10261-3-T'],
+                )
 
             with hfs.open(
                 pipeline_run_success_file_path(

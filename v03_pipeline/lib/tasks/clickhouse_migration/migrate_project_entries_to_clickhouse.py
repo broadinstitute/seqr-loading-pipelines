@@ -121,6 +121,16 @@ class WriteProjectEntriesMetadataJsonTask(luigi.Task):
     sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
 
+    def requires(self):
+        return HailTableTask(
+            project_table_path(
+                self.reference_genome,
+                self.dataset_type,
+                self.sample_type,
+                self.project_guid,
+            )
+        )
+
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
             metadata_for_run_path(
@@ -131,13 +141,14 @@ class WriteProjectEntriesMetadataJsonTask(luigi.Task):
         )
 
     def run(self):
+        project_ht = hl.read_table(self.input().path)
         metadata_json = {
             'migration_type': ClickHouseMigrationType.PROJECT_ENTRIES.value,
             'callsets': [],
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
             'project_guids': [self.project_guid],
-            'family_samples': {},
+            'family_samples': hl.eval(project_ht.globals.family_samples),
             'failed_family_samples': {
                 'missing_samples': {},
                 'relatedness_check': {},
