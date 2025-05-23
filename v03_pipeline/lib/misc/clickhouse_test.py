@@ -7,21 +7,25 @@ import pyarrow.parquet as pq
 
 from v03_pipeline.lib.misc.clickhouse import (
     STAGING_CLICKHOUSE_DATABASE,
+    ClickHouseDictionary,
     ClickHouseMaterializedView,
     ClickHouseTable,
     TableNameBuilder,
     atomic_entries_insert,
-    create_staging_non_table_entity,
+    create_staging_non_table_entities,
     create_staging_tables,
-    delete_existing_families,
+    delete_existing_families_from_staging_entries,
     direct_insert,
     dst_key_exists,
     get_clickhouse_client,
     insert_new_entries,
+    optimize_tables,
     max_src_key,
-    reload_gt_stats,
+    refresh_staged_gt_stats,
     replace_project_partitions,
     stage_existing_project_partitions,
+    exchange_entity,
+    reload_staged_gt_stats_dict,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
@@ -166,14 +170,14 @@ class ClickhouseTest(MockedDatarootTestCase):
             CREATE DICTIONARY {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
             (
                 `key` UInt32,
-                `ac_het` UInt16,
-                `ac_hom` UInt16
+                `ac_wes` UInt16,
+                `ac_wgs` UInt16
             )
             PRIMARY KEY key
             SOURCE(
                 CLICKHOUSE(
                     USER {Env.CLICKHOUSE_USER} PASSWORD {Env.CLICKHOUSE_PASSWORD or "''"}
-                    QUERY "SELECT * FROM {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats`"
+                    DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`
                 )
             )
             LIFETIME(0)
@@ -600,11 +604,21 @@ class ClickhouseTest(MockedDatarootTestCase):
             DatasetType.SNV_INDEL,
             TEST_RUN_ID,
         )
-        create_staging_tables(table_name_builder)
-        create_staging_non_table_entity(
+        create_staging_tables(
             table_name_builder,
-            ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
-            replace_count=3,
+            [
+                ClickHouseTable.ENTRIES,
+                ClickHouseTable.PROJECT_GT_STATS,
+                ClickHouseTable.GT_STATS,
+            ],
+        )
+        create_staging_non_table_entities(
+            table_name_builder,
+            [
+                ClickHouseMaterializedView.ENTRIES_TO_PROJECT_GT_STATS_MV,
+                ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV,
+                ClickHouseDictionary.GT_STATS_DICT,
+            ],
         )
         stage_existing_project_partitions(
             table_name_builder,
@@ -614,7 +628,15 @@ class ClickhouseTest(MockedDatarootTestCase):
                 'project_d',  # Partition does not exist already.
             ],
         )
-        sample_counts = client.execute(
+        staged_projects = client.execute(
+            f"""
+            SELECT DISTINCT project_guid FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/entries`
+            """
+        )
+        self.assertCountEqual(
+            [p[0] for p in staged_projects], ['project_a', 'project_b']
+        )
+        staged_project_gt_stats = client.execute(
             f"""
             SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
@@ -623,7 +645,7 @@ class ClickhouseTest(MockedDatarootTestCase):
             """,
         )
         self.assertCountEqual(
-            sample_counts,
+            staged_project_gt_stats,
             [
                 ('project_a', 0, 'WES', 0, 1),
                 ('project_a', 1, 'WGS', 1, 0),
@@ -633,30 +655,37 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_b', 1, 'WES', 1, 0),
                 ('project_b', 3, 'WES', 0, 1),
                 ('project_b', 4, 'WES', 0, 1),
+                # project_gt_stats stages all projects, not just
+                # those requested for loading.
+                ('project_c', 4, 'WES', 0, 1),
+                ('project_c', 5, 'WES', 0, 1),
             ],
         )
-        delete_existing_families(
+        delete_existing_families_from_staging_entries(
             table_name_builder,
             ['family_a1', 'family_a5', 'family_a6'],
         )
-        sample_counts = client.execute(
+        staged_project_gt_stats = client.execute(
             f"""
-            SELECT key, sample_type, sum(het_samples), sum(hom_samples)
+            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
             {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY key, sample_type
+            GROUP BY project_guid, key, sample_type
             """,
         )
         self.assertCountEqual(
-            sample_counts,
+            staged_project_gt_stats,
             [
-                (0, 'WES', 0, 0),
-                (1, 'WES', 1, 0),
-                (1, 'WGS', 1, 0),
-                (2, 'WGS', 0, 1),
-                (3, 'WES', 0, 1),
-                (4, 'WES', 0, 1),
-                (4, 'WGS', 0, 0),
+                ('project_a', 0, 'WES', 0, 0),
+                ('project_a', 1, 'WGS', 1, 0),
+                ('project_a', 2, 'WGS', 0, 1),
+                ('project_a', 4, 'WES', 0, 0),
+                ('project_a', 4, 'WGS', 0, 0),
+                ('project_b', 1, 'WES', 1, 0),
+                ('project_b', 3, 'WES', 0, 1),
+                ('project_b', 4, 'WES', 0, 1),
+                ('project_c', 4, 'WES', 0, 1),
+                ('project_c', 5, 'WES', 0, 1),
             ],
         )
         df = pd.DataFrame(
@@ -730,28 +759,62 @@ class ClickhouseTest(MockedDatarootTestCase):
             ),
         )
         insert_new_entries(table_name_builder)
-        sample_counts = client.execute(
+        optimize_tables(
+            table_name_builder,
+            ['project_a', 'project_d'],
+            [
+                ClickHouseTable.ENTRIES,
+                ClickHouseTable.PROJECT_GT_STATS,
+            ],
+        )
+        staged_project_gt_stats = client.execute(
             f"""
-            SELECT key, sample_type, sum(het_samples), sum(hom_samples)
+            SELECT project_guid, key, sample_type, sum(het_samples), sum(hom_samples)
             FROM
             {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/project_gt_stats`
-            GROUP BY key, sample_type
+            GROUP BY project_guid, key, sample_type
             """,
         )
         self.assertCountEqual(
-            sample_counts,
+            staged_project_gt_stats,
             [
-                (0, 'WES', 0, 1),
-                (4, 'WES', 1, 1),
-                (3, 'WES', 0, 1),
-                (2, 'WGS', 0, 1),
-                (1, 'WES', 1, 0),
-                (1, 'WGS', 1, 0),
+                ('project_a', 1, 'WGS', 1, 0),
+                ('project_a', 2, 'WGS', 0, 1),
+                ('project_b', 1, 'WES', 1, 0),
+                ('project_b', 3, 'WES', 0, 1),
+                ('project_b', 4, 'WES', 0, 1),
+                ('project_c', 4, 'WES', 0, 1),
+                ('project_c', 5, 'WES', 0, 1),
+                ('project_d', 0, 'WES', 0, 1),
+                ('project_d', 4, 'WES', 1, 0),
             ],
+        )
+        refresh_staged_gt_stats(table_name_builder)
+        staged_gt_stats = client.execute(
+            f"""
+            SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats`
+            """
+        )
+        self.assertEqual(
+            staged_gt_stats,
+            [(0, 2, 0), (1, 1, 1), (2, 0, 2), (3, 2, 0), (4, 5, 0), (5, 2, 0)],
+        )
+        staged_gt_stats_dict = client.execute(
+            f"""
+            SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict`
+            """
+        )
+        self.assertEqual(
+            staged_gt_stats_dict,
+            [],
         )
         replace_project_partitions(
             table_name_builder,
             ['project_a', 'project_d'],
+            [
+                ClickHouseTable.ENTRIES,
+                ClickHouseTable.PROJECT_GT_STATS,
+            ],
         )
         new_entries = client.execute(
             f"""
@@ -900,7 +963,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ),
             ],
         )
-
         existing_gt_stats = client.execute(
             f"""
             SELECT *
@@ -912,14 +974,62 @@ class ClickhouseTest(MockedDatarootTestCase):
             existing_gt_stats,
             [],
         )
-        reload_gt_stats(
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
+        exchange_entity(
+            table_name_builder,
+            ClickHouseTable.GT_STATS,
         )
-        self.assertCountEqual(
-            existing_gt_stats,
-            [],
+        reload_staged_gt_stats_dict(
+            table_name_builder,
+        )
+        new_gt_stats = client.execute(
+            f"""
+            SELECT *
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            """,
+        )
+        self.assertCountEqual(new_gt_stats, [])
+        exchange_entity(
+            table_name_builder,
+            ClickHouseDictionary.GT_STATS_DICT,
+        )
+        new_gt_stats_post_exchange = client.execute(
+            f"""
+            SELECT *
+            FROM
+            {Env.CLICKHOUSE_DATABASE}.`GRCh38/SNV_INDEL/gt_stats_dict`
+            """,
+        )
+        self.assertEqual(
+            new_gt_stats_post_exchange,
+            [
+                (0, 2, 0),
+                (1, 1, 1),
+                (2, 0, 2),
+                (3, 2, 0),
+                (4, 5, 0),
+                (5, 2, 0),
+            ],
+        )
+
+        staging_tables = client.execute(
+            f"""
+            SELECT create_table_query FROM system.tables
+            WHERE
+            database = %(database)s
+            """,
+            {'database': STAGING_CLICKHOUSE_DATABASE}
+        )
+        self.assertEqual(
+            len(staging_tables),
+            6,
+        )
+        self.assertEqual(
+            [s[0] for s in staging_tables if 'DICTIONARY' in s[0]][0].strip(),
+            # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
+            f"""
+            CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER default PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
+            """.strip()
         )
 
     def test_atomic_entries_insert(self):
@@ -1016,11 +1126,6 @@ class ClickhouseTest(MockedDatarootTestCase):
                 ('project_d', 0, 'WES', 1, 0),
                 ('project_d', 4, 'WES', 0, 1),
             ],
-        )
-        reload_gt_stats(
-            ReferenceGenome.GRCh38,
-            DatasetType.SNV_INDEL,
-            TEST_RUN_ID,
         )
         gt_stats = client.execute(
             f"""

@@ -229,6 +229,11 @@ def create_staging_tables(
     table_name_builder: TableNameBuilder,
     clickhouse_tables: list[ClickHouseTable],
 ) -> None:
+    logged_query(
+        f"""
+        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
+        """,
+    )
     for clickhouse_table in clickhouse_tables:
         logged_query(
             f"""
@@ -258,13 +263,14 @@ def create_staging_non_table_entities(
                 .replace('`', ''),
             },
         )[0][0]
+        if isinstance(clickhouse_entity, ClickHouseDictionary):
+            password = Env.CLICKHOUSE_PASSWORD or "''"
+            create_entity_statement = create_entity_statement.replace(
+                f"PASSWORD '[HIDDEN]'", f'PASSWORD {password}'
+            )
         create_entity_statement = create_entity_statement.replace(
             table_name_builder.dst_prefix,
             table_name_builder.staging_dst_prefix,
-        )
-        create_entity_statement = create_entity_statement.replace(
-            "'[HIDDEN]'",
-            Env.CLICKHOUSE_PASSWORD or "''",
         )
         logged_query(create_entity_statement)
 
@@ -294,7 +300,7 @@ def stage_existing_project_partitions(
     )
 
 
-def delete_existing_families(
+def delete_existing_families_from_staging_entries(
     table_name_builder: TableNameBuilder,
     family_guids: list[str],
 ) -> None:
@@ -322,23 +328,29 @@ def insert_new_entries(
 
 
 def optimize_tables(
-    table_name_builder: TableNameBuilder, clickhouse_tables: list[ClickHouseTable],
+    table_name_builder: TableNameBuilder,
+    project_guids: list[str],
+    clickhouse_tables: list[ClickHouseTable],
 ) -> None:
     # ClickHouse docs generally recommend against running OPTIMIZE TABLE FINAL.
     # However, forcing the merge to happen at load time should make the
     # application layer free of eventual consistency bugs.
     for clickhouse_table in clickhouse_tables:
-        logged_query(
-            f"""
-            OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)} FINAL
-            """,
-            # For OPTIMIZE TABLE queries, server is known to not respond with output
-            # or progress to the client.
-            increased_timeout=True,
-        )
+        for project_guid in project_guids:
+            logged_query(
+                f"""
+                OPTIMIZE TABLE {table_name_builder.staging_dst_table(clickhouse_table)}
+                PARTITION %(project_guid)s FINAL
+                """,
+                {'project_guid': project_guid},
+                # For OPTIMIZE TABLE queries, server is known to not respond with output
+                # or progress to the client.
+                increased_timeout=True,
+            )
 
 
-def reload_gt_stats(table_name_builder):
+@retry()
+def refresh_staged_gt_stats(table_name_builder):
     logged_query(
         f"""
         SYSTEM REFRESH VIEW {table_name_builder.staging_dst_table(ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV)}
@@ -349,15 +361,19 @@ def reload_gt_stats(table_name_builder):
         SYSTEM WAIT VIEW {table_name_builder.staging_dst_table(ClickHouseMaterializedView.PROJECT_GT_STATS_TO_GT_STATS_MV)}
         """,
     )
-    logged_query(
-        f"""
-        SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(ClickHouseDictionary.GT_STATS_DICT)}
-        """,
-    )
 
 
 @retry()
-def replace_staging_partitions(
+def reload_staged_gt_stats_dict(table_name_builder):
+    logged_query(
+        f"""
+        SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(ClickHouseDictionary.GT_STATS_DICT)}
+        """
+    )
+
+
+@retry()  # REPLACE partition is a copy, so this is idempotent.
+def replace_project_partitions(
     table_name_builder: TableNameBuilder,
     project_guids: list[str],
     clickhouse_tables: list[ClickHouseTable],
@@ -373,16 +389,16 @@ def replace_staging_partitions(
             )
 
 
-def exchange_entities(
+# note this is NOT idempotent
+def exchange_entity(
     table_name_builder,
-    clickhouse_entities: list[ClickHouseEntity],
+    clickhouse_entity: ClickHouseEntity,
 ) -> None:
-    for clickhouse_entity in clickhouse_entities:
-        logged_query(
-            f"""
-            EXCHANGE {'DICTIONARIES' if isinstance(clickhouse_entity, ClickHouseDictionary) else 'TABLES'} {table_name_builder.staging_dst_table(clickhouse_entities)} AND {table_name_builder.dst_table(clickhouse_entities)}
-            """,
-        )
+    logged_query(
+        f"""
+        EXCHANGE {'DICTIONARIES' if isinstance(clickhouse_entity, ClickHouseDictionary) else 'TABLES'} {table_name_builder.staging_dst_table(clickhouse_entity)} AND {table_name_builder.dst_table(clickhouse_entity)}
+        """,
+    )
 
 
 @retry()
@@ -440,11 +456,6 @@ def atomic_entries_insert(
         run_id,
     )
     drop_staging_db()
-    logged_query(
-        f"""
-        CREATE DATABASE {STAGING_CLICKHOUSE_DATABASE}
-        """,
-    )
     create_staging_tables(
         table_name_builder,
         [
@@ -465,7 +476,7 @@ def atomic_entries_insert(
         table_name_builder,
         project_guids,
     )
-    delete_existing_families(
+    delete_existing_families_from_staging_entries(
         table_name_builder,
         family_guids,
     )
@@ -474,15 +485,16 @@ def atomic_entries_insert(
     )
     optimize_tables(
         table_name_builder,
+        project_guids,
         [
             ClickHouseTable.ENTRIES,
             ClickHouseTable.PROJECT_GT_STATS,
         ],
     )
-    reload_gt_stats(
+    refresh_staged_gt_stats(
         table_name_builder,
     )
-    replace_staging_partitions(
+    replace_project_partitions(
         table_name_builder,
         project_guids,
         [
@@ -490,12 +502,27 @@ def atomic_entries_insert(
             ClickHouseTable.PROJECT_GT_STATS,
         ],
     )
-    exchange_entities(
+    exchange_entity(
         table_name_builder,
-        [
-            ClickHouseTable.GT_STATS,
-            ClickHouseDictionary.GT_STATS_DICT,
-        ],
+        ClickHouseTable.GT_STATS,
+    )
+    # Very important nuance here... the staged GT_STATS dict
+    # source table is the production GT_STATS table, so the
+    # dictionary reload must happen 'after' the preceeding
+    # exchange entity statement.  I (bpb) made several
+    # attempts to have a staging dictionary source
+    # a staging gt_stats table, but ran into issues with
+    # the dictionary "EXCHANGE" leaving the query source
+    # unmodified.  We ended up with a production dictionary
+    # pointing at a staging source and a staging dictionary
+    # pointing at a production source... which is not desired
+    # behavior.
+    reload_staged_gt_stats_dict(
+        table_name_builder,
+    )
+    exchange_entity(
+        table_name_builder,
+        ClickHouseDictionary.GT_STATS_DICT,
     )
     drop_staging_db()
 
@@ -506,5 +533,5 @@ def get_clickhouse_client(increased_timeout: bool = False) -> Client:
         port=Env.CLICKHOUSE_SERVICE_PORT,
         user=Env.CLICKHOUSE_USER,
         **{'password': Env.CLICKHOUSE_PASSWORD} if Env.CLICKHOUSE_PASSWORD else {},
-        **{'send_receive_timeout': 3600} if increased_timeout else {},
+        **{'send_receive_timeout': 1800} if increased_timeout else {},
     )
