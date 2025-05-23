@@ -17,15 +17,15 @@ from v03_pipeline.lib.misc.clickhouse import (
     delete_existing_families_from_staging_entries,
     direct_insert,
     dst_key_exists,
+    exchange_entity,
     get_clickhouse_client,
     insert_new_entries,
-    optimize_tables,
     max_src_key,
+    optimize_tables,
     refresh_staged_gt_stats,
+    reload_staged_gt_stats_dict,
     replace_project_partitions,
     stage_existing_project_partitions,
-    exchange_entity,
-    reload_staged_gt_stats_dict,
 )
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome
 from v03_pipeline.lib.model.environment import Env
@@ -631,10 +631,11 @@ class ClickhouseTest(MockedDatarootTestCase):
         staged_projects = client.execute(
             f"""
             SELECT DISTINCT project_guid FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/entries`
-            """
+            """,
         )
         self.assertCountEqual(
-            [p[0] for p in staged_projects], ['project_a', 'project_b']
+            [p[0] for p in staged_projects],
+            ['project_a', 'project_b'],
         )
         staged_project_gt_stats = client.execute(
             f"""
@@ -793,7 +794,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         staged_gt_stats = client.execute(
             f"""
             SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats`
-            """
+            """,
         )
         self.assertEqual(
             staged_gt_stats,
@@ -802,7 +803,7 @@ class ClickhouseTest(MockedDatarootTestCase):
         staged_gt_stats_dict = client.execute(
             f"""
             SELECT * FROM {STAGING_CLICKHOUSE_DATABASE}.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict`
-            """
+            """,
         )
         self.assertEqual(
             staged_gt_stats_dict,
@@ -1013,23 +1014,23 @@ class ClickhouseTest(MockedDatarootTestCase):
         )
 
         staging_tables = client.execute(
-            f"""
+            """
             SELECT create_table_query FROM system.tables
             WHERE
             database = %(database)s
             """,
-            {'database': STAGING_CLICKHOUSE_DATABASE}
+            {'database': STAGING_CLICKHOUSE_DATABASE},
         )
         self.assertEqual(
             len(staging_tables),
             6,
         )
         self.assertEqual(
-            [s[0] for s in staging_tables if 'DICTIONARY' in s[0]][0].strip(),
+            next([s[0] for s in staging_tables if 'DICTIONARY' in s[0]]).strip(),
             # important test!  Ensuring that the staging dictionary points to the production gt_stats table.
             f"""
             CREATE DICTIONARY staging.`{table_name_builder.run_id_hash}/GRCh38/SNV_INDEL/gt_stats_dict` (`key` UInt32, `ac_wes` UInt16, `ac_wgs` UInt16) PRIMARY KEY key SOURCE(CLICKHOUSE(USER default PASSWORD '[HIDDEN]' DB {Env.CLICKHOUSE_DATABASE} TABLE `GRCh38/SNV_INDEL/gt_stats`)) LIFETIME(MIN 0 MAX 0) LAYOUT(FLAT(MAX_ARRAY_SIZE 10000))
-            """.strip()
+            """.strip(),
         )
 
     def test_atomic_entries_insert(self):

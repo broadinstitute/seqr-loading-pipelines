@@ -266,7 +266,8 @@ def create_staging_non_table_entities(
         if isinstance(clickhouse_entity, ClickHouseDictionary):
             password = Env.CLICKHOUSE_PASSWORD or "''"
             create_entity_statement = create_entity_statement.replace(
-                f"PASSWORD '[HIDDEN]'", f'PASSWORD {password}'
+                "PASSWORD '[HIDDEN]'",
+                f'PASSWORD {password}',
             )
         create_entity_statement = create_entity_statement.replace(
             table_name_builder.dst_prefix,
@@ -368,7 +369,7 @@ def reload_staged_gt_stats_dict(table_name_builder):
     logged_query(
         f"""
         SYSTEM RELOAD DICTIONARY {table_name_builder.staging_dst_table(ClickHouseDictionary.GT_STATS_DICT)}
-        """
+        """,
     )
 
 
