@@ -131,7 +131,7 @@ class MiscTest(unittest.TestCase):
                     ),
                 ],
                 gnomad_non_coding_constraint=hl.Struct(z_score=None),
-                hgmd=hl.Struct(accession='abcdefg', classificationid=3),
+                hgmd=hl.Struct(accession='abcdefg', class_id=3),
                 gnomad_exomes=hl.Struct(
                     AF=0.0006690866430290043,
                     AN=1440770,
