@@ -68,5 +68,5 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
         )
         ht = ht.key_by()
         return ht.select(
-            **get_variants_export_fields(ht, self.reference_genome, self.dataset_type)
+            **get_variants_export_fields(ht, self.reference_genome, self.dataset_type),
         )
