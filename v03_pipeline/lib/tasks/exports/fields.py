@@ -1,7 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
-from v03_pipeline.lib.model import DatasetType, SampleType
+from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.exports.misc import array_structexpression_fields
 
@@ -31,7 +31,7 @@ def get_entries_export_fields(
         ),
         'filters': ht.filters,
         'calls': ht.family_entries.map(
-            lambda fe: dataset_type.entries_export_fields(fe),
+            lambda fe: dataset_type.calls_export_fields(fe),
         ),
         'sign': 1,
     }
@@ -67,6 +67,7 @@ def get_predictions_export_fields(
 
 def get_variants_export_fields(
     ht: hl.Table,
+    reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
     return {
@@ -101,7 +102,7 @@ def get_variants_export_fields(
                 if hasattr(ht, 'hgmd')
                 else hl.missing(hl.tstruct(accession=hl.tstr, class_=hl.tstr)),
             }
-            if dataset_type in ReferenceDataset.hgmd.dataset_types
+            if dataset_type in ReferenceDataset.hgmd.dataset_types(reference_genome)
             else {}
         ),
         **(

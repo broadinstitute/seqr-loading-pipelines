@@ -102,7 +102,7 @@ class DatasetType(StrEnum):
         }[self]
 
     @property
-    def entries_export_fields(
+    def calls_export_fields(
         self,
     ) -> Callable[[hl.StructExpression], hl.StructExpression]:
         return {
