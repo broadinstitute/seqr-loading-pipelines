@@ -113,6 +113,13 @@ class DatasetType(StrEnum):
                 ab=fe.AB,
                 dp=fe.DP,
             ),
+            DatasetType.MITO: lambda fe: hl.Struct(
+                sampleId=fe.s,
+                gt=fe.GT.n_alt_alleles(),
+                dp=fe.DP,
+                mq=fe.MQ,
+                hl=fe.HL,
+            ),
         }[self]
 
     @property
