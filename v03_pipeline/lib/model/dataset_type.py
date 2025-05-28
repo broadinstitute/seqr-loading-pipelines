@@ -102,27 +102,6 @@ class DatasetType(StrEnum):
         }[self]
 
     @property
-    def calls_export_fields(
-        self,
-    ) -> Callable[[hl.StructExpression], hl.StructExpression]:
-        return {
-            DatasetType.SNV_INDEL: lambda fe: hl.Struct(
-                sampleId=fe.s,
-                gt=fe.GT.n_alt_alleles(),
-                gq=fe.GQ,
-                ab=fe.AB,
-                dp=fe.DP,
-            ),
-            DatasetType.MITO: lambda fe: hl.Struct(
-                sampleId=fe.s,
-                gt=fe.GT.n_alt_alleles(),
-                dp=fe.DP,
-                mq=fe.MQ,
-                hl=fe.HL,
-            ),
-        }[self]
-
-    @property
     def row_fields(
         self,
     ) -> list[str]:

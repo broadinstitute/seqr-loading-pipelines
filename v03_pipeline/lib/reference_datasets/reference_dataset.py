@@ -112,7 +112,7 @@ class BaseReferenceDataset:
         self,
         reference_genome: ReferenceGenome,
     ) -> frozenset[DatasetType]:
-        return CONFIG[self].get(reference_genome, {}).get(DATASET_TYPES, frozenset())
+        return CONFIG[self][reference_genome][DATASET_TYPES]
 
     @property
     def enums(self) -> dict | None:

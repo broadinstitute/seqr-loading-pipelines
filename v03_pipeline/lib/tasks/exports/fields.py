@@ -2,12 +2,58 @@ import hail as hl
 
 from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.reference_datasets.reference_dataset import ReferenceDataset
 from v03_pipeline.lib.tasks.exports.misc import array_structexpression_fields
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
     return locus.contig.replace('^chr', '').replace('MT', 'M')
+
+
+def get_dataset_type_specific_annotations(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    return {
+        DatasetType.SNV_INDEL: lambda ht: {
+            'hgmd': (
+                ht.hgmd
+                if hasattr(ht, 'hgmd')
+                else hl.missing(hl.tstruct(accession=hl.tstr, classification=hl.tstr))
+            ),
+            **(
+                {'screenRegionType': ht.screen.region_types.first()}
+                if reference_genome == ReferenceGenome.GRCh38
+                else {}
+            ),
+        },
+        DatasetType.MITO: lambda ht: {
+            'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
+            'mitomapPathogenic': ht.mitomap.pathogenic,
+        },
+    }[dataset_type](ht)
+
+
+def get_calls_export_fields(
+    fe: hl.Struct,
+    dataset_type: DatasetType,
+):
+    return {
+        DatasetType.SNV_INDEL: lambda fe: hl.Struct(
+            sampleId=fe.s,
+            gt=fe.GT.n_alt_alleles(),
+            gq=fe.GQ,
+            ab=fe.AB,
+            dp=fe.DP,
+        ),
+        DatasetType.MITO: lambda fe: hl.Struct(
+            sampleId=fe.s,
+            gt=fe.GT.n_alt_alleles(),
+            dp=fe.DP,
+            mq=fe.MQ,
+            hl=fe.HL,
+        ),
+    }[dataset_type](fe)
 
 
 def get_entries_export_fields(
@@ -31,7 +77,7 @@ def get_entries_export_fields(
         ),
         'filters': ht.filters,
         'calls': ht.family_entries.map(
-            lambda fe: dataset_type.calls_export_fields(fe),
+            lambda fe: get_calls_export_fields(fe, dataset_type),
         ),
         'sign': 1,
     }
@@ -171,22 +217,7 @@ def get_variants_export_fields(
             if hasattr(ht, 'rg37_locus')
             else ht.rg38_locus.position
         ),
-        **(
-            {
-                'hgmd': ht.hgmd
-                if hasattr(ht, 'hgmd')
-                else hl.missing(hl.tstruct(accession=hl.tstr, class_=hl.tstr)),
-            }
-            if dataset_type in ReferenceDataset.hgmd.dataset_types(reference_genome)
-            else {}
-        ),
-        **(
-            {
-                'screenRegionType': ht.screen.region_types.first(),
-            }
-            if dataset_type in ReferenceDataset.screen.dataset_types(reference_genome)
-            else {}
-        ),
+        **get_dataset_type_specific_annotations(ht, reference_genome, dataset_type),
         'predictions': hl.Struct(
             **get_predictions_export_fields(ht, reference_genome, dataset_type),
         ),
