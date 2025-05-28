@@ -36,6 +36,7 @@ def get_entries_export_fields(
         'sign': 1,
     }
 
+
 def get_predictions_export_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
