@@ -36,10 +36,49 @@ def get_entries_export_fields(
         'sign': 1,
     }
 
+def get_predictions_export_fields(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    return {
+        DatasetType.SNV_INDEL: lambda ht: {
+            'cadd': ht.dbnsfp.CADD_phred,
+            'eigen': ht.eigen.Eigen_phred,
+            'fathmm': ht.dbnsfp.fathmm_MKL_coding_score,
+            **(
+                {
+                    'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
+                }
+                if reference_genome == ReferenceGenome.GRCh38
+                else {}
+            ),
+            'mpc': ht.dbnsfp.MPC_score,
+            'mut_pred': ht.dbnsfp.MutPred_score,
+            'mut_tester': ht.dbnsfp.MutationTaster_pred,
+            'polyphen': ht.dbnsfp.Polyphen2_HVAR_score,
+            'primate_ai': ht.dbnsfp.PrimateAI_score,
+            'revel': ht.dbnsfp.REVEL_score,
+            'sift': ht.dbnsfp.SIFT_score,
+            'splice_ai': ht.splice_ai.delta_score,
+            'splice_ai_consequence': ht.splice_ai.splice_consequence,
+            'vest': ht.dbnsfp.VEST4_score,
+        },
+        DatasetType.MITO: lambda ht: {
+            'apogee': ht.mitimpact.score,
+            'haplogroup_defining': hl.or_missing(ht.haplogroup.is_defining, 'Y'),
+            'hmtvar': ht.hmtvar.score,
+            'mitotip': ht.mitotip.trna_prediction,
+            'mut_taster': ht.dbnsfp.MutationTaster_pred,
+            'sift': ht.dbnsfp.SIFT_score,
+            'mlc': ht.local_constraint_mito.score,
+        },
+    }[dataset_type](ht)
+
 
 def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
     return {
-        DatasetType.SNV_INDEL: {
+        DatasetType.SNV_INDEL: lambda ht: {
             'exac': hl.Struct(
                 ac=ht.exac.AC_Adj,
                 af=ht.exac.AF,
@@ -73,7 +112,7 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 hom=ht.topmed.Hom,
             ),
         },
-        DatasetType.MITO: {
+        DatasetType.MITO: lambda ht: {
             'gnomad_mito': hl.Struct(
                 ac=ht.gnomad_mito.AC_hom,
                 af=ht.gnomad_mito.AF_hom,
@@ -97,47 +136,7 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 max_hl=ht.helix_mito.hax_hl,
             ),
         },
-    }[dataset_type]
-
-
-def get_predictions_export_fields(
-    ht: hl.Table,
-    reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-):
-    {
-        DatasetType.SNV_INDEL: {
-            'cadd': ht.dbnsfp.CADD_phred,
-            'eigen': ht.eigen.Eigen_phred,
-            'fathmm': ht.dbnsfp.fathmm_MKL_coding_score,
-            **(
-                {
-                    'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
-                }
-                if reference_genome == ReferenceGenome.GRCh38
-                else {}
-            ),
-            'mpc': ht.dbnsfp.MPC_score,
-            'mut_pred': ht.dbnsfp.MutPred_score,
-            'mut_tester': ht.dbnsfp.MutationTaster_pred,
-            'polyphen': ht.dbnsfp.Polyphen2_HVAR_score,
-            'primate_ai': ht.dbnsfp.PrimateAI_score,
-            'revel': ht.dbnsfp.REVEL_score,
-            'sift': ht.dbnsfp.SIFT_score,
-            'splice_ai': ht.splice_ai.delta_score,
-            'splice_ai_consequence': ht.splice_ai.splice_consequence,
-            'vest': ht.dbnsfp.VEST4_score,
-        },
-        DatasetType.MITO: {
-            'apogee': ht.mitimpact.score,
-            'haplogroup_defining': hl.or_missing(ht.haplogroup.is_defining, 'Y'),
-            'hmtvar': ht.hmtvar.score,
-            'mitotip': ht.mitotip.trna_prediction,
-            'mut_taster': ht.dbnsfp.MutationTaster_pred,
-            'sift': ht.dbnsfp.SIFT_score,
-            'mlc': ht.local_constraint_mito.score,
-        },
-    }[dataset_type]
+    }[dataset_type](ht)
 
 
 def get_variants_export_fields(
