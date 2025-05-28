@@ -92,9 +92,9 @@ def get_variants_export_fields(
             else reference_independent_contig(ht.rg38_locus)
         ),
         'liftedOverPos': (
-            reference_independent_contig(ht.rg37_locus)
+            ht.rg37_locus.position
             if hasattr(ht, 'rg37_locus')
-            else reference_independent_contig(ht.rg38_locus)
+            else ht.rg38_locus.position
         ),
         **(
             {
