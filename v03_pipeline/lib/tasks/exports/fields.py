@@ -37,32 +37,107 @@ def get_entries_export_fields(
     }
 
 
+def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
+    return {
+        DatasetType.SNV_INDEL: {
+            'exac': hl.Struct(
+                ac=ht.exac.AC_Adj,
+                af=ht.exac.AF,
+                an=ht.exac.AN_Adj,
+                filter_af=ht.exac.AF_POPMAX,
+                hemi=ht.exac.AC_Hemi,
+                het=ht.exac.AC_Het,
+                hom=ht.exac.AC_Hom,
+            ),
+            'gnomad_exomes': hl.Struct(
+                ac=ht.gnomad_exomes.AC,
+                af=ht.gnomad_exomes.AF,
+                an=ht.gnomad_exomes.AN,
+                filter_af=ht.gnomad_exomes.AF_POPMAX_OR_GLOBAL,
+                hemi=ht.gnomad_exomes.Hemi,
+                hom=ht.gnomad_exomes.Hom,
+            ),
+            'gnomad_genomes': hl.Struct(
+                ac=ht.gnomad_genomes.AC,
+                af=ht.gnomad_genomes.AF,
+                an=ht.gnomad_genomes.AN,
+                filter_af=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL,
+                hemi=ht.gnomad_genomes.Hemi,
+                hom=ht.gnomad_genomes.Hom,
+            ),
+            'topmed': hl.Struct(
+                ac=ht.topmed.AC,
+                af=ht.topmed.AF,
+                an=ht.topmed.AN,
+                het=ht.topmed.Het,
+                hom=ht.topmed.Hom,
+            ),
+        },
+        DatasetType.MITO: {
+            'gnomad_mito': hl.Struct(
+                ac=ht.gnomad_mito.AC_hom,
+                af=ht.gnomad_mito.AF_hom,
+                an=ht.gnomad_mito.AN,
+            ),
+            'gnomad_mito_heteroplasmy': hl.Struct(
+                ac=ht.gnomad_mito.AC_het,
+                af=ht.gnomad_mito.AF_hom,
+                an=ht.gnomad_mito.AN,
+                max_hl=ht.gnomad_mito.max_hl,
+            ),
+            'helix': hl.Struct(
+                ac=ht.helix_mito.AC_hom,
+                af=ht.helix_mito.AF_hom,
+                an=ht.helix_mito.AN,
+            ),
+            'helix_heteroplasmy': hl.Struct(
+                ac=ht.helix_mito.AC_het,
+                af=ht.helix_mito.AF_het,
+                an=ht.helix_mito.AN,
+                max_hl=ht.helix_mito.hax_hl,
+            ),
+        },
+    }[dataset_type]
+
+
 def get_predictions_export_fields(
     ht: hl.Table,
-    _dataset_type: DatasetType,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ):
-    return {
-        'cadd': ht.dbnsfp.CADD_phred,
-        'eigen': ht.eigen.Eigen_phred,
-        'fathmm': ht.dbnsfp.fathmm_MKL_coding_score,
-        **(
-            {
-                'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
-            }
-            if hasattr(ht, 'gnomad_non_coding_constraint')
-            else {}
-        ),
-        'mpc': ht.dbnsfp.MPC_score,
-        'mut_pred': ht.dbnsfp.MutPred_score,
-        'mut_tester': ht.dbnsfp.MutationTaster_pred,
-        'polyphen': ht.dbnsfp.Polyphen2_HVAR_score,
-        'primate_ai': ht.dbnsfp.PrimateAI_score,
-        'revel': ht.dbnsfp.REVEL_score,
-        'sift': ht.dbnsfp.SIFT_score,
-        'splice_ai': ht.splice_ai.delta_score,
-        'splice_ai_consequence': ht.splice_ai.splice_consequence,
-        'vest': ht.dbnsfp.VEST4_score,
-    }
+    {
+        DatasetType.SNV_INDEL: {
+            'cadd': ht.dbnsfp.CADD_phred,
+            'eigen': ht.eigen.Eigen_phred,
+            'fathmm': ht.dbnsfp.fathmm_MKL_coding_score,
+            **(
+                {
+                    'gnomad_noncoding': ht.gnomad_non_coding_constraint.z_score,
+                }
+                if reference_genome == ReferenceGenome.GRCh38
+                else {}
+            ),
+            'mpc': ht.dbnsfp.MPC_score,
+            'mut_pred': ht.dbnsfp.MutPred_score,
+            'mut_tester': ht.dbnsfp.MutationTaster_pred,
+            'polyphen': ht.dbnsfp.Polyphen2_HVAR_score,
+            'primate_ai': ht.dbnsfp.PrimateAI_score,
+            'revel': ht.dbnsfp.REVEL_score,
+            'sift': ht.dbnsfp.SIFT_score,
+            'splice_ai': ht.splice_ai.delta_score,
+            'splice_ai_consequence': ht.splice_ai.splice_consequence,
+            'vest': ht.dbnsfp.VEST4_score,
+        },
+        DatasetType.MITO: {
+            'apogee': ht.mitimpact.score,
+            'haplogroup_defining': hl.or_missing(ht.haplogroup.is_defining, 'Y'),
+            'hmtvar': ht.hmtvar.score,
+            'mitotip': ht.mitotip.trna_prediction,
+            'mut_taster': ht.dbnsfp.MutationTaster_pred,
+            'sift': ht.dbnsfp.SIFT_score,
+            'mlc': ht.local_constraint_mito.score,
+        },
+    }[dataset_type]
 
 
 def get_variants_export_fields(
@@ -109,43 +184,14 @@ def get_variants_export_fields(
             {
                 'screenRegionType': ht.screen.region_types.first(),
             }
-            if hasattr(ht, 'screen')
+            if dataset_type in ReferenceDataset.screen.dataset_types(reference_genome)
             else {}
         ),
-        'predictions': hl.Struct(**get_predictions_export_fields(ht, dataset_type)),
+        'predictions': hl.Struct(
+            **get_predictions_export_fields(ht, reference_genome, dataset_type),
+        ),
         'populations': hl.Struct(
-            exac=hl.Struct(
-                ac=ht.exac.AC_Adj,
-                af=ht.exac.AF,
-                an=ht.exac.AN_Adj,
-                filter_af=ht.exac.AF_POPMAX,
-                hemi=ht.exac.AC_Hemi,
-                het=ht.exac.AC_Het,
-                hom=ht.exac.AC_Hom,
-            ),
-            gnomad_exomes=hl.Struct(
-                ac=ht.gnomad_exomes.AC,
-                af=ht.gnomad_exomes.AF,
-                an=ht.gnomad_exomes.AN,
-                filter_af=ht.gnomad_exomes.AF_POPMAX_OR_GLOBAL,
-                hemi=ht.gnomad_exomes.Hemi,
-                hom=ht.gnomad_exomes.Hom,
-            ),
-            gnomad_genomes=hl.Struct(
-                ac=ht.gnomad_genomes.AC,
-                af=ht.gnomad_genomes.AF,
-                an=ht.gnomad_genomes.AN,
-                filter_af=ht.gnomad_genomes.AF_POPMAX_OR_GLOBAL,
-                hemi=ht.gnomad_genomes.Hemi,
-                hom=ht.gnomad_genomes.Hom,
-            ),
-            topmed=hl.Struct(
-                ac=ht.topmed.AC,
-                af=ht.topmed.AF,
-                an=ht.topmed.AN,
-                het=ht.topmed.Het,
-                hom=ht.topmed.Hom,
-            ),
+            **get_populations_export_fields(ht, dataset_type),
         ),
         **{f: ht[f] for f in sorted(array_structexpression_fields(ht))},
     }
