@@ -1,4 +1,6 @@
 import os
+from unittest import mock
+from unittest.mock import Mock
 
 import hail as hl
 import luigi.worker
@@ -14,6 +16,7 @@ from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -22,6 +25,7 @@ TEST_SNV_INDEL_ANNOTATIONS = (
 TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
 )
+TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -46,6 +50,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             new_variants_table_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_MITO_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
                 TEST_RUN_ID,
             ),
         )
@@ -229,4 +243,49 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertEqual(
             list(export_json[0]['transcripts'][0].keys()),
             sorted(export_json[0]['transcripts'][0].keys()),
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.WriteNewVariantsTableTask',
+    )
+    def test_mito_write_new_transcripts_parquet_test(
+        self,
+        write_new_variants_table_task: Mock,
+    ) -> None:
+        write_new_variants_table_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewTranscriptsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.MITO,
+                    TEST_RUN_ID,
+                ),
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertEqual(
+            export_json[0]['key'],
+            81,
+        )
+        self.assertEqual(
+            export_json[0]['transcripts'],
+            None,
         )
