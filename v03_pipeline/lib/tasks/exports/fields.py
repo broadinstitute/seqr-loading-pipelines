@@ -50,8 +50,9 @@ def get_calls_export_fields(
             sampleId=fe.s,
             gt=fe.GT.n_alt_alleles(),
             dp=fe.DP,
-            mq=fe.MQ,
             hl=fe.HL,
+            mitoCn=fe.mito_cn,
+            contamination=fe.contamination,
         ),
     }[dataset_type](fe)
 

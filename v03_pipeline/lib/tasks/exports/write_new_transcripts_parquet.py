@@ -57,7 +57,11 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
             self.reference_genome,
             self.dataset_type,
         )
-        ht = camelcase_array_structexpression_fields(ht, self.reference_genome, self.dataset_type)
+        ht = camelcase_array_structexpression_fields(
+            ht,
+            self.reference_genome,
+            self.dataset_type,
+        )
         ht = ht.key_by()
         return ht.select(
             key_=ht.key_,

@@ -60,7 +60,11 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             self.reference_genome,
             self.dataset_type,
         )
-        ht = camelcase_array_structexpression_fields(ht, self.reference_genome, self.dataset_type)
+        ht = camelcase_array_structexpression_fields(
+            ht,
+            self.reference_genome,
+            self.dataset_type,
+        )
         ht = subset_filterable_transcripts_fields(
             ht,
             self.reference_genome,
