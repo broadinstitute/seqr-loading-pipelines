@@ -181,7 +181,7 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 ac=ht.helix_mito.AC_het,
                 af=ht.helix_mito.AF_het,
                 an=ht.helix_mito.AN,
-                max_hl=ht.helix_mito.hax_hl,
+                max_hl=ht.helix_mito.max_hl,
             ),
         },
     }[dataset_type](ht)
