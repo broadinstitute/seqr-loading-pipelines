@@ -283,9 +283,27 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
         self.assertEqual(
             export_json[0]['key'],
-            81,
+            998,
         )
         self.assertEqual(
-            export_json[0]['transcripts'],
-            None,
+            export_json[0]['transcripts'][0],
+            {
+                'aminoAcids': None,
+                'biotype': 'Mt_tRNA',
+                'canonical': 1,
+                'codons': None,
+                'consequenceTerms': ['non_coding_transcript_exon_variant'],
+                'geneId': 'ENSG00000210049',
+                'hgvsc': 'ENST00000387314.1:n.2T>C',
+                'hgvsp': None,
+                'isLofNagnag': None,
+                'lofFilters': None,
+                'majorConsequence': 'non_coding_transcript_exon_variant',
+                'transcriptId': 'ENST00000387314',
+                'transcriptRank': 0,
+            },
+        )
+        self.assertEqual(
+            list(export_json[0]['transcripts'][0].keys()),
+            sorted(export_json[0]['transcripts'][0].keys()),
         )

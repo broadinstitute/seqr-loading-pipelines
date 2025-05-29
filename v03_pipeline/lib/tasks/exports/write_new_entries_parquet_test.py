@@ -1,8 +1,11 @@
+from unittest import mock
+from unittest.mock import Mock
+
 import hail as hl
 import luigi.worker
 import pandas as pd
 
-from v03_pipeline.lib.misc.io import import_vcf, remap_pedigree_hash
+from v03_pipeline.lib.misc.io import import_callset, remap_pedigree_hash
 from v03_pipeline.lib.model import (
     DatasetType,
     ReferenceGenome,
@@ -16,13 +19,18 @@ from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
     WriteNewEntriesParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
 )
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
+TEST_MITO_EXPORT_PEDIGREE = (
+    'v03_pipeline/var/test/pedigrees/test_mito_export_pedigree.tsv'
+)
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
+TEST_MITO_CALLSET = 'v03_pipeline/var/test/callsets/mito_1.mt'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -30,7 +38,11 @@ TEST_RUN_ID = 'manual__2024-04-03'
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
     def setUp(self) -> None:
         super().setUp()
-        mt = import_vcf(TEST_SNV_INDEL_VCF, ReferenceGenome.GRCh38)
+        mt = import_callset(
+            TEST_SNV_INDEL_VCF,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
         ht = mt.rows()
         ht = ht.add_index(name='key_')
         ht = ht.annotate_globals(
@@ -51,6 +63,24 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
             variant_annotations_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
+            ),
+        )
+        mt = import_callset(TEST_MITO_CALLSET, ReferenceGenome.GRCh38, DatasetType.MITO)
+        ht = mt.rows()
+        ht = ht.add_index(name='key_')
+        ht = ht.annotate_globals(
+            updates={
+                hl.Struct(
+                    callset=TEST_MITO_CALLSET,
+                    project_guid='R0116_test_project3',
+                    remap_pedigree_hash=remap_pedigree_hash(TEST_MITO_EXPORT_PEDIGREE),
+                ),
+            },
+        )
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
             ),
         )
 
@@ -164,4 +194,95 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                 ],
                 'sign': 1,
             },
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_entries_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
+    )
+    def test_mito_write_new_entries_parquet(self, mock_uvatwnst: Mock):
+        mock_uvatwnst.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewEntriesParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_MITO_CALLSET,
+            project_guids=['R0116_test_project3'],
+            project_pedigree_paths=[TEST_MITO_EXPORT_PEDIGREE],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.to_dict('records'))
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 1,
+                    'project_guid': 'R0116_test_project3',
+                    'family_guid': 'family_1',
+                    'sample_type': 'WGS',
+                    'xpos': 25000000008,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_1270_2',
+                            'gt': 2,
+                            'dp': 4216,
+                            'hl': 0.999,
+                            'mitoCn': 224,
+                            'contamination': 0.0,
+                        },
+                    ],
+                    'sign': 1,
+                },
+                {
+                    'key': 2,
+                    'project_guid': 'R0116_test_project3',
+                    'family_guid': 'family_1',
+                    'sample_type': 'WGS',
+                    'xpos': 25000000012,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_1270_2',
+                            'gt': 2,
+                            'dp': 4336,
+                            'hl': 1.0,
+                            'mitoCn': 224,
+                            'contamination': 0.0,
+                        },
+                    ],
+                    'sign': 1,
+                },
+                {
+                    'key': 4,
+                    'project_guid': 'R0116_test_project3',
+                    'family_guid': 'family_1',
+                    'sample_type': 'WGS',
+                    'xpos': 25000000018,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_1270_2',
+                            'gt': 2,
+                            'dp': 4319,
+                            'hl': 1.0,
+                            'mitoCn': 224,
+                            'contamination': 0.0,
+                        },
+                    ],
+                    'sign': 1,
+                },
+            ],
         )

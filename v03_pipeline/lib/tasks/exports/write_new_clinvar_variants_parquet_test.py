@@ -134,16 +134,16 @@ class WriteNewClinvarVariantsParquetTest(MockedDatarootTestCase):
             export_json,
             [
                 {
-                    'key': 81,
-                    'alleleId': 3226084,
+                    'key': 998,
+                    'alleleId': 677824,
                     'conflictingPathogenicities': None,
-                    'goldStars': 0,
+                    'goldStars': 1,
                     'submitters': [
-                        'Genomics Division, Defence Institute of Physiology and Allied Sciences',
+                        'Wong Mito Lab, Molecular and Human Genetics, Baylor College of Medicine',
                     ],
-                    'conditions': ['Venous thromboembolism'],
-                    'assertions': ['Affects'],
-                    'pathogenicity': 'No_pathogenic_assertion',
+                    'conditions': ['MELAS syndrome'],
+                    'assertions': [],
+                    'pathogenicity': 'Likely_pathogenic',
                 },
             ],
         )

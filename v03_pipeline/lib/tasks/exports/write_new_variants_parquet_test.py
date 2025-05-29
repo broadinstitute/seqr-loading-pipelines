@@ -295,7 +295,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ],
         )
 
-
     @mock.patch(
         'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
     )
@@ -329,71 +328,57 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             ),
         )
         export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        export_json[0]['sortedTranscriptConsequences'] = [
+            export_json[0]['sortedTranscriptConsequences'][0],
+        ]
         self.assertEqual(
             export_json,
             [
                 {
-                    'key': 1424,
-                    'xpos': 1000069134,
-                    'chrom': '1',
-                    'pos': 69134,
-                    'ref': 'A',
-                    'alt': 'G',
-                    'variantId': '1-69134-A-G',
-                    'rsid': None,
-                    'liftedOverChrom': '1',
-                    'liftedOverPos': 69134,
-                    'hgmd': None,
+                    'key': 998,
+                    'xpos': 25000000578,
+                    'chrom': 'M',
+                    'pos': 578,
+                    'ref': 'T',
+                    'alt': 'C',
+                    'variantId': 'M-578-T-C',
+                    'rsid': 'rs1603218446',
+                    'liftedOverChrom': 'M',
+                    'liftedOverPos': 578,
+                    'commonLowHeteroplasmy': True,
+                    'mitomapPathogenic': None,
                     'predictions': {
-                        'cadd': 15.880000114440918,
-                        'eigen': 1.0019999742507935,
-                        'fathmm': 0.056940000504255295,
-                        'mpc': 1.8921889066696167,
-                        'mut_pred': 0.3779999911785126,
-                        'mut_tester': 'N',
-                        'polyphen': 0.0010000000474974513,
-                        'primate_ai': 0.37232041358947754,
-                        'revel': 0.07500000298023224,
-                        'sift': 0.1289999932050705,
-                        'splice_ai': 0.019999999552965164,
-                        'splice_ai_consequence': 'Donor gain',
-                        'vest': 0.10700000077486038,
+                        'apogee': None,
+                        'haplogroup_defining': None,
+                        'hmtvar': 0.05000000074505806,
+                        'mitotip': 'likely_pathogenic',
+                        'mut_taster': None,
+                        'sift': None,
+                        'mlc': 0.12897999584674835,
                     },
                     'populations': {
-                        'exac': {
+                        'gnomad_mito': {'ac': 0, 'af': 0.0, 'an': 56433},
+                        'gnomad_mito_heteroplasmy': {
                             'ac': 0,
-                            'af': 0.0016550000291317701,
-                            'an': 66,
-                            'filter_af': None,
-                            'hemi': None,
-                            'het': 0,
-                            'hom': 0,
+                            'af': 0.0,
+                            'an': 56433,
+                            'max_hl': 0.0,
                         },
-                        'gnomad_exomes': {
-                            'ac': 505,
-                            'af': 0.026665963232517242,
-                            'an': 18938,
-                            'filter_af': 0.08191808313131332,
-                            'hemi': 0,
-                            'hom': 127,
-                        },
-                        'gnomad_genomes': {
-                            'ac': 1,
-                            'af': 0.0001722949673421681,
-                            'an': 5804,
-                            'filter_af': 0.0005662514013238251,
-                            'hemi': 0,
-                            'hom': 0,
-                        },
-                        'topmed': {
-                            'ac': 95,
-                            'af': 0.0007565619889646769,
-                            'an': 125568,
-                            'het': 95,
-                            'hom': 0,
+                        'helix': {'ac': None, 'af': None, 'an': None},
+                        'helix_heteroplasmy': {
+                            'ac': None,
+                            'af': None,
+                            'an': None,
+                            'max_hl': None,
                         },
                     },
-                    'sortedTranscriptConsequences': None,
+                    'sortedTranscriptConsequences': [
+                        {
+                            'canonical': 1,
+                            'consequenceTerms': ['non_coding_transcript_exon_variant'],
+                            'geneId': 'ENSG00000210049',
+                        },
+                    ],
                 },
             ],
         )
