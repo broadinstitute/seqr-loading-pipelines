@@ -84,6 +84,7 @@ def subset_filterable_transcripts_fields(
 def camelcase_array_structexpression_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
 ):
     for field in array_structexpression_fields(ht):
         ht = ht.transmute(
@@ -94,12 +95,12 @@ def camelcase_array_structexpression_fields(
             },
         )
 
-    # Custom handling of nested sorted_transcript_consequences fields for GRCh38
+    # Custom handling of nested sorted_transcript_consequences fields for GRCh38/SNV_INDEL.
     # Note that spliceregion (extended_intronic_splice_region_variant) prevents
     # a more procedural approach here.
     if (
         reference_genome == ReferenceGenome.GRCh38
-        and 'sortedTranscriptConsequences' in ht.row
+        and dataset_type == DatasetType.SNV_INDEL
     ):
         ht = ht.annotate(
             sortedTranscriptConsequences=ht.sortedTranscriptConsequences.map(

@@ -1,3 +1,6 @@
+from unittest import mock
+from unittest.mock import Mock
+
 import hail as hl
 import luigi.worker
 import pandas as pd
@@ -12,6 +15,7 @@ from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
 )
 from v03_pipeline.lib.test.misc import convert_ndarray_to_list
+from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_SNV_INDEL_ANNOTATIONS = (
@@ -20,6 +24,7 @@ TEST_SNV_INDEL_ANNOTATIONS = (
 TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
 )
+TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -44,6 +49,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             new_variants_table_path(
                 ReferenceGenome.GRCh37,
                 DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_MITO_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
                 TEST_RUN_ID,
             ),
         )
@@ -274,6 +289,94 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'canonical': 1,
                             'consequenceTerms': ['missense_variant'],
                             'geneId': 'ENSG00000186092',
+                        },
+                    ],
+                },
+            ],
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
+    def test_mito_write_new_variants_parquet_test(
+        self,
+        write_new_variants_table_task: Mock,
+    ) -> None:
+        write_new_variants_table_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewVariantsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.MITO,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        export_json[0]['sortedTranscriptConsequences'] = [
+            export_json[0]['sortedTranscriptConsequences'][0],
+        ]
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 998,
+                    'xpos': 25000000578,
+                    'chrom': 'M',
+                    'pos': 578,
+                    'ref': 'T',
+                    'alt': 'C',
+                    'variantId': 'M-578-T-C',
+                    'rsid': 'rs1603218446',
+                    'liftedOverChrom': 'M',
+                    'liftedOverPos': 578,
+                    'commonLowHeteroplasmy': True,
+                    'mitomapPathogenic': None,
+                    'predictions': {
+                        'apogee': None,
+                        'haplogroup_defining': None,
+                        'hmtvar': 0.05000000074505806,
+                        'mitotip': 'likely_pathogenic',
+                        'mut_taster': None,
+                        'sift': None,
+                        'mlc': 0.12897999584674835,
+                    },
+                    'populations': {
+                        'gnomad_mito': {'ac': 0, 'af': 0.0, 'an': 56433},
+                        'gnomad_mito_heteroplasmy': {
+                            'ac': 0,
+                            'af': 0.0,
+                            'an': 56433,
+                            'max_hl': 0.0,
+                        },
+                        'helix': {'ac': None, 'af': None, 'an': None},
+                        'helix_heteroplasmy': {
+                            'ac': None,
+                            'af': None,
+                            'an': None,
+                            'max_hl': None,
+                        },
+                    },
+                    'sortedTranscriptConsequences': [
+                        {
+                            'canonical': 1,
+                            'consequenceTerms': ['non_coding_transcript_exon_variant'],
+                            'geneId': 'ENSG00000210049',
                         },
                     ],
                 },

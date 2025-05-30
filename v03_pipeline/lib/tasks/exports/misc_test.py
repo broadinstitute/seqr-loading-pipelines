@@ -428,7 +428,11 @@ class MiscTest(unittest.TestCase):
             ReferenceGenome.GRCh38,
             DatasetType.SNV_INDEL,
         )
-        ht = camelcase_array_structexpression_fields(ht, ReferenceGenome.GRCh38)
+        ht = camelcase_array_structexpression_fields(
+            ht,
+            ReferenceGenome.GRCh38,
+            DatasetType.SNV_INDEL,
+        )
         ht = ht.annotate(
             sortedTranscriptConsequences=[ht.sortedTranscriptConsequences[0]],
         )

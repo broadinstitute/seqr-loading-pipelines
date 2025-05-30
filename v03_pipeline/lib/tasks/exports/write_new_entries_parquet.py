@@ -9,6 +9,7 @@ from v03_pipeline.lib.misc.family_entries import (
 )
 from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
+    variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
@@ -46,10 +47,10 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             ),
         )
 
-    def requires(self) -> list[luigi.Task]:
+    def requires(self) -> dict[str, luigi.Task]:
         return {
-            ANNOTATIONS_TABLE_TASK: (
-                self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
+            ANNOTATIONS_TABLE_TASK: self.clone(
+                UpdateVariantAnnotationsTableWithNewSamplesTask,
             ),
             REMAPPED_AND_SUBSETTED_CALLSET_TASKS: [
                 self.clone(
@@ -93,7 +94,10 @@ class WriteNewEntriesParquetTask(BaseWriteParquetTask):
             )
             ht = deglobalize_ids(ht)
             annotations_ht = hl.read_table(
-                self.input()[ANNOTATIONS_TABLE_TASK].path,
+                variant_annotations_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
             )
             ht = ht.join(annotations_ht)
 
