@@ -357,13 +357,13 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
         self.assertEqual(
             export_json[0]['key'],
-            0,
+            727,
         )
         self.assertEqual(
             export_json[0]['transcripts'][0],
             {
-                'geneId': 'ENSG00000186092',
-                'majorConsequence': 'NEAREST_TSS',
+                'geneId': 'ENSG00000188157',
+                'majorConsequence': 'INTRONIC',
             },
         )
         self.assertEqual(
