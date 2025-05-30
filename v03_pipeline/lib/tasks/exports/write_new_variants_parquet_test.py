@@ -25,6 +25,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
 )
 TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
+TEST_SV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/SV/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -59,6 +60,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             new_variants_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_SV_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
                 TEST_RUN_ID,
             ),
         )

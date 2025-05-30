@@ -31,6 +31,35 @@ def get_dataset_type_specific_annotations(
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
             'mitomapPathogenic': ht.mitomap.pathogenic,
         },
+        DatasetType.SV: lambda ht: {
+            'algorithms': ht.algorithms,
+            'bothsidesSupport': ht.bothsides_support,
+            'cpxIntervals': ht.cpx_intervals.map(
+                lambda cpx_i: hl.Struct(
+                    chrom=reference_independent_contig(cpx_i.start),
+                    start=cpx_i.start.position,
+                    end=cpx_i.end.position,
+                    type=cpx_i.type,
+                )
+            ),
+            # For insertions, end_locus represents the svSourceDetail, otherwise represents the endChrom
+            'endChrom': hl.or_missing(
+                (
+                    (ht.sv_type != 'INS')
+                    & (ht.start_locus.contig != ht.end_locus.contig)
+                ),
+                reference_independent_contig(ht.end_locus),
+            ),
+            'svSourceDetail': hl.or_missing(
+                (
+                    (ht.sv_type == 'INS')
+                    & (ht.start_locus.contig != ht.end_locus.contig)
+                ),
+                hl.Struct(chrom=reference_independent_contig(ht.end_locus)),
+            ),
+            'svType': ht.sv_type,
+            'svTypeDetail': ht.sv_type_detail,
+        },
     }[dataset_type](ht)
 
 
@@ -121,6 +150,9 @@ def get_predictions_export_fields(
             'sift': ht.dbnsfp.SIFT_score,
             'mlc': ht.local_constraint_mito.score,
         },
+        DatasetType.SV: lambda ht: {
+            'strvctvre': ht.strvctvre.score,
+        },
     }[dataset_type](ht)
 
 
@@ -184,6 +216,14 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 max_hl=ht.helix_mito.max_hl,
             ),
         },
+        DatasetType.SV: lambda ht: {
+            'gnomad_svs': hl.Struct(
+                af=ht.gnomad_svs.AF,
+                het=ht.gnomad_svs.N_HET,
+                hom=ht.gnomad_svs.N_HOM,
+                id=ht.gnomad_svs.ID,
+            ),
+        },
     }[dataset_type](ht)
 
 
@@ -197,10 +237,33 @@ def get_variants_export_fields(
         'xpos': ht.xpos,
         'chrom': reference_independent_contig(ht.locus),
         'pos': ht.locus.position,
-        'ref': ht.alleles[0],
-        'alt': ht.alleles[1],
+        **({'end': ht.end_locus.position} if hasattr(ht, 'end_locus') else {}),
+        **(
+            {
+                'rg37LocusEnd': hl.Struct(
+                    contig=reference_independent_contig(ht.rg37_locus_end),
+                    position=ht.rg37_locus_end.position,
+                )
+            }
+            if hasattr(ht, 'rg37_locus_end')
+            else {}
+        ),
+        **(
+            {
+                'ref': ht.alleles[0],
+                'alt': ht.alleles[1],
+            }
+            if hasattr(ht, 'alleles')
+            else {}
+        ),
         'variantId': ht.variant_id,
-        'rsid': ht.rsid,
+        **(
+            {
+                'rsid': ht.rsid,
+            }
+            if hasattr(ht, 'rsid')
+            else {}
+        ),
         **(
             {
                 'CAID': ht.CAID,
