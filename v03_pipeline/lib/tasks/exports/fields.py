@@ -42,7 +42,6 @@ def get_dataset_type_specific_annotations(
                     type=cpx_i.type,
                 )
             ),
-            # For insertions, end_locus represents the svSourceDetail, otherwise represents the endChrom
             'endChrom': hl.or_missing(
                 (
                     (ht.sv_type != 'INS')
