@@ -5,6 +5,7 @@ import hail as hl
 import luigi.worker
 import pandas as pd
 
+from v03_pipeline.lib.annotations import shared
 from v03_pipeline.lib.misc.io import import_callset, remap_pedigree_hash
 from v03_pipeline.lib.model import (
     DatasetType,
@@ -26,11 +27,15 @@ from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
 
 TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_PEDIGREE_4_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap.tsv'
+TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_MITO_EXPORT_PEDIGREE = (
     'v03_pipeline/var/test/pedigrees/test_mito_export_pedigree.tsv'
 )
+TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_MITO_CALLSET = 'v03_pipeline/var/test/callsets/mito_1.mt'
+TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
+
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -45,6 +50,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
         )
         ht = mt.rows()
         ht = ht.add_index(name='key_')
+        ht = ht.annotate(xpos=shared.xpos(ht))
         ht = ht.annotate_globals(
             updates={
                 hl.Struct(
@@ -68,6 +74,7 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
         mt = import_callset(TEST_MITO_CALLSET, ReferenceGenome.GRCh38, DatasetType.MITO)
         ht = mt.rows()
         ht = ht.add_index(name='key_')
+        ht = ht.annotate(xpos=shared.xpos(ht))
         ht = ht.annotate_globals(
             updates={
                 hl.Struct(
@@ -280,6 +287,130 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'hl': 1.0,
                             'mitoCn': 224,
                             'contamination': 0.0,
+                        },
+                    ],
+                    'sign': 1,
+                },
+            ],
+        )
+
+    def test_sv_write_new_entries_parquet(self):
+        worker = luigi.worker.Worker()
+        task = WriteNewEntriesParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SV,
+            sample_type=SampleType.WGS,
+            callset_path=TEST_SV_VCF_2,
+            project_guids=['R0115_test_project2'],
+            project_pedigree_paths=[TEST_PEDIGREE_5],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.to_dict('records'))
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 0,
+                    'project_guid': 'R0115_test_project2',
+                    'family_guid': 'family_2_1',
+                    'sample_type': 'WGS',
+                    'xpos': 1000180929,
+                    'filters': ['HIGH_SR_BACKGROUND', 'UNRESOLVED'],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_164_1',
+                            'gt': 0,
+                            'cn': None,
+                            'gq': 99,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_2',
+                            'gt': 1,
+                            'cn': None,
+                            'gq': 31,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_3',
+                            'gt': 0,
+                            'cn': None,
+                            'gq': 99,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_4',
+                            'gt': 0,
+                            'cn': None,
+                            'gq': 99,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                    ],
+                    'sign': 1,
+                },
+                {
+                    'key': 1,
+                    'project_guid': 'R0115_test_project2',
+                    'family_guid': 'family_2_1',
+                    'sample_type': 'WGS',
+                    'xpos': 1000257667,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_164_1',
+                            'gt': 0,
+                            'cn': 2.0,
+                            'gq': 99,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_2',
+                            'gt': 0,
+                            'cn': 2.0,
+                            'gq': 99,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_3',
+                            'gt': 1,
+                            'cn': 3.0,
+                            'gq': 8,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_4',
+                            'gt': 0,
+                            'cn': 1.0,
+                            'gq': 13,
+                            'newCall': True,
+                            'prevCall': False,
+                            'prevNumAlt': None,
                         },
                     ],
                     'sign': 1,

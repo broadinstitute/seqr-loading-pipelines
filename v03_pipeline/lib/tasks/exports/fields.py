@@ -1,6 +1,5 @@
 import hail as hl
 
-from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.exports.misc import (
     transcripts_field_name,
@@ -84,6 +83,15 @@ def get_calls_export_fields(
             mitoCn=fe.mito_cn,
             contamination=fe.contamination,
         ),
+        DatasetType.SV: lambda fe: hl.Struct(
+            sampleId=fe.s,
+            gt=fe.GT.n_alt_alleles(),
+            cn=fe.CN,
+            gq=fe.GQ,
+            newCall=fe.concordance.new_call,
+            prevCall=fe.concordance.prev_call,
+            prevNumAlt=fe.concordance.prev_num_alt,
+        ),
     }[dataset_type](fe)
 
 
@@ -98,7 +106,7 @@ def get_entries_export_fields(
         'project_guid': project_guid,
         'family_guid': ht.family_entries.family_guid[0],
         'sample_type': sample_type.value,
-        'xpos': get_expr_for_xpos(ht.locus),
+        'xpos': ht.xpos,
         **(
             {
                 'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
