@@ -51,5 +51,6 @@ def get_ht(
             0,
             ht.freq[ht.globals.freq_index_dict[hemi_field(reference_genome)]].AC,
         ),
+        spliceai_ds_max=ht.in_silico_predictors.spliceai_ds_max,
     )
     return ht.select_globals()
