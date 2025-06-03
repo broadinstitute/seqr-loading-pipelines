@@ -67,6 +67,7 @@ class GnomadTest(unittest.TestCase):
                         AF_POPMAX_OR_GLOBAL=3.779861071961932e-05,
                         FAF_AF=7.019999884505523e-06,
                         Hemi=0,
+                        spliceai_ds_max=None,
                     ),
                 ],
             )
