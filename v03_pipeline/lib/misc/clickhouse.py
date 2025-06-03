@@ -194,7 +194,7 @@ def logged_query(query, params=None, increased_timeout: bool = False):
     return client.execute(query, params)
 
 
-@retry()
+@retry(delay=1)
 def drop_staging_db():
     logged_query(f'DROP DATABASE IF EXISTS {STAGING_CLICKHOUSE_DATABASE};')
 
