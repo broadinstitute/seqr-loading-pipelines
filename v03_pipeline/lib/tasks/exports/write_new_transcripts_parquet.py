@@ -69,9 +69,13 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
                 ht[transcripts_field_name(self.reference_genome, self.dataset_type)],
             )
             .starmap(
-                lambda i, s: s.annotate(
-                    majorConsequence=s.consequenceTerms.first(),
-                    transcriptRank=i,
+                lambda i, s: (
+                    s
+                    if hasattr(s, 'majorConsequence')
+                    else s.annotate(
+                        majorConsequence=s.consequenceTerms.first(),
+                        transcriptRank=i,
+                    )
                 ),
             )
             .map(sorted_hl_struct),

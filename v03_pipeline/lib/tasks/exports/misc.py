@@ -284,6 +284,14 @@ def unmap_formatting_annotation_enums(
             ),
         )
         ht = ht.annotate_globals(enums=ht.enums.drop('mitotip'))
+    if 'cpx_intervals' in formatting_annotation_names:
+        ht = ht.annotate(
+            cpx_intervals=ht.cpx_intervals.map(
+                lambda cpx_i: cpx_i.annotate(
+                    type=hl.array(SV_TYPES)[cpx_i.type_id],
+                ).drop('type_id'),
+            ),
+        )
     if 'sv_type_id' in formatting_annotation_names:
         ht = ht.annotate(sv_type=hl.array(SV_TYPES)[ht.sv_type_id]).drop('sv_type_id')
         ht = ht.annotate_globals(enums=ht.enums.drop('sv_type'))
