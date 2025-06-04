@@ -234,6 +234,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                             AF_POPMAX_OR_GLOBAL=0.0001119549197028391,
                             FAF_AF=9.315000352216884e-05,
                             Hemi=0,
+                            spliceai_ds_max=None,
                         ),
                         gnomad_genomes=hl.Struct(
                             AC=None,
@@ -243,6 +244,7 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                             AF_POPMAX_OR_GLOBAL=None,
                             FAF_AF=None,
                             Hemi=None,
+                            spliceai_ds_max=None,
                         ),
                         gnomad_non_coding_constraint=hl.Struct(z_score=0.75),
                         screen=hl.Struct(region_type_ids=[1]),
