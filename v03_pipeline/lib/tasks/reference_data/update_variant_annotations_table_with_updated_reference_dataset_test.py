@@ -439,8 +439,8 @@ class UpdateVATWithUpdatedReferenceDatasets(MockedReferenceDatasetsTestCase):
                             splice_ai='1.1',
                             topmed='1.1',
                             hgmd='1.0',
-                            gnomad_exomes='1.1',
-                            gnomad_genomes='1.1',
+                            gnomad_exomes='1.0',
+                            gnomad_genomes='1.0',
                         ),
                         enums=hl.Struct(
                             dbnsfp=ReferenceDataset.dbnsfp.enum_globals,
