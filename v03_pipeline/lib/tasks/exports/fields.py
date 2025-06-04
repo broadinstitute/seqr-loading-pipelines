@@ -1,8 +1,9 @@
 import hail as hl
 
-from v03_pipeline.lib.annotations.expression_helpers import get_expr_for_xpos
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.exports.misc import array_structexpression_fields
+from v03_pipeline.lib.tasks.exports.misc import (
+    transcripts_field_name,
+)
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
@@ -31,6 +32,34 @@ def get_dataset_type_specific_annotations(
             'commonLowHeteroplasmy': ht.common_low_heteroplasmy,
             'mitomapPathogenic': ht.mitomap.pathogenic,
         },
+        DatasetType.SV: lambda ht: {
+            'algorithms': ht.algorithms,
+            'bothsidesSupport': ht.bothsides_support,
+            'cpxIntervals': ht.cpxIntervals.map(
+                lambda cpx_i: hl.Struct(
+                    chrom=reference_independent_contig(cpx_i.start),
+                    start=cpx_i.start.position,
+                    end=cpx_i.end.position,
+                    type=cpx_i.type,
+                ),
+            ),
+            'endChrom': hl.or_missing(
+                (
+                    (ht.sv_type != 'INS')
+                    & (ht.start_locus.contig != ht.end_locus.contig)
+                ),
+                reference_independent_contig(ht.end_locus),
+            ),
+            'svSourceDetail': hl.or_missing(
+                (
+                    (ht.sv_type == 'INS')
+                    & (ht.start_locus.contig != ht.end_locus.contig)
+                ),
+                hl.Struct(chrom=reference_independent_contig(ht.end_locus)),
+            ),
+            'svType': ht.sv_type,
+            'svTypeDetail': ht.sv_type_detail,
+        },
     }[dataset_type](ht)
 
 
@@ -54,6 +83,15 @@ def get_calls_export_fields(
             mitoCn=fe.mito_cn,
             contamination=fe.contamination,
         ),
+        DatasetType.SV: lambda fe: hl.Struct(
+            sampleId=fe.s,
+            gt=fe.GT.n_alt_alleles(),
+            cn=fe.CN,
+            gq=fe.GQ,
+            newCall=fe.concordance.new_call,
+            prevCall=fe.concordance.prev_call,
+            prevNumAlt=fe.concordance.prev_num_alt,
+        ),
     }[dataset_type](fe)
 
 
@@ -68,7 +106,7 @@ def get_entries_export_fields(
         'project_guid': project_guid,
         'family_guid': ht.family_entries.family_guid[0],
         'sample_type': sample_type.value,
-        'xpos': get_expr_for_xpos(ht.locus),
+        'xpos': ht.xpos,
         **(
             {
                 'is_gnomad_gt_5_percent': hl.is_defined(ht.is_gt_5_percent),
@@ -120,6 +158,9 @@ def get_predictions_export_fields(
             'mut_taster': ht.dbnsfp.MutationTaster_pred,
             'sift': ht.dbnsfp.SIFT_score,
             'mlc': ht.local_constraint_mito.score,
+        },
+        DatasetType.SV: lambda ht: {
+            'strvctvre': ht.strvctvre.score,
         },
     }[dataset_type](ht)
 
@@ -184,7 +225,72 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 max_hl=ht.helix_mito.max_hl,
             ),
         },
+        DatasetType.SV: lambda ht: {
+            'gnomad_svs': hl.Struct(
+                af=ht.gnomad_svs.AF,
+                het=ht.gnomad_svs.N_HET,
+                hom=ht.gnomad_svs.N_HOM,
+                id=ht.gnomad_svs.ID,
+            ),
+        },
     }[dataset_type](ht)
+
+
+def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
+    if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+        return {
+            'chrom': reference_independent_contig(ht.start_locus),
+            'pos': ht.start_locus.position,
+            'end_locus': ht.end_locus.position,
+            'rg37LocusEnd': hl.Struct(
+                contig=reference_independent_contig(ht.rg37_locus_end),
+                position=ht.rg37_locus_end.position,
+            ),
+        }
+    return {
+        'chrom': reference_independent_contig(ht.locus),
+        'pos': ht.locus.position,
+        'ref': ht.alleles[0],
+        'alt': ht.alleles[1],
+    }
+
+
+def get_variant_id_fields(
+    ht: hl.Table,
+    dataset_type: DatasetType,
+):
+    return {
+        DatasetType.SNV_INDEL: lambda ht: {
+            'variantId': ht.variant_id,
+            'rsid': ht.rsid,
+            'CAID': ht.CAID,
+        },
+        DatasetType.MITO: lambda ht: {
+            'variantId': ht.variant_id,
+            'rsid': ht.rsid,
+        },
+        DatasetType.SV: lambda ht: {
+            'variantId': ht.variant_id,
+        },
+    }[dataset_type](ht)
+
+
+def get_consequences_fields(
+    ht: hl.Table,
+    reference_genome: ReferenceGenome,
+    dataset_type: DatasetType,
+):
+    consequences_field = transcripts_field_name(reference_genome, dataset_type)
+    if (
+        reference_genome == ReferenceGenome.GRCh38
+        and dataset_type == DatasetType.SNV_INDEL
+    ):
+        return {
+            'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
+            'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
+            consequences_field: ht[consequences_field],
+        }
+    return {consequences_field: ht[consequences_field]}
 
 
 def get_variants_export_fields(
@@ -195,19 +301,8 @@ def get_variants_export_fields(
     return {
         'key_': ht.key_,
         'xpos': ht.xpos,
-        'chrom': reference_independent_contig(ht.locus),
-        'pos': ht.locus.position,
-        'ref': ht.alleles[0],
-        'alt': ht.alleles[1],
-        'variantId': ht.variant_id,
-        'rsid': ht.rsid,
-        **(
-            {
-                'CAID': ht.CAID,
-            }
-            if hasattr(ht, 'CAID')
-            else {}
-        ),
+        **get_position_fields(ht, dataset_type),
+        **get_variant_id_fields(ht, dataset_type),
         'liftedOverChrom': (
             reference_independent_contig(ht.rg37_locus)
             if hasattr(ht, 'rg37_locus')
@@ -225,5 +320,5 @@ def get_variants_export_fields(
         'populations': hl.Struct(
             **get_populations_export_fields(ht, dataset_type),
         ),
-        **{f: ht[f] for f in sorted(array_structexpression_fields(ht))},
+        **get_consequences_fields(ht, reference_genome, dataset_type),
     }
