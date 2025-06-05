@@ -25,6 +25,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
     'v03_pipeline/var/test/exports/GRCh37/SNV_INDEL/annotations.ht'
 )
 TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
+TEST_SV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/SV/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -59,6 +60,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             new_variants_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.MITO,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_SV_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
                 TEST_RUN_ID,
             ),
         )
@@ -378,6 +389,74 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'consequenceTerms': ['non_coding_transcript_exon_variant'],
                             'geneId': 'ENSG00000210049',
                         },
+                    ],
+                },
+            ],
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.WriteNewVariantsTableTask',
+    )
+    def test_sv_write_new_variants_parquet_test(
+        self,
+        write_new_variants_table_task: Mock,
+    ) -> None:
+        write_new_variants_table_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewVariantsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SV,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        export_json[0]['sortedGeneConsequences'] = [
+            export_json[0]['sortedGeneConsequences'][0],
+        ]
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 727,
+                    'xpos': 1001025886,
+                    'chrom': '1',
+                    'pos': 1025886,
+                    'end_locus': 1028192,
+                    'rg37LocusEnd': {'contig': '1', 'position': 963572},
+                    'variantId': 'all_sample_sets.chr1.final_cleanup_CPX_chr1_1',
+                    'liftedOverChrom': '1',
+                    'liftedOverPos': 961266,
+                    'algorithms': 'manta',
+                    'bothsidesSupport': None,
+                    'cpxIntervals': [
+                        {'chrom': '1', 'start': 1025886, 'end': 1025986, 'type': 'DUP'},
+                        {'chrom': '1', 'start': 1025886, 'end': 1028192, 'type': 'INV'},
+                    ],
+                    'endChrom': '2',
+                    'svSourceDetail': None,
+                    'svType': 'CPX',
+                    'svTypeDetail': 'dupINV',
+                    'predictions': {'strvctvre': None},
+                    'populations': {'gnomad_svs': None},
+                    'sortedGeneConsequences': [
+                        {'geneId': 'ENSG00000188157', 'majorConsequence': 'INTRONIC'},
                     ],
                 },
             ],
