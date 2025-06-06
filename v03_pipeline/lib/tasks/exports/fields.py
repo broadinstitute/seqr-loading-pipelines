@@ -60,6 +60,10 @@ def get_dataset_type_specific_annotations(
             'svType': ht.sv_type,
             'svTypeDetail': ht.sv_type_detail,
         },
+        DatasetType.GCNV: lambda ht: {
+            'numExon': ht.num_exon,
+            'svType': ht.sv_type,
+        },
     }[dataset_type](ht)
 
 
@@ -162,6 +166,9 @@ def get_predictions_export_fields(
         DatasetType.SV: lambda ht: {
             'strvctvre': ht.strvctvre.score,
         },
+        DatasetType.GCNV: lambda ht: {
+            'strvctvre': ht.strvctvre.score,
+        },
     }[dataset_type](ht)
 
 
@@ -233,6 +240,15 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
                 id=ht.gnomad_svs.ID,
             ),
         },
+        DatasetType.GCNV: lambda ht: {
+            'seqrPop': hl.Struct(
+                af=ht.gt_stats.AF,
+                ac=ht.gt_stats.AC,
+                an=ht.gt_stats.AN,
+                Hom=ht.gt_stats.Hom,
+                Het=ht.gt_stats.Het,
+            ),
+        },
     }[dataset_type](ht)
 
 
@@ -241,7 +257,7 @@ def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
         return {
             'chrom': reference_independent_contig(ht.start_locus),
             'pos': ht.start_locus.position,
-            'end_locus': ht.end_locus.position,
+            'end': ht.end_locus.position,
             'rg37LocusEnd': hl.Struct(
                 contig=reference_independent_contig(ht.rg37_locus_end),
                 position=ht.rg37_locus_end.position,
@@ -270,6 +286,9 @@ def get_variant_id_fields(
             'rsid': ht.rsid,
         },
         DatasetType.SV: lambda ht: {
+            'variantId': ht.variant_id,
+        },
+        DatasetType.GCNV: lambda ht: {
             'variantId': ht.variant_id,
         },
     }[dataset_type](ht)
