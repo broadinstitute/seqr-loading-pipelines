@@ -27,6 +27,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
 )
 TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
 TEST_SV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/SV/annotations.ht'
+TEST_GCNV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/GCNV/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -71,6 +72,16 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             new_variants_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SV,
+                TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(
+            TEST_GCNV_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
                 TEST_RUN_ID,
             ),
         )
@@ -364,6 +375,58 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             {
                 'geneId': 'ENSG00000188157',
                 'majorConsequence': 'INTRONIC',
+            },
+        )
+        self.assertEqual(
+            list(export_json[0]['transcripts'][0].keys()),
+            sorted(export_json[0]['transcripts'][0].keys()),
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.WriteNewVariantsTableTask',
+    )
+    def test_gcnv_write_new_transcripts_parquet_test(
+        self,
+        write_new_variants_table_task: Mock,
+    ) -> None:
+        write_new_variants_table_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewTranscriptsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.GCNV,
+            sample_type=SampleType.WES,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            os.path.join(
+                new_transcripts_parquet_path(
+                    ReferenceGenome.GRCh38,
+                    DatasetType.GCNV,
+                    TEST_RUN_ID,
+                ),
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        self.assertListEqual(list(export_json[0].keys()), ['key', 'transcripts'])
+        self.assertEqual(
+            export_json[0]['key'],
+            0,
+        )
+        self.assertEqual(
+            export_json[0]['transcripts'][0],
+            {
+                'geneId': 'ENSG00000187634',
+                'majorConsequence': 'LOF',
             },
         )
         self.assertEqual(
