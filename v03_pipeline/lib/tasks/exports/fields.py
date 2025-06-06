@@ -96,6 +96,20 @@ def get_calls_export_fields(
             prevCall=fe.concordance.prev_call,
             prevNumAlt=fe.concordance.prev_num_alt,
         ),
+        DatasetType.GCNV: lambda fe: hl.Struct(
+            sampleId=fe.s,
+            gt=fe.GT.n_alt_alleles(),
+            cn=fe.CN,
+            qs=fe.QS,
+            defragged=fe.defragged,
+            start=fe.sample_start,
+            end=fe.sample_end,
+            numExon=fe.sample_num_exon,
+            geneIds=fe.sample_gene_ids,
+            newCall=fe.concordance.new_call,
+            prevCall=fe.concordance.prev_call,
+            prevOverlap=fe.concordance.prev_overlap,
+        ),
     }[dataset_type](fe)
 
 
