@@ -527,11 +527,11 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'an': 23048,
                             'Hom': None,
                             'Het': None,
-                        }
+                        },
                     },
                     'sortedGeneConsequences': [
-                        {'geneId': 'ENSG00000187634', 'majorConsequence': 'LOF'}
+                        {'geneId': 'ENSG00000187634', 'majorConsequence': 'LOF'},
                     ],
-                }
+                },
             ],
         )
