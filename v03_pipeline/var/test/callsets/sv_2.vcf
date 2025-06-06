@@ -11,6 +11,7 @@
 ##FORMAT=<ID=SR_GQ,Number=1,Type=Integer,Description="Split read genotype quality">
 ##FORMAT=<ID=SR_GT,Number=1,Type=Integer,Description="Split-read genotype">
 ##INFO=<ID=ALGORITHMS,Number=.,Type=String,Description="Source algorithms">
+##INFO=<ID=BOTHSIDES_SUPPORT,Number=0,Type=Flag,Description="Variant has read-level support for both sides of breakpoint">
 ##INFO=<ID=CHR2,Number=1,Type=String,Description="Chromosome for END coordinate">
 ##INFO=<ID=CPX_INTERVALS,Number=.,Type=String,Description="Genomic intervals constituting complex variant.">
 ##INFO=<ID=CPX_TYPE,Number=1,Type=String,Description="Class of complex variant.">

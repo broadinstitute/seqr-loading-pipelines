@@ -125,6 +125,7 @@ class DatasetType(StrEnum):
                 'info.AC': hl.tarray(hl.tint32),
                 'info.AF': hl.tarray(hl.tfloat64),
                 'info.ALGORITHMS': hl.tarray(hl.tstr),
+                'info.BOTHSIDES_SUPPORT': hl.tbool,
                 'info.AN': hl.tint32,
                 'info.CHR2': hl.tstr,
                 'info.CPX_INTERVALS': hl.tarray(hl.tstr),
