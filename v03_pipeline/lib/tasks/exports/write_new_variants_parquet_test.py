@@ -32,8 +32,52 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 
 class WriteNewVariantsParquetTest(MockedDatarootTestCase):
-    def setUp(self) -> None:
-        super().setUp()
+    def test_empty_write_new_variants_parquet_test(
+        self,
+    ) -> None:
+        ht = hl.read_table(
+            TEST_SNV_INDEL_ANNOTATIONS,
+        )
+        ht = ht.head(0)
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        worker = luigi.worker.Worker()
+        task = WriteNewVariantsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.SNV_INDEL,
+            sample_type=SampleType.WGS,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
+        self.assertEqual(
+            len(df),
+            0,
+        )
+
+    def test_snv_indel_write_new_variants_parquet_test(
+        self,
+    ) -> None:
         ht = hl.read_table(
             TEST_SNV_INDEL_ANNOTATIONS,
         )
@@ -44,48 +88,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                 TEST_RUN_ID,
             ),
         )
-        ht = hl.read_table(
-            TEST_GRCH37_SNV_INDEL_ANNOTATIONS,
-        )
-        ht.write(
-            new_variants_table_path(
-                ReferenceGenome.GRCh37,
-                DatasetType.SNV_INDEL,
-                TEST_RUN_ID,
-            ),
-        )
-        ht = hl.read_table(
-            TEST_MITO_ANNOTATIONS,
-        )
-        ht.write(
-            new_variants_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.MITO,
-                TEST_RUN_ID,
-            ),
-        )
-        ht = hl.read_table(
-            TEST_SV_ANNOTATIONS,
-        )
-        ht.write(
-            new_variants_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SV,
-                TEST_RUN_ID,
-            ),
-        )
-        ht = hl.read_table(TEST_GCNV_ANNOTATIONS)
-        ht.write(
-            new_variants_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.GCNV,
-                TEST_RUN_ID,
-            ),
-        )
-
-    def test_write_new_variants_parquet_test(
-        self,
-    ) -> None:
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,
@@ -211,6 +213,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     def test_grch37_write_new_variants_parquet_test(
         self,
     ) -> None:
+        ht = hl.read_table(
+            TEST_GRCH37_SNV_INDEL_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh37,
+                DatasetType.SNV_INDEL,
+                TEST_RUN_ID,
+            ),
+        )
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
             reference_genome=ReferenceGenome.GRCh37,
@@ -322,6 +334,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         self,
         write_new_variants_table_task: Mock,
     ) -> None:
+        ht = hl.read_table(
+            TEST_MITO_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.MITO,
+                TEST_RUN_ID,
+            ),
+        )
         write_new_variants_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
@@ -410,6 +432,16 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         self,
         write_new_variants_table_task: Mock,
     ) -> None:
+        ht = hl.read_table(
+            TEST_SV_ANNOTATIONS,
+        )
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.SV,
+                TEST_RUN_ID,
+            ),
+        )
         write_new_variants_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
@@ -478,6 +510,14 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         self,
         write_new_variants_table_task: Mock,
     ) -> None:
+        ht = hl.read_table(TEST_GCNV_ANNOTATIONS)
+        ht.write(
+            new_variants_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                TEST_RUN_ID,
+            ),
+        )
         write_new_variants_table_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
