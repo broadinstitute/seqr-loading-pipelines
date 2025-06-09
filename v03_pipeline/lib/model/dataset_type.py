@@ -392,10 +392,6 @@ class DatasetType(StrEnum):
         return self == DatasetType.SV
 
     @property
-    def should_export_to_parquet(self):
-        return self == DatasetType.SNV_INDEL
-
-    @property
     def export_vcf_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
         return {
             DatasetType.SV: [
