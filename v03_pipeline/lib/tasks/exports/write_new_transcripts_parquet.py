@@ -2,6 +2,7 @@ import hail as hl
 import luigi
 import luigi.util
 
+from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.paths import (
     new_transcripts_parquet_path,
     new_variants_table_path,
@@ -56,6 +57,13 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
                     self.dataset_type,
                 ),
             )
+            callset_ht = get_callset_ht(
+                self.reference_genome,
+                self.dataset_type,
+                self.callset_path,
+                self.project_guids,
+            )
+            ht = ht.semi_join(callset_ht)
         else:
             ht = hl.read_table(
                 new_variants_table_path(
