@@ -374,7 +374,7 @@ class DatasetType(StrEnum):
             DatasetType.SV: [
                 sv.gt_stats,
             ],
-        }.get(self, [])
+        }[self]
 
     @property
     def should_send_to_allele_registry(self):

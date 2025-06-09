@@ -71,53 +71,52 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
 
         # Union with the new variants table and annotate with the lookup table.
         ht = ht.union(new_variants_ht, unify=True)
-        if self.dataset_type.variant_frequency_annotation_fns:
-            callset_ht = get_callset_ht(
+        callset_ht = get_callset_ht(
+            self.reference_genome,
+            self.dataset_type,
+            self.callset_path,
+            self.project_guids,
+        )
+        lookup_ht = None
+        if self.dataset_type.has_lookup_table:
+            lookup_ht = hl.read_table(
+                lookup_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                ),
+            )
+            # Variants may have fallen out of the callset and
+            # have been removed from the lookup table during modification.
+            # Ensure we don't proceed with those variants.
+            ht = ht.semi_join(lookup_ht)
+        elif self.dataset_type.gt_stats_from_hl_call_stats:
+            callset_mt = get_callset_mt(
                 self.reference_genome,
                 self.dataset_type,
                 self.callset_path,
                 self.project_guids,
             )
-            lookup_ht = None
-            if self.dataset_type.has_lookup_table:
-                lookup_ht = hl.read_table(
-                    lookup_table_path(
-                        self.reference_genome,
-                        self.dataset_type,
-                    ),
-                )
-                # Variants may have fallen out of the callset and
-                # have been removed from the lookup table during modification.
-                # Ensure we don't proceed with those variants.
-                ht = ht.semi_join(lookup_ht)
-            elif self.dataset_type.gt_stats_from_hl_call_stats:
-                callset_mt = get_callset_mt(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.callset_path,
-                    self.project_guids,
-                )
-                callset_mt = callset_mt.annotate_rows(
-                    gt_stats=hl.agg.call_stats(callset_mt.GT, callset_mt.alleles),
-                )
-                callset_ht = callset_mt.rows()
-
-            # new_variants_ht consists of variants present in the new callset, fully annotated,
-            # but NOT present in the existing annotations table.
-            # callset_variants_ht consists of variants present in the new callset, fully annotated,
-            # and either present or not present in the existing annotations table.
-            callset_variants_ht = ht.semi_join(callset_ht)
-            non_callset_variants_ht = ht.anti_join(callset_ht)
-            callset_variants_ht = callset_variants_ht.annotate(
-                **get_fields(
-                    callset_variants_ht,
-                    self.dataset_type.variant_frequency_annotation_fns,
-                    lookup_ht=lookup_ht,
-                    callset_ht=callset_ht,
-                    **self.param_kwargs,
-                ),
+            callset_mt = callset_mt.annotate_rows(
+                gt_stats=hl.agg.call_stats(callset_mt.GT, callset_mt.alleles),
             )
-            ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
+            callset_ht = callset_mt.rows()
+
+        # new_variants_ht consists of variants present in the new callset, fully annotated,
+        # but NOT present in the existing annotations table.
+        # callset_variants_ht consists of variants present in the new callset, fully annotated,
+        # and either present or not present in the existing annotations table.
+        callset_variants_ht = ht.semi_join(callset_ht)
+        non_callset_variants_ht = ht.anti_join(callset_ht)
+        callset_variants_ht = callset_variants_ht.annotate(
+            **get_fields(
+                callset_variants_ht,
+                self.dataset_type.variant_frequency_annotation_fns,
+                lookup_ht=lookup_ht,
+                callset_ht=callset_ht,
+                **self.param_kwargs,
+            ),
+        )
+        ht = non_callset_variants_ht.union(callset_variants_ht, unify=True)
         new_variants_ht_globals = new_variants_ht.index_globals()
         return ht.select_globals(
             versions=new_variants_ht_globals.versions,
