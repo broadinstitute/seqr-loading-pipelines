@@ -11,7 +11,11 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.paths import new_transcripts_parquet_path, new_variants_table_path, variant_annotations_table_path
+from v03_pipeline.lib.paths import (
+    new_transcripts_parquet_path,
+    new_variants_table_path,
+    variant_annotations_table_path,
+)
 from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
