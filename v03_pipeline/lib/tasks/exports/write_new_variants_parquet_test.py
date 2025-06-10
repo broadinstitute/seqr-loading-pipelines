@@ -87,19 +87,10 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
             TEST_SNV_INDEL_ANNOTATIONS,
         )
         ht.write(
-            variant_annotations_table_path(
+            new_variants_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.SNV_INDEL,
                 TEST_RUN_ID,
-                DatasetType.GCNV,
-            ),
-        )
-        ht.write(
-            remapped_and_subsetted_callset_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.GCNV,
-                'fake_callset',
-                'fake_project',
             ),
         )
         worker = luigi.worker.Worker()
@@ -530,19 +521,12 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
     ) -> None:
         ht = hl.read_table(TEST_GCNV_ANNOTATIONS)
         ht.write(
-            new_variants_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.GCNV,
-                TEST_RUN_ID,
-            ),
-        )
-        write_new_variants_table_task.return_value = MockCompleteTask()
-        get_callset_ht.return_value = hl.read_table(
             variant_annotations_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
             ),
         )
+        get_callset_ht.return_value = ht
         update_variant_annotations_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewVariantsParquetTask(
