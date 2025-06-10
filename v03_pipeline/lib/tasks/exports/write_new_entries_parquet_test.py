@@ -35,6 +35,7 @@ TEST_PEDIGREE_5 = 'v03_pipeline/var/test/pedigrees/test_pedigree_5.tsv'
 TEST_SNV_INDEL_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
 TEST_MITO_CALLSET = 'v03_pipeline/var/test/callsets/mito_1.mt'
 TEST_SV_VCF_2 = 'v03_pipeline/var/test/callsets/sv_2.vcf'
+TEST_GCNV_BED_FILE = 'v03_pipeline/var/test/callsets/gcnv_1.tsv'
 
 
 TEST_RUN_ID = 'manual__2024-04-03'
@@ -42,6 +43,8 @@ TEST_RUN_ID = 'manual__2024-04-03'
 
 class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
     def setUp(self) -> None:
+        # NOTE: The annotations tables are mocked for SNV_INDEL & MITO
+        # to avoid reference dataset updates that SV/GCNV do not have.
         super().setUp()
         mt = import_callset(
             TEST_SNV_INDEL_VCF,
@@ -411,6 +414,170 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                             'newCall': True,
                             'prevCall': False,
                             'prevNumAlt': None,
+                        },
+                    ],
+                    'sign': 1,
+                },
+            ],
+        )
+
+    def test_gcnv_write_new_entries_parquet(self):
+        worker = luigi.worker.Worker()
+        task = WriteNewEntriesParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.GCNV,
+            sample_type=SampleType.WES,
+            callset_path=TEST_GCNV_BED_FILE,
+            project_guids=['R0115_test_project2'],
+            project_pedigree_paths=[TEST_PEDIGREE_5],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_entries_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.to_dict('records'))
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 0,
+                    'project_guid': 'R0115_test_project2',
+                    'family_guid': 'family_2_1',
+                    'sample_type': 'WES',
+                    'xpos': 1100006937,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_164_1',
+                            'gt': 1,
+                            'cn': 1,
+                            'qs': 4,
+                            'defragged': False,
+                            'start': 100006937,
+                            'end': 100007881,
+                            'numExon': 2.0,
+                            'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
+                            'newCall': False,
+                            'prevCall': True,
+                            'prevOverlap': False,
+                        },
+                        {
+                            'sampleId': 'RGP_164_2',
+                            'gt': 1,
+                            'cn': 1,
+                            'qs': 5,
+                            'defragged': False,
+                            'start': 100017585,
+                            'end': 100023213,
+                            'numExon': None,
+                            'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
+                            'newCall': False,
+                            'prevCall': False,
+                            'prevOverlap': False,
+                        },
+                        {
+                            'sampleId': 'RGP_164_3',
+                            'gt': 2,
+                            'cn': 0,
+                            'qs': 30,
+                            'defragged': False,
+                            'start': 100017585,
+                            'end': 100023213,
+                            'numExon': None,
+                            'geneIds': ['ENSG00000117620', 'ENSG00000283761'],
+                            'newCall': False,
+                            'prevCall': True,
+                            'prevOverlap': False,
+                        },
+                        {
+                            'sampleId': 'RGP_164_4',
+                            'gt': 2,
+                            'cn': 0.0,
+                            'qs': 30.0,
+                            'defragged': False,
+                            'start': 100017586.0,
+                            'end': 100023212.0,
+                            'numExon': 2.0,
+                            'geneIds': ['ENSG00000283761', 'ENSG22222222222'],
+                            'newCall': False,
+                            'prevCall': True,
+                            'prevOverlap': False,
+                        },
+                    ],
+                    'sign': 1,
+                },
+                {
+                    'key': 1,
+                    'project_guid': 'R0115_test_project2',
+                    'family_guid': 'family_2_1',
+                    'sample_type': 'WES',
+                    'xpos': 1100017586,
+                    'filters': [],
+                    'calls': [
+                        {
+                            'sampleId': 'RGP_164_1',
+                            'gt': None,
+                            'cn': None,
+                            'qs': None,
+                            'defragged': None,
+                            'start': None,
+                            'end': None,
+                            'numExon': None,
+                            'geneIds': None,
+                            'newCall': None,
+                            'prevCall': None,
+                            'prevOverlap': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_2',
+                            'gt': None,
+                            'cn': None,
+                            'qs': None,
+                            'defragged': None,
+                            'start': None,
+                            'end': None,
+                            'numExon': None,
+                            'geneIds': None,
+                            'newCall': None,
+                            'prevCall': None,
+                            'prevOverlap': None,
+                        },
+                        {
+                            'sampleId': 'RGP_164_3',
+                            'gt': 2,
+                            'cn': 0.0,
+                            'qs': 30.0,
+                            'defragged': False,
+                            'start': None,
+                            'end': None,
+                            'numExon': None,
+                            'geneIds': None,
+                            'newCall': False,
+                            'prevCall': True,
+                            'prevOverlap': False,
+                        },
+                        {
+                            'sampleId': 'RGP_164_4',
+                            'gt': None,
+                            'cn': None,
+                            'qs': None,
+                            'defragged': None,
+                            'start': None,
+                            'end': None,
+                            'numExon': None,
+                            'geneIds': None,
+                            'newCall': None,
+                            'prevCall': None,
+                            'prevOverlap': None,
                         },
                     ],
                     'sign': 1,

@@ -10,7 +10,12 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.paths import new_variants_parquet_path, new_variants_table_path
+from v03_pipeline.lib.paths import (
+    new_variants_parquet_path,
+    new_variants_table_path,
+    remapped_and_subsetted_callset_path,
+    variant_annotations_table_path,
+)
 from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
     WriteNewVariantsParquetTask,
 )
@@ -26,6 +31,7 @@ TEST_GRCH37_SNV_INDEL_ANNOTATIONS = (
 )
 TEST_MITO_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/MITO/annotations.ht'
 TEST_SV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/SV/annotations.ht'
+TEST_GCNV_ANNOTATIONS = 'v03_pipeline/var/test/exports/GRCh38/GCNV/annotations.ht'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -71,6 +77,21 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                 ReferenceGenome.GRCh38,
                 DatasetType.SV,
                 TEST_RUN_ID,
+            ),
+        )
+        ht = hl.read_table(TEST_GCNV_ANNOTATIONS)
+        ht.write(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+            ),
+        )
+        ht.write(
+            remapped_and_subsetted_callset_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                'fake_callset',
+                'fake_project',
             ),
         )
 
@@ -438,7 +459,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'xpos': 1001025886,
                     'chrom': '1',
                     'pos': 1025886,
-                    'end_locus': 1028192,
+                    'end': 1028192,
                     'rg37LocusEnd': {'contig': '1', 'position': 963572},
                     'variantId': 'all_sample_sets.chr1.final_cleanup_CPX_chr1_1',
                     'liftedOverChrom': '1',
@@ -457,6 +478,81 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'populations': {'gnomad_svs': None},
                     'sortedGeneConsequences': [
                         {'geneId': 'ENSG00000188157', 'majorConsequence': 'INTRONIC'},
+                    ],
+                },
+            ],
+        )
+
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
+    )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_variants_parquet.get_callset_ht',
+    )
+    def test_gcnv_write_new_variants_parquet_test(
+        self,
+        get_callset_ht: Mock,
+        update_variant_annotations_task: Mock,
+    ) -> None:
+        get_callset_ht.return_value = hl.read_table(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+            ),
+        )
+        update_variant_annotations_task.return_value = MockCompleteTask()
+        worker = luigi.worker.Worker()
+        task = WriteNewVariantsParquetTask(
+            reference_genome=ReferenceGenome.GRCh38,
+            dataset_type=DatasetType.GCNV,
+            sample_type=SampleType.WES,
+            callset_path='fake_callset',
+            project_guids=[
+                'fake_project',
+            ],
+            project_pedigree_paths=['fake_pedigree'],
+            skip_validation=True,
+            run_id=TEST_RUN_ID,
+        )
+        worker.add(task)
+        worker.run()
+        self.assertTrue(task.output().exists())
+        self.assertTrue(task.complete())
+        df = pd.read_parquet(
+            new_variants_parquet_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+                TEST_RUN_ID,
+            ),
+        )
+        export_json = convert_ndarray_to_list(df.head(1).to_dict('records'))
+        self.assertEqual(
+            export_json,
+            [
+                {
+                    'key': 0,
+                    'xpos': 1000939203,
+                    'chrom': '1',
+                    'pos': 939203,
+                    'end': 939558,
+                    'rg37LocusEnd': {'contig': '1', 'position': 874938},
+                    'variantId': 'R4_variant_0_DUP',
+                    'liftedOverChrom': '1',
+                    'liftedOverPos': 874583,
+                    'numExon': 1,
+                    'svType': 'DUP',
+                    'predictions': {'strvctvre': 0.4490000009536743},
+                    'populations': {
+                        'seqrPop': {
+                            'af': 4.3387713958509266e-05,
+                            'ac': 1,
+                            'an': 23048,
+                            'Hom': None,
+                            'Het': None,
+                        },
+                    },
+                    'sortedGeneConsequences': [
+                        {'geneId': 'ENSG00000187634', 'majorConsequence': 'LOF'},
                     ],
                 },
             ],
