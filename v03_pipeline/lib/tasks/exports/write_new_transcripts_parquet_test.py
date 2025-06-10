@@ -11,7 +11,11 @@ from v03_pipeline.lib.model import (
     ReferenceGenome,
     SampleType,
 )
-from v03_pipeline.lib.paths import new_transcripts_parquet_path, new_variants_table_path
+from v03_pipeline.lib.paths import (
+    new_transcripts_parquet_path,
+    new_variants_table_path,
+    variant_annotations_table_path,
+)
 from v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet import (
     WriteNewTranscriptsParquetTask,
 )
@@ -79,10 +83,9 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
             TEST_GCNV_ANNOTATIONS,
         )
         ht.write(
-            new_variants_table_path(
+            variant_annotations_table_path(
                 ReferenceGenome.GRCh38,
                 DatasetType.GCNV,
-                TEST_RUN_ID,
             ),
         )
 
@@ -383,13 +386,23 @@ class WriteNewTranscriptsParquetTest(MockedDatarootTestCase):
         )
 
     @mock.patch(
-        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.WriteNewVariantsTableTask',
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.UpdateVariantAnnotationsTableWithNewSamplesTask',
+    )
+    @mock.patch(
+        'v03_pipeline.lib.tasks.exports.write_new_transcripts_parquet.get_callset_ht',
     )
     def test_gcnv_write_new_transcripts_parquet_test(
         self,
-        write_new_variants_table_task: Mock,
+        get_callset_ht: Mock,
+        update_variant_annotations_task: Mock,
     ) -> None:
-        write_new_variants_table_task.return_value = MockCompleteTask()
+        get_callset_ht.return_value = hl.read_table(
+            variant_annotations_table_path(
+                ReferenceGenome.GRCh38,
+                DatasetType.GCNV,
+            ),
+        )
+        update_variant_annotations_task.return_value = MockCompleteTask()
         worker = luigi.worker.Worker()
         task = WriteNewTranscriptsParquetTask(
             reference_genome=ReferenceGenome.GRCh38,

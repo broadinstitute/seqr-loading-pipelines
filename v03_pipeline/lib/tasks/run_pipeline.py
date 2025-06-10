@@ -46,7 +46,6 @@ class RunPipelineTask(luigi.WrapperTask):
             *(
                 [self.clone(WriteNewClinvarVariantsParquetTask)]
                 if FeatureFlag.EXPORT_TO_PARQUET
-                and self.dataset_type.should_export_to_parquet
                 and (
                     ReferenceDataset.clinvar
                     in BaseReferenceDataset.for_reference_genome_dataset_type(
@@ -63,7 +62,6 @@ class RunPipelineTask(luigi.WrapperTask):
                     self.clone(WriteNewVariantsParquetTask),
                 ]
                 if FeatureFlag.EXPORT_TO_PARQUET
-                and self.dataset_type.should_export_to_parquet
                 else []
             ),
         ]
