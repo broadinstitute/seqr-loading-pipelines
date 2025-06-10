@@ -13,7 +13,6 @@ from v03_pipeline.lib.model import (
 from v03_pipeline.lib.paths import (
     new_variants_parquet_path,
     new_variants_table_path,
-    remapped_and_subsetted_callset_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.exports.write_new_variants_parquet import (
