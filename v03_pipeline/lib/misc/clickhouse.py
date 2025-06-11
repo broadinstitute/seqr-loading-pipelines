@@ -55,7 +55,7 @@ class ClickHouseTable(StrEnum):
             ClickHouseTable.ENTRIES: new_entries_parquet_path,
         }[self]
 
-    def should_load(
+    def should_load(  # noqa: PLR0911
         self,
         reference_genome: ReferenceGenome,
         dataset_type: DatasetType,

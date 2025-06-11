@@ -363,7 +363,6 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         export_json[0]['sortedTranscriptConsequences'] = [
             export_json[0]['sortedTranscriptConsequences'][0],
         ]
-        print(export_json[0]['sortedTranscriptConsequences'])
         self.assertEqual(
             export_json,
             [
@@ -418,7 +417,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'biotype': 'Mt_tRNA',
                             'consequenceTerms': ['non_coding_transcript_exon_variant'],
                             'lofFilters': None,
-                        }
+                        },
                     ],
                 },
             ],
