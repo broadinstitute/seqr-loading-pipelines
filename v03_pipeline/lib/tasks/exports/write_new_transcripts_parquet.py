@@ -13,7 +13,6 @@ from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
     reformat_transcripts_for_export,
-    sorted_hl_struct,
     unmap_formatting_annotation_enums,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
@@ -62,7 +61,5 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
             key_=ht.key_,
             transcripts=hl.enumerate(
                 ht.sortedTranscriptConsequences,
-            )
-            .starmap(reformat_transcripts_for_export)
-            .map(sorted_hl_struct),
+            ).starmap(reformat_transcripts_for_export),
         )

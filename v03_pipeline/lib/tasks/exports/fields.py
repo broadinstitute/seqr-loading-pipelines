@@ -1,6 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
+from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
@@ -323,7 +324,11 @@ def get_consequences_fields(
             'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
         },
         DatasetType.MITO: lambda ht: {
-            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
+            # MITO transcripts are not exported to their own table,
+            # but the structure should be preserved here.
+            'sortedTranscriptConsequences': hl.enumerate(
+                ht.sortedTranscriptConsequences,
+            ).starmap(reformat_transcripts_for_export),
         },
         DatasetType.SV: lambda ht: {
             'sortedGeneConsequences': ht.sortedGeneConsequences,

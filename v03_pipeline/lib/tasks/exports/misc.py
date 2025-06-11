@@ -47,7 +47,7 @@ def array_structexpression_fields(ht: hl.Table):
 
 
 def reformat_transcripts_for_export(i: int, s: hl.StructExpression):
-    return (
+    formatted_s = (
         s.annotate(
             majorConsequence=s.consequenceTerms.first(),
             transcriptRank=i,
@@ -62,6 +62,7 @@ def reformat_transcripts_for_export(i: int, s: hl.StructExpression):
             transcriptRank=i,
         ).drop('isLofNagnag', 'lofFilters')
     )
+    return sorted_hl_struct(formatted_s)
 
 
 def export_parquet_filterable_transcripts_fields(
