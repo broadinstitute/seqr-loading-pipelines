@@ -363,6 +363,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
         export_json[0]['sortedTranscriptConsequences'] = [
             export_json[0]['sortedTranscriptConsequences'][0],
         ]
+        print(export_json[0]['sortedTranscriptConsequences'])
         self.assertEqual(
             export_json,
             [
@@ -406,10 +407,18 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     },
                     'sortedTranscriptConsequences': [
                         {
+                            'aminoAcids': None,
                             'canonical': 1,
-                            'consequenceTerms': ['non_coding_transcript_exon_variant'],
+                            'codons': None,
                             'geneId': 'ENSG00000210049',
-                        },
+                            'hgvsc': 'ENST00000387314.1:n.2T>C',
+                            'hgvsp': None,
+                            'transcriptId': 'ENST00000387314',
+                            'isLofNagnag': None,
+                            'biotype': 'Mt_tRNA',
+                            'consequenceTerms': ['non_coding_transcript_exon_variant'],
+                            'lofFilters': None,
+                        }
                     ],
                 },
             ],

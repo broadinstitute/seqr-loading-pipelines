@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 import hail as hl
 
 from v03_pipeline.lib.annotations.enums import (
@@ -44,40 +46,66 @@ def array_structexpression_fields(ht: hl.Table):
     ]
 
 
-def transcripts_field_name(
+def reformat_transcripts_for_export(i: int, s: hl.StructExpression):
+    return (
+        s.annotate(
+            majorConsequence=s.consequenceTerms.first(),
+            transcriptRank=i,
+        )
+        if hasattr(s, 'loftee')
+        else s.annotate(
+            loftee=hl.Struct(
+                isLofNagnag=s.isLofNagnag,
+                lofFilters=s.lofFilters,
+            ),
+            majorConsequence=s.consequenceTerms.first(),
+            transcriptRank=i,
+        ).drop('isLofNagnag', 'lofFilters')
+    )
+
+
+def export_parquet_filterable_transcripts_fields(
     reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
-) -> str:
-    formatting_annotation_names = {
-        fa.__name__ for fa in dataset_type.formatting_annotation_fns(reference_genome)
+) -> OrderedDict[str, str]:
+    fields = {
+        k: k
+        for k in [
+            'canonical',
+            'consequenceTerms',
+            'geneId',
+        ]
     }
-    if 'sorted_gene_consequences' in formatting_annotation_names:
-        return snake_to_camelcase('sorted_gene_consequences')
-    return snake_to_camelcase('sorted_transcript_consequences')
+    if reference_genome == ReferenceGenome.GRCh38:
+        fields = {
+            **fields,
+            'alphamissensePathogenicity': 'alphamissense.pathogenicity',
+            'extendedIntronicSpliceRegionVariant': 'spliceregion.extended_intronic_splice_region_variant',
+            'fiveutrConsequence': 'utrannotator.fiveutrConsequence',
+        }
+    # Parquet export expects all fields sorted alphabetically
+    return OrderedDict(sorted(fields.items()))
 
 
-def subset_filterable_transcripts_fields(
+def subset_sorted_transcript_consequences_fields(
     ht: hl.Table,
     reference_genome: ReferenceGenome,
-    dataset_type: DatasetType,
 ) -> hl.Table:
-    field_name = transcripts_field_name(reference_genome, dataset_type)
     return ht.annotate(
-        **{
-            field_name: hl.enumerate(ht[field_name]).starmap(
-                lambda idx, c: c.select(
-                    **{
-                        new_nested_field_name: parse_nested_field(
-                            ht[field_name],
-                            existing_nested_field_name,
-                        )[idx]
-                        for new_nested_field_name, existing_nested_field_name in dataset_type.export_parquet_filterable_transcripts_fields(
-                            reference_genome,
-                        ).items()
-                    },
-                ),
+        sortedTranscriptConsequences=hl.enumerate(
+            ht.sortedTranscriptConsequences,
+        ).starmap(
+            lambda idx, c: c.select(
+                **{
+                    new_field_name: parse_nested_field(
+                        ht.sortedTranscriptConsequences,
+                        existing_field_name,
+                    )[idx]
+                    for new_field_name, existing_field_name in export_parquet_filterable_transcripts_fields(
+                        reference_genome,
+                    ).items()
+                },
             ),
-        },
+        ),
     )
 
 

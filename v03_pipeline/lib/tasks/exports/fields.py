@@ -1,9 +1,6 @@
 import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.exports.misc import (
-    transcripts_field_name,
-)
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
@@ -313,17 +310,28 @@ def get_consequences_fields(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
-    consequences_field = transcripts_field_name(reference_genome, dataset_type)
-    if (
-        reference_genome == ReferenceGenome.GRCh38
-        and dataset_type == DatasetType.SNV_INDEL
-    ):
-        return {
-            'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
-            'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
-            consequences_field: ht[consequences_field],
-        }
-    return {consequences_field: ht[consequences_field]}
+    return {
+        DatasetType.SNV_INDEL: lambda ht: {
+            **(
+                {
+                    'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
+                    'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
+                }
+                if reference_genome == ReferenceGenome.GRCh38
+                else {}
+            ),
+            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
+        },
+        DatasetType.MITO: lambda ht: {
+            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
+        },
+        DatasetType.SV: lambda ht: {
+            'sortedGeneConsequences': ht.sortedGeneConsequences,
+        },
+        DatasetType.GCNV: lambda ht: {
+            'sortedGeneConsequences': ht.sortedGeneConsequences,
+        },
+    }[dataset_type](ht)
 
 
 def get_variants_export_fields(

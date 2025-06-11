@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from collections.abc import Callable
 from enum import StrEnum
 
@@ -406,36 +405,9 @@ class DatasetType(StrEnum):
             ],
         }[self]
 
-    def export_parquet_filterable_transcripts_fields(
-        self,
-        reference_genome: ReferenceGenome,
-    ) -> OrderedDict[str, str]:
-        fields = ['geneId']
-        if self in {DatasetType.SV, DatasetType.GCNV}:
-            fields = [
-                *fields,
-                'majorConsequence',
-            ]
-        if self in {DatasetType.SNV_INDEL, DatasetType.MITO}:
-            fields = [
-                *fields,
-                'canonical',
-                'consequenceTerms',
-            ]
-        fields = {
-            # above fields are renamed to themselves
-            k: k
-            for k in fields
-        }
-        if self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38:
-            fields = {
-                **fields,
-                'alphamissensePathogenicity': 'alphamissense.pathogenicity',
-                'extendedIntronicSpliceRegionVariant': 'spliceregion.extended_intronic_splice_region_variant',
-                'fiveutrConsequence': 'utrannotator.fiveutrConsequence',
-            }
-        # Parquet export expects all fields sorted alphabetically
-        return OrderedDict(sorted(fields.items()))
+    @property
+    def should_write_new_transcripts(self):
+        return self == DatasetType.SNV_INDEL
 
     @property
     def overwrite_male_non_par_calls(self) -> None:

@@ -73,11 +73,12 @@ class ClickHouseTable(StrEnum):
                             dataset_type,
                         )
                     )
+                if self == ClickHouseTable.TRANSCRIPTS:
+                    return dataset_type.should_write_new_transcripts
                 return self in {
                     ClickHouseTable.ANNOTATIONS_DISK,
                     ClickHouseTable.ANNOTATIONS_MEMORY,
                     ClickHouseTable.KEY_LOOKUP,
-                    ClickHouseTable.TRANSCRIPTS,
                 }
             msg = f'Unhandled ClickHouseMigrationType: {migration_type.value}'
             raise ValueError(
@@ -91,11 +92,12 @@ class ClickHouseTable(StrEnum):
                     dataset_type,
                 )
             )
+        if self == ClickHouseTable.TRANSCRIPTS:
+            return dataset_type.should_write_new_transcripts
         return self in {
             ClickHouseTable.ANNOTATIONS_DISK,
             ClickHouseTable.ANNOTATIONS_MEMORY,
             ClickHouseTable.KEY_LOOKUP,
-            ClickHouseTable.TRANSCRIPTS,
             ClickHouseTable.ENTRIES,
         }
 

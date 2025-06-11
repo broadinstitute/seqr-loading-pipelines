@@ -56,9 +56,14 @@ class RunPipelineTask(luigi.WrapperTask):
                 else []
             ),
             *(
+                [self.clone(WriteNewTranscriptsParquetTask)]
+                if FeatureFlag.EXPORT_TO_PARQUET
+                and self.dataset_type.should_write_new_transcripts
+                else []
+            ),
+            *(
                 [
                     self.clone(WriteNewEntriesParquetTask),
-                    self.clone(WriteNewTranscriptsParquetTask),
                     self.clone(WriteNewVariantsParquetTask),
                 ]
                 if FeatureFlag.EXPORT_TO_PARQUET
