@@ -254,11 +254,11 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
         },
         DatasetType.GCNV: lambda ht: {
             'seqrPop': hl.Struct(
-                af=ht.gt_stats.AF,
                 ac=ht.gt_stats.AC,
+                af=ht.gt_stats.AF,
                 an=ht.gt_stats.AN,
-                Hom=ht.gt_stats.Hom,
-                Het=ht.gt_stats.Het,
+                het=ht.gt_stats.Het,
+                hom=ht.gt_stats.Hom,
             ),
         },
     }[dataset_type](ht)

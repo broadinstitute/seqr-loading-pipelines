@@ -556,11 +556,11 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'predictions': {'strvctvre': 0.4490000009536743},
                     'populations': {
                         'seqrPop': {
-                            'af': 4.3387713958509266e-05,
                             'ac': 1,
+                            'af': 4.3387713958509266e-05,
                             'an': 23048,
-                            'Hom': None,
-                            'Het': None,
+                            'het': None,
+                            'hom': None,
                         },
                     },
                     'sortedGeneConsequences': [
