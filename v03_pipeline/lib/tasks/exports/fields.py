@@ -1,9 +1,7 @@
 import hail as hl
 
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
-from v03_pipeline.lib.tasks.exports.misc import (
-    transcripts_field_name,
-)
+from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
 
 def reference_independent_contig(locus: hl.LocusExpression):
@@ -256,11 +254,11 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
         },
         DatasetType.GCNV: lambda ht: {
             'seqrPop': hl.Struct(
-                af=ht.gt_stats.AF,
                 ac=ht.gt_stats.AC,
+                af=ht.gt_stats.AF,
                 an=ht.gt_stats.AN,
-                Hom=ht.gt_stats.Hom,
-                Het=ht.gt_stats.Het,
+                het=ht.gt_stats.Het,
+                hom=ht.gt_stats.Hom,
             ),
         },
     }[dataset_type](ht)
@@ -313,17 +311,32 @@ def get_consequences_fields(
     reference_genome: ReferenceGenome,
     dataset_type: DatasetType,
 ):
-    consequences_field = transcripts_field_name(reference_genome, dataset_type)
-    if (
-        reference_genome == ReferenceGenome.GRCh38
-        and dataset_type == DatasetType.SNV_INDEL
-    ):
-        return {
-            'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
-            'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
-            consequences_field: ht[consequences_field],
-        }
-    return {consequences_field: ht[consequences_field]}
+    return {
+        DatasetType.SNV_INDEL: lambda ht: {
+            **(
+                {
+                    'sortedMotifFeatureConsequences': ht.sortedMotifFeatureConsequences,
+                    'sortedRegulatoryFeatureConsequences': ht.sortedRegulatoryFeatureConsequences,
+                }
+                if reference_genome == ReferenceGenome.GRCh38
+                else {}
+            ),
+            'sortedTranscriptConsequences': ht.sortedTranscriptConsequences,
+        },
+        DatasetType.MITO: lambda ht: {
+            # MITO transcripts are not exported to their own table,
+            # but the structure should be preserved here.
+            'sortedTranscriptConsequences': hl.enumerate(
+                ht.sortedTranscriptConsequences,
+            ).starmap(reformat_transcripts_for_export),
+        },
+        DatasetType.SV: lambda ht: {
+            'sortedGeneConsequences': ht.sortedGeneConsequences,
+        },
+        DatasetType.GCNV: lambda ht: {
+            'sortedGeneConsequences': ht.sortedGeneConsequences,
+        },
+    }[dataset_type](ht)
 
 
 def get_variants_export_fields(

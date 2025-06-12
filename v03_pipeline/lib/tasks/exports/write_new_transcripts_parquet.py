@@ -2,11 +2,9 @@ import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.paths import (
     new_transcripts_parquet_path,
     new_variants_table_path,
-    variant_annotations_table_path,
 )
 from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
@@ -14,18 +12,13 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
-    sorted_hl_struct,
-    transcripts_field_name,
+    reformat_transcripts_for_export,
     unmap_formatting_annotation_enums,
 )
 from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarget
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
-from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
-    UpdateVariantAnnotationsTableWithNewSamplesTask,
-)
-from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -43,35 +36,16 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> luigi.Task:
-        if self.dataset_type.export_all_callset_variants:
-            return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
-        if self.dataset_type.should_send_to_allele_registry:
-            return self.clone(UpdateNewVariantsWithCAIDsTask)
-        return self.clone(WriteNewVariantsTableTask)
+        return self.clone(UpdateNewVariantsWithCAIDsTask)
 
     def create_table(self) -> None:
-        if self.dataset_type.export_all_callset_variants:
-            ht = hl.read_table(
-                variant_annotations_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            )
-            callset_ht = get_callset_ht(
+        ht = hl.read_table(
+            new_variants_table_path(
                 self.reference_genome,
                 self.dataset_type,
-                self.callset_path,
-                self.project_guids,
-            )
-            ht = ht.semi_join(callset_ht)
-        else:
-            ht = hl.read_table(
-                new_variants_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                    self.run_id,
-                ),
-            )
+                self.run_id,
+            ),
+        )
         ht = unmap_formatting_annotation_enums(
             ht,
             self.reference_genome,
@@ -86,17 +60,6 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
         return ht.select(
             key_=ht.key_,
             transcripts=hl.enumerate(
-                ht[transcripts_field_name(self.reference_genome, self.dataset_type)],
-            )
-            .starmap(
-                lambda i, s: (
-                    s
-                    if hasattr(s, 'majorConsequence')
-                    else s.annotate(
-                        majorConsequence=s.consequenceTerms.first(),
-                        transcriptRank=i,
-                    )
-                ),
-            )
-            .map(sorted_hl_struct),
+                ht.sortedTranscriptConsequences,
+            ).starmap(reformat_transcripts_for_export),
         )

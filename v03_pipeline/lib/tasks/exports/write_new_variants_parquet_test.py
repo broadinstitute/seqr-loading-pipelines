@@ -406,9 +406,21 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     },
                     'sortedTranscriptConsequences': [
                         {
+                            'aminoAcids': None,
+                            'biotype': 'Mt_tRNA',
                             'canonical': 1,
+                            'codons': None,
                             'consequenceTerms': ['non_coding_transcript_exon_variant'],
                             'geneId': 'ENSG00000210049',
+                            'hgvsc': 'ENST00000387314.1:n.2T>C',
+                            'hgvsp': None,
+                            'loftee': {
+                                'isLofNagnag': None,
+                                'lofFilters': None,
+                            },
+                            'majorConsequence': 'non_coding_transcript_exon_variant',
+                            'transcriptId': 'ENST00000387314',
+                            'transcriptRank': 0,
                         },
                     ],
                 },
@@ -544,11 +556,11 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'predictions': {'strvctvre': 0.4490000009536743},
                     'populations': {
                         'seqrPop': {
-                            'af': 4.3387713958509266e-05,
                             'ac': 1,
+                            'af': 4.3387713958509266e-05,
                             'an': 23048,
-                            'Hom': None,
-                            'Het': None,
+                            'het': None,
+                            'hom': None,
                         },
                     },
                     'sortedGeneConsequences': [
