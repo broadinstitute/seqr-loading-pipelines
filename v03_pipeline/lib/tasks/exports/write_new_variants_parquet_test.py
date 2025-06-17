@@ -379,7 +379,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                     'mitomapPathogenic': None,
                     'predictions': {
                         'apogee': None,
-                        'haplogroup_defining': None,
+                        'haplogroup_defining': False,
                         'hmtvar': 0.05000000074505806,
                         'mitotip': 'likely_pathogenic',
                         'mut_taster': None,
@@ -412,10 +412,7 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                             'geneId': 'ENSG00000210049',
                             'hgvsc': 'ENST00000387314.1:n.2T>C',
                             'hgvsp': None,
-                            'loftee': {
-                                'isLofNagnag': None,
-                                'lofFilters': None,
-                            },
+                            'loftee': {'isLofNagnag': None, 'lofFilters': None},
                             'majorConsequence': 'non_coding_transcript_exon_variant',
                             'transcriptId': 'ENST00000387314',
                             'transcriptRank': 0,
