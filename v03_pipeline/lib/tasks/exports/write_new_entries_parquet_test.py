@@ -328,7 +328,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'key': 0,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'sample_type': 'WGS',
                     'xpos': 1000180929,
                     'filters': ['HIGH_SR_BACKGROUND', 'UNRESOLVED'],
                     'calls': [
@@ -375,7 +374,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'key': 1,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'sample_type': 'WGS',
                     'xpos': 1000257667,
                     'filters': [],
                     'calls': [
@@ -452,7 +450,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'key': 0,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'sample_type': 'WES',
                     'xpos': 1100006937,
                     'filters': [],
                     'calls': [
@@ -519,7 +516,6 @@ class WriteNewEntriesParquetTest(MockedReferenceDatasetsTestCase):
                     'key': 1,
                     'project_guid': 'R0115_test_project2',
                     'family_guid': 'family_2_1',
-                    'sample_type': 'WES',
                     'xpos': 1100017586,
                     'filters': [],
                     'calls': [

@@ -121,7 +121,13 @@ def get_entries_export_fields(
         'key_': ht.key_,
         'project_guid': project_guid,
         'family_guid': ht.family_entries.family_guid[0],
-        'sample_type': sample_type.value,
+        **(
+            {
+                'sample_type': sample_type.value,
+            }
+            if dataset_type in {DatasetType.SNV_INDEL, DatasetType.MITO}
+            else {}
+        ),
         'xpos': ht.xpos,
         **(
             {
@@ -168,7 +174,7 @@ def get_predictions_export_fields(
         },
         DatasetType.MITO: lambda ht: {
             'apogee': ht.mitimpact.score,
-            'haplogroup_defining': hl.or_missing(ht.haplogroup.is_defining, 'Y'),
+            'haplogroup_defining': ht.haplogroup.is_defining,
             'hmtvar': ht.hmtvar.score,
             'mitotip': ht.mitotip.trna_prediction,
             'mut_taster': ht.dbnsfp.MutationTaster_pred,
@@ -275,6 +281,12 @@ def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
                 position=ht.rg37_locus_end.position,
             ),
         }
+    if dataset_type == DatasetType.MITO:
+        return {
+            'pos': ht.locus.position,
+            'ref': ht.alleles[0],
+            'alt': ht.alleles[1],
+        }
     return {
         'chrom': reference_independent_contig(ht.locus),
         'pos': ht.locus.position,
@@ -304,6 +316,23 @@ def get_variant_id_fields(
             'variantId': ht.variant_id,
         },
     }[dataset_type](ht)
+
+
+def get_lifted_over_position_fields(ht: hl.Table, dataset_type: DatasetType):
+    if dataset_type == DatasetType.MITO:
+        return {'liftedOverPos': ht.rg37_locus.position}
+    return {
+        'liftedOverChrom': (
+            reference_independent_contig(ht.rg37_locus)
+            if hasattr(ht, 'rg37_locus')
+            else reference_independent_contig(ht.rg38_locus)
+        ),
+        'liftedOverPos': (
+            ht.rg37_locus.position
+            if hasattr(ht, 'rg37_locus')
+            else ht.rg38_locus.position
+        ),
+    }
 
 
 def get_consequences_fields(
@@ -349,16 +378,7 @@ def get_variants_export_fields(
         'xpos': ht.xpos,
         **get_position_fields(ht, dataset_type),
         **get_variant_id_fields(ht, dataset_type),
-        'liftedOverChrom': (
-            reference_independent_contig(ht.rg37_locus)
-            if hasattr(ht, 'rg37_locus')
-            else reference_independent_contig(ht.rg38_locus)
-        ),
-        'liftedOverPos': (
-            ht.rg37_locus.position
-            if hasattr(ht, 'rg37_locus')
-            else ht.rg38_locus.position
-        ),
+        **get_lifted_over_position_fields(ht, dataset_type),
         **get_dataset_type_specific_annotations(ht, reference_genome, dataset_type),
         'predictions': hl.Struct(
             **get_predictions_export_fields(ht, reference_genome, dataset_type),

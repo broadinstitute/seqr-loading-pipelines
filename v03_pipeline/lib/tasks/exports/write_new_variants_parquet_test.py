@@ -369,13 +369,11 @@ class WriteNewVariantsParquetTest(MockedDatarootTestCase):
                 {
                     'key': 998,
                     'xpos': 25000000578,
-                    'chrom': 'M',
                     'pos': 578,
                     'ref': 'T',
                     'alt': 'C',
                     'variantId': 'M-578-T-C',
                     'rsid': 'rs1603218446',
-                    'liftedOverChrom': 'M',
                     'liftedOverPos': 578,
                     'commonLowHeteroplasmy': True,
                     'mitomapPathogenic': None,
