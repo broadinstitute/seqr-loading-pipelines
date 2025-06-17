@@ -13,7 +13,6 @@ from v03_pipeline.lib.paths import (
     new_entries_parquet_path,
     pipeline_run_success_file_path,
     project_table_path,
-    variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
@@ -23,8 +22,8 @@ from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
-from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    ClickHouseMigrationType,
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_variants_to_clickhouse import (
+    MigrateProjectVariantsToClickHouseTask,
 )
 from v03_pipeline.lib.tasks.exports.fields import get_entries_export_fields
 from v03_pipeline.lib.tasks.exports.write_new_entries_parquet import (
@@ -56,12 +55,7 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
 
     def requires(self) -> list[luigi.Task]:
         return {
-            ANNOTATIONS_TABLE_TASK: HailTableTask(
-                variant_annotations_table_path(
-                    self.reference_genome,
-                    self.dataset_type,
-                ),
-            ),
+            ANNOTATIONS_TABLE_TASK: self.clone(MigrateProjectVariantsToClickHouseTask),
             PROJECT_TABLE_TASK: HailTableTask(
                 project_table_path(
                     self.reference_genome,
@@ -116,20 +110,13 @@ class WriteProjectEntriesParquetTask(BaseWriteParquetTask):
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
-class WriteProjectEntriesMetadataJsonTask(luigi.Task):
+class WriteMigrationMetadataJsonTask(luigi.Task):
     run_id = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
 
     def requires(self):
-        return HailTableTask(
-            project_table_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.sample_type,
-                self.project_guid,
-            ),
-        )
+        return self.clone(WriteProjectEntriesParquetTask)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
@@ -143,7 +130,6 @@ class WriteProjectEntriesMetadataJsonTask(luigi.Task):
     def run(self):
         project_ht = hl.read_table(self.input().path)
         metadata_json = {
-            'migration_type': ClickHouseMigrationType.PROJECT_ENTRIES.value,
             'callsets': [],
             'run_id': self.run_id,
             'sample_type': self.sample_type.value,
@@ -163,16 +149,13 @@ class WriteProjectEntriesMetadataJsonTask(luigi.Task):
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
-class MigrateProjectEntriesToClickHouseTask(luigi.Task):
+class MigrateProjectToClickHouseTask(luigi.Task):
     run_id = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
 
     def requires(self):
-        return [
-            self.clone(WriteProjectEntriesParquetTask),
-            self.clone(WriteProjectEntriesMetadataJsonTask),
-        ]
+        return self.clone(WriteMigrationMetadataJsonTask)
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(

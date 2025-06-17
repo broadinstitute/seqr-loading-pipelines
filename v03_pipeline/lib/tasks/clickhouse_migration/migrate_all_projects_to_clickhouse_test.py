@@ -20,8 +20,8 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
     ClickHouseMigrationType,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_project_entries_to_clickhouse import (
-    MigrateAllProjectEntriesToClickHouseTask,
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
+    MigrateAllProjectsToClickHouseTask,
 )
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
@@ -49,7 +49,7 @@ TEST_PROJECT_TABLES = [
 ]
 
 
-class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
+class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
@@ -74,7 +74,7 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
         self,
     ) -> None:
         worker = luigi.worker.Worker()
-        task = MigrateAllProjectEntriesToClickHouseTask(
+        task = MigrateAllProjectsToClickHouseTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
         )

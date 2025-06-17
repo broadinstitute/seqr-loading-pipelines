@@ -9,16 +9,15 @@ from v03_pipeline.lib.paths import (
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    ClickHouseMigrationType,
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_to_clickhouse import (
+    MigrateProjectToClickHouseTask,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_project_entries_to_clickhouse import (
-    MigrateProjectEntriesToClickHouseTask,
-)
+
+MIGRATION_RUN_ID = 'hail_search_to_clickhouse_migration'
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
-class MigrateAllProjectEntriesToClickHouseTask(luigi.WrapperTask):
+class MigrateAllProjectsToClickHouseTask(luigi.WrapperTask):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
@@ -42,8 +41,8 @@ class MigrateAllProjectEntriesToClickHouseTask(luigi.WrapperTask):
                 project_guid = p.path.split('/')[-1].replace('.ht', '')
                 self.dynamic_parquet_tasks.add(
                     self.clone(
-                        MigrateProjectEntriesToClickHouseTask,
-                        run_id=f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
+                        MigrateProjectToClickHouseTask,
+                        run_id=f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                         sample_type=sample_type,
                         project_guid=project_guid,
                     ),
