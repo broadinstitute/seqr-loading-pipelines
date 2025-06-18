@@ -17,11 +17,9 @@ from v03_pipeline.lib.paths import (
     project_table_path,
     variant_annotations_table_path,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    ClickHouseMigrationType,
-)
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_project_entries_to_clickhouse import (
-    MigrateAllProjectEntriesToClickHouseTask,
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
+    MIGRATION_RUN_ID,
+    MigrateAllProjectsToClickHouseTask,
 )
 from v03_pipeline.lib.test.mocked_reference_datasets_testcase import (
     MockedReferenceDatasetsTestCase,
@@ -49,7 +47,7 @@ TEST_PROJECT_TABLES = [
 ]
 
 
-class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
+class MigrateAllProjectsToClickHouseTaskTest(MockedReferenceDatasetsTestCase):
     def setUp(self) -> None:
         super().setUp()
         ht = hl.read_table(TEST_SNV_INDEL_ANNOTATIONS)
@@ -74,7 +72,7 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
         self,
     ) -> None:
         worker = luigi.worker.Worker()
-        task = MigrateAllProjectEntriesToClickHouseTask(
+        task = MigrateAllProjectsToClickHouseTask(
             reference_genome=ReferenceGenome.GRCh37,
             dataset_type=DatasetType.SNV_INDEL,
         )
@@ -86,7 +84,7 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                 new_entries_parquet_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
-                    f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
+                    f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                 ),
             )
             export_json = df.to_dict('records')
@@ -100,17 +98,13 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                 metadata_for_run_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
-                    f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
+                    f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                 ),
             ) as f:
                 metadata_json = json.load(f)
                 self.assertEqual(
                     metadata_json['run_id'],
-                    f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
-                )
-                self.assertEqual(
-                    metadata_json['migration_type'],
-                    ClickHouseMigrationType.PROJECT_ENTRIES.value,
+                    f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                 )
                 self.assertEqual(
                     metadata_json['family_samples']['F079280_bh10261'],
@@ -121,7 +115,7 @@ class MigrateAllProjectEntriesToClickHouseTaskTest(MockedReferenceDatasetsTestCa
                 pipeline_run_success_file_path(
                     ReferenceGenome.GRCh37,
                     DatasetType.SNV_INDEL,
-                    f'{ClickHouseMigrationType.PROJECT_ENTRIES.run_id}_{sample_type.value}_{project_guid}',
+                    f'{MIGRATION_RUN_ID}_{sample_type.value}_{project_guid}',
                 ),
             ) as f:
                 self.assertEqual(f.read(), '')

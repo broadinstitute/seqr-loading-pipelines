@@ -1,15 +1,11 @@
-import json
-
 import hail as hl
 import luigi
 import luigi.util
 
-from v03_pipeline.lib.misc.io import write
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
-    metadata_for_run_path,
     new_variants_table_path,
-    pipeline_run_success_file_path,
+    project_table_path,
     variant_annotations_table_path,
 )
 from v03_pipeline.lib.reference_datasets.reference_dataset import (
@@ -19,9 +15,7 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
 from v03_pipeline.lib.tasks.base.base_loading_pipeline_params import (
     BaseLoadingPipelineParams,
 )
-from v03_pipeline.lib.tasks.clickhouse_migration.constants import (
-    ClickHouseMigrationType,
-)
+from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
 from v03_pipeline.lib.tasks.exports.write_new_clinvar_variants_parquet import (
     WriteNewClinvarVariantsParquetTask,
 )
@@ -36,50 +30,17 @@ from v03_pipeline.lib.tasks.files import GCSorLocalTarget, HailTableTask
 MAX_SNV_INDEL_ALLELE_LENGTH = 500
 
 
-@luigi.util.inherits(BaseLoadingPipelineParams)
-class WriteVariantsMetadataJsonTask(luigi.Task):
-    def output(self) -> luigi.Target:
-        return GCSorLocalTarget(
-            metadata_for_run_path(
-                self.reference_genome,
-                self.dataset_type,
-                ClickHouseMigrationType.VARIANTS.run_id,
-            ),
-        )
-
-    def run(self):
-        metadata_json = {
-            'migration_type': ClickHouseMigrationType.VARIANTS.value,
-            'callsets': [],
-            'run_id': ClickHouseMigrationType.VARIANTS.run_id,
-            'sample_type': '',
-            'project_guids': [],
-            'family_samples': {},
-            'failed_family_samples': {
-                'missing_samples': {},
-                'relatedness_check': {},
-                'sex_check': {},
-                'ploidy_check': {},
-            },
-            'relatedness_check_file_path': '',
-            'sample_qc': {},
-        }
-        with self.output().open('w') as f:
-            json.dump(metadata_json, f)
-
-
-@luigi.util.inherits(BaseLoadingPipelineParams)
-class MigrateVariantsToClickHouseTask(luigi.Task):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dynamic_parquet_tasks = set()
+class WriteProjectSubsettedVariantsTask(BaseWriteTask):
+    run_id = luigi.Parameter()
+    sample_type = luigi.EnumParameter(enum=SampleType)
+    project_guid = luigi.Parameter()
 
     def output(self) -> luigi.Target:
         return GCSorLocalTarget(
-            pipeline_run_success_file_path(
+            new_variants_table_path(
                 self.reference_genome,
                 self.dataset_type,
-                ClickHouseMigrationType.VARIANTS.run_id,
+                self.run_id,
             ),
         )
 
@@ -91,8 +52,38 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     self.dataset_type,
                 ),
             ),
-            self.clone(WriteVariantsMetadataJsonTask),
+            HailTableTask(
+                project_table_path(
+                    self.reference_genome,
+                    self.dataset_type,
+                    self.sample_type,
+                    self.project_guid,
+                ),
+            ),
         ]
+
+    def create_table(self) -> hl.Table:
+        ht = hl.read_table(self.input()[0].path)
+        if not hasattr(ht, 'key_'):
+            ht = ht.add_index(name='key_')
+        if self.dataset_type.filter_invalid_sites:
+            ht = ht.filter(hl.len(ht.alleles[1]) < MAX_SNV_INDEL_ALLELE_LENGTH)
+        project_ht = hl.read_table(self.input()[1].path)
+        return ht.semi_join(project_ht)
+
+
+@luigi.util.inherits(BaseLoadingPipelineParams)
+class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
+    run_id = luigi.Parameter()
+    sample_type = luigi.EnumParameter(enum=SampleType)
+    project_guid = luigi.Parameter()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dynamic_parquet_tasks = set()
+
+    def requires(self) -> list[luigi.Task]:
+        return self.clone(WriteProjectSubsettedVariantsTask)
 
     def complete(self):
         return (
@@ -105,32 +96,11 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
         )
 
     def run(self):
-        # First, move the existing annotations table to
-        # the new_variants location.
-        ht = hl.read_table(
-            self.input()[0].path,
-        )
-        if not hasattr(ht, 'key_'):
-            ht = ht.add_index(name='key_')
-
-        if self.dataset_type.filter_invalid_sites:
-            ht = ht.filter(hl.len(ht.alleles[1]) < MAX_SNV_INDEL_ALLELE_LENGTH)
-
-        write(
-            ht,
-            new_variants_table_path(
-                self.reference_genome,
-                self.dataset_type,
-                ClickHouseMigrationType.VARIANTS.run_id,
-            ),
-        )
-
-        # Then, write all dependent parquet tasks.
         self.dynamic_parquet_tasks.update(
             [
                 self.clone(
                     WriteNewTranscriptsParquetTask,
-                    # SampleType and Callset Path being required
+                    # Callset Path being required
                     # here is byproduct of the "place all variants"
                     # in the variants path" hack.  In theory
                     # it is possible to re-factor the parameters
@@ -139,22 +109,16 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
                     # we could inherit the functionality of these
                     # tasks without calling them directly, but
                     # that was also more code.
-                    run_id=ClickHouseMigrationType.VARIANTS.run_id,
-                    sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
                 self.clone(
                     WriteNewVariantsParquetTask,
-                    run_id=ClickHouseMigrationType.VARIANTS.run_id,
-                    sample_type=SampleType.WGS,
                     callset_path=None,
                 ),
                 *(
                     [
                         self.clone(
                             WriteNewClinvarVariantsParquetTask,
-                            run_id=ClickHouseMigrationType.VARIANTS.run_id,
-                            sample_type=SampleType.WGS,
                             callset_path=None,
                         ),
                     ]
@@ -170,5 +134,3 @@ class MigrateVariantsToClickHouseTask(luigi.Task):
             ],
         )
         yield self.dynamic_parquet_tasks
-        with self.output().open('w') as f:
-            f.write('')
