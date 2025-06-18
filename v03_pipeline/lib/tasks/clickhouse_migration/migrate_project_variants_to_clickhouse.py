@@ -5,7 +5,6 @@ import luigi.util
 from v03_pipeline.lib.model import SampleType
 from v03_pipeline.lib.paths import (
     new_variants_table_path,
-    pipeline_run_success_file_path,
     project_table_path,
     variant_annotations_table_path,
 )
@@ -74,7 +73,7 @@ class WriteProjectSubsettedVariantsTask(BaseWriteTask):
 
 
 @luigi.util.inherits(BaseLoadingPipelineParams)
-class MigrateProjectVariantsToClickHouseTask(luigi.Task):
+class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
     run_id = luigi.Parameter()
     sample_type = luigi.EnumParameter(enum=SampleType)
     project_guid = luigi.Parameter()
@@ -82,15 +81,6 @@ class MigrateProjectVariantsToClickHouseTask(luigi.Task):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
-
-    def output(self) -> luigi.Target:
-        return GCSorLocalTarget(
-            pipeline_run_success_file_path(
-                self.reference_genome,
-                self.dataset_type,
-                self.run_id,
-            ),
-        )
 
     def requires(self) -> list[luigi.Task]:
         return self.clone(WriteProjectSubsettedVariantsTask)
@@ -106,7 +96,6 @@ class MigrateProjectVariantsToClickHouseTask(luigi.Task):
         )
 
     def run(self):
-        # Then, write all dependent parquet tasks.
         self.dynamic_parquet_tasks.update(
             [
                 self.clone(
@@ -145,5 +134,3 @@ class MigrateProjectVariantsToClickHouseTask(luigi.Task):
             ],
         )
         yield self.dynamic_parquet_tasks
-        with self.output().open('w') as f:
-            f.write('')
