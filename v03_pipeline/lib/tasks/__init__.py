@@ -1,3 +1,6 @@
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
+    MigrateAllProjectsToClickHouseTask,
+)
 from v03_pipeline.lib.tasks.delete_family_table import DeleteFamilyTableTask
 from v03_pipeline.lib.tasks.delete_family_tables import DeleteFamilyTablesTask
 from v03_pipeline.lib.tasks.delete_project_family_tables import (
@@ -46,6 +49,7 @@ __all__ = [
     'DeleteProjectFamilyTablesTask',
     'DeleteProjectTablesTask',
     'MigrateAllLookupTablesTask',
+    'MigrateAllProjectsToClickHouseTask',
     'MigrateAllVariantAnnotationsTablesTask',
     'RunPipelineTask',
     'UpdateLookupTableTask',
