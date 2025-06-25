@@ -22,6 +22,10 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     ReferenceDataset,
 )
 
+from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
+    MIGRATION_RUN_ID,
+)
+
 logger = get_logger(__name__)
 
 GOOGLE_XML_API_PATH = 'https://storage.googleapis.com/'
@@ -398,7 +402,7 @@ def direct_insert(
         msg = f'Skipping direct insert of {table_name_builder.dst_table(clickhouse_table)} since src table is empty'
         logger.info(msg)
         return
-    if dst_key_exists(
+    if MIGRATION_RUN_ID not in run_id and dst_key_exists(
         table_name_builder,
         clickhouse_table,
         key,
