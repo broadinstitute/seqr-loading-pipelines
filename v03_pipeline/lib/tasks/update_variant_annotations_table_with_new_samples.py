@@ -36,7 +36,7 @@ class UpdateVariantAnnotationsTableWithNewSamplesTask(
     def complete(self) -> bool:
         # NOTE: Special hack for ClickHouse migration tasks which
         # do not have a callset/projects to load.
-        if not self.callset_path:
+        if len(self.project_guids) == 0:
             return super().complete()
         return super().complete() and hl.eval(
             hl.bind(
