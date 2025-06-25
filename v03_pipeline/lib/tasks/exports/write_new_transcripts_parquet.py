@@ -19,6 +19,10 @@ from v03_pipeline.lib.tasks.files import GCSorLocalFolderTarget, GCSorLocalTarge
 from v03_pipeline.lib.tasks.update_new_variants_with_caids import (
     UpdateNewVariantsWithCAIDsTask,
 )
+from v03_pipeline.lib.tasks.update_variant_annotations_table_with_new_samples import (
+    UpdateVariantAnnotationsTableWithNewSamplesTask,
+)
+from v03_pipeline.lib.tasks.write_new_variants_table import WriteNewVariantsTableTask
 
 
 @luigi.util.inherits(BaseLoadingRunParams)
@@ -36,7 +40,11 @@ class WriteNewTranscriptsParquetTask(BaseWriteParquetTask):
         return GCSorLocalFolderTarget(self.output().path).exists()
 
     def requires(self) -> luigi.Task:
-        return self.clone(UpdateNewVariantsWithCAIDsTask)
+        if self.dataset_type.export_all_callset_variants:
+            return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
+        if self.dataset_type.should_send_to_allele_registry:
+            return self.clone(UpdateNewVariantsWithCAIDsTask)
+        return self.clone(WriteNewVariantsTableTask)
 
     def create_table(self) -> None:
         ht = hl.read_table(

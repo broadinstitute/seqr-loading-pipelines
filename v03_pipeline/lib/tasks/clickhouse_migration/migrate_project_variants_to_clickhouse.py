@@ -82,7 +82,9 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
         super().__init__(*args, **kwargs)
         self.dynamic_parquet_tasks = set()
 
-    def requires(self) -> list[luigi.Task]:
+    def requires(self) -> luigi.Task:
+        if self.dataset_type.export_all_callset_variants:
+            return None
         return self.clone(WriteProjectSubsettedVariantsTask)
 
     def complete(self):
