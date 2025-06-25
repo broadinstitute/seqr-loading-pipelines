@@ -100,18 +100,24 @@ class MigrateProjectVariantsToClickHouseTask(luigi.WrapperTask):
     def run(self):
         self.dynamic_parquet_tasks.update(
             [
-                self.clone(
-                    WriteNewTranscriptsParquetTask,
-                    # Callset Path being required
-                    # here is byproduct of the "place all variants"
-                    # in the variants path" hack.  In theory
-                    # it is possible to re-factor the parameters
-                    # such that this isn't required, but it's left
-                    # as out of scope for now.  Alternatively,
-                    # we could inherit the functionality of these
-                    # tasks without calling them directly, but
-                    # that was also more code.
-                    callset_path=None,
+                *(
+                    [
+                        self.clone(
+                            WriteNewTranscriptsParquetTask,
+                            # Callset Path being required
+                            # here is byproduct of the "place all variants"
+                            # in the variants path" hack.  In theory
+                            # it is possible to re-factor the parameters
+                            # such that this isn't required, but it's left
+                            # as out of scope for now.  Alternatively,
+                            # we could inherit the functionality of these
+                            # tasks without calling them directly, but
+                            # that was also more code.
+                            callset_path=None,
+                        ),
+                    ]
+                    if self.dataset_type.should_write_new_transcripts
+                    else []
                 ),
                 self.clone(
                     WriteNewVariantsParquetTask,
