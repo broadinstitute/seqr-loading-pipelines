@@ -21,7 +21,6 @@ from v03_pipeline.lib.reference_datasets.reference_dataset import (
     BaseReferenceDataset,
     ReferenceDataset,
 )
-
 from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
     MIGRATION_RUN_ID,
 )
