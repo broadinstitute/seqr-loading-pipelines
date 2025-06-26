@@ -291,7 +291,8 @@ def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
             'rg37LocusEnd': hl.Struct(
                 contig=rg37_contig,
                 position=hl.or_missing(
-                    hl.is_defined(rg37_contig), ht.rg37_locus_end.position,
+                    hl.is_defined(rg37_contig),
+                    ht.rg37_locus_end.position,
                 ),
             ),
         }
