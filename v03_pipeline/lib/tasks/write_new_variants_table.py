@@ -5,6 +5,10 @@ import luigi
 import luigi.util
 
 from v03_pipeline.lib.annotations.fields import get_fields
+from v03_pipeline.lib.annotations.misc import (
+    annotate_formatting_annotation_enum_globals,
+    annotate_reference_dataset_globals,
+)
 from v03_pipeline.lib.misc.callsets import get_callset_ht
 from v03_pipeline.lib.misc.io import remap_pedigree_hash
 from v03_pipeline.lib.misc.math import constrain
@@ -80,19 +84,20 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             self.clone(UpdateVariantAnnotationsTableWithUpdatedReferenceDataset),
         ]
         if self.dataset_type.has_lookup_table:
-            # NB: the lookup table task has remapped and subsetted callset tasks as dependencies.
             requirements = [
                 *requirements,
                 self.clone(UpdateLookupTableTask),
             ]
-        else:
-            requirements = [
-                *requirements,
-                self.clone(WriteMetadataForRunTask),
-            ]
-        return requirements
+        return [
+            *requirements,
+            self.clone(WriteMetadataForRunTask),
+        ]
 
     def complete(self) -> bool:
+        # NOTE: Special hack for ClickHouse migration tasks which
+        # do not have a callset/projects to load.
+        if len(self.project_guids) == 0:
+            return super().complete()
         return super().complete() and hl.eval(
             hl.bind(
                 lambda updates: hl.all(
@@ -102,7 +107,6 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                                 callset=self.callset_path,
                                 project_guid=project_guid,
                                 remap_pedigree_hash=remap_pedigree_hash(
-                                    self.project_remap_paths[i],
                                     self.project_pedigree_paths[i],
                                 ),
                             ),
@@ -129,6 +133,14 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 self.dataset_type,
             ),
         )
+        # Gracefully handle case for on-premises uses
+        # where key_ field is not present and migration was not run.
+        if not hasattr(annotations_ht, 'key_'):
+            annotations_ht = annotations_ht.add_index(name='key_')
+            annotations_ht = annotations_ht.annotate_globals(
+                max_key_=(annotations_ht.count() - 1),
+            )
+
         new_variants_ht = callset_ht.anti_join(annotations_ht)
 
         # Annotate new variants with VEP.
@@ -173,6 +185,18 @@ class WriteNewVariantsTableTask(BaseWriteTask):
             reference_dataset_ht = self.annotation_dependencies[
                 f'{reference_dataset.value}_ht'
             ]
+            if reference_dataset.select:
+                reference_dataset_ht = reference_dataset.select(
+                    self.reference_genome,
+                    self.dataset_type,
+                    reference_dataset_ht,
+                )
+            if reference_dataset.filter:
+                reference_dataset_ht = reference_dataset.filter(
+                    self.reference_genome,
+                    self.dataset_type,
+                    reference_dataset_ht,
+                )
             reference_dataset_ht = reference_dataset_ht.select(
                 **{
                     f'{reference_dataset.name}': hl.Struct(
@@ -181,13 +205,32 @@ class WriteNewVariantsTableTask(BaseWriteTask):
                 },
             )
             new_variants_ht = new_variants_ht.join(reference_dataset_ht, 'left')
-        return new_variants_ht.select_globals(
+        new_variants_ht = new_variants_ht.select_globals(
+            versions=hl.Struct(),
+            enums=hl.Struct(),
+        )
+
+        # Add serial integer index
+        new_variants_ht = new_variants_ht.add_index(name='key_')
+        new_variants_ht = new_variants_ht.transmute(
+            key_=new_variants_ht.key_ + annotations_ht.index_globals().max_key_ + 1,
+        )
+        new_variants_ht = annotate_formatting_annotation_enum_globals(
+            new_variants_ht,
+            self.reference_genome,
+            self.dataset_type,
+        )
+        new_variants_ht = annotate_reference_dataset_globals(
+            new_variants_ht,
+            self.reference_genome,
+            self.dataset_type,
+        )
+        return new_variants_ht.annotate_globals(
             updates={
                 hl.Struct(
                     callset=self.callset_path,
                     project_guid=project_guid,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[i],
                         self.project_pedigree_paths[i],
                     ),
                 )

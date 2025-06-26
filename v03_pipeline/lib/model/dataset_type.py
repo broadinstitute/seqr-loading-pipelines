@@ -4,7 +4,7 @@ from enum import StrEnum
 import hail as hl
 
 from v03_pipeline.lib.annotations import gcnv, mito, shared, snv_indel, sv
-from v03_pipeline.lib.model.definitions import ReferenceGenome, SampleType
+from v03_pipeline.lib.model.definitions import ReferenceGenome
 
 MITO_MIN_HOM_THRESHOLD = 0.95
 ZERO = 0.0
@@ -15,6 +15,15 @@ class DatasetType(StrEnum):
     MITO = 'MITO'
     SNV_INDEL = 'SNV_INDEL'
     SV = 'SV'
+
+    @property
+    def reference_genomes(self) -> list[ReferenceGenome]:
+        return {
+            DatasetType.SNV_INDEL: [ReferenceGenome.GRCh37, ReferenceGenome.GRCh38],
+            DatasetType.MITO: [ReferenceGenome.GRCh38],
+            DatasetType.GCNV: [ReferenceGenome.GRCh38],
+            DatasetType.SV: [ReferenceGenome.GRCh38],
+        }[self]
 
     def table_key_type(
         self,
@@ -115,6 +124,7 @@ class DatasetType(StrEnum):
                 'info.AC': hl.tarray(hl.tint32),
                 'info.AF': hl.tarray(hl.tfloat64),
                 'info.ALGORITHMS': hl.tarray(hl.tstr),
+                'info.BOTHSIDES_SUPPORT': hl.tbool,
                 'info.AN': hl.tint32,
                 'info.CHR2': hl.tstr,
                 'info.CPX_INTERVALS': hl.tarray(hl.tstr),
@@ -182,12 +192,6 @@ class DatasetType(StrEnum):
         return (
             self == DatasetType.SNV_INDEL and reference_genome == ReferenceGenome.GRCh38
         )
-
-    def expect_filters(
-        self,
-        sample_type: SampleType,
-    ) -> bool:
-        return self == DatasetType.SNV_INDEL and sample_type == SampleType.WES
 
     def expect_tdr_metrics(
         self,
@@ -369,7 +373,7 @@ class DatasetType(StrEnum):
             DatasetType.SV: [
                 sv.gt_stats,
             ],
-        }.get(self, [])
+        }[self]
 
     @property
     def should_send_to_allele_registry(self):
@@ -380,8 +384,16 @@ class DatasetType(StrEnum):
         return self == DatasetType.SNV_INDEL
 
     @property
+    def filter_invalid_sites(self):
+        return self == DatasetType.SNV_INDEL
+
+    @property
     def should_export_to_vcf(self):
         return self == DatasetType.SV
+
+    @property
+    def export_all_callset_variants(self):
+        return self == DatasetType.GCNV
 
     @property
     def export_vcf_annotation_fns(self) -> list[Callable[..., hl.Expression]]:
@@ -392,6 +404,10 @@ class DatasetType(StrEnum):
                 sv.info,
             ],
         }[self]
+
+    @property
+    def should_write_new_transcripts(self):
+        return self == DatasetType.SNV_INDEL
 
     @property
     def overwrite_male_non_par_calls(self) -> None:

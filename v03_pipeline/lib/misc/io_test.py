@@ -20,9 +20,8 @@ TEST_IMPUTED_SEX_UNEXPECTED_VALUE = (
     'v03_pipeline/var/test/sex_check/test_imputed_sex_unexpected_value.tsv'
 )
 TEST_INVALID_VCF = 'v03_pipeline/var/test/callsets/improperly_formatted.vcf'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 TEST_MITO_MT = 'v03_pipeline/var/test/callsets/mito_1.mt'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
 
 
 class IOTest(unittest.TestCase):
@@ -61,11 +60,10 @@ class IOTest(unittest.TestCase):
         self.assertEqual(
             hl.eval(
                 remap_pedigree_hash(
-                    TEST_REMAP,
-                    TEST_PEDIGREE_3,
+                    TEST_PEDIGREE_3_REMAP,
                 ),
             ),
-            -560434714,
+            573002191,
         )
 
     def test_import_vcf(self) -> None:
@@ -97,7 +95,7 @@ class IOTest(unittest.TestCase):
             SeqrValidationError,
             'VCF failed file format validation: Your input file has a malformed header: We never saw the required CHROM header line \\(starting with one #\\) for the input VCF file',
             import_vcf,
-            TEST_PEDIGREE_3,
+            TEST_PEDIGREE_3_REMAP,
             ReferenceGenome.GRCh38,
         )
         self.assertRaisesRegex(

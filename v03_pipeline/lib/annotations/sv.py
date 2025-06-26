@@ -122,7 +122,7 @@ def algorithms(ht: hl.Table, **_: Any) -> hl.Expression:
 
 
 def bothsides_support(ht: hl.Table, **_: Any) -> hl.Expression:
-    return ht.filters.any(lambda x: x == 'BOTHSIDES_SUPPORT')
+    return ht['info.BOTHSIDES_SUPPORT']
 
 
 def CN(mt: hl.MatrixTable, **_: Any) -> hl.Expression:  # noqa: N802

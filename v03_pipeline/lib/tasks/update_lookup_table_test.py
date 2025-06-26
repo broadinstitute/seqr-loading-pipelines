@@ -9,8 +9,7 @@ from v03_pipeline.lib.tasks.update_lookup_table import (
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP = 'v03_pipeline/var/test/remaps/test_remap_1.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
 
 TEST_RUN_ID = 'manual__2024-04-03'
 
@@ -26,8 +25,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             project_guids=[
                 'R0555_seqr_demo',
             ],  # a project excluded from the lookup table
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -47,7 +45,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             callset=TEST_VCF,
                             project_guid='R0555_seqr_demo',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
+                                remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
                             ),
                         ),
                     },
@@ -65,8 +63,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project'],
-            project_remap_paths=[TEST_REMAP],
-            project_pedigree_paths=[TEST_PEDIGREE_3],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP],
             skip_validation=True,
             run_id=TEST_RUN_ID,
         )
@@ -86,7 +83,7 @@ class UpdateLookupTableTest(MockedDatarootTestCase):
                             callset=TEST_VCF,
                             project_guid='R0113_test_project',
                             remap_pedigree_hash=hl.eval(
-                                remap_pedigree_hash(TEST_REMAP, TEST_PEDIGREE_3),
+                                remap_pedigree_hash(TEST_PEDIGREE_3_REMAP),
                             ),
                         ),
                     },

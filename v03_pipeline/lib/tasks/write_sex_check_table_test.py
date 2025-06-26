@@ -123,7 +123,6 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path='na',
             project_guids=['R0113_test_project'],
-            project_remap_paths=['test_remap'],
             project_pedigree_paths=['test_pedigree'],
             run_id='manual__2024-04-03',
         )
@@ -157,61 +156,3 @@ class WriteSexCheckTableTaskTest(MockedDatarootTestCase):
             ),
         ) as f:
             self.assertTrue('collaborator_sample_id' in f.read())
-
-    @patch(
-        'v03_pipeline.lib.tasks.write_sex_check_table.FeatureFlag',
-    )
-    def test_snv_wes_sex_check_table_task(
-        self,
-        mock_ff: Mock,
-    ) -> None:
-        mock_ff.EXPECT_TDR_METRICS = True
-        worker = luigi.worker.Worker()
-        write_sex_check_table = WriteSexCheckTableTask(
-            reference_genome=ReferenceGenome.GRCh38,
-            dataset_type=DatasetType.SNV_INDEL,
-            sample_type=SampleType.WES,
-            callset_path=TEST_SEX_AND_RELATEDNESS_CALLSET_MT,
-            project_guids=['R0113_test_project'],
-            project_remap_paths=['test_remap'],
-            project_pedigree_paths=['test_pedigree'],
-            run_id='manual__2024-04-04',
-        )
-        worker.add(write_sex_check_table)
-        worker.run()
-        sex_check_ht = hl.read_table(
-            sex_check_table_path(
-                ReferenceGenome.GRCh38,
-                DatasetType.SNV_INDEL,
-                TEST_SEX_AND_RELATEDNESS_CALLSET_MT,
-            ),
-        )
-        self.assertCountEqual(
-            sex_check_ht.collect(),
-            [
-                hl.Struct(
-                    s='ROS_006_18Y03226_D1',
-                    predicted_sex='M',
-                ),
-                hl.Struct(
-                    s='ROS_006_18Y03227_D1',
-                    predicted_sex='M',
-                ),
-                hl.Struct(
-                    s='ROS_006_18Y03228_D1',
-                    predicted_sex='M',
-                ),
-                hl.Struct(
-                    s='ROS_007_19Y05919_D1',
-                    predicted_sex='M',
-                ),
-                hl.Struct(
-                    s='ROS_007_19Y05939_D1',
-                    predicted_sex='F',
-                ),
-                hl.Struct(
-                    s='ROS_007_19Y05987_D1',
-                    predicted_sex='M',
-                ),
-            ],
-        )

@@ -55,7 +55,6 @@ class WriteVariantAnnotationsVCFTest(MockedReferenceDatasetsTestCase):
                 sample_type=SampleType.WGS,
                 callset_path=TEST_SV_VCF,
                 project_guids=['R0115_test_project2'],
-                project_remap_paths=['not_a_real_file'],
                 project_pedigree_paths=[TEST_PEDIGREE_5],
                 skip_validation=True,
                 skip_expect_tdr_metrics=True,

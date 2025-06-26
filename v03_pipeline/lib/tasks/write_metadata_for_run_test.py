@@ -11,9 +11,8 @@ from v03_pipeline.lib.test.mock_complete_task import MockCompleteTask
 from v03_pipeline.lib.test.mocked_dataroot_testcase import MockedDatarootTestCase
 
 TEST_VCF = 'v03_pipeline/var/test/callsets/1kg_30variants.vcf'
-TEST_REMAP_2 = 'v03_pipeline/var/test/remaps/test_remap_2.tsv'
-TEST_PEDIGREE_3 = 'v03_pipeline/var/test/pedigrees/test_pedigree_3.tsv'
-TEST_PEDIGREE_4 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4.tsv'
+TEST_PEDIGREE_3_REMAP = 'v03_pipeline/var/test/pedigrees/test_pedigree_3_remap.tsv'
+TEST_PEDIGREE_4_REMAP_2 = 'v03_pipeline/var/test/pedigrees/test_pedigree_4_remap_2.tsv'
 TEST_SAMPLE_QC_JSON = 'v03_pipeline/var/test/sample_qc_1.json'
 
 
@@ -40,8 +39,7 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
             sample_type=SampleType.WGS,
             callset_path=TEST_VCF,
             project_guids=['R0113_test_project', 'R0114_project4'],
-            project_remap_paths=[TEST_REMAP_2, TEST_REMAP_2],
-            project_pedigree_paths=[TEST_PEDIGREE_3, TEST_PEDIGREE_4],
+            project_pedigree_paths=[TEST_PEDIGREE_3_REMAP, TEST_PEDIGREE_4_REMAP_2],
             skip_validation=True,
             run_id='run_123456',
         )
@@ -97,10 +95,11 @@ class WriteMetadataForRunTaskTest(MockedDatarootTestCase):
                         TEST_VCF,
                     ),
                     'sample_qc': {
-                        'HG00731': {'filter_flags': ['coverage', 'contamination']},
-                        'HG00732': {'filter_flags': ['coverage']},
-                        'HG00733': {'filter_flags': ['contamination']},
-                        'NA19675': {'filter_flags': []},
+                        'HG00731_1': {'filter_flags': ['coverage', 'contamination']},
+                        'HG00732_1': {'filter_flags': ['coverage']},
+                        'HG00733_1': {'filter_flags': ['contamination']},
+                        'NA19675_1': {'filter_flags': []},
+                        'NA20888_1': {'filter_flags': ['sample_failed']},
                     },
                 },
             )

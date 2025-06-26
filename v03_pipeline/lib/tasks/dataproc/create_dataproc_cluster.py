@@ -19,7 +19,11 @@ DEBIAN_IMAGE = '2.2.5-debian12'
 HAIL_VERSION = hl.version().split('-')[0]
 INSTANCE_TYPE = 'n1-highmem-8'
 PKGS = '|'.join(
-    [x.replace('gnomad_qc @ ', '') for x in pip_freeze.freeze() if 'hail @' not in x],
+    [
+        x.replace('gnomad_qc @ ', '').replace('onnxconverter-common @ ', '')
+        for x in pip_freeze.freeze()
+        if 'hail @' not in x
+    ],
 )
 TIMEOUT_S = 1200
 
@@ -100,9 +104,6 @@ def get_cluster_config(reference_genome: ReferenceGenome, run_id: str):
                     else '0',
                     'spark-env:EXPECT_TDR_METRICS': '1'
                     if FeatureFlag.EXPECT_TDR_METRICS
-                    else '0',
-                    'spark-env:EXPECT_WES_FILTERS': '1'
-                    if FeatureFlag.EXPECT_WES_FILTERS
                     else '0',
                     'spark-env:HAIL_SEARCH_DATA_DIR': Env.HAIL_SEARCH_DATA_DIR,
                     'spark-env:HAIL_TMP_DIR': Env.HAIL_TMP_DIR,

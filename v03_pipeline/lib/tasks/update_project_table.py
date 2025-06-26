@@ -5,6 +5,7 @@ import luigi.util
 from v03_pipeline.lib.annotations.fields import get_fields
 from v03_pipeline.lib.misc.family_entries import (
     compute_callset_family_entries_ht,
+    initialize_project_table,
     join_family_entries_hts,
     remove_family_guids,
 )
@@ -40,7 +41,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[self.project_i],
                         self.project_pedigree_paths[self.project_i],
                     ),
                 ),
@@ -51,23 +51,9 @@ class UpdateProjectTableTask(BaseUpdateTask):
         return self.clone(WriteRemappedAndSubsettedCallsetTask)
 
     def initialize_table(self) -> hl.Table:
-        key_type = self.dataset_type.table_key_type(self.reference_genome)
-        return hl.Table.parallelize(
-            [],
-            hl.tstruct(
-                **key_type,
-                filters=hl.tset(hl.tstr),
-                # NB: entries is missing here because it is untyped
-                # until we read the type off of the first callset aggregation.
-            ),
-            key=key_type.fields,
-            globals=hl.Struct(
-                family_guids=hl.empty_array(hl.tstr),
-                family_samples=hl.empty_dict(hl.tstr, hl.tarray(hl.tstr)),
-                updates=hl.empty_set(
-                    hl.tstruct(callset=hl.tstr, remap_pedigree_hash=hl.tint32),
-                ),
-            ),
+        return initialize_project_table(
+            self.reference_genome,
+            self.dataset_type,
         )
 
     def update_table(self, ht: hl.Table) -> hl.Table:
@@ -100,7 +86,6 @@ class UpdateProjectTableTask(BaseUpdateTask):
                 hl.Struct(
                     callset=self.callset_path,
                     remap_pedigree_hash=remap_pedigree_hash(
-                        self.project_remap_paths[self.project_i],
                         self.project_pedigree_paths[self.project_i],
                     ),
                 ),
