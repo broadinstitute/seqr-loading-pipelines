@@ -4,7 +4,7 @@ from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
 STANDARD_CONTIGS = hl.set(
-    c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs
+    (c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs)
 )
 
 
