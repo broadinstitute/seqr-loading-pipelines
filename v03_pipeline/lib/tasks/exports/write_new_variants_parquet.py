@@ -12,9 +12,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write_parquet import BaseWriteParquetTask
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
-)
 from v03_pipeline.lib.tasks.exports.fields import get_variants_export_fields
 from v03_pipeline.lib.tasks.exports.misc import (
     camelcase_array_structexpression_fields,
@@ -49,7 +46,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             # Special logic for the Clickhouse migration, forcing
             # utilization of the project subsetted variants table
             # that lives at the new variants table path.
-            and MIGRATION_RUN_ID not in self.run_id
+            and len(self.project_guids) > 0
         ):
             return self.clone(UpdateVariantAnnotationsTableWithNewSamplesTask)
         if self.dataset_type.should_send_to_allele_registry:
@@ -62,7 +59,7 @@ class WriteNewVariantsParquetTask(BaseWriteParquetTask):
             # Special logic for the Clickhouse migration, forcing
             # utilization of the project subsetted variants table
             # that lives at the new variants table path.
-            and MIGRATION_RUN_ID not in self.run_id
+            and len(self.project_guids) > 0
         ):
             ht = hl.read_table(
                 variant_annotations_table_path(

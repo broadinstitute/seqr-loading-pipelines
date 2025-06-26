@@ -26,9 +26,6 @@ from v03_pipeline.lib.tasks.base.base_loading_run_params import (
     BaseLoadingRunParams,
 )
 from v03_pipeline.lib.tasks.base.base_write import BaseWriteTask
-from v03_pipeline.lib.tasks.clickhouse_migration.migrate_all_projects_to_clickhouse import (
-    MIGRATION_RUN_ID,
-)
 from v03_pipeline.lib.tasks.files import GCSorLocalTarget
 from v03_pipeline.lib.tasks.reference_data.update_variant_annotations_table_with_updated_reference_dataset import (
     UpdateVariantAnnotationsTableWithUpdatedReferenceDataset,
@@ -99,7 +96,7 @@ class WriteNewVariantsTableTask(BaseWriteTask):
     def complete(self) -> bool:
         # NOTE: Special hack for ClickHouse migration tasks which
         # do not have a callset/projects to load.
-        if MIGRATION_RUN_ID in self.run_id:
+        if len(self.project_guids) == 0:
             return super().complete()
         return super().complete() and hl.eval(
             hl.bind(
