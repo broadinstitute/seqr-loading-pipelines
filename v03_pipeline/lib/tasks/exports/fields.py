@@ -322,7 +322,10 @@ def get_lifted_over_position_fields(ht: hl.Table, dataset_type: DatasetType):
     if dataset_type == DatasetType.MITO:
         return {'liftedOverPos': ht.rg37_locus.position}
     # Null out alterate contigs.
-    if ht.rg37_locus.contig not in ReferenceGenome.GRCh37.standard_contigs:
+    if (
+        ht.rg37_locus.contig
+        and ht.rg37_locus.contig not in ReferenceGenome.GRCh37.standard_contigs
+    ):
         return {
             'liftedOverChrom': None,
             'liftedOverPos': None,
