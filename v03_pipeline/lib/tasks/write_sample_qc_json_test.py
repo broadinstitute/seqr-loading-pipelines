@@ -50,6 +50,10 @@ class WriteSampleQCJsonTaskTest(MockedDatarootTestCase):
         mock_tdr_task.return_value = MockCompleteTask()
         mock_tdr_table = Mock()
         mock_tdr_table.path = TEST_TDR_METRICS_FILE
+        # Note, hfs.ls is getting mocked in every module not just write_sample_qc_json?
+        # It seems as though hfs is import-cached somehow, which leads to a single
+        # object being used globally.
+        mock_tdr_table.size = 10
         mock_ls_tdr_dir.return_value = [mock_tdr_table]
         mock_get_pop_pca_scores.return_value = hl.Table.parallelize(
             [
