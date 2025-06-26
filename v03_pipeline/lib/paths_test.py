@@ -169,9 +169,9 @@ class TestPaths(unittest.TestCase):
                 hfs.stat_result.FileListEntry(
                     path='v03_pipeline/var/test/callsets/1kg_30variants.vcf',
                     owner=None,
-                    size=104481,
+                    size=1732033623.804012,
                     typ=hfs.stat_result.FileType(2),
-                    modification_time=1732033623.804012,
+                    modification_time=1732033000,
                 ),
             ]
             self.assertEqual(
