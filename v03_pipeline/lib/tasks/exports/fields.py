@@ -3,9 +3,20 @@ import hail as hl
 from v03_pipeline.lib.model import DatasetType, ReferenceGenome, SampleType
 from v03_pipeline.lib.tasks.exports.misc import reformat_transcripts_for_export
 
+STANDARD_CONTIGS = hl.set(
+    c.replace('MT', 'M') for c in ReferenceGenome.GRCh37.standard_contigs
+)
+
 
 def reference_independent_contig(locus: hl.LocusExpression):
-    return locus.contig.replace('^chr', '').replace('MT', 'M')
+    contig = locus.contig.replace('^chr', '').replace('MT', 'M')
+    return hl.or_missing(
+        # lifted over alternate contigs may be present
+        # even though the primary contig is filtered to
+        # standard contigs earlier in the pipeline
+        STANDARD_CONTIGS.contains(contig),
+        contig,
+    )
 
 
 def get_dataset_type_specific_annotations(
@@ -272,13 +283,16 @@ def get_populations_export_fields(ht: hl.Table, dataset_type: DatasetType):
 
 def get_position_fields(ht: hl.Table, dataset_type: DatasetType):
     if dataset_type in {DatasetType.SV, DatasetType.GCNV}:
+        rg37_contig = reference_independent_contig(ht.rg37_locus_end)
         return {
             'chrom': reference_independent_contig(ht.start_locus),
             'pos': ht.start_locus.position,
             'end': ht.end_locus.position,
             'rg37LocusEnd': hl.Struct(
-                contig=reference_independent_contig(ht.rg37_locus_end),
-                position=ht.rg37_locus_end.position,
+                contig=rg37_contig,
+                position=hl.or_missing(
+                    hl.is_defined(rg37_contig), ht.rg37_locus_end.position
+                ),
             ),
         }
     if dataset_type == DatasetType.MITO:
@@ -321,15 +335,6 @@ def get_variant_id_fields(
 def get_lifted_over_position_fields(ht: hl.Table, dataset_type: DatasetType):
     if dataset_type == DatasetType.MITO:
         return {'liftedOverPos': ht.rg37_locus.position}
-    # Null out alterate contigs.
-    if (
-        ht.rg37_locus.contig
-        and ht.rg37_locus.contig not in ReferenceGenome.GRCh37.standard_contigs
-    ):
-        return {
-            'liftedOverChrom': None,
-            'liftedOverPos': None,
-        }
     return {
         'liftedOverChrom': (
             reference_independent_contig(ht.rg37_locus)
@@ -337,7 +342,10 @@ def get_lifted_over_position_fields(ht: hl.Table, dataset_type: DatasetType):
             else reference_independent_contig(ht.rg38_locus)
         ),
         'liftedOverPos': (
-            ht.rg37_locus.position
+            hl.or_missing(
+                hl.is_defined(reference_independent_contig(ht.rg37_locus)),
+                ht.rg37_locus.position,
+            )
             if hasattr(ht, 'rg37_locus')
             else ht.rg38_locus.position
         ),
