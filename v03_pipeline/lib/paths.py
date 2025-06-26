@@ -73,9 +73,7 @@ def _callset_path_hash(callset_path: str) -> str:
         else:
             # f.modification_time is None for directories
             key = callset_path + str(
-                sum(
-                    (f.size if f.size else 0) for f in shards
-                ),
+                sum((f.size if f.size else 0) for f in shards),
             )
     except FileNotFoundError:
         key = callset_path
