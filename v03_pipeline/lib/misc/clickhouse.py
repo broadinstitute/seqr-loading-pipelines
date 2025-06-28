@@ -438,15 +438,14 @@ def atomic_entries_insert(
     )
     drop_staging_db()
     create_staging_tables(
-        table_name_builder(
-            [ClickHouseTable.ENTRIES]
-            if dataset_type.export_all_callset_variants
-            else [
-                ClickHouseTable.ENTRIES,
-                ClickHouseTable.PROJECT_GT_STATS,
-                ClickHouseTable.GT_STATS,
-            ],
-        ),
+        table_name_builder,
+        [ClickHouseTable.ENTRIES]
+        if dataset_type.export_all_callset_variants
+        else [
+            ClickHouseTable.ENTRIES,
+            ClickHouseTable.PROJECT_GT_STATS,
+            ClickHouseTable.GT_STATS,
+        ],
     )
     create_staging_non_table_entities(
         table_name_builder,
